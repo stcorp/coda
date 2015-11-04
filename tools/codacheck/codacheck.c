@@ -86,7 +86,7 @@ static void print_help()
 
 static void print_error(coda_cursor *cursor, const char *error, void *userdata)
 {
-    userdata = userdata;
+    (void)userdata;     /* prevent unused warning */
 
     printf("  ERROR: %s", error);
     if (cursor != NULL)

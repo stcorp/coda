@@ -61,3 +61,12 @@
 %ignore coda_strfl;
 %ignore coda_set_error;
 %ignore coda_errno_to_string;
+
+%ignore coda_datetime_to_double;
+%ignore coda_double_to_datetime;
+%ignore coda_time_to_string;
+%ignore coda_string_to_time;
+%ignore coda_utcdatetime_to_double;
+%ignore coda_double_to_utcdatetime;
+%ignore coda_time_to_utcstring;
+%ignore coda_utcstring_to_time;

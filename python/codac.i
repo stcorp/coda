@@ -70,7 +70,7 @@
     codac._codac.CodaError.)
 */
 %pythoncode %{
-    CodacError = _codac.CodacError
+CodacError = _codac.CodacError
 %}
 
 
@@ -405,20 +405,11 @@ POSIX_SCALAR_OUTPUT_HELPER(uint64_t, PyLong_FromUnsignedLongLong)
 
 
 /*
-    special string handling for user-allocated output strings
-*/
-/*
-    coda_time_to_string()::char *str
-    coda_utctime_to_string()::char *str
-*/
-%cstring_bounded_output(char *str, 26);
-
-/*
     coda_time_parts_to_string()::char *str
     coda_time_double_to_string()::char *str
     coda_time_double_to_string_utc()::char *str
 */
-%apply (const char *FORMAT, char *STRING) {(const char *format, char *str)}
+%apply (const char *FORMAT, char *STRING) {(const char *format, char *out_str)}
 
 
 /*
@@ -461,7 +452,7 @@ POSIX_SCALAR_OUTPUT_HELPER(uint64_t, PyLong_FromUnsignedLongLong)
 %typemap(argout) (const coda_cursor *cursor, char *dst, long dst_size)
 {
     /* create string from result without using the '\0' terminating character */
-    $result = SWIG_Python_AppendOutput($result, PyString_FromStringAndSize($2, $3 - 1));
+    $result = SWIG_Python_AppendOutput($result, SWIG_FromCharPtrAndSize($2, $3 - 1));
 }
 
 %typemap(freearg) (const coda_cursor *cursor, char *dst, long dst_size)

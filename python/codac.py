@@ -255,14 +255,6 @@ isMinInf = _codac.isMinInf
 def expression_is_constant(*args):
   return _codac.expression_is_constant(*args)
 expression_is_constant = _codac.expression_is_constant
-
-def string_to_time(*args):
-  return _codac.string_to_time(*args)
-string_to_time = _codac.string_to_time
-
-def utcstring_to_time(*args):
-  return _codac.utcstring_to_time(*args)
-utcstring_to_time = _codac.utcstring_to_time
 CODA_MAX_NUM_DIMS = _codac.CODA_MAX_NUM_DIMS
 coda_array_ordering_c = _codac.coda_array_ordering_c
 coda_array_ordering_fortran = _codac.coda_array_ordering_fortran
@@ -378,30 +370,6 @@ time_string_to_double = _codac.time_string_to_double
 def time_string_to_double_utc(*args):
   return _codac.time_string_to_double_utc(*args)
 time_string_to_double_utc = _codac.time_string_to_double_utc
-
-def datetime_to_double(*args):
-  return _codac.datetime_to_double(*args)
-datetime_to_double = _codac.datetime_to_double
-
-def double_to_datetime(*args):
-  return _codac.double_to_datetime(*args)
-double_to_datetime = _codac.double_to_datetime
-
-def coda_time_to_string(*args):
-  return _codac.coda_time_to_string(*args)
-coda_time_to_string = _codac.coda_time_to_string
-
-def utcdatetime_to_double(*args):
-  return _codac.utcdatetime_to_double(*args)
-utcdatetime_to_double = _codac.utcdatetime_to_double
-
-def coda_double_to_utcdatetime(*args):
-  return _codac.coda_double_to_utcdatetime(*args)
-coda_double_to_utcdatetime = _codac.coda_double_to_utcdatetime
-
-def coda_time_to_utcstring(*args):
-  return _codac.coda_time_to_utcstring(*args)
-coda_time_to_utcstring = _codac.coda_time_to_utcstring
 
 def recognize_file(*args):
   return _codac.recognize_file(*args)

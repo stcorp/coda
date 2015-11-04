@@ -600,21 +600,35 @@ static void print_data(coda_cursor *cursor)
     }
 }
 
-void print_debug_data()
+void print_debug_data(const char *product_class, const char *product_type, int format_version)
 {
     coda_product *pf;
     coda_cursor cursor;
     coda_format format;
     int result;
 
-    result = coda_open(traverse_info.file_name, &pf);
+    if (product_class == NULL)
+    {
+        result = coda_open(traverse_info.file_name, &pf);
+    }
+    else
+    {
+        result = coda_open_as(traverse_info.file_name, product_class, product_type, format_version, &pf);
+    }
     if (result != 0 && coda_errno == CODA_ERROR_FILE_OPEN)
     {
         /* maybe not enough memory space to map the file in memory =>
          * temporarily disable memory mapping of files and try again
          */
         coda_set_option_use_mmap(0);
-        result = coda_open(traverse_info.file_name, &pf);
+        if (product_class == NULL)
+        {
+            result = coda_open(traverse_info.file_name, &pf);
+        }
+        else
+        {
+            result = coda_open_as(traverse_info.file_name, product_class, product_type, format_version, &pf);
+        }
         coda_set_option_use_mmap(1);
     }
     if (result != 0)

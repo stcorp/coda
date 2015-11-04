@@ -485,6 +485,8 @@ static void record_delete(coda_type_record *type)
 
 static void array_delete(coda_type_array *type)
 {
+    int i;
+
     if (type == NULL)
     {
         return;
@@ -509,16 +511,11 @@ static void array_delete(coda_type_array *type)
     {
         coda_type_release(type->base_type);
     }
-    if (type->dim_expr != NULL)
+    for (i = 0; i < type->num_dims; i++)
     {
-        int i;
-
-        for (i = 0; i < type->num_dims; i++)
+        if (type->dim_expr[i] != NULL)
         {
-            if (type->dim_expr[i] != NULL)
-            {
-                coda_expression_delete(type->dim_expr[i]);
-            }
+            coda_expression_delete(type->dim_expr[i]);
         }
     }
     free(type);

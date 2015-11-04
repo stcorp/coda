@@ -177,7 +177,7 @@ void export_data_element_to_hdf4();
 #endif
 
 /* codadump-debug.c functions */
-void print_debug_data();
+void print_debug_data(const char *product_class, const char *product_type, int format_version);
 
 /* codadump-traverse.c functions */
 void print_full_field_name(FILE *f, int print_dims, int compound_as_array);

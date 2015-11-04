@@ -293,7 +293,7 @@
     }
     else
     {
-        tmp_result = PyString_FromStringAndSize(*$1, *$2);
+        tmp_result = PyBytes_FromStringAndSize(*$1, *$2);
         if (tmp_result == NULL)
         {
             return NULL;
@@ -421,13 +421,13 @@
         }
 
         tmp[0] = PyArray_SimpleNew(tmp_num_dims, tmp_dims_int, __numpy_type);
-        if (tmp == NULL)
+        if (tmp[0] == NULL)
         {
             return PyErr_NoMemory();
         }
 
         tmp[1] = PyArray_SimpleNew(tmp_num_dims, tmp_dims_int, __numpy_type);
-        if (tmp == NULL)
+        if (tmp[1] == NULL)
         {
             return PyErr_NoMemory();
         }

@@ -268,7 +268,7 @@ static int eval_expression_for_file(const char *filepath)
 
 int callback(const char *filepath, coda_filefilter_status status, const char *error, void *userdata)
 {
-    userdata = userdata;        /* prevent unused warnings from the compiler */
+    (void)userdata;     /* prevent unused warning */
 
     if (status == coda_ffs_error)
     {

@@ -129,6 +129,9 @@ static void print_help()
     printf("            -p, --path <path>\n");
     printf("                    path (in the form of a CODA node expression) to the\n");
     printf("                    location in the product where the operation should begin\n");
+    printf("            --open_as <product class> <product type> <version>\n");
+    printf("                    force opening the product using the given product class,\n");
+    printf("                    product type, and format version\n");
     printf("\n");
     printf("    codadump -h, --help\n");
     printf("        Show help (this text)\n");
@@ -485,6 +488,9 @@ static void handle_hdf4_run_mode(int argc, char *argv[])
 
 static void handle_debug_run_mode(int argc, char *argv[])
 {
+    const char *product_class = NULL;
+    const char *product_type = NULL;
+    int format_version = 0;
     int use_fast_size_expressions;
     int i;
 
@@ -511,6 +517,14 @@ static void handle_debug_run_mode(int argc, char *argv[])
         {
             starting_path = argv[i + 1];
             i++;
+        }
+        else if (strcmp(argv[i], "--open_as") == 0 && i + 3 < argc && argv[i + 1][0] != '-' && argv[i + 2][0] != '-' &&
+                 argv[i + 3][0] != '-')
+        {
+            product_class = argv[i + 1];
+            product_type = argv[i + 2];
+            format_version = atoi(argv[i + 3]); /* we just use '0' if the conversion to int fails */
+            i += 3;
         }
         else if (i == argc - 1 && argv[i][0] != '-')
         {
@@ -549,7 +563,7 @@ static void handle_debug_run_mode(int argc, char *argv[])
         }
     }
 
-    print_debug_data();
+    print_debug_data(product_class, product_type, format_version);
 
     if (output_file_name != NULL)
     {

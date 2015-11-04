@@ -1,3 +1,18 @@
+2.13 2015-04-29
+~~~~~~~~~~~~~~~
+
+* Fixed Python wrapping of functions coda.time_string_to_parts,
+  coda.time_string_to_double, and coda.time_string_to_double_utc.
+  (they now accept both format and string parameters again)
+
+* Added Python 3 compatibility.
+  In Python 3 coda_expression_eval_string() returns 'bytes' and
+  coda_cursor_read_string() returns 'unicode'.
+
+* Added --open_as option to codadump debug mode.
+
+* Doxygen documentation is now made with doxygen 2.8.9.1.
+
 2.12.1 2015-02-24
 ~~~~~~~~~~~~~~~~~
 

@@ -19,10 +19,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 """
 
-from codac import *
+from .codac import *
 import numpy
 import copy
-import StringIO
+import io
 
 #
 # EXCEPTION HIERARCHY
@@ -101,7 +101,7 @@ class Record(object):
 
     def __getitem__(self, key):
         if not isinstance(key, int):
-            raise TypeError, "index should be an integer"
+            raise TypeError("index should be an integer")
 
         if key < 0:
             key += len(self._registeredFields)
@@ -128,15 +128,15 @@ class Record(object):
         for some of the floats will differ.
         """
 
-        out = StringIO.StringIO()
+        out = io.StringIO()
 
         for field in self._registeredFields:
             data = self.__dict__[field]
 
-            print >> out, "%32s:" % (field),
+            out.write(u"%32s:" % (field))
 
             if isinstance(data,Record):
-                print >> out, "record (%i fields)" % (len(data),)
+                out.write(u"record (%i fields)\n" % (len(data),))
 
             elif isinstance(data,numpy.ndarray):
                 dim = data.shape
@@ -144,15 +144,15 @@ class Record(object):
                 for d in dim[:-1]:
                     dimString += "%ix" % (d,)
                 dimString += "%i" % (dim[-1],)
-                print >> out, "[%s %s]" % (dimString,self._typeToString[data.dtype.type])
+                out.write(u"[%s %s]\n" % (dimString,self._typeToString[data.dtype.type]))
 
-            elif isinstance(data,basestring):
-                print >> out, "\"%s\"" % (data,)
+            elif isinstance(data,str):
+                out.write(u"\"%s\"\n" % (data,))
 
             else:
                 # if type is none of the above, fall back
                 # on the type specific __str__() function.
-                print >> out, "%s" % (data,)
+                out.write(u"%s\n" % (data,))
 
         return out.getvalue()
 
@@ -178,13 +178,13 @@ def _traverse_path(cursor,path,start=0):
             # if the current node is a record, the path should specify
             # a field. fields are always specified by name, so path[pathIndex]
             # should be of type basestring.
-            if not isinstance(path[pathIndex],basestring):
-                raise ValueError, "Record \"%s\" should be indexed by field name, yet the specified index (%s) is not of type string." % (type_get_name(nodeType),path[pathIndex])
+            if not isinstance(path[pathIndex],str):
+                raise ValueError("Record \"%s\" should be indexed by field name, yet the specified index (%s) is not of type string." % (type_get_name(nodeType),path[pathIndex]))
 
             fieldIndex = type_get_record_field_index_from_name(nodeType,path[pathIndex])
 
             if cursor_get_record_field_available_status(cursor,fieldIndex) != 1:
-                raise ValueError, "Field \"%s\" is unavailable. Unavailable fields are not allowed in a path specification." % (path[pathIndex],)
+                raise ValueError("Field \"%s\" is unavailable. Unavailable fields are not allowed in a path specification." % (path[pathIndex],))
 
             cursor_goto_record_field_by_index(cursor,fieldIndex)
 
@@ -199,7 +199,7 @@ def _traverse_path(cursor,path,start=0):
             elif isinstance(path[pathIndex],(list,tuple)):
                 arrayIndex = path[pathIndex]
             else:
-                raise ValueError, "The specified array index (%s) should be an integer or a sequence of integers, but is neither." % (path[pathIndex],)
+                raise ValueError("The specified array index (%s) should be an integer or a sequence of integers, but is neither." % (path[pathIndex],))
 
             # get the shape of the array from the cursor. the size of all
             # dynamic dimensions are computed by the coda library.
@@ -215,7 +215,7 @@ def _traverse_path(cursor,path,start=0):
             # check if the number of indices specified match the
             # dimensionality of the array.
             if len(arrayIndex) != len(arrayShape):
-                raise ValueError, "The number of specified indices does not match the dimensionality of the array."
+                raise ValueError("The number of specified indices does not match the dimensionality of the array.")
 
             # check for variable indices and perform range checks on all
             # non-variable indices.
@@ -224,7 +224,7 @@ def _traverse_path(cursor,path,start=0):
                 if arrayIndex[i] == -1:
                     intermediateArray = True
                 elif (arrayIndex[i] < 0) or (arrayIndex[i] >= arrayShape[i]):
-                    raise ValueError, "Array index (%i) out of bounds (0,%i)." % (arrayIndex[i],arrayShape[i])
+                    raise ValueError("Array index (%i) out of bounds (0,%i)." % (arrayIndex[i],arrayShape[i]))
 
             if intermediateArray:
                 return (True,pathIndex)
@@ -236,7 +236,7 @@ def _traverse_path(cursor,path,start=0):
                 else:
                     cursor_goto_array_element(cursor,arrayIndex)
         else:
-            raise ValueError, "Extra tokens in path specification: %s" % (path[pathIndex:],)
+            raise ValueError("Extra tokens in path specification: %s" % (path[pathIndex:],))
 
     # we've arrived at the end of the path.
     return (False,len(path) - 1)
@@ -282,7 +282,7 @@ def _fetch_intermediate_array(cursor,path,pathIndex=0):
         step = 1
         arrayIndex = path[pathIndex]
 
-        for i in reversed(range(0,len(arrayIndex))):
+        for i in reversed(list(range(0,len(arrayIndex)))):
             if arrayIndex[i] == -1:
                 fetchShape.append(arrayShape[i])
                 fetchStep.append(step)
@@ -351,7 +351,7 @@ def _fetch_intermediate_array(cursor,path,pathIndex=0):
                 nodeReadType = type_get_read_type(nodeType)
 
                 if nodeReadType == coda_native_type_not_available:
-                    raise FetchError, "Can not read array, not all elements are available."
+                    raise FetchError("Can not read array, not all elements are available.")
                 else:
                     (scalar,numpyType) = _numpyNativeTypeDictionary[nodeReadType]
 
@@ -423,7 +423,7 @@ def _fetch_object_array(cursor):
 
     # loop over all elements excluding the last one
     arraySizeMinOne = array.size - 1
-    for i in xrange(arraySizeMinOne):
+    for i in range(arraySizeMinOne):
         array.flat[i] = _fetch_subtree(cursor)
         cursor_goto_next_array_element(cursor)
 
@@ -529,7 +529,7 @@ def _fetch_subtree(cursor):
                 return _readSpecialTypeArrayFunctionDictionary[arrayBaseSpecialType](cursor)
 
         else:
-            raise FetchError, "Encountered an array of unknown base type."
+            raise FetchError("Encountered an array of unknown base type.")
 
     elif ((nodeClass == coda_integer_class)
          or (nodeClass == coda_real_class) 
@@ -546,7 +546,7 @@ def _fetch_subtree(cursor):
         return _readSpecialTypeScalarFunctionDictionary[nodeSpecialType](cursor)
 
     else:
-        raise FetchError, "Encountered an element of unknown type."
+        raise FetchError("Encountered an element of unknown type.")
 
 
 #
@@ -589,7 +589,7 @@ def get_attributes(start, *path):
     if intermediateNode:
         # we encountered an array with variable (-1) indices.
         # this is only allowed when calling coda.fetch().
-        raise ValueError, "Variable (-1) array indices are only allowed when calling coda.fetch()."
+        raise ValueError("Variable (-1) array indices are only allowed when calling coda.fetch().")
 
     cursor_goto_attributes(cursor)
 
@@ -620,7 +620,7 @@ def get_description(start, *path):
     if intermediateNode:
         # we encountered an array with variable (-1) indices.
         # this is only allowed when calling coda.fetch().
-        raise ValueError, "Variable (-1) array indices are only allowed when calling coda.fetch()."
+        raise ValueError("Variable (-1) array indices are only allowed when calling coda.fetch().")
 
     nodeType = cursor_get_type(cursor)
     nodeDescription = type_get_description(nodeType)
@@ -691,8 +691,8 @@ def get_field_available(start, *path):
     (http://www.stcorp.nl/coda/documentation/coda-python/)
     """
 
-    if len(path) == 0 or not isinstance(path[-1],basestring):
-        raise ValueError, "The path argument should not be empty and should end with a string that contains the name of a record field."
+    if len(path) == 0 or not isinstance(path[-1],str):
+        raise ValueError("The path argument should not be empty and should end with a string that contains the name of a record field.")
 
     cursor = _get_cursor(start)
 
@@ -701,7 +701,7 @@ def get_field_available(start, *path):
     if intermediateNode:
         # we encountered an array with variable (-1) indices.
         # this is only allowed when calling coda.fetch().
-        raise ValueError, "Variable (-1) array indices are only allowed when calling coda.fetch()."
+        raise ValueError("Variable (-1) array indices are only allowed when calling coda.fetch().")
 
     # get the field index.
     nodeType = cursor_get_type(cursor)
@@ -736,7 +736,7 @@ def get_field_count(start, *path):
     if intermediateNode:
         # we encountered an array with variable (-1) indices.
         # this is only allowed when calling coda.fetch().
-        raise ValueError, "Variable (-1) array indices are only allowed when calling coda.fetch()."
+        raise ValueError("Variable (-1) array indices are only allowed when calling coda.fetch().")
 
     nodeType = cursor_get_type(cursor)
     fieldCount = type_get_num_record_fields(nodeType)
@@ -775,7 +775,7 @@ def get_field_names(start, *path):
     if intermediateNode:
         # we encountered an array with variable (-1) indices.
         # this is only allowed when calling coda.fetch().
-        raise ValueError, "Variable (-1) array indices are only allowed when calling coda.fetch()."
+        raise ValueError("Variable (-1) array indices are only allowed when calling coda.fetch().")
 
     nodeType = cursor_get_type(cursor)
     fieldCount = type_get_num_record_fields(nodeType)
@@ -817,7 +817,7 @@ def get_size(start, *path):
     if intermediateNode:
         # we encountered an array with variable (-1) indices.
         # this is only allowed when calling coda.fetch().
-        raise ValueError, "Variable (-1) array indices are only allowed when calling coda.fetch()."
+        raise ValueError("Variable (-1) array indices are only allowed when calling coda.fetch().")
 
     dims = cursor_get_array_dim(cursor)
     del cursor
@@ -898,7 +898,7 @@ def get_unit(start, *path):
     if intermediateNode:
         # we encountered an array with variable (-1) indices.
         # this is only allowed when calling coda.fetch().
-        raise ValueError, "Variable (-1) array indices are only allowed when calling coda.fetch()."
+        raise ValueError("Variable (-1) array indices are only allowed when calling coda.fetch().")
 
     nodeType = cursor_get_type(cursor)
     del cursor

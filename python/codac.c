@@ -3858,13 +3858,13 @@ SWIGINTERN coda_cursor *coda_cursor_struct___deepcopy__(struct coda_cursor_struc
         }
 
         tmp[0] = PyArray_SimpleNew(tmp_num_dims, tmp_dims_int, NPY_FLOAT64);
-        if (tmp == NULL)
+        if (tmp[0] == NULL)
         {
             return PyErr_NoMemory();
         }
 
         tmp[1] = PyArray_SimpleNew(tmp_num_dims, tmp_dims_int, NPY_FLOAT64);
-        if (tmp == NULL)
+        if (tmp[1] == NULL)
         {
             return PyErr_NoMemory();
         }
@@ -5185,94 +5185,6 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_string_to_time(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  char *arg1 = (char *) 0 ;
-  double *arg2 = (double *) 0 ;
-  int res1 ;
-  char *buf1 = 0 ;
-  int alloc1 = 0 ;
-  double temp2 ;
-  int res2 = SWIG_TMPOBJ ;
-  PyObject * obj0 = 0 ;
-  int result;
-  
-  arg2 = &temp2;
-  if (!PyArg_ParseTuple(args,(char *)"O:string_to_time",&obj0)) SWIG_fail;
-  res1 = SWIG_AsCharPtrAndSize(obj0, &buf1, NULL, &alloc1);
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "string_to_time" "', argument " "1"" of type '" "char const *""'");
-  }
-  arg1 = (char *)(buf1);
-  {
-    result = (int)coda_string_to_time((char const *)arg1,arg2);
-    
-    if (result < 0)
-    {
-      if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
-      
-      return PyErr_Format(codacError,"coda_string_to_time(): %s", coda_errno_to_string(coda_errno));
-    }
-  }
-  resultobj = SWIG_Py_Void();
-  if (SWIG_IsTmpObj(res2)) {
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_double((*arg2)));
-  } else {
-    int new_flags = SWIG_IsNewObj(res2) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg2), SWIGTYPE_p_double, new_flags));
-  }
-  if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
-  return resultobj;
-fail:
-  if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_utcstring_to_time(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  char *arg1 = (char *) 0 ;
-  double *arg2 = (double *) 0 ;
-  int res1 ;
-  char *buf1 = 0 ;
-  int alloc1 = 0 ;
-  double temp2 ;
-  int res2 = SWIG_TMPOBJ ;
-  PyObject * obj0 = 0 ;
-  int result;
-  
-  arg2 = &temp2;
-  if (!PyArg_ParseTuple(args,(char *)"O:utcstring_to_time",&obj0)) SWIG_fail;
-  res1 = SWIG_AsCharPtrAndSize(obj0, &buf1, NULL, &alloc1);
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "utcstring_to_time" "', argument " "1"" of type '" "char const *""'");
-  }
-  arg1 = (char *)(buf1);
-  {
-    result = (int)coda_utcstring_to_time((char const *)arg1,arg2);
-    
-    if (result < 0)
-    {
-      if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
-      
-      return PyErr_Format(codacError,"coda_utcstring_to_time(): %s", coda_errno_to_string(coda_errno));
-    }
-  }
-  resultobj = SWIG_Py_Void();
-  if (SWIG_IsTmpObj(res2)) {
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_double((*arg2)));
-  } else {
-    int new_flags = SWIG_IsNewObj(res2) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg2), SWIGTYPE_p_double, new_flags));
-  }
-  if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
-  return resultobj;
-fail:
-  if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
-  return NULL;
-}
-
-
 SWIGINTERN PyObject *_wrap_init(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int result;
@@ -5950,7 +5862,12 @@ SWIGINTERN PyObject *_wrap_time_string_to_parts(PyObject *SWIGUNUSEDPARM(self), 
   int *arg7 = (int *) 0 ;
   int *arg8 = (int *) 0 ;
   int *arg9 = (int *) 0 ;
+  int res1 ;
+  char *buf1 = 0 ;
   int alloc1 = 0 ;
+  int res2 ;
+  char *buf2 = 0 ;
+  int alloc2 = 0 ;
   int temp3 ;
   int res3 = SWIG_TMPOBJ ;
   int temp4 ;
@@ -5966,6 +5883,7 @@ SWIGINTERN PyObject *_wrap_time_string_to_parts(PyObject *SWIGUNUSEDPARM(self), 
   int temp9 ;
   int res9 = SWIG_TMPOBJ ;
   PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
   int result;
   
   arg3 = &temp3;
@@ -5975,38 +5893,29 @@ SWIGINTERN PyObject *_wrap_time_string_to_parts(PyObject *SWIGUNUSEDPARM(self), 
   arg7 = &temp7;
   arg8 = &temp8;
   arg9 = &temp9;
-  if (!PyArg_ParseTuple(args,(char *)"O:time_string_to_parts",&obj0)) SWIG_fail;
-  {
-    size_t length;
-    int res = SWIG_AsCharPtrAndSize(obj0, &arg1, &length, &alloc1);
-    if (!SWIG_IsOK(res))
-    {
-      SWIG_exception_fail(SWIG_ArgError(res), "in variable '""format""' of type '""char const *""'");
-    }
-    arg2 = malloc(length);
-    if( arg2 == NULL )
-    {
-      return PyErr_NoMemory();
-    }
-    arg2[0] = '\0';
+  if (!PyArg_ParseTuple(args,(char *)"OO:time_string_to_parts",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_AsCharPtrAndSize(obj0, &buf1, NULL, &alloc1);
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "time_string_to_parts" "', argument " "1"" of type '" "char const *""'");
   }
+  arg1 = (char *)(buf1);
+  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "time_string_to_parts" "', argument " "2"" of type '" "char const *""'");
+  }
+  arg2 = (char *)(buf2);
   {
     result = (int)coda_time_string_to_parts((char const *)arg1,(char const *)arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9);
     
     if (result < 0)
     {
-      {
-        if (alloc1 == SWIG_NEWOBJ) free(arg1);
-        free(arg2);
-      }
+      if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
+      if (alloc2 == SWIG_NEWOBJ) free((char*)buf2);
       
       return PyErr_Format(codacError,"coda_time_string_to_parts(): %s", coda_errno_to_string(coda_errno));
     }
   }
   resultobj = SWIG_Py_Void();
-  {
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_FromCharPtr(arg2));
-  }
   if (SWIG_IsTmpObj(res3)) {
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg3)));
   } else {
@@ -6049,16 +5958,12 @@ SWIGINTERN PyObject *_wrap_time_string_to_parts(PyObject *SWIGUNUSEDPARM(self), 
     int new_flags = SWIG_IsNewObj(res9) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg9), SWIGTYPE_p_int, new_flags));
   }
-  {
-    if (alloc1 == SWIG_NEWOBJ) free(arg1);
-    free(arg2);
-  }
+  if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
+  if (alloc2 == SWIG_NEWOBJ) free((char*)buf2);
   return resultobj;
 fail:
-  {
-    if (alloc1 == SWIG_NEWOBJ) free(arg1);
-    free(arg2);
-  }
+  if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
+  if (alloc2 == SWIG_NEWOBJ) free((char*)buf2);
   return NULL;
 }
 
@@ -6194,61 +6099,54 @@ SWIGINTERN PyObject *_wrap_time_string_to_double(PyObject *SWIGUNUSEDPARM(self),
   char *arg1 = (char *) 0 ;
   char *arg2 = (char *) 0 ;
   double *arg3 = (double *) 0 ;
+  int res1 ;
+  char *buf1 = 0 ;
   int alloc1 = 0 ;
+  int res2 ;
+  char *buf2 = 0 ;
+  int alloc2 = 0 ;
   double temp3 ;
   int res3 = SWIG_TMPOBJ ;
   PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
   int result;
   
   arg3 = &temp3;
-  if (!PyArg_ParseTuple(args,(char *)"O:time_string_to_double",&obj0)) SWIG_fail;
-  {
-    size_t length;
-    int res = SWIG_AsCharPtrAndSize(obj0, &arg1, &length, &alloc1);
-    if (!SWIG_IsOK(res))
-    {
-      SWIG_exception_fail(SWIG_ArgError(res), "in variable '""format""' of type '""char const *""'");
-    }
-    arg2 = malloc(length);
-    if( arg2 == NULL )
-    {
-      return PyErr_NoMemory();
-    }
-    arg2[0] = '\0';
+  if (!PyArg_ParseTuple(args,(char *)"OO:time_string_to_double",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_AsCharPtrAndSize(obj0, &buf1, NULL, &alloc1);
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "time_string_to_double" "', argument " "1"" of type '" "char const *""'");
   }
+  arg1 = (char *)(buf1);
+  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "time_string_to_double" "', argument " "2"" of type '" "char const *""'");
+  }
+  arg2 = (char *)(buf2);
   {
     result = (int)coda_time_string_to_double((char const *)arg1,(char const *)arg2,arg3);
     
     if (result < 0)
     {
-      {
-        if (alloc1 == SWIG_NEWOBJ) free(arg1);
-        free(arg2);
-      }
+      if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
+      if (alloc2 == SWIG_NEWOBJ) free((char*)buf2);
       
       return PyErr_Format(codacError,"coda_time_string_to_double(): %s", coda_errno_to_string(coda_errno));
     }
   }
   resultobj = SWIG_Py_Void();
-  {
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_FromCharPtr(arg2));
-  }
   if (SWIG_IsTmpObj(res3)) {
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_double((*arg3)));
   } else {
     int new_flags = SWIG_IsNewObj(res3) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg3), SWIGTYPE_p_double, new_flags));
   }
-  {
-    if (alloc1 == SWIG_NEWOBJ) free(arg1);
-    free(arg2);
-  }
+  if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
+  if (alloc2 == SWIG_NEWOBJ) free((char*)buf2);
   return resultobj;
 fail:
-  {
-    if (alloc1 == SWIG_NEWOBJ) free(arg1);
-    free(arg2);
-  }
+  if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
+  if (alloc2 == SWIG_NEWOBJ) free((char*)buf2);
   return NULL;
 }
 
@@ -6258,513 +6156,54 @@ SWIGINTERN PyObject *_wrap_time_string_to_double_utc(PyObject *SWIGUNUSEDPARM(se
   char *arg1 = (char *) 0 ;
   char *arg2 = (char *) 0 ;
   double *arg3 = (double *) 0 ;
+  int res1 ;
+  char *buf1 = 0 ;
   int alloc1 = 0 ;
+  int res2 ;
+  char *buf2 = 0 ;
+  int alloc2 = 0 ;
   double temp3 ;
   int res3 = SWIG_TMPOBJ ;
   PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
   int result;
   
   arg3 = &temp3;
-  if (!PyArg_ParseTuple(args,(char *)"O:time_string_to_double_utc",&obj0)) SWIG_fail;
-  {
-    size_t length;
-    int res = SWIG_AsCharPtrAndSize(obj0, &arg1, &length, &alloc1);
-    if (!SWIG_IsOK(res))
-    {
-      SWIG_exception_fail(SWIG_ArgError(res), "in variable '""format""' of type '""char const *""'");
-    }
-    arg2 = malloc(length);
-    if( arg2 == NULL )
-    {
-      return PyErr_NoMemory();
-    }
-    arg2[0] = '\0';
+  if (!PyArg_ParseTuple(args,(char *)"OO:time_string_to_double_utc",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_AsCharPtrAndSize(obj0, &buf1, NULL, &alloc1);
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "time_string_to_double_utc" "', argument " "1"" of type '" "char const *""'");
   }
+  arg1 = (char *)(buf1);
+  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "time_string_to_double_utc" "', argument " "2"" of type '" "char const *""'");
+  }
+  arg2 = (char *)(buf2);
   {
     result = (int)coda_time_string_to_double_utc((char const *)arg1,(char const *)arg2,arg3);
     
     if (result < 0)
     {
-      {
-        if (alloc1 == SWIG_NEWOBJ) free(arg1);
-        free(arg2);
-      }
+      if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
+      if (alloc2 == SWIG_NEWOBJ) free((char*)buf2);
       
       return PyErr_Format(codacError,"coda_time_string_to_double_utc(): %s", coda_errno_to_string(coda_errno));
     }
   }
   resultobj = SWIG_Py_Void();
-  {
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_FromCharPtr(arg2));
-  }
   if (SWIG_IsTmpObj(res3)) {
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_double((*arg3)));
   } else {
     int new_flags = SWIG_IsNewObj(res3) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg3), SWIGTYPE_p_double, new_flags));
   }
-  {
-    if (alloc1 == SWIG_NEWOBJ) free(arg1);
-    free(arg2);
-  }
+  if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
+  if (alloc2 == SWIG_NEWOBJ) free((char*)buf2);
   return resultobj;
 fail:
-  {
-    if (alloc1 == SWIG_NEWOBJ) free(arg1);
-    free(arg2);
-  }
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_datetime_to_double(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  int arg1 ;
-  int arg2 ;
-  int arg3 ;
-  int arg4 ;
-  int arg5 ;
-  int arg6 ;
-  int arg7 ;
-  double *arg8 = (double *) 0 ;
-  int val1 ;
-  int ecode1 = 0 ;
-  int val2 ;
-  int ecode2 = 0 ;
-  int val3 ;
-  int ecode3 = 0 ;
-  int val4 ;
-  int ecode4 = 0 ;
-  int val5 ;
-  int ecode5 = 0 ;
-  int val6 ;
-  int ecode6 = 0 ;
-  int val7 ;
-  int ecode7 = 0 ;
-  double temp8 ;
-  int res8 = SWIG_TMPOBJ ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  PyObject * obj3 = 0 ;
-  PyObject * obj4 = 0 ;
-  PyObject * obj5 = 0 ;
-  PyObject * obj6 = 0 ;
-  int result;
-  
-  arg8 = &temp8;
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOO:datetime_to_double",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6)) SWIG_fail;
-  ecode1 = SWIG_AsVal_int(obj0, &val1);
-  if (!SWIG_IsOK(ecode1)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "datetime_to_double" "', argument " "1"" of type '" "int""'");
-  } 
-  arg1 = (int)(val1);
-  ecode2 = SWIG_AsVal_int(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "datetime_to_double" "', argument " "2"" of type '" "int""'");
-  } 
-  arg2 = (int)(val2);
-  ecode3 = SWIG_AsVal_int(obj2, &val3);
-  if (!SWIG_IsOK(ecode3)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "datetime_to_double" "', argument " "3"" of type '" "int""'");
-  } 
-  arg3 = (int)(val3);
-  ecode4 = SWIG_AsVal_int(obj3, &val4);
-  if (!SWIG_IsOK(ecode4)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "datetime_to_double" "', argument " "4"" of type '" "int""'");
-  } 
-  arg4 = (int)(val4);
-  ecode5 = SWIG_AsVal_int(obj4, &val5);
-  if (!SWIG_IsOK(ecode5)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "datetime_to_double" "', argument " "5"" of type '" "int""'");
-  } 
-  arg5 = (int)(val5);
-  ecode6 = SWIG_AsVal_int(obj5, &val6);
-  if (!SWIG_IsOK(ecode6)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "datetime_to_double" "', argument " "6"" of type '" "int""'");
-  } 
-  arg6 = (int)(val6);
-  ecode7 = SWIG_AsVal_int(obj6, &val7);
-  if (!SWIG_IsOK(ecode7)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "datetime_to_double" "', argument " "7"" of type '" "int""'");
-  } 
-  arg7 = (int)(val7);
-  {
-    result = (int)coda_datetime_to_double(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8);
-    
-    if (result < 0)
-    {
-      return PyErr_Format(codacError,"coda_datetime_to_double(): %s", coda_errno_to_string(coda_errno));
-    }
-  }
-  resultobj = SWIG_Py_Void();
-  if (SWIG_IsTmpObj(res8)) {
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_double((*arg8)));
-  } else {
-    int new_flags = SWIG_IsNewObj(res8) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg8), SWIGTYPE_p_double, new_flags));
-  }
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_double_to_datetime(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  double arg1 ;
-  int *arg2 = (int *) 0 ;
-  int *arg3 = (int *) 0 ;
-  int *arg4 = (int *) 0 ;
-  int *arg5 = (int *) 0 ;
-  int *arg6 = (int *) 0 ;
-  int *arg7 = (int *) 0 ;
-  int *arg8 = (int *) 0 ;
-  double val1 ;
-  int ecode1 = 0 ;
-  int temp2 ;
-  int res2 = SWIG_TMPOBJ ;
-  int temp3 ;
-  int res3 = SWIG_TMPOBJ ;
-  int temp4 ;
-  int res4 = SWIG_TMPOBJ ;
-  int temp5 ;
-  int res5 = SWIG_TMPOBJ ;
-  int temp6 ;
-  int res6 = SWIG_TMPOBJ ;
-  int temp7 ;
-  int res7 = SWIG_TMPOBJ ;
-  int temp8 ;
-  int res8 = SWIG_TMPOBJ ;
-  PyObject * obj0 = 0 ;
-  int result;
-  
-  arg2 = &temp2;
-  arg3 = &temp3;
-  arg4 = &temp4;
-  arg5 = &temp5;
-  arg6 = &temp6;
-  arg7 = &temp7;
-  arg8 = &temp8;
-  if (!PyArg_ParseTuple(args,(char *)"O:double_to_datetime",&obj0)) SWIG_fail;
-  ecode1 = SWIG_AsVal_double(obj0, &val1);
-  if (!SWIG_IsOK(ecode1)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "double_to_datetime" "', argument " "1"" of type '" "double""'");
-  } 
-  arg1 = (double)(val1);
-  {
-    result = (int)coda_double_to_datetime(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8);
-    
-    if (result < 0)
-    {
-      return PyErr_Format(codacError,"coda_double_to_datetime(): %s", coda_errno_to_string(coda_errno));
-    }
-  }
-  resultobj = SWIG_Py_Void();
-  if (SWIG_IsTmpObj(res2)) {
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg2)));
-  } else {
-    int new_flags = SWIG_IsNewObj(res2) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg2), SWIGTYPE_p_int, new_flags));
-  }
-  if (SWIG_IsTmpObj(res3)) {
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg3)));
-  } else {
-    int new_flags = SWIG_IsNewObj(res3) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg3), SWIGTYPE_p_int, new_flags));
-  }
-  if (SWIG_IsTmpObj(res4)) {
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg4)));
-  } else {
-    int new_flags = SWIG_IsNewObj(res4) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg4), SWIGTYPE_p_int, new_flags));
-  }
-  if (SWIG_IsTmpObj(res5)) {
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg5)));
-  } else {
-    int new_flags = SWIG_IsNewObj(res5) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg5), SWIGTYPE_p_int, new_flags));
-  }
-  if (SWIG_IsTmpObj(res6)) {
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg6)));
-  } else {
-    int new_flags = SWIG_IsNewObj(res6) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg6), SWIGTYPE_p_int, new_flags));
-  }
-  if (SWIG_IsTmpObj(res7)) {
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg7)));
-  } else {
-    int new_flags = SWIG_IsNewObj(res7) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg7), SWIGTYPE_p_int, new_flags));
-  }
-  if (SWIG_IsTmpObj(res8)) {
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg8)));
-  } else {
-    int new_flags = SWIG_IsNewObj(res8) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg8), SWIGTYPE_p_int, new_flags));
-  }
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_coda_time_to_string(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  double arg1 ;
-  char *arg2 = (char *) 0 ;
-  double val1 ;
-  int ecode1 = 0 ;
-  char temp2[26+1] ;
-  PyObject * obj0 = 0 ;
-  int result;
-  
-  arg2 = (char *) temp2;
-  if (!PyArg_ParseTuple(args,(char *)"O:coda_time_to_string",&obj0)) SWIG_fail;
-  ecode1 = SWIG_AsVal_double(obj0, &val1);
-  if (!SWIG_IsOK(ecode1)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "coda_time_to_string" "', argument " "1"" of type '" "double""'");
-  } 
-  arg1 = (double)(val1);
-  {
-    result = (int)coda_time_to_string(arg1,arg2);
-    
-    if (result < 0)
-    {
-      return PyErr_Format(codacError,"coda_time_to_string(): %s", coda_errno_to_string(coda_errno));
-    }
-  }
-  resultobj = SWIG_Py_Void();
-  arg2[26] = 0;  
-  resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_FromCharPtr(arg2));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_utcdatetime_to_double(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  int arg1 ;
-  int arg2 ;
-  int arg3 ;
-  int arg4 ;
-  int arg5 ;
-  int arg6 ;
-  int arg7 ;
-  double *arg8 = (double *) 0 ;
-  int val1 ;
-  int ecode1 = 0 ;
-  int val2 ;
-  int ecode2 = 0 ;
-  int val3 ;
-  int ecode3 = 0 ;
-  int val4 ;
-  int ecode4 = 0 ;
-  int val5 ;
-  int ecode5 = 0 ;
-  int val6 ;
-  int ecode6 = 0 ;
-  int val7 ;
-  int ecode7 = 0 ;
-  double temp8 ;
-  int res8 = SWIG_TMPOBJ ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  PyObject * obj3 = 0 ;
-  PyObject * obj4 = 0 ;
-  PyObject * obj5 = 0 ;
-  PyObject * obj6 = 0 ;
-  int result;
-  
-  arg8 = &temp8;
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOO:utcdatetime_to_double",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6)) SWIG_fail;
-  ecode1 = SWIG_AsVal_int(obj0, &val1);
-  if (!SWIG_IsOK(ecode1)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "utcdatetime_to_double" "', argument " "1"" of type '" "int""'");
-  } 
-  arg1 = (int)(val1);
-  ecode2 = SWIG_AsVal_int(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "utcdatetime_to_double" "', argument " "2"" of type '" "int""'");
-  } 
-  arg2 = (int)(val2);
-  ecode3 = SWIG_AsVal_int(obj2, &val3);
-  if (!SWIG_IsOK(ecode3)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "utcdatetime_to_double" "', argument " "3"" of type '" "int""'");
-  } 
-  arg3 = (int)(val3);
-  ecode4 = SWIG_AsVal_int(obj3, &val4);
-  if (!SWIG_IsOK(ecode4)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "utcdatetime_to_double" "', argument " "4"" of type '" "int""'");
-  } 
-  arg4 = (int)(val4);
-  ecode5 = SWIG_AsVal_int(obj4, &val5);
-  if (!SWIG_IsOK(ecode5)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "utcdatetime_to_double" "', argument " "5"" of type '" "int""'");
-  } 
-  arg5 = (int)(val5);
-  ecode6 = SWIG_AsVal_int(obj5, &val6);
-  if (!SWIG_IsOK(ecode6)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "utcdatetime_to_double" "', argument " "6"" of type '" "int""'");
-  } 
-  arg6 = (int)(val6);
-  ecode7 = SWIG_AsVal_int(obj6, &val7);
-  if (!SWIG_IsOK(ecode7)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "utcdatetime_to_double" "', argument " "7"" of type '" "int""'");
-  } 
-  arg7 = (int)(val7);
-  {
-    result = (int)coda_utcdatetime_to_double(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8);
-    
-    if (result < 0)
-    {
-      return PyErr_Format(codacError,"coda_utcdatetime_to_double(): %s", coda_errno_to_string(coda_errno));
-    }
-  }
-  resultobj = SWIG_Py_Void();
-  if (SWIG_IsTmpObj(res8)) {
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_double((*arg8)));
-  } else {
-    int new_flags = SWIG_IsNewObj(res8) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg8), SWIGTYPE_p_double, new_flags));
-  }
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_coda_double_to_utcdatetime(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  double arg1 ;
-  int *arg2 = (int *) 0 ;
-  int *arg3 = (int *) 0 ;
-  int *arg4 = (int *) 0 ;
-  int *arg5 = (int *) 0 ;
-  int *arg6 = (int *) 0 ;
-  int *arg7 = (int *) 0 ;
-  int *arg8 = (int *) 0 ;
-  double val1 ;
-  int ecode1 = 0 ;
-  int temp2 ;
-  int res2 = SWIG_TMPOBJ ;
-  int temp3 ;
-  int res3 = SWIG_TMPOBJ ;
-  int temp4 ;
-  int res4 = SWIG_TMPOBJ ;
-  int temp5 ;
-  int res5 = SWIG_TMPOBJ ;
-  int temp6 ;
-  int res6 = SWIG_TMPOBJ ;
-  int temp7 ;
-  int res7 = SWIG_TMPOBJ ;
-  int temp8 ;
-  int res8 = SWIG_TMPOBJ ;
-  PyObject * obj0 = 0 ;
-  int result;
-  
-  arg2 = &temp2;
-  arg3 = &temp3;
-  arg4 = &temp4;
-  arg5 = &temp5;
-  arg6 = &temp6;
-  arg7 = &temp7;
-  arg8 = &temp8;
-  if (!PyArg_ParseTuple(args,(char *)"O:coda_double_to_utcdatetime",&obj0)) SWIG_fail;
-  ecode1 = SWIG_AsVal_double(obj0, &val1);
-  if (!SWIG_IsOK(ecode1)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "coda_double_to_utcdatetime" "', argument " "1"" of type '" "double""'");
-  } 
-  arg1 = (double)(val1);
-  {
-    result = (int)coda_double_to_utcdatetime(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8);
-    
-    if (result < 0)
-    {
-      return PyErr_Format(codacError,"coda_double_to_utcdatetime(): %s", coda_errno_to_string(coda_errno));
-    }
-  }
-  resultobj = SWIG_Py_Void();
-  if (SWIG_IsTmpObj(res2)) {
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg2)));
-  } else {
-    int new_flags = SWIG_IsNewObj(res2) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg2), SWIGTYPE_p_int, new_flags));
-  }
-  if (SWIG_IsTmpObj(res3)) {
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg3)));
-  } else {
-    int new_flags = SWIG_IsNewObj(res3) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg3), SWIGTYPE_p_int, new_flags));
-  }
-  if (SWIG_IsTmpObj(res4)) {
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg4)));
-  } else {
-    int new_flags = SWIG_IsNewObj(res4) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg4), SWIGTYPE_p_int, new_flags));
-  }
-  if (SWIG_IsTmpObj(res5)) {
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg5)));
-  } else {
-    int new_flags = SWIG_IsNewObj(res5) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg5), SWIGTYPE_p_int, new_flags));
-  }
-  if (SWIG_IsTmpObj(res6)) {
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg6)));
-  } else {
-    int new_flags = SWIG_IsNewObj(res6) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg6), SWIGTYPE_p_int, new_flags));
-  }
-  if (SWIG_IsTmpObj(res7)) {
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg7)));
-  } else {
-    int new_flags = SWIG_IsNewObj(res7) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg7), SWIGTYPE_p_int, new_flags));
-  }
-  if (SWIG_IsTmpObj(res8)) {
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg8)));
-  } else {
-    int new_flags = SWIG_IsNewObj(res8) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg8), SWIGTYPE_p_int, new_flags));
-  }
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_coda_time_to_utcstring(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  double arg1 ;
-  char *arg2 = (char *) 0 ;
-  double val1 ;
-  int ecode1 = 0 ;
-  char temp2[26+1] ;
-  PyObject * obj0 = 0 ;
-  int result;
-  
-  arg2 = (char *) temp2;
-  if (!PyArg_ParseTuple(args,(char *)"O:coda_time_to_utcstring",&obj0)) SWIG_fail;
-  ecode1 = SWIG_AsVal_double(obj0, &val1);
-  if (!SWIG_IsOK(ecode1)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "coda_time_to_utcstring" "', argument " "1"" of type '" "double""'");
-  } 
-  arg1 = (double)(val1);
-  {
-    result = (int)coda_time_to_utcstring(arg1,arg2);
-    
-    if (result < 0)
-    {
-      return PyErr_Format(codacError,"coda_time_to_utcstring(): %s", coda_errno_to_string(coda_errno));
-    }
-  }
-  resultobj = SWIG_Py_Void();
-  arg2[26] = 0;  
-  resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_FromCharPtr(arg2));
-  return resultobj;
-fail:
+  if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
+  if (alloc2 == SWIG_NEWOBJ) free((char*)buf2);
   return NULL;
 }
 
@@ -7874,7 +7313,7 @@ SWIGINTERN PyObject *_wrap_type_get_fixed_value(PyObject *SWIGUNUSEDPARM(self), 
     }
     else
     {
-      tmp_result = PyString_FromStringAndSize(*arg2, *arg3);
+      tmp_result = PyBytes_FromStringAndSize(*arg2, *arg3);
       if (tmp_result == NULL)
       {
         return NULL;
@@ -10408,7 +9847,7 @@ SWIGINTERN PyObject *_wrap_cursor_read_string(PyObject *SWIGUNUSEDPARM(self), Py
   resultobj = SWIG_Py_Void();
   {
     /* create string from result without using the '\0' terminating character */
-    resultobj = SWIG_Python_AppendOutput(resultobj, PyString_FromStringAndSize(arg2, arg3 - 1));
+    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_FromCharPtrAndSize(arg2, arg3 - 1));
   }
   {
     free(arg2);
@@ -10751,7 +10190,7 @@ SWIGINTERN PyObject *_wrap_expression_eval_string(PyObject *SWIGUNUSEDPARM(self)
     }
     else
     {
-      tmp_result = PyString_FromStringAndSize(*arg3, *arg4);
+      tmp_result = PyBytes_FromStringAndSize(*arg3, *arg4);
       if (tmp_result == NULL)
       {
         return NULL;
@@ -10862,8 +10301,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"isPlusInf", _wrap_isPlusInf, METH_VARARGS, NULL},
 	 { (char *)"isMinInf", _wrap_isMinInf, METH_VARARGS, NULL},
 	 { (char *)"expression_is_constant", _wrap_expression_is_constant, METH_VARARGS, NULL},
-	 { (char *)"string_to_time", _wrap_string_to_time, METH_VARARGS, NULL},
-	 { (char *)"utcstring_to_time", _wrap_utcstring_to_time, METH_VARARGS, NULL},
 	 { (char *)"init", _wrap_init, METH_VARARGS, NULL},
 	 { (char *)"set_option_bypass_special_types", _wrap_set_option_bypass_special_types, METH_VARARGS, NULL},
 	 { (char *)"set_option_perform_boundary_checks", _wrap_set_option_perform_boundary_checks, METH_VARARGS, NULL},
@@ -10880,12 +10317,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"time_double_to_string_utc", _wrap_time_double_to_string_utc, METH_VARARGS, NULL},
 	 { (char *)"time_string_to_double", _wrap_time_string_to_double, METH_VARARGS, NULL},
 	 { (char *)"time_string_to_double_utc", _wrap_time_string_to_double_utc, METH_VARARGS, NULL},
-	 { (char *)"datetime_to_double", _wrap_datetime_to_double, METH_VARARGS, NULL},
-	 { (char *)"double_to_datetime", _wrap_double_to_datetime, METH_VARARGS, NULL},
-	 { (char *)"coda_time_to_string", _wrap_coda_time_to_string, METH_VARARGS, NULL},
-	 { (char *)"utcdatetime_to_double", _wrap_utcdatetime_to_double, METH_VARARGS, NULL},
-	 { (char *)"coda_double_to_utcdatetime", _wrap_coda_double_to_utcdatetime, METH_VARARGS, NULL},
-	 { (char *)"coda_time_to_utcstring", _wrap_coda_time_to_utcstring, METH_VARARGS, NULL},
 	 { (char *)"recognize_file", _wrap_recognize_file, METH_VARARGS, NULL},
 	 { (char *)"open", _wrap_open, METH_VARARGS, NULL},
 	 { (char *)"open_as", _wrap_open_as, METH_VARARGS, NULL},
