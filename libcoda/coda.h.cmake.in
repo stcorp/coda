@@ -36,6 +36,7 @@ extern "C"
 #ifdef WIN32
 #include <windows.h>
 
+#ifdef _MSC_VER
 #ifndef int8_t
 #define int8_t  signed char
 #endif
@@ -60,6 +61,7 @@ extern "C"
 #endif
 #ifndef uint64_t
 #define uint64_t unsigned __int64
+#endif
 #endif
 #endif
 

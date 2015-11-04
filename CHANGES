@@ -1,3 +1,12 @@
+1.4.1 2010-12-01
+~~~~~~~~~~~~~~~~
+
+* CODA can now be build using MSYS/MinGW on Windows.
+
+* Fixed issue with GRIB backend on systems that require strict word alignment.
+
+* Added support for GRIB files with spacing between the GRIB messages. 
+
 1.4.0 2010-11-08
 ~~~~~~~~~~~~~~~~
 

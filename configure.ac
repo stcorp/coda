@@ -1,5 +1,5 @@
 # autoconf file for CODA
-AC_INIT([CODA],[1.4])
+AC_INIT([CODA],[1.4.1])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE(foreign 1.8.3 -Wall)
 
@@ -69,6 +69,9 @@ int vsnprintf(const char *, size_t, const char *, va_list ap);
 /* Make sure we use the 1.6 compatibility API for HDF 1.8 */
 #define H5_USE_16_API
 
+/* Make sure we build the PCRE library statically on Windows */
+#define PCRE_STATIC
+
 #endif /* !defined(CODA_CONFIG_H) */
 ])
 
@@ -95,7 +98,7 @@ AC_CONFIG_FILES([win32/coda.iss win32/setup.py])
 # 6. If any interfaces have been removed or changed since the last public
 #    release, then set age to 0.
 LIBCODA_CURRENT=3
-LIBCODA_REVISION=0
+LIBCODA_REVISION=1
 LIBCODA_AGE=2
 AC_SUBST(LIBCODA_CURRENT)
 AC_SUBST(LIBCODA_REVISION)

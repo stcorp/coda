@@ -2014,10 +2014,7 @@ static int read_grib2_message(coda_grib_product *product, coda_grib_dynamic_reco
                 coda_grib_dynamic_record_set_field(grid, "scaleFactorOfRadiusOfSphericalEarth", type);
                 coda_grib_release_dynamic_type(type);
 
-                intvalue = *((uint32_t *)&buffer[2]);
-#ifndef WORDS_BIGENDIAN
-                swap4(&intvalue);
-#endif
+                intvalue = ((buffer[2] * 256 + buffer[3]) * 256 + buffer[4]) * 256 + buffer[5];
                 type =
                     (coda_grib_dynamic_type *)
                     coda_grib_dynamic_integer_new(grib_types.scaledValueOfRadiusOfSphericalEarth, intvalue);
@@ -2029,10 +2026,7 @@ static int read_grib2_message(coda_grib_product *product, coda_grib_dynamic_reco
                 coda_grib_dynamic_record_set_field(grid, "scaleFactorOfEarthMajorAxis", type);
                 coda_grib_release_dynamic_type(type);
 
-                intvalue = *((uint32_t *)&buffer[7]);
-#ifndef WORDS_BIGENDIAN
-                swap4(&intvalue);
-#endif
+                intvalue = ((buffer[7] * 256 + buffer[8]) * 256 + buffer[9]) * 256 + buffer[10];
                 type = (coda_grib_dynamic_type *)coda_grib_dynamic_integer_new(grib_types.scaledValueOfEarthMajorAxis,
                                                                                intvalue);
                 coda_grib_dynamic_record_set_field(grid, "scaledValueOfEarthMajorAxis", type);
@@ -2043,64 +2037,43 @@ static int read_grib2_message(coda_grib_product *product, coda_grib_dynamic_reco
                 coda_grib_dynamic_record_set_field(grid, "scaleFactorOfEarthMinorAxis", type);
                 coda_grib_release_dynamic_type(type);
 
-                intvalue = *((uint32_t *)&buffer[12]);
-#ifndef WORDS_BIGENDIAN
-                swap4(&intvalue);
-#endif
+                intvalue = ((buffer[12] * 256 + buffer[13]) * 256 + buffer[14]) * 256 + buffer[15];
                 type = (coda_grib_dynamic_type *)coda_grib_dynamic_integer_new(grib_types.scaledValueOfEarthMinorAxis,
                                                                                intvalue);
                 coda_grib_dynamic_record_set_field(grid, "scaledValueOfEarthMinorAxis", type);
                 coda_grib_release_dynamic_type(type);
 
-                intvalue = *((uint32_t *)&buffer[16]);
-#ifndef WORDS_BIGENDIAN
-                swap4(&intvalue);
-#endif
+                intvalue = ((buffer[16] * 256 + buffer[17]) * 256 + buffer[18]) * 256 + buffer[19];
                 type = (coda_grib_dynamic_type *)coda_grib_dynamic_integer_new(grib_types.grib2_Ni, intvalue);
                 coda_grib_dynamic_record_set_field(grid, "Ni", type);
                 coda_grib_release_dynamic_type(type);
 
-                intvalue = *((uint32_t *)&buffer[20]);
-#ifndef WORDS_BIGENDIAN
-                swap4(&intvalue);
-#endif
+                intvalue = ((buffer[20] * 256 + buffer[21]) * 256 + buffer[22]) * 256 + buffer[23];
                 type = (coda_grib_dynamic_type *)coda_grib_dynamic_integer_new(grib_types.grib2_Nj, intvalue);
                 coda_grib_dynamic_record_set_field(grid, "Nj", type);
                 coda_grib_release_dynamic_type(type);
 
-                intvalue = *((uint32_t *)&buffer[24]);
-#ifndef WORDS_BIGENDIAN
-                swap4(&intvalue);
-#endif
+                intvalue = ((buffer[24] * 256 + buffer[25]) * 256 + buffer[26]) * 256 + buffer[27];
                 type =
                     (coda_grib_dynamic_type *)
                     coda_grib_dynamic_integer_new(grib_types.basicAngleOfTheInitialProductionDomain, intvalue);
                 coda_grib_dynamic_record_set_field(grid, "basicAngleOfTheInitialProductionDomain", type);
                 coda_grib_release_dynamic_type(type);
 
-                intvalue = *((uint32_t *)&buffer[28]);
-#ifndef WORDS_BIGENDIAN
-                swap4(&intvalue);
-#endif
+                intvalue = ((buffer[28] * 256 + buffer[29]) * 256 + buffer[30]) * 256 + buffer[31];
                 type = (coda_grib_dynamic_type *)coda_grib_dynamic_integer_new(grib_types.subdivisionsOfBasicAngle,
                                                                                intvalue);
                 coda_grib_dynamic_record_set_field(grid, "subdivisionsOfBasicAngle", type);
                 coda_grib_release_dynamic_type(type);
 
-                intvalue = *((uint32_t *)&buffer[32]);
-#ifndef WORDS_BIGENDIAN
-                swap4(&intvalue);
-#endif
+                intvalue = ((buffer[32] * 256 + buffer[33]) * 256 + buffer[34]) * 256 + buffer[35];
                 type = (coda_grib_dynamic_type *)coda_grib_dynamic_integer_new(grib_types.latitudeOfFirstGridPoint,
                                                                                (buffer[32] & 0x80 ?
                                                                                 -(intvalue - (1 << 31)) : intvalue));
                 coda_grib_dynamic_record_set_field(grid, "latitudeOfFirstGridPoint", type);
                 coda_grib_release_dynamic_type(type);
 
-                intvalue = *((uint32_t *)&buffer[36]);
-#ifndef WORDS_BIGENDIAN
-                swap4(&intvalue);
-#endif
+                intvalue = ((buffer[36] * 256 + buffer[37]) * 256 + buffer[38]) * 256 + buffer[39];
                 type = (coda_grib_dynamic_type *)coda_grib_dynamic_integer_new(grib_types.longitudeOfFirstGridPoint,
                                                                                (buffer[36] & 0x80 ?
                                                                                 -(intvalue - (1 << 31)) : intvalue));
@@ -2112,39 +2085,27 @@ static int read_grib2_message(coda_grib_product *product, coda_grib_dynamic_reco
                 coda_grib_dynamic_record_set_field(grid, "resolutionAndComponentFlags", type);
                 coda_grib_release_dynamic_type(type);
 
-                intvalue = *((uint32_t *)&buffer[41]);
-#ifndef WORDS_BIGENDIAN
-                swap4(&intvalue);
-#endif
+                intvalue = ((buffer[41] * 256 + buffer[42]) * 256 + buffer[43]) * 256 + buffer[44];
                 type = (coda_grib_dynamic_type *)coda_grib_dynamic_integer_new(grib_types.latitudeOfLastGridPoint,
                                                                                (buffer[41] & 0x80 ?
                                                                                 -(intvalue - (1 << 31)) : intvalue));
                 coda_grib_dynamic_record_set_field(grid, "latitudeOfLastGridPoint", type);
                 coda_grib_release_dynamic_type(type);
 
-                intvalue = *((uint32_t *)&buffer[45]);
-#ifndef WORDS_BIGENDIAN
-                swap4(&intvalue);
-#endif
+                intvalue = ((buffer[45] * 256 + buffer[46]) * 256 + buffer[47]) * 256 + buffer[48];
                 type = (coda_grib_dynamic_type *)coda_grib_dynamic_integer_new(grib_types.longitudeOfLastGridPoint,
                                                                                (buffer[45] & 0x80 ?
                                                                                 -(intvalue - (1 << 31)) : intvalue));
                 coda_grib_dynamic_record_set_field(grid, "longitudeOfLastGridPoint", type);
                 coda_grib_release_dynamic_type(type);
 
-                intvalue = *((uint32_t *)&buffer[49]);
-#ifndef WORDS_BIGENDIAN
-                swap4(&intvalue);
-#endif
+                intvalue = ((buffer[49] * 256 + buffer[50]) * 256 + buffer[51]) * 256 + buffer[52];
                 type = (coda_grib_dynamic_type *)coda_grib_dynamic_integer_new(grib_types.grib2_iDirectionIncrement,
                                                                                intvalue);
                 coda_grib_dynamic_record_set_field(grid, "iDirectionIncrement", type);
                 coda_grib_release_dynamic_type(type);
 
-                intvalue = *((uint32_t *)&buffer[53]);
-#ifndef WORDS_BIGENDIAN
-                swap4(&intvalue);
-#endif
+                intvalue = ((buffer[53] * 256 + buffer[54]) * 256 + buffer[55]) * 256 + buffer[56];
                 if (template_number >= 40 && template_number <= 43)
                 {
                     type = (coda_grib_dynamic_type *)coda_grib_dynamic_integer_new(grib_types.grib2_N, intvalue);
@@ -2479,26 +2440,45 @@ int coda_grib_open(const char *filename, int64_t file_size, coda_product **produ
     {
         coda_grib_dynamic_record *message;
 
+        /* find start of Indicator Section */
+        buffer[0] = '\0';
+        while (file_offset < file_size - 1 && buffer[0] != 'G')
+        {
+            if (read(grib_product->fd, buffer, 1) < 0)
+            {
+                coda_grib_close((coda_product *)grib_product);
+                coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", grib_product->filename,
+                               strerror(errno));
+                return -1;
+            }
+            file_offset++;
+        }
+        if (file_offset >= file_size - 1)
+        {
+            /* there is only filler data at the end of the file, but no new message */
+            break;
+        }
+        file_offset--;
+
         /* Section 0: Indicator Section */
-        if (read(grib_product->fd, buffer, 8) < 0)
+        /* we already read the 'G' character, now read the rest of the section */
+        if (read(grib_product->fd, &buffer[1], 7) < 0)
         {
             coda_grib_close((coda_product *)grib_product);
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", grib_product->filename,
-                           strerror(errno));
+            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", filename, strerror(errno));
             return -1;
         }
         if (buffer[0] != 'G' || buffer[1] != 'R' || buffer[2] != 'I' || buffer[3] != 'B')
         {
             coda_grib_close((coda_product *)grib_product);
-            coda_set_error(CODA_ERROR_PRODUCT, "invalid indicator for message %ld in %s", message_number,
-                           grib_product->filename);
+            coda_set_error(CODA_ERROR_PRODUCT, "invalid indicator for message %ld in %s", message_number, filename);
             return -1;
         }
         if (buffer[7] != 1 && buffer[7] != 2)
         {
             coda_grib_close((coda_product *)grib_product);
             coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, "unsupported GRIB format version (%d) for message %ld for "
-                           "file %s", (int)buffer[7], message_number, grib_product->filename);
+                           "file %s", (int)buffer[7], message_number, filename);
             return -1;
         }
         if (grib_product->grib_version < 0)
@@ -2509,7 +2489,7 @@ int coda_grib_open(const char *filename, int64_t file_size, coda_product **produ
         {
             coda_grib_close((coda_product *)grib_product);
             coda_set_error(CODA_ERROR_PRODUCT, "mixed GRIB versions within a single file not supported for file %s",
-                           grib_product->filename);
+                           filename);
             return -1;
         }
 
@@ -2545,8 +2525,7 @@ int coda_grib_open(const char *filename, int64_t file_size, coda_product **produ
             if (read(grib_product->fd, &message_size, 8) < 0)
             {
                 coda_grib_close((coda_product *)grib_product);
-                coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", grib_product->filename,
-                               strerror(errno));
+                coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", filename, strerror(errno));
                 return -1;
             }
 #ifndef WORDS_BIGENDIAN
@@ -2585,8 +2564,8 @@ int coda_grib_open(const char *filename, int64_t file_size, coda_product **produ
 
             coda_grib_close((coda_product *)grib_product);
             coda_str64(file_offset, file_offset_str);
-            coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %s in file %s (%s)",
-                           file_offset_str, grib_product->filename, strerror(errno));
+            coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %s in file %s (%s)", file_offset_str,
+                           filename, strerror(errno));
             return -1;
         }
 

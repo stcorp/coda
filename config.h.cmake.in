@@ -341,6 +341,9 @@ int vsnprintf(const char *, size_t, const char *, va_list ap);
 /* Make sure we use the 1.6 compatibility API for HDF 1.8 */
 #define H5_USE_16_API
 
+/* Make sure we build the PCRE library statically on Windows */
+#define PCRE_STATIC
+
 
 /* This is the relative path to CODA definitions for the IDL interface. */	
 #cmakedefine CODA_DEFINITION_IDL ${CODA_DEFINITION_IDL}
