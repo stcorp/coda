@@ -1,3 +1,9 @@
+2.9.1 2013-06-27
+~~~~~~~~~~~~~~~~
+
+* When parsing an ascii datetime value fails, codacheck will now continue
+  checking the remainder of the product.
+
 2.9 2013-05-22
 ~~~~~~~~~~~~~~
 

@@ -193,7 +193,8 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size,
                 }
                 if (coda_cursor_read_double(cursor, &value) != 0)
                 {
-                    if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT)
+                    if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT &&
+                        coda_errno != CODA_ERROR_INVALID_DATETIME)
                     {
                         return -1;
                     }
@@ -219,7 +220,8 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size,
                 }
                 if (coda_cursor_get_string_length(cursor, &string_length) != 0)
                 {
-                    if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT)
+                    if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT &&
+                        coda_errno != CODA_ERROR_INVALID_DATETIME)
                     {
                         return -1;
                     }
@@ -332,7 +334,8 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size,
                 {
                     if (coda_cursor_get_bit_size(cursor, &local_bit_size) != 0)
                     {
-                        if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT)
+                        if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT &&
+                            coda_errno != CODA_ERROR_INVALID_DATETIME)
                         {
                             return -1;
                         }
@@ -407,7 +410,8 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size,
                     /* try to read the time value as a double */
                     if (coda_cursor_read_double(cursor, &value) != 0)
                     {
-                        if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT)
+                        if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT &&
+                            coda_errno != CODA_ERROR_INVALID_DATETIME)
                         {
                             return -1;
                         }
