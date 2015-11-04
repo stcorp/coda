@@ -1,3 +1,22 @@
+2.12.1 2015-02-24
+~~~~~~~~~~~~~~~~~
+
+* Added option to 'codadump debug' to disable the use of fast-size
+  expressions.
+
+* offset and size arguments to Python coda.cursor_read_bytes() function
+  are now optional.
+
+* Fixed issue where strings returned via the Python interface were sometimes
+  shortened if the string contained '\0' or other non-printable characters.
+
+* Fixed issues where detection of xml files could fail.
+  Problems could occur when an element was fully empty (not even containing
+  whitespace) or when the element string content or closing tag crossed an
+  8Kb boundary in the file.
+
+* Added entry for 2015-06-30 in leap second table.
+ 
 2.12 2015-01-15
 ~~~~~~~~~~~~~~~
 

@@ -122,6 +122,8 @@ static void print_help()
     printf("        purposes. No conversions are applied and (if applicable) for each\n");
     printf("        data element the file offset is given\n");
     printf("        Debug options:\n");
+    printf("            -d, --disable_fast_size_expressions\n");
+    printf("                    do not use fast-size expressions\n");
     printf("            -o, --output <filename>\n");
     printf("                    write output to specified file\n");
     printf("            -p, --path <path>\n");
@@ -134,11 +136,11 @@ static void print_help()
     printf("    codadump -v, --version\n");
     printf("        Print the version number of CODA and exit\n");
     printf("\n");
-    printf("    CODA will look for .codadef files using a definition path, which is a\n");
-    printf("    ':' separated (';' on Windows) list of paths to .codadef files and/or\n");
-    printf("    to directories containing .codadef files.\n");
-    printf("    By default the definition path is set to a single directory relative\n");
-    printf("    to the tool location. A different definition path can be set via the\n");
+    printf("    CODA will look for .codadef files using a definition path, which is a ':'\n");
+    printf("    separated (';' on Windows) list of paths to .codadef files and/or to\n");
+    printf("    directories containing .codadef files.\n");
+    printf("    By default the definition path is set to a single directory relative to\n");
+    printf("    the tool location. A different definition path can be set via the\n");
     printf("    CODA_DEFINITION environment variable or via the -D option.\n");
     printf("    (the -D option overrides the environment variable setting).\n");
     printf("\n");
@@ -483,16 +485,23 @@ static void handle_hdf4_run_mode(int argc, char *argv[])
 
 static void handle_debug_run_mode(int argc, char *argv[])
 {
+    int use_fast_size_expressions;
     int i;
 
     traverse_info.file_name = NULL;
     output_file_name = NULL;
     starting_path = NULL;
     ascii_output = stdout;
+    use_fast_size_expressions = 1;
 
     for (i = 0; i < argc; i++)
     {
-        if ((strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "--output") == 0) && i + 1 < argc && argv[i + 1][0] != '-')
+        if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--disable_fast_size_expressions") == 0)
+        {
+            use_fast_size_expressions = 0;
+        }
+        else if ((strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "--output") == 0) && i + 1 < argc &&
+                 argv[i + 1][0] != '-')
         {
             output_file_name = argv[i + 1];
             i++;
@@ -529,6 +538,7 @@ static void handle_debug_run_mode(int argc, char *argv[])
     }
     coda_set_option_perform_boundary_checks(0);
     coda_set_option_perform_conversions(0);
+    coda_set_option_use_fast_size_expressions(use_fast_size_expressions);
     if (output_file_name != NULL)
     {
         ascii_output = fopen(output_file_name, "w");

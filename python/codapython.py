@@ -538,23 +538,7 @@ def _fetch_subtree(cursor):
 
         # scalar type.
         nodeReadType = type_get_read_type(nodeType)
-
-        if nodeReadType == coda_native_type_bytes:
-            # this is a special case. all cursor_read_*_array() functions determine the
-            # size of the array in the wrapper code. however, as a user might want to use
-            # cursor_read_bytes() to read arbitrary portions of a product as raw bytes,
-            # it has been wrapped such that the size (and offset) argument are still
-            # accessible from Python. however, as a consequence, we have to find out the
-            # number of bytes to read in Python by calling cursor_get_byte_size().
-
-            byteSize = cursor_get_byte_size(cursor)
-
-            if byteSize == 0:
-                return None
-            else:
-                return cursor_read_bytes(cursor,0,byteSize)
-        else:
-            return _readNativeTypeScalarFunctionDictionary[nodeReadType](cursor)
+        return _readNativeTypeScalarFunctionDictionary[nodeReadType](cursor)
 
     elif nodeClass == coda_special_class:
         # special type.
@@ -941,7 +925,8 @@ _readNativeTypeScalarFunctionDictionary = {
     coda_native_type_float:  cursor_read_float,
     coda_native_type_double: cursor_read_double,
     coda_native_type_char:   cursor_read_char,
-    coda_native_type_string: cursor_read_string }
+    coda_native_type_string: cursor_read_string,
+    coda_native_type_bytes:  cursor_read_bytes }
 
 # dictionary (a.k.a. switch construct ;) for native type array read functions.
 _readNativeTypeArrayFunctionDictionary = {

@@ -233,7 +233,7 @@ static void abort_parser(parser_info *info)
 
 static int XMLCALL not_standalone_handler(void *data)
 {
-    data = data;
+    (void)data;
 
     /* return an error if this is not a standalone file */
     return XML_STATUS_ERROR;
@@ -494,7 +494,7 @@ static void XMLCALL end_element_handler(void *data, const char *el)
     coda_mem_type *type;
     int index;
 
-    el = el;
+    (void)el;
 
     if (info->abort_parser)
     {
@@ -806,6 +806,7 @@ static int detection_match_rule(detection_parser_info *info, coda_detection_rule
 {
     int i;
 
+    /* detection rules for i>0 are based on filenames */
     for (i = 1; i < detection_rule->num_entries; i++)
     {
         coda_detection_rule_entry *entry = detection_rule->entry[i];
@@ -869,7 +870,7 @@ static void XMLCALL detection_start_element_handler(void *data, const char *el, 
 {
     detection_parser_info *info;
 
-    attr = attr;
+    (void)attr;
 
     info = (detection_parser_info *)data;
     if (info->unparsed_depth == 0)
@@ -939,7 +940,7 @@ static void XMLCALL detection_end_element_handler(void *data, const char *el)
 {
     detection_parser_info *info;
 
-    el = el;
+    (void)el;
 
     info = (detection_parser_info *)data;
 
@@ -950,23 +951,25 @@ static void XMLCALL detection_end_element_handler(void *data, const char *el)
 
     if (info->unparsed_depth == 0)
     {
+        int i;
+
+        /* check if a product type matches */
+        for (i = 0; i < info->detection_tree->num_detection_rules; i++)
+        {
+            coda_detection_rule *rule = info->detection_tree->detection_rule[i];
+
+            if ((rule->entry[0]->value_length == 0 ||
+                 (info->matchvalue != NULL && strcmp(rule->entry[0]->value, info->matchvalue) == 0)) &&
+                detection_match_rule(info, rule))
+            {
+                /* we have a match -> product type found */
+                info->product_definition = info->detection_tree->detection_rule[i]->product_definition;
+                abort_detection_parser(info, 1);
+                return;
+            }
+        }
         if (info->matchvalue != NULL)
         {
-            int i;
-
-            /* check if a product type matches */
-            for (i = 0; i < info->detection_tree->num_detection_rules; i++)
-            {
-                if ((info->detection_tree->detection_rule[i]->entry[0]->value == NULL ||
-                     strcmp(info->detection_tree->detection_rule[i]->entry[0]->value, info->matchvalue) == 0) &&
-                    detection_match_rule(info, info->detection_tree->detection_rule[i]))
-                {
-                    /* we have a match -> product type found */
-                    info->product_definition = info->detection_tree->detection_rule[i]->product_definition;
-                    abort_detection_parser(info, 1);
-                    return;
-                }
-            }
             free(info->matchvalue);
             info->matchvalue = NULL;
         }
@@ -1037,11 +1040,6 @@ int coda_xml_parse_for_detection(int fd, const char *filename, coda_product_defi
 
         coda_errno = 0;
         result = XML_Parse(info.parser, buff, length, (length == 0));
-        if (info.matchvalue != NULL)
-        {
-            free(info.matchvalue);
-            info.matchvalue = NULL;
-        }
         if (info.product_definition != NULL || info.abort_parser == 2)
         {
             break;
@@ -1056,6 +1054,11 @@ int coda_xml_parse_for_detection(int fd, const char *filename, coda_product_defi
             }
             coda_str64(XML_GetCurrentByteIndex(info.parser), s);
             coda_add_error_message(" (line: %lu, byte offset: %s)", (long)XML_GetCurrentLineNumber(info.parser), s);
+            if (info.matchvalue != NULL)
+            {
+                free(info.matchvalue);
+                info.matchvalue = NULL;
+            }
             XML_ParserFree(info.parser);
             return -1;
         }
@@ -1067,6 +1070,11 @@ int coda_xml_parse_for_detection(int fd, const char *filename, coda_product_defi
         }
     }
 
+    if (info.matchvalue != NULL)
+    {
+        free(info.matchvalue);
+        info.matchvalue = NULL;
+    }
     XML_ParserFree(info.parser);
 
     *definition = info.product_definition;

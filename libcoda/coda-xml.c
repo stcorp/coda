@@ -36,7 +36,7 @@ int coda_xml_recognize_file(const char *filename, int64_t size, coda_product_def
     int fd;
     int open_flags;
 
-    size = size;
+    (void)size;
 
     open_flags = O_RDONLY;
 #ifdef WIN32

@@ -731,6 +731,7 @@ int coda_leap_second_table_init(void)
         register_leap_second(189388832.0);      /* 2006-01-01 UTC */
         register_leap_second(284083233.0);      /* 2009-01-01 UTC */
         register_leap_second(394416034.0);      /* 2012-07-01 UTC */
+        register_leap_second(489024035.0);      /* 2015-07-01 UTC */
     }
 
     return 0;

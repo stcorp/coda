@@ -784,8 +784,8 @@ int coda_hdf5_cursor_read_double(const coda_cursor *cursor, double *dst)
 
 int coda_hdf5_cursor_read_char(const coda_cursor *cursor, char *dst)
 {
-    cursor = cursor;
-    dst = dst;
+    (void)cursor;
+    (void)dst;
 
     /* HDF5 does not have char types */
     assert(0);
@@ -849,8 +849,8 @@ int coda_hdf5_cursor_read_double_array(const coda_cursor *cursor, double *dst)
 
 int coda_hdf5_cursor_read_char_array(const coda_cursor *cursor, char *dst)
 {
-    cursor = cursor;
-    dst = dst;
+    (void)cursor;
+    (void)dst;
 
     /* HDF5 does not have single char types */
     assert(0);

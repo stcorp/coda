@@ -373,7 +373,7 @@
             return PyErr_NoMemory();
         }
 
-        tmp_result = __function_name(cursor, (__native_type*)PyArray_DATA(tmp), coda_array_ordering_c);
+        tmp_result = __function_name(cursor, (__native_type*)PyArray_DATA((PyArrayObject *)tmp), coda_array_ordering_c);
         if (tmp_result < 0)
         {
             Py_DECREF(tmp);
@@ -432,8 +432,9 @@
             return PyErr_NoMemory();
         }
 
-        tmp_result = __function_name(cursor, (__native_type *)PyArray_DATA(tmp[0]),
-                                     (__native_type *)PyArray_DATA(tmp[1]), coda_array_ordering_c);
+        tmp_result = __function_name(cursor, (__native_type *)PyArray_DATA((PyArrayObject *)tmp[0]),
+                                     (__native_type *)PyArray_DATA((PyArrayObject *)tmp[1]),
+                                     coda_array_ordering_c);
         if (tmp_result < 0)
         {
             Py_DECREF(tmp[0]);
@@ -477,7 +478,7 @@
             return PyErr_NoMemory();
         }
 
-        tmp_result = __function_name(cursor, (double *)PyArray_DATA(tmp));
+        tmp_result = __function_name(cursor, (double *)PyArray_DATA((PyArrayObject *)tmp));
         if (tmp_result < 0)
         {
             Py_DECREF(tmp);
@@ -531,7 +532,8 @@
             return PyErr_NoMemory();
         }
 
-        tmp_result = __function_name(cursor, (double *)PyArray_DATA(tmp), coda_array_ordering_c);
+        tmp_result = __function_name(cursor, (double *)PyArray_DATA((PyArrayObject *)tmp),
+                                     coda_array_ordering_c);
         if (tmp_result < 0)
         {
             Py_DECREF(tmp);

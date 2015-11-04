@@ -4795,7 +4795,7 @@ errorProcessor(XML_Parser parser,
                const char *end,
                const char **nextPtr)
 {
-  s = s; end = end; nextPtr = nextPtr; /* prevent unused warning */
+  (void)s; (void)end; (void)nextPtr;    /* prevent unused warning */
   return errorCode;
 }
 

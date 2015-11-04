@@ -179,7 +179,7 @@ PREFIX(checkPiTarget)(const ENCODING *enc, const char *ptr,
                       const char *end, int *tokPtr)
 {
   int upper = 0;
-  enc = enc; /* prevent unused warning */
+  (void)enc;    /* prevent unused warning */
   *tokPtr = XML_TOK_PI;
   if (end - ptr != MINBPC(enc)*3)
     return 1;
@@ -289,7 +289,7 @@ PREFIX(scanCdataSection)(const ENCODING *enc, const char *ptr,
   static const char CDATA_LSQB[] = { ASCII_C, ASCII_D, ASCII_A,
                                      ASCII_T, ASCII_A, ASCII_LSQB };
   int i;
-  enc = enc; /* prevent unused warning */
+  (void)enc;    /* prevent unused warning */
   /* CDATA[ */
   if (end - ptr < 6 * MINBPC(enc))
     return XML_TOK_PARTIAL;
@@ -1526,7 +1526,7 @@ static int PTRFASTCALL
 PREFIX(charRefNumber)(const ENCODING *enc, const char *ptr)
 {
   int result = 0;
-  enc = enc; /* prevent unused warning */
+  (void)enc;    /* prevent unused warning */
   /* skip &# */
   ptr += 2*MINBPC(enc);
   if (CHAR_MATCHES(enc, ptr, ASCII_x)) {
@@ -1571,7 +1571,7 @@ static int PTRCALL
 PREFIX(predefinedEntityName)(const ENCODING *enc, const char *ptr,
                              const char *end)
 {
-  enc = enc; /* prevent unused warning */
+  (void)enc;    /* prevent unused warning */
   switch ((end - ptr)/MINBPC(enc)) {
   case 2:
     if (CHAR_MATCHES(enc, ptr + MINBPC(enc), ASCII_t)) {
@@ -1690,7 +1690,7 @@ static int PTRCALL
 PREFIX(nameMatchesAscii)(const ENCODING *enc, const char *ptr1,
                          const char *end1, const char *ptr2)
 {
-  enc = enc; /* prevent unused warning */
+  (void)enc;    /* prevent unused warning */
   for (; *ptr2; ptr1 += MINBPC(enc), ptr2++) {
     if (ptr1 == end1)
       return 0;

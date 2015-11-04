@@ -114,21 +114,21 @@
 static int PTRFASTCALL
 isNever(const ENCODING *enc, const char *p)
 {
-  enc = enc; p = p; /* prevent unused warning */
+  (void)enc; (void)p;   /* prevent unused warning */
   return 0;
 }
 
 static int PTRFASTCALL
 utf8_isName2(const ENCODING *enc, const char *p)
 {
-  enc = enc; /* prevent unused warning */
+  (void)enc;    /* prevent unused warning */
   return UTF8_GET_NAMING2(namePages, (const unsigned char *)p);
 }
 
 static int PTRFASTCALL
 utf8_isName3(const ENCODING *enc, const char *p)
 {
-  enc = enc; /* prevent unused warning */
+  (void)enc;    /* prevent unused warning */
   return UTF8_GET_NAMING3(namePages, (const unsigned char *)p);
 }
 
@@ -137,14 +137,14 @@ utf8_isName3(const ENCODING *enc, const char *p)
 static int PTRFASTCALL
 utf8_isNmstrt2(const ENCODING *enc, const char *p)
 {
-  enc = enc; /* prevent unused warning */
+  (void)enc;    /* prevent unused warning */
   return UTF8_GET_NAMING2(nmstrtPages, (const unsigned char *)p);
 }
 
 static int PTRFASTCALL
 utf8_isNmstrt3(const ENCODING *enc, const char *p)
 {
-  enc = enc; /* prevent unused warning */
+  (void)enc;    /* prevent unused warning */
   return UTF8_GET_NAMING3(nmstrtPages, (const unsigned char *)p);
 }
 
@@ -153,21 +153,21 @@ utf8_isNmstrt3(const ENCODING *enc, const char *p)
 static int PTRFASTCALL
 utf8_isInvalid2(const ENCODING *enc, const char *p)
 {
-  enc = enc; /* prevent unused warning */
+  (void)enc;    /* prevent unused warning */
   return UTF8_INVALID2((const unsigned char *)p);
 }
 
 static int PTRFASTCALL
 utf8_isInvalid3(const ENCODING *enc, const char *p)
 {
-  enc = enc; /* prevent unused warning */
+  (void)enc;    /* prevent unused warning */
   return UTF8_INVALID3((const unsigned char *)p);
 }
 
 static int PTRFASTCALL
 utf8_isInvalid4(const ENCODING *enc, const char *p)
 {
-  enc = enc; /* prevent unused warning */
+  (void)enc;    /* prevent unused warning */
   return UTF8_INVALID4((const unsigned char *)p);
 }
 
@@ -334,7 +334,7 @@ utf8_toUtf8(const ENCODING *enc,
 {
   char *to;
   const char *from;
-  enc = enc; /* prevent unused warning */
+  (void)enc;    /* prevent unused warning */
   if (fromLim - *fromP > toLim - *toP) {
     /* Avoid copying partial characters. */
     for (fromLim = *fromP + (toLim - *toP); fromLim > *fromP; fromLim--)
@@ -440,7 +440,7 @@ latin1_toUtf8(const ENCODING *enc,
               const char **fromP, const char *fromLim,
               char **toP, const char *toLim)
 {
-  enc = enc; /* prevent unused warning */
+  (void)enc;    /* prevent unused warning */
   for (;;) {
     unsigned char c;
     if (*fromP == fromLim)
@@ -466,7 +466,7 @@ latin1_toUtf16(const ENCODING *enc,
                const char **fromP, const char *fromLim,
                unsigned short **toP, const unsigned short *toLim)
 {
-  enc = enc; /* prevent unused warning */
+  (void)enc;    /* prevent unused warning */
   while (*fromP != fromLim && *toP != toLim)
     *(*toP)++ = (unsigned char)*(*fromP)++;
 }
@@ -502,7 +502,7 @@ ascii_toUtf8(const ENCODING *enc,
              const char **fromP, const char *fromLim,
              char **toP, const char *toLim)
 {
-  enc = enc; /* prevent unused warning */
+  (void)enc;    /* prevent unused warning */
   while (*fromP != fromLim && *toP != toLim)
     *(*toP)++ = *(*fromP)++;
 }
@@ -559,7 +559,7 @@ E ## toUtf8(const ENCODING *enc, \
             char **toP, const char *toLim) \
 { \
   const char *from; \
-  enc = enc; /* prevent unused warning */ \
+  (void)enc;    /* prevent unused warning */ \
   for (from = *fromP; from != fromLim; from += 2) { \
     int plane; \
     unsigned char lo2; \
@@ -623,7 +623,7 @@ E ## toUtf16(const ENCODING *enc, \
              unsigned short **toP, const unsigned short *toLim) \
 { \
   /* Avoid copying first half only of surrogate */ \
-  enc = enc; /* prevent unused warning */ \
+  (void)enc;    /* prevent unused warning */ \
   if (fromLim - *fromP > ((toLim - *toP) << 1) \
       && (GET_HI(fromLim - 2) & 0xF8) == 0xD8) \
     fromLim -= 2; \
@@ -968,7 +968,7 @@ static void PTRCALL
 initUpdatePosition(const ENCODING *enc, const char *ptr,
                    const char *end, POSITION *pos)
 {
-  enc = enc; /* prevent unused warning */
+  (void)enc;    /* prevent unused warning */
   normal_updatePosition(&utf8_encoding.enc, ptr, end, pos);
 }
 

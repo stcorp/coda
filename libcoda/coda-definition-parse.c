@@ -671,13 +671,13 @@ static int data_dictionary_add_product_class(parser_info *info)
 
 static void dummy_free_handler(void *data)
 {
-    data = data;        /* do nothing */
+    (void)data; /* do nothing */
 }
 
 static int dummy_init(parser_info *info, const char **attr)
 {
-    info = info;
-    attr = attr;
+    (void)info;
+    (void)attr;
     return 0;
 }
 
@@ -721,7 +721,7 @@ static int bool_expression_finalise(parser_info *info)
 
 static int bool_expression_init(parser_info *info, const char **attr)
 {
-    attr = attr;
+    (void)attr;
 
     info->node->expect_char_data = 1;
     info->node->free_data = (free_data_handler)coda_expression_delete;
@@ -770,7 +770,7 @@ static int integer_expression_finalise(parser_info *info)
 
 static int integer_expression_init(parser_info *info, const char **attr)
 {
-    attr = attr;
+    (void)attr;
 
     info->node->expect_char_data = 1;
     info->node->free_data = (free_data_handler)coda_expression_delete;
@@ -830,7 +830,7 @@ static int integer_constant_or_expression_finalise(parser_info *info)
 
 static int integer_constant_or_expression_init(parser_info *info, const char **attr)
 {
-    attr = attr;
+    (void)attr;
 
     info->node->expect_char_data = 1;
     info->node->free_data = (free_data_handler)coda_expression_delete;
@@ -891,7 +891,7 @@ static int optional_integer_constant_or_expression_finalise(parser_info *info)
 
 static int optional_integer_constant_or_expression_init(parser_info *info, const char **attr)
 {
-    attr = attr;
+    (void)attr;
 
     info->node->expect_char_data = 1;
     info->node->free_data = (free_data_handler)coda_expression_delete;
@@ -918,7 +918,8 @@ static int string_data_finalise(parser_info *info)
 
 static int string_data_init(parser_info *info, const char **attr)
 {
-    attr = attr;
+    (void)attr;
+
     info->node->expect_char_data = 1;
     info->node->finalise_element = string_data_finalise;
     return 0;
@@ -1015,7 +1016,7 @@ static int void_expression_finalise(parser_info *info)
 
 static int void_expression_init(parser_info *info, const char **attr)
 {
-    attr = attr;
+    (void)attr;
 
     info->node->expect_char_data = 1;
     info->node->free_data = (free_data_handler)coda_expression_delete;
@@ -1093,6 +1094,14 @@ static int cd_array_set_type(parser_info *info)
 
 static int cd_array_add_dimension(parser_info *info)
 {
+    if (info->node->parent->format != coda_format_ascii && info->node->parent->format != coda_format_binary &&
+        !info->node->empty)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "dimension with size specification not allowed for %s array",
+                       coda_type_get_format_name(info->node->parent->format));
+        return -1;
+    }
+
     if (info->node->data != NULL || info->node->empty)
     {
         if (coda_type_array_add_variable_dimension((coda_type_array *)info->node->parent->data,
@@ -1418,7 +1427,7 @@ static int cd_detection_rule_add_entry(parser_info *info)
 
 static int cd_detection_rule_init(parser_info *info, const char **attr)
 {
-    attr = attr;
+    (void)attr;
 
     info->node->free_data = (free_data_handler)coda_detection_rule_delete;
     info->node->data = coda_detection_rule_new();
@@ -1763,7 +1772,8 @@ static int cd_native_type_finalise(parser_info *info)
 
 static int cd_native_type_init(parser_info *info, const char **attr)
 {
-    attr = attr;
+    (void)attr;
+
     info->node->expect_char_data = 1;
     info->node->finalise_element = cd_native_type_finalise;
     return 0;
@@ -2292,8 +2302,6 @@ static int cd_product_type_add_product_definition(parser_info *info)
 static int cd_product_type_init(parser_info *info, const char **attr)
 {
     const char *name;
-
-    attr = attr;
 
     name = get_mandatory_attribute_value(attr, "name", info->node->tag);
     if (name == NULL)
@@ -3255,7 +3263,7 @@ static void XMLCALL end_element_handler(void *data, const char *el)
 {
     parser_info *info = (parser_info *)data;
 
-    el = el;
+    (void)el;
 
     if (info->abort_parser)
     {

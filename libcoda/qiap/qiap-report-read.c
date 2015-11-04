@@ -285,7 +285,7 @@ static void XMLCALL start_element_handler(void *data, const char *el, const char
     int has_char_data = 0;
     int allowed = 1;
 
-    attr = attr;
+    (void)attr;
 
     if (info->unparsed_depth > 0)
     {
@@ -616,7 +616,7 @@ static void XMLCALL end_element_handler(void *data, const char *el)
 {
     parser_info *info = (parser_info *)data;
 
-    el = el;
+    (void)el;
 
     if (info->abort_parser)
     {

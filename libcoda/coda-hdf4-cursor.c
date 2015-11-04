@@ -350,7 +350,7 @@ int coda_hdf4_cursor_get_num_elements(const coda_cursor *cursor, long *num_eleme
 
 int coda_hdf4_cursor_get_string_length(const coda_cursor *cursor, long *length)
 {
-    cursor = cursor;    /* prevent unused warning */
+    (void)cursor;       /* prevent unused warning */
     /* HDF4 does not support strings as basic types, only char data. We will therefore always return a size of 1 */
     *length = 1;
     return 0;

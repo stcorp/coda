@@ -151,8 +151,7 @@
 /* Define to 1 if you have the `vsnprintf' function. */
 #cmakedefine HAVE_VSNPRINTF ${HAVE_VSNPRINTF}
 
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
 #cmakedefine LT_OBJDIR ${LT_OBJDIR}
 
 /* Name of package */

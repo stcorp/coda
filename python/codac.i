@@ -28,6 +28,8 @@
 
 
 %{
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+
 #include "numpy/arrayobject.h"
 #include "coda.h"
 %}
@@ -447,19 +449,19 @@ POSIX_SCALAR_OUTPUT_HELPER(uint64_t, PyLong_FromUnsignedLongLong)
     {
         return PyErr_Format(codacError,"coda_cursor_get_string_length(): %s", coda_errno_to_string(coda_errno));
     }
-    $3 = $3 + 1;
-
+    /* add one additional byte for the '\0' terminating character */
+    $3++;
     $2 = malloc($3 * sizeof(char));
     if( $2 == NULL )
     {
         return PyErr_NoMemory();
     }
-    $2[0] = '\0';
 }
 
 %typemap(argout) (const coda_cursor *cursor, char *dst, long dst_size)
 {
-    $result = SWIG_Python_AppendOutput($result, PyString_FromString($2));
+    /* create string from result without using the '\0' terminating character */
+    $result = SWIG_Python_AppendOutput($result, PyString_FromStringAndSize($2, $3 - 1));
 }
 
 %typemap(freearg) (const coda_cursor *cursor, char *dst, long dst_size)
@@ -654,7 +656,7 @@ NUMPY_OUTPUT_HELPER(cursor_read_complex_array,coda_cursor_read_complex_double_pa
             return PyErr_NoMemory();
         }
     
-        tmp_result = coda_cursor_read_bits(cursor, (uint8_t *)PyArray_DATA(tmp), bit_offset, bit_length);
+        tmp_result = coda_cursor_read_bits(cursor, (uint8_t *)PyArray_DATA((PyArrayObject *)tmp), bit_offset, bit_length);
     
         if (tmp_result < 0)
         {
@@ -691,7 +693,7 @@ NUMPY_OUTPUT_HELPER(cursor_read_complex_array,coda_cursor_read_complex_double_pa
             return PyErr_NoMemory();
         }
     
-        tmp_result = coda_cursor_read_bytes(cursor, (uint8_t *)PyArray_DATA(tmp), offset, length);
+        tmp_result = coda_cursor_read_bytes(cursor, (uint8_t *)PyArray_DATA((PyArrayObject *)tmp), offset, length);
     
         if (tmp_result < 0)
         {
@@ -830,5 +832,12 @@ def expression_eval_double(expr, cursor=None):
     return _codac.expression_eval_double(expr, cursor)
 def expression_eval_string(expr, cursor=None):
     return _codac.expression_eval_string(expr, cursor)
+
+# wrap cursor_read_bytes() function such that the offset and length arguments become optional
+def cursor_read_bytes(cursor, offset=None, length=None):
+    if offset is None and length is None:
+        offset = 0
+        length = cursor_get_byte_size(cursor)
+    return _codac.cursor_read_bytes(cursor, offset, length)
 %}
 

@@ -579,8 +579,8 @@ static void coda_matlab_class(int nlhs, mxArray *plhs[], int nrhs, const mxArray
 
 static void coda_matlab_clearall(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    plhs = plhs;        /* prevents 'unused parameter' warning */
-    prhs = prhs;        /* prevents 'unused parameter' warning */
+    (void)plhs; /* prevents 'unused parameter' warning */
+    (void)prhs; /* prevents 'unused parameter' warning */
 
     /* check parameters */
     if (nlhs > 0)
@@ -597,7 +597,7 @@ static void coda_matlab_clearall(int nlhs, mxArray *plhs[], int nrhs, const mxAr
 
 static void coda_matlab_close(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    plhs = plhs;        /* prevents 'unused parameter' warning */
+    (void)plhs; /* prevents 'unused parameter' warning */
 
     /* check parameters */
     if (nlhs > 0)
@@ -1327,7 +1327,7 @@ static void coda_matlab_setopt(int nlhs, mxArray *plhs[], int nrhs, const mxArra
     char *name;
     mwSize length;
 
-    plhs = plhs;        /* prevents 'unused parameter' warning */
+    (void)plhs; /* prevents 'unused parameter' warning */
 
     /* check parameters */
     if (nlhs > 0)
@@ -1592,7 +1592,7 @@ static void coda_matlab_unit(int nlhs, mxArray *plhs[], int nrhs, const mxArray 
 
 static void coda_matlab_version(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    prhs = prhs;        /* prevents 'unused parameter' warning */
+    (void)prhs; /* prevents 'unused parameter' warning */
 
     /* check parameters */
     if (nlhs > 1)

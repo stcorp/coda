@@ -784,6 +784,13 @@ def expression_eval_double(expr, cursor=None):
 def expression_eval_string(expr, cursor=None):
     return _codac.expression_eval_string(expr, cursor)
 
+# wrap cursor_read_bytes() function such that the offset and length arguments become optional
+def cursor_read_bytes(cursor, offset=None, length=None):
+    if offset is None and length is None:
+        offset = 0
+        length = cursor_get_byte_size(cursor)
+    return _codac.cursor_read_bytes(cursor, offset, length)
+
 # This file is compatible with both classic and new-style classes.
 
 

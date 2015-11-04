@@ -451,7 +451,7 @@ static IDL_VPTR x_coda_close(int argc, IDL_VPTR *argv)
 static IDL_VPTR x_coda_version(int argc, IDL_VPTR *argv)
 {
     assert(argc == 0);
-    argv = argv;
+    (void)argv;
     if (idl_coda_init() != 0)
     {
         return mk_coda_error(coda_errno);
@@ -572,7 +572,7 @@ static void x_coda_unload(int argc, IDL_VPTR *argv)
     int i;
 
     assert(argc == 0);
-    argv = argv;
+    (void)argv;
     if (!idl_coda_loaded)
     {
         return;

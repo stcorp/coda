@@ -12,7 +12,7 @@ build system. The changes that were made are:
 
  - Checks for BYTEORDER have been replaced with checks for WORDS_BIGENDIAN.
 
- - Added 'variable = variable;' entries in many functions to eliminate
+ - Added '(void)variable;' entries in many functions to eliminate
   'unused parameter' warnings.
 
  - Added EMPTY_NORMAL_VTABLE macro to eliminate 'missing initializer'

@@ -123,7 +123,7 @@ int coda_hdf5_close(coda_product *product)
 
 static herr_t add_error_message(int n, H5E_error_t *err_desc, void *client_data)
 {
-    client_data = client_data;
+    (void)client_data;
 
     if (n == 0)
     {
