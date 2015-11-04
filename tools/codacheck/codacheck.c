@@ -30,6 +30,9 @@
 
 #include "coda.h"
 
+/* internal CODA function */
+void coda_cursor_add_to_error_message(const coda_cursor *cursor);
+
 int option_verbose;
 int option_quick;
 int found_errors;
@@ -64,115 +67,10 @@ static void print_help()
     printf("\n");
 }
 
-static int print_cursor_position(const coda_cursor *cursor)
+static void print_error_with_cursor(coda_cursor *cursor)
 {
-    int depth;
-
-    if (coda_cursor_get_depth(cursor, &depth) != 0)
-    {
-        return -1;
-    }
-    if (depth > 0)
-    {
-        coda_type_class type_class;
-        coda_cursor parent_cursor;
-        long index;
-
-        /* print parent */
-        parent_cursor = *cursor;
-        if (coda_cursor_goto_parent(&parent_cursor) != 0)
-        {
-            return -1;
-        }
-        if (depth > 1)
-        {
-            if (print_cursor_position(&parent_cursor) != 0)
-            {
-                return -1;
-            }
-        }
-
-        /* print path from parent to current cursor position */
-        if (coda_cursor_get_index(cursor, &index) != 0)
-        {
-            return -1;
-        }
-        if (index == -1)
-        {
-            /* we are pointing to the attribute record */
-            printf("@");
-        }
-        else
-        {
-            if (coda_cursor_get_type_class(&parent_cursor, &type_class) != 0)
-            {
-                return -1;
-            }
-            switch (type_class)
-            {
-                case coda_array_class:
-                    {
-                        long array_index[CODA_MAX_NUM_DIMS];
-                        long dim[CODA_MAX_NUM_DIMS];
-                        int num_dims;
-                        int i;
-
-                        /* convert to zero dimensional index if needed */
-                        if (coda_cursor_get_array_dim(&parent_cursor, &num_dims, dim) != 0)
-                        {
-                            return -1;
-                        }
-                        for (i = num_dims - 1; i >= 0; i--)
-                        {
-                            array_index[i] = index % dim[i];
-                            index /= dim[i];
-                        }
-                        printf("[");
-                        for (i = 0; i < num_dims; i++)
-                        {
-                            printf("%ld", array_index[i]);
-                            if (i < num_dims - 1)
-                            {
-                                printf(",");
-                            }
-                        }
-                        printf("]");
-                    }
-                    break;
-                case coda_record_class:
-                    {
-                        const char *name;
-                        coda_type *type;
-
-                        if (coda_cursor_get_type(&parent_cursor, &type) != 0)
-                        {
-                            return -1;
-                        }
-                        if (coda_type_get_record_field_name(type, index, &name) != 0)
-                        {
-                            return -1;
-                        }
-                        printf("/%s", name);
-                    }
-                    break;
-                default:
-                    assert(0);
-                    exit(1);
-            }
-        }
-    }
-
-    return 0;
-}
-
-static void print_error_with_cursor(coda_cursor *cursor, int err)
-{
-    printf("  ERROR: %s at ", coda_errno_to_string(err));
-    if (print_cursor_position(cursor) != 0)
-    {
-        printf("{--%s--}", coda_errno_to_string(coda_errno));
-    }
-    printf("\n");
+    coda_cursor_add_to_error_message(cursor);
+    printf("  ERROR: %s\n", coda_errno_to_string(coda_errno));
     found_errors = 1;
 }
 
@@ -201,7 +99,7 @@ static int quick_size_check(coda_product *product)
     coda_set_option_use_fast_size_expressions(0);
     if (coda_cursor_get_bit_size(&cursor, &calculated_file_size) != 0)
     {
-        print_error_with_cursor(&cursor, coda_errno);
+        print_error_with_cursor(&cursor);
     }
     coda_set_option_use_fast_size_expressions(prev_option_value);
 
@@ -233,7 +131,7 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size)
 
     if (coda_cursor_get_type_class(cursor, &type_class) != 0)
     {
-        print_error_with_cursor(cursor, coda_errno);
+        print_error_with_cursor(cursor);
         return -1;
     }
     switch (type_class)
@@ -249,14 +147,14 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size)
                 }
                 if (coda_cursor_get_num_elements(cursor, &num_elements) != 0)
                 {
-                    print_error_with_cursor(cursor, coda_errno);
+                    print_error_with_cursor(cursor);
                     return -1;
                 }
                 if (num_elements > 0)
                 {
                     if (coda_cursor_goto_first_array_element(cursor) != 0)
                     {
-                        print_error_with_cursor(cursor, coda_errno);
+                        print_error_with_cursor(cursor);
                         return -1;
                     }
                     for (i = 0; i < num_elements; i++)
@@ -282,7 +180,7 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size)
                         {
                             if (coda_cursor_goto_next_array_element(cursor) != 0)
                             {
-                                print_error_with_cursor(cursor, coda_errno);
+                                print_error_with_cursor(cursor);
                                 return -1;
                             }
                         }
@@ -302,14 +200,14 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size)
                 }
                 if (coda_cursor_get_num_elements(cursor, &num_elements) != 0)
                 {
-                    print_error_with_cursor(cursor, coda_errno);
+                    print_error_with_cursor(cursor);
                     return -1;
                 }
                 if (num_elements > 0)
                 {
                     if (coda_cursor_goto_first_record_field(cursor) != 0)
                     {
-                        print_error_with_cursor(cursor, coda_errno);
+                        print_error_with_cursor(cursor);
                         return -1;
                     }
                     for (i = 0; i < num_elements; i++)
@@ -335,7 +233,7 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size)
                         {
                             if (coda_cursor_goto_next_record_field(cursor) != 0)
                             {
-                                print_error_with_cursor(cursor, coda_errno);
+                                print_error_with_cursor(cursor);
                                 return -1;
                             }
                         }
@@ -353,13 +251,13 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size)
                 {
                     if (coda_cursor_get_bit_size(cursor, bit_size) != 0)
                     {
-                        print_error_with_cursor(cursor, coda_errno);
+                        print_error_with_cursor(cursor);
                         return -1;
                     }
                 }
                 if (coda_cursor_read_double(cursor, &value) != 0)
                 {
-                    print_error_with_cursor(cursor, coda_errno);
+                    print_error_with_cursor(cursor);
                     if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT)
                     {
                         return -1;
@@ -380,13 +278,13 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size)
                 {
                     if (coda_cursor_get_bit_size(cursor, bit_size) != 0)
                     {
-                        print_error_with_cursor(cursor, coda_errno);
+                        print_error_with_cursor(cursor);
                         return -1;
                     }
                 }
                 if (coda_cursor_get_string_length(cursor, &string_length) != 0)
                 {
-                    print_error_with_cursor(cursor, coda_errno);
+                    print_error_with_cursor(cursor);
                     if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT)
                     {
                         return -1;
@@ -397,19 +295,19 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size)
                 if (string_length < 0)
                 {
                     coda_set_error(CODA_ERROR_PRODUCT, "string length is negative");
-                    print_error_with_cursor(cursor, coda_errno);
+                    print_error_with_cursor(cursor);
                     /* if we can't determine a proper string length, don't try to read the data */
                     break;
                 }
 
                 if (coda_cursor_get_type(cursor, &type) != 0)
                 {
-                    print_error_with_cursor(cursor, coda_errno);
+                    print_error_with_cursor(cursor);
                     return -1;
                 }
                 if (coda_type_get_fixed_value(type, &fixed_value, &fixed_value_length) != 0)
                 {
-                    print_error_with_cursor(cursor, coda_errno);
+                    print_error_with_cursor(cursor);
                     return -1;
                 }
 
@@ -421,12 +319,12 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size)
                         coda_set_error(CODA_ERROR_OUT_OF_MEMORY,
                                        "out of memory (could not allocate %lu bytes) (%s:%u)", string_length + 1,
                                        __FILE__, __LINE__);
-                        print_error_with_cursor(cursor, coda_errno);
+                        print_error_with_cursor(cursor);
                         return -1;
                     }
                     if (coda_cursor_read_string(cursor, data, string_length + 1) != 0)
                     {
-                        print_error_with_cursor(cursor, coda_errno);
+                        print_error_with_cursor(cursor);
                         free(data);
                         return -1;
                     }
@@ -437,7 +335,7 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size)
                     if (string_length != fixed_value_length)
                     {
                         coda_set_error(CODA_ERROR_PRODUCT, "string data does not match fixed value (length differs)");
-                        print_error_with_cursor(cursor, coda_errno);
+                        print_error_with_cursor(cursor);
                         /* we do not return -1; we can just continue checking the rest of the file */
                     }
                     else if (string_length > 0)
@@ -445,7 +343,7 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size)
                         if (memcmp(data, fixed_value, fixed_value_length) != 0)
                         {
                             coda_set_error(CODA_ERROR_PRODUCT, "string data does not match fixed value");
-                            print_error_with_cursor(cursor, coda_errno);
+                            print_error_with_cursor(cursor);
                             /* we do not return -1; we can just continue checking the rest of the file */
                         }
                     }
@@ -469,7 +367,7 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size)
                 {
                     if (coda_cursor_get_bit_size(cursor, bit_size) != 0)
                     {
-                        print_error_with_cursor(cursor, coda_errno);
+                        print_error_with_cursor(cursor);
                         return -1;
                     }
                     local_bit_size = *bit_size;
@@ -478,7 +376,7 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size)
                 {
                     if (coda_cursor_get_bit_size(cursor, &local_bit_size) != 0)
                     {
-                        print_error_with_cursor(cursor, coda_errno);
+                        print_error_with_cursor(cursor);
                         if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT)
                         {
                             return -1;
@@ -490,7 +388,7 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size)
                 if (local_bit_size < 0)
                 {
                     coda_set_error(CODA_ERROR_PRODUCT, "bit size is negative");
-                    print_error_with_cursor(cursor, coda_errno);
+                    print_error_with_cursor(cursor);
                     /* if we can't determine a proper size, don't try to read the data */
                     break;
                 }
@@ -498,12 +396,12 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size)
 
                 if (coda_cursor_get_type(cursor, &type) != 0)
                 {
-                    print_error_with_cursor(cursor, coda_errno);
+                    print_error_with_cursor(cursor);
                     return -1;
                 }
                 if (coda_type_get_fixed_value(type, &fixed_value, &fixed_value_length) != 0)
                 {
-                    print_error_with_cursor(cursor, coda_errno);
+                    print_error_with_cursor(cursor);
                     return -1;
                 }
                 if (fixed_value != NULL)
@@ -511,7 +409,7 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size)
                     if (byte_size != fixed_value_length)
                     {
                         coda_set_error(CODA_ERROR_PRODUCT, "data does not match fixed value (length differs)");
-                        print_error_with_cursor(cursor, coda_errno);
+                        print_error_with_cursor(cursor);
                         /* we do not return -1; we can just continue checking the rest of the file */
                     }
                     else if (fixed_value_length > 0)
@@ -524,19 +422,19 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size)
                             coda_set_error(CODA_ERROR_OUT_OF_MEMORY,
                                            "out of memory (could not allocate %lu bytes) (%s:%u)", (long)byte_size,
                                            __FILE__, __LINE__);
-                            print_error_with_cursor(cursor, coda_errno);
+                            print_error_with_cursor(cursor);
                             return -1;
                         }
                         if (coda_cursor_read_bits(cursor, data, 0, local_bit_size) != 0)
                         {
-                            print_error_with_cursor(cursor, coda_errno);
+                            print_error_with_cursor(cursor);
                             free(data);
                             return -1;
                         }
                         if (memcmp(data, fixed_value, fixed_value_length) != 0)
                         {
                             coda_set_error(CODA_ERROR_PRODUCT, "data does not match fixed value");
-                            print_error_with_cursor(cursor, coda_errno);
+                            print_error_with_cursor(cursor);
                             /* we do not return -1; we can just continue checking the rest of the file */
                         }
                         free(data);
@@ -550,7 +448,7 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size)
 
                 if (coda_cursor_get_special_type(cursor, &special_type) != 0)
                 {
-                    print_error_with_cursor(cursor, coda_errno);
+                    print_error_with_cursor(cursor);
                     return -1;
                 }
 
@@ -561,7 +459,7 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size)
                     /* try to read the time value as a double */
                     if (coda_cursor_read_double(cursor, &value) != 0)
                     {
-                        print_error_with_cursor(cursor, coda_errno);
+                        print_error_with_cursor(cursor);
                         if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT)
                         {
                             return -1;
@@ -574,7 +472,7 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size)
                 {
                     if (coda_cursor_use_base_type_of_special_type(cursor) != 0)
                     {
-                        print_error_with_cursor(cursor, coda_errno);
+                        print_error_with_cursor(cursor);
                         return -1;
                     }
                     if (check_data(cursor, bit_size) != 0)
@@ -597,12 +495,12 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size)
 
         if (coda_cursor_goto_attributes(cursor) != 0)
         {
-            print_error_with_cursor(cursor, coda_errno);
+            print_error_with_cursor(cursor);
             return -1;
         }
         if (coda_cursor_get_num_elements(cursor, &num_elements) != 0)
         {
-            print_error_with_cursor(cursor, coda_errno);
+            print_error_with_cursor(cursor);
             return -1;
         }
         /* we check for empty attribute lists here in order to prevent endless recursions of attributes of attributes */

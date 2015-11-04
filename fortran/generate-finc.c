@@ -184,7 +184,7 @@ static void print_constants(void)
     PRINT_CONSTANT(coda_format_grib1, i);
     PRINT_CONSTANT(coda_format_grib2, i);
     PRINT_CONSTANT(coda_format_rinex, i);
-    PRINT_CONSTANT(coda_format_sp3c, i);
+    PRINT_CONSTANT(coda_format_sp3, i);
 
     PRINT_EMPTY;
 
@@ -418,6 +418,19 @@ static void print_function_definitions(void)
     PRINT_FUNCDEF(coda_cursor_read_complex_double_pairs_array, int);
     PRINT_FUNCDEF(coda_cursor_read_complex_double_split, int);
     PRINT_FUNCDEF(coda_cursor_read_complex_double_split_array, int);
+
+    PRINT_EMPTY;
+
+    PRINT_FUNCDEF(coda_expression_get_type_name, void);
+    PRINT_FUNCDEF(coda_expression_from_string, int);
+    PRINT_FUNCDEF(coda_expression_delete, void);
+    PRINT_FUNCDEF(coda_expression_get_type, int);
+    PRINT_FUNCDEF(coda_expression_is_constant, int);
+    PRINT_FUNCDEF(coda_expression_eval_bool, int);
+    PRINT_FUNCDEF(coda_expression_eval_integer, int);
+    PRINT_FUNCDEF(coda_expression_eval_float, int);
+    PRINT_FUNCDEF(coda_expression_eval_string, int);
+    PRINT_FUNCDEF(coda_expression_eval_node, int);
 }
 
 int main()

@@ -1207,7 +1207,7 @@ static int data_dictionary_add_detection_rule(coda_detection_rule *detection_rul
         case coda_format_grib1:
         case coda_format_grib2:
         case coda_format_rinex:
-        case coda_format_sp3c:
+        case coda_format_sp3:
             assert(0);
             exit(1);
     }

@@ -40,8 +40,9 @@
 #include "coda-hdf5.h"
 #endif
 #include "coda-type.h"
-
-/** \file */
+#ifdef CODA_USE_QIAP
+#include "coda-qiap.h"
+#endif
 
 typedef int (*read_function) (const coda_cursor *, void *);
 
@@ -484,6 +485,15 @@ static int read_split_array(const coda_cursor *cursor, read_function read_basic_
 
 static int read_int8(const coda_cursor *cursor, int8_t *dst)
 {
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_int8(cursor, dst);
+    if (result != 0)
+    {
+        return (result < 0 ? -1 : 0);
+    }
+#endif
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
@@ -520,6 +530,15 @@ static int read_int8(const coda_cursor *cursor, int8_t *dst)
 
 static int read_uint8(const coda_cursor *cursor, uint8_t *dst)
 {
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_uint8(cursor, dst);
+    if (result != 0)
+    {
+        return (result < 0 ? -1 : 0);
+    }
+#endif
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
@@ -555,6 +574,15 @@ static int read_uint8(const coda_cursor *cursor, uint8_t *dst)
 
 static int read_int16(const coda_cursor *cursor, int16_t *dst)
 {
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_int16(cursor, dst);
+    if (result != 0)
+    {
+        return (result < 0 ? -1 : 0);
+    }
+#endif
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
@@ -582,15 +610,24 @@ static int read_int16(const coda_cursor *cursor, int16_t *dst)
         case coda_backend_netcdf:
             return coda_netcdf_cursor_read_int16(cursor, dst);
         case coda_backend_grib:
-            break;
+            assert(0);
+            exit(1);
     }
 
-    assert(0);
-    exit(1);
+    return 0;
 }
 
 static int read_uint16(const coda_cursor *cursor, uint16_t *dst)
 {
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_uint16(cursor, dst);
+    if (result != 0)
+    {
+        return (result < 0 ? -1 : 0);
+    }
+#endif
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
@@ -626,6 +663,15 @@ static int read_uint16(const coda_cursor *cursor, uint16_t *dst)
 
 static int read_int32(const coda_cursor *cursor, int32_t *dst)
 {
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_int32(cursor, dst);
+    if (result != 0)
+    {
+        return (result < 0 ? -1 : 0);
+    }
+#endif
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
@@ -634,6 +680,7 @@ static int read_int32(const coda_cursor *cursor, int32_t *dst)
             return coda_bin_cursor_read_int32(cursor, dst);
         case coda_backend_memory:
             return coda_mem_cursor_read_int32(cursor, dst);
+            break;
         case coda_backend_xml:
             return coda_xml_cursor_read_int32(cursor, dst);
         case coda_backend_hdf4:
@@ -653,15 +700,24 @@ static int read_int32(const coda_cursor *cursor, int32_t *dst)
         case coda_backend_netcdf:
             return coda_netcdf_cursor_read_int32(cursor, dst);
         case coda_backend_grib:
-            break;
+            assert(0);
+            exit(1);
     }
 
-    assert(0);
-    exit(1);
+    return 0;
 }
 
 static int read_uint32(const coda_cursor *cursor, uint32_t *dst)
 {
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_uint32(cursor, dst);
+    if (result != 0)
+    {
+        return (result < 0 ? -1 : 0);
+    }
+#endif
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
@@ -697,6 +753,15 @@ static int read_uint32(const coda_cursor *cursor, uint32_t *dst)
 
 static int read_int64(const coda_cursor *cursor, int64_t *dst)
 {
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_int64(cursor, dst);
+    if (result != 0)
+    {
+        return (result < 0 ? -1 : 0);
+    }
+#endif
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
@@ -732,6 +797,15 @@ static int read_int64(const coda_cursor *cursor, int64_t *dst)
 
 static int read_uint64(const coda_cursor *cursor, uint64_t *dst)
 {
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_uint64(cursor, dst);
+    if (result != 0)
+    {
+        return (result < 0 ? -1 : 0);
+    }
+#endif
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
@@ -767,6 +841,15 @@ static int read_uint64(const coda_cursor *cursor, uint64_t *dst)
 
 static int read_float(const coda_cursor *cursor, float *dst)
 {
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_float(cursor, dst);
+    if (result != 0)
+    {
+        return (result < 0 ? -1 : 0);
+    }
+#endif
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
@@ -803,6 +886,15 @@ static int read_float(const coda_cursor *cursor, float *dst)
 
 static int read_double(const coda_cursor *cursor, double *dst)
 {
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_double(cursor, dst);
+    if (result != 0)
+    {
+        return (result < 0 ? -1 : 0);
+    }
+#endif
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
@@ -839,6 +931,15 @@ static int read_double(const coda_cursor *cursor, double *dst)
 
 static int read_char(const coda_cursor *cursor, char *dst)
 {
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_char(cursor, dst);
+    if (result != 0)
+    {
+        return (result < 0 ? -1 : 0);
+    }
+#endif
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
@@ -876,6 +977,15 @@ static int read_char(const coda_cursor *cursor, char *dst)
 
 static int read_string(const coda_cursor *cursor, char *dst, long dst_size)
 {
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_string(cursor, dst, dst_size);
+    if (result != 0)
+    {
+        return (result < 0 ? -1 : 0);
+    }
+#endif
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
@@ -913,6 +1023,22 @@ static int read_string(const coda_cursor *cursor, char *dst, long dst_size)
 
 static int read_int8_array(const coda_cursor *cursor, int8_t *dst, coda_array_ordering array_ordering)
 {
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_int8_array(cursor, dst);
+    if (result < 0)
+    {
+        if (result == 1 && array_ordering != coda_array_ordering_c)
+        {
+            if (transpose_array(cursor, dst, sizeof(int8_t)) != 0)
+            {
+                return -1;
+            }
+        }
+        return (result == 1 ? 0 : -1);
+    }
+#endif
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
@@ -978,6 +1104,22 @@ static int read_int8_array(const coda_cursor *cursor, int8_t *dst, coda_array_or
 
 static int read_uint8_array(const coda_cursor *cursor, uint8_t *dst, coda_array_ordering array_ordering)
 {
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_uint8_array(cursor, dst);
+    if (result < 0)
+    {
+        if (result == 1 && array_ordering != coda_array_ordering_c)
+        {
+            if (transpose_array(cursor, dst, sizeof(uint8_t)) != 0)
+            {
+                return -1;
+            }
+        }
+        return (result == 1 ? 0 : -1);
+    }
+#endif
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
@@ -1038,6 +1180,22 @@ static int read_uint8_array(const coda_cursor *cursor, uint8_t *dst, coda_array_
 
 static int read_int16_array(const coda_cursor *cursor, int16_t *dst, coda_array_ordering array_ordering)
 {
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_int16_array(cursor, dst);
+    if (result < 0)
+    {
+        if (result == 1 && array_ordering != coda_array_ordering_c)
+        {
+            if (transpose_array(cursor, dst, sizeof(int16_t)) != 0)
+            {
+                return -1;
+            }
+        }
+        return (result == 1 ? 0 : -1);
+    }
+#endif
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
@@ -1103,6 +1261,22 @@ static int read_int16_array(const coda_cursor *cursor, int16_t *dst, coda_array_
 
 static int read_uint16_array(const coda_cursor *cursor, uint16_t *dst, coda_array_ordering array_ordering)
 {
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_uint16_array(cursor, dst);
+    if (result < 0)
+    {
+        if (result == 1 && array_ordering != coda_array_ordering_c)
+        {
+            if (transpose_array(cursor, dst, sizeof(uint16_t)) != 0)
+            {
+                return -1;
+            }
+        }
+        return (result == 1 ? 0 : -1);
+    }
+#endif
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
@@ -1163,6 +1337,22 @@ static int read_uint16_array(const coda_cursor *cursor, uint16_t *dst, coda_arra
 
 static int read_int32_array(const coda_cursor *cursor, int32_t *dst, coda_array_ordering array_ordering)
 {
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_int32_array(cursor, dst);
+    if (result < 0)
+    {
+        if (result == 1 && array_ordering != coda_array_ordering_c)
+        {
+            if (transpose_array(cursor, dst, sizeof(int32_t)) != 0)
+            {
+                return -1;
+            }
+        }
+        return (result == 1 ? 0 : -1);
+    }
+#endif
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
@@ -1228,6 +1418,22 @@ static int read_int32_array(const coda_cursor *cursor, int32_t *dst, coda_array_
 
 static int read_uint32_array(const coda_cursor *cursor, uint32_t *dst, coda_array_ordering array_ordering)
 {
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_uint32_array(cursor, dst);
+    if (result < 0)
+    {
+        if (result == 1 && array_ordering != coda_array_ordering_c)
+        {
+            if (transpose_array(cursor, dst, sizeof(uint32_t)) != 0)
+            {
+                return -1;
+            }
+        }
+        return (result == 1 ? 0 : -1);
+    }
+#endif
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
@@ -1288,6 +1494,22 @@ static int read_uint32_array(const coda_cursor *cursor, uint32_t *dst, coda_arra
 
 static int read_int64_array(const coda_cursor *cursor, int64_t *dst, coda_array_ordering array_ordering)
 {
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_int64_array(cursor, dst);
+    if (result < 0)
+    {
+        if (result == 1 && array_ordering != coda_array_ordering_c)
+        {
+            if (transpose_array(cursor, dst, sizeof(int64_t)) != 0)
+            {
+                return -1;
+            }
+        }
+        return (result == 1 ? 0 : -1);
+    }
+#endif
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
@@ -1348,6 +1570,22 @@ static int read_int64_array(const coda_cursor *cursor, int64_t *dst, coda_array_
 
 static int read_uint64_array(const coda_cursor *cursor, uint64_t *dst, coda_array_ordering array_ordering)
 {
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_uint64_array(cursor, dst);
+    if (result < 0)
+    {
+        if (result == 1 && array_ordering != coda_array_ordering_c)
+        {
+            if (transpose_array(cursor, dst, sizeof(uint64_t)) != 0)
+            {
+                return -1;
+            }
+        }
+        return (result == 1 ? 0 : -1);
+    }
+#endif
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
@@ -1408,6 +1646,22 @@ static int read_uint64_array(const coda_cursor *cursor, uint64_t *dst, coda_arra
 
 static int read_float_array(const coda_cursor *cursor, float *dst, coda_array_ordering array_ordering)
 {
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_float_array(cursor, dst);
+    if (result < 0)
+    {
+        if (result == 1 && array_ordering != coda_array_ordering_c)
+        {
+            if (transpose_array(cursor, dst, sizeof(float)) != 0)
+            {
+                return -1;
+            }
+        }
+        return (result == 1 ? 0 : -1);
+    }
+#endif
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
@@ -1476,6 +1730,22 @@ static int read_float_array(const coda_cursor *cursor, float *dst, coda_array_or
 
 static int read_double_array(const coda_cursor *cursor, double *dst, coda_array_ordering array_ordering)
 {
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_double_array(cursor, dst);
+    if (result < 0)
+    {
+        if (result == 1 && array_ordering != coda_array_ordering_c)
+        {
+            if (transpose_array(cursor, dst, sizeof(double)) != 0)
+            {
+                return -1;
+            }
+        }
+        return (result == 1 ? 0 : -1);
+    }
+#endif
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
@@ -1541,6 +1811,22 @@ static int read_double_array(const coda_cursor *cursor, double *dst, coda_array_
 
 static int read_char_array(const coda_cursor *cursor, char *dst, coda_array_ordering array_ordering)
 {
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_char_array(cursor, dst);
+    if (result < 0)
+    {
+        if (result == 1 && array_ordering != coda_array_ordering_c)
+        {
+            if (transpose_array(cursor, dst, sizeof(char)) != 0)
+            {
+                return -1;
+            }
+        }
+        return (result == 1 ? 0 : -1);
+    }
+#endif
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
@@ -2743,7 +3029,7 @@ LIBCODA_API int coda_cursor_read_bytes(const coda_cursor *cursor, uint8_t *dst, 
 }
 
 /** Retrieve a data array as type \c int8 from the product file. The values are stored in \a dst.
- * The cursor must point to an array with a basic type that has one of the following read types to succeed:
+ * The cursor must point to an array with a base type that has one of the following read types to succeed:
  * - \c int8
  *
  * For all other data types the function will return an error.
@@ -2801,7 +3087,7 @@ LIBCODA_API int coda_cursor_read_int8_array(const coda_cursor *cursor, int8_t *d
 }
 
 /** Retrieve a data array as type \c uint8 from the product file. The values are stored in \a dst.
- * The cursor must point to an array with a basic type that has one of the following read types to succeed:
+ * The cursor must point to an array with a base type that has one of the following read types to succeed:
  * - \c uint8
  *
  * For all other data types the function will return an error.
@@ -2860,7 +3146,7 @@ LIBCODA_API int coda_cursor_read_uint8_array(const coda_cursor *cursor, uint8_t 
 }
 
 /** Retrieve a data array as type \c int16 from the product file. The values are stored in \a dst.
- * The cursor must point to an array with a basic type that has one of the following read types to succeed:
+ * The cursor must point to an array with a base type that has one of the following read types to succeed:
  * - \c int8
  * - \c uint8
  * - \c int16
@@ -2951,7 +3237,7 @@ LIBCODA_API int coda_cursor_read_int16_array(const coda_cursor *cursor, int16_t 
 }
 
 /** Retrieve a data array as type \c uint16 from the product file. The values are stored in \a dst.
- * The cursor must point to an array with a basic type that has one of the following read types to succeed:
+ * The cursor must point to an array with a base type that has one of the following read types to succeed:
  * - \c uint8
  * - \c uint16
  *
@@ -3027,7 +3313,7 @@ LIBCODA_API int coda_cursor_read_uint16_array(const coda_cursor *cursor, uint16_
 }
 
 /** Retrieve a data array as type \c int32 from the product file. The values are stored in \a dst.
- * The cursor must point to an array with a basic type that has one of the following read types to succeed:
+ * The cursor must point to an array with a base type that has one of the following read types to succeed:
  * - \c int8
  * - \c uint8
  * - \c int16
@@ -3148,7 +3434,7 @@ LIBCODA_API int coda_cursor_read_int32_array(const coda_cursor *cursor, int32_t 
 }
 
 /** Retrieve a data array as type \c uint32 from the product file. The values are stored in \a dst.
- * The cursor must point to an array with a basic type that has one of the following read types to succeed:
+ * The cursor must point to an array with a base type that has one of the following read types to succeed:
  * - \c uint8
  * - \c uint16
  * - \c uint32
@@ -3239,7 +3525,7 @@ LIBCODA_API int coda_cursor_read_uint32_array(const coda_cursor *cursor, uint32_
 }
 
 /** Retrieve a data array as type \c int64 from the product file. The values are stored in \a dst.
- * The cursor must point to an array with a basic type that has one of the following read types to succeed:
+ * The cursor must point to an array with a base type that has one of the following read types to succeed:
  * - \c int8
  * - \c uint8
  * - \c int16
@@ -3390,7 +3676,7 @@ LIBCODA_API int coda_cursor_read_int64_array(const coda_cursor *cursor, int64_t 
 }
 
 /** Retrieve a data array as type \c uint64 from the product file. The values are stored in \a dst.
- * The cursor must point to an array with a basic type that has one of the following read types to succeed:
+ * The cursor must point to an array with a base type that has one of the following read types to succeed:
  * - \c uint8
  * - \c uint16
  * - \c uint32
@@ -3496,7 +3782,7 @@ LIBCODA_API int coda_cursor_read_uint64_array(const coda_cursor *cursor, uint64_
 }
 
 /** Retrieve a data array as type \c float from the product file. The values are stored in \a dst.
- * The cursor must point to an array with a basic type that has one of the following read types to succeed:
+ * The cursor must point to an array with a base type that has one of the following read types to succeed:
  * - \c int8
  * - \c uint8
  * - \c int16
@@ -3759,7 +4045,7 @@ LIBCODA_API int coda_cursor_read_float_array(const coda_cursor *cursor, float *d
 }
 
 /** Retrieve a data array as type \c double from the product file. The values are stored in \a dst.
- * The cursor must point to an array with a basic type that has one of the following read types to succeed:
+ * The cursor must point to an array with a base type that has one of the following read types to succeed:
  * - \c int8
  * - \c uint8
  * - \c int16
@@ -3973,7 +4259,7 @@ LIBCODA_API int coda_cursor_read_double_array(const coda_cursor *cursor, double 
 }
 
 /** Retrieve a data array as type \c char from the product file. The values are stored in \a dst.
- * The cursor must point to an array with a basic type that has read type \c char to succeed.
+ * The cursor must point to an array with a base type that has read type \c char to succeed.
  * For all other data types the function will return an error.
  * \param cursor Pointer to a CODA cursor.
  * \param dst Pointer to the variable where the values read from the product will be stored.

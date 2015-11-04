@@ -435,7 +435,10 @@ POSIX_SCALAR_OUTPUT_HELPER(uint64_t, PyLong_FromUnsignedLongLong)
                            SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail($argnum)) SWIG_fail;
 
-    if (coda_cursor_get_string_length($1, &$3) != 0) SWIG_fail;
+    if (coda_cursor_get_string_length($1, &$3) != 0)
+    {
+        return PyErr_Format(codacError,"coda_cursor_get_string_length(): %s", coda_errno_to_string(coda_errno));
+    }
     $3 = $3 + 1;
 
     $2 = malloc($3 * sizeof(char));
@@ -720,6 +723,7 @@ const char *coda_type_get_class_name(coda_type_class type_class);
 const char *coda_type_get_native_type_name(coda_native_type native_type);
 const char *coda_type_get_special_type_name(coda_special_type special_type);
 long coda_c_index_to_fortran_index(int num_dims, const long dim[], long index);
+const char *coda_expression_get_type_name(coda_expression_type type);
 void coda_expression_delete(coda_expression *expr);
 %ignore coda_done;
 %ignore coda_NaN;
@@ -730,6 +734,7 @@ void coda_expression_delete(coda_expression *expr);
 %ignore coda_type_get_native_type_name;
 %ignore coda_type_get_special_type_name;
 %ignore coda_c_index_to_fortran_index;
+%ignore coda_expression_get_type_name;
 %ignore coda_expression_delete;
 
 /*

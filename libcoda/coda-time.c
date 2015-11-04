@@ -31,8 +31,6 @@
 #include <unistd.h>
 #endif
 
-/** \file */
-
 /** \defgroup coda_time CODA Time
  * The CODA Time module contains all functions and procedures related to time handling.
  *

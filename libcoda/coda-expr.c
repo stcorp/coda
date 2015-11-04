@@ -31,8 +31,6 @@
 
 #include "pcre.h"
 
-/** \file */
-
 /** \defgroup coda_expression CODA Expression
  * CODA comes with a powerful expression language that can be used to perform calculations based on product data.
  * This expression system is used internally with the product format definition (codadef) files that CODA uses to
@@ -3349,6 +3347,33 @@ int coda_expression_eval_void(const coda_expression *expr, const coda_cursor *cu
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
+
+
+/** Returns the name of an expression type.
+ * \param type CODA expression type
+ * \return if the type is known a string containing the name of the type, otherwise the string "unknown".
+ */
+LIBCODA_API const char *coda_expression_get_type_name(coda_expression_type type)
+{
+    switch (type)
+    {
+        case coda_expression_boolean:
+            return "boolean";
+        case coda_expression_integer:
+            return "integer";
+        case coda_expression_float:
+            return "float";
+        case coda_expression_string:
+            return "string";
+        case coda_expression_node:
+            return "node";
+        case coda_expression_void:
+            return "void";
+    }
+
+    return "unknown";
+}
+
 
 /** Delete the CODA expression object.
  * \param expr A CODA expression object

@@ -31,8 +31,6 @@
 #include <unistd.h>
 #endif
 
-/** \file */
-
 const char *coda_element_name_from_xml_name(const char *xml_name)
 {
     char *element_name;

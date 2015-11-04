@@ -57,6 +57,24 @@ static unsigned long strcasehash(const char *str)
     return hash;
 }
 
+static unsigned long strncasehash(const char *str, int length)
+{
+    unsigned char *c = (unsigned char *)str;
+    unsigned long hash = 0;
+    int n = 0;
+
+    while (n < length && *c != '\0')
+    {
+        unsigned char lc = *c++;
+
+        /* we use hash = hash * 1000003 ^ char */
+        hash = (hash * 0xF4243) ^ (lc + 32 * (lc >= 'A' && lc <= 'Z'));
+        n++;
+    }
+
+    return hash;
+}
+
 static unsigned long strhash(const char *str)
 {
     unsigned char *c = (unsigned char *)str;
@@ -66,6 +84,22 @@ static unsigned long strhash(const char *str)
     {
         /* we use hash = hash * 1000003 ^ char */
         hash = (hash * 0xF4243) ^ (unsigned char)(*c++);
+    }
+
+    return hash;
+}
+
+static unsigned long strnhash(const char *str, int length)
+{
+    unsigned char *c = (unsigned char *)str;
+    unsigned long hash = 0;
+    int n = 0;
+
+    while (n < length && *c != '\0')
+    {
+        /* we use hash = hash * 1000003 ^ char */
+        hash = (hash * 0xF4243) ^ (unsigned char)(*c++);
+        n++;
     }
 
     return hash;
@@ -231,6 +265,39 @@ long hashtable_get_index_from_name(hashtable *table, const char *name)
     while (table->count[i])
     {
         if ((table->case_sensitive ? strcmp(name, table->name[i]) : strcasecmp(name, table->name[i])) == 0)
+        {
+            return table->index[i];
+        }
+        if (!step)
+        {
+            step = (unsigned char)((((hash & ~mask) >> (table->power - 1)) & (mask >> 2)) | 1);
+        }
+        i += (i < step ? table->size : 0) - step;
+    }
+
+    return -1;
+}
+
+long hashtable_get_index_from_name_n(hashtable *table, const char *name, int name_length)
+{
+    unsigned long mask;
+    unsigned long hash;
+    unsigned char step;
+    long i;
+
+    if (table->count == NULL)
+    {
+        return -1;
+    }
+
+    hash = (table->case_sensitive ? strnhash(name, name_length) : strncasehash(name, name_length));
+    mask = (unsigned long)table->size - 1;
+    i = hash & mask;
+    step = 0;
+    while (table->count[i])
+    {
+        if ((table->case_sensitive ?
+             strncmp(name, table->name[i], name_length) : strncasecmp(name, table->name[i], name_length)) == 0)
         {
             return table->index[i];
         }

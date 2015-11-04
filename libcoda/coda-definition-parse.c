@@ -458,9 +458,9 @@ static int format_from_string(const char *str, coda_format *format)
     {
         *format = coda_format_rinex;
     }
-    else if (strcmp(str, "sp3c") == 0)
+    else if (strcmp(str, "sp3") == 0)
     {
-        *format = coda_format_sp3c;
+        *format = coda_format_sp3;
     }
     else
     {
@@ -3352,6 +3352,7 @@ int coda_read_definitions(const char *definition_path)
                             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) "
                                            "(%s:%u)", (long)strlen(path_component) + 1 + filename_length + 1, __FILE__,
                                            __LINE__);
+                            closedir(dirp);
                             free(path);
                             return -1;
                         }
@@ -3362,6 +3363,7 @@ int coda_read_definitions(const char *definition_path)
                             coda_set_error(CODA_ERROR_DATA_DEFINITION, "could not access file '%s' (%s)", filepath,
                                            strerror(errno));
                             free(filepath);
+                            closedir(dirp);
                             free(path);
                             return -1;
                         }
@@ -3370,6 +3372,7 @@ int coda_read_definitions(const char *definition_path)
                             if (read_definition_file(filepath) != 0)
                             {
                                 free(filepath);
+                                closedir(dirp);
                                 free(path);
                                 return -1;
                             }

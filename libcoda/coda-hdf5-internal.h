@@ -154,6 +154,9 @@ struct coda_hdf5_product_struct
     const coda_product_definition *product_definition;
     long *product_variable_size;
     int64_t **product_variable;
+#if CODA_USE_QIAP
+    void *qiap_info;
+#endif
 
     hid_t file_id;
     hsize_t num_objects;

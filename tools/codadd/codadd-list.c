@@ -43,6 +43,8 @@ extern int show_description;
 extern int show_quotes;
 extern int show_hidden;
 extern int show_expressions;
+extern int show_parent_types;
+extern int show_attributes;
 extern int use_special_types;
 
 
@@ -788,6 +790,7 @@ static void print_path(int depth)
 static void print_type(coda_type *type, int depth)
 {
     coda_type_class type_class;
+    int print_details = 0;
 
     if (depth >= CODA_CURSOR_MAXDEPTH)
     {
@@ -799,6 +802,86 @@ static void print_type(coda_type *type, int depth)
     typestack[depth] = type;
 
     coda_type_get_class(type, &type_class);
+    if (type_class == coda_record_class || type_class == coda_array_class)
+    {
+        print_details = show_parent_types;
+    }
+    else if (type_class == coda_special_class)
+    {
+        print_details = use_special_types;
+    }
+    else
+    {
+        print_details = 1;
+    }
+
+    if (print_details)
+    {
+        print_path(depth);
+        if (show_type)
+        {
+            coda_native_type read_type;
+
+            coda_type_get_read_type(type, &read_type);
+            printf("%s%s", ascii_col_sep, coda_type_get_native_type_name(read_type));
+        }
+        if (show_format)
+        {
+            coda_format format;
+
+            coda_type_get_format(type, &format);
+            printf("%s%s", ascii_col_sep, coda_type_get_format_name(format));
+        }
+        if (show_unit)
+        {
+            const char *unit;
+
+            printf("%s", ascii_col_sep);
+            coda_type_get_unit(type, &unit);
+            if (unit != NULL)
+            {
+                if (show_quotes)
+                {
+                    printf("\"");
+                }
+                printf("%s", unit);
+                if (show_quotes)
+                {
+                    printf("\"");
+                }
+            }
+        }
+        if (show_description)
+        {
+            const char *description;
+
+            printf("%s", ascii_col_sep);
+            coda_type_get_description(type, &description);
+            if (description != NULL)
+            {
+                if (show_quotes)
+                {
+                    printf("\"");
+                }
+                printf("%s", description);
+                if (show_quotes)
+                {
+                    printf("\"");
+                }
+            }
+        }
+        printf("\n");
+    }
+
+    if (show_attributes)
+    {
+        coda_type *attributes;
+
+        coda_type_get_attributes(type, &attributes);
+        indexstack[depth + 1] = -1;
+        print_type(attributes, depth + 1);
+    }
+
     switch (type_class)
     {
         case coda_record_class:
@@ -849,63 +932,8 @@ static void print_type(coda_type *type, int depth)
             }
             /* otherwise fall through to default */
         default:
-            print_path(depth);
-            if (show_type)
-            {
-                coda_native_type read_type;
-
-                coda_type_get_read_type(type, &read_type);
-                printf("%s%s", ascii_col_sep, coda_type_get_native_type_name(read_type));
-            }
-            if (show_format)
-            {
-                coda_format format;
-
-                coda_type_get_format(type, &format);
-                printf("%s%s", ascii_col_sep, coda_type_get_format_name(format));
-            }
-            if (show_unit)
-            {
-                const char *unit;
-
-                printf("%s", ascii_col_sep);
-                coda_type_get_unit(type, &unit);
-                if (unit != NULL)
-                {
-                    if (show_quotes)
-                    {
-                        printf("\"");
-                    }
-                    printf("%s", unit);
-                    if (show_quotes)
-                    {
-                        printf("\"");
-                    }
-                }
-            }
-            if (show_description)
-            {
-                const char *description;
-
-                printf("%s", ascii_col_sep);
-                coda_type_get_description(type, &description);
-                if (description != NULL)
-                {
-                    if (show_quotes)
-                    {
-                        printf("\"");
-                    }
-                    printf("%s", description);
-                    if (show_quotes)
-                    {
-                        printf("\"");
-                    }
-                }
-            }
-            printf("\n");
             break;
     }
-
 }
 
 static void generate_field_list(const char *product_class_name, const char *product_type_name, int version)

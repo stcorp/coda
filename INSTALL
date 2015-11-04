@@ -34,9 +34,10 @@ What you will need
     The binary package, which is only available for Windows, contains pre-built
     versions of everything from the source distribution (without the sources)
     and all documentation and examples. For the IDL and MATLAB interfaces,
-    pre-built versions are included for IDL 5.4 - 7.1 for Windows, and MATLAB
-    R13 (v6.5) - R2009b (v7.9) for Windows. For the Python interface, a
-    pre-built version for Python 2.6 is included. All CODA interfaces have been
+    pre-built versions are included for IDL 6.3 and higher for Windows, and
+    MATLAB R2007b (v7.5) and higher for Windows. For the Python interface, a
+    pre-built version for Python 2.6 is included. For the Java interface, a
+    pre-built version for JDK 6.0 is included. All CODA interfaces have been
     compiled with HDF4 and HDF5 support built in.
 
     If you do not have the CODA package you need, you can download it from the
@@ -48,15 +49,15 @@ What you will need
     Fortran 90 compiler.
 
   - If you plan on using the IDL interface you need a recent version of IDL :
-    The IDL interface has been verified to work with IDL version 5.2 and
+    The IDL interface has been verified to work with IDL version 6.3 and
     higher, but earlier versions may also work.
 
   - If you plan on using the MATLAB interface you need a recent version of
     MATLAB : The MATLAB interface will only work with MATLAB version 5.3 (R11)
     and higher.
 
-  - If you plan on using the Python interface you need Python version 2.4 and
-    the Python 'numpy' package (version 1.2 or higher).
+  - If you plan on using the Python interface you need Python version 2.4 or
+    higher (but not 3.x) and the Python 'numpy' package (version 1.2 or higher).
 
   - If you plan on using the Java interface you need JDK/JRE version 6.
 
@@ -66,7 +67,7 @@ What you will need
   - A C compiler : Most Unix platforms come with their own C compiler so this
     should not be a problem. For Mac OS X you should make sure you have
     installed the Developer Tools. For Windows you need Microsoft Visual C++
-    6.0 or 7.x.
+    2008 (v9.0).
 
   - If you want to use the HDF4 features of CODA then you will need to have a
     recent version of HDF4 installed (for building the source package on
@@ -212,11 +213,11 @@ a Unix-based platform :
     You should now call the configure script with the options that are
     appropriate for you. For instance, if you want to install CODA in the
     default location (/usr/local) and if you want to build the IDL interface
-    (but not the MATLAB interface) with IDL installed in /usr/local/rsi/idl and
+    (but not the MATLAB interface) with IDL installed in /usr/local/itt/idl and
     if you don't need to have the HDF4 and HDF5 capability of CODA then your
     invocation of configure would be :
 
-    % ./configure --enable-idl IDL=/usr/local/rsi/idl
+    % ./configure --enable-idl IDL=/usr/local/itt/idl
 
  4) If this completes successfully, you are now able to build the library by
     executing the `make' command :
@@ -266,10 +267,15 @@ your system administrator). The variable should be set to "<IDL_DEFAULT>"
 appended with the CODA DLM directory. If, for instance, you have installed CODA
 in /usr/local then you should set the IDL_DLM_PATH environment variable to
 "<IDL_DEFAULT>:/usr/local/lib/coda/idl".
-Note that you should ideally not use the IDL 'pref_set' function to set
-IDL_DLM_PATH (the CODA DLM file will load, but CODA will not be able to find
-its coda format definition files this way). The IDL_DLM_PATH really has to be
-an environment variable.
+Note that you should ideally not use the IDL 'pref_set' function to set the
+IDL_DLM_PATH. The CODA DLM file will still load, but CODA will not be able to
+find its coda format definition files this way. You can work around this by
+setting an explicit path to your coda definition files directory instead of
+having CODA automatically determine this location based on the IDL_DLM_PATH.
+This is done by setting the CODA_DEFINITION environment variable. This can be
+done outside IDL by setting the environment variable globally, but you can also
+do this inside IDL before you call any CODA functions using:
+    IDL> SETENV, 'CODA_DEFINITION=/path/to/codadefs/'
 Information on how to set environment variables on Mac OS X can be found at:
 http://developer.apple.com/mac/library/documentation/MacOSX/Conceptual/BPRuntimeConfig/Articles/EnvironmentVars.html
 
@@ -330,30 +336,28 @@ interfaces) on a Windows platform :
  3) If you want to build the Python interfaces, make sure you have installed
     Python and the numpy package. You should then create an environment
     variable PYTHONHOME that points to your Python directory
-    (e.g. PYTHONHOME=C:\Python24).
+    (e.g. PYTHONHOME=C:\Python26).
 
  4) If you want to build the Java interfaces, make sure you have installed
     Java and that the JAVA_HOME environment variable is properly set.
 
  5) Go to the win32 subdirectory of your unpacked source package.
  
- 6) Open the coda.dsw workspace file with Visual C++. Visual C++ 7.1 is
-    perfered (this will automatically convert the project to a .sln), but
-    Visual C++ 6.0 should also work.
+ 6) Open the coda.sln workspace file with Microsoft Visual Studio 2008.
 
- 7) From Visual C++ choose 'Batch Build...' from the 'Build' menu. Enable all
+ 7) From Visual Studio choose 'Batch Build...' from the 'Build' menu. Enable all
     targets. Then disable the 'with HDF' targets if you do not have HDF4 and
     HDF5 installed or did not perform step 2. If you do not want to build the
-    Python interfaces then disable the python target (codapython). Then, to
-    build CODA, make sure the 'Selection only' option is checked and click on
-    the 'Build' button.
+    Python interfaces then disable the python target (codapython). If you do not
+    want to build the Java interfaces then disable the java target (codajava).
+    Then, to build CODA, click on the 'Build' button.
 
-    When Visual C++ has finished, you will have successfully built the C
-    libraries, command line tools, and, if you enabled this, the Python
-    extensions. Versions with debugging information will have been created in
-    the 'Debug' subdirectory and versions without debugging information in the
-    'Release' subdirectory. Versions with HDF4 and HDF5 support are located in
-    the 'Debug\withhdf' and 'Release\withhdf'. There will also be a 'build'
+    When Visual Studio has finished, you will have successfully built the C
+    libraries, command line tools, and, if you enabled this, the Python and/or
+    Java extensions. Versions with debugging information will have been created
+    in the 'Debug' subdirectory and versions without debugging information in
+    the 'Release' subdirectory. Versions with HDF4 and HDF5 support are located
+    in the 'Debug\withhdf' and 'Release\withhdf'. There will also be a 'build'
     subdirectory, but this directory only contains intermediate files for the
     builds, so you may ignore its contents.
 
@@ -368,22 +372,16 @@ interfaces) on a Windows platform :
 
  9) If you want to build the MATLAB interfaces for CODA first build the C
     Library (as explained in step 4). Then you have to configure MEX for
-    MATLAB. Run the mex.bat file, that is located in the bin/win32 directory of
-    your MATLAB installation, with the -setup option and choose the same
-    compiler that you used to build the CODA library (mind that MATLAB releases
-    before R13 do not support VC++ 7.x, but are limited to VC++ 6.0).
-    Then edit the generated mexopts.bat file (the mex.bat file should have told
-    you the location of this 'default options file') and remove the /MD and
-    /MDd options if they are there.
+    MATLAB. Copy the mexopts.bat file that is located in the win32 subdirectory
+    to the MATLAB Application Data directory in your Documents and Settings
+    directory. More precisely, it should end up in:
+    C:\Documents and Settings\<Your Name>\Application Data\MathWorks\MATLAB\R2007b\mexopts.bat
 
     Now edit the coda-matlab.bat file in the win32 subdirectory of the CODA
     package and change the MATLAB_DIR and MATLAB_RELEASE settings at the top of
-    the file so it matches your local path and release number of MATLAB (you
-    should be aware that if you have multiple versions of MATLAB on your system
-    that unlike for the IDL interface for CODA you can have multiple versions
-    of the MATLAB interface installed. MATLAB releases R13 - R2009b can share
-    the same MATLAB build of CODA but for R12 you need to create a separate
-    build).
+    the file so it matches your local path and release number of MATLAB (for
+    MATLAB releases R13 and higher you can share the same MATLAB build of CODA,
+    so you need to build the MATLAB interface only once).
     Then save the batch file and run it. After completion there should be a
     matlab subdirectory containing all the files you need to use CODA within
     MATLAB.
@@ -420,20 +418,25 @@ will guide you through the installation process. After a successful
 installation you will have to perform some last steps if you want to use the
 IDL, MATLAB and/or Python interfaces.
 
-For IDL you will have to add <CODA installdir>\idl to your DLM_PATH for IDL
-versions 6.3 and higher, or <CODA installdir>\idl61 if you are using IDL
-version 6.1 or 6.2, <CODA installdir>\idl55 if you are using an IDL version in
-the range  5.5-6.0, or <CODA installdir>\idl54 if you are using IDL version
-5.4. You do this by setting an IDL_DLM_PATH environment variable.
+For IDL you will have to add <CODA installdir>\idl to your DLM_PATH.
+You do this by setting an IDL_DLM_PATH environment variable.
 On Windows NT, 2000, and XP open the 'System' control panel of your Windows
 operating system and goto the 'Advanced' tab. Then click on 'Environment
 Variables' and create a new system variable with the name 'IDL_DLM_PATH' and
-value '<IDL_DEFAULT>;C:\CODA\idl' (or e.g. '<IDL_DEFAULT>;C:\CODA\idl61').
+value '<IDL_DEFAULT>;C:\CODA\idl'.
 If you have installed CODA in a location different from C:\CODA then replace
 this part in the value by the installation directory you chose when installing
-CODA. For Windows 98 you should add the line 'SET IDL_DLM_PATH=C:\CODA\idl'
-(or e.g. 'SET IDL_DLM_PATH=C:\CODA\idl61'), also replacing the C:\CODA part if
-necessary, to your autoexec.bat.
+CODA. For Windows 98 you should add the line 'SET IDL_DLM_PATH=C:\CODA\idl',
+also replacing the C:\CODA part if necessary, to your autoexec.bat.
+Note that you should ideally not use the IDL 'pref_set' function to set the
+IDL_DLM_PATH. The CODA DLM file will still load, but CODA will not be able to
+find its coda format definition files this way. You can work around this by
+setting an explicit path to your coda definition files directory instead of
+having CODA automatically determine this location based on the IDL_DLM_PATH.
+This is done by setting the CODA_DEFINITION environment variable. This can be
+done outside IDL by setting the environment variable globally, but you can also
+do this inside IDL before you call any CODA functions using:
+    IDL> SETENV, 'CODA_DEFINITION=/path/to/codadefs/'
 
 For MATLAB you will have to start MATLAB and goto the 'Set Path...' menu item
 in the 'File' menu. Here you should add the directory 'C:\CODA\matlab'. If you

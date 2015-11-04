@@ -13,6 +13,9 @@
    */
 #cmakedefine CODA_EXPAT_NAME_MANGLE ${CODA_EXPAT_NAME_MANGLE}
 
+/* Define to 1 if the QIAP functionality should be included */
+#cmakedefine CODA_USE_QIAP ${CODA_USE_QIAP}
+
 /* This is the current version of coda */
 #cmakedefine CODA_VERSION ${CODA_VERSION}
 
@@ -65,6 +68,9 @@
 /* Define to 1 if you have the `SystemStubs' library (-lSystemStubs). */
 #cmakedefine HAVE_LIBSYSTEMSTUBS ${HAVE_LIBSYSTEMSTUBS}
 
+/* Define to 1 if you have the `ws2_32' library (-lws2_32). */
+#cmakedefine HAVE_LIBWS2_32 ${HAVE_LIBWS2_32}
+
 /* Define to 1 if your system has a GNU libc compatible `malloc' function, and
    to 0 otherwise. */
 #cmakedefine HAVE_MALLOC ${HAVE_MALLOC}
@@ -92,6 +98,9 @@
 
 /* Define to 1 if you have the <netcdf.h> header file. */
 #cmakedefine HAVE_NETCDF_H ${HAVE_NETCDF_H}
+
+/* Define to 1 if you have the <netdb.h> header file. */
+#cmakedefine HAVE_NETDB_H ${HAVE_NETDB_H}
 
 /* Define to 1 if you have the `pread' function. */
 #cmakedefine HAVE_PREAD ${HAVE_PREAD}
@@ -129,6 +138,9 @@
 
 /* Define to 1 if you have the <sys/param.h> header file. */
 #cmakedefine HAVE_SYS_PARAM_H ${HAVE_SYS_PARAM_H}
+
+/* Define to 1 if you have the <sys/socket.h> header file. */
+#cmakedefine HAVE_SYS_SOCKET_H ${HAVE_SYS_SOCKET_H}
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #cmakedefine HAVE_SYS_STAT_H ${HAVE_SYS_STAT_H}
@@ -172,6 +184,9 @@
 
 /* Define to the compiler attribute to test for printf format compliance */
 #cmakedefine PRINTF_ATTR ${PRINTF_ATTR}
+
+/* The version of the QIAP component */
+#cmakedefine QIAP_VERSION ${QIAP_VERSION}
 
 /* Define to 1 if you have the ANSI C header files. */
 #cmakedefine STDC_HEADERS ${STDC_HEADERS}

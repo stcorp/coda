@@ -3526,7 +3526,7 @@ static int register_idl_functions_and_procedures(void)
 
 #else
 
-    /* sysrtn is a of type IDL_FUN_RET */
+    /* sysrtn is of type IDL_FUN_RET */
 
     static IDL_SYSFUN_DEF2 idl_func_addr[] = {
         {x_coda_attributes, "CODA_ATTRIBUTES", 1, IDL_MAXPARAMS, 0, 0},

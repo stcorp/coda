@@ -39,10 +39,16 @@ all-local: $(ALL_LOCAL_TARGETS)
 
 # *** targets ***
 
+if BUILD_QIAP
+QIAPLIBS = libqiap_internal.la
+else
+QIAPLIBS =
+endif
+
 if SUBPACKAGE_MODE
 
 noinst_PROGRAMS = codadd
-noinst_LTLIBRARIES = libcoda_internal.la libexpat_internal.la libpcre_internal.la libz_internal.la
+noinst_LTLIBRARIES = libcoda_internal.la libexpat_internal.la libpcre_internal.la libz_internal.la $(QIAPLIBS)
 
 else
 
@@ -54,7 +60,7 @@ noinst_PROGRAMS = generate-finc findtypedef
 # libraries (+ related files)
 
 lib_LTLIBRARIES = libcoda.la
-noinst_LTLIBRARIES = libcoda_internal.la libexpat_internal.la libpcre_internal.la libz_internal.la
+noinst_LTLIBRARIES = libcoda_internal.la libexpat_internal.la libpcre_internal.la libz_internal.la $(QIAPLIBS)
 
 if BUILD_IDL
 idldlmexec_LTLIBRARIES = coda-idl.la
@@ -171,6 +177,30 @@ libz_internal_la_SOURCES = \
 libz_internal_la_CPPFLAGS = -Ilibcoda/zlib -I$(srcdir)/libcoda/zlib $(AM_CPPFLAGS)
 EXTRA_DIST += libcoda/zlib/COPYING libcoda/zlib/README
 
+# qiap
+
+libqiap_files = \
+	libcoda/qiap/coda-qiap.c \
+	libcoda/qiap/coda-qiap.h \
+	libcoda/qiap/qiap-query.c \
+	libcoda/qiap/qiap-report-read.c \
+	libcoda/qiap/qiap-report-write.c \
+	libcoda/qiap/qiap-soap-read.c \
+	libcoda/qiap/qiap.c \
+	libcoda/qiap/qiap.h
+INDENTFILES += $(libqiap_files)
+EXTRA_DIST += \
+	libcoda/qiap/README \
+	libcoda/qiap/doc/extrapages \
+	libcoda/qiap/doc/footer.html \
+	libcoda/qiap/doc/header.html \
+	libcoda/qiap/doc/Doxyfile.in
+
+if BUILD_QIAP
+libqiap_internal_la_SOURCES = $(libqiap_files)
+libqiap_internal_la_CPPFLAGS = -Ilibcoda/qiap -I$(srcdir)/libcoda/qiap -Ilibcoda/expat -I$(srcdir)/libcoda/expat $(AM_CPPFLAGS)
+endif
+
 # libcoda
 
 libcoda_la_SOURCES = \
@@ -214,8 +244,8 @@ libcoda_la_SOURCES = \
 	libcoda/coda-product.c \
 	libcoda/coda-rinex.c \
 	libcoda/coda-rinex.h \
-	libcoda/coda-sp3c.c \
-	libcoda/coda-sp3c.h \
+	libcoda/coda-sp3.c \
+	libcoda/coda-sp3.h \
 	libcoda/coda-time.c \
 	libcoda/coda-type.c \
 	libcoda/coda-type.h \
@@ -253,9 +283,9 @@ libcoda_la_SOURCES += $(libcoda_hdf5_files)
 else
 INDENTFILES += $(libcoda_hdf5_files)
 endif
-libcoda_la_CPPFLAGS = -Ilibcoda/expat -I$(srcdir)/libcoda/expat -Ilibcoda/pcre -I$(srcdir)/libcoda/pcre -Ilibcoda/zlib -I$(srcdir)/libcoda/zlib $(AM_CPPFLAGS)
+libcoda_la_CPPFLAGS = -Ilibcoda/expat -I$(srcdir)/libcoda/expat -Ilibcoda/pcre -I$(srcdir)/libcoda/pcre -Ilibcoda/zlib -I$(srcdir)/libcoda/zlib -Ilibcoda/qiap -I$(srcdir)/libcoda/qiap $(AM_CPPFLAGS)
 libcoda_la_LDFLAGS = -no-undefined -version-info $(LIBCODA_CURRENT):$(LIBCODA_REVISION):$(LIBCODA_AGE)
-libcoda_la_LIBADD = @LTLIBOBJS@ libexpat_internal.la libpcre_internal.la libz_internal.la $(HDF4LIBS) $(HDF5LIBS)
+libcoda_la_LIBADD = @LTLIBOBJS@ libexpat_internal.la libpcre_internal.la libz_internal.la $(QIAPLIBS) $(HDF4LIBS) $(HDF5LIBS)
 INDENTFILES += $(libcoda_la_SOURCES) libcoda/coda.h.in
 BUILT_SOURCES += coda-expr-parser.h
 
@@ -301,8 +331,8 @@ libcoda_internal_la_SOURCES = \
 	libcoda/coda-product.c \
 	libcoda/coda-rinex.c \
 	libcoda/coda-rinex.h \
-	libcoda/coda-sp3c.c \
-	libcoda/coda-sp3c.h \
+	libcoda/coda-sp3.c \
+	libcoda/coda-sp3.h \
 	libcoda/coda-time.c \
 	libcoda/coda-type.c \
 	libcoda/coda-type.h \
@@ -324,7 +354,7 @@ endif
 if WITH_HDF5
 libcoda_internal_la_SOURCES += $(libcoda_hdf5_files)
 endif
-libcoda_internal_la_CPPFLAGS = -Ilibcoda/expat -I$(srcdir)/libcoda/expat -Ilibcoda/pcre -I$(srcdir)/libcoda/pcre -Ilibcoda/zlib -I$(srcdir)/libcoda/zlib $(AM_CPPFLAGS)
+libcoda_internal_la_CPPFLAGS = -Ilibcoda/expat -I$(srcdir)/libcoda/expat -Ilibcoda/pcre -I$(srcdir)/libcoda/pcre -Ilibcoda/zlib -I$(srcdir)/libcoda/zlib -Ilibcoda/qiap -I$(srcdir)/libcoda/qiap $(AM_CPPFLAGS)
 libcoda_internal_la_LIBADD = $(libcoda_la_LIBADD)
 
 # tools/codacheck
@@ -652,6 +682,7 @@ endif
 
 include doclibcoda.mk
 include docjava.mk
+include doclibqiap.mk
 
 DOCFILES = \
 	doc/html/index.html \
@@ -667,7 +698,7 @@ DOCFILES = \
 	doc/html/codadef/codadef-hdf5.html \
 	doc/html/codadef/codadef-netcdf.html \
 	doc/html/codadef/codadef-rinex.html \
-	doc/html/codadef/codadef-sp3c.html \
+	doc/html/codadef/codadef-sp3.html \
 	doc/html/codadef/codadef-xml.html \
 	doc/html/codacheck/index.html \
 	doc/html/codacmp/index.html \
@@ -680,26 +711,40 @@ DOCFILES = \
 	doc/html/matlab/index.html \
 	doc/html/python/index.html
 
+if BUILD_QIAP
+DOCFILES += doc/html/css/qiap.css $(LIBQIAP_DOCFILES)
+endif
+
 EXTRA_DIST += \
 	$(DOCFILES) \
 	libcoda/doc/Doxyfile.in \
 	libcoda/doc/extrapages \
 	libcoda/doc/footer.html \
 	libcoda/doc/header.html \
+	libcoda/qiap/doc/Doxyfile.in \
+	libcoda/qiap/doc/extrapages \
+	libcoda/qiap/doc/footer.html \
+	libcoda/qiap/doc/header.html \
 	java/doc/Doxyfile.in \
 	java/doc/extrapages \
 	java/doc/footer.html \
 	java/doc/header.html \
 	doclibcoda.mk \
+	doclibqiap.mk \
 	docjava.mk
+
+if !BUILD_QIAP
+# make sure the QIAP documentation is always included in the source package
+EXTRA_DIST += doc/html/css/qiap.css $(LIBQIAP_DOCFILES)
+endif
 
 if !SUBPACKAGE_MODE
 nobase_pkgdata_DATA = $(DOCFILES)
 endif
 
-doc: libcoda_doc java_doc
+doc: libcoda_doc libqiap_doc java_doc
 
-docclean: libcoda_docclean java_docclean
+docclean: libcoda_docclean libqiap_docclean java_docclean
 
 libcoda_doc: coda.h libcoda/doc/Doxyfile
 	@if test "x$(DOXYGEN)" = x ; then \
@@ -729,6 +774,36 @@ doclibcoda_include:
 	  rm -f doclibcoda.mk2 ; \
 	else \
 	  mv doclibcoda.mk2 $(srcdir)/doclibcoda.mk ; \
+	fi
+
+libqiap_doc: libcoda/qiap/doc/Doxyfile
+	@if test "x$(DOXYGEN)" = x ; then \
+	  echo "Doxygen not available. Documentation was not (re)created." ; \
+	else \
+	  $(MAKE) libqiap_docclean ; \
+	  echo "creating libqiap documentation" ; \
+	  test -d doc/html || $(mkinstalldirs) doc/html ; \
+	  cd libcoda/qiap/doc ; \
+	  $(DOXYGEN) Doxyfile ; \
+	  cd ../../.. ; \
+	  rm -rf doc/html/libqiap/doxygen.* doc/html/libqiap/pages.html doc/html/libqiap/*.png doc/html/libqiap/*.gif doc/html/libqiap/*.js doc/html/libqiap/tabs.css ; \
+	  echo "creating doclibqiap.mk" ; \
+	  $(MAKE) doclibqiap_include ; \
+	fi
+
+libqiap_docclean:
+	@echo "removing libqiap documentation"
+	@rm -rf doc/html/libqiap
+
+doclibqiap_include:
+	@find doc/html/libqiap -type f | LANG= sort | $(AWK) 'BEGIN {printf("LIBQIAP_DOCFILES =")}; {printf(" \\\n\t%s", $$0)}' > doclibqiap.mk2
+	@echo "" >> doclibqiap.mk2
+	@find doc/html/libqiap -type f | LANG= sort | $(AWK) '{printf("%s:\n\t$$(MAKE) libqiap_doc\n", $$0)}' >> doclibqiap.mk2
+	@if diff $(srcdir)/doclibqiap.mk doclibqiap.mk2 >/dev/null 2>&1 ; then \
+	  echo "doclibqiap.mk is unchanged" ; \
+	  rm -f doclibqiap.mk2 ; \
+	else \
+	  mv doclibqiap.mk2 $(srcdir)/doclibqiap.mk ; \
 	fi
 
 java_doc: $(java_files) java/doc/Doxyfile
@@ -826,43 +901,48 @@ libcoda/coda.h.cmake.in: libcoda/coda.h.in cmakeify-dot-infiles.pl
 
 EXTRA_DIST += \
 	unix2dos \
-	win32/ModifyPath.iss \
-	win32/coda.dsw \
-	win32/coda.h \
-	win32/coda.iss \
-	win32/coda.iss.in \
-	win32/coda-idl.def \
-	win32/coda_idl.bat \
-	win32/coda_java.bat \
-	win32/coda_matlab.bat \
-	win32/codadll.dsp \
-	win32/codalib.dsp \
-	win32/codapython.dsp \
-	win32/codajava.dsp \
-	win32/config.h \
-	win32/config.h.in \
-	win32/makedist.bat \
-	win32/mexopts.bat \
-	win32/codacheck.dsp \
-	win32/codacmp.dsp \
-	win32/codadd.dsp \
-	win32/codadump.dsp \
-	win32/codaeval.dsp \
-	win32/codafind.dsp \
-	win32/removepath.iss \
-	win32/setup.py \
-	win32/setup.py.in \
-	win32/build.xml \
-	win32/readme.txt
+	windows/clean_dir.bat \
+	windows/coda.h \
+	windows/coda.iss \
+	windows/coda.iss.in \
+	windows/coda.sln \
+	windows/codacheck.vcproj \
+	windows/codacmp.vcproj \
+	windows/codadd.vcproj \
+	windows/codadll.vcproj \
+	windows/codadump.vcproj \
+	windows/codaeval.vcproj \
+	windows/codafind.vcproj \
+	windows/codaidl.vcproj \
+	windows/codajava.vcproj \
+	windows/codalib.vcproj \
+	windows/codamatlab.vcproj \
+	windows/codapython.vcproj \
+	windows/config.h \
+	windows/config.h.in \
+	windows/create_installer.bat \
+	windows/make_coda_all.bat \
+	windows/make_coda_idl.bat \
+	windows/make_coda_java.bat \
+	windows/make_coda_matlab.bat \
+	windows/make_coda_python.bat \
+	windows/make_coda_libraries.bat \
+	windows/make_coda_tools.bat \
+	windows/modifypath.iss \
+	windows/removepath.iss \
+	windows/setup.py \
+	windows/setup.py.in \
+	windows/build.xml \
+	windows/readme.txt
 
-win32/coda.h: $(srcdir)/libcoda/coda.h.in
-	cp $(srcdir)/libcoda/coda.h.in win32/coda.h
+windows/coda.h: $(srcdir)/libcoda/coda.h.in
+	cp $(srcdir)/libcoda/coda.h.in windows/coda.h
 
-win32/readme.txt: $(srcdir)/README
-	$(srcdir)/unix2dos $(srcdir)/README > win32/readme.txt
+windows/readme.txt: $(srcdir)/README
+	$(srcdir)/unix2dos $(srcdir)/README > windows/readme.txt
 
-win32/build.xml: $(srcdir)/java/build.xml.in
-	cat $(srcdir)/java/build.xml.in | sed 's/\@JAVA\@/C:\\jdk1.6.0_07\\bin\\java/' | sed 's/\@JAVAC\@/C:\\jdk1.6.0_07\\bin\\javac/' > win32/build.xml
+windows/build.xml: $(srcdir)/java/build.xml.in
+	cat $(srcdir)/java/build.xml.in | sed 's/\@JAVA\@/C:\\jdk1.6.0_07\\bin\\java/' | sed 's/\@JAVAC\@/C:\\jdk1.6.0_07\\bin\\javac/' > windows/build.xml
 
 # *** development install targets to avoid long installs ***
 

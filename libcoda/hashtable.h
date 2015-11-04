@@ -41,6 +41,7 @@ typedef struct hashtable_struct hashtable;
 hashtable *hashtable_new(int case_sensitive);
 int hashtable_add_name(hashtable *table, const char *name);
 long hashtable_get_index_from_name(hashtable *table, const char *name);
+long hashtable_get_index_from_name_n(hashtable *table, const char *name, int name_length);
 void hashtable_delete(hashtable *table);
 
 /* *INDENT-OFF* */

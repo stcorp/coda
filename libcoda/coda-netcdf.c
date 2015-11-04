@@ -34,60 +34,90 @@
 #endif
 
 #ifndef WORDS_BIGENDIAN
-static void swap2(void *value)
+static void swap_int16(int16_t *value)
 {
     union
     {
         uint8_t as_bytes[2];
         int16_t as_int16;
-    } v1, v2;
+    } v;
 
-    v1.as_int16 = *(int16_t *)value;
+    v.as_bytes[0] = ((uint8_t *)value)[1];
+    v.as_bytes[1] = ((uint8_t *)value)[0];
 
-    v2.as_bytes[0] = v1.as_bytes[1];
-    v2.as_bytes[1] = v1.as_bytes[0];
-
-    *(int16_t *)value = v2.as_int16;
+    *value = v.as_int16;
 }
 
-static void swap4(void *value)
+static void swap_int32(int32_t *value)
 {
     union
     {
         uint8_t as_bytes[4];
         int32_t as_int32;
-    } v1, v2;
+    } v;
 
-    v1.as_int32 = *(int32_t *)value;
+    v.as_bytes[0] = ((uint8_t *)value)[3];
+    v.as_bytes[1] = ((uint8_t *)value)[2];
+    v.as_bytes[2] = ((uint8_t *)value)[1];
+    v.as_bytes[3] = ((uint8_t *)value)[0];
 
-    v2.as_bytes[0] = v1.as_bytes[3];
-    v2.as_bytes[1] = v1.as_bytes[2];
-    v2.as_bytes[2] = v1.as_bytes[1];
-    v2.as_bytes[3] = v1.as_bytes[0];
-
-    *(int32_t *)value = v2.as_int32;
+    *value = v.as_int32;
 }
 
-static void swap8(void *value)
+static void swap_int64(int64_t *value)
 {
     union
     {
         uint8_t as_bytes[8];
         int64_t as_int64;
-    } v1, v2;
+    } v;
 
-    v1.as_int64 = *(int64_t *)value;
+    v.as_bytes[0] = ((uint8_t *)value)[7];
+    v.as_bytes[1] = ((uint8_t *)value)[6];
+    v.as_bytes[2] = ((uint8_t *)value)[5];
+    v.as_bytes[3] = ((uint8_t *)value)[4];
+    v.as_bytes[4] = ((uint8_t *)value)[3];
+    v.as_bytes[5] = ((uint8_t *)value)[2];
+    v.as_bytes[6] = ((uint8_t *)value)[1];
+    v.as_bytes[7] = ((uint8_t *)value)[0];
 
-    v2.as_bytes[0] = v1.as_bytes[7];
-    v2.as_bytes[1] = v1.as_bytes[6];
-    v2.as_bytes[2] = v1.as_bytes[5];
-    v2.as_bytes[3] = v1.as_bytes[4];
-    v2.as_bytes[4] = v1.as_bytes[3];
-    v2.as_bytes[5] = v1.as_bytes[2];
-    v2.as_bytes[6] = v1.as_bytes[1];
-    v2.as_bytes[7] = v1.as_bytes[0];
+    *value = v.as_int64;
+}
 
-    *(int64_t *)value = v2.as_int64;
+static void swap_float(float *value)
+{
+    union
+    {
+        uint8_t as_bytes[4];
+        float as_float;
+    } v;
+
+    v.as_bytes[0] = ((uint8_t *)value)[3];
+    v.as_bytes[1] = ((uint8_t *)value)[2];
+    v.as_bytes[2] = ((uint8_t *)value)[1];
+    v.as_bytes[3] = ((uint8_t *)value)[0];
+
+    *value = v.as_float;
+}
+
+static void swap_double(double *value)
+{
+    union
+    {
+        uint8_t as_bytes[8];
+        double as_double;
+    } v;
+
+    v.as_bytes[0] = ((uint8_t *)value)[7];
+    v.as_bytes[1] = ((uint8_t *)value)[6];
+    v.as_bytes[2] = ((uint8_t *)value)[5];
+    v.as_bytes[3] = ((uint8_t *)value)[4];
+    v.as_bytes[4] = ((uint8_t *)value)[3];
+    v.as_bytes[5] = ((uint8_t *)value)[2];
+    v.as_bytes[6] = ((uint8_t *)value)[1];
+    v.as_bytes[7] = ((uint8_t *)value)[0];
+
+    *value = v.as_double;
 }
 #endif
 
@@ -103,7 +133,7 @@ static int read_dim_array(coda_netcdf_product *product, int32_t num_records, int
         return -1;
     }
 #ifndef WORDS_BIGENDIAN
-    swap4(&tag);
+    swap_int32(&tag);
 #endif
 
     if (read(product->fd, num_dims, 4) < 0)
@@ -112,7 +142,7 @@ static int read_dim_array(coda_netcdf_product *product, int32_t num_records, int
         return -1;
     }
 #ifndef WORDS_BIGENDIAN
-    swap4(num_dims);
+    swap_int32(num_dims);
 #endif
 
     if (tag == 0)
@@ -154,7 +184,7 @@ static int read_dim_array(coda_netcdf_product *product, int32_t num_records, int
             return -1;
         }
 #ifndef WORDS_BIGENDIAN
-        swap4(&string_length);
+        swap_int32(&string_length);
 #endif
         /* skip chars + padding */
         if ((string_length & 3) != 0)
@@ -176,7 +206,7 @@ static int read_dim_array(coda_netcdf_product *product, int32_t num_records, int
             return -1;
         }
 #ifndef WORDS_BIGENDIAN
-        swap4(&(*dim_length)[i]);
+        swap_int32(&(*dim_length)[i]);
 #endif
         if ((*dim_length)[i] == 0)
         {
@@ -202,7 +232,7 @@ static int read_att_array(coda_netcdf_product *product, coda_mem_record **attrib
         return -1;
     }
 #ifndef WORDS_BIGENDIAN
-    swap4(&tag);
+    swap_int32(&tag);
 #endif
 
     if (read(product->fd, &num_att, 4) < 0)
@@ -211,7 +241,7 @@ static int read_att_array(coda_netcdf_product *product, coda_mem_record **attrib
         return -1;
     }
 #ifndef WORDS_BIGENDIAN
-    swap4(&num_att);
+    swap_int32(&num_att);
 #endif
 
     if (tag == 0)
@@ -264,7 +294,7 @@ static int read_att_array(coda_netcdf_product *product, coda_mem_record **attrib
             return -1;
         }
 #ifndef WORDS_BIGENDIAN
-        swap4(&string_length);
+        swap_int32(&string_length);
 #endif
         /* chars */
         name = malloc(string_length + 1);
@@ -306,7 +336,7 @@ static int read_att_array(coda_netcdf_product *product, coda_mem_record **attrib
             return -1;
         }
 #ifndef WORDS_BIGENDIAN
-        swap4(&nc_type);
+        swap_int32(&nc_type);
 #endif
         /* nelems */
         if (read(product->fd, &nelems, 4) < 0)
@@ -318,7 +348,7 @@ static int read_att_array(coda_netcdf_product *product, coda_mem_record **attrib
             return -1;
         }
 #ifndef WORDS_BIGENDIAN
-        swap4(&nelems);
+        swap_int32(&nelems);
 #endif
         value_length = nelems;
         switch (nc_type)
@@ -383,7 +413,7 @@ static int read_att_array(coda_netcdf_product *product, coda_mem_record **attrib
                         return -1;
                     }
 #ifndef WORDS_BIGENDIAN
-                    swap4(&value);
+                    swap_float(&value);
 #endif
                     if (name[0] == 's')
                     {
@@ -415,7 +445,7 @@ static int read_att_array(coda_netcdf_product *product, coda_mem_record **attrib
                         return -1;
                     }
 #ifndef WORDS_BIGENDIAN
-                    swap8(&value);
+                    swap_double(&value);
 #endif
                     if (name[0] == 's')
                     {
@@ -433,7 +463,15 @@ static int read_att_array(coda_netcdf_product *product, coda_mem_record **attrib
                                                 (strcmp(name, "_FillValue") == 0 &&
                                                  coda_isNaN(conversion->invalid_value))))
             {
-                uint8_t value[8];
+                union
+                {
+                    int8_t as_int8[8];
+                    int16_t as_int16[4];
+                    int32_t as_int32[2];
+                    int64_t as_int64[1];
+                    float as_float[2];
+                    double as_double[1];
+                } value;
 
                 if (lseek(product->fd, offset, SEEK_SET) < 0)
                 {
@@ -443,7 +481,7 @@ static int read_att_array(coda_netcdf_product *product, coda_mem_record **attrib
                                    strerror(errno));
                     return -1;
                 }
-                if (read(product->fd, value, value_length) < 0)
+                if (read(product->fd, value.as_int8, value_length) < 0)
                 {
                     free(name);
                     coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
@@ -454,31 +492,31 @@ static int read_att_array(coda_netcdf_product *product, coda_mem_record **attrib
                 switch (nc_type)
                 {
                     case 1:
-                        conversion->invalid_value = (double)(*(int8_t *)value);
+                        conversion->invalid_value = (double)value.as_int8[0];
                         break;
                     case 3:
 #ifndef WORDS_BIGENDIAN
-                        swap2(value);
+                        swap_int16(value.as_int16);
 #endif
-                        conversion->invalid_value = (double)(*(int16_t *)value);
+                        conversion->invalid_value = (double)value.as_int16[0];
                         break;
                     case 4:
 #ifndef WORDS_BIGENDIAN
-                        swap4(value);
+                        swap_int32(value.as_int32);
 #endif
-                        conversion->invalid_value = (double)(*(int32_t *)value);
+                        conversion->invalid_value = (double)value.as_int32[0];
                         break;
                     case 5:
 #ifndef WORDS_BIGENDIAN
-                        swap4(value);
+                        swap_float(value.as_float);
 #endif
-                        conversion->invalid_value = (double)(*(float *)value);
+                        conversion->invalid_value = (double)value.as_float[0];
                         break;
                     case 6:
 #ifndef WORDS_BIGENDIAN
-                        swap8(value);
+                        swap_double(value.as_double);
 #endif
-                        conversion->invalid_value = *(double *)value;
+                        conversion->invalid_value = value.as_double[0];
                         break;
                     default:
                         assert(0);
@@ -552,7 +590,7 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
         return -1;
     }
 #ifndef WORDS_BIGENDIAN
-    swap4(&tag);
+    swap_int32(&tag);
 #endif
 
     if (read(product->fd, &num_var, 4) < 0)
@@ -561,7 +599,7 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
         return -1;
     }
 #ifndef WORDS_BIGENDIAN
-    swap4(&num_var);
+    swap_int32(&num_var);
 #endif
 
     if (tag == 0)
@@ -609,7 +647,7 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
             return -1;
         }
 #ifndef WORDS_BIGENDIAN
-        swap4(&string_length);
+        swap_int32(&string_length);
 #endif
         /* chars */
         name = malloc(string_length + 1);
@@ -647,7 +685,7 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
             return -1;
         }
 #ifndef WORDS_BIGENDIAN
-        swap4(&nelems);
+        swap_int32(&nelems);
 #endif
         num_dims = 0;
         for (j = 0; j < nelems; j++)
@@ -661,7 +699,7 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
                 return -1;
             }
 #ifndef WORDS_BIGENDIAN
-            swap4(&dim_id);
+            swap_int32(&dim_id);
 #endif
             if (dim_id < 0 || dim_id >= num_dim_lengths)
             {
@@ -723,7 +761,7 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
             return -1;
         }
 #ifndef WORDS_BIGENDIAN
-        swap4(&nc_type);
+        swap_int32(&nc_type);
 #endif
         /* vsize */
         if (read(product->fd, &vsize, 4) < 0)
@@ -736,7 +774,7 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
             return -1;
         }
 #ifndef WORDS_BIGENDIAN
-        swap4(&vsize);
+        swap_int32(&vsize);
 #endif
         if (record_var)
         {
@@ -758,7 +796,7 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
                 return -1;
             }
 #ifndef WORDS_BIGENDIAN
-            swap4(&offset32);
+            swap_int32(&offset32);
 #endif
             offset = (int64_t)offset32;
         }
@@ -774,7 +812,7 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
                 return -1;
             }
 #ifndef WORDS_BIGENDIAN
-            swap8(&offset);
+            swap_int64(&offset);
 #endif
         }
         if (last_dim_set)
@@ -903,6 +941,9 @@ int coda_netcdf_open(const char *filename, int64_t file_size, const coda_product
     product_file->product_definition = definition;
     product_file->product_variable_size = NULL;
     product_file->product_variable = NULL;
+#if CODA_USE_QIAP
+    product_file->qiap_info = NULL;
+#endif
     product_file->use_mmap = 0;
     product_file->fd = -1;
     product_file->mmap_ptr = NULL;
@@ -977,7 +1018,7 @@ int coda_netcdf_open(const char *filename, int64_t file_size, const coda_product
         return -1;
     }
 #ifndef WORDS_BIGENDIAN
-    swap4(&num_records);
+    swap_int32(&num_records);
 #endif
 
     /* dim_array */

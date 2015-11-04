@@ -27,13 +27,13 @@
 %javaconst(1);
 
 
-typedef signed char  int8_t;
-typedef short int    int16_t;
-typedef int			 int32_t;
+typedef signed char     int8_t;
+typedef short int       int16_t;
+typedef int             int32_t;
 
-typedef char		uint8_t;
-typedef short int	uint16_t;
-typedef int		    uint32_t;
+typedef char            uint8_t;
+typedef short int       uint16_t;
+typedef int             uint32_t;
 
 typedef long long int   int64_t;
 typedef long long int	uint64_t;
@@ -264,6 +264,7 @@ const char *coda_type_get_format_name(coda_format format);
 const char *coda_type_get_class_name(coda_type_class type_class);
 const char *coda_type_get_native_type_name(coda_native_type native_type);
 const char *coda_type_get_special_type_name(coda_special_type special_type);
+const char *coda_expression_get_type_name(coda_expression_type type);
 void coda_expression_delete(coda_expression *expr);
 %ignore coda_done;
 %ignore coda_NaN;
@@ -273,6 +274,7 @@ void coda_expression_delete(coda_expression *expr);
 %ignore coda_type_get_class_name;
 %ignore coda_type_get_native_type_name;
 %ignore coda_type_get_special_type_name;
+%ignore coda_expression_get_type_name;
 %ignore coda_expression_delete;
 
                  

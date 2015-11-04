@@ -435,17 +435,13 @@ int coda_mem_record_add_field(coda_mem_record *type, const char *real_name, coda
         return -1;
     }
 
-    index = hashtable_get_index_from_name(type->definition->real_name_hash_data, real_name);
     if (update_definition)
     {
-        if (index < 0)
+        if (coda_type_record_create_field(type->definition, real_name, field_type->definition) != 0)
         {
-            if (coda_type_record_create_field(type->definition, real_name, field_type->definition) != 0)
-            {
-                return -1;
-            }
-            index = type->definition->num_fields - 1;
+            return -1;
         }
+        index = type->definition->num_fields - 1;
         if (type->num_fields < type->definition->num_fields)
         {
             coda_dynamic_type **new_field_type;
@@ -469,6 +465,7 @@ int coda_mem_record_add_field(coda_mem_record *type, const char *real_name, coda
     }
     else
     {
+        index = hashtable_get_index_from_name(type->definition->real_name_hash_data, real_name);
         if (index < 0)
         {
             coda_set_error(CODA_ERROR_INVALID_NAME, "record does not have a field with name '%s' (%s:%u)", real_name,

@@ -2,14 +2,14 @@
 #
 project(CODA)
 
-set(VERSION 2.2)
+set(VERSION 2.3)
 set(CODA_VERSION \"${VERSION}\")
 
 # General setup
 #
 cmake_minimum_required(VERSION 2.6.0)
 set(CMAKE_MODULE_PATH
-  ${CMAKE_SOURCE_DIR}/CMakeModules
+  ${CODA_SOURCE_DIR}/CMakeModules
   ${CMAKE_MODULE_PATH}
   CACHE INTERNAL "Local CMake modules"
   )
@@ -33,6 +33,8 @@ cmake_dependent_option(
   CODA_WITH_HDF4 ON)
 #Python is not yet supported in this release of CODA.
 #option(CODA_BUILD_PYTHON "build Python interface" OFF)
+option(CODA_BUILD_QIAP "include QIAP support" ON)
+set(QIAP_VERSION \"${VERSION}-coda\" CACHE INTERNAL "QIAP version number")
 
 # The following is done because in CMake options are always
 # ON/OFF only, but for config.h substition we need something with
@@ -41,6 +43,10 @@ cmake_dependent_option(
 if(NOT CODA_DISABLE_HDF4_VDATA_ATTRIBUTES)
   set(ENABLE_HDF4_VDATA_ATTRIBUTES 1)
 endif(NOT CODA_DISABLE_HDF4_VDATA_ATTRIBUTES)
+
+if(CODA_BUILD_QIAP)
+  set(CODA_USE_QIAP 1)
+endif(CODA_BUILD_QIAP)
 
 # Some autoconf variables that CMake does not use itself, but
 # that are used in the config file substitutions.
@@ -166,9 +172,13 @@ find_include(stdlib.h		HAVE_STDLIB_H)
 find_include(strings.h		HAVE_STRINGS_H)
 find_include(string.h		HAVE_STRING_H)
 find_include(sys/mman.h		HAVE_SYS_MMAN_H)
+find_include(sys/socket.h	HAVE_SYS_SOCKET_H)
 find_include(sys/stat.h		HAVE_SYS_STAT_H)
 find_include(sys/types.h	HAVE_SYS_TYPES_H)
 find_include(unistd.h		HAVE_UNISTD_H)
+if(CODA_BUILD_QIAP)
+  find_include(netdb.h		HAVE_NETDB_H)
+endif(CODA_BUILD_QIAP)
 
 set(CMAKE_EXTRA_INCLUDE_FILES ${INCLUDES})
 
@@ -235,6 +245,21 @@ include_directories(
   ${CODA_INCLUDE_DIRS}
 )
 
+# Required libraries
+#
+if(NOT WIN32)
+# Only on Unix -- Windows does not need this, and the CMake
+# people explicitly recommend just special-casing the platform
+# through 'if'.
+  find_library(LIBM_LIBRARY m)
+  mark_as_advanced(LIBM_LIBRARY)
+endif(NOT WIN32)
+if(CODA_BUILD_QIAP)
+  if(WIN32)
+    find_library(LIBWS2_32_LIBRARY ws_32)
+    mark_as_advanced(LIBWS2_32_LIBRARY)
+  endif(WIN32)
+endif(CODA_BUILD_QIAP)
 
 # The Doxyfile uses some autoconf variables CMake does not have.
 # We set them here manually, so that we can use the same .in
@@ -292,8 +317,8 @@ set(LIBCODA_SOURCES
   libcoda/coda-product.c
   libcoda/coda-rinex.c
   libcoda/coda-rinex.h
-  libcoda/coda-sp3c.c
-  libcoda/coda-sp3c.h
+  libcoda/coda-sp3.c
+  libcoda/coda-sp3.h
   libcoda/coda-time.c
   libcoda/coda-type.c
   libcoda/coda-type.h
@@ -385,7 +410,7 @@ if(CODA_BUILD_IDL)
       set(IDL_COMPILE_FLAGS "-nologo -I. -I${CODA_BINARY_DIR} -I${CODA_SOURCE_DIR}/libcoda -DWIN32_LEAN_AND_MEAN -DWIN32 -DHAVE_CONFIG_H -DIDL_V5_4")
       set(IDL_LIBDIR "${IDL_DIR}/bin/bin.x86/")
       set(IDL_LIB "${IDL_LIBDIR}/idl.lib")
-      set(IDL_LINK_FLAGS "/DEF:${CODA_SOURCE_DIR}/win32/coda-idl.def")
+      set(IDL_LINK_FLAGS "/EXPORT:IDL_Load,@1")
     else(WIN32)
       set(IDL_LINK_FLAGS "-module -shared -avoid-version")
       if(APPLE)
@@ -536,6 +561,7 @@ if(CODA_BUILD_MATLAB)
 	  matlab/coda_fieldnames.m
 	  matlab/coda_getopt.m
 	  matlab/coda_open.m
+	  matlab/coda_open_as.m
 	  matlab/coda_options.m
 	  matlab/coda_param.m
 	  matlab/coda_product_class.m
@@ -666,6 +692,22 @@ set(LIBZLIB_SOURCES
 
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/zlib)
 
+# QIAP sources
+#
+if(CODA_BUILD_QIAP)
+set(LIBQIAP_SOURCES
+  libcoda/qiap/coda-qiap.c
+  libcoda/qiap/coda-qiap.h
+  libcoda/qiap/qiap-query.c
+  libcoda/qiap/qiap-report-read.c
+  libcoda/qiap/qiap-report-write.c
+  libcoda/qiap/qiap-soap-read.c
+  libcoda/qiap/qiap.c
+  libcoda/qiap/qiap.h
+)
+
+include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/qiap)
+endif(CODA_BUILD_QIAP)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/coda.h DESTINATION include)
 
@@ -673,11 +715,11 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/coda.h DESTINATION include)
 #
 # Set dynamic library version
 #
-set(LIBCODA_CURRENT 7)
+set(LIBCODA_CURRENT 8)
 set(LIBCODA_REVISION 0)
-set(LIBCODA_AGE 2)
+set(LIBCODA_AGE 3)
 
-add_library(coda SHARED ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBPCRE_SOURCES} ${LIBZLIB_SOURCES})
+add_library(coda SHARED ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBPCRE_SOURCES} ${LIBZLIB_SOURCES} ${LIBQIAP_SOURCES})
 target_link_libraries(coda ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
 set_target_properties(coda PROPERTIES
   VERSION ${LIBCODA_CURRENT}.${LIBCODA_REVISION}.${LIBCODA_AGE}
@@ -685,7 +727,7 @@ set_target_properties(coda PROPERTIES
 )
 install(TARGETS coda DESTINATION lib)
 
-add_library(coda_static STATIC ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBPCRE_SOURCES} ${LIBZLIB_SOURCES})
+add_library(coda_static STATIC ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBPCRE_SOURCES} ${LIBZLIB_SOURCES} ${LIBQIAP_SOURCES})
 
 # On Windows, we want libcoda.lib for static, coda.dll & coda.lib for shared.
 # On Unix, we want libcoda.a and libcoda.so
@@ -706,16 +748,6 @@ if(MSVC)
     )
 endif(MSVC)
 
-
-# Required libraries
-#
-# Only on Unix -- Windows does not need this, and the CMake
-# people explicitly recommend just special-casing the platform
-# through 'if'.
-if(NOT WIN32)
-  find_library(LIBM_LIBRARY m)
-  mark_as_advanced(LIBM_LIBRARY)
-endif(NOT WIN32)
 
 # tools codacheck
 
@@ -788,6 +820,7 @@ set(codadd_SOURCES
   tools/codadd/codadd-detect.c
   tools/codadd/codadd-doc.c
   tools/codadd/codadd-list.c
+  tools/codadd/codadd-xmlschema.c
   )
 add_executable(codadd ${codadd_SOURCES})
 target_link_libraries(codadd coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${LIBM_LIBRARY})
@@ -812,9 +845,9 @@ configure_file(
 # DOS line endings (CMake bug 0008506)
 #
 configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/win32/coda.iss.in
-  ${CMAKE_CURRENT_BINARY_DIR}/win32/coda.iss)
+  ${CMAKE_CURRENT_SOURCE_DIR}/windows/coda.iss.in
+  ${CMAKE_CURRENT_BINARY_DIR}/windows/coda.iss)
 configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/win32/setup.py.in
-  ${CMAKE_CURRENT_BINARY_DIR}/win32/setup.py)
+  ${CMAKE_CURRENT_SOURCE_DIR}/windows/setup.py.in
+  ${CMAKE_CURRENT_BINARY_DIR}/windows/setup.py)
 

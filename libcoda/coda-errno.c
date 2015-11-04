@@ -28,12 +28,13 @@
 #ifdef HAVE_HDF5
 #include "coda-hdf5.h"
 #endif
+#ifdef CODA_USE_QIAP
+#include "coda-qiap.h"
+#endif
 
 #define MAX_ERROR_INFO_LENGTH	4096
 
 static char coda_error_message_buffer[MAX_ERROR_INFO_LENGTH + 1];
-
-/** \file */
 
 /** \defgroup coda_error CODA Error
  * With a few exceptions almost all CODA functions return an integer that indicate whether the function was able to
@@ -42,7 +43,7 @@ static char coda_error_message_buffer[MAX_ERROR_INFO_LENGTH + 1];
  * described in this section. You will also be able to retrieve a character string with an error description via
  * the coda_errno_to_string() function. This function will return either the default error message for the error
  * code, or a custom error message. A custom error message will only be returned if the error code you pass to
- * coda_errno_to_string() is equal to the last error that occurred and if this last error was set with a custom error
+ * coda_errno_to_string() is equal to the last error that occurred and if this last error was set with a custom error
  * message. The CODA error state can be set with the coda_set_error() function.<br>
  */
 
@@ -132,6 +133,9 @@ static char coda_error_message_buffer[MAX_ERROR_INFO_LENGTH + 1];
  * read outside the range of an enclosing element such as an XML element.
  * This error usually means that either the product or its definition in CODA contains an error.
  */
+/** \def CODA_ERROR_QIAP
+ * An error occured in the QIAP specific support functions.
+ */
 
 /** \def CODA_ERROR_DATA_DEFINITION
  * There was an error detected in the CODA Data Definitions.
@@ -204,6 +208,23 @@ void coda_set_error_message(const char *message, ...)
     va_end(ap);
 }
 
+static int add_error_message(const char *message, ...)
+{
+    va_list ap;
+
+    va_start(ap, message);
+    coda_add_error_message_vargs(message, ap);
+    va_end(ap);
+
+    return 0;
+}
+
+void coda_cursor_add_to_error_message(const coda_cursor *cursor)
+{
+    coda_add_error_message(" at ");
+    coda_cursor_print_path(cursor, add_error_message);
+}
+
 /** Set the error value and optionally set a custom error message.
  * If \a message is NULL then the default error message for the error number will be used.
  * \param err Value of #coda_errno.
@@ -229,6 +250,12 @@ LIBCODA_API void coda_set_error(int err, const char *message, ...)
     if (err == CODA_ERROR_HDF5 && message == NULL)
     {
         coda_hdf5_add_error_message();
+    }
+#endif
+#ifdef CODA_USE_QIAP
+    if (err == CODA_ERROR_QIAP && message == NULL)
+    {
+        coda_qiap_add_error_message();
     }
 #endif
 }
@@ -301,6 +328,8 @@ LIBCODA_API const char *coda_errno_to_string(int err)
                 return "product error detected";
             case CODA_ERROR_OUT_OF_BOUNDS_READ:
                 return "trying to read outside the element boundary";
+            case CODA_ERROR_QIAP:
+                return "QIAP error";
 
             case CODA_ERROR_DATA_DEFINITION:
                 return "error in data definitions detected";

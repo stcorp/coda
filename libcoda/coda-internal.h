@@ -82,6 +82,9 @@ struct coda_product_struct
     const coda_product_definition *product_definition;
     long *product_variable_size;
     int64_t **product_variable;
+#if CODA_USE_QIAP
+    void *qiap_info;
+#endif
 };
 
 extern int coda_option_bypass_special_types;
@@ -95,6 +98,7 @@ void coda_add_error_message(const char *message, ...);
 void coda_set_error_message(const char *message, ...);
 void coda_add_error_message_vargs(const char *message, va_list ap);
 void coda_set_error_message_vargs(const char *message, va_list ap);
+void coda_cursor_add_to_error_message(const coda_cursor *cursor);
 
 int coda_data_dictionary_init(void);
 void coda_data_dictionary_done(void);
@@ -106,6 +110,11 @@ coda_dynamic_type *coda_mem_empty_record(coda_format format);
 coda_type *coda_get_type_for_dynamic_type(coda_dynamic_type *dynamic_type);
 void coda_dynamic_type_delete(coda_dynamic_type *type);
 int coda_dynamic_type_update(coda_dynamic_type **type, coda_type **definition);
+
+LIBCODA_API int coda_type_get_record_field_index_from_name_n(const coda_type *type, const char *name, int name_length,
+                                                             long *index);
+
+int coda_cursor_print_path(const coda_cursor *cursor, int (*print) (const char *, ...));
 
 int coda_product_variable_get_size(coda_product *product, const char *name, long *size);
 int coda_product_variable_get_pointer(coda_product *product, const char *name, long i, int64_t **ptr);

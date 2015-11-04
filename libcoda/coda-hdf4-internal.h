@@ -27,7 +27,7 @@
 #include "hdf.h"
 #include "mfhdf.h"
 
-#define MAX_HDF4_NAME_LENGTH 64
+#define MAX_HDF4_NAME_LENGTH 256
 #define MAX_HDF4_VAR_DIMS 32
 
 typedef enum hdf4_type_tag_enum
@@ -195,6 +195,9 @@ struct coda_hdf4_product_struct
     const coda_product_definition *product_definition;
     long *product_variable_size;
     int64_t **product_variable;
+#if CODA_USE_QIAP
+    void *qiap_info;
+#endif
 
     int32 is_hdf;       /* is it a real HDF4 file or are we accessing a (net)CDF file */
     int32 file_id;

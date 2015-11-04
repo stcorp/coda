@@ -1120,44 +1120,40 @@ void coda_grib_done(void)
 }
 
 #ifndef WORDS_BIGENDIAN
-static void swap4(void *value)
+static void swap_float(float *value)
 {
     union
     {
         uint8_t as_bytes[4];
-        int32_t as_int32;
-    } v1, v2;
+        float as_float;
+    } v;
 
-    v1.as_int32 = *(int32_t *)value;
+    v.as_bytes[0] = ((uint8_t *)value)[3];
+    v.as_bytes[1] = ((uint8_t *)value)[2];
+    v.as_bytes[2] = ((uint8_t *)value)[1];
+    v.as_bytes[3] = ((uint8_t *)value)[0];
 
-    v2.as_bytes[0] = v1.as_bytes[3];
-    v2.as_bytes[1] = v1.as_bytes[2];
-    v2.as_bytes[2] = v1.as_bytes[1];
-    v2.as_bytes[3] = v1.as_bytes[0];
-
-    *(int32_t *)value = v2.as_int32;
+    *value = v.as_float;
 }
 
-static void swap8(void *value)
+static void swap_int64(int64_t *value)
 {
     union
     {
         uint8_t as_bytes[8];
         int64_t as_int64;
-    } v1, v2;
+    } v;
 
-    v1.as_int64 = *(int64_t *)value;
+    v.as_bytes[0] = ((uint8_t *)value)[7];
+    v.as_bytes[1] = ((uint8_t *)value)[6];
+    v.as_bytes[2] = ((uint8_t *)value)[5];
+    v.as_bytes[3] = ((uint8_t *)value)[4];
+    v.as_bytes[4] = ((uint8_t *)value)[3];
+    v.as_bytes[5] = ((uint8_t *)value)[2];
+    v.as_bytes[6] = ((uint8_t *)value)[1];
+    v.as_bytes[7] = ((uint8_t *)value)[0];
 
-    v2.as_bytes[0] = v1.as_bytes[7];
-    v2.as_bytes[1] = v1.as_bytes[6];
-    v2.as_bytes[2] = v1.as_bytes[5];
-    v2.as_bytes[3] = v1.as_bytes[4];
-    v2.as_bytes[4] = v1.as_bytes[3];
-    v2.as_bytes[5] = v1.as_bytes[2];
-    v2.as_bytes[6] = v1.as_bytes[1];
-    v2.as_bytes[7] = v1.as_bytes[0];
-
-    *(int64_t *)value = v2.as_int64;
+    *value = v.as_int64;
 }
 #endif
 
@@ -1355,6 +1351,7 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
             }
             type = (coda_dynamic_type *)coda_mem_raw_new((coda_type_raw *)grib_type[grib1_local], section_size - 40,
                                                          raw_data);
+            free(raw_data);
             coda_mem_record_add_field(message, "local", type, 0);
             file_offset += section_size - 40;
         }
@@ -1727,6 +1724,7 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
         }
         if (read(product->fd, bitmask, section_size - 6) < 0)
         {
+            free(bitmask);
             coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
                            strerror(errno));
             return -1;
@@ -1854,7 +1852,7 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
     int16_t binaryScaleFactor = 0;
     float referenceValue = 0;
     uint8_t bitsPerValue = 0;
-    uint32_t num_elements;
+    uint32_t num_elements = 0;
     uint32_t section_size;
     uint8_t buffer[64];
     uint8_t prev_section;
@@ -1866,10 +1864,7 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
         return -1;
     }
 
-    section_size = *(uint32_t *)buffer;
-#ifndef WORDS_BIGENDIAN
-    swap4(&section_size);
-#endif
+    section_size = ((buffer[0] * 256 + buffer[1]) * 256 + buffer[2]) * 256 + buffer[3];
 
     if (buffer[4] != 1)
     {
@@ -1964,10 +1959,7 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
     file_offset += 4;
     while (memcmp(buffer, "7777", 4) != 0)
     {
-        section_size = *(uint32_t *)buffer;
-#ifndef WORDS_BIGENDIAN
-        swap4(&section_size);
-#endif
+        section_size = ((buffer[0] * 256 + buffer[1]) * 256 + buffer[2]) * 256 + buffer[3];
 
         /* read section number */
         if (read(product->fd, buffer, 1) < 0)
@@ -2262,25 +2254,28 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                                strerror(errno));
                 return -1;
             }
-            num_elements = *((uint32_t *)buffer);
-#ifndef WORDS_BIGENDIAN
-            swap4(&num_elements);
-#endif
+            num_elements = ((buffer[0] * 256 + buffer[1]) * 256 + buffer[2]) * 256 + buffer[3];
             dataRepresentationTemplate = buffer[4] * 256 + buffer[5];
             file_offset += 6;
 
             if (dataRepresentationTemplate == 0 || dataRepresentationTemplate == 1)
             {
-                if (read(product->fd, buffer, 9) < 0)
+                if (read(product->fd, &referenceValue, 4) < 0)
                 {
                     coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
                                    strerror(errno));
                     return -1;
                 }
-                referenceValue = *((float *)buffer);
 #ifndef WORDS_BIGENDIAN
-                swap4(&referenceValue);
+                swap_float(&referenceValue);
 #endif
+                if (read(product->fd, &referenceValue, 5) < 0)
+                {
+                    coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
+                                   strerror(errno));
+                    return -1;
+                }
+
                 binaryScaleFactor = (buffer[4] & 0x80 ? -1 : 1) * ((buffer[4] & 0x7F) * 256 + buffer[5]);
                 decimalScaleFactor = (buffer[6] & 0x80 ? -1 : 1) * ((buffer[6] & 0x7F) * 256 + buffer[7]);
                 bitsPerValue = buffer[8];
@@ -2535,6 +2530,9 @@ int coda_grib_open(const char *filename, int64_t file_size, const coda_product_d
     grib_product->product_definition = definition;
     grib_product->product_variable_size = NULL;
     grib_product->product_variable = NULL;
+#if CODA_USE_QIAP
+    grib_product->qiap_info = NULL;
+#endif
     grib_product->use_mmap = 0;
     grib_product->fd = -1;
     grib_product->mmap_ptr = NULL;
@@ -2661,7 +2659,7 @@ int coda_grib_open(const char *filename, int64_t file_size, const coda_product_d
                 return -1;
             }
 #ifndef WORDS_BIGENDIAN
-            swap8(&message_size);
+            swap_int64(&message_size);
 #endif
 
             message = coda_mem_record_new((coda_type_record *)grib_type[grib2_message]);

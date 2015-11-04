@@ -150,6 +150,7 @@
 %rename(cursor_read_complex_double_pairs_array) coda_cursor_read_complex_double_pairs_array;
 %rename(cursor_read_complex_double_split) coda_cursor_read_complex_double_split;
 %rename(cursor_read_complex_double_split_array) coda_cursor_read_complex_double_split_array;
+%rename(expression_get_type_name) coda_expression_get_type_name;
 %rename(expression_from_string) coda_expression_from_string;
 %rename(expression_delete) coda_expression_delete;
 %rename(expression_get_type) coda_expression_get_type;

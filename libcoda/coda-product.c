@@ -50,8 +50,11 @@
 #include "coda-hdf5.h"
 #endif
 #include "coda-rinex.h"
-#include "coda-sp3c.h"
+#include "coda-sp3.h"
 #include "coda-definition.h"
+#if CODA_USE_QIAP
+#include "coda-qiap.h"
+#endif
 
 /** \defgroup coda_product CODA Product
  * The CODA Product module contains functions and procedures to open, close and retrieve information about product
@@ -275,15 +278,16 @@ static int get_format(const char *filename, int64_t file_size, coda_format *form
         }
     }
 
-    /* SP3-c */
+    /* SP3 */
     if (file_size >= 60)
     {
-        if (buffer[0] == '#' && buffer[1] == 'c' && (buffer[2] == 'P' || buffer[2] == 'V') &&
-            buffer[3] >= '0' && buffer[3] <= '9' && buffer[4] >= '0' && buffer[4] <= '9' && buffer[5] >= '0' &&
-            buffer[5] <= '0' && buffer[6] >= '0' && buffer[6] <= '9' && buffer[7] == ' ' && buffer[10] == ' ' &&
-            buffer[13] == ' ' && buffer[16] == ' ' && buffer[19] == ' ' && buffer[31] == ' ' && buffer[39] == ' ')
+        if (buffer[0] == '#' && (buffer[1] == 'a' || buffer[1] == 'b' || buffer[1] == 'c') &&
+            (buffer[2] == 'P' || buffer[2] == 'V') && buffer[3] >= '0' && buffer[3] <= '9' && buffer[4] >= '0' &&
+            buffer[4] <= '9' && buffer[5] >= '0' && buffer[5] <= '9' && buffer[6] >= '0' && buffer[6] <= '9' &&
+            buffer[7] == ' ' && buffer[10] == ' ' && buffer[13] == ' ' && buffer[16] == ' ' && buffer[19] == ' ' &&
+            buffer[31] == ' ' && buffer[39] == ' ')
         {
-            *format = coda_format_sp3c;
+            *format = coda_format_sp3;
             return 0;
         }
     }
@@ -341,8 +345,8 @@ static int detect_definition(const char *filename, coda_format *format, int64_t 
             *definition = NULL;
             break;
         case coda_format_rinex:
-        case coda_format_sp3c:
-            /* We currently use the ascii detection tree to assign product class/type to RINEX and SP3-c files */
+        case coda_format_sp3:
+            /* We currently use the ascii detection tree to assign product class/type to RINEX and SP3 files */
             if (coda_ascbin_recognize_file(filename, *file_size, definition) != 0)
             {
                 return -1;
@@ -484,8 +488,8 @@ static int open_file(const char *filename, coda_format format, int64_t file_size
                 return -1;
             }
             break;
-        case coda_format_sp3c:
-            if (coda_sp3c_open(filename, file_size, definition, product_file) != 0)
+        case coda_format_sp3:
+            if (coda_sp3_open(filename, file_size, definition, product_file) != 0)
             {
                 return -1;
             }
@@ -524,6 +528,15 @@ static int open_file(const char *filename, coda_format format, int64_t file_size
             (*product_file)->product_variable[i] = NULL;
         }
     }
+
+#if CODA_USE_QIAP
+    if (coda_qiap_init_actions(*product_file) != 0)
+    {
+        coda_close(*product_file);
+        return -1;
+    }
+#endif
+
     return 0;
 }
 
@@ -644,6 +657,10 @@ LIBCODA_API int coda_close(coda_product *product)
         return -1;
     }
 
+#if CODA_USE_QIAP
+    coda_qiap_delete_actions(product);
+#endif
+
     /* remove product variable information */
     if (product->product_variable_size != NULL)
     {
@@ -694,8 +711,8 @@ LIBCODA_API int coda_close(coda_product *product)
 #endif
         case coda_format_rinex:
             return coda_rinex_close(product);
-        case coda_format_sp3c:
-            return coda_sp3c_close(product);
+        case coda_format_sp3:
+            return coda_sp3_close(product);
     }
 
     assert(0);

@@ -31,8 +31,6 @@
 #include <dirent.h>
 #endif
 
-/** \file */
-
 #define NAME_BLOCK_SIZE 1024
 
 typedef struct NameBuffer_struct
@@ -254,6 +252,7 @@ static int coda_match_dir(coda_expression *expr, NameBuffer *path_name,
         result = coda_match_filepath(1, expr, path_name, callback, userdata);
         if (result != 0)
         {
+            closedir(dirp);
             return result;
         }
 

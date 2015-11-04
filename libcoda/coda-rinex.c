@@ -2220,8 +2220,6 @@ static int read_observation_records(ingest_info *info)
         coda_mem_record_add_field(info->epoch_record, "epoch", value, 0);
 
         epoch_flag = line[31];
-        base_type = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)rinex_type[rinex_epoch_string],
-                                                           epoch_string);
         value = (coda_dynamic_type *)coda_mem_char_new((coda_type_text *)rinex_type[rinex_obs_epoch_flag], epoch_flag);
         coda_mem_record_add_field(info->epoch_record, "flag", value, 0);
 
@@ -2615,7 +2613,7 @@ static int read_navigation_records(ingest_info *info)
         coda_mem_record *record;
         coda_dynamic_type *base_type;
         coda_dynamic_type *value;
-        char epoch_string[28];
+        char epoch_string[20];
         int year, month, day, hour, minute, second;
         int number;
         double record_value[31];
@@ -2663,7 +2661,7 @@ static int read_navigation_records(ingest_info *info)
         coda_mem_record_add_field(record, "number", value, 0);
 
         memcpy(epoch_string, &line[4], 19);
-        epoch_string[27] = '\0';
+        epoch_string[19] = '\0';
         if (sscanf(epoch_string, "%4d %2d %2d %2d %2d %d", &year, &month, &day, &hour, &minute, &second) != 6)
         {
             coda_dynamic_type_delete((coda_dynamic_type *)record);
@@ -3147,6 +3145,9 @@ int coda_rinex_open(const char *filename, int64_t file_size, const coda_product_
     product_file->product_definition = definition;
     product_file->product_variable_size = NULL;
     product_file->product_variable = NULL;
+#if CODA_USE_QIAP
+    product_file->qiap_info = NULL;
+#endif
 
     product_file->filename = strdup(filename);
     if (product_file->filename == NULL)

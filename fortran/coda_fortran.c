@@ -282,9 +282,12 @@ int UFNAME(CODA_OPEN_AS,coda_open_as)(char *filename, char *product_class, char 
                                       int filename_size, int product_class_size, int product_type_size)
 {
     int result;
-    INSTR_BEGIN(filename)
-    INSTR_BEGIN(product_class)
-    INSTR_BEGIN(product_type)
+    INSTR_BEGIN_DEF(filename)
+    INSTR_BEGIN_DEF(product_class)
+    INSTR_BEGIN_DEF(product_type)
+    INSTR_BEGIN_INIT(filename)
+    INSTR_BEGIN_INIT(product_class)
+    INSTR_BEGIN_INIT(product_type)
     result = coda_open_as(filename_s, product_class_s, product_type_s, version, (coda_product **)pf);
     INSTR_END(product_type)
     INSTR_END(product_class)
@@ -885,3 +888,86 @@ int UFNAME(CODA_CURSOR_READ_COMPLEX_DOUBLE_SPLIT_ARRAY,coda_cursor_read_complex_
 {
     return coda_cursor_read_complex_double_split_array(*(coda_cursor **)cursor, dst_re, dst_im, (coda_array_ordering)*array_ordering);
 }
+
+void UFNAME(CODA_EXPRESSION_GET_TYPE_NAME,coda_expression_get_type_name)(int *expression_type, char *expression_type_name, int expression_type_name_size)
+{
+    OUTSTR_BEGIN(expression_type_name)
+    expression_type_name_s = coda_type_get_native_type_name(*expression_type);
+    OUTSTR_END(expression_type_name)
+}
+
+int UFNAME(CODA_EXPRESSION_FROM_STRING,coda_expression_from_string)(char *expression_string, void *expression, int expression_string_size)
+{
+    int result;
+    INSTR_BEGIN(expression_string)
+    result = coda_expression_from_string(expression_string_s, (coda_expression **)expression);
+    INSTR_END(expression_string)
+    return result;
+}
+
+void UFNAME(CODA_EXPRESSION_DELETE,coda_expression_delete)(void *expression)
+{
+    coda_expression_delete(*(coda_expression **)expression);
+}
+
+int UFNAME(CODA_EXPRESSION_GET_TYPE,coda_expression_get_type)(void *expression, int *expression_type)
+{
+    return coda_expression_get_type(*(coda_expression **)expression, (coda_expression_type *)expression_type);
+}
+
+int UFNAME(CODA_EXPRESSION_IS_CONSTANT,coda_expression_is_constant)(void *expression)
+{
+    return coda_expression_is_constant(*(coda_expression **)expression);
+}
+
+int UFNAME(CODA_EXPRESSION_EVAL_BOOL,coda_expression_eval_bool)(void *expression, void *cursor, int *value)
+{
+    return coda_expression_eval_bool(*(coda_expression **)expression, *(coda_cursor **)cursor, value);
+}
+
+int UFNAME(CODA_EXPRESSION_EVAL_INTEGER,coda_expression_eval_integer)(void *expression, void *cursor, int64_t *value)
+{
+    return coda_expression_eval_integer(*(coda_expression **)expression, *(coda_cursor **)cursor, value);
+}
+
+int UFNAME(CODA_EXPRESSION_EVAL_FLOAT,coda_expression_eval_float)(void *expression, void *cursor, double *value)
+{
+    return coda_expression_eval_float(*(coda_expression **)expression, *(coda_cursor **)cursor, value);
+}
+
+int UFNAME(CODA_EXPRESSION_EVAL_STRING,coda_expression_eval_string)(void *expression, void *cursor, char *value, int value_size)
+{
+    char *value_s = NULL;
+    long value_l;
+    int result;
+
+    result = coda_expression_eval_string(*(coda_expression **)expression, *(coda_cursor **)cursor, &value_s, &value_l);
+    if (value_s != NULL)
+    {
+        if (value_l > value_size)
+        {
+            memcpy(value, value_s, value_size);
+        }
+        else
+        {
+            memcpy(value, value_s, value_l);
+            while (value_l < value_size)
+            {
+                value[value_l] = ' ';
+                value_l++;
+            }
+        }
+        coda_free(value_s);
+    }
+    else
+    {
+        memset(value, ' ', value_size);
+    }
+    return result;
+}
+
+int UFNAME(CODA_EXPRESSION_EVAL_NODE,coda_expression_eval_node)(void *expression, void *cursor)
+{
+    return coda_expression_eval_node(*(coda_expression **)expression, *(coda_cursor **)cursor);
+}
+

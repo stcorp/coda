@@ -182,6 +182,7 @@ LIBCODA_API extern int coda_errno;
 
 #define CODA_ERROR_PRODUCT                                 (-300)
 #define CODA_ERROR_OUT_OF_BOUNDS_READ                      (-301)
+#define CODA_ERROR_QIAP                                    (-302)
 
 #define CODA_ERROR_DATA_DEFINITION                         (-400)
 #define CODA_ERROR_EXPRESSION                              (-401)
@@ -214,7 +215,7 @@ enum coda_format_enum
     coda_format_grib1,                      /**< Data stored in GRIB1 format */
     coda_format_grib2,                      /**< Data stored in GRIB2 format */
     coda_format_rinex,                      /**< Data stored in RINEX format */
-    coda_format_sp3c                        /**< Data stored in SP3-c format */
+    coda_format_sp3                         /**< Data stored in SP3 format */
 };
 
 enum coda_type_class_enum
@@ -500,6 +501,8 @@ LIBCODA_API int coda_cursor_read_complex_double_split_array(const coda_cursor *c
 
 
 /* CODA Expression */
+
+LIBCODA_API const char *coda_expression_get_type_name(coda_expression_type type);
 
 LIBCODA_API int coda_expression_from_string(const char *exprstring, coda_expression **expr);
 LIBCODA_API void coda_expression_delete(coda_expression *expr);

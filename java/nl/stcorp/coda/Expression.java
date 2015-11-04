@@ -34,6 +34,19 @@ public class Expression
 
 
     /**
+     * Returns the name of an expression type.
+     * 
+     * @param type
+     *            CODA expression type
+     * @return if the type is known a string containing the name of the
+     *         type, otherwise the string "unknown".
+     */
+    public static String getTypeName(ExpressionTypeEnum type)
+    {
+        return codac.expression_get_type_name(type);
+    }
+
+    /**
      * Create a new CODA expression object by parsing a string containing a CODA
      * expression.
      * 

@@ -175,6 +175,7 @@
             <li><a href="#coda_cursor_read_complex_double_pairs_array"><code>coda.cursor_read_complex_double_pairs_array</code></a></li>
             <li><a href="#coda_cursor_read_complex_double_split"><code>coda.cursor_read_complex_double_split</code></a></li>
             <li><a href="#coda_cursor_read_complex_double_split_array"><code>coda.cursor_read_complex_double_split_array</code></a></li>
+            <li><a href="#coda_expression_get_type_name"><code>coda.expression_get_type_name</code></a></li>
             <li><a href="#coda_expression_from_string"><code>coda.expression_from_string</code></a></li>
             <li><a href="#coda_expression_delete"><code>coda.expression_delete</code></a></li>
             <li><a href="#coda_expression_get_type"><code>coda.expression_get_type</code></a></li>
@@ -601,9 +602,10 @@ except coda.CodacError, e:
       <h5 id="coda_cursor_read_complex_double_split"><code>[dst_re, dst_im] = coda.cursor_read_complex_double_split()</code></h5>
       <h5 id="coda_cursor_read_complex_double_split_array"><code>[dst_re, dst_im] = coda.cursor_read_complex_double_split_array()</code></h5>
       <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numpy array  object using C array ordering.</p>
+      <h5 id="coda_expression_get_type_name"><code>stringvalue = coda.expression_get_type_name(expression_type)</code></h5>
       <h5 id="coda_expression_from_string"><code>expr = coda.expression_from_string(exprstring)</code></h5>
       <h5 id="coda_expression_delete"><code>coda.expression_delete(expr)</code></h5>
-      <h5 id="coda_expression_get_type"><code>result_type = coda.expression_get_type(expr)</code></h5>
+      <h5 id="coda_expression_get_type"><code>expression_type = coda.expression_get_type(expr)</code></h5>
       <h5 id="coda_expression_is_constant"><code>is_constant = coda.expression_is_constant(expr)</code></h5>
       <h5 id="coda_expression_eval_bool"><code>boolvalue = coda.expression_eval_bool(expr, cursor=None)</code></h5>
       <h5 id="coda_expression_eval_integer"><code>integervalue = coda.expression_eval_integer(expr, cursor=None)</code></h5>

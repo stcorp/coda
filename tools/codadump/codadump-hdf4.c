@@ -229,10 +229,10 @@ static void *hdf_fill_value(int32 type)
         case DFNT_INT32:
             return &int32_fill_value;
         case DFNT_FLOAT32:
-            float_fill_value = (float)sqrt(-1);
+            float_fill_value = (float)coda_NaN();
             return &float_fill_value;
         case DFNT_FLOAT64:
-            double_fill_value = sqrt(-1);
+            double_fill_value = coda_NaN();
             return &double_fill_value;
         default:
             return NULL;
@@ -982,7 +982,7 @@ static void write_data(int depth, int array_depth, int record_depth)
                             {
                                 handle_hdf4_error();
                             }
-                            destroy_hdf_data_block(dim_id);
+                            destroy_hdf_data_block();
                         }
                         break;
                     case coda_native_type_not_available:

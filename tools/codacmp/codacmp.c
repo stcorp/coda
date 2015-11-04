@@ -29,6 +29,10 @@
 
 #include "coda.h"
 
+/* internal CODA functions */
+void coda_cursor_add_to_error_message(const coda_cursor *cursor);
+int coda_cursor_print_path(const coda_cursor *cursor, int (*print) (const char *, ...));
+
 const char *pre[] = { "< ", "> " };
 
 int option_verbose;
@@ -107,121 +111,10 @@ static void print_escaped(const char *data, long length)
     }
 }
 
-static int print_cursor_position(const coda_cursor *cursor)
+static void print_error_with_cursor(coda_cursor *cursor, int file_id)
 {
-    int depth;
-
-    if (coda_cursor_get_depth(cursor, &depth) != 0)
-    {
-        return -1;
-    }
-    if (depth > 0)
-    {
-        coda_type_class type_class;
-        coda_cursor parent_cursor;
-        long index;
-
-        /* print parent */
-        parent_cursor = *cursor;
-        if (coda_cursor_goto_parent(&parent_cursor) != 0)
-        {
-            return -1;
-        }
-        if (depth > 1)
-        {
-            if (print_cursor_position(&parent_cursor) != 0)
-            {
-                return -1;
-            }
-        }
-
-        printf("/");
-
-        /* print path from parent to current cursor position */
-        if (coda_cursor_get_index(cursor, &index) != 0)
-        {
-            return -1;
-        }
-        if (index == -1)
-        {
-            /* we are pointing to the attribute record */
-            printf("@");
-        }
-        else
-        {
-            if (coda_cursor_get_type_class(&parent_cursor, &type_class) != 0)
-            {
-                return -1;
-            }
-            switch (type_class)
-            {
-                case coda_array_class:
-                    {
-                        long array_index[CODA_MAX_NUM_DIMS];
-                        long dim[CODA_MAX_NUM_DIMS];
-                        int num_dims;
-                        int i;
-
-                        /* convert to zero dimensional index if needed */
-                        if (coda_cursor_get_array_dim(&parent_cursor, &num_dims, dim) != 0)
-                        {
-                            return -1;
-                        }
-                        for (i = num_dims - 1; i >= 0; i--)
-                        {
-                            array_index[i] = index % dim[i];
-                            index /= dim[i];
-                        }
-                        printf("[");
-                        for (i = 0; i < num_dims; i++)
-                        {
-                            printf("%ld", array_index[i]);
-                            if (i < num_dims - 1)
-                            {
-                                printf(",");
-                            }
-                        }
-                        printf("]");
-                    }
-                    break;
-                case coda_record_class:
-                    {
-                        const char *name;
-                        coda_type *type;
-
-                        if (coda_cursor_get_type(&parent_cursor, &type) != 0)
-                        {
-                            return -1;
-                        }
-                        if (coda_type_get_record_field_name(type, index, &name) != 0)
-                        {
-                            return -1;
-                        }
-                        printf("%s", name);
-                    }
-                    break;
-                default:
-                    assert(0);
-                    exit(1);
-            }
-        }
-    }
-    else
-    {
-        printf("/");
-    }
-
-    return 0;
-}
-
-static void print_error_with_cursor(coda_cursor *cursor, int file_id, int err)
-{
-    printf("%sERROR: %s at ", pre[file_id - 1], coda_errno_to_string(err));
-    if (print_cursor_position(cursor) != 0)
-    {
-        printf("{--%s--}", coda_errno_to_string(coda_errno));
-    }
-    printf("\n");
+    coda_cursor_add_to_error_message(cursor);
+    printf("%sERROR: %s\n", pre[file_id - 1], coda_errno_to_string(coda_errno));
 }
 
 static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
@@ -231,19 +124,19 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
 
     if (coda_cursor_get_type_class(cursor1, &type_class1) != 0)
     {
-        print_error_with_cursor(cursor1, 1, coda_errno);
+        print_error_with_cursor(cursor1, 1);
         return -1;
     }
     if (coda_cursor_get_type_class(cursor2, &type_class2) != 0)
     {
-        print_error_with_cursor(cursor2, 2, coda_errno);
+        print_error_with_cursor(cursor2, 2);
         return -1;
     }
 
     if (type_class1 != type_class2)
     {
         printf("type differs at ");
-        print_cursor_position(cursor1);
+        coda_cursor_print_path(cursor1, printf);
         printf("\n");
         if (option_verbose)
         {
@@ -263,18 +156,18 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
 
                 if (coda_cursor_get_num_elements(cursor1, &num_elements1) != 0)
                 {
-                    print_error_with_cursor(cursor1, 1, coda_errno);
+                    print_error_with_cursor(cursor1, 1);
                     return -1;
                 }
                 if (coda_cursor_get_num_elements(cursor2, &num_elements2) != 0)
                 {
-                    print_error_with_cursor(cursor2, 2, coda_errno);
+                    print_error_with_cursor(cursor2, 2);
                     return -1;
                 }
                 if (num_elements1 != num_elements2)
                 {
                     printf("number of array elements differs at ");
-                    print_cursor_position(cursor1);
+                    coda_cursor_print_path(cursor1, printf);
                     printf("\n");
                     if (option_verbose)
                     {
@@ -287,12 +180,12 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
                 {
                     if (coda_cursor_goto_first_array_element(cursor1) != 0)
                     {
-                        print_error_with_cursor(cursor1, 1, coda_errno);
+                        print_error_with_cursor(cursor1, 1);
                         return -1;
                     }
                     if (coda_cursor_goto_first_array_element(cursor2) != 0)
                     {
-                        print_error_with_cursor(cursor2, 1, coda_errno);
+                        print_error_with_cursor(cursor2, 1);
                         return -1;
                     }
                     for (i = 0; i < num_elements1; i++)
@@ -305,12 +198,12 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
                         {
                             if (coda_cursor_goto_next_array_element(cursor1) != 0)
                             {
-                                print_error_with_cursor(cursor1, 1, coda_errno);
+                                print_error_with_cursor(cursor1, 1);
                                 return -1;
                             }
                             if (coda_cursor_goto_next_array_element(cursor2) != 0)
                             {
-                                print_error_with_cursor(cursor2, 2, coda_errno);
+                                print_error_with_cursor(cursor2, 2);
                                 return -1;
                             }
                         }
@@ -332,22 +225,22 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
 
                 if (coda_cursor_get_type(cursor1, &record_type1) != 0)
                 {
-                    print_error_with_cursor(cursor1, 1, coda_errno);
+                    print_error_with_cursor(cursor1, 1);
                     return -1;
                 }
                 if (coda_cursor_get_type(cursor2, &record_type2) != 0)
                 {
-                    print_error_with_cursor(cursor2, 2, coda_errno);
+                    print_error_with_cursor(cursor2, 2);
                     return -1;
                 }
                 if (coda_cursor_get_num_elements(cursor1, &num_elements1) != 0)
                 {
-                    print_error_with_cursor(cursor1, 1, coda_errno);
+                    print_error_with_cursor(cursor1, 1);
                     return -1;
                 }
                 if (coda_cursor_get_num_elements(cursor2, &num_elements2) != 0)
                 {
-                    print_error_with_cursor(cursor2, 2, coda_errno);
+                    print_error_with_cursor(cursor2, 2);
                     return -1;
                 }
 
@@ -363,7 +256,7 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
 
                         if (coda_type_get_record_field_name(record_type1, index1, &field_name) != 0)
                         {
-                            print_error_with_cursor(cursor1, 1, coda_errno);
+                            print_error_with_cursor(cursor1, 1);
                             return -1;
                         }
                         if (coda_type_get_record_field_index_from_name(record_type2, field_name, &index2) != 0)
@@ -372,7 +265,7 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
                             if (first_definition_mismatch)
                             {
                                 printf("definition differs at ");
-                                print_cursor_position(cursor1);
+                                coda_cursor_print_path(cursor1, printf);
                                 printf("\n");
                                 first_definition_mismatch = 0;
                             }
@@ -393,7 +286,7 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
 
                         if (coda_type_get_record_field_name(record_type2, index2, &field_name) != 0)
                         {
-                            print_error_with_cursor(cursor2, 2, coda_errno);
+                            print_error_with_cursor(cursor2, 2);
                             return -1;
                         }
                         if (coda_type_get_record_field_index_from_name(record_type1, field_name, &index1) != 0)
@@ -402,7 +295,7 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
                             if (first_definition_mismatch)
                             {
                                 printf("definition differs at ");
-                                print_cursor_position(cursor1);
+                                coda_cursor_print_path(cursor1, printf);
                                 printf("\n");
                                 first_definition_mismatch = 0;
                             }
@@ -422,7 +315,7 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
                     record_cursor1 = *cursor1;
                     if (coda_cursor_goto_first_record_field(cursor1) != 0)
                     {
-                        print_error_with_cursor(cursor1, 1, coda_errno);
+                        print_error_with_cursor(cursor1, 1);
                         return -1;
                     }
                     for (index1 = 0; index1 < num_elements1; index1++)
@@ -432,12 +325,12 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
 
                         if (coda_cursor_get_record_field_available_status(&record_cursor1, index1, &available1) != 0)
                         {
-                            print_error_with_cursor(&record_cursor1, 1, coda_errno);
+                            print_error_with_cursor(&record_cursor1, 1);
                             return -1;
                         }
                         if (coda_type_get_record_field_name(record_type1, index1, &field_name) != 0)
                         {
-                            print_error_with_cursor(cursor1, 1, coda_errno);
+                            print_error_with_cursor(cursor1, 1);
                             return -1;
                         }
                         if (coda_type_get_record_field_index_from_name(record_type2, field_name, &index2) == 0)
@@ -447,7 +340,7 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
                             /* field is defined for both records */
                             if (coda_cursor_get_record_field_available_status(cursor2, index2, &available2) != 0)
                             {
-                                print_error_with_cursor(cursor2, 2, coda_errno);
+                                print_error_with_cursor(cursor2, 2);
                                 return -1;
                             }
                             if (available1)
@@ -456,7 +349,7 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
                                 {
                                     if (coda_cursor_goto_record_field_by_index(cursor2, index2) != 0)
                                     {
-                                        print_error_with_cursor(cursor2, 2, coda_errno);
+                                        print_error_with_cursor(cursor2, 2);
                                         return -1;
                                     }
                                     if (compare_data(cursor1, cursor2) != 0)
@@ -469,7 +362,7 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
                                 {
                                     /* this field is only available in record #1 */
                                     printf("availability differs at ");
-                                    print_cursor_position(cursor1);
+                                    coda_cursor_print_path(cursor1, printf);
                                     printf("\n");
                                     if (option_verbose)
                                     {
@@ -482,7 +375,7 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
                             {
                                 /* this field is only available in record #2 */
                                 printf("availability differs at ");
-                                print_cursor_position(cursor1);
+                                coda_cursor_print_path(cursor1, printf);
                                 printf("\n");
                                 if (option_verbose)
                                 {
@@ -495,7 +388,7 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
                         {
                             if (coda_cursor_goto_next_record_field(cursor1) != 0)
                             {
-                                print_error_with_cursor(cursor1, 1, coda_errno);
+                                print_error_with_cursor(cursor1, 1);
                                 return -1;
                             }
                         }
@@ -512,18 +405,18 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
 
                 if (coda_cursor_get_read_type(cursor1, &read_type1) != 0)
                 {
-                    print_error_with_cursor(cursor1, 1, coda_errno);
+                    print_error_with_cursor(cursor1, 1);
                     return -1;
                 }
                 if (coda_cursor_get_read_type(cursor2, &read_type2) != 0)
                 {
-                    print_error_with_cursor(cursor2, 2, coda_errno);
+                    print_error_with_cursor(cursor2, 2);
                     return -1;
                 }
                 if (read_type1 != read_type2)
                 {
                     printf("native type differs at ");
-                    print_cursor_position(cursor1);
+                    coda_cursor_print_path(cursor1, printf);
                     printf("\n");
                     if (option_verbose)
                     {
@@ -545,7 +438,7 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
 
                             if (coda_cursor_read_int64(cursor1, &value1) != 0)
                             {
-                                print_error_with_cursor(cursor1, 1, coda_errno);
+                                print_error_with_cursor(cursor1, 1);
                                 if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT)
                                 {
                                     return -1;
@@ -553,7 +446,7 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
                             }
                             else if (coda_cursor_read_int64(cursor2, &value2) != 0)
                             {
-                                print_error_with_cursor(cursor2, 2, coda_errno);
+                                print_error_with_cursor(cursor2, 2);
                                 if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT)
                                 {
                                     return -1;
@@ -562,7 +455,7 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
                             else if (value1 != value2)
                             {
                                 printf("value differs at ");
-                                print_cursor_position(cursor1);
+                                coda_cursor_print_path(cursor1, printf);
                                 printf("\n");
                                 if (option_verbose)
                                 {
@@ -587,7 +480,7 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
 
                             if (coda_cursor_read_uint64(cursor1, &value1) != 0)
                             {
-                                print_error_with_cursor(cursor1, 1, coda_errno);
+                                print_error_with_cursor(cursor1, 1);
                                 if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT)
                                 {
                                     return -1;
@@ -595,7 +488,7 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
                             }
                             else if (coda_cursor_read_uint64(cursor2, &value2) != 0)
                             {
-                                print_error_with_cursor(cursor2, 2, coda_errno);
+                                print_error_with_cursor(cursor2, 2);
                                 if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT)
                                 {
                                     return -1;
@@ -604,7 +497,7 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
                             else if (value1 != value2)
                             {
                                 printf("value differs at ");
-                                print_cursor_position(cursor1);
+                                coda_cursor_print_path(cursor1, printf);
                                 printf("\n");
                                 if (option_verbose)
                                 {
@@ -627,7 +520,7 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
 
                             if (coda_cursor_read_double(cursor1, &value1) != 0)
                             {
-                                print_error_with_cursor(cursor1, 1, coda_errno);
+                                print_error_with_cursor(cursor1, 1);
                                 if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT)
                                 {
                                     return -1;
@@ -635,7 +528,7 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
                             }
                             else if (coda_cursor_read_double(cursor2, &value2) != 0)
                             {
-                                print_error_with_cursor(cursor2, 2, coda_errno);
+                                print_error_with_cursor(cursor2, 2);
                                 if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT)
                                 {
                                     return -1;
@@ -644,7 +537,7 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
                             else if (value1 != value2 && !(coda_isNaN(value1) && coda_isNaN(value2)))
                             {
                                 printf("value differs at ");
-                                print_cursor_position(cursor1);
+                                coda_cursor_print_path(cursor1, printf);
                                 printf("\n");
                                 if (option_verbose)
                                 {
@@ -670,12 +563,12 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
 
                 if (coda_cursor_get_string_length(cursor1, &length1) != 0)
                 {
-                    print_error_with_cursor(cursor1, 1, coda_errno);
+                    print_error_with_cursor(cursor1, 1);
                     return -1;
                 }
                 if (coda_cursor_get_string_length(cursor2, &length2) != 0)
                 {
-                    print_error_with_cursor(cursor2, 2, coda_errno);
+                    print_error_with_cursor(cursor2, 2);
                     return -1;
                 }
                 str1 = (char *)malloc(length1 + 1);
@@ -683,7 +576,7 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
                 {
                     coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
                                    length1, __FILE__, __LINE__);
-                    print_error_with_cursor(cursor1, 1, coda_errno);
+                    print_error_with_cursor(cursor1, 1);
                     return -1;
                 }
                 str2 = (char *)malloc(length2 + 1);
@@ -691,13 +584,13 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
                 {
                     coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
                                    length2, __FILE__, __LINE__);
-                    print_error_with_cursor(cursor2, 2, coda_errno);
+                    print_error_with_cursor(cursor2, 2);
                     free(str1);
                     return -1;
                 }
                 if (coda_cursor_read_string(cursor1, str1, length1 + 1) != 0)
                 {
-                    print_error_with_cursor(cursor1, 1, coda_errno);
+                    print_error_with_cursor(cursor1, 1);
                     if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT)
                     {
                         free(str1);
@@ -707,7 +600,7 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
                 }
                 else if (coda_cursor_read_string(cursor2, str2, length2 + 1) != 0)
                 {
-                    print_error_with_cursor(cursor2, 2, coda_errno);
+                    print_error_with_cursor(cursor2, 2);
                     if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT)
                     {
                         free(str1);
@@ -718,7 +611,7 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
                 else if (memcmp(str1, str2, length1) != 0)
                 {
                     printf("string value differs at ");
-                    print_cursor_position(cursor1);
+                    coda_cursor_print_path(cursor1, printf);
                     printf("\n");
                     if (option_verbose)
                     {
@@ -739,20 +632,20 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
 
                 if (coda_cursor_get_bit_size(cursor1, &bit_size1) != 0)
                 {
-                    print_error_with_cursor(cursor1, 1, coda_errno);
+                    print_error_with_cursor(cursor1, 1);
                     return -1;
                 }
                 byte_size1 = (bit_size1 >> 3) + ((bit_size1 & 0x7) != 0 ? 1 : 0);
                 if (coda_cursor_get_bit_size(cursor2, &bit_size2) != 0)
                 {
-                    print_error_with_cursor(cursor2, 2, coda_errno);
+                    print_error_with_cursor(cursor2, 2);
                     return -1;
                 }
                 byte_size2 = (bit_size2 >> 3) + ((bit_size2 & 0x7) != 0 ? 1 : 0);
                 if (bit_size1 != bit_size2)
                 {
                     printf("data size differs at ");
-                    print_cursor_position(cursor1);
+                    coda_cursor_print_path(cursor1, printf);
                     printf("\n");
                     if (option_verbose)
                     {
@@ -775,7 +668,7 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
                     {
                         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
                                        (long)byte_size1, __FILE__, __LINE__);
-                        print_error_with_cursor(cursor1, 1, coda_errno);
+                        print_error_with_cursor(cursor1, 1);
                         return -1;
                     }
                     value2 = (uint8_t *)malloc((size_t)byte_size2);
@@ -783,13 +676,13 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
                     {
                         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
                                        (long)byte_size2, __FILE__, __LINE__);
-                        print_error_with_cursor(cursor2, 2, coda_errno);
+                        print_error_with_cursor(cursor2, 2);
                         free(value1);
                         return -1;
                     }
                     if (coda_cursor_read_bits(cursor1, value1, 0, bit_size1) != 0)
                     {
-                        print_error_with_cursor(cursor1, 1, coda_errno);
+                        print_error_with_cursor(cursor1, 1);
                         if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT)
                         {
                             free(value1);
@@ -799,7 +692,7 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
                     }
                     else if (coda_cursor_read_bits(cursor2, value2, 0, bit_size2) != 0)
                     {
-                        print_error_with_cursor(cursor2, 2, coda_errno);
+                        print_error_with_cursor(cursor2, 2);
                         if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT)
                         {
                             free(value1);
@@ -810,7 +703,7 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
                     else if (memcmp(value1, value2, (size_t)byte_size1) != 0)
                     {
                         printf("data differs at ");
-                        print_cursor_position(cursor1);
+                        coda_cursor_print_path(cursor1, printf);
                         printf("\n");
                         if (option_verbose && byte_size1 <= 256)
                         {
@@ -834,18 +727,18 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
 
                 if (coda_cursor_get_special_type(cursor1, &special_type1) != 0)
                 {
-                    print_error_with_cursor(cursor1, 1, coda_errno);
+                    print_error_with_cursor(cursor1, 1);
                     return -1;
                 }
                 if (coda_cursor_get_special_type(cursor2, &special_type2) != 0)
                 {
-                    print_error_with_cursor(cursor2, 2, coda_errno);
+                    print_error_with_cursor(cursor2, 2);
                     return -1;
                 }
                 if (special_type1 != special_type2)
                 {
                     printf("special type differs at ");
-                    print_cursor_position(cursor1);
+                    coda_cursor_print_path(cursor1, printf);
                     printf("\n");
                     if (option_verbose)
                     {
@@ -856,12 +749,12 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
                 }
                 if (coda_cursor_use_base_type_of_special_type(cursor1) != 0)
                 {
-                    print_error_with_cursor(cursor1, 1, coda_errno);
+                    print_error_with_cursor(cursor1, 1);
                     return -1;
                 }
                 if (coda_cursor_use_base_type_of_special_type(cursor2) != 0)
                 {
-                    print_error_with_cursor(cursor2, 2, coda_errno);
+                    print_error_with_cursor(cursor2, 2);
                     return -1;
                 }
                 if (compare_data(cursor1, cursor2) != 0)
@@ -879,22 +772,22 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
 
         if (coda_cursor_goto_attributes(cursor1) != 0)
         {
-            print_error_with_cursor(cursor1, 1, coda_errno);
+            print_error_with_cursor(cursor1, 1);
             return -1;
         }
         if (coda_cursor_goto_attributes(cursor2) != 0)
         {
-            print_error_with_cursor(cursor2, 2, coda_errno);
+            print_error_with_cursor(cursor2, 2);
             return -1;
         }
         if (coda_cursor_get_num_elements(cursor1, &num_elements1) != 0)
         {
-            print_error_with_cursor(cursor1, 1, coda_errno);
+            print_error_with_cursor(cursor1, 1);
             return -1;
         }
         if (coda_cursor_get_num_elements(cursor2, &num_elements2) != 0)
         {
-            print_error_with_cursor(cursor2, 2, coda_errno);
+            print_error_with_cursor(cursor2, 2);
             return -1;
         }
         if (num_elements1 > 0 || num_elements2 > 0)

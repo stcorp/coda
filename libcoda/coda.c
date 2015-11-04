@@ -31,10 +31,11 @@
 #endif
 #include "coda-grib.h"
 #include "coda-rinex.h"
-#include "coda-sp3c.h"
+#include "coda-sp3.h"
 #include "coda-path.h"
-
-/** \file */
+#ifdef CODA_USE_QIAP
+#include "coda-qiap.h"
+#endif
 
 /** \defgroup coda_general CODA General
  * The CODA General module contains all general and miscellaneous functions and procedures of CODA.
@@ -271,8 +272,8 @@ LIBCODA_API int coda_get_option_use_fast_size_expressions(void)
 /** Enable/Disable the use of memory mapping of files.
  * By default CODA uses a technique called 'memory mapping' to open and access data from product files.
  * The memory mapping approach is a very fast approach that uses the mmap() function to (as the term suggests) map
- * a file in memory. Accessing data from a file using mmap() greatly outperforms the default approach of reading data
- * using the open()/read() combination (often by a factor of 5 and sometimes even more).
+ * a file in memory. Accessing data from a file using mmap() greatly outperforms the alternative approach of reading
+ * data using the open()/read() combination (often by a factor of 5 and sometimes even more).
  *
  * The downside of mapping a file into memory is that it takes away valuable address space. When you run a 32-bit
  * Operating System your maximum addressable memory range is 4GB (or 2GB) and if you simultaneously try to keep a few
@@ -282,7 +283,7 @@ LIBCODA_API int coda_get_option_use_fast_size_expressions(void)
  * 4GB for a 32 bits pointer.
  *
  * If you are using CODA in a situation where you need to have multiple large product files open at the same time you
- * can turn of the use of memory mapping by using this function. Disabling the use of mmap() means that CODA will fall
+ * can turn off the use of memory mapping by using this function. Disabling the use of mmap() means that CODA will fall
  * back to the mechanism of open()/read().
  *
  * In addition, the open()/read() functionality in CODA is able to handle files that are over 4GB in size. If you are
@@ -529,6 +530,19 @@ LIBCODA_API int coda_init(void)
             return -1;
         }
 #endif
+#ifdef CODA_USE_QIAP
+        if (coda_qiap_init() != 0)
+        {
+            coda_data_dictionary_done();
+            if (coda_definition_path != NULL)
+            {
+                free(coda_definition_path);
+                coda_definition_path = NULL;
+            }
+            coda_leap_second_table_done();
+            return -1;
+        }
+#endif
     }
     coda_init_counter++;
 
@@ -557,7 +571,10 @@ LIBCODA_API void coda_done(void)
         coda_init_counter--;
         if (coda_init_counter == 0)
         {
-            coda_sp3c_done();
+#ifdef CODA_USE_QIAP
+            coda_qiap_done();
+#endif
+            coda_sp3_done();
             coda_rinex_done();
             coda_grib_done();
             coda_data_dictionary_done();

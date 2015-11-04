@@ -51,6 +51,9 @@ typedef struct coda_grib_product_struct
     const coda_product_definition *product_definition;
     long *product_variable_size;
     int64_t **product_variable;
+#if CODA_USE_QIAP
+    void *qiap_info;
+#endif
 
     int use_mmap;       /* indicates whether the file was opened using mmap */
     int fd;     /* file handle when not using mmap */

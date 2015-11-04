@@ -39,6 +39,11 @@ void coda_netcdf_type_delete(coda_dynamic_type *type)
     {
         coda_dynamic_type_delete((coda_dynamic_type *)((coda_netcdf_type *)type)->attributes);
     }
+    if (type->definition != NULL)
+    {
+        coda_type_release((coda_type *)type->definition);
+    }
+    free(type);
 }
 
 coda_netcdf_array *coda_netcdf_array_new(int num_dims, long dim[CODA_MAX_NUM_DIMS], coda_netcdf_basic_type *base_type)

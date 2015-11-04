@@ -40,10 +40,8 @@
 #include "coda-hdf5.h"
 #endif
 #include "coda-rinex.h"
-#include "coda-sp3c.h"
+#include "coda-sp3.h"
 #include "coda-type.h"
-
-/** \file */
 
 /** \defgroup coda_cursor CODA Cursor
  * After you have opened a product file with coda_open() (see \link coda_product CODA Product\endlink) you will
@@ -217,6 +215,72 @@ coda_type *coda_get_type_for_dynamic_type(coda_dynamic_type *dynamic_type)
     return dynamic_type->definition;
 }
 
+int coda_cursor_print_path(const coda_cursor *cursor, int (*print) (const char *, ...))
+{
+    int i;
+
+    if (cursor->n <= 1)
+    {
+        if (print("/") < 0)
+        {
+            return -1;
+        }
+        return 0;
+    }
+
+    for (i = 1; i < cursor->n; i++)
+    {
+        long index = cursor->stack[i].index;
+
+        if (index == -1)
+        {
+            /* we are pointing to the attribute record */
+            if (print(i == 0 ? "/@" : "@") < 0)
+            {
+                return -1;
+            }
+        }
+        else
+        {
+            coda_type_class type_class;
+            coda_type *type;
+
+            type = coda_get_type_for_dynamic_type(cursor->stack[i - 1].type);
+            if (coda_type_get_class(type, &type_class) != 0)
+            {
+                return -1;
+            }
+            switch (type_class)
+            {
+                case coda_array_class:
+                    if (print((i == 0 ? "/[%ld]" : "[%ld]"), index) < 0)
+                    {
+                        return -1;
+                    }
+                    break;
+                case coda_record_class:
+                    {
+                        const char *name;
+
+                        if (coda_type_get_record_field_name(type, index, &name) != 0)
+                        {
+                            return -1;
+                        }
+                        if (print("/%s", name) < 0)
+                        {
+                            return -1;
+                        }
+                    }
+                    break;
+                default:
+                    assert(0);
+                    exit(1);
+            }
+        }
+    }
+
+    return 0;
+}
 
 /** \addtogroup coda_cursor
  * @{
@@ -271,8 +335,8 @@ LIBCODA_API int coda_cursor_set_product(coda_cursor *cursor, coda_product *produ
 #endif
         case coda_format_rinex:
             return coda_rinex_cursor_set_product(cursor, product);
-        case coda_format_sp3c:
-            return coda_sp3c_cursor_set_product(cursor, product);
+        case coda_format_sp3:
+            return coda_sp3_cursor_set_product(cursor, product);
         case coda_format_cdf:
             /* unsupported */
             break;
@@ -284,7 +348,8 @@ LIBCODA_API int coda_cursor_set_product(coda_cursor *cursor, coda_product *produ
 
 /** Moves the cursor to point to the first field of a record.
  * If the field is a dynamically available record field and if it is not available in the current record, the cursor
- * will point to a special no-data data type after completion of this function.
+ * will point to a special no-data data type after completion of this function (the position information of the cursor
+ * is retained in that case, so you can still use coda_cursor_goto_parent, coda_cursor_goto_next_record_field, etc.).
  * \warning If the record contains no fields the function will return an error.
  * \param cursor Pointer to a CODA cursor that references a record.
  * \return
@@ -298,7 +363,8 @@ LIBCODA_API int coda_cursor_goto_first_record_field(coda_cursor *cursor)
 
 /** Moves the cursor to point to the field at position \a index of a record.
  * If the field is a dynamically available record field and if it is not available in the current record, the cursor
- * will point to a special no-data data type after completion of this function.
+ * will point to a special no-data data type after completion of this function (the position information of the cursor
+ * is retained in that case, so you can still use coda_cursor_goto_parent, coda_cursor_goto_next_record_field, etc.).
  * \see coda_cursor_get_num_elements()
  * \param cursor Pointer to a CODA cursor that references a record.
  * \param index Index of the field (0 <= \a index < number of fields).
@@ -367,7 +433,8 @@ LIBCODA_API int coda_cursor_goto_record_field_by_index(coda_cursor *cursor, long
 
 /** Moves the cursor to point to the field of a record that has fieldname \a name.
  * If the field is a dynamically available record field and if it is not available in the current record, the cursor
- * will point to a special no-data data type after completion of this function.
+ * will point to a special no-data data type after completion of this function (the position information of the cursor
+ * is retained in that case, so you can still use coda_cursor_goto_parent, coda_cursor_goto_next_record_field, etc.).
  * If \a name does not correspond with a fieldname of the record the function will return an error.
  * \param cursor Pointer to a CODA cursor that references a record.
  * \param name Fieldname of the field.
@@ -389,7 +456,8 @@ LIBCODA_API int coda_cursor_goto_record_field_by_name(coda_cursor *cursor, const
 
 /** Moves the cursor to point to the next field of a record.
  * If the field is a dynamically available record field and if it is not available in the current record, the cursor
- * will point to a special no-data data type after completion of this function.
+ * will point to a special no-data data type after completion of this function (the position information of the cursor
+ * is retained in that case, so you can still use coda_cursor_goto_parent, coda_cursor_goto_next_record_field, etc.).
  * \warning If the cursor already points to the last field of a record the function will return an error. So if you
  * want to enumerate all fields of a record use something like
  * \code
@@ -690,14 +758,14 @@ LIBCODA_API int coda_cursor_goto_array_element_by_index(coda_cursor *cursor, lon
  * \warning If the cursor already points to the last element of an array the function will return an error. So if you
  * want to enumerate all elements of an array (as a one dimensional sequence) use something like
  * \code
- * n_elements = coda_cursor_count_elements(cursor);
- * if (n_elements > 0)
+ * coda_cursor_get_num_elements(cursor, &num_elements);
+ * if (num_elements > 0)
  * {
  *     coda_cursor_goto_first_array_element(cursor);
- *     for (i = 0; i < n_elements; i++)
+ *     for (i = 0; i < num_elements; i++)
  *     {
  *         ...
- *         if (i < n_elements - 1)
+ *         if (i < num_elements - 1)
  *         {
  *             coda_cursor_goto_next_array_element(cursor);
  *         }

@@ -1,3 +1,43 @@
+2.3 2011-12-13
+~~~~~~~~~~~~~~
+
+* Improved SP3 support
+  - Extended support to SP3-a and SP3-b.
+  - CODA format enumeration value is now called 'sp3' instead of 'sp3c'.
+  - Fixed issue where SP3 products < 2000 and >= 2010 were not supported.
+
+* Added support for QIAP (Quality Information and Action Protocol).
+  See libcoda/qiap/README file in source package for details.
+
+* Added coda_expression_get_type_name().
+
+* Fixed the format of parameter paths in the output of codacheck and
+  codacmp.
+
+* Added missing CODA expression interface for Fortran.
+
+* Added --parent-types and --attributes option to 'codadd list'.
+
+* Configuring the build system for the Java interface on Mac OS X should now
+  work correctly.
+
+* Fixed issue where CODA would no longer create separate record fields for
+  netCDF elements and HDF4 root elements (vdata, vgroup, etc.) if elements
+  shared the same name (in which case CODA should append unique _## numeric
+  postpixes to the fieldnames).
+
+* Fixed potential wrong reading of epoch value from RINEX Navigation record.
+
+* Fixed memory leaks in netCDF, GRIB, and RINEX backends.
+
+* Fixed issue where CODA did not properly support HDF4 dataset names that are
+  longer than 63 characters.
+
+* Upgraded the Windows Visual Studion 6.0 project files to Visual Studio 2008
+  (9.0) project files.
+
+* The binary installer of BEAT for Windows now requires IDL 6.3 or higher.
+
 2.2 2011-09-02
 ~~~~~~~~~~~~~~
 
@@ -23,6 +63,9 @@
   runtime shared library path.
 
 * Fixed wrong fieldname in CODA documentation of SP3-c mapping.
+
+* Removed the text format restriction on 'product type' names (they no longer
+  have to consist of only a-z, A-Z, 0-9 and '_' characters).
 
 2.1 2011-07-21
 ~~~~~~~~~~~~~~

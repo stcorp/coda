@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioProject
+	ProjectType="Visual C++"
+	Version="9.00"
+	Name="codalib"
+	ProjectGUID="{D6B95274-D4B3-4010-B9F5-45CF992FEEAF}"
+	TargetFrameworkVersion="0"
+	>
+	<Platforms>
+		<Platform Name="Win32"/>
+		<Platform Name="x64"/>
+	</Platforms>
+	<Configurations>
+		<Configuration
+			Name="Release|Win32"
+			OutputDirectory="$(CODA_BINARY_DIR)\"
+			IntermediateDirectory="$(CODA_BUILD_DIR)\$(ProjectName)\"
+			ConfigurationType="4"
+			CharacterSet="2"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalOptions="/Zm400 "
+				Optimization="2"
+				InlineFunctionExpansion="1"
+				AdditionalIncludeDirectories=".,..,..\libcoda,..\libcoda\expat,..\libcoda\pcre,..\libcoda\qiap,$(ZLIB_INCLUDE_DIR),$(HDF4_INCLUDE_DIR),$(HDF5_INCLUDE_DIR)"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;HAVE_HDF4;HAVE_HDF5;HAVE_CONFIG_H;YY_NO_UNISTD_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE"
+				StringPooling="true"
+				RuntimeLibrary="0"
+				EnableFunctionLevelLinking="true"
+				WarningLevel="3"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)libcoda.lib"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug|Win32"
+			OutputDirectory="$(CODA_BINARY_DIR)\"
+			IntermediateDirectory="$(CODA_BUILD_DIR)\$(ProjectName)\"
+			ConfigurationType="4"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalOptions="/Zm400 "
+				Optimization="0"
+				AdditionalIncludeDirectories=".,..,..\libcoda,..\libcoda\expat,..\libcoda\pcre,..\libcoda\qiap,$(ZLIB_INCLUDE_DIR),$(HDF4_INCLUDE_DIR),$(HDF5_INCLUDE_DIR)"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;HAVE_HDF4;HAVE_HDF5;HAVE_CONFIG_H;YY_NO_UNISTD_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)libcoda_d.lib"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|x64"
+			OutputDirectory="$(CODA_BINARY_DIR)\"
+			IntermediateDirectory="$(CODA_BUILD_DIR)\$(ProjectName)\"
+			ConfigurationType="4"
+			CharacterSet="2"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalOptions="/Zm400 "
+				Optimization="2"
+				InlineFunctionExpansion="1"
+				AdditionalIncludeDirectories=".,..,..\libcoda,..\libcoda\expat,..\libcoda\pcre,..\libcoda\qiap,$(ZLIB_INCLUDE_DIR),$(HDF4_INCLUDE_DIR),$(HDF5_INCLUDE_DIR)"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;HAVE_HDF4;HAVE_HDF5;HAVE_CONFIG_H;YY_NO_UNISTD_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE"
+				StringPooling="true"
+				RuntimeLibrary="0"
+				EnableFunctionLevelLinking="true"
+				WarningLevel="3"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)libcoda.lib"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug|x64"
+			OutputDirectory="$(CODA_BINARY_DIR)\"
+			IntermediateDirectory="$(CODA_BUILD_DIR)\$(ProjectName)\"
+			ConfigurationType="4"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalOptions="/Zm400 "
+				Optimization="0"
+				AdditionalIncludeDirectories=".,..,..\libcoda,..\libcoda\expat,..\libcoda\pcre,..\libcoda\qiap,$(ZLIB_INCLUDE_DIR),$(HDF4_INCLUDE_DIR),$(HDF5_INCLUDE_DIR)"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;HAVE_HDF4;HAVE_HDF5;HAVE_CONFIG_H;YY_NO_UNISTD_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)libcoda_d.lib"
+			/>
+		</Configuration>
+	</Configurations>
+	<Files>
+		<File RelativePath="..\coda-expr-parser.c"/>
+		<File RelativePath="..\coda-expr-tokenizer.c"/>
+		<File RelativePath="..\libcoda\coda-ascbin-cursor.c"/>
+		<File RelativePath="..\libcoda\coda-ascbin-internal.h"/>
+		<File RelativePath="..\libcoda\coda-ascbin.c"/>
+		<File RelativePath="..\libcoda\coda-ascbin.h"/>
+		<File RelativePath="..\libcoda\coda-ascii-cursor.c"/>
+		<File RelativePath="..\libcoda\coda-ascii.h"/>
+		<File RelativePath="..\libcoda\coda-bin-cursor.c"/>
+		<File RelativePath="..\libcoda\coda-bin.h"/>
+		<File RelativePath="..\libcoda\coda-cursor-read.c"/>
+		<File RelativePath="..\libcoda\coda-cursor.c"/>
+		<File RelativePath="..\libcoda\coda-definition-parse.c"/>
+		<File RelativePath="..\libcoda\coda-definition.c"/>
+		<File RelativePath="..\libcoda\coda-definition.h"/>
+		<File RelativePath="..\libcoda\coda-errno.c"/>
+		<File RelativePath="..\libcoda\coda-expr.c"/>
+		<File RelativePath="..\libcoda\coda-expr.h"/>
+		<File RelativePath="..\libcoda\coda-filefilter.c"/>
+		<File RelativePath="..\libcoda\coda-filefilter.h"/>
+		<File RelativePath="..\libcoda\coda-grib-cursor.c"/>
+		<File RelativePath="..\libcoda\coda-grib-internal.h"/>
+		<File RelativePath="..\libcoda\coda-grib-type.c"/>
+		<File RelativePath="..\libcoda\coda-grib.c"/>
+		<File RelativePath="..\libcoda\coda-grib.h"/>
+		<File RelativePath="..\libcoda\coda-hdf4-cursor.c"/>
+		<File RelativePath="..\libcoda\coda-hdf4-internal.h"/>
+		<File RelativePath="..\libcoda\coda-hdf4-type.c"/>
+		<File RelativePath="..\libcoda\coda-hdf4.c"/>
+		<File RelativePath="..\libcoda\coda-hdf4.h"/>
+		<File RelativePath="..\libcoda\coda-hdf5-cursor.c"/>
+		<File RelativePath="..\libcoda\coda-hdf5-internal.h"/>
+		<File RelativePath="..\libcoda\coda-hdf5-type.c"/>
+		<File RelativePath="..\libcoda\coda-hdf5.c"/>
+		<File RelativePath="..\libcoda\coda-hdf5.h"/>
+		<File RelativePath="..\libcoda\coda-internal.h"/>
+		<File RelativePath="..\libcoda\coda-mem-cursor.c"/>
+		<File RelativePath="..\libcoda\coda-mem-internal.h"/>
+		<File RelativePath="..\libcoda\coda-mem-type.c"/>
+		<File RelativePath="..\libcoda\coda-mem.c"/>
+		<File RelativePath="..\libcoda\coda-mem.h"/>
+		<File RelativePath="..\libcoda\coda-netcdf-cursor.c"/>
+		<File RelativePath="..\libcoda\coda-netcdf-internal.h"/>
+		<File RelativePath="..\libcoda\coda-netcdf-type.c"/>
+		<File RelativePath="..\libcoda\coda-netcdf.c"/>
+		<File RelativePath="..\libcoda\coda-netcdf.h"/>
+		<File RelativePath="..\libcoda\coda-path.h"/>
+		<File RelativePath="..\libcoda\coda-product.c"/>
+		<File RelativePath="..\libcoda\coda-rinex.c"/>
+		<File RelativePath="..\libcoda\coda-rinex.h"/>
+		<File RelativePath="..\libcoda\coda-sp3.c"/>
+		<File RelativePath="..\libcoda\coda-sp3.h"/>
+		<File RelativePath="..\libcoda\coda-time.c"/>
+		<File RelativePath="..\libcoda\coda-type.c"/>
+		<File RelativePath="..\libcoda\coda-utils.c"/>
+		<File RelativePath="..\libcoda\coda-xml-cursor.c"/>
+		<File RelativePath="..\libcoda\coda-xml-internal.h"/>
+		<File RelativePath="..\libcoda\coda-xml-parser.c"/>
+		<File RelativePath="..\libcoda\coda-xml-type.c"/>
+		<File RelativePath="..\libcoda\coda-xml.c"/>
+		<File RelativePath="..\libcoda\coda-xml.h"/>
+		<File RelativePath="..\libcoda\coda.c"/>
+		<File RelativePath="..\libcoda\expat\ascii.h"/>
+		<File RelativePath="..\libcoda\expat\asciitab.h"/>
+		<File RelativePath="..\libcoda\expat\coda_expat_mangle.h"/>
+		<File RelativePath="..\libcoda\expat\expat.h"/>
+		<File RelativePath="..\libcoda\expat\expat_external.h"/>
+		<File RelativePath="..\libcoda\expat\iasciitab.h"/>
+		<File RelativePath="..\libcoda\expat\internal.h"/>
+		<File RelativePath="..\libcoda\expat\latin1tab.h"/>
+		<File RelativePath="..\libcoda\expat\nametab.h"/>
+		<File RelativePath="..\libcoda\expat\utf8tab.h"/>
+		<File RelativePath="..\libcoda\expat\xmlparse.c"/>
+		<File RelativePath="..\libcoda\expat\xmlrole.c"/>
+		<File RelativePath="..\libcoda\expat\xmlrole.h"/>
+		<File RelativePath="..\libcoda\expat\xmltok.c"/>
+		<File RelativePath="..\libcoda\expat\xmltok.h"/>
+		<File RelativePath="..\libcoda\expat\xmltol_impl.h"/>
+		<File RelativePath="..\libcoda\hashtable.c"/>
+		<File RelativePath="..\libcoda\hashtable.h"/>
+		<File RelativePath="..\libcoda\pcre\coda_pcre_config.h"/>
+		<File RelativePath="..\libcoda\pcre\coda_pcre_mangle.h"/>
+		<File RelativePath="..\libcoda\pcre\pcre.h"/>
+		<File RelativePath="..\libcoda\pcre\pcre_chartables.c"/>
+		<File RelativePath="..\libcoda\pcre\pcre_compile.c"/>
+		<File RelativePath="..\libcoda\pcre\pcre_config.c"/>
+		<File RelativePath="..\libcoda\pcre\pcre_dfa_exec.c"/>
+		<File RelativePath="..\libcoda\pcre\pcre_exec.c"/>
+		<File RelativePath="..\libcoda\pcre\pcre_fullinfo.c"/>
+		<File RelativePath="..\libcoda\pcre\pcre_get.c"/>
+		<File RelativePath="..\libcoda\pcre\pcre_globals.c"/>
+		<File RelativePath="..\libcoda\pcre\pcre_info.c"/>
+		<File RelativePath="..\libcoda\pcre\pcre_internal.h"/>
+		<File RelativePath="..\libcoda\pcre\pcre_maketables.c"/>
+		<File RelativePath="..\libcoda\pcre\pcre_newline.c"/>
+		<File RelativePath="..\libcoda\pcre\pcre_ord2utf8.c"/>
+		<File RelativePath="..\libcoda\pcre\pcre_refcount.c"/>
+		<File RelativePath="..\libcoda\pcre\pcre_study.c"/>
+		<File RelativePath="..\libcoda\pcre\pcre_tables.c"/>
+		<File RelativePath="..\libcoda\pcre\pcre_try_flipped.c"/>
+		<File RelativePath="..\libcoda\pcre\pcre_ucd.c"/>
+		<File RelativePath="..\libcoda\pcre\pcre_valid_utf8.c"/>
+		<File RelativePath="..\libcoda\pcre\pcre_version.c"/>
+		<File RelativePath="..\libcoda\pcre\pcre_xclass.c"/>
+		<File RelativePath="..\libcoda\pcre\ucp.h"/>
+		<File RelativePath="..\libcoda\qiap\coda-qiap.c"/>
+		<File RelativePath="..\libcoda\qiap\coda-qiap.h"/>
+		<File RelativePath="..\libcoda\qiap\qiap-query.c"/>
+		<File RelativePath="..\libcoda\qiap\qiap-report-read.c"/>
+		<File RelativePath="..\libcoda\qiap\qiap-report-write.c"/>
+		<File RelativePath="..\libcoda\qiap\qiap-soap-read.c"/>
+		<File RelativePath="..\libcoda\qiap\qiap.c"/>
+		<File RelativePath="..\libcoda\qiap\qiap.h"/>
+		<File RelativePath="..\libcoda\ziparchive.c"/>
+		<File RelativePath="..\libcoda\ziparchive.h"/>
+		<File RelativePath="coda-expr-parser.h"/>
+		<File RelativePath="coda.h"/>
+		<File RelativePath="config.h"/>
+	</Files>
+</VisualStudioProject>

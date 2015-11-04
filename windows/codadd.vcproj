@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioProject
+	ProjectType="Visual C++"
+	Version="9.00"
+	Name="codadd"
+	ProjectGUID="{55670D6B-156E-4412-91CD-2C1E8AC12543}"
+	TargetFrameworkVersion="0"
+	>
+	<Platforms>
+		<Platform Name="Win32"/>
+		<Platform Name="x64"/>
+	</Platforms>
+	<Configurations>
+		<Configuration
+			Name="Release|Win32"
+			OutputDirectory="$(CODA_BINARY_DIR)\"
+			IntermediateDirectory="$(CODA_BUILD_DIR)\$(ProjectName)\"
+			ConfigurationType="1"
+			CharacterSet="2"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="2"
+				InlineFunctionExpansion="1"
+				AdditionalIncludeDirectories=".,..\libcoda"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;HAVE_HDF4;HAVE_CONFIG_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE"
+				StringPooling="true"
+				RuntimeLibrary="0"
+				EnableFunctionLevelLinking="true"
+				WarningLevel="3"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="hdf.lib mfhdf.lib xdr.lib hdf5.lib libjpeg.lib libszip.lib zlib.lib libcoda.lib ws2_32.lib odbc32.lib odbccp32.lib"
+				OutputFile="$(OutDir)codadd.exe"
+				LinkIncremental="1"
+				IgnoreDefaultLibraryNames="libcmt.lib"
+				AdditionalLibraryDirectories="$(OutDir),$(HDF4_LIB),$(HDF5_LIB),$(JPEG_LIB),$(SZIP_LIB),$(ZLIB_LIB)"
+				ProgramDatabaseFile="$(OutDir)codadd.pdb"
+				SubSystem="1"
+				TargetMachine="1"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug|Win32"
+			OutputDirectory="$(CODA_BINARY_DIR)\"
+			IntermediateDirectory="$(CODA_BUILD_DIR)\$(ProjectName)\"
+			ConfigurationType="1"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories=".,..\libcoda"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;HAVE_HDF4;HAVE_CONFIG_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="hdfd.lib mfhdfd.lib xdrd.lib hdf5d.lib libjpeg.lib libszip.lib zlib.lib libcoda_d.lib ws2_32.lib odbc32.lib odbccp32.lib"
+				OutputFile="$(OutDir)codadd_d.exe"
+				LinkIncremental="2"
+				IgnoreDefaultLibraryNames="libcmtd.lib"
+				AdditionalLibraryDirectories="$(OutDir),$(HDF4_LIB),$(HDF5_LIB),$(JPEG_LIB),$(SZIP_LIB),$(ZLIB_LIB)"
+				GenerateDebugInformation="true"
+				ProgramDatabaseFile="$(OutDir)codadd_d.pdb"
+				SubSystem="1"
+				TargetMachine="1"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|x64"
+			OutputDirectory="$(CODA_BINARY_DIR)\"
+			IntermediateDirectory="$(CODA_BUILD_DIR)\$(ProjectName)\"
+			ConfigurationType="1"
+			CharacterSet="2"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="2"
+				InlineFunctionExpansion="1"
+				AdditionalIncludeDirectories=".,..\libcoda"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;HAVE_HDF4;HAVE_CONFIG_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE"
+				StringPooling="true"
+				RuntimeLibrary="0"
+				EnableFunctionLevelLinking="true"
+				WarningLevel="3"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="hdf.lib mfhdf.lib xdr.lib hdf5.lib libjpeg.lib libszip.lib zlib.lib libcoda.lib ws2_32.lib odbc32.lib odbccp32.lib"
+				OutputFile="$(OutDir)codadd.exe"
+				LinkIncremental="1"
+				IgnoreDefaultLibraryNames="libcmt.lib"
+				AdditionalLibraryDirectories="$(OutDir),$(HDF4_LIB),$(HDF5_LIB),$(JPEG_LIB),$(SZIP_LIB),$(ZLIB_LIB)"
+				ProgramDatabaseFile="$(OutDir)codadd.pdb"
+				SubSystem="1"
+				TargetMachine="17"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug|x64"
+			OutputDirectory="$(CODA_BINARY_DIR)\"
+			IntermediateDirectory="$(CODA_BUILD_DIR)\$(ProjectName)\"
+			ConfigurationType="1"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories=".,..\libcoda"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;HAVE_HDF4;HAVE_CONFIG_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="hdfd.lib mfhdfd.lib xdrd.lib hdf5d.lib libjpeg.lib libszip.lib zlib.lib libcoda_d.lib ws2_32.lib odbc32.lib odbccp32.lib"
+				OutputFile="$(OutDir)codadd_d.exe"
+				LinkIncremental="2"
+				IgnoreDefaultLibraryNames="libcmtd.lib"
+				AdditionalLibraryDirectories="$(OutDir),$(HDF4_LIB),$(HDF5_LIB),$(JPEG_LIB),$(SZIP_LIB),$(ZLIB_LIB)"
+				GenerateDebugInformation="true"
+				ProgramDatabaseFile="$(OutDir)codadd_d.pdb"
+				SubSystem="1"
+				TargetMachine="17"
+			/>
+		</Configuration>
+	</Configurations>
+	<Files>
+		<File RelativePath="..\tools\codadd\codadd-detect.c"/>
+		<File RelativePath="..\tools\codadd\codadd-doc.c"/>
+		<File RelativePath="..\tools\codadd\codadd-list.c"/>
+		<File RelativePath="..\tools\codadd\codadd-xmlschema.c"/>
+		<File RelativePath="..\tools\codadd\codadd.c"/>
+	</Files>
+</VisualStudioProject>

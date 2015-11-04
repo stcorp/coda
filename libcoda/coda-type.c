@@ -39,8 +39,6 @@
 #include "coda-hdf5.h"
 #endif
 
-/** \file */
-
 /** \defgroup coda_types CODA Types
  * Each data element or group of data elements (such as an array or record) in a product file has a unique description,
  * in CODA. This description is independent of the file format of the product (e.g. ascii, binary, XML, netCDF, etc.)
@@ -2785,8 +2783,8 @@ LIBCODA_API const char *coda_type_get_format_name(coda_format format)
             return "hdf5";
         case coda_format_rinex:
             return "rinex";
-        case coda_format_sp3c:
-            return "sp3c";
+        case coda_format_sp3:
+            return "sp3";
     }
 
     return "unknown";
@@ -3038,10 +3036,12 @@ LIBCODA_API int coda_type_get_bit_size(const coda_type *type, int64_t *bit_size)
 }
 
 /** Get the name of a type.
- * A type can have an optional name that uniquely defines it within a product class. No two types within the same
- * product class may have the same name. If a type has a name, only a single instance of the definition will be used for
- * all places where the type is used (i.e. a single coda_type object will be used for all cases where this type is 
- * used).
+ * A type can have an optional name that uniquely defines it within a product class. This is something that is used
+ * internally within CODA to allow reuse of type definitions. If a type has a name, only a single instance of
+ * the definition will be used for all places where the type is used (i.e. a single coda_type object will be used for
+ * all cases where this type is used). For this reason type names are unique within the scope of a product class.
+ * You should never rely in your code on types having a specific name, or having a name at all. The internal type reuse
+ * approach within a product class may change unannounced.
  * If the type is unnamed a NULL pointer will be returned.
  * The \a name parameter will either be a NULL pointer or a 0 terminated string.
  * \param type CODA type.
@@ -3310,6 +3310,53 @@ LIBCODA_API int coda_type_get_record_field_index_from_name(const coda_type *type
     if (field_index < 0)
     {
         coda_set_error(CODA_ERROR_INVALID_NAME, "record does not contain a field named '%s'", name);
+        return -1;
+    }
+    *index = field_index;
+    return 0;
+}
+
+/* Get the field index from a field name for a record type where the field name may not be zero terminated
+ * If the type is not a record class the function will return an error.
+ * \param type CODA type.
+ * \param name Name of the record field.
+ * \param name_length Maximum length of the name parameter.
+ * \param index Pointer to a variable where the field index will be stored (0 <= \a index < number of fields).
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_type_get_record_field_index_from_name_n(const coda_type *type, const char *name, int name_length,
+                                                             long *index)
+{
+    long field_index;
+
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->type_class != coda_record_class)
+    {
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "type does not refer to a record (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
+        return -1;
+    }
+    if (name == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "name argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (index == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "index argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    field_index = hashtable_get_index_from_name_n(((coda_type_record *)type)->hash_data, name, name_length);
+    if (field_index < 0)
+    {
+        coda_set_error(CODA_ERROR_INVALID_NAME, "record does not contain a field named '%.*s'", name_length, name);
         return -1;
     }
     *index = field_index;

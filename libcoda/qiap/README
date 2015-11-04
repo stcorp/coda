@@ -1,0 +1,34 @@
+QIAP is the Quality Information and Action Protocol and is a standard that has
+been developed within the ESA GECA project.
+The standard allows a data provider to formally communicate problems about
+data products to users in the form of Quality Issue Reports in xml format.
+These reports can contain information on the filtering and corrective actions
+that a user can perform to circumvent existing issues.
+
+CODA comes with a full implementation of QIAP. By setting the CODA_QIAP_REPORT
+environment variable to point to a Quality Issue Report that has been
+retrieved from a data provider, CODA will read this report when CODA is
+initialized (i.e. as part of coda_init()).
+
+When a product file is opened, CODA will then determine which actions from the
+Quality Issue Report are applicable. If the product file needs to be discarded
+CODA will return a CODA_ERROR_QIAP with qiap_errno set to QIAP_ERROR_DISCARD.
+Whenever you try to read a specific data element, CODA will determine if a
+corrective/discard action is available. If a value should be discarded you
+will receive a CODA_ERROR_QIAP (similar to the case where the full product
+needs to be discarded) and if the value needs to be corrected then CODA will
+do this automatically in the background for you.
+
+You can use the qiap.h include file in this directory to get access to the
+generic QIAP interface functions/structures (including the definition of
+qiap_errno).
+In addition, there is a coda-qiap.h include file that contains definitions
+for the CODA-specific QIAP functions.
+Since the full QIAP library is included in the CODA library, you don't have
+to separately link against a QIAP library to have access to the QIAP
+specific functions.
+
+Note that you can use the CODA_QIAP_LOG environment variable to point to a
+file where CODA should log all QIAP actions. Whenever a corrective action
+is performed or a QIAP_ERROR_DISCARD is returned an entry will be written
+to this log file.

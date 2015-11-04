@@ -69,6 +69,12 @@ int coda_bin_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size)
             {
                 *bit_size *= 8;
             }
+            if (*bit_size < 0)
+            {
+                coda_set_error(CODA_ERROR_PRODUCT, "calculated size is negative (%ld bits)", (long)*bit_size);
+                coda_cursor_add_to_error_message(cursor);
+                return -1;
+            }
             break;
         case coda_special_class:
             {

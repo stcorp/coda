@@ -577,6 +577,13 @@ int coda_ascbin_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size
                             /* convert 'byte size' to 'bit size' */
                             *bit_size *= 8;
                         }
+                        if (*bit_size < 0)
+                        {
+                            coda_set_error(CODA_ERROR_PRODUCT, "calculated size is negative (%ld bits)",
+                                           (long)*bit_size);
+                            coda_cursor_add_to_error_message(cursor);
+                            return -1;
+                        }
                     }
                     else if (record->union_field_expr != NULL)
                     {

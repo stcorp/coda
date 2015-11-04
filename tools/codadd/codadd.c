@@ -36,6 +36,8 @@ int show_description;
 int show_quotes;
 int show_hidden;
 int show_expressions;
+int show_parent_types;
+int show_attributes;
 int use_special_types;
 
 void generate_html(const char *prefixdir);
@@ -80,6 +82,10 @@ static void print_help()
     printf("                    show description information\n");
     printf("            --hidden\n");
     printf("                    show record fields with 'hidden' property\n");
+    printf("            --parent-types\n");
+    printf("                    show additional lines for records and arrays\n");
+    printf("            --attributes\n");
+    printf("                    show additional lines for attributes\n");
     printf("            --no_special_types\n");
     printf("                    bypass special data types from the CODA format definition -\n");
     printf("                    data with a special type is treated using its non-special\n");
@@ -120,6 +126,8 @@ int main(int argc, char *argv[])
     show_quotes = 0;
     show_hidden = 0;
     show_expressions = 0;
+    show_parent_types = 0;
+    show_attributes = 0;
     use_special_types = 1;
 
     if (argc > 1)
@@ -214,6 +222,14 @@ int main(int argc, char *argv[])
             else if (strcmp(argv[i], "--hidden") == 0)
             {
                 show_hidden = 1;
+            }
+            else if (strcmp(argv[i], "--parent-types") == 0)
+            {
+                show_parent_types = 1;
+            }
+            else if (strcmp(argv[i], "--attributes") == 0)
+            {
+                show_attributes = 1;
             }
             else if (strcmp(argv[i], "--no_special_types") == 0)
             {

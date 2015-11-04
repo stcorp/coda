@@ -88,7 +88,7 @@ struct za_file_struct
 };
 
 #ifdef WORDS_BIGENDIAN
-static void swap2(uint16_t *value)
+static void swap_uint16(uint16_t *value)
 {
     union
     {
@@ -104,7 +104,7 @@ static void swap2(uint16_t *value)
     *value = v2.as_uint16;
 }
 
-static void swap4(uint32_t *value)
+static void swap_uint32(uint32_t *value)
 {
     union
     {
@@ -125,7 +125,12 @@ static void swap4(uint32_t *value)
 
 static int get_entries(za_file *zf)
 {
-    char buffer[46];
+    union
+    {
+        int8_t as_int8[48];
+        uint16_t as_uint16[24];
+        uint32_t as_uint32[12];
+    } buffer;
     uint32_t signature;
     uint32_t offset;
     uint16_t num_entries;
@@ -138,15 +143,15 @@ static int get_entries(za_file *zf)
         return -1;
     }
 
-    if (read(zf->fd, buffer, 22) < 0)
+    if (read(zf->fd, buffer.as_int8, 22) < 0)
     {
         zf->handle_error(strerror(errno));
         return -1;
     }
 
-    signature = *((uint32_t *)&buffer[0]);
+    signature = buffer.as_uint32[0];
 #ifdef WORDS_BIGENDIAN
-    swap4(&signature);
+    swap_uint32(&signature);
 #endif
     if (signature != 0x06054b50)
     {
@@ -157,14 +162,14 @@ static int get_entries(za_file *zf)
         return -1;
     }
 
-    num_entries = *((uint16_t *)&buffer[8]);
+    num_entries = buffer.as_uint16[4];  /* offset 8 */
 #ifdef WORDS_BIGENDIAN
-    swap2(&num_entries);
+    swap_uint16(&num_entries);
 #endif
 
-    offset = *((uint32_t *)&buffer[16]);
+    offset = buffer.as_uint32[4];       /* offset 16 */
 #ifdef WORDS_BIGENDIAN
-    swap4(&offset);
+    swap_uint32(&offset);
 #endif
 
     zf->num_entries = num_entries;
@@ -198,15 +203,15 @@ static int get_entries(za_file *zf)
         entry = &zf->entry[i];
 
         /* read the constant length part of the central directory 'file header' */
-        if (read(zf->fd, buffer, 46) < 0)
+        if (read(zf->fd, buffer.as_int8, 46) < 0)
         {
             zf->handle_error(strerror(errno));
             return -1;
         }
 
-        signature = *((uint32_t *)&buffer[0]);
+        signature = buffer.as_uint32[0];
 #ifdef WORDS_BIGENDIAN
-        swap4(&signature);
+        swap_uint32(&signature);
 #endif
         if (signature != 0x02014b50)
         {
@@ -215,24 +220,24 @@ static int get_entries(za_file *zf)
             return -1;
         }
 
-        version1 = *((uint16_t *)&buffer[4]);
+        version1 = buffer.as_uint16[2]; /* offset 4 */
 #ifdef WORDS_BIGENDIAN
-        swap2(&version1);
+        swap_uint16(&version1);
 #endif
 
-        version2 = *((uint16_t *)&buffer[6]);
+        version2 = buffer.as_uint16[3]; /* offset 6 */
 #ifdef WORDS_BIGENDIAN
-        swap2(&version2);
+        swap_uint16(&version2);
 #endif
 
-        bitflag = *((uint16_t *)&buffer[8]);
+        bitflag = buffer.as_uint16[4];  /* offset 8 */
 #ifdef WORDS_BIGENDIAN
-        swap2(&bitflag);
+        swap_uint16(&bitflag);
 #endif
 
-        entry->compression = *((uint16_t *)&buffer[10]);
+        entry->compression = buffer.as_uint16[5];       /* offset 10 */
 #ifdef WORDS_BIGENDIAN
-        swap2(&entry->compression);
+        swap_uint16(&entry->compression);
 #endif
         if (entry->compression != 0 && entry->compression != 8)
         {
@@ -240,64 +245,64 @@ static int get_entries(za_file *zf)
             return -1;
         }
 
-        entry->modification_time = *((uint16_t *)&buffer[12]);
+        entry->modification_time = buffer.as_uint16[6]; /* offset 12 */
 #ifdef WORDS_BIGENDIAN
-        swap2(&entry->modification_time);
+        swap_uint16(&entry->modification_time);
 #endif
 
-        entry->modification_date = *((uint16_t *)&buffer[14]);
+        entry->modification_date = buffer.as_uint16[7]; /* offset 14 */
 #ifdef WORDS_BIGENDIAN
-        swap2(&entry->modification_date);
+        swap_uint16(&entry->modification_date);
 #endif
 
-        entry->crc = *((uint32_t *)&buffer[16]);
+        entry->crc = buffer.as_uint32[4];       /* offset 16 */
 #ifdef WORDS_BIGENDIAN
-        swap4(&entry->crc);
+        swap_uint32(&entry->crc);
 #endif
 
-        entry->compressed_size = *((uint32_t *)&buffer[20]);
+        entry->compressed_size = buffer.as_uint32[5];   /* offset 20 */
 #ifdef WORDS_BIGENDIAN
-        swap4(&entry->compressed_size);
+        swap_uint32(&entry->compressed_size);
 #endif
 
-        entry->uncompressed_size = *((uint32_t *)&buffer[24]);
+        entry->uncompressed_size = buffer.as_uint32[6]; /* offset 24 */
 #ifdef WORDS_BIGENDIAN
-        swap4(&entry->uncompressed_size);
+        swap_uint32(&entry->uncompressed_size);
 #endif
 
-        entry->filename_length = *((uint16_t *)&buffer[28]);
+        entry->filename_length = buffer.as_uint16[14];  /* offset 28 */
 #ifdef WORDS_BIGENDIAN
-        swap2(&entry->filename_length);
+        swap_uint16(&entry->filename_length);
 #endif
 
-        entry->extrafield_length = *((uint16_t *)&buffer[30]);
+        entry->extrafield_length = buffer.as_uint16[15];        /* offset 30 */
 #ifdef WORDS_BIGENDIAN
-        swap2(&entry->extrafield_length);
+        swap_uint16(&entry->extrafield_length);
 #endif
 
-        comment_length = *((uint16_t *)&buffer[32]);
+        comment_length = buffer.as_uint16[16];  /* offset 32 */
 #ifdef WORDS_BIGENDIAN
-        swap2(&comment_length);
+        swap_uint16(&comment_length);
 #endif
 
         /* skip disk number start (2 bytes) */
 
-        internal_attributes = *((uint16_t *)&buffer[36]);
+        internal_attributes = buffer.as_uint16[18];     /* offset 36 */
 #ifdef WORDS_BIGENDIAN
-        swap2(&internal_attributes);
+        swap_uint16(&internal_attributes);
 #endif
         entry->ascii = internal_attributes & 0x1;
 
         /* we can't directly access 32 bit values if they are not on a 32 bit boundary with regard to the start of
          * 'buffer'. We therefore use memcpy for these cases. */
-        memcpy(&entry->attributes, &buffer[38], 4);
+        memcpy(&entry->attributes, &buffer.as_int8[38], 4);
 #ifdef WORDS_BIGENDIAN
-        swap4(&entry->attributes);
+        swap_uint32(&entry->attributes);
 #endif
 
-        memcpy(&entry->localheader_offset, &buffer[42], 4);
+        memcpy(&entry->localheader_offset, &buffer.as_int8[42], 4);
 #ifdef WORDS_BIGENDIAN
-        swap4(&entry->localheader_offset);
+        swap_uint32(&entry->localheader_offset);
 #endif
 
         entry->filename = malloc(entry->filename_length + 1);
@@ -400,6 +405,7 @@ za_file *za_open(const char *filename, void (*error_handler) (const char *, ...)
     if (zf->fd < 0)
     {
         zf->handle_error("could not open file '%s' (%s)\n", filename, strerror(errno));
+        free(zf->filename);
         free(zf);
         return NULL;
     }
@@ -470,7 +476,12 @@ const char *za_get_entry_name(za_entry *entry)
 
 int za_read_entry(za_entry *entry, char *out_buffer)
 {
-    char buffer[30];
+    union
+    {
+        int8_t as_int8[32];
+        uint16_t as_uint16[16];
+        uint32_t as_uint32[8];
+    } buffer;
     uint32_t signature;
     uint16_t version2;
     uint16_t bitflag;
@@ -490,15 +501,15 @@ int za_read_entry(za_entry *entry, char *out_buffer)
     }
 
     /* read the constant length part of the 'local file header' */
-    if (read(entry->zf->fd, buffer, 30) < 0)
+    if (read(entry->zf->fd, buffer.as_int8, 30) < 0)
     {
         entry->zf->handle_error(strerror(errno));
         return -1;
     }
 
-    signature = *((uint32_t *)&buffer[0]);
+    signature = buffer.as_uint32[0];
 #ifdef WORDS_BIGENDIAN
-    swap4(&signature);
+    swap_uint32(&signature);
 #endif
     if (signature != 0x04034b50)
     {
@@ -507,19 +518,19 @@ int za_read_entry(za_entry *entry, char *out_buffer)
         return -1;
     }
 
-    version2 = *((uint16_t *)&buffer[4]);
+    version2 = buffer.as_uint16[2];     /* offset 4 */
 #ifdef WORDS_BIGENDIAN
-    swap2(&version2);
+    swap_uint16(&version2);
 #endif
 
-    bitflag = *((uint16_t *)&buffer[6]);
+    bitflag = buffer.as_uint16[3];      /* offset 6 */
 #ifdef WORDS_BIGENDIAN
-    swap2(&bitflag);
+    swap_uint16(&bitflag);
 #endif
 
-    compression = *((uint16_t *)&buffer[8]);
+    compression = buffer.as_uint16[4];  /* offset 8 */
 #ifdef WORDS_BIGENDIAN
-    swap2(&compression);
+    swap_uint16(&compression);
 #endif
     if (compression != entry->compression)
     {
@@ -528,9 +539,9 @@ int za_read_entry(za_entry *entry, char *out_buffer)
         return -1;
     }
 
-    modification_time = *((uint16_t *)&buffer[10]);
+    modification_time = buffer.as_uint16[5];    /* offset 10 */
 #ifdef WORDS_BIGENDIAN
-    swap2(&modification_time);
+    swap_uint16(&modification_time);
 #endif
     if (modification_time != entry->modification_time)
     {
@@ -539,9 +550,9 @@ int za_read_entry(za_entry *entry, char *out_buffer)
         return -1;
     }
 
-    modification_date = *((uint16_t *)&buffer[12]);
+    modification_date = buffer.as_uint16[6];    /* offset 12 */
 #ifdef WORDS_BIGENDIAN
-    swap2(&modification_date);
+    swap_uint16(&modification_date);
 #endif
     if (modification_date != entry->modification_date)
     {
@@ -552,9 +563,9 @@ int za_read_entry(za_entry *entry, char *out_buffer)
 
     /* we can't directly access 32 bit values if they are not on a 32 bit boundary with regard to the start of
      * 'buffer'. We therefore use memcpy for these cases. */
-    memcpy(&crc, &buffer[14], 4);
+    memcpy(&crc, &buffer.as_int8[14], 4);
 #ifdef WORDS_BIGENDIAN
-    swap4(&crc);
+    swap_uint32(&crc);
 #endif
     if (crc != entry->crc)
     {
@@ -562,9 +573,9 @@ int za_read_entry(za_entry *entry, char *out_buffer)
         return -1;
     }
 
-    memcpy(&compressed_size, &buffer[18], 4);
+    memcpy(&compressed_size, &buffer.as_int8[18], 4);
 #ifdef WORDS_BIGENDIAN
-    swap4(&compressed_size);
+    swap_uint32(&compressed_size);
 #endif
     if (compressed_size != entry->compressed_size)
     {
@@ -573,9 +584,9 @@ int za_read_entry(za_entry *entry, char *out_buffer)
         return -1;
     }
 
-    memcpy(&uncompressed_size, &buffer[22], 4);
+    memcpy(&uncompressed_size, &buffer.as_int8[22], 4);
 #ifdef WORDS_BIGENDIAN
-    swap4(&uncompressed_size);
+    swap_uint32(&uncompressed_size);
 #endif
     if (uncompressed_size != entry->uncompressed_size)
     {
@@ -584,9 +595,9 @@ int za_read_entry(za_entry *entry, char *out_buffer)
         return -1;
     }
 
-    filename_length = *((uint16_t *)&buffer[26]);
+    filename_length = buffer.as_uint16[13];     /* offset 26 */
 #ifdef WORDS_BIGENDIAN
-    swap2(&filename_length);
+    swap_uint16(&filename_length);
 #endif
     if (filename_length != entry->filename_length)
     {
@@ -595,9 +606,9 @@ int za_read_entry(za_entry *entry, char *out_buffer)
         return -1;
     }
 
-    extrafield_length = *((uint16_t *)&buffer[28]);
+    extrafield_length = buffer.as_uint16[14];   /* offset 28 */
 #ifdef WORDS_BIGENDIAN
-    swap2(&extrafield_length);
+    swap_uint16(&extrafield_length);
 #endif
     /* the extra field information is allowed to be different between the local file header and central directory! */
 

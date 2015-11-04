@@ -103,6 +103,9 @@ struct coda_xml_product_struct
     const coda_product_definition *product_definition;
     long *product_variable_size;
     int64_t **product_variable;
+#if CODA_USE_QIAP
+    void *qiap_info;
+#endif
 
     int use_mmap;       /* this field is needed for when the ascii backend wants to read data - the value is always 0 */
     int fd;

@@ -105,7 +105,7 @@ EOF
   rm -f conftest.*
 fi
 if test -n "$vl_cv_prog_cc_warnings"; then
-  CFLAGS="$CFLAGS $vl_cv_prog_cc_warnings"
+  CFLAGS="$vl_cv_prog_cc_warnings $CFLAGS"
 else
   vl_cv_prog_cc_warnings="unknown"
 fi])

@@ -26,29 +26,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-static void print_filter(codadump_filter *filter)
-{
-    if (filter != NULL)
-    {
-        printf("%s", filter->fieldname);
-        if (filter->subfilter != NULL)
-        {
-            printf(".{");
-            print_filter(filter->subfilter);
-            printf("}");
-        }
-        if (filter->next != NULL)
-        {
-            printf(",");
-            print_filter(filter->next);
-        }
-    }
-    else
-    {
-        printf("NULL");
-    }
-}
-
 static void get_filter_item(const char *filter_expr, codadump_filter **filter, char **tail)
 {
     int n = 0;
