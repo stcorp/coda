@@ -24,7 +24,7 @@
 				AdditionalOptions="/Zm400 "
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories=".,..,..\libcoda,..\libcoda\expat,..\libcoda\pcre,..\libcoda\qiap,$(ZLIB_INCLUDE_DIR),$(HDF4_DYNAMIC_INCLUDE_DIR),$(HDF5_DYNAMIC_INCLUDE_DIR)"
+				AdditionalIncludeDirectories=".,..,..\libcoda,..\libcoda\expat,..\libcoda\pcre,$(ZLIB_INCLUDE_DIR),$(HDF4_DYNAMIC_INCLUDE_DIR),$(HDF5_DYNAMIC_INCLUDE_DIR)"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBCODADLL_EXPORTS;LIBCODADLL;HAVE_HDF4;HAVE_HDF5;HAVE_CONFIG_H;YY_NO_UNISTD_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -53,7 +53,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/Zm400 "
 				Optimization="0"
-				AdditionalIncludeDirectories=".,..,..\libcoda,..\libcoda\expat,..\libcoda\pcre,..\libcoda\qiap,$(ZLIB_INCLUDE_DIR),$(HDF4_DYNAMIC_INCLUDE_DIR),$(HDF5_DYNAMIC_INCLUDE_DIR)"
+				AdditionalIncludeDirectories=".,..,..\libcoda,..\libcoda\expat,..\libcoda\pcre,$(ZLIB_INCLUDE_DIR),$(HDF4_DYNAMIC_INCLUDE_DIR),$(HDF5_DYNAMIC_INCLUDE_DIR)"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBCODADLL_EXPORTS;LIBCODADLL;HAVE_HDF4;HAVE_HDF5;HAVE_CONFIG_H;YY_NO_UNISTD_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -86,7 +86,7 @@
 				AdditionalOptions="/Zm400 "
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories=".,..,..\libcoda,..\libcoda\expat,..\libcoda\pcre,..\libcoda\qiap,$(ZLIB_INCLUDE_DIR),$(HDF4_DYNAMIC_INCLUDE_DIR),$(HDF5_DYNAMIC_INCLUDE_DIR)"
+				AdditionalIncludeDirectories=".,..,..\libcoda,..\libcoda\expat,..\libcoda\pcre,$(ZLIB_INCLUDE_DIR),$(HDF4_DYNAMIC_INCLUDE_DIR),$(HDF5_DYNAMIC_INCLUDE_DIR)"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBCODADLL_EXPORTS;LIBCODADLL;HAVE_HDF4;HAVE_HDF5;HAVE_CONFIG_H;YY_NO_UNISTD_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -115,7 +115,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/Zm400 "
 				Optimization="0"
-				AdditionalIncludeDirectories=".,..,..\libcoda,..\libcoda\expat,..\libcoda\pcre,..\libcoda\qiap,$(ZLIB_INCLUDE_DIR),$(HDF4_DYNAMIC_INCLUDE_DIR),$(HDF5_DYNAMIC_INCLUDE_DIR)"
+				AdditionalIncludeDirectories=".,..,..\libcoda,..\libcoda\expat,..\libcoda\pcre,$(ZLIB_INCLUDE_DIR),$(HDF4_DYNAMIC_INCLUDE_DIR),$(HDF5_DYNAMIC_INCLUDE_DIR)"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBCODADLL_EXPORTS;LIBCODADLL;HAVE_HDF4;HAVE_HDF5;HAVE_CONFIG_H;YY_NO_UNISTD_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -261,14 +261,6 @@
 		<File RelativePath="..\libcoda\pcre\pcre_version.c"/>
 		<File RelativePath="..\libcoda\pcre\pcre_xclass.c"/>
 		<File RelativePath="..\libcoda\pcre\ucp.h"/>
-		<File RelativePath="..\libcoda\qiap\coda-qiap.c"/>
-		<File RelativePath="..\libcoda\qiap\coda-qiap.h"/>
-		<File RelativePath="..\libcoda\qiap\qiap-query.c"/>
-		<File RelativePath="..\libcoda\qiap\qiap-report-read.c"/>
-		<File RelativePath="..\libcoda\qiap\qiap-report-write.c"/>
-		<File RelativePath="..\libcoda\qiap\qiap-soap-read.c"/>
-		<File RelativePath="..\libcoda\qiap\qiap.c"/>
-		<File RelativePath="..\libcoda\qiap\qiap.h"/>
 		<File RelativePath="..\libcoda\ziparchive.c"/>
 		<File RelativePath="..\libcoda\ziparchive.h"/>
 		<File RelativePath="..\libcoda\coda-expr-parser.h"/>

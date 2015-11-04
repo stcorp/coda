@@ -86,9 +86,6 @@ struct coda_product_struct
     int64_t **product_variable;
     int64_t mem_size;
     uint8_t *mem_ptr;
-#if CODA_USE_QIAP
-    void *qiap_info;
-#endif
 };
 
 extern int coda_option_bypass_special_types;

@@ -39,16 +39,10 @@ all-local: $(ALL_LOCAL_TARGETS)
 
 # *** targets ***
 
-if BUILD_QIAP
-QIAPLIBS = libqiap_internal.la
-else
-QIAPLIBS =
-endif
-
 if SUBPACKAGE_MODE
 
 noinst_PROGRAMS = codadd
-noinst_LTLIBRARIES = libcoda_internal.la libexpat_internal.la libpcre_internal.la libz_internal.la $(QIAPLIBS)
+noinst_LTLIBRARIES = libcoda_internal.la libexpat_internal.la libpcre_internal.la libz_internal.la
 
 else
 
@@ -60,7 +54,7 @@ noinst_PROGRAMS = generate-finc findtypedef
 # libraries (+ related files)
 
 lib_LTLIBRARIES = libcoda.la
-noinst_LTLIBRARIES = libcoda_internal.la libexpat_internal.la libpcre_internal.la libz_internal.la $(QIAPLIBS)
+noinst_LTLIBRARIES = libcoda_internal.la libexpat_internal.la libpcre_internal.la libz_internal.la
 
 if BUILD_IDL
 idldlmexec_LTLIBRARIES = coda-idl.la
@@ -178,30 +172,6 @@ libz_internal_la_SOURCES = \
 libz_internal_la_CPPFLAGS = -Ilibcoda/zlib -I$(srcdir)/libcoda/zlib $(AM_CPPFLAGS)
 EXTRA_DIST += libcoda/zlib/COPYING libcoda/zlib/README
 
-# qiap
-
-libqiap_files = \
-	libcoda/qiap/coda-qiap.c \
-	libcoda/qiap/coda-qiap.h \
-	libcoda/qiap/qiap-query.c \
-	libcoda/qiap/qiap-report-read.c \
-	libcoda/qiap/qiap-report-write.c \
-	libcoda/qiap/qiap-soap-read.c \
-	libcoda/qiap/qiap.c \
-	libcoda/qiap/qiap.h
-INDENTFILES += $(libqiap_files)
-EXTRA_DIST += \
-	libcoda/qiap/README \
-	libcoda/qiap/doc/extrapages.txt \
-	libcoda/qiap/doc/footer.html \
-	libcoda/qiap/doc/header.html \
-	libcoda/qiap/doc/Doxyfile.in
-
-if BUILD_QIAP
-libqiap_internal_la_SOURCES = $(libqiap_files)
-libqiap_internal_la_CPPFLAGS = -Ilibcoda/qiap -I$(srcdir)/libcoda/qiap -Ilibcoda/expat -I$(srcdir)/libcoda/expat $(AM_CPPFLAGS)
-endif
-
 # libcoda
 
 libcoda_la_SOURCES = \
@@ -304,9 +274,9 @@ libcoda_la_SOURCES += $(libcoda_hdf5_files)
 else
 INDENTFILES += $(libcoda_hdf5_files)
 endif
-libcoda_la_CPPFLAGS = -Ilibcoda/expat -I$(srcdir)/libcoda/expat -Ilibcoda/pcre -I$(srcdir)/libcoda/pcre -Ilibcoda/zlib -I$(srcdir)/libcoda/zlib -Ilibcoda/qiap -I$(srcdir)/libcoda/qiap $(AM_CPPFLAGS)
+libcoda_la_CPPFLAGS = -Ilibcoda/expat -I$(srcdir)/libcoda/expat -Ilibcoda/pcre -I$(srcdir)/libcoda/pcre -Ilibcoda/zlib -I$(srcdir)/libcoda/zlib $(AM_CPPFLAGS)
 libcoda_la_LDFLAGS = -no-undefined -version-info $(LIBCODA_CURRENT):$(LIBCODA_REVISION):$(LIBCODA_AGE)
-libcoda_la_LIBADD = @LTLIBOBJS@ libexpat_internal.la libpcre_internal.la libz_internal.la $(QIAPLIBS) $(HDF4LIBS) $(HDF5LIBS)
+libcoda_la_LIBADD = @LTLIBOBJS@ libexpat_internal.la libpcre_internal.la libz_internal.la $(HDF4LIBS) $(HDF5LIBS)
 INDENTFILES += $(libcoda_la_SOURCES) libcoda/coda.h.in
 BUILT_SOURCES += libcoda/coda-expr-parser.h
 
@@ -395,7 +365,7 @@ endif
 if WITH_HDF5
 libcoda_internal_la_SOURCES += $(libcoda_hdf5_files)
 endif
-libcoda_internal_la_CPPFLAGS = -Ilibcoda/expat -I$(srcdir)/libcoda/expat -Ilibcoda/pcre -I$(srcdir)/libcoda/pcre -Ilibcoda/zlib -I$(srcdir)/libcoda/zlib -Ilibcoda/qiap -I$(srcdir)/libcoda/qiap $(AM_CPPFLAGS)
+libcoda_internal_la_CPPFLAGS = -Ilibcoda/expat -I$(srcdir)/libcoda/expat -Ilibcoda/pcre -I$(srcdir)/libcoda/pcre -Ilibcoda/zlib -I$(srcdir)/libcoda/zlib $(AM_CPPFLAGS)
 libcoda_internal_la_LIBADD = $(libcoda_la_LIBADD)
 
 # tools/codacheck
@@ -710,7 +680,6 @@ endif
 
 include doclibcoda.mk
 include docjava.mk
-include doclibqiap.mk
 
 DOCFILES = \
 	doc/html/index.html \
@@ -740,40 +709,26 @@ DOCFILES = \
 	doc/html/matlab/index.html \
 	doc/html/python/index.html
 
-if BUILD_QIAP
-DOCFILES += doc/html/css/qiap.css $(LIBQIAP_DOCFILES)
-endif
-
 EXTRA_DIST += \
 	$(DOCFILES) \
 	libcoda/doc/Doxyfile.in \
 	libcoda/doc/extrapages.txt \
 	libcoda/doc/footer.html \
 	libcoda/doc/header.html \
-	libcoda/qiap/doc/Doxyfile.in \
-	libcoda/qiap/doc/extrapages.txt \
-	libcoda/qiap/doc/footer.html \
-	libcoda/qiap/doc/header.html \
 	java/doc/Doxyfile.in \
 	java/doc/extrapages.txt \
 	java/doc/footer.html \
 	java/doc/header.html \
 	doclibcoda.mk \
-	doclibqiap.mk \
 	docjava.mk
-
-if !BUILD_QIAP
-# make sure the QIAP documentation is always included in the source package
-EXTRA_DIST += doc/html/css/qiap.css $(LIBQIAP_DOCFILES)
-endif
 
 if !SUBPACKAGE_MODE
 nobase_pkgdata_DATA = $(DOCFILES)
 endif
 
-doc: libcoda_doc libqiap_doc java_doc
+doc: libcoda_doc java_doc
 
-docclean: libcoda_docclean libqiap_docclean java_docclean
+docclean: libcoda_docclean java_docclean
 
 libcoda_doc: coda.h libcoda/doc/Doxyfile
 	@if test "x$(DOXYGEN)" = x ; then \
@@ -803,36 +758,6 @@ doclibcoda_include:
 	  rm -f doclibcoda.mk2 ; \
 	else \
 	  mv doclibcoda.mk2 $(srcdir)/doclibcoda.mk ; \
-	fi
-
-libqiap_doc: libcoda/qiap/doc/Doxyfile
-	@if test "x$(DOXYGEN)" = x ; then \
-	  echo "Doxygen not available. Documentation was not (re)created." ; \
-	else \
-	  $(MAKE) libqiap_docclean ; \
-	  echo "creating libqiap documentation" ; \
-	  test -d doc/html || $(MKDIR_P) doc/html ; \
-	  cd libcoda/qiap/doc ; \
-	  $(DOXYGEN) Doxyfile ; \
-	  cd ../../.. ; \
-	  rm -rf doc/html/libqiap/doxygen.* doc/html/libqiap/tab* ; \
-	  echo "creating doclibqiap.mk" ; \
-	  $(MAKE) doclibqiap_include ; \
-	fi
-
-libqiap_docclean:
-	@echo "removing libqiap documentation"
-	@rm -rf doc/html/libqiap
-
-doclibqiap_include:
-	@find doc/html/libqiap -type f | LANG= sort | $(AWK) 'BEGIN {printf("LIBQIAP_DOCFILES =")}; {printf(" \\\n\t%s", $$0)}' > doclibqiap.mk2
-	@echo "" >> doclibqiap.mk2
-	@find doc/html/libqiap -type f | LANG= sort | $(AWK) '{printf("%s:\n\t$$(MAKE) libqiap_doc\n", $$0)}' >> doclibqiap.mk2
-	@if diff $(srcdir)/doclibqiap.mk doclibqiap.mk2 >/dev/null 2>&1 ; then \
-	  echo "doclibqiap.mk is unchanged" ; \
-	  rm -f doclibqiap.mk2 ; \
-	else \
-	  mv doclibqiap.mk2 $(srcdir)/doclibqiap.mk ; \
 	fi
 
 java_doc: $(java_files) java/doc/Doxyfile

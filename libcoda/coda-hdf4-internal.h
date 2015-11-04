@@ -197,10 +197,7 @@ struct coda_hdf4_product_struct
     long *product_variable_size;
     int64_t **product_variable;
     int64_t mem_size;
-    const uint8_t *mem_ptr;
-#if CODA_USE_QIAP
-    void *qiap_info;
-#endif
+    uint8_t *mem_ptr;
 
     /* 'hdf4' product specific fields */
     int32 is_hdf;       /* is it a real HDF4 file or are we accessing a (net)CDF file */

@@ -25,46 +25,9 @@
 /* *INDENT-ON* */
 
 /* Make parser independent from other parsers */
-#define yymaxdepth coda_expression_maxdepth
-#define yyparse coda_expression_parse
-#define yylex   coda_expression_lex
 #define yyerror coda_expression_error
-#define yylval  coda_expression_lval
-#define yychar  coda_expression_char
-#define yydebug coda_expression_debug
-#define yypact  coda_expression_pact
-#define yyr1    coda_expression_r1
-#define yyr2    coda_expression_r2
-#define yydef   coda_expression_def
-#define yychk   coda_expression_chk
-#define yypgo   coda_expression_pgo
-#define yyact   coda_expression_act
-#define yyexca  coda_expression_exca
-#define yyerrflag coda_expression_errflag
-#define yynerrs coda_expression_nerrs
-#define yyps    coda_expression_ps
-#define yypv    coda_expression_pv
-#define yys     coda_expression_s
-#define yy_yys  coda_expression_yys
-#define yystate coda_expression_state
-#define yytmp   coda_expression_tmp
-#define yyv     coda_expression_v
-#define yy_yyv  coda_expression_yyv
-#define yyval   coda_expression_val
-#define yylloc  coda_expression_lloc
-#define yyreds  coda_expression_reds
-#define yytoks  coda_expression_toks
-#define yylhs   coda_expression_yylhs
-#define yylen   coda_expression_yylen
-#define yydefred coda_expression_yydefred
-#define yydgoto coda_expression_yydgoto
-#define yysindex coda_expression_yysindex
-#define yyrindex coda_expression_yyrindex
-#define yygindex coda_expression_yygindex
-#define yytable  coda_expression_yytable
-#define yycheck  coda_expression_yycheck
-#define yyname   coda_expression_yyname
-#define yyrule   coda_expression_yyrule
+#define yylex   coda_expression_lex
+#define yyparse coda_expression_parse
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -81,8 +44,8 @@ static coda_expression *parsed_expression;
 
 /* tokenizer declarations */
 int coda_expression_lex(void);
-void *coda_expression_scan_string(const char *yy_str);
-void coda_expression_delete_buffer(void *);
+void *coda_expression__scan_string(const char *yy_str);
+void coda_expression__delete_buffer(void *);
 
 static void coda_expression_error(const char *error)
 {
@@ -835,6 +798,10 @@ stringexpr:
             $$ = coda_expression_new(expr_bytes, NULL, $3, $5, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
+    | FUNC_BYTES '(' node ',' intexpr ',' intexpr ')' {
+            $$ = coda_expression_new(expr_bytes, NULL, $3, $5, $7, NULL);
+            if ($$ == NULL) YYERROR;
+        }
     | stringexpr '+' stringexpr {
             $$ = coda_expression_new(expr_add, NULL, $1, $3, NULL, NULL);
             if ($$ == NULL) YYERROR;
@@ -1005,17 +972,17 @@ LIBCODA_API int coda_expression_from_string(const char *exprstring, coda_express
 
     coda_errno = 0;
     parsed_expression = NULL;
-    bufstate = (void *)coda_expression_scan_string(exprstring);
+    bufstate = (void *)coda_expression__scan_string(exprstring);
     if (coda_expression_parse() != 0)
     {
         if (coda_errno == 0)
         {
             coda_set_error(CODA_ERROR_EXPRESSION, NULL);
         }
-        coda_expression_delete_buffer(bufstate);
+        coda_expression__delete_buffer(bufstate);
         return -1;
     }
-    coda_expression_delete_buffer(bufstate);
+    coda_expression__delete_buffer(bufstate);
     *expr = parsed_expression;
 
     return 0;

@@ -751,7 +751,7 @@ static void generate_expr(const coda_expression *expr, int precedence)
             generate_expr(((coda_expression_operation *)expr)->operand[1], 15);
             break;
         case expr_string:
-            ff_printf("string(");
+            ff_printf("str(");
             generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             if (((coda_expression_operation *)expr)->operand[1] != NULL)
             {

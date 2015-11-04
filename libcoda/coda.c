@@ -33,9 +33,6 @@
 #include "coda-rinex.h"
 #include "coda-sp3.h"
 #include "coda-path.h"
-#ifdef CODA_USE_QIAP
-#include "coda-qiap.h"
-#endif
 
 /** \defgroup coda_general CODA General
  * The CODA General module contains all general and miscellaneous functions and procedures of CODA.
@@ -530,19 +527,6 @@ LIBCODA_API int coda_init(void)
             return -1;
         }
 #endif
-#ifdef CODA_USE_QIAP
-        if (coda_qiap_init() != 0)
-        {
-            coda_data_dictionary_done();
-            if (coda_definition_path != NULL)
-            {
-                free(coda_definition_path);
-                coda_definition_path = NULL;
-            }
-            coda_leap_second_table_done();
-            return -1;
-        }
-#endif
     }
     coda_init_counter++;
 
@@ -571,9 +555,6 @@ LIBCODA_API void coda_done(void)
         coda_init_counter--;
         if (coda_init_counter == 0)
         {
-#ifdef CODA_USE_QIAP
-            coda_qiap_done();
-#endif
             coda_sp3_done();
             coda_rinex_done();
             coda_grib_done();

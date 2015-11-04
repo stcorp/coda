@@ -22,6 +22,7 @@
 #include "coda-tree.h"
 
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 /** Create root node for a new node tree

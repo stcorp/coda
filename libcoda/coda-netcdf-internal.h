@@ -60,10 +60,7 @@ typedef struct coda_netcdf_product_struct
     long *product_variable_size;
     int64_t **product_variable;
     int64_t mem_size;
-    const uint8_t *mem_ptr;
-#if CODA_USE_QIAP
-    void *qiap_info;
-#endif
+    uint8_t *mem_ptr;
 
     /* 'netcdf' product specific fields */
     coda_product *raw_product;

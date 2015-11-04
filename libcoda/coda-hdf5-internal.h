@@ -131,10 +131,7 @@ struct coda_hdf5_product_struct
     long *product_variable_size;
     int64_t **product_variable;
     int64_t mem_size;
-    const uint8_t *mem_ptr;
-#if CODA_USE_QIAP
-    void *qiap_info;
-#endif
+    uint8_t *mem_ptr;
 
     /* 'hdf5' product specific fields */
     hid_t file_id;

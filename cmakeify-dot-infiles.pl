@@ -8,7 +8,7 @@
 #
 # This script:
 # + Changes #define lines to #cmakedefine lines
-# + Is a modified version of the CLS perl code for cmakeifying brathll.
+# + Adds windows specific defines
 #
 
 use strict;
@@ -59,14 +59,6 @@ sub CopyFile($$)
 
 /* we need to redefine ELEMENT_TYPE because it conflicts with io.h contents */
 #define ELEMENT_TYPE ELEMENT_TYPE_RENAMED
-#define XML_NS 1
-#define XML_DTD 1
-#define XML_LARGE_SIZE 1
-#define XML_CONTEXT_BYTES 1024
-#define XML_BUILDING_EXPAT 1
-
-/* some defines that are needed for pcre */
-#define PCRE_STATIC
 
 /* redefines for special string handling functions */
 #define strcasecmp _stricmp
@@ -113,20 +105,6 @@ EOF
 
                 # Move comment of end of line to preceding line
                 s/^(.*)(\/\*.*\*\/)/$2\n$1$'/;
-                
-                if (m/define.*HAVE_ALLOCA_H/)
-                {
-                    $_	.= <<'EOF'
-
-/* Automatically added by "cmakeify-dot-infiles" conversion script */
-/* Needed for windows. */
-#cmakedefine HAVE_MALLOC_H ${HAVE_MALLOC_H}
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif
-
-EOF
-                }
             }
         }
     }

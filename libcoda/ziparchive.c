@@ -162,9 +162,6 @@ static int get_entries(za_file *zf)
     for (i = 0; i < num_entries; i++)
     {
         uint16_t comment_length;
-        uint16_t version1;
-        uint16_t version2;
-        uint16_t bitflag;
         uint16_t internal_attributes;
         za_entry *entry;
 
@@ -188,20 +185,9 @@ static int get_entries(za_file *zf)
             return -1;
         }
 
-        version1 = buffer.as_uint16[2]; /* offset 4 */
-#ifdef WORDS_BIGENDIAN
-        swap_uint16(&version1);
-#endif
-
-        version2 = buffer.as_uint16[3]; /* offset 6 */
-#ifdef WORDS_BIGENDIAN
-        swap_uint16(&version2);
-#endif
-
-        bitflag = buffer.as_uint16[4];  /* offset 8 */
-#ifdef WORDS_BIGENDIAN
-        swap_uint16(&bitflag);
-#endif
+        /* uint16_t version1 = buffer.as_uint16[2]; */
+        /* uint16_t version2 = buffer.as_uint16[3]; */
+        /* uint16_t bitflag = buffer.as_uint16[4]; */
 
         entry->compression = buffer.as_uint16[5];       /* offset 10 */
 #ifdef WORDS_BIGENDIAN
@@ -452,8 +438,6 @@ int za_read_entry(za_entry *entry, char *out_buffer)
         uint32_t as_uint32[8];
     } buffer;
     uint32_t signature;
-    uint16_t version2;
-    uint16_t bitflag;
     uint16_t compression;
     uint16_t modification_time;
     uint16_t modification_date;
@@ -487,15 +471,8 @@ int za_read_entry(za_entry *entry, char *out_buffer)
         return -1;
     }
 
-    version2 = buffer.as_uint16[2];     /* offset 4 */
-#ifdef WORDS_BIGENDIAN
-    swap_uint16(&version2);
-#endif
-
-    bitflag = buffer.as_uint16[3];      /* offset 6 */
-#ifdef WORDS_BIGENDIAN
-    swap_uint16(&bitflag);
-#endif
+    /* uint16_t version2 = buffer.as_uint16[2];  */
+    /* uint16_t bitflag = buffer.as_uint16[3]; */
 
     compression = buffer.as_uint16[4];  /* offset 8 */
 #ifdef WORDS_BIGENDIAN

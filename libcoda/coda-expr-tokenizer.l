@@ -20,6 +20,8 @@
 
 /* *INDENT-OFF* */
 
+%option outfile="lex.yy.c"
+%option prefix="coda_expression_"
 %option noyywrap
 %option noinput
 %option nounput
@@ -28,50 +30,6 @@
 %{
 
 /* *INDENT-ON* */
-
-/* These defines are to allow more than one yacc file in the program */
-#define yy_delete_buffer coda_expression_delete_buffer
-#define yy_scan_string coda_expression_scan_string
-#define yy_yys coda_expression_yys
-#define yy_yyv coda_expression_yyv
-#define yyact coda_expression_act
-#define yychar coda_expression_char
-#define yycheck coda_expression_yycheck
-#define yychk coda_expression_chk
-#define yydebug coda_expression_debug
-#define yydef coda_expression_def
-#define yydefred coda_expression_yydefred
-#define yydgoto coda_expression_yydgoto
-#define yyerrflag coda_expression_errflag
-#define yyerror coda_expression_error
-#define yyexca coda_expression_exca
-#define yygindex coda_expression_yygindex
-#define yylen coda_expression_yylen
-#define yylex coda_expression_lex
-#define yylhs coda_expression_yylhs
-#define yylloc coda_expression_lloc
-#define yylval coda_expression_lval
-#define yymaxdepth coda_expression_maxdepth
-#define yyname coda_expression_yyname
-#define yynerrs coda_expression_nerrs
-#define yypact coda_expression_pact
-#define yyparse coda_expression_parse
-#define yypgo coda_expression_pgo
-#define yyps coda_expression_ps
-#define yypv coda_expression_pv
-#define yyr1 coda_expression_r1
-#define yyr2 coda_expression_r2
-#define yyreds coda_expression_reds
-#define yyrindex coda_expression_yyrindex
-#define yyrule coda_expression_yyrule
-#define yys coda_expression_s
-#define yysindex coda_expression_yysindex
-#define yystate coda_expression_state
-#define yytable coda_expression_yytable
-#define yytmp coda_expression_tmp
-#define yytoks coda_expression_toks
-#define yyv coda_expression_v
-#define yyval coda_expression_val
 
 #include "coda-expr.h"
 

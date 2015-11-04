@@ -8,6 +8,8 @@
 # The user may specify ZLIB_INCLUDE and ZLIB_LIB environment
 # variables to locate include files and library directories
 #
+include(CheckLibraryExists)
+include(CheckIncludeFile)
 
 find_path(ZLIB_INCLUDE_DIR
   NAMES zlib.h

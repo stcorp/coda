@@ -31,7 +31,8 @@
 #include <unistd.h>
 #endif
 
-#define DETECTION_BLOCK_SIZE 4096
+/* we use 16K + 16 bytes to also allow detection of HDF5 at superblock offset 16384 */
+#define DETECTION_BLOCK_SIZE 16400
 
 static void delete_detection_node(coda_ascbin_detection_node *node)
 {

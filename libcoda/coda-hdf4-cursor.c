@@ -769,6 +769,12 @@ static int read_partial_array(const coda_cursor *cursor, long offset, long lengt
                 type = (coda_hdf4_SDS *)cursor->stack[cursor->n - 1].type;
 
                 /* determine hyperslab start/edge */
+                if (type->rank == 0)
+                {
+                    coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "partial array reading not allowed for zero "
+                                   "dimensional HDF4 SDS");
+                    return -1;
+                }
                 for (i = type->rank - 1; i >= 0; i--)
                 {
                     if (length <= block_size * type->dimsizes[i])

@@ -719,6 +719,7 @@ static int new_hdf5AttributeDefinition(hid_t attr_id, coda_type **type)
             coda_type_release((coda_type *)array);
             return -1;
         }
+        coda_type_release(definition);
         for (i = 0; i < num_dims; i++)
         {
             if (coda_type_array_add_fixed_dimension(array, (long)dim[i]) != 0)
@@ -789,9 +790,9 @@ static int new_hdf5Attribute(coda_product *product, hid_t attr_id, coda_dynamic_
         long i;
 
         array = coda_mem_array_new((coda_type_array *)definition, NULL);
+        coda_type_release(definition);
         if (array == NULL)
         {
-            coda_type_release(definition);
             if (is_variable_string)
             {
                 for (k = 0; k < num_elements; k++)
@@ -858,6 +859,7 @@ static int new_hdf5Attribute(coda_product *product, hid_t attr_id, coda_dynamic_
         {
             element = coda_mem_data_new(definition, NULL, product, size, buffer);
         }
+        coda_type_release(definition);
         if (element == NULL)
         {
             if (is_variable_string)
@@ -900,9 +902,9 @@ static coda_mem_record *new_hdf5AttributeRecord(coda_product *product, hid_t obj
         return NULL;
     }
     attrs = coda_mem_record_new(definition, NULL);
+    coda_type_release((coda_type *)definition);
     if (attrs == NULL)
     {
-        coda_type_release((coda_type *)definition);
         return NULL;
     }
 
@@ -917,7 +919,7 @@ static coda_mem_record *new_hdf5AttributeRecord(coda_product *product, hid_t obj
     /* initialize attributes */
     for (i = 0; i < num_attributes; i++)
     {
-        coda_dynamic_type *attribute;
+        coda_dynamic_type *attribute = NULL;
         hid_t attr_id;
         char *name;
         int length;

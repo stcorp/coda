@@ -53,9 +53,6 @@
 #include "coda-rinex.h"
 #include "coda-sp3.h"
 #include "coda-definition.h"
-#if CODA_USE_QIAP
-#include "coda-qiap.h"
-#endif
 
 /** \defgroup coda_product CODA Product
  * The CODA Product module contains functions and procedures to open, close and retrieve information about product
@@ -535,14 +532,6 @@ static int open_file(const char *filename, coda_format format, int64_t file_size
         }
     }
 
-#if CODA_USE_QIAP
-    if (coda_qiap_init_actions(*product_file) != 0)
-    {
-        coda_close(*product_file);
-        return -1;
-    }
-#endif
-
     return 0;
 }
 
@@ -662,10 +651,6 @@ LIBCODA_API int coda_close(coda_product *product)
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "product file argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
-
-#if CODA_USE_QIAP
-    coda_qiap_delete_actions(product);
-#endif
 
     /* remove product variable information */
     if (product->product_variable_size != NULL)

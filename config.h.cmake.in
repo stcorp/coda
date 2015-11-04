@@ -13,9 +13,6 @@
    */
 #cmakedefine CODA_EXPAT_NAME_MANGLE ${CODA_EXPAT_NAME_MANGLE}
 
-/* Define to 1 if the QIAP functionality should be included */
-#cmakedefine CODA_USE_QIAP ${CODA_USE_QIAP}
-
 /* This is the current version of coda */
 #cmakedefine CODA_VERSION ${CODA_VERSION}
 
@@ -59,9 +56,6 @@
 /* Define to 1 if you have the `m' library (-lm). */
 #cmakedefine HAVE_LIBM ${HAVE_LIBM}
 
-/* Define to 1 if you have the `ws2_32' library (-lws2_32). */
-#cmakedefine HAVE_LIBWS2_32 ${HAVE_LIBWS2_32}
-
 /* Define to 1 if your system has a GNU libc compatible `malloc' function, and
    to 0 otherwise. */
 #cmakedefine HAVE_MALLOC ${HAVE_MALLOC}
@@ -83,9 +77,6 @@
 
 /* Define to 1 if you have the <netcdf.h> header file. */
 #cmakedefine HAVE_NETCDF_H ${HAVE_NETCDF_H}
-
-/* Define to 1 if you have the <netdb.h> header file. */
-#cmakedefine HAVE_NETDB_H ${HAVE_NETDB_H}
 
 /* Define to 1 if you have the `pread' function. */
 #cmakedefine HAVE_PREAD ${HAVE_PREAD}
@@ -165,9 +156,6 @@
 
 /* Define to the compiler attribute to test for printf format compliance */
 #cmakedefine PRINTF_ATTR ${PRINTF_ATTR}
-
-/* The version of the QIAP component */
-#cmakedefine QIAP_VERSION ${QIAP_VERSION}
 
 /* Define to 1 if you have the ANSI C header files. */
 #cmakedefine STDC_HEADERS ${STDC_HEADERS}
@@ -356,14 +344,6 @@ int vsnprintf(const char *, size_t, const char *, va_list ap);
 
 /* we need to redefine ELEMENT_TYPE because it conflicts with io.h contents */
 #define ELEMENT_TYPE ELEMENT_TYPE_RENAMED
-#define XML_NS 1
-#define XML_DTD 1
-#define XML_LARGE_SIZE 1
-#define XML_CONTEXT_BYTES 1024
-#define XML_BUILDING_EXPAT 1
-
-/* some defines that are needed for pcre */
-#define PCRE_STATIC
 
 /* redefines for special string handling functions */
 #define strcasecmp _stricmp

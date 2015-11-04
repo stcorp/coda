@@ -20,6 +20,7 @@
 
 #include "coda-internal.h"
 
+#include <stdio.h>
 #include <string.h>
 
 #ifdef HAVE_HDF4
@@ -27,9 +28,6 @@
 #endif
 #ifdef HAVE_HDF5
 #include "coda-hdf5.h"
-#endif
-#ifdef CODA_USE_QIAP
-#include "coda-qiap.h"
 #endif
 
 #define MAX_ERROR_INFO_LENGTH	4096
@@ -132,9 +130,6 @@ static char coda_error_message_buffer[MAX_ERROR_INFO_LENGTH + 1];
  * Trying to read outside the element boundary. This happens if there was a read beyond the end of the product or a 
  * read outside the range of an enclosing element such as an XML element.
  * This error usually means that either the product or its definition in CODA contains an error.
- */
-/** \def CODA_ERROR_QIAP
- * An error occured in the QIAP specific support functions.
  */
 
 /** \def CODA_ERROR_DATA_DEFINITION
@@ -258,12 +253,6 @@ LIBCODA_API void coda_set_error(int err, const char *message, ...)
         coda_hdf5_add_error_message();
     }
 #endif
-#ifdef CODA_USE_QIAP
-    if (err == CODA_ERROR_QIAP && message == NULL)
-    {
-        coda_qiap_add_error_message();
-    }
-#endif
 }
 
 /** Returns a string with the description of the CODA error.
@@ -334,8 +323,6 @@ LIBCODA_API const char *coda_errno_to_string(int err)
                 return "product error detected";
             case CODA_ERROR_OUT_OF_BOUNDS_READ:
                 return "trying to read outside the element boundary";
-            case CODA_ERROR_QIAP:
-                return "QIAP error";
 
             case CODA_ERROR_DATA_DEFINITION:
                 return "error in data definitions detected";

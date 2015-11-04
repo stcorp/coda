@@ -1420,7 +1420,7 @@ static void generate_html_expr(const coda_expression *expr, int precedence)
             generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
             break;
         case expr_string:
-            ff_printf("<b>string</b>(");
+            ff_printf("<b>str</b>(");
             generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             if (((coda_expression_operation *)expr)->operand[1] != NULL)
             {
@@ -2036,6 +2036,15 @@ static void generate_html_index(const char *filename)
     fclose(FFILE);
 }
 
+static void create_directory(const char *filename)
+{
+#if WIN32
+    CreateDirectory(filename, NULL);
+#else
+    mkdir(filename, 0777);
+#endif
+}
+
 void generate_html(const char *prefixdir)
 {
     char *filename;
@@ -2067,13 +2076,12 @@ void generate_html(const char *prefixdir)
         }
 
         sprintf(filename, "%s/%s", prefixdir, product_class->name);
-        mkdir(filename, 0777);
-
+        create_directory(filename);
         sprintf(filename, "%s/%s/index.html", prefixdir, product_class->name);
         generate_html_product_class(filename, product_class);
 
         sprintf(filename, "%s/%s/products", prefixdir, product_class->name);
-        mkdir(filename, 0777);
+        create_directory(filename);
 
         for (j = 0; j < product_class->num_product_types; j++)
         {
@@ -2092,7 +2100,7 @@ void generate_html(const char *prefixdir)
             sprintf(filename, "%s/%s/types.html", prefixdir, product_class->name);
             generate_html_named_types_index(filename, product_class);
             sprintf(filename, "%s/%s/types", prefixdir, product_class->name);
-            mkdir(filename, 0777);
+            create_directory(filename);
 
             for (j = 0; j < product_class->num_named_types; j++)
             {

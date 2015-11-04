@@ -80,9 +80,6 @@ int coda_xml_open(const char *filename, int64_t file_size, const coda_product_de
     product_file->product_variable = NULL;
     product_file->mem_size = 0;
     product_file->mem_ptr = NULL;
-#if CODA_USE_QIAP
-    product_file->qiap_info = NULL;
-#endif
     product_file->raw_product = NULL;
 
     product_file->filename = strdup(filename);
@@ -122,6 +119,10 @@ int coda_xml_close(coda_product *product)
     if (product_file->root_type != NULL)
     {
         coda_dynamic_type_delete(product_file->root_type);
+    }
+    if (product_file->mem_ptr != NULL)
+    {
+        free(product_file->mem_ptr);
     }
     if (product_file->raw_product != NULL)
     {

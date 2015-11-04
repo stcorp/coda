@@ -33,6 +33,7 @@ char *output_file_name;
 char *starting_path;
 int verbosity;
 int calc_dim;
+int max_depth = -1;
 int show_dim_vals;
 int show_index;
 int show_label;
@@ -166,6 +167,9 @@ static void print_help()
     printf("            -p, --path <path>\n");
     printf("                    path (in the form of a CODA node expression) to the\n");
     printf("                    location in the product where the operation should begin\n");
+    printf("            --max_depth <depth>\n");
+    printf("                    only traverse arrays/records this deep for printing items\n");
+    printf("                    (the max depth is relative to any path provided by -p)\n");
     printf("            --open_as <product class> <product type> <version>\n");
     printf("                    force opening the product using the given product class,\n");
     printf("                    product type, and format version\n");
@@ -727,6 +731,11 @@ static void handle_debug_run_mode(int argc, char *argv[])
                  argv[i + 1][0] != '-')
         {
             starting_path = argv[i + 1];
+            i++;
+        }
+        else if ((strcmp(argv[i], "--max_depth") == 0) && i + 1 < argc && argv[i + 1][0] != '-')
+        {
+            max_depth = atoi(argv[i + 1]);      /* we just use '0' if the conversion to int fails */
             i++;
         }
         else if (strcmp(argv[i], "--open_as") == 0 && i + 3 < argc && argv[i + 1][0] != '-' && argv[i + 2][0] != '-' &&

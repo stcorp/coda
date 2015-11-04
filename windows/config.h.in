@@ -19,9 +19,6 @@
 /* Version number of package */
 #undef VERSION
 
-/* Version of linked-in QIAP library */
-#undef QIAP_VERSION
-
 /* some defines that are needed to configure expat */
 #define HAVE_MEMMOVE 1
 /* we need to redefine ELEMENT_TYPE because it conflicts with io.h contents */
@@ -64,7 +61,6 @@
 #define YYMALLOC malloc
 #define YYFREE free
 
-#define CODA_USE_QIAP 1
 #define HAVE_LIBWS2_32 1
 
 /* coda-idl defines */

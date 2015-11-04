@@ -35,9 +35,6 @@ struct coda_bin_product_struct
     int64_t **product_variable;
     int64_t mem_size;
     const uint8_t *mem_ptr;
-#if CODA_USE_QIAP
-    void *qiap_info;
-#endif
 
     /* 'bin' product specific fields */
     int use_mmap;       /* indicates whether to use mem_ptr (or the file descriptor 'fd') */

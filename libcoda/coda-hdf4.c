@@ -350,6 +350,10 @@ int coda_hdf4_close(coda_product *product)
     {
         free(product_file->filename);
     }
+    if (product_file->mem_ptr != NULL)
+    {
+        free(product_file->mem_ptr);
+    }
 
     /* first remove everything that was not added to the root_type */
     if (product_file->vgroup != NULL)
@@ -453,9 +457,6 @@ int coda_hdf4_open(const char *filename, int64_t file_size, const coda_product_d
     product_file->product_variable = NULL;
     product_file->mem_size = 0;
     product_file->mem_ptr = NULL;
-#if CODA_USE_QIAP
-    product_file->qiap_info = NULL;
-#endif
     product_file->is_hdf = 0;
     product_file->file_id = -1;
     product_file->gr_id = -1;

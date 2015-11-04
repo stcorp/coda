@@ -1,3 +1,30 @@
+2.15 2015-11-03
+~~~~~~~~~~~~~~~
+
+* Removed QIAP support as it is no longer going to be a supported standard.
+
+* Added --max_depth option to codadump debug mode.
+
+* Added bytes(node, offset, length) coda expression function.
+
+* Resolved possible windows build issue. Now using CreateDirectory() instead
+  of mkdir().
+
+* Changed detection block size from 4096 to 16400 bytes (allowing for detection
+  of HDF5 files where the superblock starts at offset 4096, 8192, or 16384).
+
+* Improved CMake build system.
+
+* Removed stdio.h #include from coda.h
+
+* Fixed name of string cast function in generated codadef documentation
+  ('str' instead of'string').
+
+* Resolved issue with FLEX generated files not properly prefixing all exported
+  symbols.
+
+* Fixed memory leaks in different backends (introduced in 2.14).
+
 2.14 2015-09-04
 ~~~~~~~~~~~~~~~
 
@@ -17,7 +44,8 @@
 * codaeval now properly throws an error when trying to evaluate a 'void'
   or 'node' expression.
 
-* Fixed sorting of product classes (last item was not allways sorted).
+* Fixed sorting of product classes (last product class was not allways
+  included in the sorting).
 
 * Fixed memory issue in gracefull handling of HDF5 files with invalid
   content.

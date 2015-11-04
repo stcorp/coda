@@ -1,5 +1,5 @@
 # autoconf file for CODA
-AC_INIT([CODA],[2.14])
+AC_INIT([CODA],[2.15])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE(foreign subdir-objects 1.10 -Wall)
 
@@ -82,7 +82,6 @@ AC_CONFIG_HEADERS([windows/config.h])
 AC_CONFIG_FILES([Makefile fortran/Makefile])
 AC_CONFIG_FILES([java/build.xml])
 AC_CONFIG_FILES([libcoda/doc/Doxyfile java/doc/Doxyfile])
-AC_CONFIG_FILES([libcoda/qiap/doc/Doxyfile])
 AC_CONFIG_FILES([idl/coda-idl.dlm])
 AC_CONFIG_FILES([windows/codawin32.iss windows/codawin64.iss windows/setup.py])
 
@@ -100,7 +99,7 @@ AC_CONFIG_FILES([windows/codawin32.iss windows/codawin64.iss windows/setup.py])
 # 6. If any interfaces have been removed or changed since the last public
 #    release, then set age to 0.
 LIBCODA_CURRENT=12
-LIBCODA_REVISION=0
+LIBCODA_REVISION=1
 LIBCODA_AGE=5
 AC_SUBST(LIBCODA_CURRENT)
 AC_SUBST(LIBCODA_REVISION)
@@ -205,26 +204,6 @@ AC_ARG_ENABLE([coda-subpackage-mode],
   [ac_cv_enable_coda_subpackage_mode=$enableval],
   [AC_CACHE_CHECK([build CODA as sub-package],ac_cv_enable_coda_subpackage_mode,ac_cv_enable_coda_subpackage_mode=no)])
 AM_CONDITIONAL(SUBPACKAGE_MODE, test $ac_cv_enable_coda_subpackage_mode = yes)
-
-# *** QIAP support ***
-
-AC_ARG_ENABLE([qiap],
-  [AS_HELP_STRING([--disable-qiap],[disable support for the ESA Quality Information and Action Protocol (QIAP)])],
-  [ac_cv_enable_qiap=$enableval],
-  [AC_CACHE_CHECK([enable support for QIAP],ac_cv_enable_qiap,ac_cv_enable_qiap=yes)])
-AM_CONDITIONAL(BUILD_QIAP, test $ac_cv_enable_qiap = yes)
-
-if test $ac_cv_enable_qiap = yes ; then
-  AC_CHECK_HEADERS([netdb.h])
-  AC_CHECK_LIB([ws2_32], [main])
-  if test "$QIAP_VERSION" = "" ; then
-    QIAP_VERSION=${VERSION}-coda
-  fi
-  AC_DEFINE(CODA_USE_QIAP, 1, [Define to 1 if the QIAP functionality should be included])
-  AC_DEFINE_UNQUOTED(QIAP_VERSION, ["$QIAP_VERSION"], [The version of the QIAP component])
-  AC_SUBST(QIAP_VERSION)
-fi
-
 
 # *** directories ***
 

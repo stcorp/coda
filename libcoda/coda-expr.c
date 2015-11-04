@@ -2622,6 +2622,7 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
         case expr_bytes:
             {
                 coda_cursor prev_cursor;
+                int64_t byte_offset = 0;
                 int64_t num_bytes;
                 int64_t num_bits = -1;
 
@@ -2631,7 +2632,22 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                 {
                     return -1;
                 }
-                if (opexpr->operand[1] != NULL)
+                if (opexpr->operand[2] != NULL)
+                {
+                    if (eval_integer(info, opexpr->operand[1], &byte_offset) != 0)
+                    {
+                        return -1;
+                    }
+                    if (eval_integer(info, opexpr->operand[2], &num_bytes) != 0)
+                    {
+                        return -1;
+                    }
+                    if (num_bytes > 0)
+                    {
+                        num_bits = num_bytes << 3;
+                    }
+                }
+                else if (opexpr->operand[1] != NULL)
                 {
                     if (eval_integer(info, opexpr->operand[1], &num_bytes) != 0)
                     {
@@ -2666,7 +2682,7 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                                        (long)num_bytes, __FILE__, __LINE__);
                         return -1;
                     }
-                    if (coda_cursor_read_bits(&info->cursor, (uint8_t *)*value, 0, num_bits) != 0)
+                    if (coda_cursor_read_bits(&info->cursor, (uint8_t *)*value, byte_offset * 8, num_bits) != 0)
                     {
                         free(*value);
                         return -1;

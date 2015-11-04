@@ -2,7 +2,7 @@
 #
 project(CODA)
 
-set(VERSION 2.14)
+set(VERSION 2.15)
 set(CODA_VERSION \"${VERSION}\")
 
 # General setup
@@ -31,8 +31,6 @@ cmake_dependent_option(
   CODA_DISABLE_HDF4_VDATA_ATTRIBUTES "enable HDF4 Vdata attributes" OFF
   CODA_WITH_HDF4 ON)
 option(CODA_BUILD_PYTHON "build Python interface" OFF)
-option(CODA_BUILD_QIAP "include QIAP support" ON)
-set(QIAP_VERSION \"${VERSION}-coda\" CACHE INTERNAL "QIAP version number")
 
 # The following is done because in CMake options are always
 # ON/OFF only, but for config.h substition we need something with
@@ -41,10 +39,6 @@ set(QIAP_VERSION \"${VERSION}-coda\" CACHE INTERNAL "QIAP version number")
 if(NOT CODA_DISABLE_HDF4_VDATA_ATTRIBUTES)
   set(ENABLE_HDF4_VDATA_ATTRIBUTES 1)
 endif(NOT CODA_DISABLE_HDF4_VDATA_ATTRIBUTES)
-
-if(CODA_BUILD_QIAP)
-  set(CODA_USE_QIAP 1)
-endif(CODA_BUILD_QIAP)
 
 # Some autoconf variables that CMake does not use itself, but
 # that are used in the config file substitutions.
@@ -114,7 +108,8 @@ find_package(BISON)
 find_package(FLEX)
 
 BISON_TARGET(coda-expr-parser ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/coda-expr-parser.y ${CMAKE_CURRENT_BINARY_DIR}/libcoda/coda-expr-parser.c)
-FLEX_TARGET(coda-expr-tokenizer ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/coda-expr-tokenizer.l ${CMAKE_CURRENT_BINARY_DIR}/libcoda/coda-expr-tokenizer.c)
+FLEX_TARGET(coda-expr-tokenizer ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/coda-expr-tokenizer.l ${CMAKE_CURRENT_SOURCE_DIR}/lex.yy.c)
+add_flex_bison_dependency(coda-expr-tokenizer coda-expr-parser)
 
 # Required include files
 #
@@ -141,9 +136,6 @@ find_include(sys/socket.h HAVE_SYS_SOCKET_H)
 find_include(sys/stat.h HAVE_SYS_STAT_H)
 find_include(sys/types.h HAVE_SYS_TYPES_H)
 find_include(unistd.h HAVE_UNISTD_H)
-if(CODA_BUILD_QIAP)
-  find_include(netdb.h HAVE_NETDB_H)
-endif(CODA_BUILD_QIAP)
 
 set(CMAKE_EXTRA_INCLUDE_FILES ${INCLUDES})
 
@@ -160,6 +152,7 @@ check_function_exists(realloc HAVE_REALLOC)
 check_function_exists(stat HAVE_STAT)
 check_function_exists(strcasecmp HAVE_STRCASECMP)
 check_function_exists(strdup HAVE_STRDUP)
+check_function_exists(strerror HAVE_STRERROR)
 check_function_exists(strncasecmp HAVE_STRNCASECMP)
 check_function_exists(vsnprintf HAVE_VSNPRINTF)
 
@@ -204,6 +197,7 @@ endif(NOT HAVE_STRERROR)
 set(CODA_INCLUDE_DIRS
   ${CMAKE_CURRENT_SOURCE_DIR}/libcoda
   ${CMAKE_CURRENT_BINARY_DIR}
+  ${CMAKE_CURRENT_BINARY_DIR}/libcoda
   CACHE INTERNAL "Include directories for the CODA library")
 
 include_directories(${CODA_INCLUDE_DIRS})
@@ -217,12 +211,6 @@ if(NOT WIN32)
   find_library(LIBM_LIBRARY m)
   mark_as_advanced(LIBM_LIBRARY)
 endif(NOT WIN32)
-if(CODA_BUILD_QIAP)
-  if(WIN32)
-    find_library(LIBWS2_32_LIBRARY ws_32)
-    mark_as_advanced(LIBWS2_32_LIBRARY)
-  endif(WIN32)
-endif(CODA_BUILD_QIAP)
 
 # The Doxyfile uses some autoconf variables CMake does not have.
 # We set them here manually, so that we can use the same .in
@@ -263,9 +251,6 @@ set(LIBCODA_SOURCES
   libcoda/coda-definition.c
   libcoda/coda-definition.h
   libcoda/coda-errno.c
-  libcoda/coda-expr-parser.c
-  libcoda/coda-expr-parser.h
-  libcoda/coda-expr-tokenizer.c
   libcoda/coda-expr.c
   libcoda/coda-expr.h
   libcoda/coda-filefilter.c
@@ -316,7 +301,9 @@ set(LIBCODA_SOURCES
   libcoda/hashtable.h
   libcoda/ipow.h
   libcoda/ziparchive.c
-  libcoda/ziparchive.h)
+  libcoda/ziparchive.h
+  ${BISON_coda-expr-parser_OUTPUTS}
+  ${FLEX_coda-expr-tokenizer_OUTPUTS})
 
 set(LIBCODA_HDF4_FILES
   libcoda/coda-hdf4-cursor.c
@@ -669,22 +656,6 @@ set(LIBZLIB_SOURCES
 
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/zlib)
 
-# QIAP sources
-#
-if(CODA_BUILD_QIAP)
-  set(LIBQIAP_SOURCES
-    libcoda/qiap/coda-qiap.c
-    libcoda/qiap/coda-qiap.h
-    libcoda/qiap/qiap-query.c
-    libcoda/qiap/qiap-report-read.c
-    libcoda/qiap/qiap-report-write.c
-    libcoda/qiap/qiap-soap-read.c
-    libcoda/qiap/qiap.c
-    libcoda/qiap/qiap.h)
-  
-  include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/qiap)
-endif(CODA_BUILD_QIAP)
-
 if(NOT CODA_BUILD_SUBPACKAGE_MODE)
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/coda.h DESTINATION include)
 endif(NOT CODA_BUILD_SUBPACKAGE_MODE)
@@ -694,12 +665,12 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
   # Set dynamic library version
   #
   set(LIBCODA_CURRENT 12)
-  set(LIBCODA_REVISION 0)
+  set(LIBCODA_REVISION 1)
   set(LIBCODA_AGE 5)
   math(EXPR LIBCODA_MAJOR "${LIBCODA_CURRENT} - ${LIBCODA_AGE}")
   set(LIBCODA_MINOR ${LIBCODA_AGE})
   
-  add_library(coda SHARED ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBPCRE_SOURCES} ${LIBZLIB_SOURCES} ${LIBQIAP_SOURCES})
+  add_library(coda SHARED ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBPCRE_SOURCES} ${LIBZLIB_SOURCES})
   target_link_libraries(coda ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
   set_target_properties(coda PROPERTIES
     VERSION ${LIBCODA_MAJOR}.${LIBCODA_MINOR}.${LIBCODA_REVISION}
@@ -707,7 +678,7 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
     install(TARGETS coda DESTINATION lib)
 endif(NOT CODA_BUILD_SUBPACKAGE_MODE)
 
-add_library(coda_static STATIC ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBPCRE_SOURCES} ${LIBZLIB_SOURCES} ${LIBQIAP_SOURCES})
+add_library(coda_static STATIC ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBPCRE_SOURCES} ${LIBZLIB_SOURCES})
 
 # On Windows, we want libcoda.lib for static, coda.dll & coda.lib for shared.
 # On Unix, we want libcoda.a and libcoda.so

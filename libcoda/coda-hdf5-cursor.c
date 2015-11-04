@@ -474,6 +474,12 @@ static int read_partial_array(const coda_cursor *cursor, long offset, long lengt
     }
 
     /* determine hyperslab start/edge */
+    if (num_dims == 0)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT,
+                       "partial array reading not allowed for zero dimensional HDF5 Dataset");
+        return -1;
+    }
     for (i = num_dims - 1; i >= 0; i--)
     {
         if (length <= block_size * dim[i])

@@ -25,6 +25,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <stdio.h>
 #include <string.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>

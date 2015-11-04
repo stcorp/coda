@@ -8,6 +8,8 @@
 # The user may specify JPEG_INCLUDE and JPEG_LIB environment
 # variables to locate include files and library directories
 #
+include(CheckLibraryExists)
+include(CheckIncludeFile)
 
 find_path(JPEG_INCLUDE_DIR
   NAMES jpeglib.h

@@ -20,6 +20,7 @@
 
 #include "coda-mem-internal.h"
 
+#include <stdio.h>
 #include <assert.h>
 
 static coda_mem_record *empty_record_singleton[] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };

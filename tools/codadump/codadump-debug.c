@@ -111,7 +111,7 @@ static void print_escaped(const char *data, long length)
     }
 }
 
-static void print_data(coda_cursor *cursor)
+static void print_data(coda_cursor *cursor, int depth)
 {
     coda_type_class type_class;
     int has_attributes;
@@ -128,7 +128,7 @@ static void print_data(coda_cursor *cursor)
         }
         fi_printf("{attributes}\n");
         INDENT++;
-        print_data(cursor);
+        print_data(cursor, depth);
         INDENT--;
         coda_cursor_goto_parent(cursor);
     }
@@ -201,7 +201,14 @@ static void print_data(coda_cursor *cursor)
                         }
                         ff_printf("\n");
                         INDENT++;
-                        print_data(cursor);
+                        if (max_depth < 0 || depth < max_depth)
+                        {
+                            print_data(cursor, depth + 1);
+                        }
+                        else
+                        {
+                            fi_printf("...\n");
+                        }
                         INDENT--;
                         coda_cursor_goto_parent(cursor);
                     }
@@ -242,7 +249,14 @@ static void print_data(coda_cursor *cursor)
                             }
                             ff_printf("\n");
                             INDENT++;
-                            print_data(cursor);
+                            if (max_depth < 0 || depth < max_depth)
+                            {
+                                print_data(cursor, depth + 1);
+                            }
+                            else
+                            {
+                                fi_printf("...\n");
+                            }
                             INDENT--;
                             if (i < num_fields - 1)
                             {
@@ -320,7 +334,14 @@ static void print_data(coda_cursor *cursor)
                             }
                             ff_printf("\n");
                             INDENT++;
-                            print_data(cursor);
+                            if (max_depth < 0 || depth < max_depth)
+                            {
+                                print_data(cursor, depth + 1);
+                            }
+                            else
+                            {
+                                fi_printf("...\n");
+                            }
                             INDENT--;
 
                             k = num_dims - 1;
@@ -535,7 +556,7 @@ static void print_data(coda_cursor *cursor)
                     {
                         handle_coda_error();
                     }
-                    print_data(&base_cursor);
+                    print_data(&base_cursor, depth);
                 }
 
                 fi_printf("<%s>", coda_type_get_special_type_name(special_type));
@@ -655,7 +676,7 @@ void print_debug_data(const char *product_class, const char *product_type, int f
         }
     }
 
-    print_data(&cursor);
+    print_data(&cursor, 0);
 
     coda_close(pf);
 }

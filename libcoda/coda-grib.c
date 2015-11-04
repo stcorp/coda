@@ -1486,7 +1486,6 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
     float referenceValue;
     uint8_t bitsPerValue;
     uint8_t gridDefinition;
-    int isIntegerData;
     int32_t intvalue;
 
     /* Section 1: Product Definition Section (PDS) */
@@ -1975,7 +1974,7 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
         coda_set_error(CODA_ERROR_PRODUCT, "second order ('Complex') Packing not supported");
         return -1;
     }
-    isIntegerData = (buffer[3] & 0x20 ? 1 : 0);
+    /* int isIntegerData = (buffer[3] & 0x20 ? 1 : 0); */
     if (buffer[3] & 0x10)
     {
         if (bitmask != NULL)
@@ -2823,9 +2822,6 @@ int coda_grib_open(const char *filename, int64_t file_size, const coda_product_d
     product_file->product_variable = NULL;
     product_file->mem_size = 0;
     product_file->mem_ptr = NULL;
-#if CODA_USE_QIAP
-    product_file->qiap_info = NULL;
-#endif
 
     product_file->grib_version = -1;
     product_file->record_size = 0;
@@ -2981,6 +2977,10 @@ int coda_grib_close(coda_product *product)
     if (product_file->root_type != NULL)
     {
         coda_dynamic_type_delete(product_file->root_type);
+    }
+    if (product_file->mem_ptr != NULL)
+    {
+        free(product_file->mem_ptr);
     }
     if (product_file->raw_product != NULL)
     {

@@ -61,9 +61,6 @@ int coda_ascii_open(const char *filename, int64_t file_size, const coda_product_
     product_file->product_variable = NULL;
     product_file->mem_size = 0;
     product_file->mem_ptr = NULL;
-#if CODA_USE_QIAP
-    product_file->qiap_info = NULL;
-#endif
 
     product_file->use_mmap = 0;
     product_file->fd = -1;

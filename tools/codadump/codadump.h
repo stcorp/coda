@@ -59,6 +59,7 @@ extern char *output_file_name;
 extern char *starting_path;
 extern int verbosity;
 extern int calc_dim;
+extern int max_depth;
 extern int show_dim_vals;
 extern int show_index;
 extern int show_label;

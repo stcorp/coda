@@ -25,6 +25,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -1943,9 +1944,6 @@ int coda_sp3_open(const char *filename, int64_t file_size, const coda_product_de
     product_file->product_variable = NULL;
     product_file->mem_size = 0;
     product_file->mem_ptr = NULL;
-#if CODA_USE_QIAP
-    product_file->qiap_info = NULL;
-#endif
 
     product_file->filename = strdup(filename);
     if (product_file->filename == NULL)

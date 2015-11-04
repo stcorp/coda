@@ -30,8 +30,6 @@ extern "C"
 #endif
 /* *INDENT-ON* */
 
-#include <stdio.h>
-
 #ifdef WIN32
 #include <windows.h>
 
@@ -183,7 +181,6 @@ LIBCODA_API extern int coda_errno;
 
 #define CODA_ERROR_PRODUCT                                 (-300)
 #define CODA_ERROR_OUT_OF_BOUNDS_READ                      (-301)
-#define CODA_ERROR_QIAP                                    (-302)
 
 #define CODA_ERROR_DATA_DEFINITION                         (-400)
 #define CODA_ERROR_EXPRESSION                              (-401)

@@ -79,7 +79,7 @@ For Unix based systems you can pass a 'CFLAGS="..."' option to
 the configure script. By default configure will use -g -O2 for the gcc
 compiler and use the default optimisation settings for all other compilers.
 
- * When using BEAT with HDF5 support the following warning is given:
+ * When using CODA with HDF5 support the following warning is given:
 ---
 Warning! The HDF5 header files included by this application do not match the
 version used by the HDF5 library to which this application is linked. Data
@@ -92,9 +92,9 @@ MATLAB will abort after this warning unless you set the
 HDF5_DISABLE_VERSION_CHECK environment variable on your system.
 
 This problem is related to the fact that MATLAB comes with its own HDF5
-library and BEAT is linked to a version of the HDF5 library that you provided
+library and CODA is linked to a version of the HDF5 library that you provided
 yourself. Downloading a HDF5 version that matches the version mentioned in
-'library is x.x.x' and using that to build BEAT will fix the problem. Earlier
+'library is x.x.x' and using that to build CODA will fix the problem. Earlier
 versions of HDF5 can be downloaded from:
 ftp://ftp.hdfgroup.org/HDF5/prev-releases
 

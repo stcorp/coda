@@ -867,9 +867,7 @@ static int read_VDR(coda_cdf_product *product_file, int64_t offset, int is_zvar)
     int32_t num_dims;
     int32_t zdim_sizes[CODA_MAX_NUM_DIMS];
     int32_t dim_varys[CODA_MAX_NUM_DIMS];
-    int64_t pad_value_offset;
     int record_varys;
-    int has_pad_value;
     int has_compression;
     int i;
 
@@ -1027,9 +1025,9 @@ static int read_VDR(coda_cdf_product *product_file, int64_t offset, int is_zvar)
         offset += num_dims * 4;
     }
     record_varys = flags & 1;
-    has_pad_value = flags & 2;
+    /* int has_pad_value = flags & 2; */
     has_compression = flags & 4;
-    pad_value_offset = offset;
+    /* int64_t pad_value_offset = offset; */
     if (!record_varys && max_rec != 0)
     {
         coda_set_error(CODA_ERROR_PRODUCT, "CDF variable '%s' has non-varying record dimension but number of records "
@@ -1316,9 +1314,6 @@ int coda_cdf_open(const char *filename, int64_t file_size, const coda_product_de
     product_file->product_variable = NULL;
     product_file->mem_size = 0;
     product_file->mem_ptr = NULL;
-#if CODA_USE_QIAP
-    product_file->qiap_info = NULL;
-#endif
 
     product_file->filename = strdup(filename);
     if (product_file->filename == NULL)
@@ -1399,6 +1394,10 @@ int coda_cdf_close(coda_product *product)
     if (product_file->root_type != NULL)
     {
         coda_dynamic_type_delete((coda_dynamic_type *)product_file->root_type);
+    }
+    if (product_file->mem_ptr != NULL)
+    {
+        free(product_file->mem_ptr);
     }
     if (product_file->raw_product != NULL)
     {

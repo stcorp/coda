@@ -10,6 +10,4 @@ package nl.stcorp.coda;
 
 public interface codacConstants {
   public final static int CODA_MAX_NUM_DIMS = 8;
-  public final static int CODA_ERROR_QIAP = (-302);
-  public final static int CODA_ERROR_EXPRESSION = (-401);
 }

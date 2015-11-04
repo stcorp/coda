@@ -1,4 +1,3 @@
-
 # Find the HDF4 library
 #
 # This module defines
@@ -9,6 +8,9 @@
 # The user may specify HDF4_INCLUDE and HDF4_LIB CMake or
 # environment variables to locate include files and library
 #
+include(CheckLibraryExists)
+include(CheckIncludeFile)
+
 if (NOT HDF4_INCLUDE)
   if ($ENV{HDF4_INCLUDE} MATCHES ".+")
     file(TO_CMAKE_PATH $ENV{HDF4_INCLUDE} HDF4_INCLUDE)
@@ -39,17 +41,8 @@ find_library(DF_LIBRARY
   NAMES ${DF_NAMES}
   PATHS ${HDF4_LIB} ENV HDF4_LIB)
 if (DF_LIBRARY)
-  set(CMAKE_REQUIRED_LIBRARIES
-    ${ZLIB_LIBRARIES}
-    ${JPEG_LIBRARIES}
-    ${SZIP_LIBRARIES}
-    )
-# Not doing this check right now. See comments in FindHDF5 for details.
-#
-#  check_library_exists(${DF_LIBRARY} Hopen "" HAVE_DF)
-#
-  set(HAVE_DF 1)
-
+  set(CMAKE_REQUIRED_LIBRARIES ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${SZIP_LIBRARIES})
+  check_library_exists(${DF_LIBRARY} Hopen "" HAVE_DF)
   if (HAVE_DF)
     set(DF_LIBRARIES ${DF_LIBRARY})
   endif(HAVE_DF)
@@ -60,51 +53,29 @@ find_library(MFHDF_LIBRARY
   NAMES ${MFHDF_NAMES}
   PATHS ${HDF4_LIB} ENV HDF4_LIB)
 if (MFHDF_LIBRARY)
-  set(CMAKE_REQUIRED_LIBRARIES
-    ${DF_LIBRARIES}
-    ${ZLIB_LIBRARIES}
-    ${JPEG_LIBRARIES}
-    ${SZIP_LIBRARIES}
-    )
-# Not doing this check right now. See comments in FindHDF5 for details.
-#
-#  check_library_exists(${MFHDF_LIBRARY} SDstart "" HAVE_MFHDF)
-#
-  set(HAVE_MFHDF 1)
-
+  set(CMAKE_REQUIRED_LIBRARIES ${DF_LIBRARIES} ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${SZIP_LIBRARIES})
+  check_library_exists(${MFHDF_LIBRARY} SDstart "" HAVE_MFHDF)
   if (HAVE_MFHDF)
     set(MFHDF_LIBRARIES ${MFHDF_LIBRARY})
   endif(HAVE_MFHDF)
 endif (MFHDF_LIBRARY)
 
-if (HAVE_HDF_H AND
-    HAVE_MFHDF_H)
+if (HAVE_HDF_H AND HAVE_MFHDF_H)
   set(HDF4_INCLUDE_DIR ${HDF4_INCLUDE})
-endif (HAVE_HDF_H AND
-    HAVE_MFHDF_H)
+endif (HAVE_HDF_H AND HAVE_MFHDF_H)
 
-if (HAVE_DF AND
-    HAVE_MFHDF)
-  set(HDF4_LIBRARIES
-    ${MFHDF_LIBRARIES}
-    ${DF_LIBRARIES}
-    ${ZLIB_LIBRARIES}
-    ${JPEG_LIBRARIES}
-    ${SZIP_LIBRARIES}
-    )
+if (HAVE_DF AND HAVE_MFHDF)
+  set(HDF4_LIBRARIES ${MFHDF_LIBRARIES} ${DF_LIBRARIES} ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${SZIP_LIBRARIES})
   if (MSVC)
-    set(HDF4_LIBRARIES
-      ${HDF4_LIBRARIES}
-      wsock32)
+    set(HDF4_LIBRARIES ${HDF4_LIBRARIES} wsock32)
   endif(MSVC)
-
   set(HAVE_HDF4 1)
-endif (HAVE_DF AND
-  HAVE_MFHDF)
+endif (HAVE_DF AND HAVE_MFHDF)
 
 
-# handle the QUIETLY and REQUIRED arguments and set HDF4_FOUND to TRUE if
-# all listed variables are TRUE
+# handle the QUIETLY and REQUIRED arguments and set HDF4_FOUND to
+# TRUE if all listed variables are TRUE
+#
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(HDF4 DEFAULT_MSG HDF4_LIBRARIES HDF4_INCLUDE_DIR)
 mark_as_advanced(DF_LIBRARY MFHDF_LIBRARY HDF4_INCLUDE_DIR)
