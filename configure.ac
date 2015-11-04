@@ -1,5 +1,5 @@
 # autoconf file for CODA
-AC_INIT(CODA, 1.1)
+AC_INIT(CODA, 1.1.1)
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE(foreign 1.8.3 -Wall)
 
@@ -146,7 +146,7 @@ ST_CHECK_MACOSX_SYSTEMSTUBS
 
 # *** checks for header files ***
 
-AC_CHECK_HEADERS([dirent.h unistd.h strings.h sys/mman.h zlib.h])
+AC_CHECK_HEADERS([dirent.h unistd.h strings.h sys/mman.h])
 
 # *** checks for types ***
 
@@ -229,17 +229,6 @@ AC_SUBST(codaidlexamplesdir)
 AC_SUBST(matlabmexexecdir)
 AC_SUBST(codapythondir)
 AC_SUBST(codapyexecdir)
-
-# *** zlib ***
-
-ST_CHECK_ZLIB
-if test $st_cv_have_zlib = no ; then
-  AC_MSG_ERROR(BOXED_TEXT([ERROR: zlib libraries and/or header files are not found.
-Try setting the ZLIB_LIB and ZLIB_INCLUDE environment variables to the
-location of your zlib library and include files.]))
-fi
-AC_SUBST(ZLIB)
-
 
 # *** coda-idl ***
 

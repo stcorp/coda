@@ -1,0 +1,9 @@
+
+These files are taken from libz, version 1.2.3.
+
+Only the source files that are needed to perform an inflate have been
+included.
+
+The zconf.h file has been modified to include a coda_expat_mangle.h that
+performs a name mangling (i.e. prefix with 'coda_') of all exported
+symbols.

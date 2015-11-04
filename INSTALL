@@ -66,9 +66,6 @@ What you will need
     installed the Developer Tools. For Windows you need Microsoft Visual C++
     6.0 or 7.x.
 
-  - The zlib package: containing the libz library and zlib.h (and related)
-    include files. 
-
   - If you want to use the HDF4 features of CODA then you will need to have a
     recent version of HDF4 installed (for building the source package on
     Windows you will need to have version 4.2r3 of HDF).
@@ -118,18 +115,6 @@ a Unix-based platform :
     can use this option to provide a different installation directory. For
     instance, you can use --prefix=$HOME/coda to install CODA in the
     subdirectory 'coda' of your home directory.
-
-    ZLIB_LIB=<zlib library directory> : CODA will try to locate the zlib
-    library in the default locations for libraries (/usr/local/lib is usually
-    not considered a default location!). If ./configure complains that it can't
-    find the 'libz' library file, pass this option to ./configure with the
-    location of the library file.
-    
-    ZLIB_INCLUDE=<zlib include file directory> : CODA will try to locate the
-    zlib include files in the default locations for include files
-    (/usr/local/include is usually not considered a default location!). If
-    ./configure complains that it can't find the 'zlib.h' include file, pass
-    this option to ./configure with the location of the include file.
 
     --enable-idl : By default CODA is built without the IDL interface. Use this
     option to enable building of the interface to IDL. 

@@ -35,7 +35,7 @@ all-local: $(ALL_LOCAL_TARGETS)
 if SUBPACKAGE_MODE
 
 noinst_PROGRAMS = codadd
-noinst_LTLIBRARIES = libcoda_internal.la libexpat.la
+noinst_LTLIBRARIES = libcoda_internal.la libexpat_internal.la libz_internal.la
 
 else
 
@@ -47,7 +47,7 @@ noinst_PROGRAMS = generate-finc findtypedef
 # libraries (+ related files)
 
 lib_LTLIBRARIES = libcoda.la
-noinst_LTLIBRARIES = libcoda_internal.la libexpat.la
+noinst_LTLIBRARIES = libcoda_internal.la libexpat_internal.la libz_internal.la
 
 if BUILD_IDL
 idldlmexec_LTLIBRARIES = coda-idl.la
@@ -87,7 +87,7 @@ endif
 
 # expat
 
-libexpat_la_SOURCES = \
+libexpat_internal_la_SOURCES = \
 	libcoda/expat/xmlparse.c \
 	libcoda/expat/xmlrole.c \
 	libcoda/expat/xmltok.c \
@@ -106,6 +106,26 @@ libexpat_la_SOURCES = \
 	libcoda/expat/xmltok_impl.h
 EXTRA_DIST += libcoda/expat/xmltok_impl.c libcoda/expat/xmltok_ns.c
 EXTRA_DIST += libcoda/expat/COPYING libcoda/expat/README
+
+# zlib
+
+libz_internal_la_SOURCES = \
+	libcoda/zlib/adler32.c \
+	libcoda/zlib/coda_zlib_mangle.h \
+	libcoda/zlib/crc32.c \
+	libcoda/zlib/crc32.h \
+	libcoda/zlib/inffast.c \
+	libcoda/zlib/inffast.h \
+	libcoda/zlib/inffixed.h \
+	libcoda/zlib/inflate.c \
+	libcoda/zlib/inflate.h \
+	libcoda/zlib/inftrees.c \
+	libcoda/zlib/inftrees.h \
+	libcoda/zlib/zconf.h \
+	libcoda/zlib/zlib.h \
+	libcoda/zlib/zutil.c \
+	libcoda/zlib/zutil.h
+EXTRA_DIST += libcoda/zlib/COPYING libcoda/zlib/README
 
 # libcoda
 
@@ -185,9 +205,9 @@ libcoda_la_SOURCES += $(libcoda_hdf5_files)
 else
 INDENTFILES += $(libcoda_hdf5_files)
 endif
-libcoda_la_CPPFLAGS = -Ilibcoda/expat -I$(srcdir)/libcoda/expat $(AM_CPPFLAGS)
+libcoda_la_CPPFLAGS = -Ilibcoda/expat -I$(srcdir)/libcoda/expat -Ilibcoda/zlib -I$(srcdir)/libcoda/zlib $(AM_CPPFLAGS)
 libcoda_la_LDFLAGS = -no-undefined -version-info $(LIBCODA_CURRENT):$(LIBCODA_REVISION):$(LIBCODA_AGE)
-libcoda_la_LIBADD = @LTLIBOBJS@ libexpat.la $(HDF4LIBS) $(HDF5LIBS) $(ZLIB)
+libcoda_la_LIBADD = @LTLIBOBJS@ libexpat_internal.la libz_internal.la $(HDF4LIBS) $(HDF5LIBS)
 INDENTFILES += $(libcoda_la_SOURCES) libcoda/coda.h.in
 BUILT_SOURCES += coda-expr-parser.h
 
@@ -252,7 +272,7 @@ endif
 if WITH_HDF5
 libcoda_internal_la_SOURCES += $(libcoda_hdf5_files)
 endif
-libcoda_internal_la_CPPFLAGS = -Ilibcoda/expat -I$(srcdir)/libcoda/expat $(AM_CPPFLAGS)
+libcoda_internal_la_CPPFLAGS = -Ilibcoda/expat -I$(srcdir)/libcoda/expat -Ilibcoda/zlib -I$(srcdir)/libcoda/zlib $(AM_CPPFLAGS)
 libcoda_internal_la_LIBADD = $(libcoda_la_LIBADD)
 
 # tools/codacheck
@@ -340,8 +360,8 @@ CLEANFILES += fortran/coda.inc
 if BUILD_IDL
 coda_idl_la_SOURCES = idl/coda-idl.c
 coda_idl_la_LDFLAGS = -module -shared -avoid-version
-coda_idl_la_LIBADD = libcoda_internal.la
-coda_idl_la_DEPENDENCIES = libcoda_internal.la
+coda_idl_la_LIBADD = libcoda.la
+coda_idl_la_DEPENDENCIES = libcoda.la
 INDENTFILES += $(coda_idl_la_SOURCES)
 endif
 
