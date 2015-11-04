@@ -1,3 +1,17 @@
+2.7.1 2012-09-18
+~~~~~~~~~~~~~~~~
+
+* Fixed issue where codadef definitions (for product type detection) for
+  HDF4, HDF5, CDF, netCDF, and GRIB formats were not properly associated
+  to an open product.
+
+* Fixed issue where the global option bypass_special_types was not handled
+  properly by non-ascii/binary backends (e.g. SP3, RINEX, CDF).
+
+* Fixed issue with CDF backend where variables for which the 'varies' property
+  for all dimensions (including the record dimension) was False resulted in an
+  error. These variables are now treated properly as scalar variables.
+
 2.7 2012-08-31
 ~~~~~~~~~~~~~~
 

@@ -577,22 +577,41 @@ LIBCODA_API int coda_cursor_goto_record_field_by_index(coda_cursor *cursor, long
     {
         case coda_backend_ascii:
         case coda_backend_binary:
-            return coda_ascbin_cursor_goto_record_field_by_index(cursor, index);
+            if (coda_ascbin_cursor_goto_record_field_by_index(cursor, index) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_memory:
-            return coda_mem_cursor_goto_record_field_by_index(cursor, index);
+            if (coda_mem_cursor_goto_record_field_by_index(cursor, index) != 0)
+            {
+                return -1;
+            }
             break;
         case coda_backend_xml:
-            return coda_xml_cursor_goto_record_field_by_index(cursor, index);
+            if (coda_xml_cursor_goto_record_field_by_index(cursor, index) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
-            return coda_hdf4_cursor_goto_record_field_by_index(cursor, index);
+            if (coda_hdf4_cursor_goto_record_field_by_index(cursor, index) != 0)
+            {
+                return -1;
+            }
+            break;
 #else
             coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
             return -1;
 #endif
         case coda_backend_hdf5:
 #ifdef HAVE_HDF5
-            return coda_hdf5_cursor_goto_record_field_by_index(cursor, index);
+            if (coda_hdf5_cursor_goto_record_field_by_index(cursor, index) != 0)
+            {
+                return -1;
+            }
+            break;
 #else
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
@@ -600,11 +619,24 @@ LIBCODA_API int coda_cursor_goto_record_field_by_index(coda_cursor *cursor, long
         case coda_backend_cdf:
         case coda_backend_netcdf:
         case coda_backend_grib:
-            break;
+            assert(0);
+            exit(1);
     }
 
-    assert(0);
-    exit(1);
+    if (coda_option_bypass_special_types)
+    {
+        type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+        while (type->type_class == coda_special_class)
+        {
+            if (coda_cursor_use_base_type_of_special_type(cursor) != 0)
+            {
+                return -1;
+            }
+            type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+        }
+    }
+
+    return 0;
 }
 
 
@@ -690,21 +722,41 @@ LIBCODA_API int coda_cursor_goto_next_record_field(coda_cursor *cursor)
     {
         case coda_backend_ascii:
         case coda_backend_binary:
-            return coda_ascbin_cursor_goto_next_record_field(cursor);
+            if (coda_ascbin_cursor_goto_next_record_field(cursor) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_memory:
-            return coda_mem_cursor_goto_next_record_field(cursor);
+            if (coda_mem_cursor_goto_next_record_field(cursor) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_xml:
-            return coda_xml_cursor_goto_next_record_field(cursor);
+            if (coda_xml_cursor_goto_next_record_field(cursor) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
-            return coda_hdf4_cursor_goto_next_record_field(cursor);
+            if (coda_hdf4_cursor_goto_next_record_field(cursor) != 0)
+            {
+                return -1;
+            }
+            break;
 #else
             coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
             return -1;
 #endif
         case coda_backend_hdf5:
 #ifdef HAVE_HDF5
-            return coda_hdf5_cursor_goto_next_record_field(cursor);
+            if (coda_hdf5_cursor_goto_next_record_field(cursor) != 0)
+            {
+                return -1;
+            }
+            break;
 #else
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
@@ -712,11 +764,24 @@ LIBCODA_API int coda_cursor_goto_next_record_field(coda_cursor *cursor)
         case coda_backend_cdf:
         case coda_backend_netcdf:
         case coda_backend_grib:
-            break;
+            assert(0);
+            exit(1);
     }
 
-    assert(0);
-    exit(1);
+    if (coda_option_bypass_special_types)
+    {
+        type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+        while (type->type_class == coda_special_class)
+        {
+            if (coda_cursor_use_base_type_of_special_type(cursor) != 0)
+            {
+                return -1;
+            }
+            type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+        }
+    }
+
+    return 0;
 }
 
 /** Moves the cursor to point to the available union field.
@@ -751,20 +816,41 @@ LIBCODA_API int coda_cursor_goto_available_union_field(coda_cursor *cursor)
     {
         case coda_backend_ascii:
         case coda_backend_binary:
-            return coda_ascbin_cursor_goto_available_union_field(cursor);
+            if (coda_ascbin_cursor_goto_available_union_field(cursor) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_xml:
-            return coda_xml_cursor_goto_available_union_field(cursor);
+            if (coda_xml_cursor_goto_available_union_field(cursor) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_memory:
         case coda_backend_hdf4:
         case coda_backend_hdf5:
         case coda_backend_cdf:
         case coda_backend_netcdf:
         case coda_backend_grib:
-            break;
+            assert(0);
+            exit(1);
     }
 
-    assert(0);
-    exit(1);
+    if (coda_option_bypass_special_types)
+    {
+        type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+        while (type->type_class == coda_special_class)
+        {
+            if (coda_cursor_use_base_type_of_special_type(cursor) != 0)
+            {
+                return -1;
+            }
+            type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+        }
+    }
+
+    return 0;
 }
 
 /** Moves the cursor to point to the first element of an array.
@@ -824,35 +910,79 @@ LIBCODA_API int coda_cursor_goto_array_element(coda_cursor *cursor, int num_subs
     {
         case coda_backend_ascii:
         case coda_backend_binary:
-            return coda_ascbin_cursor_goto_array_element(cursor, num_subs, subs);
+            if (coda_ascbin_cursor_goto_array_element(cursor, num_subs, subs) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_memory:
-            return coda_mem_cursor_goto_array_element(cursor, num_subs, subs);
+            if (coda_mem_cursor_goto_array_element(cursor, num_subs, subs) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_xml:
-            return coda_xml_cursor_goto_array_element(cursor, num_subs, subs);
+            if (coda_xml_cursor_goto_array_element(cursor, num_subs, subs) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
-            return coda_hdf4_cursor_goto_array_element(cursor, num_subs, subs);
+            if (coda_hdf4_cursor_goto_array_element(cursor, num_subs, subs) != 0)
+            {
+                return -1;
+            }
+            break;
 #else
             coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
             return -1;
 #endif
         case coda_backend_hdf5:
 #ifdef HAVE_HDF5
-            return coda_hdf5_cursor_goto_array_element(cursor, num_subs, subs);
+            if (coda_hdf5_cursor_goto_array_element(cursor, num_subs, subs) != 0)
+            {
+                return -1;
+            }
+            break;
 #else
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
         case coda_backend_cdf:
-            return coda_cdf_cursor_goto_array_element(cursor, num_subs, subs);
+            if (coda_cdf_cursor_goto_array_element(cursor, num_subs, subs) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_netcdf:
-            return coda_netcdf_cursor_goto_array_element(cursor, num_subs, subs);
+            if (coda_netcdf_cursor_goto_array_element(cursor, num_subs, subs) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_grib:
-            return coda_grib_cursor_goto_array_element(cursor, num_subs, subs);
+            if (coda_grib_cursor_goto_array_element(cursor, num_subs, subs) != 0)
+            {
+                return -1;
+            }
+            break;
     }
 
-    assert(0);
-    exit(1);
+    if (coda_option_bypass_special_types)
+    {
+        type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+        while (type->type_class == coda_special_class)
+        {
+            if (coda_cursor_use_base_type_of_special_type(cursor) != 0)
+            {
+                return -1;
+            }
+            type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+        }
+    }
+
+    return 0;
 }
 
 /** Moves the cursor to point to an array element via an index.
@@ -903,35 +1033,79 @@ LIBCODA_API int coda_cursor_goto_array_element_by_index(coda_cursor *cursor, lon
     {
         case coda_backend_ascii:
         case coda_backend_binary:
-            return coda_ascbin_cursor_goto_array_element_by_index(cursor, index);
+            if (coda_ascbin_cursor_goto_array_element_by_index(cursor, index) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_memory:
-            return coda_mem_cursor_goto_array_element_by_index(cursor, index);
+            if (coda_mem_cursor_goto_array_element_by_index(cursor, index) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_xml:
-            return coda_xml_cursor_goto_array_element_by_index(cursor, index);
+            if (coda_xml_cursor_goto_array_element_by_index(cursor, index) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
-            return coda_hdf4_cursor_goto_array_element_by_index(cursor, index);
+            if (coda_hdf4_cursor_goto_array_element_by_index(cursor, index) != 0)
+            {
+                return -1;
+            }
+            break;
 #else
             coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
             return -1;
 #endif
         case coda_backend_hdf5:
 #ifdef HAVE_HDF5
-            return coda_hdf5_cursor_goto_array_element_by_index(cursor, index);
+            if (coda_hdf5_cursor_goto_array_element_by_index(cursor, index) != 0)
+            {
+                return -1;
+            }
+            break;
 #else
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
         case coda_backend_cdf:
-            return coda_cdf_cursor_goto_array_element_by_index(cursor, index);
+            if (coda_cdf_cursor_goto_array_element_by_index(cursor, index) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_netcdf:
-            return coda_netcdf_cursor_goto_array_element_by_index(cursor, index);
+            if (coda_netcdf_cursor_goto_array_element_by_index(cursor, index) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_grib:
-            return coda_grib_cursor_goto_array_element_by_index(cursor, index);
+            if (coda_grib_cursor_goto_array_element_by_index(cursor, index) != 0)
+            {
+                return -1;
+            }
+            break;
     }
 
-    assert(0);
-    exit(1);
+    if (coda_option_bypass_special_types)
+    {
+        type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+        while (type->type_class == coda_special_class)
+        {
+            if (coda_cursor_use_base_type_of_special_type(cursor) != 0)
+            {
+                return -1;
+            }
+            type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+        }
+    }
+
+    return 0;
 }
 
 /** Moves the cursor to point to the next element of an array.
@@ -993,35 +1167,79 @@ LIBCODA_API int coda_cursor_goto_next_array_element(coda_cursor *cursor)
     {
         case coda_backend_ascii:
         case coda_backend_binary:
-            return coda_ascbin_cursor_goto_next_array_element(cursor);
+            if (coda_ascbin_cursor_goto_next_array_element(cursor) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_memory:
-            return coda_mem_cursor_goto_next_array_element(cursor);
+            if (coda_mem_cursor_goto_next_array_element(cursor) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_xml:
-            return coda_xml_cursor_goto_next_array_element(cursor);
+            if (coda_xml_cursor_goto_next_array_element(cursor) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
-            return coda_hdf4_cursor_goto_next_array_element(cursor);
+            if (coda_hdf4_cursor_goto_next_array_element(cursor) != 0)
+            {
+                return -1;
+            }
+            break;
 #else
             coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
             return -1;
 #endif
         case coda_backend_hdf5:
 #ifdef HAVE_HDF5
-            return coda_hdf5_cursor_goto_next_array_element(cursor);
+            if (coda_hdf5_cursor_goto_next_array_element(cursor) != 0)
+            {
+                return -1;
+            }
+            break;
 #else
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
         case coda_backend_cdf:
-            return coda_cdf_cursor_goto_next_array_element(cursor);
+            if (coda_cdf_cursor_goto_next_array_element(cursor) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_netcdf:
-            return coda_netcdf_cursor_goto_next_array_element(cursor);
+            if (coda_netcdf_cursor_goto_next_array_element(cursor) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_grib:
-            return coda_grib_cursor_goto_next_array_element(cursor);
+            if (coda_grib_cursor_goto_next_array_element(cursor) != 0)
+            {
+                return -1;
+            }
+            break;
     }
 
-    assert(0);
-    exit(1);
+    if (coda_option_bypass_special_types)
+    {
+        type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+        while (type->type_class == coda_special_class)
+        {
+            if (coda_cursor_use_base_type_of_special_type(cursor) != 0)
+            {
+                return -1;
+            }
+            type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+        }
+    }
+
+    return 0;
 }
 
 /** Moves the cursor to point to a (virtual) record containing the attributes of the current data element.
@@ -1130,6 +1348,20 @@ LIBCODA_API int coda_cursor_goto_root(coda_cursor *cursor)
     }
 
     cursor->n = 1;
+
+    if (coda_option_bypass_special_types)
+    {
+        coda_type *type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+        while (type->type_class == coda_special_class)
+        {
+            if (coda_cursor_use_base_type_of_special_type(cursor) != 0)
+            {
+                return -1;
+            }
+            type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+        }
+    }
 
     return 0;
 }
@@ -1860,7 +2092,8 @@ LIBCODA_API int coda_cursor_get_record_field_available_status(const coda_cursor 
             *available = 1;
             break;
         case coda_backend_grib:
-            break;
+            assert(0);
+            exit(1);
     }
 
     return 0;

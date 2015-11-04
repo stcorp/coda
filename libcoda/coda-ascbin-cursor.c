@@ -27,50 +27,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* replace current type if necessary: use 'no-data' type for missing fields */
-static int eval_current_type(coda_cursor *cursor)
-{
-    /* check whether this is a missing field */
-    if (cursor->n > 1 && cursor->stack[cursor->n - 1].index != -1 &&
-        (cursor->stack[cursor->n - 2].type->backend == coda_backend_ascii ||
-         cursor->stack[cursor->n - 2].type->backend == coda_backend_binary) &&
-        ((coda_type *)cursor->stack[cursor->n - 2].type)->type_class == coda_record_class)
-    {
-        coda_cursor record_cursor;
-        int available;
-        int index = cursor->stack[cursor->n - 1].index;
-
-        record_cursor = *cursor;
-        record_cursor.n--;
-        if (coda_ascbin_cursor_get_record_field_available_status(&record_cursor, index, &available) != 0)
-        {
-            return -1;
-        }
-        if (!available)
-        {
-            if (cursor->stack[cursor->n - 2].type->backend == coda_backend_ascii)
-            {
-                cursor->stack[cursor->n - 1].type = coda_no_data_singleton(coda_format_ascii);
-            }
-            else
-            {
-                cursor->stack[cursor->n - 1].type = coda_no_data_singleton(coda_format_binary);
-            }
-            return 0;
-        }
-    }
-    if (coda_option_bypass_special_types &&
-        ((coda_type *)cursor->stack[cursor->n - 1].type)->type_class == coda_special_class)
-    {
-        if (coda_cursor_use_base_type_of_special_type(cursor) != 0)
-        {
-            return -1;
-        }
-    }
-
-    return 0;
-}
-
 /* cursor should point to record for this function */
 static int get_relative_field_bit_offset_by_index(const coda_cursor *cursor, long field_index, int64_t *rel_bit_offset)
 {
@@ -144,19 +100,26 @@ static int get_relative_field_bit_offset_by_index(const coda_cursor *cursor, lon
     for (i = index; i < field_index; i++)
     {
         int64_t bit_size;
+        int available = 1;
 
-        field_cursor.stack[field_cursor.n - 1].type = (coda_dynamic_type *)record->field[i]->type;
-        field_cursor.stack[field_cursor.n - 1].index = i;
-        if (eval_current_type(&field_cursor) != 0)
+        if (record->field[i]->available_expr != NULL)
         {
-            return -1;
+            if (coda_expression_eval_bool(record->field[i]->available_expr, cursor, &available) != 0)
+            {
+                return -1;
+            }
         }
-        if (coda_cursor_get_bit_size(&field_cursor, &bit_size) != 0)
+        if (available)
         {
-            return -1;
+            field_cursor.stack[field_cursor.n - 1].type = (coda_dynamic_type *)record->field[i]->type;
+            field_cursor.stack[field_cursor.n - 1].index = i;
+            if (coda_cursor_get_bit_size(&field_cursor, &bit_size) != 0)
+            {
+                return -1;
+            }
+            prev_bit_offset += bit_size;
+            field_cursor.stack[field_cursor.n - 1].bit_offset += bit_size;
         }
-        prev_bit_offset += bit_size;
-        field_cursor.stack[field_cursor.n - 1].bit_offset += bit_size;
     }
     *rel_bit_offset = prev_bit_offset;
 
@@ -244,13 +207,14 @@ int coda_ascbin_cursor_set_product(coda_cursor *cursor, coda_product *product)
     cursor->stack[0].index = -1;        /* there is no index for the root of the product */
     cursor->stack[0].bit_offset = 0;
 
-    return eval_current_type(cursor);
+    return 0;
 }
 
 int coda_ascbin_cursor_goto_record_field_by_index(coda_cursor *cursor, long index)
 {
     coda_type_record *record;
     int64_t bit_offset;
+    int available = 1;
 
     record = (coda_type_record *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
 
@@ -262,7 +226,20 @@ int coda_ascbin_cursor_goto_record_field_by_index(coda_cursor *cursor, long inde
     }
 
     bit_offset = cursor->stack[cursor->n - 1].bit_offset;
-    if (record->union_field_expr == NULL)
+    if (record->union_field_expr != NULL)
+    {
+        long available_index;
+
+        if (coda_cursor_get_available_union_field_index(cursor, &available_index) != 0)
+        {
+            return -1;
+        }
+        if (index != available_index)
+        {
+            available = 0;
+        }
+    }
+    else
     {
         int64_t rel_bit_offset;
 
@@ -271,16 +248,26 @@ int coda_ascbin_cursor_goto_record_field_by_index(coda_cursor *cursor, long inde
             return -1;
         }
         bit_offset += rel_bit_offset;
+        if (record->field[index]->available_expr != NULL)
+        {
+            if (coda_expression_eval_bool(record->field[index]->available_expr, cursor, &available) != 0)
+            {
+                return -1;
+            }
+        }
     }
 
     cursor->n++;
-    cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)record->field[index]->type;
+    if (available)
+    {
+        cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)record->field[index]->type;
+    }
+    else
+    {
+        cursor->stack[cursor->n - 1].type = coda_no_data_singleton(record->format);
+    }
     cursor->stack[cursor->n - 1].index = index;
     cursor->stack[cursor->n - 1].bit_offset = bit_offset;
-    if (eval_current_type(cursor) != 0)
-    {
-        return -1;
-    }
 
     return 0;
 }
@@ -289,6 +276,7 @@ int coda_ascbin_cursor_goto_next_record_field(coda_cursor *cursor)
 {
     coda_type_record *record;
     int64_t bit_offset;
+    int available = 1;
     long index;
 
     record = (coda_type_record *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 2].type);
@@ -301,7 +289,22 @@ int coda_ascbin_cursor_goto_next_record_field(coda_cursor *cursor)
     }
 
     bit_offset = cursor->stack[cursor->n - 2].bit_offset;
-    if (record->union_field_expr == NULL)
+    if (record->union_field_expr != NULL)
+    {
+        coda_cursor record_cursor = *cursor;
+        long available_index;
+
+        record_cursor.n--;
+        if (coda_cursor_get_available_union_field_index(&record_cursor, &available_index) != 0)
+        {
+            return -1;
+        }
+        if (index != available_index)
+        {
+            available = 0;
+        }
+    }
+    else
     {
         int64_t rel_bit_offset;
 
@@ -310,14 +313,27 @@ int coda_ascbin_cursor_goto_next_record_field(coda_cursor *cursor)
             return -1;
         }
         bit_offset += rel_bit_offset;
+        if (record->field[index]->available_expr != NULL)
+        {
+            coda_cursor record_cursor = *cursor;
+
+            record_cursor.n--;
+            if (coda_expression_eval_bool(record->field[index]->available_expr, &record_cursor, &available) != 0)
+            {
+                return -1;
+            }
+        }
     }
-    cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)record->field[index]->type;
+    if (available)
+    {
+        cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)record->field[index]->type;
+    }
+    else
+    {
+        cursor->stack[cursor->n - 1].type = coda_no_data_singleton(record->format);
+    }
     cursor->stack[cursor->n - 1].index = index;
     cursor->stack[cursor->n - 1].bit_offset = bit_offset;
-    if (eval_current_type(cursor) != 0)
-    {
-        return -1;
-    }
 
     return 0;
 }
@@ -334,12 +350,17 @@ int coda_ascbin_cursor_goto_available_union_field(coda_cursor *cursor)
         return -1;
     }
 
-    /* TODO: eliminate double evaluation of 'union_field_expr' (once here and once by eval_current_type) */
     if (coda_ascbin_cursor_get_available_union_field_index(cursor, &index) != 0)
     {
         return -1;
     }
-    return coda_ascbin_cursor_goto_record_field_by_index(cursor, index);
+
+    cursor->n++;
+    cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)record->field[index]->type;
+    cursor->stack[cursor->n - 1].index = index;
+    cursor->stack[cursor->n - 1].bit_offset = cursor->stack[cursor->n - 2].bit_offset;
+
+    return 0;
 }
 
 int coda_ascbin_cursor_goto_array_element(coda_cursor *cursor, int num_subs, const long subs[])
@@ -409,10 +430,6 @@ int coda_ascbin_cursor_goto_array_element(coda_cursor *cursor, int num_subs, con
 
             cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)array->base_type;
             cursor->stack[cursor->n - 1].index = i;
-            if (eval_current_type(cursor) != 0)
-            {
-                return -1;
-            }
             if (coda_cursor_get_bit_size(cursor, &bit_size) != 0)
             {
                 cursor->n--;
@@ -423,10 +440,6 @@ int coda_ascbin_cursor_goto_array_element(coda_cursor *cursor, int num_subs, con
     }
     cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)array->base_type;
     cursor->stack[cursor->n - 1].index = offset_elements;
-    if (eval_current_type(cursor) != 0)
-    {
-        return -1;
-    }
 
     return 0;
 }
@@ -471,10 +484,6 @@ int coda_ascbin_cursor_goto_array_element_by_index(coda_cursor *cursor, long ind
 
             cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)array->base_type;
             cursor->stack[cursor->n - 1].index = i;
-            if (eval_current_type(cursor) != 0)
-            {
-                return -1;
-            }
             if (coda_cursor_get_bit_size(cursor, &bit_size) != 0)
             {
                 cursor->n--;
@@ -485,10 +494,6 @@ int coda_ascbin_cursor_goto_array_element_by_index(coda_cursor *cursor, long ind
     }
     cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)array->base_type;
     cursor->stack[cursor->n - 1].index = index;
-    if (eval_current_type(cursor) != 0)
-    {
-        return -1;
-    }
 
     return 0;
 }
@@ -529,10 +534,6 @@ int coda_ascbin_cursor_goto_next_array_element(coda_cursor *cursor)
     cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)array->base_type;
     cursor->stack[cursor->n - 1].index = index;
     cursor->stack[cursor->n - 1].bit_offset += bit_size;
-    if (eval_current_type(cursor) != 0)
-    {
-        return -1;
-    }
 
     return 0;
 }
@@ -547,7 +548,7 @@ int coda_ascbin_cursor_goto_attributes(coda_cursor *cursor)
     cursor->stack[cursor->n - 1].index = -1;
     cursor->stack[cursor->n - 1].bit_offset = -1;       /* virtual types do not have a bit offset */
 
-    return eval_current_type(cursor);
+    return 0;
 }
 
 int coda_ascbin_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size)
@@ -610,7 +611,7 @@ int coda_ascbin_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size
                             long i;
 
                             field_cursor = *cursor;
-                            if (coda_cursor_goto_record_field_by_index(&field_cursor, 0) != 0)
+                            if (coda_cursor_goto_first_record_field(&field_cursor) != 0)
                             {
                                 return -1;
                             }
@@ -638,15 +639,29 @@ int coda_ascbin_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size
                                 record_bit_size += field_bit_size;
                                 if (i < record->num_fields - 1)
                                 {
-                                    field_cursor.stack[field_cursor.n - 1].type =
-                                        (coda_dynamic_type *)record->field[i + 1]->type;
+                                    int available = 1;
+
+                                    if (record->field[i + 1]->available_expr != NULL)
+                                    {
+                                        if (coda_expression_eval_bool(record->field[i + 1]->available_expr, cursor,
+                                                                      &available) != 0)
+                                        {
+                                            return -1;
+                                        }
+                                    }
+                                    if (available)
+                                    {
+                                        field_cursor.stack[field_cursor.n - 1].type =
+                                            (coda_dynamic_type *)record->field[i + 1]->type;
+                                    }
+                                    else
+                                    {
+                                        field_cursor.stack[field_cursor.n - 1].type =
+                                            coda_no_data_singleton(record->format);
+                                    }
                                     field_cursor.stack[field_cursor.n - 1].index = i + 1;
                                     field_cursor.stack[field_cursor.n - 1].bit_offset =
                                         cursor->stack[cursor->n - 1].bit_offset + rel_bit_offset;
-                                    if (eval_current_type(&field_cursor) != 0)
-                                    {
-                                        return -1;
-                                    }
                                 }
                             }
                         }
@@ -693,10 +708,6 @@ int coda_ascbin_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size
 
                             array_cursor.stack[array_cursor.n - 1].type = (coda_dynamic_type *)array->base_type;
                             array_cursor.stack[array_cursor.n - 1].index = i;
-                            if (eval_current_type(&array_cursor) != 0)
-                            {
-                                return -1;
-                            }
                             if (coda_cursor_get_bit_size(&array_cursor, &element_bit_size) != 0)
                             {
                                 return -1;

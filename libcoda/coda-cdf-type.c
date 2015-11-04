@@ -28,47 +28,50 @@ void coda_cdf_type_delete(coda_dynamic_type *type)
     assert(type != NULL);
     assert(type->backend == coda_backend_cdf);
 
-    if (type->definition != NULL)
+    switch (((coda_cdf_type *)type)->tag)
     {
-        if (type->definition->type_class == coda_array_class)
-        {
-            coda_cdf_variable *variable = (coda_cdf_variable *)type;
-
-            if (variable->attributes != NULL)
-            {
-                coda_dynamic_type_delete((coda_dynamic_type *)variable->attributes);
-            }
-            if (variable->base_type != NULL)
-            {
-                coda_dynamic_type_delete((coda_dynamic_type *)variable->base_type);
-            }
-            if (variable->offset != NULL)
-            {
-                free(variable->offset);
-            }
-            if (variable->data != NULL)
-            {
-                free(variable->data);
-            }
-        }
-        else if (type->definition->type_class == coda_special_class)
-        {
+        case tag_cdf_basic_type:
+            break;
+        case tag_cdf_time:
             if (((coda_cdf_time *)type)->base_type != NULL)
             {
                 coda_dynamic_type_delete(((coda_cdf_time *)type)->base_type);
             }
-        }
+            break;
+        case tag_cdf_variable:
+            {
+                coda_cdf_variable *variable = (coda_cdf_variable *)type;
+
+                if (variable->attributes != NULL)
+                {
+                    coda_dynamic_type_delete((coda_dynamic_type *)variable->attributes);
+                }
+                if (variable->base_type != NULL)
+                {
+                    coda_dynamic_type_delete((coda_dynamic_type *)variable->base_type);
+                }
+                if (variable->offset != NULL)
+                {
+                    free(variable->offset);
+                }
+                if (variable->data != NULL)
+                {
+                    free(variable->data);
+                }
+            }
+            break;
+    }
+    if (type->definition != NULL)
+    {
         coda_type_release(type->definition);
     }
     free(type);
 }
 
-static coda_cdf_type *basic_type_new(int32_t data_type, int32_t num_elements)
+static int basic_type_init(coda_cdf_type *type, int32_t data_type, int32_t num_elements)
 {
     coda_type_class type_class;
     coda_native_type native_type;
-    coda_type *definition;
-    coda_cdf_type *type;
     int64_t byte_size;
 
     switch (data_type)
@@ -136,52 +139,61 @@ static coda_cdf_type *basic_type_new(int32_t data_type, int32_t num_elements)
             break;
         default:
             coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid CDF data type (%d)", data_type);
-            return NULL;
+            return -1;
     }
     switch (type_class)
     {
         case coda_integer_class:
         case coda_real_class:
-            definition = (coda_type *)coda_type_number_new(coda_format_cdf, type_class);
+            type->definition = (coda_type *)coda_type_number_new(coda_format_cdf, type_class);
             break;
         case coda_text_class:
-            definition = (coda_type *)coda_type_text_new(coda_format_cdf);
+            type->definition = (coda_type *)coda_type_text_new(coda_format_cdf);
             break;
         default:
             assert(0);
             exit(1);
     }
-    if (definition == NULL)
+    if (type->definition == NULL)
     {
-        return NULL;
+        return -1;
     }
-    if (coda_type_set_read_type(definition, native_type) != 0)
+    if (coda_type_set_read_type(type->definition, native_type) != 0)
     {
-        coda_type_release(definition);
-        return NULL;
+        return -1;
     }
-    if (coda_type_set_byte_size(definition, byte_size) != 0)
+    if (coda_type_set_byte_size(type->definition, byte_size) != 0)
     {
-        coda_type_release(definition);
-        return NULL;
+        return -1;
     }
+    return 0;
+}
+
+static coda_cdf_type *basic_type_new(int32_t data_type, int32_t num_elements)
+{
+    coda_cdf_type *type;
+
     type = (coda_cdf_type *)malloc(sizeof(coda_cdf_type));
     if (type == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
                        (long)sizeof(coda_cdf_type), __FILE__, __LINE__);
-        coda_type_release(definition);
         return NULL;
     }
     type->backend = coda_backend_cdf;
-    type->definition = definition;
+    type->definition = NULL;
+    type->tag = tag_cdf_basic_type;
+    if (basic_type_init(type, data_type, num_elements) != 0)
+    {
+        coda_cdf_type_delete((coda_dynamic_type *)type);
+        return NULL;
+    }
     return type;
 }
 
-static coda_cdf_time *time_type_new(int32_t data_type)
+static coda_cdf_time *time_type_new(int32_t data_type, coda_cdf_type *base_type)
 {
     coda_cdf_time *type;
-    int32_t base_data_type;
 
     assert(data_type == 31 || data_type == 33);
 
@@ -194,45 +206,34 @@ static coda_cdf_time *time_type_new(int32_t data_type)
     }
     type->backend = coda_backend_cdf;
     type->definition = NULL;
-    type->base_type = NULL;
+    type->tag = tag_cdf_time;
     type->data_type = data_type;
+    type->base_type = NULL;
 
-    if (data_type == 31)
-    {
-        /* EPOCH */
-        base_data_type = 45;
-    }
-    else
-    {
-        /* TIME_TT2000 */
-        base_data_type = 8;
-    }
     type->definition = coda_type_time_new(coda_format_cdf, NULL);
     if (type->definition == NULL)
     {
         coda_cdf_type_delete((coda_dynamic_type *)type);
         return NULL;
     }
-    type->base_type = (coda_dynamic_type *)basic_type_new(base_data_type, 1);
-    if (type->base_type == NULL)
+    if (coda_type_time_set_base_type(type->definition, base_type->definition) != 0)
     {
         coda_cdf_type_delete((coda_dynamic_type *)type);
         return NULL;
     }
-    if (coda_type_time_set_base_type(type->definition, type->base_type->definition) != 0)
-    {
-        coda_cdf_type_delete((coda_dynamic_type *)type);
-        return NULL;
-    }
+    type->base_type = (coda_dynamic_type *)base_type;
+
     return type;
 }
 
-coda_cdf_variable *coda_cdf_variable_new(int32_t data_type, int32_t max_rec, int32_t rec_varys, int32_t num_dims,
+coda_dynamic_type *coda_cdf_variable_new(int32_t data_type, int32_t max_rec, int32_t rec_varys, int32_t num_dims,
                                          int32_t dim[CODA_MAX_NUM_DIMS], int32_t dim_varys[CODA_MAX_NUM_DIMS],
                                          coda_array_ordering array_ordering, int32_t num_elements,
-                                         int sparse_rec_method)
+                                         int sparse_rec_method, coda_cdf_variable **variable)
 {
     coda_cdf_variable *type;
+    int is_scalar = 0;
+    int time_type = -1;
     int i;
 
     assert(rec_varys || max_rec == 0);
@@ -246,6 +247,7 @@ coda_cdf_variable *coda_cdf_variable_new(int32_t data_type, int32_t max_rec, int
     }
     type->backend = coda_backend_cdf;
     type->definition = NULL;
+    type->tag = tag_cdf_variable;
     type->attributes = NULL;
     type->base_type = NULL;
     type->num_records = 1;
@@ -255,60 +257,103 @@ coda_cdf_variable *coda_cdf_variable_new(int32_t data_type, int32_t max_rec, int
     type->offset = NULL;
     type->data = NULL;
 
+    if (!rec_varys)
+    {
+        is_scalar = 1;
+        for (i = 0; i < num_dims; i++)
+        {
+            if (dim_varys[i])
+            {
+                is_scalar = 0;
+                break;
+            }
+        }
+    }
     if (data_type == 31 || data_type == 33)
     {
-        type->base_type = (coda_cdf_type *)time_type_new(data_type);
-    }
-    else
-    {
-        type->base_type = basic_type_new(data_type, num_elements);
-    }
-    if (type->base_type == NULL)
-    {
-        coda_cdf_type_delete((coda_dynamic_type *)type);
-        return NULL;
+        time_type = data_type;
+        if (data_type == 31)
+        {
+            /* EPOCH */
+            data_type = 45;
+        }
+        else
+        {
+            /* TIME_TT2000 */
+            data_type = 8;
+        }
     }
 
-    type->definition = coda_type_array_new(coda_format_cdf);
-    if (type->definition == NULL)
+    if (is_scalar)
     {
-        coda_cdf_type_delete((coda_dynamic_type *)type);
-        return NULL;
-    }
-    if (coda_type_array_set_base_type(type->definition, type->base_type->definition) != 0)
-    {
-        coda_cdf_type_delete((coda_dynamic_type *)type);
-        return NULL;
-    }
-    if (rec_varys)
-    {
-        if (coda_type_array_add_fixed_dimension(type->definition, max_rec + 1) != 0)
+        if (basic_type_init((coda_cdf_type *)type, data_type, num_elements) != 0)
         {
             coda_cdf_type_delete((coda_dynamic_type *)type);
             return NULL;
         }
-        type->num_records = max_rec + 1;
+        type->value_size = (int)(type->definition->bit_size / 8);
     }
-    type->value_size = (int)(type->base_type->definition->bit_size / 8);
-    for (i = 0; i < num_dims; i++)
+    else
     {
-        /* make sure that we always add the dimensions using C array ordering */
-        int dim_id = (array_ordering == coda_array_ordering_c ? i : num_dims - 1 - i);
-
-        if (dim_varys[dim_id])
+        type->base_type = basic_type_new(data_type, num_elements);
+        if (type->base_type == NULL)
         {
-            if (coda_type_array_add_fixed_dimension(type->definition, dim[dim_id]) != 0)
+            coda_cdf_type_delete((coda_dynamic_type *)type);
+            return NULL;
+        }
+        if (time_type != -1)
+        {
+            coda_cdf_time *base_type;
+
+            base_type = time_type_new(time_type, type->base_type);
+            if (base_type == NULL)
             {
                 coda_cdf_type_delete((coda_dynamic_type *)type);
                 return NULL;
             }
-            type->num_values_per_record *= dim[dim_id];
+            type->base_type = (coda_cdf_type *)base_type;
         }
-    }
-    if (coda_type_array_validate(type->definition) != 0)
-    {
-        coda_cdf_type_delete((coda_dynamic_type *)type);
-        return NULL;
+        type->definition = coda_type_array_new(coda_format_cdf);
+        if (type->definition == NULL)
+        {
+            coda_cdf_type_delete((coda_dynamic_type *)type);
+            return NULL;
+        }
+        if (coda_type_array_set_base_type(type->definition, type->base_type->definition) != 0)
+        {
+            coda_cdf_type_delete((coda_dynamic_type *)type);
+            return NULL;
+        }
+        if (rec_varys)
+        {
+            if (coda_type_array_add_fixed_dimension(type->definition, max_rec + 1) != 0)
+            {
+                coda_cdf_type_delete((coda_dynamic_type *)type);
+                return NULL;
+            }
+            type->num_records = max_rec + 1;
+        }
+        type->value_size = (int)(type->base_type->definition->bit_size / 8);
+        for (i = 0; i < num_dims; i++)
+        {
+            /* make sure that we always add the dimensions using C array ordering */
+            int dim_id = (array_ordering == coda_array_ordering_c ? i : num_dims - 1 - i);
+
+            if (dim_varys[dim_id])
+            {
+                if (coda_type_array_add_fixed_dimension(type->definition, dim[dim_id]) != 0)
+                {
+                    coda_cdf_type_delete((coda_dynamic_type *)type);
+                    return NULL;
+                }
+                type->num_values_per_record *= dim[dim_id];
+            }
+        }
+        if (coda_type_array_validate(type->definition) != 0)
+        {
+            coda_cdf_type_delete((coda_dynamic_type *)type);
+            return NULL;
+        }
     }
 
     type->offset = malloc(type->num_records * sizeof(int64_t));
@@ -324,12 +369,138 @@ coda_cdf_variable *coda_cdf_variable_new(int32_t data_type, int32_t max_rec, int
         type->offset[i] = -1;
     }
 
-    return type;
+    *variable = type;
+
+    if (is_scalar && time_type != -1)
+    {
+        coda_cdf_time *special_type;
+
+        special_type = time_type_new(time_type, (coda_cdf_type *)type);
+        if (special_type == NULL)
+        {
+            coda_cdf_type_delete((coda_dynamic_type *)type);
+            return NULL;
+        }
+        return (coda_dynamic_type *)special_type;
+    }
+
+    return (coda_dynamic_type *)type;
 }
 
 int coda_cdf_variable_add_attribute(coda_cdf_variable *type, const char *real_name, coda_dynamic_type *attribute_type,
                                     int update_definition)
 {
-    /* add attribute by treating coda_cdf_variable as a coda_mem_type */
-    return coda_mem_type_add_attribute((coda_mem_type *)type, real_name, attribute_type, update_definition);
+    coda_mem_record *attributes;
+    long index = -1;
+
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (real_name == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "real_name argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (attribute_type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "attribute_type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    if (type->attributes == NULL)
+    {
+        if (update_definition)
+        {
+            if (type->definition->attributes == NULL)
+            {
+                type->definition->attributes = coda_type_record_new(type->definition->format);
+                if (type->definition->attributes == NULL)
+                {
+                    return -1;
+                }
+            }
+            type->attributes = coda_mem_record_new(type->definition->attributes);
+            if (type->attributes == NULL)
+            {
+                return -1;
+            }
+        }
+        else
+        {
+            coda_set_error(CODA_ERROR_INVALID_NAME, "type does not have an attribute with name '%s' (%s:%u)", real_name,
+                           __FILE__, __LINE__);
+            return -1;
+        }
+    }
+    else
+    {
+        if (type->attributes->backend != coda_backend_memory)
+        {
+            coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "cannot add attribute (%s:%u)", __FILE__, __LINE__);
+            return -1;
+        }
+        assert(type->definition->attributes == type->attributes->definition);
+    }
+
+    attributes = type->attributes;
+
+    index = hashtable_get_index_from_name(attributes->definition->real_name_hash_data, real_name);
+    if (update_definition)
+    {
+        if (index < 0 || (index < attributes->num_fields && attributes->field_type[index] != NULL))
+        {
+            if (coda_type_record_create_field(attributes->definition, real_name, attribute_type->definition) != 0)
+            {
+                return -1;
+            }
+            index = attributes->definition->num_fields - 1;
+        }
+        if (attributes->num_fields < attributes->definition->num_fields)
+        {
+            coda_dynamic_type **new_field_type;
+            long i;
+
+            new_field_type = realloc(attributes->field_type,
+                                     attributes->definition->num_fields * sizeof(coda_dynamic_type *));
+            if (new_field_type == NULL)
+            {
+                coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                               attributes->definition->num_fields * sizeof(coda_dynamic_type *), __FILE__, __LINE__);
+
+                return -1;
+            }
+            attributes->field_type = new_field_type;
+            for (i = attributes->num_fields; i < attributes->definition->num_fields; i++)
+            {
+                attributes->field_type[i] = NULL;
+            }
+            attributes->num_fields = attributes->definition->num_fields;
+        }
+    }
+    else
+    {
+        if (index < 0)
+        {
+            coda_set_error(CODA_ERROR_INVALID_NAME, "type does not have an attribute with name '%s' (%s:%u)", real_name,
+                           __FILE__, __LINE__);
+            return -1;
+        }
+        if (attributes->field_type[index] != NULL)
+        {
+            coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "attribute '%s' is already set (%s:%u)", real_name, __FILE__,
+                           __LINE__);
+            return -1;
+        }
+        if (attributes->definition->field[index]->type != attribute_type->definition)
+        {
+            coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "trying to add attribute '%s' of incompatible type (%s:%u)",
+                           real_name, __FILE__, __LINE__);
+            return -1;
+        }
+    }
+    attributes->field_type[index] = attribute_type;
+
+    return 0;
 }

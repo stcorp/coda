@@ -146,11 +146,10 @@ int coda_cdf_cursor_goto_next_array_element(coda_cursor *cursor)
 
 int coda_cdf_cursor_goto_attributes(coda_cursor *cursor)
 {
-    coda_cdf_type *type;
+    coda_cdf_type *type = (coda_cdf_type *)cursor->stack[cursor->n - 1].type;
 
-    type = (coda_cdf_type *)cursor->stack[cursor->n - 1].type;
     cursor->n++;
-    if (type->definition->type_class == coda_array_class && ((coda_cdf_variable *)type)->attributes != NULL)
+    if (type->tag == tag_cdf_variable && ((coda_cdf_variable *)type)->attributes != NULL)
     {
         cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)((coda_cdf_variable *)type)->attributes;
     }
@@ -176,7 +175,7 @@ int coda_cdf_cursor_get_num_elements(const coda_cursor *cursor, long *num_elemen
 {
     if (cursor->stack[cursor->n - 1].type->definition->type_class == coda_array_class)
     {
-        *num_elements = ((coda_cdf_variable *)cursor->stack[cursor->n - 1].type)->definition->num_elements;
+        *num_elements = ((coda_type_array *)cursor->stack[cursor->n - 1].type->definition)->num_elements;
     }
     else
     {
@@ -199,8 +198,19 @@ int coda_cdf_cursor_get_array_dim(const coda_cursor *cursor, int *num_dims, long
 static int read_array(const coda_cursor *cursor, void *dst)
 {
     coda_cdf_variable *variable = (coda_cdf_variable *)cursor->stack[cursor->n - 1].type;
+    coda_type_class type_class;
     long record_size = variable->num_values_per_record * variable->value_size;
     int i;
+
+    assert(variable->tag == tag_cdf_variable);
+    if (variable->base_type == NULL)
+    {
+        type_class = variable->definition->type_class;
+    }
+    else
+    {
+        type_class = variable->base_type->definition->type_class;
+    }
 
     for (i = 0; i < variable->num_records; i++)
     {
@@ -222,14 +232,14 @@ static int read_array(const coda_cursor *cursor, void *dst)
             }
         }
     }
-    if (variable->base_type->definition->type_class != coda_text_class)
+    if (type_class != coda_text_class)
     {
 #ifdef WORDS_BIGENDIAN
-        coda_endianness other_endianness = coda_little_endian;
+        coda_endianness system_endianness = coda_big_endian;
 #else
-        coda_endianness other_endianness = coda_big_endian;
+        coda_endianness system_endianness = coda_little_endian;
 #endif
-        if (((coda_cdf_product *)cursor->product)->endianness == other_endianness)
+        if (((coda_cdf_product *)cursor->product)->endianness != system_endianness)
         {
             switch (variable->value_size)
             {
@@ -259,7 +269,7 @@ static int read_array(const coda_cursor *cursor, void *dst)
             }
         }
     }
-    if (!coda_option_bypass_special_types && variable->base_type->definition->type_class == coda_special_class)
+    if (!coda_option_bypass_special_types && type_class == coda_special_class)
     {
         coda_cdf_time *time_type = (coda_cdf_time *)variable->base_type;
 
@@ -287,11 +297,53 @@ static int read_array(const coda_cursor *cursor, void *dst)
 
 static int read_basic_type(const coda_cursor *cursor, void *dst, long size_boundary)
 {
-    coda_cdf_variable *variable = (coda_cdf_variable *)cursor->stack[cursor->n - 2].type;
-    int record_id = cursor->stack[cursor->n - 1].index / variable->num_values_per_record;
-    int element_id = cursor->stack[cursor->n - 1].index - record_id * variable->num_values_per_record;
-    int value_size = variable->value_size;
+    coda_cdf_variable *variable = (coda_cdf_variable *)cursor->stack[cursor->n - 1].type;
+    coda_type_class type_class;
+    int index = 0;
+    int record_id;
+    int element_id;
+    int value_size;
+    int time_type = -1;
     int64_t offset;
+
+    switch (((coda_cdf_type *)cursor->stack[cursor->n - 1].type)->tag)
+    {
+        case tag_cdf_basic_type:
+            variable = (coda_cdf_variable *)cursor->stack[cursor->n - 2].type;
+            index = cursor->stack[cursor->n - 1].index;
+            break;
+        case tag_cdf_time:
+            {
+                coda_cdf_time *type = (coda_cdf_time *)cursor->stack[cursor->n - 1].type;
+
+                if (((coda_cdf_type *)type->base_type)->tag == tag_cdf_variable)
+                {
+                    variable = (coda_cdf_variable *)type->base_type;
+                }
+                else
+                {
+                    variable = (coda_cdf_variable *)cursor->stack[cursor->n - 2].type;
+                    index = cursor->stack[cursor->n - 1].index;
+                }
+                time_type = type->data_type;
+            }
+            break;
+        case tag_cdf_variable:
+            break;
+    }
+    assert(variable->tag == tag_cdf_variable);
+    if (variable->base_type == NULL)
+    {
+        type_class = variable->definition->type_class;
+    }
+    else
+    {
+        type_class = variable->base_type->definition->type_class;
+    }
+
+    record_id = index / variable->num_values_per_record;
+    element_id = index - record_id * variable->num_values_per_record;
+    value_size = variable->value_size;
 
     /* TODO: handle sparse records */
     if (variable->offset[record_id] < 0)
@@ -315,7 +367,7 @@ static int read_basic_type(const coda_cursor *cursor, void *dst, long size_bound
             return -1;
         }
     }
-    if (variable->base_type->definition->type_class != coda_text_class)
+    if (type_class != coda_text_class)
     {
 #ifdef WORDS_BIGENDIAN
         coda_endianness other_endianness = coda_little_endian;
@@ -343,12 +395,10 @@ static int read_basic_type(const coda_cursor *cursor, void *dst, long size_bound
             }
         }
     }
-    if (!coda_option_bypass_special_types && variable->base_type->definition->type_class == coda_special_class)
+    if (!coda_option_bypass_special_types && time_type != -1)
     {
-        coda_cdf_time *time_type = (coda_cdf_time *)variable->base_type;
-
         /* convert time values to 'seconds since 2000-01-01T00:00:00' */
-        if (time_type->data_type == 31)
+        if (time_type == 31)
         {
             /* CDF_EPOCH */
             *((double *)dst) = *((double *)dst) * 1e-3 - 63113904000.0;

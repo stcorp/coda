@@ -24,16 +24,26 @@
 #include "coda-cdf.h"
 
 #include "coda-mem-internal.h"
+
+typedef enum cdf_type_tag_enum
+{
+    tag_cdf_basic_type,
+    tag_cdf_time,
+    tag_cdf_variable
+} cdf_type_tag;
+
 typedef struct coda_cdf_type_struct
 {
     coda_backend backend;
     coda_type *definition;
+    cdf_type_tag tag;
 } coda_cdf_type;
 
 typedef struct coda_cdf_time_struct
 {
     coda_backend backend;
     coda_type_special *definition;
+    cdf_type_tag tag;
     coda_dynamic_type *base_type;
     int32_t data_type;
 } coda_cdf_time;
@@ -42,7 +52,8 @@ typedef struct coda_cdf_variable_struct
 {
     coda_backend backend;
     coda_type_array *definition;
-    coda_dynamic_type *attributes;      /* make sure this field is in the same position as for coda_mem_type */
+    cdf_type_tag tag;
+    coda_mem_record *attributes;
     coda_cdf_type *base_type;
     int num_records;
     int num_values_per_record;
@@ -84,10 +95,10 @@ typedef struct coda_cdf_product_struct
     int32_t rdim_sizes[CODA_MAX_NUM_DIMS];
 } coda_cdf_product;
 
-coda_cdf_variable *coda_cdf_variable_new(int32_t data_type, int32_t max_rec, int32_t rec_varys, int32_t num_dims,
+coda_dynamic_type *coda_cdf_variable_new(int32_t data_type, int32_t max_rec, int32_t rec_varys, int32_t num_dims,
                                          int32_t dim[CODA_MAX_NUM_DIMS], int32_t dim_varys[CODA_MAX_NUM_DIMS],
                                          coda_array_ordering array_ordering, int32_t num_elements,
-                                         int sparse_rec_method);
+                                         int sparse_rec_method, coda_cdf_variable **variable);
 
 int coda_cdf_variable_add_attribute(coda_cdf_variable *type, const char *real_name, coda_dynamic_type *attribute_type,
                                     int update_definition);

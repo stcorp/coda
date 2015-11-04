@@ -837,6 +837,7 @@ static int read_CPR(coda_cdf_product *product_file, int64_t offset)
 
 static int read_VDR(coda_cdf_product *product_file, int64_t offset, int is_zvar)
 {
+    coda_dynamic_type *variable_type;
     coda_cdf_variable *variable;
     int32_t record_type;
     int64_t vdr_next;
@@ -1040,21 +1041,21 @@ static int read_VDR(coda_cdf_product *product_file, int64_t offset, int is_zvar)
 
     if (is_zvar)
     {
-        variable = coda_cdf_variable_new(data_type, max_rec, record_varys, num_dims, zdim_sizes, dim_varys,
-                                         product_file->array_ordering, num_elems, srecords);
+        variable_type = coda_cdf_variable_new(data_type, max_rec, record_varys, num_dims, zdim_sizes, dim_varys,
+                                              product_file->array_ordering, num_elems, srecords, &variable);
     }
     else
     {
-        variable = coda_cdf_variable_new(data_type, max_rec, record_varys, num_dims, product_file->rdim_sizes,
-                                         dim_varys, product_file->array_ordering, num_elems, srecords);
+        variable_type = coda_cdf_variable_new(data_type, max_rec, record_varys, num_dims, product_file->rdim_sizes,
+                                              dim_varys, product_file->array_ordering, num_elems, srecords, &variable);
     }
-    if (variable == NULL)
+    if (variable_type == NULL)
     {
         return -1;
     }
-    if (coda_mem_record_add_field(product_file->root_type, name, (coda_dynamic_type *)variable, 1) != 0)
+    if (coda_mem_record_add_field(product_file->root_type, name, variable_type, 1) != 0)
     {
-        coda_cdf_type_delete((coda_dynamic_type *)variable);
+        coda_cdf_type_delete((coda_dynamic_type *)variable_type);
         return -1;
     }
 

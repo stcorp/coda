@@ -455,7 +455,7 @@ static int open_file(const char *filename, coda_format format, int64_t file_size
             break;
         case coda_format_hdf4:
 #ifdef HAVE_HDF4
-            if (coda_hdf4_open(filename, file_size, NULL, product_file) != 0)
+            if (coda_hdf4_open(filename, file_size, definition, product_file) != 0)
             {
                 return -1;
             }
@@ -466,7 +466,7 @@ static int open_file(const char *filename, coda_format format, int64_t file_size
 #endif
         case coda_format_hdf5:
 #ifdef HAVE_HDF5
-            if (coda_hdf5_open(filename, file_size, NULL, product_file) != 0)
+            if (coda_hdf5_open(filename, file_size, definition, product_file) != 0)
             {
                 return -1;
             }
@@ -476,20 +476,20 @@ static int open_file(const char *filename, coda_format format, int64_t file_size
             return -1;
 #endif
         case coda_format_cdf:
-            if (coda_cdf_open(filename, file_size, NULL, product_file) != 0)
+            if (coda_cdf_open(filename, file_size, definition, product_file) != 0)
             {
                 return -1;
             }
             break;
         case coda_format_netcdf:
-            if (coda_netcdf_open(filename, file_size, NULL, product_file) != 0)
+            if (coda_netcdf_open(filename, file_size, definition, product_file) != 0)
             {
                 return -1;
             }
             break;
         case coda_format_grib1:
         case coda_format_grib2:
-            if (coda_grib_open(filename, file_size, NULL, product_file) != 0)
+            if (coda_grib_open(filename, file_size, definition, product_file) != 0)
             {
                 return -1;
             }

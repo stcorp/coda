@@ -20,6 +20,7 @@
 
 #include "coda-xml-internal.h"
 #include "coda-ascbin.h"
+#include "coda-read-bytes.h"
 #include "coda-ascii.h"
 
 #include <assert.h>
@@ -474,24 +475,23 @@ int coda_xml_cursor_read_char(const coda_cursor *cursor, char *dst)
         return coda_ascii_cursor_read_char(&sub_cursor, dst, ((coda_xml_element *)type)->inner_bit_size);
     }
 
-    return coda_ascii_cursor_read_bytes(cursor, (uint8_t *)dst, 0, 1);
+    return read_bytes(cursor->product, ((coda_xml_element *)type)->inner_bit_offset >> 3, 1, (uint8_t *)dst);
 }
 
 int coda_xml_cursor_read_string(const coda_cursor *cursor, char *dst, long dst_size)
 {
     coda_xml_type *type = (coda_xml_type *)cursor->stack[cursor->n - 1].type;
-    coda_cursor sub_cursor = *cursor;
     long read_size;
 
     assert(type->tag == tag_xml_element);
-    sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
     if (type->definition->format == coda_format_ascii)
     {
+        coda_cursor sub_cursor = *cursor;
+
         /* defer to the ascii backend */
+        sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
         return coda_ascii_cursor_read_string(&sub_cursor, dst, dst_size, ((coda_xml_element *)type)->inner_bit_size);
     }
-
-    /* TODO: replace call to coda_ascii_cursor_read_bytes() with direct call to read_bytes() */
 
     read_size = (long)(((coda_xml_element *)type)->inner_bit_size >> 3);
     if (read_size + 1 > dst_size)
@@ -500,7 +500,8 @@ int coda_xml_cursor_read_string(const coda_cursor *cursor, char *dst, long dst_s
     }
     if (read_size > 0)
     {
-        if (coda_ascii_cursor_read_bytes(&sub_cursor, (uint8_t *)dst, 0, read_size) != 0)
+        if (read_bytes(cursor->product, ((coda_xml_element *)type)->inner_bit_offset >> 3, read_size, (uint8_t *)dst)
+            != 0)
         {
             return -1;
         }
@@ -535,20 +536,12 @@ int coda_xml_cursor_read_bits(const coda_cursor *cursor, uint8_t *dst, int64_t b
 int coda_xml_cursor_read_bytes(const coda_cursor *cursor, uint8_t *dst, int64_t offset, int64_t length)
 {
     coda_xml_type *type = (coda_xml_type *)cursor->stack[cursor->n - 1].type;
-    coda_cursor sub_cursor = *cursor;
 
-    /* TODO: replace call to coda_ascii_cursor_read_bytes() with direct call to read_bytes() */
-
-    /* defer to the ascii backend */
     if (type->tag == tag_xml_root)
     {
-        sub_cursor.stack[cursor->n - 1].bit_offset = 0;
+        return read_bytes(cursor->product, offset, length, dst);
     }
-    else
-    {
-        sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
-    }
-    return coda_ascii_cursor_read_bytes(&sub_cursor, dst, offset, length);
+    return read_bytes(cursor->product, (((coda_xml_element *)type)->inner_bit_offset >> 3) + offset, length, dst);
 }
 
 int coda_xml_cursor_read_int8_array(const coda_cursor *cursor, int8_t *dst)
