@@ -523,9 +523,10 @@ static void generate_html_type(const coda_Type *type, int expand_named_type, int
     ff_printf(">\n");
 
     /* type name and size */
+    coda_type_get_bit_size(type, &bit_size);
     fi_printf("<tr>");
     fi_printf("<th ");
-    if (type->format != coda_format_ascii && type->format != coda_format_binary)
+    if (bit_size < 0)
     {
         ff_printf(" colspan=\"2\"");
     }
@@ -549,6 +550,10 @@ static void generate_html_type(const coda_Type *type, int expand_named_type, int
             break;
         case coda_array_class:
             ff_printf("array");
+            if (type->format == coda_format_xml && ((coda_xmlType *)type)->tag == tag_xml_ascii_type)
+            {
+                break;
+            }
             if (type->name == NULL || expand_named_type)
             {
                 int num_dims;
@@ -631,27 +636,19 @@ static void generate_html_type(const coda_Type *type, int expand_named_type, int
         ff_printf("&nbsp;\"<a class=\"header\" href=\"../types/%s.html\">%s</a>\"", type->name, type->name);
     }
     ff_printf("</th>");
-    if (type->format == coda_format_ascii || type->format == coda_format_binary)
+    if (bit_size >= 0)
     {
-        fi_printf("<td style=\"width:10px\" align=\"right\"><i>size</i>:&nbsp;");
-        coda_type_get_bit_size(type, &bit_size);
-        if (bit_size >= 0)
-        {
-            char s[21];
+        char s[21];
 
-            coda_str64(bit_size >> 3, s);
-            if (bit_size & 0x7)
-            {
-                ff_printf("%s:%d", s, (int)(bit_size & 0x7));
-            }
-            else
-            {
-                ff_printf("%s", s);
-            }
+        fi_printf("<td style=\"width:10px\" align=\"right\"><i>size</i>:&nbsp;");
+        coda_str64(bit_size >> 3, s);
+        if (bit_size & 0x7)
+        {
+            ff_printf("%s:%d", s, (int)(bit_size & 0x7));
         }
         else
         {
-            ff_printf("variable");
+            ff_printf("%s", s);
         }
         ff_printf("</td>");
     }

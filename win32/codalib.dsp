@@ -271,6 +271,22 @@ SOURCE="..\libcoda\coda-hdf5-type.c"
 # End Source File
 # Begin Source File
 
+SOURCE="..\libcoda\coda-netcdf-cursor.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\coda-netcdf-dynamic.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\coda-netcdf-type.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\coda-netcdf.c"
+# End Source File
+# Begin Source File
+
 SOURCE="..\libcoda\coda-product.c"
 # End Source File
 # Begin Source File
@@ -437,6 +453,14 @@ SOURCE="..\libcoda\coda-hdf5.h"
 # Begin Source File
 
 SOURCE="..\libcoda\coda-internal.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\coda-netcdf-internal.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\coda-netcdf.h"
 # End Source File
 # Begin Source File
 

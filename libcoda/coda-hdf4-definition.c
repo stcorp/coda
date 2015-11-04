@@ -1737,9 +1737,13 @@ static coda_hdf4SDS *new_hdf4SDS(coda_hdf4ProductFile *pf, int32 sds_index)
 
         if (SDattrinfo(T->sds_id, attr_index, name, &data_type, &count) == 0)
         {
-            if (data_type == DFNT_FLOAT64 && count == 1)
+            if ((data_type == DFNT_FLOAT64 || data_type == DFNT_FLOAT32) && count == 1)
             {
                 SDreadattr(T->sds_id, attr_index, &scale_factor);
+                if (data_type == DFNT_FLOAT32)
+                {
+                    scale_factor = (double)*(float *)&scale_factor;
+                }
             }
         }
     }
@@ -1753,9 +1757,13 @@ static coda_hdf4SDS *new_hdf4SDS(coda_hdf4ProductFile *pf, int32 sds_index)
 
         if (SDattrinfo(T->sds_id, attr_index, name, &data_type, &count) == 0)
         {
-            if (data_type == DFNT_FLOAT64 && count == 1)
+            if ((data_type == DFNT_FLOAT64 || data_type == DFNT_FLOAT32) && count == 1)
             {
                 SDreadattr(T->sds_id, attr_index, &add_offset);
+                if (data_type == DFNT_FLOAT32)
+                {
+                    add_offset = (double)*(float *)&add_offset;
+                }
             }
         }
     }

@@ -109,6 +109,9 @@ const char *coda_element_name_from_xml_name(const char *xml_name);
 int coda_is_identifier(const char *name);
 char *coda_identifier_from_name(const char *name, hashtable *hash_data);
 char *coda_short_identifier_from_name(const char *name, hashtable *hash_data, int maxlength);
+
+int coda_array_transpose(void *array, int num_dims, const long dim[], int element_size);
+
 int coda_dayofyear_to_month_day(int year, int day_of_year, int *month, int *day_of_month);
 int coda_month_to_integer(const char month[3]);
 

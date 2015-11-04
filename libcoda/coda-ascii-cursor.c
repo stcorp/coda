@@ -604,7 +604,7 @@ static int parse_eps_datetime_long(char *buffer, long buffer_length, double *dst
         return -1;
     }
 
-    return coda_datetime_to_double(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MSEC, dst);
+    return coda_datetime_to_double(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, 1000 * MSEC, dst);
 }
 
 static int parse_ccsds_datetime_ymd1(char *buffer, long buffer_length, double *dst)
@@ -1721,7 +1721,7 @@ static int read_string(const coda_Cursor *cursor, char *dst, long dst_size, int6
     return 0;
 }
 
-static int read_array(const coda_Cursor *cursor, read_function read_basic_type, uint8_t *dst,
+static int read_array(const coda_Cursor *cursor, read_function read_basic_type_function, uint8_t *dst,
                       int basic_type_size, coda_array_ordering array_ordering, int64_t size_boundary)
 {
     coda_Cursor array_cursor;
@@ -1758,7 +1758,7 @@ static int read_array(const coda_Cursor *cursor, read_function read_basic_type, 
 
                 element_size_boundary = size_boundary - (array_cursor.stack[cursor->n - 1].bit_offset -
                                                          cursor->stack[cursor->n - 1].bit_offset);
-                if ((*read_basic_type)(&array_cursor, &dst[i * basic_type_size], element_size_boundary) != 0)
+                if ((*read_basic_type_function)(&array_cursor, &dst[i * basic_type_size], element_size_boundary) != 0)
                 {
                     return -1;
                 }
@@ -1806,8 +1806,8 @@ static int read_array(const coda_Cursor *cursor, read_function read_basic_type, 
 
                     element_size_boundary = size_boundary - (array_cursor.stack[cursor->n - 1].bit_offset -
                                                              cursor->stack[cursor->n - 1].bit_offset);
-                    if ((*read_basic_type)(&array_cursor, &dst[fortran_index * basic_type_size],
-                                           element_size_boundary) != 0)
+                    if ((*read_basic_type_function)(&array_cursor, &dst[fortran_index * basic_type_size],
+                                                    element_size_boundary) != 0)
                     {
                         return -1;
                     }

@@ -324,8 +324,8 @@ static int coda_match_filepath(int ignore_other_file_types, coda_Expr *expr, Nam
  * The return value of the callback function determines whether the rest of the files/directories should be processed.
  * If you return 0 from the callback function then processing will continue normally. If you return a different value,
  * then the coda_match_filefilter() function will stop further processing and return the same return value to your
- * program as you have returned from the callback function. In such cases coda_match_filefilter() will allways cease to
- * continue and will return with a value of -1.
+ * program as you have returned from the callback function. It is recommended not to use -1 as return value in your
+ * callback function, since coda_match_filefilter() will already return -1 if it encounters an error internally.
  *
  * A small example of a callback function is given below
  * \code

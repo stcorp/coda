@@ -13,10 +13,10 @@ inputdir=${1}
 targetdir=`pwd`
 
 if test $# -eq 2 ; then
-  # make targetdir an absolutle path (because it will be referenced after
+  # make targetdir an absolute path (because it will be referenced after
   # a cd to the input directory
   firstchar=`echo ${2} | sed -e 's:^\(.\).*$:\1:'`
-  if test "X${firstchar}" == "X/" ; then
+  if test "X${firstchar}" = "X/" ; then
     targetdir=${2}
   else
     targetdir=${targetdir}/${2}

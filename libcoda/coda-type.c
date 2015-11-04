@@ -28,6 +28,7 @@
 #include "coda-ascii.h"
 #include "coda-bin.h"
 #include "coda-xml.h"
+#include "coda-netcdf.h"
 #ifdef HAVE_HDF4
 #include "coda-hdf4.h"
 #endif
@@ -39,10 +40,10 @@
 
 /** \defgroup coda_types CODA Types
  * Each data element or group of data elements (such as an array or record) in a product file, independent of whether
- * it is an ascii, binary, XML, HDF4, or HDF5 product, has a unique description in CODA.
+ * it is an ascii, binary, XML, netCDF, HDF4, or HDF5 product, has a unique description in CODA.
  * Each of those descriptions is refered to as a CODA type (which is of type #coda_Type).
  * For ascii, binary, and XML products the type definition is fixed and is provided by .codadef files.
- * For HDF4 and HDF5 files the type definition is taken from the products themselves.
+ * For netCDF, HDF4, and HDF5 files the type definition is taken from the products themselves.
  * /note For XML files CODA also allows taking the definition from the file itself, but CODA will then not know how to
  * interpret the 'leaf elements' (i.e. whether the content of an XML element should be a string, an integer, a time
  * value, etc.) and will treat all 'leaf elements' as ascii text.
@@ -88,7 +89,8 @@
  * requested property (e.g. if the size of an array is not fixed, coda_type_get_array_dim() will return a
  * dimension value of -1 and coda_cursor_get_array_dim() will return the real dimension value).
  *
- * CODA also provides mappings of the datatypes that are available in XML, HDF4, and HDF5 products to the CODA types.
+ * CODA also provides mappings of the datatypes that are available in XML, netCDF, HDF4, and HDF5 products to the CODA
+ * types.
  * When accessing HDF products via CODA you will therefore get the 'CODA view' on these files.
  * For XML the following mapping is used:
  *  - the root of the product maps to a record with a single field (representing the root xml element)
@@ -97,6 +99,13 @@
  *    element
  *  - if an element contains ascii content then the content will be described using a CODA type for ascii formatted data
  *  - XML attributes for an element will be described using a record with a field for each attribute
+ *
+ * For netCDF the following mapping is used:
+ *  - the root of the product maps to a record with a field for each variable in the product
+ *  - a variable maps to a scalar for 0 dimensional data or to an array of basic types for 1 or higher dimensional data
+ *  - global attributes are provides as attributes of the root record
+ *  - variable attributes are provided as attributes of the basic type (i.e. of the scalar or the array element)
+ *  - for arrays of characters, the last dimension is mapped to a string (if it is not the appendable dimension)
  *
  * For HDF4 the following mapping is used:
  *  - the root of product maps to a record
@@ -117,7 +126,8 @@
  *  - HDF5 softlinks and datatype objects are not supported by CODA
  *  - CODA only supports datasets and attributes that contain integer, float and string HDF5 data types and these data
  *    types map to their respective basic type in CODA.
- * CODA doesn't use the #coda_special_class types for HDF4 and HDF5 products.
+ *
+ * CODA doesn't use the #coda_special_class types for netCDF, HDF4, and HDF5 products.
  *
  * More information about the CODA types and descriptions of the supported products can be found in the CODA Product
  * Format Definitions documentation that is included with the CODA package.
@@ -176,14 +186,14 @@ LIBCODA_API const char *coda_type_get_format_name(coda_format format)
             return "binary";
         case coda_format_xml:
             return "xml";
+        case coda_format_netcdf:
+            return "netcdf";
+        case coda_format_cdf:
+            return "cdf";
         case coda_format_hdf4:
             return "hdf4";
         case coda_format_hdf5:
             return "hdf5";
-        case coda_format_cdf:
-            return "cdf";
-        case coda_format_netcdf:
-            return "netcdf";
     }
 
     return "unknown";
@@ -319,10 +329,10 @@ LIBCODA_API int coda_type_has_ascii_content(const coda_Type *type, int *has_asci
             break;
         case coda_format_xml:
             return coda_xml_type_has_ascii_content(type, has_ascii_content);
+        case coda_format_netcdf:
+        case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:
-        case coda_format_cdf:
-        case coda_format_netcdf:
             *has_ascii_content = (type->type_class == coda_text_class);
             break;
     }
@@ -384,7 +394,7 @@ LIBCODA_API int coda_type_get_class(const coda_Type *type, coda_type_class *type
  * The native type that is returned indicates which storage type can best be used when reading data of this
  * CODA type to memory. Compound types (arrays and records) that can be read directly (using a raw byte
  * array) will return a read type #coda_native_type_bytes. If a type can not be read directly (e.g. compound types in
- * HDF4/5 products) the special native type value #coda_native_type_not_available will be returned.
+ * XML, netCDF, HDF4, and HDF5 products) the special native type value #coda_native_type_not_available will be returned.
  * \note Be aware that types of class #coda_integer_class can return a native type #coda_native_type_double if the
  * integer type has a conversion associated with it and conversions are enabled.
  * \see coda_set_option_perform_conversions()
@@ -416,9 +426,10 @@ LIBCODA_API int coda_type_get_read_type(const coda_Type *type, coda_native_type 
             return coda_bin_type_get_read_type(type, read_type);
         case coda_format_xml:
             return coda_xml_type_get_read_type(type, read_type);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_type_get_read_type(type, read_type);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_type_get_read_type(type, read_type);
 #else
@@ -485,9 +496,10 @@ LIBCODA_API int coda_type_get_string_length(const coda_Type *type, long *length)
             exit(1);
         case coda_format_xml:
             return coda_xml_type_get_string_length(type, length);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_type_get_string_length(type, length);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_type_get_string_length(type, length);
 #else
@@ -513,7 +525,7 @@ LIBCODA_API int coda_type_get_string_length(const coda_Type *type, long *length)
  * file. This means that e.g. ascii floats and ascii integers will return 8 times the byte size of the ascii
  * representation, records and arrays return the sum of the bit sizes of their fields/array-elements.
  * For XML data you will be able to retrieve bit sizes for all data except arrays and attribute records.
- * You will not be able to retrieve bit/byte sizes for data in HDF4 or HDF5 format.
+ * You will not be able to retrieve bit/byte sizes for data in netCDF, HDF4, or HDF5 format.
  * If the size is not fixed and can only be determined from information inside a product then \a bit_size will be set
  * to -1.
  * \param type CODA type.
@@ -544,10 +556,10 @@ LIBCODA_API int coda_type_get_bit_size(const coda_Type *type, int64_t *bit_size)
             return coda_bin_type_get_bit_size(type, bit_size);
         case coda_format_xml:
             return coda_xml_type_get_bit_size(type, bit_size);
+        case coda_format_netcdf:
+        case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:
-        case coda_format_cdf:
-        case coda_format_netcdf:
             *bit_size = -1;
             break;
     }
@@ -661,10 +673,10 @@ LIBCODA_API int coda_type_get_unit(const coda_Type *type, const char **unit)
             return coda_bin_type_get_unit(type, unit);
         case coda_format_xml:
             return coda_xml_type_get_unit(type, unit);
+        case coda_format_netcdf:
+        case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:
-        case coda_format_cdf:
-        case coda_format_netcdf:
             *unit = NULL;
             break;
     }
@@ -711,10 +723,10 @@ LIBCODA_API int coda_type_get_fixed_value(const coda_Type *type, const char **fi
             return coda_bin_type_get_fixed_value(type, fixed_value, length);
         case coda_format_xml:
             return coda_xml_type_get_fixed_value(type, fixed_value, length);
+        case coda_format_netcdf:
+        case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:
-        case coda_format_cdf:
-        case coda_format_netcdf:
             *fixed_value = NULL;
             break;
     }
@@ -756,9 +768,10 @@ LIBCODA_API int coda_type_get_num_record_fields(const coda_Type *type, long *num
             return coda_ascbin_type_get_num_record_fields(type, num_fields);
         case coda_format_xml:
             return coda_xml_type_get_num_record_fields(type, num_fields);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_type_get_num_record_fields(type, num_fields);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_type_get_num_record_fields(type, num_fields);
 #else
@@ -822,9 +835,11 @@ LIBCODA_API int coda_type_get_record_field_index_from_name(const coda_Type *type
         case coda_format_xml:
             result = coda_xml_type_get_record_field_index_from_name(type, name, index);
             break;
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            result = coda_netcdf_type_get_record_field_index_from_name(type, name, index);
+            break;
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             result = coda_hdf4_type_get_record_field_index_from_name(type, name, index);
             break;
@@ -889,9 +904,10 @@ LIBCODA_API int coda_type_get_record_field_type(const coda_Type *type, long inde
             return coda_ascbin_type_get_record_field_type(type, index, field_type);
         case coda_format_xml:
             return coda_xml_type_get_record_field_type(type, index, field_type);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_type_get_record_field_type(type, index, field_type);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_type_get_record_field_type(type, index, field_type);
 #else
@@ -947,9 +963,10 @@ LIBCODA_API int coda_type_get_record_field_name(const coda_Type *type, long inde
             return coda_ascbin_type_get_record_field_name(type, index, name);
         case coda_format_xml:
             return coda_xml_type_get_record_field_name(type, index, name);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_type_get_record_field_name(type, index, name);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_type_get_record_field_name(type, index, name);
 #else
@@ -1008,10 +1025,10 @@ LIBCODA_API int coda_type_get_record_field_hidden_status(const coda_Type *type, 
             return coda_ascbin_type_get_record_field_hidden_status(type, index, hidden);
         case coda_format_xml:
             return coda_xml_type_get_record_field_hidden_status(type, index, hidden);
+        case coda_format_netcdf:
+        case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:
-        case coda_format_cdf:
-        case coda_format_netcdf:
             *hidden = 0;
             break;
     }
@@ -1021,8 +1038,8 @@ LIBCODA_API int coda_type_get_record_field_hidden_status(const coda_Type *type, 
 
 /** Get the available status of a record field.
  * If the type is not a record class the function will return an error.
- * The available status is only applicable for data in ascii, binary, or xml format (fields are always available for
- * HDF data).
+ * The available status is only applicable for data in ascii, binary, or XML format (fields are always available for
+ * netCDF, HDF4, and HDF5 data).
  * The available status is a dynamic property and can thus only really be determined using the function
  * coda_cursor_get_record_field_available_status(). The coda_type_get_record_field_hidden_status() function, however,
  * indicates whether the availability of a field is dynamic or not. If it is not dynamic (i.e. it is always available)
@@ -1060,10 +1077,10 @@ LIBCODA_API int coda_type_get_record_field_available_status(const coda_Type *typ
             return coda_ascbin_type_get_record_field_available_status(type, index, available);
         case coda_format_xml:
             return coda_xml_type_get_record_field_available_status(type, index, available);
+        case coda_format_netcdf:
+        case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:
-        case coda_format_cdf:
-        case coda_format_netcdf:
             *available = 1;
             break;
     }
@@ -1107,10 +1124,10 @@ LIBCODA_API int coda_type_get_record_union_status(const coda_Type *type, int *is
             return coda_ascbin_type_get_record_union_status(type, is_union);
         case coda_format_xml:
             return coda_xml_type_get_record_union_status(type, is_union);
+        case coda_format_netcdf:
+        case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:
-        case coda_format_cdf:
-        case coda_format_netcdf:
             *is_union = 0;
             break;
     }
@@ -1152,9 +1169,10 @@ LIBCODA_API int coda_type_get_array_num_dims(const coda_Type *type, int *num_dim
             return coda_ascbin_type_get_array_num_dims(type, num_dims);
         case coda_format_xml:
             return coda_xml_type_get_array_num_dims(type, num_dims);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_type_get_array_num_dims(type, num_dims);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_type_get_array_num_dims(type, num_dims);
 #else
@@ -1222,9 +1240,10 @@ LIBCODA_API int coda_type_get_array_dim(const coda_Type *type, int *num_dims, lo
             return coda_ascbin_type_get_array_dim(type, num_dims, dim);
         case coda_format_xml:
             return coda_xml_type_get_array_dim(type, num_dims, dim);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_type_get_array_dim(type, num_dims, dim);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_type_get_array_dim(type, num_dims, dim);
 #else
@@ -1278,9 +1297,10 @@ LIBCODA_API int coda_type_get_array_base_type(const coda_Type *type, coda_Type *
             return coda_ascbin_type_get_array_base_type(type, base_type);
         case coda_format_xml:
             return coda_xml_type_get_array_base_type(type, base_type);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_type_get_array_base_type(type, base_type);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_type_get_array_base_type(type, base_type);
 #else
@@ -1336,10 +1356,10 @@ LIBCODA_API int coda_type_get_special_type(const coda_Type *type, coda_special_t
             return coda_bin_type_get_special_type(type, special_type);
         case coda_format_xml:
             return coda_xml_type_get_special_type(type, special_type);
+        case coda_format_netcdf:
+        case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:
-        case coda_format_cdf:
-        case coda_format_netcdf:
             break;
     }
 
@@ -1382,10 +1402,10 @@ LIBCODA_API int coda_type_get_special_base_type(const coda_Type *type, coda_Type
             return coda_bin_type_get_special_base_type(type, base_type);
         case coda_format_xml:
             return coda_xml_type_get_special_base_type(type, base_type);
+        case coda_format_netcdf:
+        case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:
-        case coda_format_cdf:
-        case coda_format_netcdf:
             break;
     }
 

@@ -217,14 +217,14 @@ int coda_hdf5_type_get_array_dim(const coda_Type *type, int *num_dims, long dim[
             *num_dims = ((coda_hdf5Attribute *)type)->ndims;
             for (i = 0; i < ((coda_hdf5Attribute *)type)->ndims; i++)
             {
-                dim[i] = (int)((coda_hdf5Attribute *)type)->dims[i];
+                dim[i] = (long)((coda_hdf5Attribute *)type)->dims[i];
             }
             break;
         case tag_hdf5_dataset:
             *num_dims = ((coda_hdf5DataSet *)type)->ndims;
             for (i = 0; i < ((coda_hdf5DataSet *)type)->ndims; i++)
             {
-                dim[i] = (int)((coda_hdf5DataSet *)type)->dims[i];
+                dim[i] = (long)((coda_hdf5DataSet *)type)->dims[i];
             }
             break;
         default:

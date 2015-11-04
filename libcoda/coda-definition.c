@@ -30,6 +30,7 @@ coda_DataDictionary *coda_data_dictionary = NULL;
 void coda_ascii_release_type(coda_Type *type);
 void coda_bin_release_type(coda_Type *type);
 void coda_xml_release_type(coda_Type *type);
+void coda_netcdf_release_type(coda_Type *type);
 
 #ifdef HAVE_HDF4
 void coda_hdf4_release_type(coda_Type *type);
@@ -41,6 +42,7 @@ void coda_hdf5_release_type(coda_Type *type);
 void coda_ascii_release_dynamic_type(coda_DynamicType *type);
 void coda_bin_release_dynamic_type(coda_DynamicType *type);
 void coda_xml_release_dynamic_type(coda_DynamicType *type);
+void coda_netcdf_release_dynamic_type(coda_DynamicType *type);
 
 #ifdef HAVE_HDF4
 void coda_hdf4_release_dynamic_type(coda_DynamicType *type);
@@ -71,9 +73,11 @@ void coda_release_type(coda_Type *type)
         case coda_format_xml:
             coda_xml_release_type(type);
             break;
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            coda_netcdf_release_type(type);
+            break;
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             coda_hdf4_release_type(type);
 #endif
@@ -99,9 +103,11 @@ void coda_release_dynamic_type(coda_DynamicType *type)
         case coda_format_xml:
             coda_xml_release_dynamic_type(type);
             break;
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            coda_netcdf_release_dynamic_type(type);
+            break;
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             coda_hdf4_release_dynamic_type(type);
 #endif

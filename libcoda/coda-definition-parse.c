@@ -100,7 +100,7 @@ typedef enum xml_element_tag_enum
     element_cd_vsf_integer
 } xml_element_tag;
 
-static char *xml_full_element_name[] = {
+static const char *xml_full_element_name[] = {
     CODA_DEFINITION_NAMESPACE " Array",
     CODA_DEFINITION_NAMESPACE " AsciiLine",
     CODA_DEFINITION_NAMESPACE " AsciiLineSeparator",

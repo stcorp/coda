@@ -164,6 +164,12 @@ libcoda_la_SOURCES = \
 	libcoda/coda-filefilter.c \
 	libcoda/coda-filefilter.h \
 	libcoda/coda-internal.h \
+	libcoda/coda-netcdf-cursor.c \
+	libcoda/coda-netcdf-dynamic.c \
+	libcoda/coda-netcdf-internal.h \
+	libcoda/coda-netcdf-type.c \
+	libcoda/coda-netcdf.c \
+	libcoda/coda-netcdf.h \
 	libcoda/coda-path.h \
 	libcoda/coda-product.c \
 	libcoda/coda-type.c \
@@ -247,6 +253,12 @@ libcoda_internal_la_SOURCES = \
 	libcoda/coda-filefilter.c \
 	libcoda/coda-filefilter.h \
 	libcoda/coda-internal.h \
+	libcoda/coda-netcdf-cursor.c \
+	libcoda/coda-netcdf-dynamic.c \
+	libcoda/coda-netcdf-internal.h \
+	libcoda/coda-netcdf-type.c \
+	libcoda/coda-netcdf.c \
+	libcoda/coda-netcdf.h \
 	libcoda/coda-path.h \
 	libcoda/coda-product.c \
 	libcoda/coda-type.c \

@@ -22,10 +22,10 @@
       <p>For installation instructions for CODA look at the INSTALL file that comes with each downloadable source package.</p>
 
       <h2>CODA Product Format Definitions</h2>
-      <p>CODA uses a single view on data, independent of the underlying basic ascii/binary/xml/hdf file format.</p>
+      <p>CODA uses a single view on data, independent of the underlying basic ascii/binary/xml/netcdf/hdf4/hdf5 file format.</p>
       <p>A description of the common type system that CODA uses to provide a hierarchical view on data can be found in the <a href="codadef/codadef-format.html">CODA Product Format Definition Description Format</a> documentation.</p>
       <p>Product format definitions in CODA can make use of a powerful expression language for e.g. determining array sizes, bit offsets, etc. This expression language is described in the <a href="codadef/codadef-expressions.html">CODA Expressions</a> documentation.</p>
-      <p>Data products that are in XML, HDF4, or HDF5 do not always need a CODA product format description, since they are self describing formats. The approach that CODA uses to map the XML/HDF4/HDF5 data types to CODA data types can be found in the <a href="codadef/codadef-xml.html">CODA XML Mapping Description</a>, <a href="codadef/codadef-hdf4.html">CODA HDF4 Mapping Description</a>, and <a href="codadef/codadef-hdf5.html">CODA HDF5 Mapping Description</a> documentation.</p>
+      <p>Data products that are in XML, netCDF, HDF4, or HDF5 do not always need a CODA product format description, since they are self describing formats. The approach that CODA uses to map the XML/netCDF/HDF4/HDF5 data types to CODA data types can be found in the <a href="codadef/codadef-xml.html">CODA XML Mapping Description</a>, <a href="codadef/codadef-netcdf.html">CODA netCDF Mapping Description</a>, <a href="codadef/codadef-hdf4.html">CODA HDF4 Mapping Description</a>, and <a href="codadef/codadef-hdf5.html">CODA HDF5 Mapping Description</a> documentation.</p>
 
       <h2>C interface</h2>
       <p>The C interface is the foundation of CODA upon which all other CODA tools are build. As a developer you can also use this library and gain easy, high-performance access to all data in products that are supported by CODA.</p>

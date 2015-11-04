@@ -46,8 +46,8 @@
 -T uint16_t
 -T uint32_t
 -T uint64_t
--T read_basic_type
 -T read_function
+-T read_basic_type_function
 -T free_data_handler
 -T int32
 -T uint8

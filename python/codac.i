@@ -371,6 +371,13 @@ POSIX_SCALAR_OUTPUT_HELPER(uint64_t, PyLong_FromUnsignedLongLong)
 
 
 /*
+    specially handle coda_string_to_time, since the first argument should not
+    be handled as output argument (see coda_time_to_string rule further on)
+*/
+void coda_string_to_time(const char *INPUT, double *OUTPUT);
+%ignore coda_string_to_time;
+
+/*
     handle standard floating point C type output arguments.
 */
 %apply float *OUTPUT { float *dst };

@@ -2,7 +2,7 @@
 #
 project(CODA)
 
-set(VERSION 1.2.3)
+set(VERSION 1.3)
 set(CODA_VERSION \"${VERSION}\")
 
 # General setup
@@ -285,6 +285,12 @@ set(LIBCODA_SOURCES
   libcoda/coda-filefilter.c
   libcoda/coda-filefilter.h
   libcoda/coda-internal.h
+  libcoda/coda-netcdf-cursor.c
+  libcoda/coda-netcdf-dynamic.c
+  libcoda/coda-netcdf-internal.h
+  libcoda/coda-netcdf-type.c
+  libcoda/coda-netcdf.c
+  libcoda/coda-netcdf.h
   libcoda/coda-path.h
   libcoda/coda-product.c
   libcoda/coda-type.c

@@ -41,6 +41,7 @@
 #include "coda-ascii.h"
 #include "coda-bin.h"
 #include "coda-xml.h"
+#include "coda-netcdf.h"
 #ifdef HAVE_HDF4
 #include "coda-hdf4.h"
 #endif
@@ -54,22 +55,24 @@
  * files that are supported by CODA.
  *
  * Under the hood CODA uses five different backends to access data from products. There are backends for structured
- * ascii, structured binary, XML, HDF4, and HDF5 data formats.
- * HDF4 and HDF5 are self describing product format. This means that CODA will retrieve information about the structural
- * layout and contents from the file itself. For XML, CODA can either use an external definition (from a .codadef file)
- * to interpret an XML file (similar like an XML Schema) or it can try to retrieve structural layout of the file from
- * the file itself. This last option will result in a reduced form of access, since 'leaf elements' can not be
- * interpreted as e.g. integer/float/time but will only be accessible as string data.
+ * ascii, structured binary, XML, netCDF, HDF4, and HDF5 data formats.
+ * netCDF, HDF4, and HDF5 are self describing product format. This means that CODA will retrieve information about the
+ * structural layout and contents from the file itself. For XML, CODA can either use an external definition
+ * (from a .codadef file) to interpret an XML file (similar like an XML Schema) or it can try to retrieve structural
+ * layout of the file from the file itself.
+ * This last option will result in a reduced form of access, since 'leaf elements' can not be interpreted as e.g.
+ * integer/float/time but will only be accessible as string data.
  * For the interpretation of structured ascii and structured binary files (or a combination of both) CODA purely relies
  * on the format definitions that are provided in the .codadef files.
  *
  * In order to be able to open product files with CODA you will first have to initialize CODA with coda_init() (see
  * \link coda_general CODA General\endlink). This initialization routine will initialize all available backends and will
  * search for all .codadef files in your CODA definition path to read the necessary descriptions of all non
- * self-describing products.
+ * self-describing products (note that you will then have to set the location of your CODA definition path using
+ * coda_set_definition_path() or via the CODA_DEFINITION environment variable before calling coda_init()).
  * As a user you can access all supported products in the same way no matter which format the product uses underneath.
  * This means that you can use the same functions for opening, traversing, reading,
- * and closing a product no matter whether you are accessing an ascii, binary, XML, HDF4, or HDF5 file.
+ * and closing a product no matter whether you are accessing an ascii, binary, XML, netCDF, HDF4, or HDF5 file.
  *
  * To open a product file you will have to use the coda_open() function. This function takes as only parameter the
  * filename of the product file. CODA will then open the file and automatically check what type of file it is.
@@ -84,8 +87,8 @@
  * uniquely defines the description that will be used to interpret a product file.
  *
  * If CODA can not determine the product class, type, or version of a structured ascii/binary file, the file will not
- * be opened and an error will be returned. For XML, HDF4, and HDF5 files CODA will open and interpret the data based
- * on the file contents.
+ * be opened and an error will be returned. For XML, netCDF, HDF4, and HDF5 files CODA will open and interpret the data
+ * based on the file contents.
  * If everything was successful, the coda_open() function will provide you a file handle (of type #coda_ProductFile)
  * that can be passed to a range of other functions to retrieve information like the product class, type and version,
  * or to read data from the file with the help of CODA cursors (see \link coda_cursor CODA Cursor\endlink).
@@ -94,9 +97,12 @@
  * Below is a simple example that opens a file called productfile.dat and closes it again.
  * \code
  * coda_ProductFile *pf;
- * coda_init();
- * pf = coda_open("productfile.dat");
- * if (pf == NULL)
+ * if (coda_init() != 0)
+ * {
+ *   fprintf(stderr, "Error: %s\n", coda_errno_to_string(coda_errno));
+ *   exit(1);
+ * }
+ * if (coda_open("productfile.dat", &pf) != 0)
  * {
  *   fprintf(stderr, "Error: %s\n", coda_errno_to_string(coda_errno));
  *   exit(1);
@@ -209,14 +215,16 @@ static int get_format_and_size(const char *filename, coda_format *format, int64_
     }
 
     /* (NASA) CDF */
-    if (*file_size >= 4 && memcmp(buffer, "\000\000\377\377", 4) == 0)
+    if (*file_size >= 8 && (memcmp(buffer, "\000\000\377\377\000\000\377\377", 8) == 0 ||       /* 0x0000FFFF 0x0000FFFF */
+                            memcmp(buffer, "\315\363\000\001\000\000\377\377", 8) == 0 ||       /* 0xCDF30001 0x0000FFFF */
+                            memcmp(buffer, "\315\363\000\001\314\314\000\001", 8) == 0))        /* 0xCDF30001 0xCCCC0001 */
     {
         *format = coda_format_cdf;
         return 0;
     }
 
-    /* NetCDF */
-    if (*file_size >= 4 && memcmp(buffer, "CDF\001", 4) == 0)
+    /* netCDF */
+    if (*file_size >= 4 && memcmp(buffer, "CDF", 3) == 0 && (buffer[3] == '\001' || buffer[3] == '\002'))
     {
         *format = coda_format_netcdf;
         return 0;
@@ -248,8 +256,8 @@ static int get_format_and_size(const char *filename, coda_format *format, int64_
 /** Determine the file size, format, product class, product type, and format version of a product file.
  * This function will perform an open and close on the product file and will try to automatically recognize
  * the product class, type, and version of the product file.
- * If the file is an HDF4 or HDF5 file the \a file_format will be set, but \a product_class and \a product_type will
- * be set to NULL and \a version will be set to -1.
+ * If the file is a netCDF, HDF4, or HDF5 file the \a file_format will be set, but \a product_class and \a product_type
+ * will be set to NULL and \a version will be set to -1.
  * For XML the \a product_class, \a product_type, and \a version will only be set if there is an external definition
  * available for the product (i.e. from one of the .codadef files in your CODA definition path).
  * Otherwise the values will be NULL/-1.
@@ -304,10 +312,10 @@ LIBCODA_API int coda_recognize_file(const char *filename, int64_t *file_size, co
                 return -1;
             }
             break;
-        case coda_format_hdf4:
-        case coda_format_hdf5:
-        case coda_format_cdf:
         case coda_format_netcdf:
+        case coda_format_hdf4:
+        case coda_format_cdf:
+        case coda_format_hdf5:
             break;
     }
 
@@ -381,9 +389,14 @@ LIBCODA_API int coda_open(const char *filename, coda_ProductFile **pf)
                 return -1;
             }
             break;
+        case coda_format_netcdf:
+            if (coda_netcdf_open(filename, file_size, &product_file) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_format_hdf4:
         case coda_format_cdf:
-        case coda_format_netcdf:
 #ifdef HAVE_HDF4
             if (coda_hdf4_open(filename, file_size, format, &product_file) != 0)
             {
@@ -487,9 +500,10 @@ LIBCODA_API int coda_close(coda_ProductFile *pf)
             return coda_bin_close(pf);
         case coda_format_xml:
             return coda_xml_close(pf);
+        case coda_format_netcdf:
+            return coda_netcdf_close(pf);
         case coda_format_hdf4:
         case coda_format_cdf:
-        case coda_format_netcdf:
 #ifdef HAVE_HDF4
             return coda_hdf4_close(pf);
 #else
@@ -560,7 +574,7 @@ LIBCODA_API int coda_get_product_file_size(const coda_ProductFile *pf, int64_t *
 }
 
 /** Get the basic file format of the product.
- * Possible formats are ascii, binary, xml, hdf4, and hdf5.
+ * Possible formats are ascii, binary, xml, netcdf, hdf4, cdf, and hdf5.
  * Mind that inside a product different typed data can exist. For instance, both xml and binary products can have
  * part of their content be ascii typed data.
  * \param pf Pointer to a product file handle. 

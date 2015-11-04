@@ -296,13 +296,13 @@ char *coda_short_identifier_from_name(const char *name, hashtable *hash_data, in
  * Fortran-style.
  *
  * In order for a user to fill a multidimensional array in Fortran-style with data from a multi-dimensional array
- * from an Envisat product using CODA (which uses C-style indexing), the user can use this function to provide the
- * index conversions. A small example showing how this would be done with a multi-dimensional array of doubles:
+ * from a product using CODA (which uses C-style indexing), the user can use this function to provide the index
+ * conversions. A small example showing how this would be done with a multi-dimensional array of doubles:
  * \code
- * coda_cursor_get_array_dim(cursor, &num_dim, dims);
  * coda_cursor_get_num_elements(cursor, &num_elements);
  * if (num_elements > 0)
  * {
+ *     coda_cursor_get_array_dim(cursor, &num_dim, dims);
  *     coda_cursor_goto_first_array_element(cursor);
  *     for (i = 0; i < num_elements; i++)
  *     {
@@ -352,6 +352,141 @@ LIBCODA_API long coda_c_index_to_fortran_index(int num_dims, const long dim[], l
     }
 
     return indexf;
+}
+
+int coda_array_transpose(void *array, int num_dims, const long dim[], int element_size)
+{
+    long num_elements;
+    long multiplier[CODA_MAX_NUM_DIMS + 1];
+    long rsub[CODA_MAX_NUM_DIMS + 1];   /* reversed index in multi dim array */
+    long rdim[CODA_MAX_NUM_DIMS + 1];   /* reversed order of dim[] */
+    long index = 0;
+    long i;
+    uint8_t *src;
+    uint8_t *dst;
+
+    if (num_dims <= 1)
+    {
+        /* nothing to do */
+        return 0;
+    }
+
+    src = (uint8_t *)array;
+
+    num_elements = 1;
+    for (i = 0; i < num_dims; i++)
+    {
+        num_elements *= dim[i];
+        rsub[i] = 0;
+        rdim[i] = dim[num_dims - 1 - i];
+    }
+    if (num_elements <= 1)
+    {
+        /* nothing to do */
+        return 0;
+    }
+
+    multiplier[num_dims] = 1;
+    rdim[num_dims] = 1;
+    for (i = num_dims; i > 0; i--)
+    {
+        multiplier[i - 1] = multiplier[i] * rdim[i];
+    }
+    rdim[num_dims] = 0;
+    rsub[num_dims] = 0;
+
+    dst = (uint8_t *)malloc(num_elements * element_size);
+    if (dst == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                       num_elements * element_size, __FILE__, __LINE__);
+        return -1;
+    }
+
+    switch (element_size)
+    {
+        case 1:
+            for (i = 0; i < num_elements; i++)
+            {
+                int j = 0;
+
+                dst[index] = src[i];
+                index += multiplier[j];
+                rsub[j]++;
+                while (rsub[j] == rdim[j])
+                {
+                    rsub[j] = 0;
+                    index -= multiplier[j] * rdim[j];
+                    j++;
+                    index += multiplier[j];
+                    rsub[j]++;
+                }
+            }
+            break;
+        case 2:
+            for (i = 0; i < num_elements; i++)
+            {
+                int j = 0;
+
+                ((uint16_t *)dst)[index] = ((uint16_t *)src)[i];
+                index += multiplier[j];
+                rsub[j]++;
+                while (rsub[j] == rdim[j])
+                {
+                    rsub[j] = 0;
+                    index -= multiplier[j] * rdim[j];
+                    j++;
+                    index += multiplier[j];
+                    rsub[j]++;
+                }
+            }
+            break;
+        case 4:
+            for (i = 0; i < num_elements; i++)
+            {
+                int j = 0;
+
+                ((uint32_t *)dst)[index] = ((uint32_t *)src)[i];
+                index += multiplier[j];
+                rsub[j]++;
+                while (rsub[j] == rdim[j])
+                {
+                    rsub[j] = 0;
+                    index -= multiplier[j] * rdim[j];
+                    j++;
+                    index += multiplier[j];
+                    rsub[j]++;
+                }
+            }
+            break;
+        case 8:
+            for (i = 0; i < num_elements; i++)
+            {
+                int j = 0;
+
+                ((uint64_t *)dst)[index] = ((uint64_t *)src)[i];
+                index += multiplier[j];
+                rsub[j]++;
+                while (rsub[j] == rdim[j])
+                {
+                    rsub[j] = 0;
+                    index -= multiplier[j] * rdim[j];
+                    j++;
+                    index += multiplier[j];
+                    rsub[j]++;
+                }
+            }
+            break;
+        default:
+            assert(0);
+            exit(1);
+    }
+
+    memcpy(array, dst, num_elements * element_size);
+
+    free(dst);
+
+    return 0;
 }
 
 static void clean_path(char *path)

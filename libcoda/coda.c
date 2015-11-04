@@ -27,6 +27,7 @@
 #include "coda-ascii.h"
 #include "coda-bin.h"
 #include "coda-xml.h"
+#include "coda-netcdf.h"
 #ifdef HAVE_HDF4
 #include "coda-hdf4.h"
 #endif
@@ -52,8 +53,8 @@
  * In order to let CODA know where your .codadef files are stored you will either have to set the CODA_DEFINITION
  * environment variable or call the coda_set_definition_path() function (before calling coda_init()).
  *
- * If no .codadef files are loaded, CODA will still be able to provide access to HDF4, HDF5, and XML products by taking
- * the format definition from the product files itself (for XML this will be a reduced form of access, since
+ * If no .codadef files are loaded, CODA will still be able to provide access to HDF4, HDF5, netCDF, and XML products
+ * by taking the format definition from the product files itself (for XML this will be a reduced form of access, since
  * 'leaf elements' can not be interpreted as e.g. integer/float/time but will only be accessible as string data).
  */
 
@@ -383,8 +384,14 @@ LIBCODA_API int coda_set_definition_path(const char *path)
 /** Initializes CODA.
  * This function should be called before any other CODA function is called (except for coda_set_definition_path()).
  *
+ * If you want to use CODA to access non self-describing products (i.e. where the definition is provided via a .codadef
+ * file), you will have the set the CODA definition path to the location of your .codadef files before you call
+ * coda_init(). This can be done either via coda_set_definition_path() or via the CODA_DEFINITION environment variable.
+ *
  * It is valid to perform multiple calls to coda_init() after each other. Only the first call to coda_init() will do
- * the actual initialization and all following calls to coda_init() will only increase an initialization counter.
+ * the actual initialization and all following calls to coda_init() will only increase an initialization counter (this
+ * also means that it is important that you set the CODA definition path before the first call to coda_init() is
+ * performed; changing the CODA definition path afterwards will have no effect).
  * Each call to coda_init() needs to be matched by a call to coda_done() at clean-up time (i.e. the amount of calls
  * to coda_done() needs to be equal to the amount of calls to coda_init()). Only the last coda_done() call (when
  * the initialization counter has reached 0) will do the actual clean-up of CODA.
@@ -464,6 +471,7 @@ LIBCODA_API void coda_done(void)
 #ifdef HAVE_HDF4
             coda_hdf4_done();
 #endif
+            coda_netcdf_done();
             coda_xml_done();
             coda_bin_done();
             coda_ascii_done();
@@ -488,9 +496,10 @@ int coda_get_type_for_dynamic_type(coda_DynamicType *dynamic_type, coda_Type **t
             return coda_bin_get_type_for_dynamic_type(dynamic_type, type);
         case coda_format_xml:
             return coda_xml_get_type_for_dynamic_type(dynamic_type, type);
+        case coda_format_netcdf:
+            return coda_netcdf_get_type_for_dynamic_type(dynamic_type, type);
         case coda_format_hdf4:
         case coda_format_cdf:
-        case coda_format_netcdf:
 #ifdef HAVE_HDF4
             return coda_hdf4_get_type_for_dynamic_type(dynamic_type, type);
 #else

@@ -1,3 +1,20 @@
+1.3.0 2009-07-17
+~~~~~~~~~~~~~~~~
+
+* Added built-in netCDF backend for accessing netCDF3 32-bit and 64-bit data
+  formats (reading of netCDF data is no longer performed via the HDF4 library).
+
+* scale_factor/add_offset conversion for HDF4 SDS data is now also applied
+  if the scale_factor and/or add_offset attributes are provided as FLOAT32
+  (and not only if they are provided as FLOAT64).
+
+* Fixed coda.string_to_time() return value mapping in Python interface.
+
+* Fixed issue with parsing of microsecond information from ascii EPS time
+  string values.
+
+* Fixed fetching of array of raw byte data in IDL interface.
+
 1.2.3 2009-06-10
 ~~~~~~~~~~~~~~~~
 

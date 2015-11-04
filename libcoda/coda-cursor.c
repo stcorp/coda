@@ -30,6 +30,7 @@
 #include "coda-ascii.h"
 #include "coda-bin.h"
 #include "coda-xml.h"
+#include "coda-netcdf.h"
 #ifdef HAVE_HDF4
 #include "coda-hdf4.h"
 #endif
@@ -48,7 +49,7 @@
  * i.e., pointing to the entire product, with a type that accurately describes the entire product.
  * From there you can navigate the cursor to the specific data element(s) you want to access.
  * Note that cursors are used for all products that can be opened with CODA. This includes files in ascii, binary, XML,
- * HDF4, or HDF5 format.
+ * netCDF, HDF4, or HDF5 format.
  *
  * You can initialize a cursor to point to the product root via the following function:
  *
@@ -166,9 +167,10 @@ LIBCODA_API int coda_cursor_set_product(coda_Cursor *cursor, coda_ProductFile *p
             return coda_ascbin_cursor_set_product(cursor, pf);
         case coda_format_xml:
             return coda_xml_cursor_set_product(cursor, pf);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_set_product(cursor, pf);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_set_product(cursor, pf);
 #else
@@ -241,9 +243,10 @@ LIBCODA_API int coda_cursor_goto_record_field_by_index(coda_Cursor *cursor, long
             return coda_ascbin_cursor_goto_record_field_by_index(cursor, index);
         case coda_format_xml:
             return coda_xml_cursor_goto_record_field_by_index(cursor, index);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_goto_record_field_by_index(cursor, index);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_goto_record_field_by_index(cursor, index);
 #else
@@ -345,9 +348,10 @@ LIBCODA_API int coda_cursor_goto_next_record_field(coda_Cursor *cursor)
             return coda_ascbin_cursor_goto_next_record_field(cursor);
         case coda_format_xml:
             return coda_xml_cursor_goto_next_record_field(cursor);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_goto_next_record_field(cursor);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_goto_next_record_field(cursor);
 #else
@@ -399,10 +403,10 @@ LIBCODA_API int coda_cursor_goto_available_union_field(coda_Cursor *cursor)
             return coda_ascbin_cursor_goto_available_union_field(cursor);
         case coda_format_xml:
             return coda_xml_cursor_goto_available_union_field(cursor);
+        case coda_format_netcdf:
+        case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:
-        case coda_format_cdf:
-        case coda_format_netcdf:
             coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to a union");
             return -1;
     }
@@ -468,9 +472,10 @@ LIBCODA_API int coda_cursor_goto_array_element(coda_Cursor *cursor, int num_subs
             return coda_ascbin_cursor_goto_array_element(cursor, num_subs, subs);
         case coda_format_xml:
             return coda_xml_cursor_goto_array_element(cursor, num_subs, subs);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_goto_array_element(cursor, num_subs, subs);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_goto_array_element(cursor, num_subs, subs);
 #else
@@ -538,9 +543,10 @@ LIBCODA_API int coda_cursor_goto_array_element_by_index(coda_Cursor *cursor, lon
             return coda_ascbin_cursor_goto_array_element_by_index(cursor, index);
         case coda_format_xml:
             return coda_xml_cursor_goto_array_element_by_index(cursor, index);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_goto_array_element_by_index(cursor, index);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_goto_array_element_by_index(cursor, index);
 #else
@@ -620,9 +626,10 @@ LIBCODA_API int coda_cursor_goto_next_array_element(coda_Cursor *cursor)
             return coda_ascbin_cursor_goto_next_array_element(cursor);
         case coda_format_xml:
             return coda_xml_cursor_goto_next_array_element(cursor);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_goto_next_array_element(cursor);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_goto_next_array_element(cursor);
 #else
@@ -646,9 +653,9 @@ LIBCODA_API int coda_cursor_goto_next_array_element(coda_Cursor *cursor)
  * This function will move the cursor to a record containing all attributes of the data element that the cursor was
  * previously pointing to.
  * If there are no attributes available the cursor will point to an empty record (i.e. a record with 0 fields).
- * It only makes sense to retrieve attributes when the HDF4, HDF5 or XML backend is used. Ascii and binary files will
- * always return an empty record. You can use the CODA Type functions to retrieve the fixed attributes (such as unit and
- * description) for files that are stored in a structured ascii or binary format.
+ * It only makes sense to retrieve attributes when the HDF4, HDF5, netCDF or XML backend is used. Ascii and binary
+ * files will always return an empty record. You can use the CODA Type functions to retrieve the fixed attributes
+ * (such as unit and description) for files that are stored in a structured ascii or binary format.
  * \param cursor Pointer to a CODA cursor.
  * \return
  *   \arg \c 0, Success.
@@ -676,9 +683,10 @@ LIBCODA_API int coda_cursor_goto_attributes(coda_Cursor *cursor)
             return coda_ascbin_cursor_goto_attributes(cursor);
         case coda_format_xml:
             return coda_xml_cursor_goto_attributes(cursor);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_goto_attributes(cursor);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_goto_attributes(cursor);
 #else
@@ -785,10 +793,10 @@ LIBCODA_API int coda_cursor_use_base_type_of_special_type(coda_Cursor *cursor)
             return coda_bin_cursor_use_base_type_of_special_type(cursor);
         case coda_format_xml:
             return coda_xml_cursor_use_base_type_of_special_type(cursor);
+        case coda_format_netcdf:
+        case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:
-        case coda_format_cdf:
-        case coda_format_netcdf:
             break;
     }
 
@@ -879,9 +887,10 @@ LIBCODA_API int coda_cursor_get_string_length(const coda_Cursor *cursor, long *l
             exit(1);
         case coda_format_xml:
             return coda_xml_cursor_get_string_length(cursor, length);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_get_string_length(cursor, length);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_get_string_length(cursor, length);
 #else
@@ -907,7 +916,7 @@ LIBCODA_API int coda_cursor_get_string_length(const coda_Cursor *cursor, long *l
  * file. This means that e.g. ascii floats and ascii integers will return 8 times the byte size of the ascii
  * representation, records and arrays return the sum of the bit sizes of their fields/array-elements.
  * For XML data you will be able to retrieve bit sizes for all data except arrays and attribute records.
- * You will not be able to retrieve bit/byte sizes for data in HDF4 or HDF5 format.
+ * You will not be able to retrieve bit/byte sizes for data in netCDF, HDF4 or HDF5 format.
  * If a bit size is not available \a bit_size will be set to -1.
  * \param cursor Pointer to a valid CODA cursor.
  * \param bit_size Pointer to the variable where the bit size will be stored.
@@ -931,10 +940,10 @@ LIBCODA_API int coda_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit
             return coda_bin_cursor_get_bit_size(cursor, bit_size);
         case coda_format_xml:
             return coda_xml_cursor_get_bit_size(cursor, bit_size);
+        case coda_format_netcdf:
+        case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:
-        case coda_format_cdf:
-        case coda_format_netcdf:
             *bit_size = -1;
             break;
     }
@@ -1004,9 +1013,10 @@ LIBCODA_API int coda_cursor_get_num_elements(const coda_Cursor *cursor, long *nu
             return coda_bin_cursor_get_num_elements(cursor, num_elements);
         case coda_format_xml:
             return coda_xml_cursor_get_num_elements(cursor, num_elements);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_get_num_elements(cursor, num_elements);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_get_num_elements(cursor, num_elements);
 #else
@@ -1105,7 +1115,7 @@ LIBCODA_API int coda_cursor_get_index(const coda_Cursor *cursor, long *index)
 }
 
 /** Retrieve the file offset in bits of the data element that the cursor points to.
- * You will not be able to retrieve bit/byte offsets for data in HDF4 or HDF5 format.
+ * You will not be able to retrieve bit/byte offsets for data in netCDF, HDF4, or HDF5 format.
  * For data in XML format you will not be able to retrieve bit/byte offsets for arrays or attribute records.
  * \param cursor Pointer to a CODA cursor.
  * \param bit_offset Pointer to the variable where the file offset in bits will be stored.
@@ -1134,10 +1144,10 @@ int coda_cursor_get_file_bit_offset(const coda_Cursor *cursor, int64_t *bit_offs
         case coda_format_xml:
             *bit_offset = cursor->stack[cursor->n - 1].bit_offset;
             break;
+        case coda_format_netcdf:
+        case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:
-        case coda_format_cdf:
-        case coda_format_netcdf:
             *bit_offset = -1;
             break;
     }
@@ -1182,10 +1192,10 @@ int coda_cursor_get_file_byte_offset(const coda_Cursor *cursor, int64_t *byte_of
                 *byte_offset = (cursor->stack[cursor->n - 1].bit_offset >> 3);
             }
             break;
+        case coda_format_netcdf:
+        case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:
-        case coda_format_cdf:
-        case coda_format_netcdf:
             *byte_offset = -1;
             return -1;
     }
@@ -1398,10 +1408,10 @@ LIBCODA_API int coda_cursor_get_record_field_available_status(const coda_Cursor 
             return coda_ascbin_cursor_get_record_field_available_status(cursor, index, available);
         case coda_format_xml:
             return coda_xml_cursor_get_record_field_available_status(cursor, index, available);
+        case coda_format_netcdf:
+        case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:
-        case coda_format_cdf:
-        case coda_format_netcdf:
             /* fields are always available in HDF */
             *available = 1;
             break;
@@ -1446,10 +1456,10 @@ LIBCODA_API int coda_cursor_get_available_union_field_index(const coda_Cursor *c
             return coda_ascbin_cursor_get_available_union_field_index(cursor, index);
         case coda_format_xml:
             return coda_xml_cursor_get_available_union_field_index(cursor, index);
+        case coda_format_netcdf:
+        case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:
-        case coda_format_cdf:
-        case coda_format_netcdf:
             break;
     }
 
@@ -1498,9 +1508,10 @@ LIBCODA_API int coda_cursor_get_array_dim(const coda_Cursor *cursor, int *num_di
             return coda_ascbin_cursor_get_array_dim(cursor, num_dims, dim);
         case coda_format_xml:
             return coda_xml_cursor_get_array_dim(cursor, num_dims, dim);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_get_array_dim(cursor, num_dims, dim);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_get_array_dim(cursor, num_dims, dim);
 #else
@@ -1552,9 +1563,10 @@ LIBCODA_API int coda_cursor_read_int8(const coda_Cursor *cursor, int8_t *dst)
             return coda_bin_cursor_read_int8(cursor, dst);
         case coda_format_xml:
             return coda_xml_cursor_read_int8(cursor, dst);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_read_int8(cursor, dst);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_int8(cursor, dst);
 #else
@@ -1606,9 +1618,10 @@ LIBCODA_API int coda_cursor_read_uint8(const coda_Cursor *cursor, uint8_t *dst)
             return coda_bin_cursor_read_uint8(cursor, dst);
         case coda_format_xml:
             return coda_xml_cursor_read_uint8(cursor, dst);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_read_uint8(cursor, dst);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_uint8(cursor, dst);
 #else
@@ -1662,9 +1675,10 @@ LIBCODA_API int coda_cursor_read_int16(const coda_Cursor *cursor, int16_t *dst)
             return coda_bin_cursor_read_int16(cursor, dst);
         case coda_format_xml:
             return coda_xml_cursor_read_int16(cursor, dst);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_read_int16(cursor, dst);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_int16(cursor, dst);
 #else
@@ -1717,9 +1731,10 @@ LIBCODA_API int coda_cursor_read_uint16(const coda_Cursor *cursor, uint16_t *dst
             return coda_bin_cursor_read_uint16(cursor, dst);
         case coda_format_xml:
             return coda_xml_cursor_read_uint16(cursor, dst);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_read_uint16(cursor, dst);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_uint16(cursor, dst);
 #else
@@ -1775,9 +1790,10 @@ LIBCODA_API int coda_cursor_read_int32(const coda_Cursor *cursor, int32_t *dst)
             return coda_bin_cursor_read_int32(cursor, dst);
         case coda_format_xml:
             return coda_xml_cursor_read_int32(cursor, dst);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_read_int32(cursor, dst);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_int32(cursor, dst);
 #else
@@ -1831,9 +1847,10 @@ LIBCODA_API int coda_cursor_read_uint32(const coda_Cursor *cursor, uint32_t *dst
             return coda_bin_cursor_read_uint32(cursor, dst);
         case coda_format_xml:
             return coda_xml_cursor_read_uint32(cursor, dst);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_read_uint32(cursor, dst);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_uint32(cursor, dst);
 #else
@@ -1891,9 +1908,10 @@ LIBCODA_API int coda_cursor_read_int64(const coda_Cursor *cursor, int64_t *dst)
             return coda_bin_cursor_read_int64(cursor, dst);
         case coda_format_xml:
             return coda_xml_cursor_read_int64(cursor, dst);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_read_int64(cursor, dst);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_int64(cursor, dst);
 #else
@@ -1948,9 +1966,10 @@ LIBCODA_API int coda_cursor_read_uint64(const coda_Cursor *cursor, uint64_t *dst
             return coda_bin_cursor_read_uint64(cursor, dst);
         case coda_format_xml:
             return coda_xml_cursor_read_uint64(cursor, dst);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_read_uint64(cursor, dst);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_uint64(cursor, dst);
 #else
@@ -2011,9 +2030,10 @@ LIBCODA_API int coda_cursor_read_float(const coda_Cursor *cursor, float *dst)
             return coda_bin_cursor_read_float(cursor, dst);
         case coda_format_xml:
             return coda_xml_cursor_read_float(cursor, dst);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_read_float(cursor, dst);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_float(cursor, dst);
 #else
@@ -2074,9 +2094,10 @@ LIBCODA_API int coda_cursor_read_double(const coda_Cursor *cursor, double *dst)
             return coda_bin_cursor_read_double(cursor, dst);
         case coda_format_xml:
             return coda_xml_cursor_read_double(cursor, dst);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_read_double(cursor, dst);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_double(cursor, dst);
 #else
@@ -2127,9 +2148,10 @@ LIBCODA_API int coda_cursor_read_char(const coda_Cursor *cursor, char *dst)
             return -1;
         case coda_format_xml:
             return coda_xml_cursor_read_char(cursor, dst);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_read_char(cursor, dst);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_char(cursor, dst);
 #else
@@ -2210,9 +2232,10 @@ LIBCODA_API int coda_cursor_read_string(const coda_Cursor *cursor, char *dst, lo
             exit(1);
         case coda_format_xml:
             return coda_xml_cursor_read_string(cursor, dst, dst_size);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_read_string(cursor, dst, dst_size);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_string(cursor, dst, dst_size);
 #else
@@ -2267,10 +2290,10 @@ LIBCODA_API int coda_cursor_read_bits(const coda_Cursor *cursor, uint8_t *dst, i
         case coda_format_binary:
             return coda_bin_cursor_read_bits(cursor, dst, bit_offset, bit_length);
         case coda_format_xml:
+        case coda_format_netcdf:
+        case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:
-        case coda_format_cdf:
-        case coda_format_netcdf:
             break;
     }
 
@@ -2317,10 +2340,10 @@ LIBCODA_API int coda_cursor_read_bytes(const coda_Cursor *cursor, uint8_t *dst, 
             return coda_bin_cursor_read_bytes(cursor, dst, offset, length);
         case coda_format_xml:
             return coda_xml_cursor_read_bytes(cursor, dst, offset, length);
+        case coda_format_netcdf:
+        case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:
-        case coda_format_cdf:
-        case coda_format_netcdf:
             break;
     }
 
@@ -2369,9 +2392,10 @@ LIBCODA_API int coda_cursor_read_int8_array(const coda_Cursor *cursor, int8_t *d
             return coda_bin_cursor_read_int8_array(cursor, dst, array_ordering);
         case coda_format_xml:
             return coda_xml_cursor_read_int8_array(cursor, dst, array_ordering);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_read_int8_array(cursor, dst, array_ordering);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_int8_array(cursor, dst, array_ordering);
 #else
@@ -2433,9 +2457,10 @@ LIBCODA_API int coda_cursor_read_uint8_array(const coda_Cursor *cursor, uint8_t 
             return coda_bin_cursor_read_uint8_array(cursor, dst, array_ordering);
         case coda_format_xml:
             return coda_xml_cursor_read_uint8_array(cursor, dst, array_ordering);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_read_uint8_array(cursor, dst, array_ordering);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_uint8_array(cursor, dst, array_ordering);
 #else
@@ -2499,9 +2524,10 @@ LIBCODA_API int coda_cursor_read_int16_array(const coda_Cursor *cursor, int16_t 
             return coda_bin_cursor_read_int16_array(cursor, dst, array_ordering);
         case coda_format_xml:
             return coda_xml_cursor_read_int16_array(cursor, dst, array_ordering);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_read_int16_array(cursor, dst, array_ordering);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_int16_array(cursor, dst, array_ordering);
 #else
@@ -2564,9 +2590,10 @@ LIBCODA_API int coda_cursor_read_uint16_array(const coda_Cursor *cursor, uint16_
             return coda_bin_cursor_read_uint16_array(cursor, dst, array_ordering);
         case coda_format_xml:
             return coda_xml_cursor_read_uint16_array(cursor, dst, array_ordering);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_read_uint16_array(cursor, dst, array_ordering);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_uint16_array(cursor, dst, array_ordering);
 #else
@@ -2632,9 +2659,10 @@ LIBCODA_API int coda_cursor_read_int32_array(const coda_Cursor *cursor, int32_t 
             return coda_bin_cursor_read_int32_array(cursor, dst, array_ordering);
         case coda_format_xml:
             return coda_xml_cursor_read_int32_array(cursor, dst, array_ordering);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_read_int32_array(cursor, dst, array_ordering);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_int32_array(cursor, dst, array_ordering);
 #else
@@ -2698,9 +2726,10 @@ LIBCODA_API int coda_cursor_read_uint32_array(const coda_Cursor *cursor, uint32_
             return coda_bin_cursor_read_uint32_array(cursor, dst, array_ordering);
         case coda_format_xml:
             return coda_xml_cursor_read_uint32_array(cursor, dst, array_ordering);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_read_uint32_array(cursor, dst, array_ordering);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_uint32_array(cursor, dst, array_ordering);
 #else
@@ -2768,9 +2797,10 @@ LIBCODA_API int coda_cursor_read_int64_array(const coda_Cursor *cursor, int64_t 
             return coda_bin_cursor_read_int64_array(cursor, dst, array_ordering);
         case coda_format_xml:
             return coda_xml_cursor_read_int64_array(cursor, dst, array_ordering);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_read_int64_array(cursor, dst, array_ordering);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_int64_array(cursor, dst, array_ordering);
 #else
@@ -2835,9 +2865,10 @@ LIBCODA_API int coda_cursor_read_uint64_array(const coda_Cursor *cursor, uint64_
             return coda_bin_cursor_read_uint64_array(cursor, dst, array_ordering);
         case coda_format_xml:
             return coda_xml_cursor_read_uint64_array(cursor, dst, array_ordering);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_read_uint64_array(cursor, dst, array_ordering);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_uint64_array(cursor, dst, array_ordering);
 #else
@@ -2907,9 +2938,10 @@ LIBCODA_API int coda_cursor_read_float_array(const coda_Cursor *cursor, float *d
             return coda_bin_cursor_read_float_array(cursor, dst, array_ordering);
         case coda_format_xml:
             return coda_xml_cursor_read_float_array(cursor, dst, array_ordering);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_read_float_array(cursor, dst, array_ordering);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_float_array(cursor, dst, array_ordering);
 #else
@@ -2980,9 +3012,10 @@ LIBCODA_API int coda_cursor_read_double_array(const coda_Cursor *cursor, double 
             return coda_bin_cursor_read_double_array(cursor, dst, array_ordering);
         case coda_format_xml:
             return coda_xml_cursor_read_double_array(cursor, dst, array_ordering);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_read_double_array(cursor, dst, array_ordering);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_double_array(cursor, dst, array_ordering);
 #else
@@ -3042,9 +3075,10 @@ LIBCODA_API int coda_cursor_read_char_array(const coda_Cursor *cursor, char *dst
             return -1;
         case coda_format_xml:
             return coda_xml_cursor_read_char_array(cursor, dst, array_ordering);
-        case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_netcdf:
+            return coda_netcdf_cursor_read_char_array(cursor, dst, array_ordering);
+        case coda_format_cdf:
+        case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_char_array(cursor, dst, array_ordering);
 #else
@@ -3094,10 +3128,10 @@ LIBCODA_API int coda_cursor_read_complex_double_pair(const coda_Cursor *cursor, 
         case coda_format_binary:
             return coda_bin_cursor_read_double_pair(cursor, dst);
         case coda_format_xml:
+        case coda_format_netcdf:
+        case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:
-        case coda_format_cdf:
-        case coda_format_netcdf:
             break;
     }
 
@@ -3146,10 +3180,10 @@ LIBCODA_API int coda_cursor_read_complex_double_pairs_array(const coda_Cursor *c
         case coda_format_binary:
             return coda_bin_cursor_read_double_pairs_array(cursor, dst, array_ordering);
         case coda_format_xml:
+        case coda_format_netcdf:
+        case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:
-        case coda_format_cdf:
-        case coda_format_netcdf:
             break;
     }
 
@@ -3228,10 +3262,10 @@ LIBCODA_API int coda_cursor_read_complex_double_split_array(const coda_Cursor *c
         case coda_format_binary:
             return coda_bin_cursor_read_double_split_array(cursor, dst_re, dst_im, array_ordering);
         case coda_format_xml:
+        case coda_format_netcdf:
+        case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:
-        case coda_format_cdf:
-        case coda_format_netcdf:
             break;
     }
 

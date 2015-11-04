@@ -668,29 +668,29 @@ static int idl_coda_fetch_datahandle_array_filldata(struct IDL_CodaDataHandle *d
                 switch (read_type)
                 {
                     case coda_native_type_int8:
-                        if (coda_cursor_read_int16_array
-                            (&datahandle->cursor, (int16_t *)fill, coda_array_ordering_fortran) != 0)
+                        if (coda_cursor_read_int16_array(&datahandle->cursor, (int16_t *)fill,
+                                                         coda_array_ordering_fortran) != 0)
                         {
                             return -1;
                         }
                         break;
                     case coda_native_type_uint8:
-                        if (coda_cursor_read_uint8_array
-                            (&datahandle->cursor, (uint8_t *)fill, coda_array_ordering_fortran) != 0)
+                        if (coda_cursor_read_uint8_array(&datahandle->cursor, (uint8_t *)fill,
+                                                         coda_array_ordering_fortran) != 0)
                         {
                             return -1;
                         }
                         break;
                     case coda_native_type_int16:
-                        if (coda_cursor_read_int16_array
-                            (&datahandle->cursor, (int16_t *)fill, coda_array_ordering_fortran) != 0)
+                        if (coda_cursor_read_int16_array(&datahandle->cursor, (int16_t *)fill,
+                                                         coda_array_ordering_fortran) != 0)
                         {
                             return -1;
                         }
                         break;
                     case coda_native_type_uint16:
-                        if (coda_cursor_read_uint16_array
-                            (&datahandle->cursor, (uint16_t *)fill, coda_array_ordering_fortran) != 0)
+                        if (coda_cursor_read_uint16_array(&datahandle->cursor, (uint16_t *)fill,
+                                                          coda_array_ordering_fortran) != 0)
                         {
                             return -1;
                         }
@@ -710,29 +710,29 @@ static int idl_coda_fetch_datahandle_array_filldata(struct IDL_CodaDataHandle *d
                         }
                         break;
                     case coda_native_type_int64:
-                        if (coda_cursor_read_int64_array
-                            (&datahandle->cursor, (int64_t *)fill, coda_array_ordering_fortran) != 0)
+                        if (coda_cursor_read_int64_array(&datahandle->cursor, (int64_t *)fill,
+                                                         coda_array_ordering_fortran) != 0)
                         {
                             return -1;
                         }
                         break;
                     case coda_native_type_uint64:
-                        if (coda_cursor_read_uint64_array
-                            (&datahandle->cursor, (uint64_t *)fill, coda_array_ordering_fortran) != 0)
+                        if (coda_cursor_read_uint64_array(&datahandle->cursor, (uint64_t *)fill,
+                                                          coda_array_ordering_fortran) != 0)
                         {
                             return -1;
                         }
                         break;
                     case coda_native_type_float:
-                        if (coda_cursor_read_float_array
-                            (&datahandle->cursor, (float *)fill, coda_array_ordering_fortran) != 0)
+                        if (coda_cursor_read_float_array(&datahandle->cursor, (float *)fill,
+                                                         coda_array_ordering_fortran) != 0)
                         {
                             return -1;
                         }
                         break;
                     case coda_native_type_double:
-                        if (coda_cursor_read_double_array
-                            (&datahandle->cursor, (double *)fill, coda_array_ordering_fortran) != 0)
+                        if (coda_cursor_read_double_array(&datahandle->cursor, (double *)fill,
+                                                          coda_array_ordering_fortran) != 0)
                         {
                             return -1;
                         }
@@ -1781,7 +1781,33 @@ static int idl_coda_fetch_datahandle_to_VPTR(struct IDL_CodaDataHandle *datahand
         case coda_record_class:
             return idl_coda_fetch_datahandle_record_to_VPTR(datahandle, retval);
         case coda_raw_class:
+            {
+                int64_t size;
 
+                if (coda_cursor_get_byte_size(&datahandle->cursor, &size) != 0)
+                {
+                    return -1;
+                }
+
+                /* handle the zero-element case */
+                if (size == 0)
+                {
+                    *retval = mk_coda_no_data();
+                }
+                else
+                {
+                    IDL_MEMINT dims;
+                    char *fill;
+
+                    dims = size;
+                    fill = IDL_MakeTempArray(IDL_TYP_BYTE, 1, &dims, FALSE, retval);
+                    if (coda_cursor_read_bytes(&datahandle->cursor, (uint8_t *)fill, 0, dims) != 0)
+                    {
+                        return -1;
+                    }
+                }
+            }
+            break;
         case coda_integer_class:
         case coda_real_class:
         case coda_text_class:

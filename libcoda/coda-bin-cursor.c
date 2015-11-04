@@ -1447,7 +1447,7 @@ static int read_time(const coda_Cursor *cursor, double *dst)
     exit(1);
 }
 
-static int read_array(const coda_Cursor *cursor, read_function read_basic_type, uint8_t *dst,
+static int read_array(const coda_Cursor *cursor, read_function read_basic_type_function, uint8_t *dst,
                       int basic_type_size, coda_array_ordering array_ordering)
 {
     coda_Cursor array_cursor;
@@ -1480,7 +1480,7 @@ static int read_array(const coda_Cursor *cursor, read_function read_basic_type, 
             }
             for (i = 0; i < num_elements; i++)
             {
-                if ((*read_basic_type)(&array_cursor, &dst[i * basic_type_size]) != 0)
+                if ((*read_basic_type_function)(&array_cursor, &dst[i * basic_type_size]) != 0)
                 {
                     return -1;
                 }
@@ -1524,7 +1524,7 @@ static int read_array(const coda_Cursor *cursor, read_function read_basic_type, 
             {
                 do
                 {
-                    if ((*read_basic_type)(&array_cursor, &dst[fortran_index * basic_type_size]) != 0)
+                    if ((*read_basic_type_function)(&array_cursor, &dst[fortran_index * basic_type_size]) != 0)
                     {
                         return -1;
                     }
@@ -1558,7 +1558,7 @@ static int read_array(const coda_Cursor *cursor, read_function read_basic_type, 
     return 0;
 }
 
-static int read_split_array(const coda_Cursor *cursor, read_function read_basic_type, uint8_t *dst_1,
+static int read_split_array(const coda_Cursor *cursor, read_function read_basic_type_function, uint8_t *dst_1,
                             uint8_t *dst_2, int basic_type_size, coda_array_ordering array_ordering)
 {
     coda_Cursor array_cursor;
@@ -1592,7 +1592,7 @@ static int read_split_array(const coda_Cursor *cursor, read_function read_basic_
             }
             for (i = 0; i < num_elements; i++)
             {
-                (*read_basic_type)(&array_cursor, buffer);
+                (*read_basic_type_function)(&array_cursor, buffer);
                 memcpy(&dst_1[i * basic_type_size], &buffer[0], basic_type_size);
                 memcpy(&dst_2[i * basic_type_size], &buffer[basic_type_size], basic_type_size);
                 if (i < num_elements - 1)
@@ -1635,7 +1635,7 @@ static int read_split_array(const coda_Cursor *cursor, read_function read_basic_
             {
                 do
                 {
-                    (*read_basic_type)(&array_cursor, buffer);
+                    (*read_basic_type_function)(&array_cursor, buffer);
                     memcpy(&dst_1[fortran_index * basic_type_size], &buffer[0], basic_type_size);
                     memcpy(&dst_2[fortran_index * basic_type_size], &buffer[basic_type_size], basic_type_size);
                     c_index++;

@@ -74,6 +74,7 @@ class Cursor(_object):
 Cursor_swigregister = _codac.Cursor_swigregister
 Cursor_swigregister(Cursor)
 
+string_to_time = _codac.string_to_time
 cursor_read_int8_array = _codac.cursor_read_int8_array
 cursor_read_uint8_array = _codac.cursor_read_uint8_array
 cursor_read_int16_array = _codac.cursor_read_int16_array
@@ -161,7 +162,6 @@ set_option_use_mmap = _codac.set_option_use_mmap
 datetime_to_double = _codac.datetime_to_double
 double_to_datetime = _codac.double_to_datetime
 coda_time_to_string = _codac.coda_time_to_string
-string_to_time = _codac.string_to_time
 recognize_file = _codac.recognize_file
 open = _codac.open
 close = _codac.close
