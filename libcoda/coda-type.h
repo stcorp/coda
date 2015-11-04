@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2012 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2013 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -323,6 +323,7 @@ int coda_type_vsf_integer_validate(coda_type_special *type);
 coda_type_special *coda_type_time_new(coda_format format, coda_expression *value_expr);
 int coda_type_time_add_ascii_float_mapping(coda_type_special *type, coda_ascii_float_mapping *mapping);
 int coda_type_time_set_base_type(coda_type_special *type, coda_type *base_type);
+int coda_type_time_validate(coda_type_special *type);
 
 coda_type_special *coda_type_complex_new(coda_format format);
 int coda_type_complex_set_type(coda_type_special *type, coda_type *element_type);

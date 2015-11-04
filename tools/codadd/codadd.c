@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2012 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2013 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -49,7 +49,7 @@ void generate_detection_tree(coda_format format);
 static void print_version()
 {
     printf("codadd %s\n", libcoda_version);
-    printf("Copyright (C) 2007-2012 S[&]T, The Netherlands.\n");
+    printf("Copyright (C) 2007-2013 S[&]T, The Netherlands.\n");
     printf("\n");
 }
 

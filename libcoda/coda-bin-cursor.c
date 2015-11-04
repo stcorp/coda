@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2012 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2013 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -939,42 +939,6 @@ int coda_bin_cursor_read_bytes(const coda_cursor *cursor, uint8_t *dst, int64_t 
         return coda_bin_cursor_read_bits(cursor, dst, 8 * offset, 8 * length);
     }
     return read_bytes(cursor->product, (cursor->stack[cursor->n - 1].bit_offset >> 3) + offset, length, dst);
-}
-
-int coda_bin_cursor_read_double_pair(const coda_cursor *cursor, double *dst)
-{
-    coda_cursor pair_cursor;
-
-    if (((coda_type *)cursor->stack[cursor->n - 1].type)->type_class != coda_special_class ||
-        ((coda_type_special *)cursor->stack[cursor->n - 1].type)->special_type != coda_special_complex)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a paired double data type");
-        return -1;
-    }
-
-    pair_cursor = *cursor;
-    if (coda_cursor_use_base_type_of_special_type(&pair_cursor) != 0)
-    {
-        return -1;
-    }
-    if (coda_cursor_goto_record_field_by_index(&pair_cursor, 0) != 0)
-    {
-        return -1;
-    }
-    if (coda_cursor_read_double(&pair_cursor, &dst[0]) != 0)
-    {
-        return -1;
-    }
-    if (coda_cursor_goto_next_record_field(&pair_cursor) != 0)
-    {
-        return -1;
-    }
-    if (coda_cursor_read_double(&pair_cursor, &dst[1]) != 0)
-    {
-        return -1;
-    }
-
-    return 0;
 }
 
 /** @} */

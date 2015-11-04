@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2012 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2013 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -324,15 +324,34 @@ int coda_mem_cursor_read_bits(const coda_cursor *cursor, uint8_t *dst, int64_t b
 
 int coda_mem_cursor_read_bytes(const coda_cursor *cursor, uint8_t *dst, int64_t offset, int64_t length)
 {
-    coda_mem_raw *type = (coda_mem_raw *)cursor->stack[cursor->n - 1].type;
+    coda_mem_type *type = (coda_mem_type *)cursor->stack[cursor->n - 1].type;
 
-    if (offset + length > type->length)
+    switch (type->definition->type_class)
     {
-        coda_set_error(CODA_ERROR_OUT_OF_BOUNDS_READ, "trying to read beyond the size of the raw type");
-        return -1;
+        case coda_special_class:
+            if (((coda_type_special *)type->definition)->special_type == coda_special_no_data)
+            {
+                coda_set_error(CODA_ERROR_OUT_OF_BOUNDS_READ, "trying to read beyond the size of the raw type");
+                return -1;
+            }
+            break;
+        case coda_raw_class:
+            {
+                coda_mem_raw *raw_type = (coda_mem_raw *)type;
+
+                if (offset + length > raw_type->length)
+                {
+                    coda_set_error(CODA_ERROR_OUT_OF_BOUNDS_READ, "trying to read beyond the size of the raw type");
+                    return -1;
+                }
+                memcpy(dst, &raw_type->data[offset], (size_t)length);
+            }
+            return 0;
+        default:
+            break;
     }
-    memcpy(dst, &type->data[offset], (size_t)length);
-    return 0;
+    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a raw bytes data type");
+    return -1;
 }
 
 int coda_mem_cursor_read_int8_array(const coda_cursor *cursor, int8_t *dst)

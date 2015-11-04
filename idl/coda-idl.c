@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2012 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2013 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -311,6 +311,7 @@ static IDL_VPTR x_coda_open(int argc, IDL_VPTR *argv)
     }
 
     IDL_ENSURE_STRING(argv[0]);
+    IDL_ENSURE_SCALAR(argv[0]);
 
     /* find first free slot */
     for (product_index = 0; product_index < NUM_PF_SLOTS; product_index++)
@@ -366,6 +367,9 @@ static IDL_VPTR x_coda_open_as(int argc, IDL_VPTR *argv)
     IDL_ENSURE_STRING(argv[0]);
     IDL_ENSURE_STRING(argv[1]);
     IDL_ENSURE_STRING(argv[2]);
+    IDL_ENSURE_SCALAR(argv[0]);
+    IDL_ENSURE_SCALAR(argv[1]);
+    IDL_ENSURE_SCALAR(argv[2]);
 
     /* find first free slot */
     for (product_index = 0; product_index < NUM_PF_SLOTS; product_index++)
@@ -2825,6 +2829,7 @@ static IDL_VPTR x_coda_eval(int argc, IDL_VPTR *argv)
     }
 
     IDL_ENSURE_STRING(argv[0]);
+    IDL_ENSURE_SCALAR(argv[0]);
     exprstring = IDL_STRING_STR(&argv[0]->value.str);
     if (coda_expression_from_string(exprstring, &expr) != 0)
     {
@@ -3055,6 +3060,7 @@ static IDL_VPTR x_coda_getopt(int argc, IDL_VPTR *argv)
     }
 
     IDL_ENSURE_STRING(argv[0]);
+    IDL_ENSURE_SCALAR(argv[0]);
 
     name = IDL_STRING_STR(&argv[0]->value.str);
 
@@ -3120,6 +3126,7 @@ static IDL_VPTR x_coda_setopt(int argc, IDL_VPTR *argv)
     }
 
     IDL_ENSURE_STRING(argv[0]);
+    IDL_ENSURE_SCALAR(argv[0]);
 
     name = IDL_STRING_STR(&argv[0]->value.str);
     value = IDL_LongScalar(argv[1]);

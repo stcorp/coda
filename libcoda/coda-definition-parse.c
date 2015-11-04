@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2012 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2013 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -2550,6 +2550,11 @@ static int cd_time_add_mapping(parser_info *info)
     return 0;
 }
 
+static int cd_time_finalise(parser_info *info)
+{
+    return coda_type_time_validate((coda_type_special *)info->node->data);
+}
+
 static int cd_time_init(parser_info *info, const char **attr)
 {
     const char *timeformat;
@@ -2844,6 +2849,7 @@ static int cd_time_init(parser_info *info, const char **attr)
     register_type_elements(info->node, cd_time_set_type);
     register_sub_element(info->node, element_cd_description, string_data_init, type_set_description);
     register_sub_element(info->node, element_cd_mapping, cd_mapping_init, cd_time_add_mapping);
+    info->node->finalise_element = cd_time_finalise;
 
     return 0;
 }

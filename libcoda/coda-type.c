@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2012 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2013 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -1981,7 +1981,7 @@ int coda_type_text_validate(const coda_type_text *type)
         if (type->size_expr == NULL && type->bit_size < 0 &&
             (type->mappings == NULL || type->mappings->default_bit_size < 0))
         {
-            coda_set_error(CODA_ERROR_DATA_DEFINITION, "missing bit size or bit size expression for integer type");
+            coda_set_error(CODA_ERROR_DATA_DEFINITION, "missing bit size or bit size expression for text type");
             return -1;
         }
         if (type->bit_size >= 0 && type->bit_size % 8 != 0)
@@ -2400,12 +2400,21 @@ int coda_type_time_add_ascii_float_mapping(coda_type_special *type, coda_ascii_f
         return -1;
     }
 
-    /* wrap existing value_expr in if-construct: if(str(.,<length>)=="<str>",<value>,<value_expr>) */
     sprintf(strexpr, "%d", mapping->length);
     value_expr = coda_expression_new(expr_constant_integer, strdup(strexpr), NULL, NULL, NULL, NULL);
-    node_expr = coda_expression_new(expr_goto_here, NULL, NULL, NULL, NULL, NULL);
-    cond_expr = coda_expression_new(expr_string, NULL, node_expr, value_expr, NULL, NULL);
-    value_expr = coda_expression_new(expr_constant_string, mapping->str, NULL, NULL, NULL, NULL);
+    if (mapping->length == 0)
+    {
+        /* wrap existing value_expr in if-construct: if(length(.)==0,<value>,<value_expr>) */
+        node_expr = coda_expression_new(expr_goto_here, NULL, NULL, NULL, NULL, NULL);
+        cond_expr = coda_expression_new(expr_length, NULL, node_expr, NULL, NULL, NULL);
+    }
+    else
+    {
+        /* wrap existing value_expr in if-construct: if(str(.,<length>)=="<str>",<value>,<value_expr>) */
+        node_expr = coda_expression_new(expr_goto_here, NULL, NULL, NULL, NULL, NULL);
+        cond_expr = coda_expression_new(expr_string, NULL, node_expr, value_expr, NULL, NULL);
+        value_expr = coda_expression_new(expr_constant_string, mapping->str, NULL, NULL, NULL, NULL);
+    }
     cond_expr = coda_expression_new(expr_equal, NULL, cond_expr, value_expr, NULL, NULL);
     coda_strfl(mapping->value, strexpr);
     value_expr = coda_expression_new(expr_constant_float, strdup(strexpr), NULL, NULL, NULL, NULL);
@@ -2444,6 +2453,16 @@ int coda_type_time_set_base_type(coda_type_special *type, coda_type *base_type)
     /* update bit_size */
     type->bit_size = type->base_type->bit_size;
 
+    return 0;
+}
+
+int coda_type_time_validate(coda_type_special *type)
+{
+    if (type->base_type == NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "missing base type for time type");
+        return -1;
+    }
     return 0;
 }
 

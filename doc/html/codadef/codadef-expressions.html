@@ -599,7 +599,7 @@ inf
         <tr><td>HH</td><td>2-digit hour of day value [00..23]</td></tr>
         <tr><td>mm</td><td>2-digit minute of hour value [00..59]</td></tr>
         <tr><td>ss</td><td>2-digit second of minute value [00..60]<br />Note that a possible leap second value is supported in a string value, but it is not taken into account in a conversion (i.e. it is treated as '00' of the next minute) unless explicitly specified otherwise.</td></tr>
-        <tr><td>S<br />SS<br />SSS<br />SSSS<br />SSSSS<br />SSSSSS</td><td>1-digit to 6-digit fraction of a second.<br />A 3-digit fraction would represent milliseconds and a 6-digit fraction would represent microseconds.<br />Values will be printed truncated (i.e. 12.159 seconds with format ss.SS will be printed as 12.15)</td></tr>
+        <tr><td>S<br />SS<br />SSS<br />...<td>n-digit fraction of a second.<br />A 3-digit fraction would represent milliseconds and a 6-digit fraction would represent microseconds.<br />Values will be printed truncated (i.e. 12.159 seconds with format ss.SS will be printed as 12.15). Any digits beyond the 6th digit will be ignored when parsing (i.e. values will always be truncated at microsecond resolution).</td></tr>
       </table>
 
       <p>Several examples of formats and their string values for the date 4 December 2012 19:32:56.123456:</p>
@@ -826,7 +826,7 @@ node =
 
       <div class="footer">
         <hr />
-        <p>Copyright &copy; 2007-2012 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+        <p>Copyright &copy; 2007-2013 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
       </div>
 
     </div>

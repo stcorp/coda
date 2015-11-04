@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2012 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2013 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -992,14 +992,8 @@ static int string_to_datetime(const char *format, const char *str, int *year, in
             {
                 fi++;
                 n++;
-                if (n > 6)
-                {
-                    coda_set_error(CODA_ERROR_INVALID_FORMAT, "too many digits for fractional second in date/time "
-                                   "format (%s)", format);
-                    return -1;
-                }
             }
-            if (parse_integer(&str[si], n, musec) != 0)
+            if (parse_integer(&str[si], n > 6 ? 6 : n, musec) != 0)
             {
                 coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect fractional "
                                "second value (format: %s)", str, format);
@@ -1210,12 +1204,6 @@ int coda_time_to_string_with_format(const char *format, double datetime, char *s
             {
                 fi++;
                 n++;
-                if (n > 6)
-                {
-                    coda_set_error(CODA_ERROR_INVALID_FORMAT, "too many digits for fractional second in date/time "
-                                   "format (%s)", format);
-                    return -1;
-                }
             }
             for (i = n; i < 6; i++)
             {

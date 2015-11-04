@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2012 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2013 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -46,7 +46,6 @@ int coda_bin_cursor_read_char(const coda_cursor *cursor, char *dst);
 int coda_bin_cursor_read_string(const coda_cursor *cursor, char *dst, long dst_size);
 int coda_bin_cursor_read_bits(const coda_cursor *cursor, uint8_t *dst, int64_t bit_offset, int64_t bit_length);
 int coda_bin_cursor_read_bytes(const coda_cursor *cursor, uint8_t *dst, int64_t offset, int64_t length);
-int coda_bin_cursor_read_double_pair(const coda_cursor *cursor, double *dst);
 
 int coda_bin_cursor_read_int8_array(const coda_cursor *cursor, int8_t *dst, coda_array_ordering array_ordering);
 int coda_bin_cursor_read_uint8_array(const coda_cursor *cursor, uint8_t *dst, coda_array_ordering array_ordering);

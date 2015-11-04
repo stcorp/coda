@@ -149,3 +149,63 @@ span.comment       { color: #236e25; background-color: inherit; }
 span.preprocessor  { color: #806020; background-color: inherit; }
 span.stringliteral { color: #891315; background-color: inherit; }
 span.charliteral   { color: #0000FF; background-color: inherit; }
+
+div.directory {
+        margin: 10px 0px;
+        border-top: 1px solid #A8B8D9;
+        border-bottom: 1px solid #A8B8D9;
+        width: 100%;
+}
+.directory table {
+        border-collapse:collapse;
+}
+.directory td {
+        margin: 0px;
+        padding: 0px;
+	vertical-align: top;
+}
+.directory td.entry {
+        white-space: nowrap;
+        padding-right: 6px;
+}
+.directory td.entry a {
+        outline:none;
+}
+.directory td.entry a img {
+        border: none;
+}
+.directory td.desc {
+        width: 100%;
+        padding-left: 6px;
+	padding-right: 6px;
+	padding-top: 3px;
+	border-left: 1px solid rgba(0,0,0,0.05);
+}
+.directory tr.even {
+	padding-left: 6px;
+	background-color: #F7F8FB;
+}
+.directory img {
+	vertical-align: -30%;
+}
+.directory .levels {
+        white-space: nowrap;
+        width: 100%;
+        text-align: right;
+        font-size: 9pt;
+}
+.directory .levels span {
+        cursor: pointer;
+        padding-left: 2px;
+        padding-right: 2px;
+	color: #3D578C;
+}
+div.dynheader {
+        margin-top: 8px;
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}

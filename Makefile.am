@@ -794,7 +794,7 @@ libcoda_doc: coda.h libcoda/doc/Doxyfile
 	  cd libcoda/doc ; \
 	  $(DOXYGEN) Doxyfile ; \
 	  cd ../.. ; \
-	  rm -rf doc/html/libcoda/doxygen.* doc/html/libcoda/pages.html doc/html/libcoda/*.png doc/html/libcoda/*.gif doc/html/libcoda/*.js doc/html/libcoda/tabs.css ; \
+	  rm -rf doc/html/libcoda/doxygen.* doc/html/libcoda/tab* ; \
 	  echo "creating doclibcoda.mk" ; \
 	  $(MAKE) doclibcoda_include ; \
 	fi
@@ -824,7 +824,7 @@ libqiap_doc: libcoda/qiap/doc/Doxyfile
 	  cd libcoda/qiap/doc ; \
 	  $(DOXYGEN) Doxyfile ; \
 	  cd ../../.. ; \
-	  rm -rf doc/html/libqiap/doxygen.* doc/html/libqiap/pages.html doc/html/libqiap/*.png doc/html/libqiap/*.gif doc/html/libqiap/*.js doc/html/libqiap/tabs.css ; \
+	  rm -rf doc/html/libqiap/doxygen.* doc/html/libqiap/tab* ; \
 	  echo "creating doclibqiap.mk" ; \
 	  $(MAKE) doclibqiap_include ; \
 	fi
@@ -854,7 +854,7 @@ java_doc: $(java_files) java/doc/Doxyfile
 	  cd java/doc ; \
 	  $(DOXYGEN) Doxyfile ; \
 	  cd ../.. ; \
-	  rm -rf doc/html/java/doxygen.* doc/html/java/pages.html doc/html/java/*.png doc/html/java/*.gif doc/html/java/*.js doc/html/java/tabs.css ; \
+	  rm -rf doc/html/java/doxygen.* doc/html/java/tab* doc/html/java/dir_*.html ; \
 	  echo "creating docjava.mk" ; \
 	  $(MAKE) docjava_include ; \
 	fi

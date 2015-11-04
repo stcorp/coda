@@ -2,7 +2,7 @@
 #
 project(CODA)
 
-set(VERSION 2.8)
+set(VERSION 2.8.1)
 set(CODA_VERSION \"${VERSION}\")
 
 # General setup
@@ -721,7 +721,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/coda.h DESTINATION include)
 # Set dynamic library version
 #
 set(LIBCODA_CURRENT 10)
-set(LIBCODA_REVISION 0)
+set(LIBCODA_REVISION 1)
 set(LIBCODA_AGE 4)
 math(EXPR LIBCODA_MAJOR "${LIBCODA_CURRENT} - ${LIBCODA_AGE}")
 set(LIBCODA_MINOR ${LIBCODA_AGE})

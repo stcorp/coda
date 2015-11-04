@@ -1,3 +1,20 @@
+2.8.1 2013-03-07
+~~~~~~~~~~~~~~~~
+
+* Fixed issue where ascii time value format definitions with an ascii mapping
+  that maps the empty string to NaN, had this mapping applied for any value
+  (regression introduced in 2.8).
+
+* Fixed issue where trying to use coda_cursor_read_bytes/bits on a 'no data'
+  special type element could cause a segmentation fault.
+
+* Time parsing of a string now allows the fractional part of a second to be
+  longer than 6 digits (although remaining digits will be ignored and the
+  time value will always be truncated at microsecond resolution).
+
+* The 'complex' special type is no longer restricted to binary data (but
+  can now also be used for e.g. ascii data formats).
+
 2.8 2012-12-12
 ~~~~~~~~~~~~~~
 

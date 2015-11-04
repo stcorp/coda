@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2007-2012 S[&]T, The Netherlands.
+// Copyright (C) 2007-2013 S[&]T, The Netherlands.
 //
 // This file is part of CODA.
 //
@@ -390,8 +390,9 @@ public class Coda
     /**
      * Enable/Disable the use of memory mapping of files. 
      * 
-     * @param enable \arg 0: Disable the
-     * use of memory mapping. \arg 1: Enable the use of memory mapping.
+     * @param enable
+     *            \arg 0: Disable the use of memory mapping. \arg 1: Enable
+     *            the use of memory mapping.
      * 
      * @throws CodaException
      *             If an error occurred.
