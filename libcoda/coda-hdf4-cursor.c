@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2009 S&T, The Netherlands.
+ * Copyright (C) 2007-2010 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -537,8 +537,8 @@ static int read_basic_type(const coda_Cursor *cursor, void *dst)
                     return -1;
                 }
                 assert(index < num_elements);
-                native_type_size = get_native_type_size(((coda_hdf4BasicType *)
-                                                         cursor->stack[cursor->n - 1].type)->read_type);
+                native_type_size =
+                    get_native_type_size(((coda_hdf4BasicType *)cursor->stack[cursor->n - 1].type)->read_type);
                 buffer = malloc(num_elements * native_type_size);
                 if (buffer == NULL)
                 {

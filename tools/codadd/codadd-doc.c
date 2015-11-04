@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2009 S&T, The Netherlands.
+ * Copyright (C) 2007-2010 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -1531,7 +1531,7 @@ static void generate_html_product_definition(const char *filename, coda_ProductD
                 char s2[21];
 
                 coda_str64(entry->offset, s1);
-                coda_str64(entry->offset + entry->value_length, s1);
+                coda_str64(entry->offset + entry->value_length, s2);
 
                 if (entry->use_filename)
                 {

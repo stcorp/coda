@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2009 S&T, The Netherlands.
+ * Copyright (C) 2007-2010 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -50,12 +50,12 @@ SIGN         [+-]
 FL_MANTISSA  ({INTEGER}".")|("."{INTEGER})|({INTEGER}"."{INTEGER})
 FL_EXPONENT  [Ee]{SIGN}?{INTEGER}
 FLOAT        ({FL_MANTISSA}{FL_EXPONENT}?)|({INTEGER}{FL_EXPONENT})
-IDENTIFIER   [[:alpha:]][[:alnum:]_.]*
+IDENTIFIER   [[:alpha:]][[:alnum:]_]*
 WHITESPACE   [[:space:]]+
 
 %%
 
-"\""([^\"]|\\"\"")*"\"" {
+"\""([^\"\\]|\\.)*"\"" {
                             yylval.stringval = (char *)malloc(yyleng - 1);
                             memcpy(yylval.stringval, yytext + 1, yyleng - 2);
                             yylval.stringval[yyleng - 2] = '\0';

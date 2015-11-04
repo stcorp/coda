@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2009 S&T, The Netherlands.
+ * Copyright (C) 2007-2010 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -339,6 +339,7 @@ int coda_ascbin_record_add_field(coda_ascbinRecord *record, coda_ascbinField *fi
     if (record->num_fields % BLOCK_SIZE == 0)
     {
         coda_ascbinField **new_field;
+
         new_field = realloc(record->field, (record->num_fields + BLOCK_SIZE) * sizeof(coda_ascbinField *));
         if (new_field == NULL)
         {
@@ -465,6 +466,7 @@ int coda_ascbin_union_add_field(coda_ascbinUnion *dd_union, coda_ascbinField *fi
     if (dd_union->num_fields % BLOCK_SIZE == 0)
     {
         coda_ascbinField **new_field;
+
         new_field = realloc(dd_union->field, (dd_union->num_fields + BLOCK_SIZE) * sizeof(coda_ascbinField *));
         if (new_field == NULL)
         {
@@ -598,6 +600,7 @@ static int array_add_dimension(coda_ascbinArray *array, long dim, coda_Expr *dim
     {
         long *new_dim;
         coda_Expr **new_dim_expr;
+
         new_dim = (long *)realloc(array->dim, (array->num_dims + 1) * sizeof(long));
         if (new_dim == NULL)
         {
@@ -723,6 +726,7 @@ static int detection_node_add_node(coda_ascbinDetectionNode *node, coda_ascbinDe
     if (node->num_subnodes % BLOCK_SIZE == 0)
     {
         coda_ascbinDetectionNode **new_subnode;
+
         new_subnode = realloc(node->subnode, (node->num_subnodes + BLOCK_SIZE) * sizeof(coda_ascbinDetectionNode *));
         if (new_subnode == NULL)
         {

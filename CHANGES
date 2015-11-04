@@ -1,3 +1,12 @@
+1.3.3 2010-03-19
+~~~~~~~~~~~~~~~~
+
+* Fixed small issue in html documentation generation (wrong byte end-position
+  for a detection expression).
+
+* Fixed bug in parsing of string constants in expression language (string
+  constants can now end with an escaped backslash '\\').
+
 1.3.2 2010-01-08
 ~~~~~~~~~~~~~~~~
 

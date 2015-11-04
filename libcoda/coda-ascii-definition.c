@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2009 S&T, The Netherlands.
+ * Copyright (C) 2007-2010 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -288,6 +288,7 @@ static int mapping_type_add_mapping(coda_asciiMappingsType *type, coda_asciiMapp
     if (type->mappings->num_mappings % BLOCK_SIZE == 0)
     {
         coda_asciiMapping **new_mapping;
+
         new_mapping = realloc(type->mappings->mapping,
                               (type->mappings->num_mappings + BLOCK_SIZE) * sizeof(coda_asciiMapping *));
         if (new_mapping == NULL)

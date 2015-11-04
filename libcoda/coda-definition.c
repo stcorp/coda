@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2009 S&T, The Netherlands.
+ * Copyright (C) 2007-2010 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -671,6 +671,7 @@ int coda_product_definition_add_product_variable(coda_ProductDefinition *product
     if (product_definition->num_product_variables % BLOCK_SIZE == 0)
     {
         coda_ProductVariable **new_product_variable;
+
         new_product_variable = realloc(product_definition->product_variable,
                                        (product_definition->num_product_variables + BLOCK_SIZE) *
                                        sizeof(coda_ProductVariable *));
@@ -824,6 +825,7 @@ int coda_product_type_add_product_definition(coda_ProductType *product_type, cod
     if (product_type->num_product_definitions % BLOCK_SIZE == 0)
     {
         coda_ProductDefinition **new_product_definition;
+
         new_product_definition = realloc(product_type->product_definition,
                                          (product_type->num_product_definitions + BLOCK_SIZE) *
                                          sizeof(coda_ProductDefinition *));
@@ -1023,6 +1025,7 @@ int coda_product_class_add_product_type(coda_ProductClass *product_class, coda_P
     if (product_class->num_product_types % BLOCK_SIZE == 0)
     {
         coda_ProductType **new_product_type;
+
         new_product_type = realloc(product_class->product_type, (product_class->num_product_types + BLOCK_SIZE) *
                                    sizeof(coda_ProductType *));
         if (new_product_type == NULL)
@@ -1074,6 +1077,7 @@ int coda_product_class_add_named_type(coda_ProductClass *product_class, coda_Typ
     if (product_class->num_named_types % BLOCK_SIZE == 0)
     {
         coda_Type **new_named_type;
+
         new_named_type = realloc(product_class->named_type, (product_class->num_named_types + BLOCK_SIZE) *
                                  sizeof(coda_Type *));
         assert(new_named_type != NULL);
@@ -1185,6 +1189,7 @@ int coda_data_dictionary_add_product_class(coda_ProductClass *product_class)
     if (coda_data_dictionary->num_product_classes % BLOCK_SIZE == 0)
     {
         coda_ProductClass **new_product_class;
+
         new_product_class = realloc(coda_data_dictionary->product_class,
                                     (coda_data_dictionary->num_product_classes + BLOCK_SIZE) *
                                     sizeof(coda_ProductClass *));

@@ -1,4 +1,4 @@
-# setup.py for installing CODA-Python and CODAL2-Python on Windows.
+# setup.py for installing CODA Python interface on Windows.
 
 import os
 from distutils.core import setup
@@ -8,7 +8,7 @@ setup (name             = "CODA",
        version          = "@VERSION@",
        description      = "CODA Common Data Access framework",
        long_description = "",
-       maintainer       = "S&T",
+       maintainer       = "S[&]T",
        maintainer_email = "coda@stcorp.nl",
        license          = "GPL",
        url              = "http://www.stcorp.nl/coda/",

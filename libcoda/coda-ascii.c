@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2009 S&T, The Netherlands.
+ * Copyright (C) 2007-2010 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -148,6 +148,7 @@ int coda_ascii_init_asciilines(coda_ProductFile *pf)
                 if (num_asciilines % BLOCK_SIZE == 0)
                 {
                     long *new_offset;
+
                     new_offset = realloc(asciiline_end_offset, (num_asciilines + BLOCK_SIZE) * sizeof(long));
                     if (new_offset == NULL)
                     {

@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2007-2009 S&T, The Netherlands.
+// Copyright (C) 2007-2010 S[&]T, The Netherlands.
 //
 // This file is part of CODA.
 //

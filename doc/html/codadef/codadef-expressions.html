@@ -497,7 +497,7 @@ intvalue = {digit} ;
 
 floatvalue = (intvalue, '.', [intvalue] | '.', intvalue), [('E' | 'e' | 'D' | 'd'), [sign], intvalue] ;
 
-strvalue = '"', [{character-'"' | ('\', '"')}], '"' ;
+stringvalue = '"', [{character-'"' | ('\', '"')}], '"' ;
 
 voidexpr =
 	'$' identifier '=' intexpr |
@@ -676,7 +676,7 @@ node =
 
       <div class="footer">
         <hr />
-        <p>Copyright &copy; 2007-2009 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+        <p>Copyright &copy; 2007-2010 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
       </div>
 
     </div>

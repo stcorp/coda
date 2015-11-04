@@ -6,7 +6,7 @@
 AppName=@PACKAGE_NAME@
 AppId=@PACKAGE_TARNAME@
 AppVerName=@PACKAGE_NAME@ @PACKAGE_VERSION@
-AppPublisher=S&T
+AppPublisher=S[&]T
 AppPublisherURL=http://www.stcorp.nl/
 AppSupportURL=http://www.stcorp.nl/coda/
 AppUpdatesURL=http://www.stcorp.nl/coda/

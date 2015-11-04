@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2009 S&T, The Netherlands.
+ * Copyright (C) 2007-2010 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -31,7 +31,7 @@
 
 static void print_copyright_notice(void)
 {
-    printf("C Copyright (C) 2007-2009 S&T, The Netherlands.\n");
+    printf("C Copyright (C) 2007-2010 S[&]T, The Netherlands.\n");
     printf("C\n");
     printf("C This file is part of CODA.\n");
     printf("C\n");

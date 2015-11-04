@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2009 S&T, The Netherlands.
+ * Copyright (C) 2007-2010 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -381,9 +381,8 @@ static void traverse_data()
 
                         name = codadump_filter_get_fieldname(traverse_info.filter[traverse_info.filter_depth]);
                         assert(name != NULL);
-                        if (coda_type_get_record_field_index_from_name(traverse_info.
-                                                                       type[traverse_info.current_depth - 1],
-                                                                       name, &index) != 0)
+                        if (coda_type_get_record_field_index_from_name
+                            (traverse_info.type[traverse_info.current_depth - 1], name, &index) != 0)
                         {
                             if (coda_errno == CODA_ERROR_INVALID_NAME)
                             {

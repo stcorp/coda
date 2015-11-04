@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2009 S&T, The Netherlands.
+ * Copyright (C) 2007-2010 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -206,6 +206,7 @@ int coda_netcdf_root_add_variable(coda_netcdfRoot *type, const char *name, coda_
     {
         coda_netcdfType **new_variable;
         char **new_name;
+
         new_variable = realloc(type->variable, (type->num_variables + BLOCK_SIZE) * sizeof(coda_netcdfType *));
         if (new_variable == NULL)
         {
@@ -419,6 +420,7 @@ int coda_netcdf_attribute_record_add_attribute(coda_netcdfAttributeRecord *type,
     {
         coda_netcdfType **new_attribute;
         char **new_name;
+
         new_attribute = realloc(type->attribute, (type->num_attributes + BLOCK_SIZE) * sizeof(coda_netcdfType *));
         if (new_attribute == NULL)
         {

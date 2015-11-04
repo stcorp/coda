@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2009 S&T, The Netherlands.
+ * Copyright (C) 2007-2010 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -45,7 +45,7 @@ void generate_list(const char *product_class, const char *product_type, int vers
 static void print_version()
 {
     printf("codadd %s\n", libcoda_version);
-    printf("Copyright (C) 2007-2009 S&T, The Netherlands\n");
+    printf("Copyright (C) 2007-2010 S[&]T, The Netherlands.\n");
     printf("\n");
 }
 

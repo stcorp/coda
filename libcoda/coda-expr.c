@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2009 S&T, The Netherlands.
+ * Copyright (C) 2007-2010 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -2297,6 +2297,7 @@ static int eval_string(eval_info *info, const coda_Expr *expr, long *offset, lon
             {
                 coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
                                __LINE__);
+                return -1;
             }
         }
         else

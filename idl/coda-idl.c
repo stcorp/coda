@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2009 S&T, The Netherlands.
+ * Copyright (C) 2007-2010 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -1000,6 +1000,7 @@ static int idl_coda_fetch_datahandle_array_to_VPTR(struct IDL_CodaDataHandle *da
     coda_Type *basetype;
     IDL_MEMINT idl_dimspec[IDL_MAX_ARRAY_DIM];
     IDL_StructDefPtr sdef;
+    IDL_VPTR tmpval;
     int32_t number_of_elements;
     char *fill;
     long dim[IDL_MAX_ARRAY_DIM];
@@ -1041,14 +1042,21 @@ static int idl_coda_fetch_datahandle_array_to_VPTR(struct IDL_CodaDataHandle *da
 
     if (sdef == NULL)
     {
-        fill = IDL_MakeTempArray(idl_type, num_dims, idl_dimspec, FALSE, retval);
+        fill = IDL_MakeTempArray(idl_type, num_dims, idl_dimspec, FALSE, &tmpval);
     }
     else
     {
-        fill = IDL_MakeTempStruct(sdef, num_dims, idl_dimspec, retval, FALSE);
+        fill = IDL_MakeTempStruct(sdef, num_dims, idl_dimspec, &tmpval, FALSE);
     }
 
-    return idl_coda_fetch_datahandle_array_filldata(datahandle, fill, num_dims, dim, basetype, number_of_elements);
+    if (idl_coda_fetch_datahandle_array_filldata(datahandle, fill, num_dims, dim, basetype, number_of_elements) != 0)
+    {
+        IDL_Deltmp(tmpval);
+        return -1;
+    }
+
+    *retval = tmpval;
+    return 0;
 }
 
 static int idl_coda_fetch_cursor_to_StructDefPtr(coda_Cursor *cursor, IDL_StructDefPtr *sdef)
@@ -1674,8 +1682,8 @@ static int idl_coda_fetch_datahandle_record_filldata(struct IDL_CodaDataHandle *
                 {
                     case coda_record_class:
                         /* This will expand the record in-situ, recursively */
-                        if (idl_coda_fetch_datahandle_record_filldata(datahandle, (IDL_STRUCT_TAG_DEF *)
-                                                                      field_info->value.s.sdef, fill) != 0)
+                        if (idl_coda_fetch_datahandle_record_filldata
+                            (datahandle, (IDL_STRUCT_TAG_DEF *)field_info->value.s.sdef, fill) != 0)
                         {
                             return -1;
                         }
@@ -1756,20 +1764,29 @@ static int idl_coda_fetch_datahandle_record_filldata(struct IDL_CodaDataHandle *
 static int idl_coda_fetch_datahandle_record_to_VPTR(struct IDL_CodaDataHandle *datahandle, IDL_VPTR *retval)
 {
     IDL_StructDefPtr sdef;
+    IDL_VPTR tmpval;
     char *data;
 
     if (idl_coda_fetch_cursor_to_StructDefPtr(&datahandle->cursor, &sdef) != 0)
     {
         return -1;
     }
-    data = IDL_MakeTempStructVector(sdef, 1, retval, IDL_TRUE);
+    data = IDL_MakeTempStructVector(sdef, 1, &tmpval, IDL_TRUE);
 
-    return idl_coda_fetch_datahandle_record_filldata(datahandle, sdef, data);
+    if (idl_coda_fetch_datahandle_record_filldata(datahandle, sdef, data) != 0)
+    {
+        IDL_Deltmp(tmpval);
+        return -1;
+    }
+
+    *retval = tmpval;
+    return 0;
 }
 
 static int idl_coda_fetch_datahandle_to_VPTR(struct IDL_CodaDataHandle *datahandle, IDL_VPTR *retval)
 {
     coda_type_class type_class;
+    IDL_VPTR tmpval;
 
     if (coda_cursor_get_type_class(&datahandle->cursor, &type_class) != 0)
     {
@@ -1793,7 +1810,7 @@ static int idl_coda_fetch_datahandle_to_VPTR(struct IDL_CodaDataHandle *datahand
                 /* handle the zero-element case */
                 if (size == 0)
                 {
-                    *retval = mk_coda_no_data();
+                    tmpval = mk_coda_no_data();
                 }
                 else
                 {
@@ -1801,9 +1818,10 @@ static int idl_coda_fetch_datahandle_to_VPTR(struct IDL_CodaDataHandle *datahand
                     char *fill;
 
                     dims = size;
-                    fill = IDL_MakeTempArray(IDL_TYP_BYTE, 1, &dims, FALSE, retval);
+                    fill = IDL_MakeTempArray(IDL_TYP_BYTE, 1, &dims, FALSE, &tmpval);
                     if (coda_cursor_read_bytes(&datahandle->cursor, (uint8_t *)fill, 0, dims) != 0)
                     {
+                        IDL_Deltmp(tmpval);
                         return -1;
                     }
                 }
@@ -1823,82 +1841,92 @@ static int idl_coda_fetch_datahandle_to_VPTR(struct IDL_CodaDataHandle *datahand
                 {
                     case coda_native_type_int8:
                         /* read as int16 */
-                        *retval = IDL_Gettmp();
-                        (*retval)->type = IDL_TYP_INT;
-                        if (coda_cursor_read_int16(&datahandle->cursor, &(*retval)->value.i) != 0)
+                        tmpval = IDL_Gettmp();
+                        tmpval->type = IDL_TYP_INT;
+                        if (coda_cursor_read_int16(&datahandle->cursor, &tmpval->value.i) != 0)
                         {
+                            IDL_Deltmp(tmpval);
                             return -1;
                         }
                         break;
                     case coda_native_type_uint8:
-                        *retval = IDL_Gettmp();
-                        (*retval)->type = IDL_TYP_BYTE;
-                        if (coda_cursor_read_uint8(&datahandle->cursor, &(*retval)->value.c) != 0)
+                        tmpval = IDL_Gettmp();
+                        tmpval->type = IDL_TYP_BYTE;
+                        if (coda_cursor_read_uint8(&datahandle->cursor, &tmpval->value.c) != 0)
                         {
+                            IDL_Deltmp(tmpval);
                             return -1;
                         }
                         break;
                     case coda_native_type_int16:
-                        *retval = IDL_Gettmp();
-                        (*retval)->type = IDL_TYP_INT;
-                        if (coda_cursor_read_int16(&datahandle->cursor, &(*retval)->value.i) != 0)
+                        tmpval = IDL_Gettmp();
+                        tmpval->type = IDL_TYP_INT;
+                        if (coda_cursor_read_int16(&datahandle->cursor, &tmpval->value.i) != 0)
                         {
+                            IDL_Deltmp(tmpval);
                             return -1;
                         }
                         break;
                     case coda_native_type_uint16:
-                        *retval = IDL_Gettmp();
-                        (*retval)->type = IDL_TYP_UINT;
-                        if (coda_cursor_read_uint16(&datahandle->cursor, &(*retval)->value.ui) != 0)
+                        tmpval = IDL_Gettmp();
+                        tmpval->type = IDL_TYP_UINT;
+                        if (coda_cursor_read_uint16(&datahandle->cursor, &tmpval->value.ui) != 0)
                         {
+                            IDL_Deltmp(tmpval);
                             return -1;
                         }
                         break;
                     case coda_native_type_int32:
-                        *retval = IDL_Gettmp();
-                        (*retval)->type = IDL_TYP_LONG;
-                        if (coda_cursor_read_int32(&datahandle->cursor, (int32_t *)&(*retval)->value.l) != 0)
+                        tmpval = IDL_Gettmp();
+                        tmpval->type = IDL_TYP_LONG;
+                        if (coda_cursor_read_int32(&datahandle->cursor, (int32_t *)&tmpval->value.l) != 0)
                         {
+                            IDL_Deltmp(tmpval);
                             return -1;
                         }
                         break;
                     case coda_native_type_uint32:
-                        *retval = IDL_Gettmp();
-                        (*retval)->type = IDL_TYP_ULONG;
-                        if (coda_cursor_read_uint32(&datahandle->cursor, (uint32_t *)&(*retval)->value.ul) != 0)
+                        tmpval = IDL_Gettmp();
+                        tmpval->type = IDL_TYP_ULONG;
+                        if (coda_cursor_read_uint32(&datahandle->cursor, (uint32_t *)&tmpval->value.ul) != 0)
                         {
+                            IDL_Deltmp(tmpval);
                             return -1;
                         }
                         break;
                     case coda_native_type_int64:
-                        *retval = IDL_Gettmp();
-                        (*retval)->type = IDL_TYP_LONG64;
-                        if (coda_cursor_read_int64(&datahandle->cursor, (int64_t *)&(*retval)->value.l64) != 0)
+                        tmpval = IDL_Gettmp();
+                        tmpval->type = IDL_TYP_LONG64;
+                        if (coda_cursor_read_int64(&datahandle->cursor, (int64_t *)&tmpval->value.l64) != 0)
                         {
+                            IDL_Deltmp(tmpval);
                             return -1;
                         }
                         break;
                     case coda_native_type_uint64:
-                        *retval = IDL_Gettmp();
-                        (*retval)->type = IDL_TYP_ULONG64;
-                        if (coda_cursor_read_uint64(&datahandle->cursor, (uint64_t *)&(*retval)->value.ul64) != 0)
+                        tmpval = IDL_Gettmp();
+                        tmpval->type = IDL_TYP_ULONG64;
+                        if (coda_cursor_read_uint64(&datahandle->cursor, (uint64_t *)&tmpval->value.ul64) != 0)
                         {
+                            IDL_Deltmp(tmpval);
                             return -1;
                         }
                         break;
                     case coda_native_type_float:
-                        *retval = IDL_Gettmp();
-                        (*retval)->type = IDL_TYP_FLOAT;
-                        if (coda_cursor_read_float(&datahandle->cursor, &(*retval)->value.f) != 0)
+                        tmpval = IDL_Gettmp();
+                        tmpval->type = IDL_TYP_FLOAT;
+                        if (coda_cursor_read_float(&datahandle->cursor, &tmpval->value.f) != 0)
                         {
+                            IDL_Deltmp(tmpval);
                             return -1;
                         }
                         break;
                     case coda_native_type_double:
-                        *retval = IDL_Gettmp();
-                        (*retval)->type = IDL_TYP_DOUBLE;
-                        if (coda_cursor_read_double(&datahandle->cursor, &(*retval)->value.d) != 0)
+                        tmpval = IDL_Gettmp();
+                        tmpval->type = IDL_TYP_DOUBLE;
+                        if (coda_cursor_read_double(&datahandle->cursor, &tmpval->value.d) != 0)
                         {
+                            IDL_Deltmp(tmpval);
                             return -1;
                         }
                         break;
@@ -1908,7 +1936,7 @@ static int idl_coda_fetch_datahandle_to_VPTR(struct IDL_CodaDataHandle *datahand
 
                             coda_cursor_read_char(&datahandle->cursor, &str[0]);
                             str[1] = '\0';
-                            *retval = IDL_StrToSTRING(str);
+                            tmpval = IDL_StrToSTRING(str);
                         }
                         break;
                     case coda_native_type_string:
@@ -1934,7 +1962,7 @@ static int idl_coda_fetch_datahandle_to_VPTR(struct IDL_CodaDataHandle *datahand
                             {
                                 return -1;
                             }
-                            *retval = IDL_StrToSTRING(str);
+                            tmpval = IDL_StrToSTRING(str);
                             free(str);
                         }
                         break;
@@ -1957,31 +1985,33 @@ static int idl_coda_fetch_datahandle_to_VPTR(struct IDL_CodaDataHandle *datahand
                 {
                     case coda_special_vsf_integer:
                     case coda_special_time:
-                        *retval = IDL_Gettmp();
-                        (*retval)->type = IDL_TYP_DOUBLE;
-                        coda_cursor_read_double(&datahandle->cursor, &(*retval)->value.d);
+                        tmpval = IDL_Gettmp();
+                        tmpval->type = IDL_TYP_DOUBLE;
+                        coda_cursor_read_double(&datahandle->cursor, &tmpval->value.d);
                         if ((special_type == coda_special_time) && coda_idl_option_time_unit_days)
                         {
-                            (*retval)->value.d = sec2day((*retval)->value.d);
+                            tmpval->value.d = sec2day(tmpval->value.d);
                         }
                         break;
                     case coda_special_complex:
-                        *retval = IDL_Gettmp();
-                        (*retval)->type = IDL_TYP_DCOMPLEX;
-                        if (coda_cursor_read_complex_double_pair(&datahandle->cursor, (double *)&(*retval)->value.dcmp)
+                        tmpval = IDL_Gettmp();
+                        tmpval->type = IDL_TYP_DCOMPLEX;
+                        if (coda_cursor_read_complex_double_pair(&datahandle->cursor, (double *)&tmpval->value.dcmp)
                             != 0)
                         {
+                            IDL_Deltmp(tmpval);
                             return -1;
                         }
                         break;
                     case coda_special_no_data:
-                        *retval = mk_coda_no_data();
+                        tmpval = mk_coda_no_data();
                         break;
                 }
             }
             break;
     }
 
+    *retval = tmpval;
     return 0;
 }
 
