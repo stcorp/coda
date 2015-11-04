@@ -727,6 +727,7 @@ static int get_bits_int8(coda_ProductFile *pf, int64_t src_bit_offset, unsigned 
     if (src_bit_length < 8)
     {
         uint8_t value = *(uint8_t *)dst;
+
         if (value & (1 << (src_bit_length - 1)))
         {
             /* sign bit is set -> set higher significant bits to 1 as well */
@@ -774,13 +775,14 @@ static int get_bits_int16(coda_ProductFile *pf, int64_t src_bit_offset, unsigned
     if (src_bit_length < 16)
     {
         uint16_t value = *(uint16_t *)dst;
+
         if (value & (1 << (src_bit_length - 1)))
         {
             /* sign bit is set -> set higher significant bits to 1 as well */
             *dst = (int16_t)(value | ~((1 << src_bit_length) - 1));
         }
     }
-    
+
     return 0;
 }
 
@@ -841,13 +843,14 @@ static int get_bits_int32(coda_ProductFile *pf, int64_t src_bit_offset, unsigned
     if (src_bit_length < 32)
     {
         uint32_t value = *(uint32_t *)dst;
+
         if (value & (1 << (src_bit_length - 1)))
         {
             /* sign bit is set -> set higher significant bits to 1 as well */
             *dst = (int32_t)(value | ~((1 << src_bit_length) - 1));
         }
     }
-    
+
     return 0;
 }
 
@@ -914,13 +917,14 @@ static int get_bits_int64(coda_ProductFile *pf, int64_t src_bit_offset, unsigned
     if (src_bit_length < 64)
     {
         uint64_t value = *(uint64_t *)dst;
+
         if (value & (1 << (src_bit_length - 1)))
         {
             /* sign bit is set -> set higher significant bits to 1 as well */
             *dst = (int64_t)(value | ~((1 << src_bit_length) - 1));
         }
     }
-    
+
     return 0;
 }
 
@@ -1058,10 +1062,14 @@ static int read_int8(const coda_Cursor *cursor, int8_t *dst)
         }
         if (bit_size < 0 || bit_size > 8)
         {
+            char s1[21];
+            char s2[21];
+
+            coda_str64(bit_size, s1);
+            coda_str64(cursor->stack[cursor->n - 1].bit_offset >> 3, s1);
             coda_set_error(CODA_ERROR_PRODUCT,
-                           "possible product error detected in %s (invalid bit size (%lld) for binary int8 integer - "
-                           "byte:bit offset = %lld:%d)", cursor->pf->filename, (long long)bit_size,
-                           (long long)(cursor->stack[cursor->n - 1].bit_offset >> 3),
+                           "possible product error detected in %s (invalid bit size (%s) for binary int8 integer - "
+                           "byte:bit offset = %s:%d)", cursor->pf->filename, s1, s2,
                            (int)(cursor->stack[cursor->n - 1].bit_offset & 0x7));
             return -1;
         }
@@ -1089,10 +1097,14 @@ static int read_uint8(const coda_Cursor *cursor, uint8_t *dst)
         }
         if (bit_size < 0 || bit_size > 8)
         {
+            char s1[21];
+            char s2[21];
+
+            coda_str64(bit_size, s1);
+            coda_str64(cursor->stack[cursor->n - 1].bit_offset >> 3, s1);
             coda_set_error(CODA_ERROR_PRODUCT,
-                           "possible product error detected in %s (invalid bit size (%lld) for binary uint8 integer - "
-                           "byte:bit offset = %lld:%d)", cursor->pf->filename, (long long)bit_size,
-                           (long long)(cursor->stack[cursor->n - 1].bit_offset >> 3),
+                           "possible product error detected in %s (invalid bit size (%s) for binary uint8 integer - "
+                           "byte:bit offset = %s:%d)", cursor->pf->filename, s1, s2,
                            (int)(cursor->stack[cursor->n - 1].bit_offset & 0x7));
             return -1;
         }
@@ -1121,10 +1133,14 @@ static int read_int16(const coda_Cursor *cursor, int16_t *dst)
         }
         if (bit_size < 0 || bit_size > 16)
         {
+            char s1[21];
+            char s2[21];
+
+            coda_str64(bit_size, s1);
+            coda_str64(cursor->stack[cursor->n - 1].bit_offset >> 3, s1);
             coda_set_error(CODA_ERROR_PRODUCT,
-                           "possible product error detected in %s (invalid bit size (%lld) for binary int16 integer - "
-                           "byte:bit offset = %lld:%d)", cursor->pf->filename, (long long)bit_size,
-                           (long long)(cursor->stack[cursor->n - 1].bit_offset >> 3),
+                           "possible product error detected in %s (invalid bit size (%s) for binary int16 integer - "
+                           "byte:bit offset = %s:%d)", cursor->pf->filename, s1, s2,
                            (int)(cursor->stack[cursor->n - 1].bit_offset & 0x7));
             return -1;
         }
@@ -1158,10 +1174,14 @@ static int read_uint16(const coda_Cursor *cursor, uint16_t *dst)
         }
         if (bit_size < 0 || bit_size > 16)
         {
+            char s1[21];
+            char s2[21];
+
+            coda_str64(bit_size, s1);
+            coda_str64(cursor->stack[cursor->n - 1].bit_offset >> 3, s1);
             coda_set_error(CODA_ERROR_PRODUCT,
-                           "possible product error detected in %s (invalid bit size (%lld) for binary uint16 integer - "
-                           "byte:bit offset = %lld:%d)", cursor->pf->filename, (long long)bit_size,
-                           (long long)(cursor->stack[cursor->n - 1].bit_offset >> 3),
+                           "possible product error detected in %s (invalid bit size (%s) for binary uint16 integer - "
+                           "byte:bit offset = %s:%d)", cursor->pf->filename, s1, s2,
                            (int)(cursor->stack[cursor->n - 1].bit_offset & 0x7));
             return -1;
         }
@@ -1195,10 +1215,14 @@ static int read_int32(const coda_Cursor *cursor, int32_t *dst)
         }
         if (bit_size < 0 || bit_size > 32)
         {
+            char s1[21];
+            char s2[21];
+
+            coda_str64(bit_size, s1);
+            coda_str64(cursor->stack[cursor->n - 1].bit_offset >> 3, s1);
             coda_set_error(CODA_ERROR_PRODUCT,
-                           "possible product error detected in %s (invalid bit size (%lld) for binary int32 integer - "
-                           "byte:bit offset = %lld:%d)", cursor->pf->filename, (long long)bit_size,
-                           (long long)(cursor->stack[cursor->n - 1].bit_offset >> 3),
+                           "possible product error detected in %s (invalid bit size (%s) for binary int32 integer - "
+                           "byte:bit offset = %s:%d)", cursor->pf->filename, s1, s2,
                            (int)(cursor->stack[cursor->n - 1].bit_offset & 0x7));
             return -1;
         }
@@ -1232,10 +1256,14 @@ static int read_uint32(const coda_Cursor *cursor, uint32_t *dst)
         }
         if (bit_size < 0 || bit_size > 32)
         {
+            char s1[21];
+            char s2[21];
+
+            coda_str64(bit_size, s1);
+            coda_str64(cursor->stack[cursor->n - 1].bit_offset >> 3, s1);
             coda_set_error(CODA_ERROR_PRODUCT,
-                           "possible product error detected in %s (invalid bit size (%lld) for binary uint32 integer - "
-                           "byte:bit offset = %lld:%d)", cursor->pf->filename, (long long)bit_size,
-                           (long long)(cursor->stack[cursor->n - 1].bit_offset >> 3),
+                           "possible product error detected in %s (invalid bit size (%s) for binary uint32 integer - "
+                           "byte:bit offset = %s:%d)", cursor->pf->filename, s1, s2,
                            (int)(cursor->stack[cursor->n - 1].bit_offset & 0x7));
             return -1;
         }
@@ -1269,10 +1297,14 @@ static int read_int64(const coda_Cursor *cursor, int64_t *dst)
         }
         if (bit_size < 0 || bit_size > 64)
         {
+            char s1[21];
+            char s2[21];
+
+            coda_str64(bit_size, s1);
+            coda_str64(cursor->stack[cursor->n - 1].bit_offset >> 3, s1);
             coda_set_error(CODA_ERROR_PRODUCT,
-                           "possible product error detected in %s (invalid bit size (%lld) for binary int64 integer - "
-                           "byte:bit offset = %lld:%d)", cursor->pf->filename, (long long)bit_size,
-                           (long long)(cursor->stack[cursor->n - 1].bit_offset >> 3),
+                           "possible product error detected in %s (invalid bit size (%s) for binary int64 integer - "
+                           "byte:bit offset = %s:%d)", cursor->pf->filename, s1, s2,
                            (int)(cursor->stack[cursor->n - 1].bit_offset & 0x7));
             return -1;
         }
@@ -1306,10 +1338,14 @@ static int read_uint64(const coda_Cursor *cursor, uint64_t *dst)
         }
         if (bit_size < 0 || bit_size > 64)
         {
+            char s1[21];
+            char s2[21];
+
+            coda_str64(bit_size, s1);
+            coda_str64(cursor->stack[cursor->n - 1].bit_offset >> 3, s1);
             coda_set_error(CODA_ERROR_PRODUCT,
-                           "possible product error detected in %s (invalid bit size (%lld) for binary uint64 integer - "
-                           "byte:bit offset = %lld:%d)", cursor->pf->filename, (long long)bit_size,
-                           (long long)(cursor->stack[cursor->n - 1].bit_offset >> 3),
+                           "possible product error detected in %s (invalid bit size (%s) for binary uint64 integer - "
+                           "byte:bit offset = %s:%d)", cursor->pf->filename, s1, s2,
                            (int)(cursor->stack[cursor->n - 1].bit_offset & 0x7));
             return -1;
         }

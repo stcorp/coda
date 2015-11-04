@@ -2833,9 +2833,6 @@ static int eval_void(eval_info *info, const coda_Expr *expr)
                     return -1;
                 }
                 *varptr = value;
-#if 0
-                printf("%s[%ld] := %lld\n", opexpr->identifier, (long)index, (long long)value);
-#endif
             }
             break;
         default:
@@ -2904,9 +2901,19 @@ static int eval_cursor(eval_info *info, const coda_Expr *expr)
             {
                 int64_t index;
 
-                if (eval_cursor(info, opexpr->operand[0]) != 0)
+                if (opexpr->operand[0] != NULL)
                 {
-                    return -1;
+                    if (eval_cursor(info, opexpr->operand[0]) != 0)
+                    {
+                        return -1;
+                    }
+                }
+                else
+                {
+                    if (coda_cursor_set_product(&info->cursor, info->orig_cursor->pf) != 0)
+                    {
+                        return -1;
+                    }
                 }
                 if (eval_integer(info, opexpr->operand[1], &index) != 0)
                 {
@@ -2931,7 +2938,7 @@ static int eval_cursor(eval_info *info, const coda_Expr *expr)
                     {
                         coda_set_error(CODA_ERROR_INVALID_TYPE,
                                        "cursor does not refer to an array (current type is %s)",
-                                       coda_type_get_class_name(type_class));                        
+                                       coda_type_get_class_name(type_class));
                         return -1;
                     }
 
@@ -2967,9 +2974,19 @@ static int eval_cursor(eval_info *info, const coda_Expr *expr)
             }
             break;
         case expr_goto_attribute:
-            if (eval_cursor(info, opexpr->operand[0]) != 0)
+            if (opexpr->operand[0] != NULL)
             {
-                return -1;
+                if (eval_cursor(info, opexpr->operand[0]) != 0)
+                {
+                    return -1;
+                }
+            }
+            else
+            {
+                if (coda_cursor_set_product(&info->cursor, info->orig_cursor->pf) != 0)
+                {
+                    return -1;
+                }
             }
             if (coda_cursor_goto_attributes(&info->cursor) != 0)
             {

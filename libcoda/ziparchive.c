@@ -287,12 +287,14 @@ static int get_entries(zaFile *zf)
 #endif
         entry->ascii = internal_attributes & 0x1;
 
-        entry->attributes = *((uint32_t *)&buffer[38]);
+        /* we can't directly access 32 bit values if they are not on a 32 bit boundary with regard to the start of
+         * 'buffer'. We therefore use memcpy for these cases. */
+        memcpy(&entry->attributes, &buffer[38], 4);
 #ifdef WORDS_BIGENDIAN
         swap4(&entry->attributes);
 #endif
 
-        entry->localheader_offset = *((uint32_t *)&buffer[42]);
+        memcpy(&entry->localheader_offset, &buffer[42], 4);
 #ifdef WORDS_BIGENDIAN
         swap4(&entry->localheader_offset);
 #endif
@@ -511,7 +513,9 @@ int za_read_entry(zaEntry *entry, char *out_buffer)
         return -1;
     }
 
-    crc = *((uint32_t *)&buffer[14]);
+    /* we can't directly access 32 bit values if they are not on a 32 bit boundary with regard to the start of
+     * 'buffer'. We therefore use memcpy for these cases. */
+    memcpy(&crc, &buffer[14], 4);
 #ifdef WORDS_BIGENDIAN
     swap4(&crc);
 #endif
@@ -521,7 +525,7 @@ int za_read_entry(zaEntry *entry, char *out_buffer)
         return -1;
     }
 
-    compressed_size = *((uint32_t *)&buffer[18]);
+    memcpy(&compressed_size, &buffer[18], 4);
 #ifdef WORDS_BIGENDIAN
     swap4(&compressed_size);
 #endif
@@ -532,7 +536,7 @@ int za_read_entry(zaEntry *entry, char *out_buffer)
         return -1;
     }
 
-    uncompressed_size = *((uint32_t *)&buffer[22]);
+    memcpy(&uncompressed_size, &buffer[22], 4);
 #ifdef WORDS_BIGENDIAN
     swap4(&uncompressed_size);
 #endif

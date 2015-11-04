@@ -141,7 +141,7 @@ static double day2sec(double day)
 {
     int64_t usec;
 
-    usec = floor(day * 86400000000.0 + 0.5);
+    usec = (int64_t)floor(day * 86400000000.0 + 0.5);
     return usec / 1000000.0;
 }
 
@@ -149,7 +149,7 @@ static double sec2day(double sec)
 {
     int64_t usec;
 
-    usec = floor(sec * 1000000.0 + 0.5);
+    usec = (int64_t)floor(sec * 1000000.0 + 0.5);
     return usec / 86400000000.0;
 }
 
@@ -388,7 +388,7 @@ static IDL_VPTR x_coda_close(int argc, IDL_VPTR *argv)
         return mk_coda_error(CODA_IDL_ERR_PROD_ID_NONPOSITIVE); /* product file id must be a positive integer */
     }
 
-    pf_index = (pf_id - 1) % NUM_PF_SLOTS;
+    pf_index = (int)((pf_id - 1) % NUM_PF_SLOTS);
 
     /* check that the product file id specifies an open product file */
     if (pf_slot[pf_index].pf_id != pf_id)
@@ -437,7 +437,7 @@ static IDL_VPTR x_coda_product_class(int argc, IDL_VPTR *argv)
         return mk_coda_error(CODA_IDL_ERR_PROD_ID_NONPOSITIVE); /* product file pf_id must be a positive integer */
     }
 
-    pf_index = (pf_id - 1) % NUM_PF_SLOTS;
+    pf_index = (int)((pf_id - 1) % NUM_PF_SLOTS);
 
     /* check that the product file pf_id specifies an open product file */
     if (pf_slot[pf_index].pf_id != pf_id)
@@ -471,7 +471,7 @@ static IDL_VPTR x_coda_product_type(int argc, IDL_VPTR *argv)
         return mk_coda_error(CODA_IDL_ERR_PROD_ID_NONPOSITIVE); /* product file pf_id must be a positive integer */
     }
 
-    pf_index = (pf_id - 1) % NUM_PF_SLOTS;
+    pf_index = (int)((pf_id - 1) % NUM_PF_SLOTS);
 
     /* check that the product file pf_id specifies an open product file */
     if (pf_slot[pf_index].pf_id != pf_id)
@@ -506,7 +506,7 @@ static IDL_VPTR x_coda_product_version(int argc, IDL_VPTR *argv)
         return mk_coda_error(CODA_IDL_ERR_PROD_ID_NONPOSITIVE); /* product file pf_id must be a positive integer */
     }
 
-    pf_index = (pf_id - 1) % NUM_PF_SLOTS;
+    pf_index = (int)((pf_id - 1) % NUM_PF_SLOTS);
 
     /* check that the product file pf_id specifies an open product file */
     if (pf_slot[pf_index].pf_id != pf_id)
@@ -1276,7 +1276,7 @@ static int idl_coda_fetch_cursor_to_StructDefPtr(coda_Cursor *cursor, IDL_Struct
                                 break;
                             }
                             record_tags[field_index].dims[0] = 1;
-                            record_tags[field_index].dims[1] = size;
+                            record_tags[field_index].dims[1] = (long)size;
                         }
                         break;
                     case coda_integer_class:
@@ -1990,10 +1990,10 @@ static int idl_coda_parse_vector_dimensions(IDL_VPTR arg, int *num_dims, long *i
                 index[i] = ((IDL_ULONG *)arg->value.arr->data)[i];
                 break;
             case IDL_TYP_LONG64:
-                index[i] = ((IDL_LONG64 *)arg->value.arr->data)[i];
+                index[i] = (long)((IDL_LONG64 *)arg->value.arr->data)[i];
                 break;
             case IDL_TYP_ULONG64:
-                index[i] = ((IDL_ULONG64 *)arg->value.arr->data)[i];
+                index[i] = (long)((IDL_ULONG64 *)arg->value.arr->data)[i];
                 break;
             default:
                 /* we shouldn't get here! */
@@ -2316,7 +2316,7 @@ static int idl_coda_fetchspec_to_datahandle(int argc, IDL_VPTR *argv, struct IDL
             return -1;
         }
 
-        pf_index = (datahandle->pf_id - 1) % NUM_PF_SLOTS;
+        pf_index = (int)((datahandle->pf_id - 1) % NUM_PF_SLOTS);
 
         /* check that the product file id specifies an open product file */
         if (pf_slot[pf_index].pf_id != datahandle->pf_id)
@@ -2345,7 +2345,7 @@ static int idl_coda_fetchspec_to_datahandle(int argc, IDL_VPTR *argv, struct IDL
             return -1;
         }
 
-        pf_index = (datahandle->pf_id - 1) % NUM_PF_SLOTS;
+        pf_index = (int)((datahandle->pf_id - 1) % NUM_PF_SLOTS);
 
         /* check that the product file pf_id specifies an open product file */
         if (pf_slot[pf_index].pf_id != datahandle->pf_id)

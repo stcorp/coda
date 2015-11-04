@@ -1,3 +1,17 @@
+1.2.3 2009-06-10
+~~~~~~~~~~~~~~~~
+
+* coda_get_product_format() now properly returns coda_format_ascii for ascii
+  files.
+
+* Removed -t (totals) option of codacheck.
+
+* Added coda_str64() and coda_str64u() to the C interface to support printing
+  of 64 bit values on 32-bit platforms where printf does not support %lld.
+
+* Fixed issue that could prevent CODA from working correctly on systems that are
+  picky about having variables aligned on 32 or 64 memory boundaries.
+
 1.2.2 2009-05-08
 ~~~~~~~~~~~~~~~~
 

@@ -331,7 +331,10 @@ static void generate_html_ascii_attributes(const coda_asciiType *type, int first
                         ff_printf("\"&nbsp;-&gt;&nbsp;");
                         if (type->type_class == coda_integer_class)
                         {
-                            ff_printf("%lld", (long long)((coda_asciiIntegerMapping *)mappings->mapping[i])->value);
+                            char s[21];
+
+                            coda_str64(((coda_asciiIntegerMapping *)mappings->mapping[i])->value, s);
+                            ff_printf("%s", s);
                         }
                         else
                         {
@@ -634,13 +637,16 @@ static void generate_html_type(const coda_Type *type, int expand_named_type, int
         coda_type_get_bit_size(type, &bit_size);
         if (bit_size >= 0)
         {
+            char s[21];
+
+            coda_str64(bit_size >> 3, s);
             if (bit_size & 0x7)
             {
-                ff_printf("%lld:%d", (long long)(bit_size >> 3), (int)(bit_size & 0x7));
+                ff_printf("%s:%d", s, (int)(bit_size & 0x7));
             }
             else
             {
-                ff_printf("%lld", (long long)(bit_size >> 3));
+                ff_printf("%s", s);
             }
         }
         else
@@ -995,7 +1001,12 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             ff_printf("%f", ((coda_ExprDoubleConstant *)expr)->value);
             break;
         case expr_constant_integer:
-            ff_printf("%lld", (long long)((coda_ExprIntegerConstant *)expr)->value);
+            {
+                char s[21];
+
+                coda_str64(((coda_ExprIntegerConstant *)expr)->value, s);
+                ff_printf("%s", s);
+            }
             break;
         case expr_constant_string:
             ff_printf("\"");
@@ -1067,13 +1078,19 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             generate_html_expr(((coda_ExprOperation *)expr)->operand[3], 15);
             break;
         case expr_goto_array_element:
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            if (((coda_ExprOperation *)expr)->operand[0] != NULL)
+            {
+                generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            }
             ff_printf("[");
             generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 15);
             ff_printf("]");
             break;
         case expr_goto_attribute:
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            if (((coda_ExprOperation *)expr)->operand[0] != NULL)
+            {
+                generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            }
             ff_printf("@%s", ((coda_ExprOperation *)expr)->identifier);
             break;
         case expr_goto_begin:
@@ -1513,11 +1530,15 @@ static void generate_html_product_definition(const char *filename, coda_ProductD
             for (j = 0; j < detection_rule->num_entries; j++)
             {
                 coda_DetectionRuleEntry *entry = detection_rule->entry[j];
+                char s1[21];
+                char s2[21];
+
+                coda_str64(entry->offset, s1);
+                coda_str64(entry->offset + entry->value_length, s1);
 
                 if (entry->use_filename)
                 {
-                    fi_printf("<b>filename</b>[%lld:%lld] == \"", (long long)entry->offset,
-                              (long long)entry->offset + entry->value_length);
+                    fi_printf("<b>filename</b>[%s:%s] == \"", s1, s2);
                     generate_escaped_html_string(entry->value, entry->value_length);
                     ff_printf("\"");
                 }
@@ -1527,14 +1548,13 @@ static void generate_html_product_definition(const char *filename, coda_ProductD
                     {
                         if (entry->value != NULL)
                         {
-                            fi_printf("<b>file</b>[%lld:%lld] == \"", (long long)entry->offset,
-                                      (long long)entry->offset + entry->value_length);
+                            fi_printf("<b>file</b>[%s:%s] == \"", s1, s2);
                             generate_escaped_html_string(entry->value, entry->value_length);
                             ff_printf("\"");
                         }
                         else
                         {
-                            fi_printf("<b>filesize</b> >= %lld", (long long)entry->offset);
+                            fi_printf("<b>filesize</b> >= %s", s1);
                         }
                     }
                     else if (entry->path != NULL)

@@ -63,11 +63,11 @@ static void print_help()
 static void print_escaped(const char *data, long length)
 {
     long i;
-    
+
     for (i = 0; i < length; i++)
     {
         char c;
-        
+
         c = data[i];
         switch (c)
         {
@@ -596,8 +596,12 @@ static int compare_data(coda_Cursor *cursor1, coda_Cursor *cursor2)
                                 printf("\n");
                                 if (option_verbose)
                                 {
-                                    printf("%s%lld\n", pre[0], (long long)value1);
-                                    printf("%s%lld\n", pre[1], (long long)value2);
+                                    char s[21];
+
+                                    coda_str64(value1, s);
+                                    printf("%s%s\n", pre[0], s);
+                                    coda_str64(value2, s);
+                                    printf("%s%s\n", pre[1], s);
                                 }
                                 return 0;
                             }
@@ -634,8 +638,12 @@ static int compare_data(coda_Cursor *cursor1, coda_Cursor *cursor2)
                                 printf("\n");
                                 if (option_verbose)
                                 {
-                                    printf("%s%llu\n", pre[0], (unsigned long long)value1);
-                                    printf("%s%llu\n", pre[1], (unsigned long long)value2);
+                                    char s[21];
+
+                                    coda_str64u(value1, s);
+                                    printf("%s%s\n", pre[0], s);
+                                    coda_str64u(value2, s);
+                                    printf("%s%s\n", pre[1], s);
                                 }
                                 return 0;
                             }
@@ -778,8 +786,12 @@ static int compare_data(coda_Cursor *cursor1, coda_Cursor *cursor2)
                     printf("\n");
                     if (option_verbose)
                     {
-                        printf("%s%lld bits\n", pre[0], (long long)bit_size1);
-                        printf("%s%lld bits\n", pre[1], (long long)bit_size2);
+                        char s[21];
+
+                        coda_str64(bit_size1, s);
+                        printf("%s%s bits\n", pre[0], s);
+                        coda_str64(bit_size2, s);
+                        printf("%s%s bits\n", pre[1], s);
                     }
                     return 0;
                 }
@@ -833,10 +845,10 @@ static int compare_data(coda_Cursor *cursor1, coda_Cursor *cursor2)
                         if (option_verbose && byte_size1 <= 256)
                         {
                             printf("%s", pre[0]);
-                            print_escaped((char *)value1, byte_size1);
+                            print_escaped((char *)value1, (long)byte_size1);
                             printf("\n");
                             printf("%s", pre[1]);
-                            print_escaped((char *)value2, byte_size2);
+                            print_escaped((char *)value2, (long)byte_size2);
                             printf("\n");
                         }
                     }

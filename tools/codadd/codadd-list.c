@@ -246,7 +246,12 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             printf("%f", ((coda_ExprDoubleConstant *)expr)->value);
             break;
         case expr_constant_integer:
-            printf("%lld", (long long)((coda_ExprIntegerConstant *)expr)->value);
+            {
+                char s[21];
+
+                coda_str64(((coda_ExprIntegerConstant *)expr)->value, s);
+                printf("%s", s);
+            }
             break;
         case expr_constant_string:
             printf("\"");
@@ -318,13 +323,19 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             generate_expr(((coda_ExprOperation *)expr)->operand[3], 15);
             break;
         case expr_goto_array_element:
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            if (((coda_ExprOperation *)expr)->operand[0] != NULL)
+            {
+                generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            }
             printf("[");
             generate_expr(((coda_ExprOperation *)expr)->operand[1], 15);
             printf("]");
             break;
         case expr_goto_attribute:
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            if (((coda_ExprOperation *)expr)->operand[0] != NULL)
+            {
+                generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            }
             printf("@%s", ((coda_ExprOperation *)expr)->identifier);
             break;
         case expr_goto_begin:

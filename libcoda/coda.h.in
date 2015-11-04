@@ -277,6 +277,9 @@ LIBCODA_API int coda_isInf(double x);
 LIBCODA_API int coda_isPlusInf(double x);
 LIBCODA_API int coda_isMinInf(double x);
 
+LIBCODA_API void coda_str64(int64_t a, char *s);
+LIBCODA_API void coda_str64u(uint64_t a, char *s);
+
 LIBCODA_API long coda_c_index_to_fortran_index(int num_dims, const long dim[], long index);
 
 LIBCODA_API int coda_datetime_to_double(int YEAR, int MONTH, int DAY, int HOUR, int MINUTE, int SECOND, int MUSEC,

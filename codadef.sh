@@ -5,7 +5,7 @@
 #set -x
 
 if test $# -eq 0 -o $# -gt 2 ; then
-  echo "Usage: $0 <input directory> [<output diretory>]"
+  echo "Usage: $0 <input directory> [<output directory>]"
   exit 1
 fi
 

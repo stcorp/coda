@@ -1476,7 +1476,7 @@ static int cd_float_ascii_set_unit(parser_info *info)
 
 static int cd_float_ascii_set_read_type(parser_info *info)
 {
-    return coda_ascii_float_set_read_type((coda_asciiFloat *)info->node->parent->data, info->node->integer_data);
+    return coda_ascii_float_set_read_type((coda_asciiFloat *)info->node->parent->data, (int)info->node->integer_data);
 }
 
 static int cd_float_ascii_set_conversion(parser_info *info)
@@ -1523,7 +1523,7 @@ static int cd_float_binary_set_bit_size(parser_info *info)
 
 static int cd_float_binary_set_read_type(parser_info *info)
 {
-    return coda_bin_float_set_read_type((coda_binFloat *)info->node->parent->data, info->node->integer_data);
+    return coda_bin_float_set_read_type((coda_binFloat *)info->node->parent->data, (int)info->node->integer_data);
 }
 
 static int cd_float_binary_set_conversion(parser_info *info)
@@ -1604,7 +1604,8 @@ static int cd_integer_ascii_set_unit(parser_info *info)
 
 static int cd_integer_ascii_set_read_type(parser_info *info)
 {
-    return coda_ascii_integer_set_read_type((coda_asciiInteger *)info->node->parent->data, info->node->integer_data);
+    return coda_ascii_integer_set_read_type((coda_asciiInteger *)info->node->parent->data,
+                                            (int)info->node->integer_data);
 }
 
 static int cd_integer_ascii_set_conversion(parser_info *info)
@@ -1658,7 +1659,8 @@ static int cd_integer_binary_set_bit_size(parser_info *info)
     }
     else
     {
-        if (coda_bin_integer_set_bit_size((coda_binInteger *)info->node->parent->data, info->node->integer_data) != 0)
+        if (coda_bin_integer_set_bit_size((coda_binInteger *)info->node->parent->data, (int)info->node->integer_data) !=
+            0)
         {
             return -1;
         }
@@ -1668,7 +1670,7 @@ static int cd_integer_binary_set_bit_size(parser_info *info)
 
 static int cd_integer_binary_set_read_type(parser_info *info)
 {
-    return coda_bin_integer_set_read_type((coda_binInteger *)info->node->parent->data, info->node->integer_data);
+    return coda_bin_integer_set_read_type((coda_binInteger *)info->node->parent->data, (int)info->node->integer_data);
 }
 
 static int cd_integer_binary_set_conversion(parser_info *info)
@@ -2683,7 +2685,7 @@ static int cd_text_ascii_set_fixed_value(parser_info *info)
 
 static int cd_text_ascii_set_read_type(parser_info *info)
 {
-    return coda_ascii_text_set_read_type((coda_asciiText *)info->node->parent->data, info->node->integer_data);
+    return coda_ascii_text_set_read_type((coda_asciiText *)info->node->parent->data, (int)info->node->integer_data);
 }
 
 static int cd_text_ascii_set_byte_size(parser_info *info)

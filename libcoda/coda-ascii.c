@@ -219,13 +219,9 @@ int coda_ascii_init_asciilines(coda_ProductFile *pf)
 
     product_file->num_asciilines = num_asciilines;
     product_file->asciiline_end_offset = asciiline_end_offset;
+    product_file->lastline_ending = lastline_ending;
 
     return 0;
-}
-
-int coda_ascii_open(const char *filename, int64_t file_size, coda_ProductFile **pf)
-{
-    return coda_ascbin_open(filename, file_size, coda_format_ascii, pf);
 }
 
 int coda_ascii_close(coda_ProductFile *pf)

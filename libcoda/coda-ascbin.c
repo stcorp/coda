@@ -183,7 +183,7 @@ int coda_ascbin_recognize_file(const char *filename, int64_t size, coda_ProductD
     return 0;
 }
 
-int coda_ascbin_open(const char *filename, int64_t file_size, coda_format format, coda_ProductFile **pf)
+int coda_ascbin_open(const char *filename, int64_t file_size, coda_ProductFile **pf)
 {
     coda_ascbinProductFile *product_file;
     coda_ProductDefinition *product_definition;
@@ -214,7 +214,7 @@ int coda_ascbin_open(const char *filename, int64_t file_size, coda_format format
     }
     product_file->filename = NULL;
     product_file->file_size = file_size;
-    product_file->format = format;
+    product_file->format = product_definition->format;
     product_file->root_type = (coda_DynamicType *)product_definition->root_type;
     product_file->product_definition = product_definition;
     product_file->product_variable_size = NULL;

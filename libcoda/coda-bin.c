@@ -23,11 +23,6 @@
 #include "coda-definition.h"
 #include "coda-bin-definition.h"
 
-int coda_bin_open(const char *filename, int64_t file_size, coda_ProductFile **pf)
-{
-    return coda_ascbin_open(filename, file_size, coda_format_binary, pf);
-}
-
 int coda_bin_close(coda_ProductFile *pf)
 {
     return coda_ascbin_close(pf);

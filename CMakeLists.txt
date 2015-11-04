@@ -2,7 +2,7 @@
 #
 project(CODA)
 
-set(VERSION 1.2.1)
+set(VERSION 1.2.3)
 set(CODA_VERSION \"${VERSION}\")
 
 # General setup
@@ -59,7 +59,14 @@ set(PACKAGE_BUGREPORT \"\")
 if(CMAKE_COMPILER_IS_GNUCC)
   set(GNU_WARNING_FLAGS "-W -Wall -Wextra")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${GNU_WARNING_FLAGS}")
+  if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC"  )
+  endif("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
 endif(CMAKE_COMPILER_IS_GNUCC)
+# CMake adds -DNDEBUG by default in the Release targets. We want
+# asserts enabled even in production releases, so we explicitly
+# re-enable them here.
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -UNDEBUG")
 
 # hdf
 #
@@ -476,9 +483,9 @@ if(CODA_BUILD_MATLAB)
     set(INT_LIB_DIR ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
 
     if(WIN32)
-      set(MEX_CMD ${MEX} ${MEXFLAGS} ${CODA_MATLAB_SOURCE_FILES} ${INT_LIB_DIR}/libcoda.lib ${INT_LIB_DIR}/expat.lib ${INT_LIB_DIR}/z.lib ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} -output ${MEX_OUTPUT})
+      set(MEX_CMD ${MEX} ${MEXFLAGS} ${CODA_MATLAB_SOURCE_FILES} ${INT_LIB_DIR}/libcoda.lib ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} -output ${MEX_OUTPUT})
     else(WIN32)
-      set(MEX_CMD ${MEX} ${MEXFLAGS} ${CODA_MATLAB_SOURCE_FILES} ${INT_LIB_DIR}/libcoda.a ${INT_LIB_DIR}/libexpat.a ${INT_LIB_DIR}/libz.a ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} -o ${MEX_OUTPUT})
+      set(MEX_CMD ${MEX} ${MEXFLAGS} ${CODA_MATLAB_SOURCE_FILES} ${INT_LIB_DIR}/libcoda.a ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} -o ${MEX_OUTPUT})
     endif(WIN32)
  
     add_custom_command(
@@ -617,7 +624,7 @@ set(LIBCODA_CURRENT 1)
 set(LIBCODA_REVISION 0)
 set(LIBCODA_AGE 0)
 
-add_library(coda SHARED ${LIBCODA_SOURCES})
+add_library(coda SHARED ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBZLIB_SOURCES})
 target_link_libraries(coda ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
 set_target_properties(coda PROPERTIES
   VERSION ${LIBCODA_CURRENT}.${LIBCODA_REVISION}.${LIBCODA_AGE}
@@ -649,8 +656,13 @@ endif(MSVC)
 
 # Required libraries
 #
-find_library(LIBM_LIBRARY m)
-mark_as_advanced(LIBM_LIBRARY)
+# Only on Unix -- Windows does not need this, and the CMake
+# people explicitly recommend just special-casing the platform
+# through 'if'.
+if(NOT WIN32)
+  find_library(LIBM_LIBRARY m)
+  mark_as_advanced(LIBM_LIBRARY)
+endif(NOT WIN32)
 
 # tools codacheck
 

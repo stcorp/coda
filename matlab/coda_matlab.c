@@ -44,7 +44,7 @@ static int coda_matlab_initialised = 0;
 static mxArray *coda_matlab_add_file_handle(coda_ProductFile *pf);
 static void coda_matlab_remove_file_handle(const mxArray *mx_handle);
 static coda_ProductFile *coda_matlab_get_product_file(const mxArray *mx_handle);
-static void coda_matlab_cleanup();
+static void coda_matlab_cleanup(void);
 
 static void coda_matlab_attributes(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]);
 static void coda_matlab_class(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]);

@@ -190,7 +190,10 @@ static void print_data(coda_Cursor *cursor)
                             }
                             if (offset >= 0)
                             {
-                                ff_printf(":%lld", (long long)(offset >> 3));
+                                char s[21];
+
+                                coda_str64(offset >> 3, s);
+                                ff_printf(":%s", s);
                                 if ((offset & 0x7) != 0)
                                 {
                                     ff_printf(":%d", (int)(offset & 0x7));
@@ -228,7 +231,10 @@ static void print_data(coda_Cursor *cursor)
                                 }
                                 if (offset >= 0)
                                 {
-                                    ff_printf("%lld", (long long)(offset >> 3));
+                                    char s[21];
+
+                                    coda_str64(offset >> 3, s);
+                                    ff_printf(":%s", s);
                                     if ((offset & 0x7) != 0)
                                     {
                                         ff_printf(":%d", (int)(offset & 0x7));
@@ -300,7 +306,10 @@ static void print_data(coda_Cursor *cursor)
                                 }
                                 if (offset >= 0)
                                 {
-                                    ff_printf(":%lld", (long long)(offset >> 3));
+                                    char s[21];
+
+                                    coda_str64(offset >> 3, s);
+                                    ff_printf(":%s", s);
                                     if ((offset & 0x7) != 0)
                                     {
                                         ff_printf(":%d", (int)(offset & 0x7));
@@ -391,6 +400,7 @@ static void print_data(coda_Cursor *cursor)
                                 int64_t bit_size;
                                 int64_t byte_size;
                                 uint8_t *data;
+                                char s[21];
 
                                 if (coda_cursor_get_bit_size(cursor, &bit_size) != 0)
                                 {
@@ -413,13 +423,14 @@ static void print_data(coda_Cursor *cursor)
                                 fi_printf("\"");
                                 print_escaped((char *)data, (long)byte_size);
                                 ff_printf("\" (size=");
-                                ff_printf("%lld", (long long)(bit_size >> 3));
+                                coda_str64(bit_size >> 3, s);
+                                ff_printf("%s", s);
                                 if ((bit_size & 0x7) != 0)
                                 {
                                     ff_printf(":%d", (int)(bit_size & 0x7));
                                 }
                                 ff_printf(")\n");
-                                    
+
                                 free(data);
                             }
                             break;
@@ -454,25 +465,29 @@ static void print_data(coda_Cursor *cursor)
                         case coda_native_type_int64:
                             {
                                 int64_t data;
+                                char s[21];
 
                                 if (coda_cursor_read_int64(cursor, &data) != 0)
                                 {
                                     handle_coda_error();
                                 }
 
-                                fi_printf("%lld\n", (long long)data);
+                                coda_str64(data, s);
+                                fi_printf("%s\n", s);
                             }
                             break;
                         case coda_native_type_uint64:
                             {
                                 uint64_t data;
+                                char s[21];
 
                                 if (coda_cursor_read_uint64(cursor, &data) != 0)
                                 {
                                     handle_coda_error();
                                 }
 
-                                fi_printf("%llu\n", (unsigned long long)data);
+                                coda_str64u(data, s);
+                                fi_printf("%s\n", s);
                             }
                             break;
                         case coda_native_type_float:

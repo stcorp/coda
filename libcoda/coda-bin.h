@@ -27,7 +27,6 @@ coda_DynamicType *coda_bin_no_data(void);
 
 void coda_bin_done(void);
 
-int coda_bin_open(const char *filename, int64_t file_size, coda_ProductFile **pf);
 int coda_bin_close(coda_ProductFile *pf);
 
 int coda_bin_get_type_for_dynamic_type(coda_DynamicType *dynamic_type, coda_Type **type);

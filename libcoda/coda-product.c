@@ -369,13 +369,8 @@ LIBCODA_API int coda_open(const char *filename, coda_ProductFile **pf)
     switch (format)
     {
         case coda_format_ascii:
-            if (coda_ascii_open(filename, file_size, &product_file) != 0)
-            {
-                return -1;
-            }
-            break;
         case coda_format_binary:
-            if (coda_bin_open(filename, file_size, &product_file) != 0)
+            if (coda_ascbin_open(filename, file_size, &product_file) != 0)
             {
                 return -1;
             }

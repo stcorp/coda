@@ -32,16 +32,8 @@
 #include "coda-path.h"
 
 int option_verbose;
-int option_totals;
 int option_quick;
-
-long count_files = 0;
-int64_t count_bytes = 0;
-
-long count_open_error = 0;
-long count_size_error = 0;
-long count_format_error = 0;
-long count_product_error = 0;
+int found_errors;
 
 static void print_version()
 {
@@ -59,8 +51,6 @@ static void print_help()
     printf("            -q, --quick\n");
     printf("                    only perform a quick check of the product\n");
     printf("                    (do not traverse the full product)\n");
-    printf("            -t, --totals\n");
-    printf("                    show a statistical summary at the end\n");
     printf("            -V, --verbose\n");
     printf("                    show more information while performing the check\n");
     printf("\n");
@@ -132,8 +122,6 @@ static int print_cursor_position(const coda_Cursor *cursor)
             }
         }
 
-        printf("/");
-
         /* print path from parent to current cursor position */
         if (coda_cursor_get_index(cursor, &index) != 0)
         {
@@ -194,7 +182,7 @@ static int print_cursor_position(const coda_Cursor *cursor)
                         {
                             return -1;
                         }
-                        printf("%s", name);
+                        printf("/%s", name);
                     }
                     break;
                 default:
@@ -202,10 +190,6 @@ static int print_cursor_position(const coda_Cursor *cursor)
                     exit(1);
             }
         }
-    }
-    else
-    {
-        printf("/");
     }
 
     return 0;
@@ -219,14 +203,7 @@ static void print_error_with_cursor(coda_Cursor *cursor, int err)
         printf("{--%s--}", coda_errno_to_string(coda_errno));
     }
     printf("\n");
-    if (err == CODA_ERROR_INVALID_FORMAT)
-    {
-        count_format_error++;
-    }
-    else if (err == CODA_ERROR_PRODUCT)
-    {
-        count_product_error++;
-    }
+    found_errors = 1;
 }
 
 static int quick_size_check(coda_ProductFile *pf)
@@ -240,7 +217,7 @@ static int quick_size_check(coda_ProductFile *pf)
     {
         return -1;
     }
-    real_file_size <<= 3; /* now in bits */
+    real_file_size <<= 3;       /* now in bits */
 
     if (coda_cursor_set_product(&cursor, pf) != 0)
     {
@@ -260,22 +237,21 @@ static int quick_size_check(coda_ProductFile *pf)
 
     if (real_file_size != calculated_file_size)
     {
+        char s1[21];
+        char s2[21];
+
+        coda_str64(real_file_size >> 3, s1);
+        coda_str64(calculated_file_size >> 3, s2);
         if (calculated_file_size & 0x7)
         {
-            printf("  ERROR: incorrect file size (actual size: %lld, calculated: %lld:%d)\n",
-                   (long long)(real_file_size >> 3), (long long)(calculated_file_size >> 3),
+            printf("  ERROR: incorrect file size (actual size: %s, calculated: %s:%d)\n", s1, s2,
                    (int)(calculated_file_size & 0x7));
         }
         else
         {
-            printf("  ERROR: incorrect file size (actual size: %lld, calculated: %lld)\n",
-                   (long long)(real_file_size >> 3), (long long)(calculated_file_size >> 3));
+            printf("  ERROR: incorrect file size (actual size: %s, calculated: %s)\n", s1, s2);
         }
-        count_size_error++;
-    }
-    else
-    {
-        count_bytes += (calculated_file_size >> 3) + (calculated_file_size & 0x7 ? 1 : 0);
+        found_errors = 1;
     }
 
     return 0;
@@ -572,7 +548,7 @@ static int check_data(coda_Cursor *cursor, int64_t *bit_size)
                     {
                         uint8_t *data;
 
-                        data = (uint8_t *)malloc(byte_size);
+                        data = (uint8_t *)malloc((size_t)byte_size);
                         if (data == NULL)
                         {
                             coda_set_error(CODA_ERROR_OUT_OF_MEMORY,
@@ -683,7 +659,7 @@ static int size_and_read_check(coda_ProductFile *pf)
     {
         return -1;
     }
-    real_file_size <<= 3; /* now in bits */
+    real_file_size <<= 3;       /* now in bits */
 
     if (coda_cursor_set_product(&cursor, pf) != 0)
     {
@@ -698,22 +674,21 @@ static int size_and_read_check(coda_ProductFile *pf)
 
     if (real_file_size != calculated_file_size)
     {
+        char s1[21];
+        char s2[21];
+
+        coda_str64(real_file_size >> 3, s1);
+        coda_str64(calculated_file_size >> 3, s2);
         if (calculated_file_size & 0x7)
         {
-            printf("  ERROR: incorrect file size (actual size: %lld, calculated: %lld:%d)\n",
-                   (long long)(real_file_size >> 3), (long long)(calculated_file_size >> 3),
+            printf("  ERROR: incorrect file size (actual size: %s, calculated: %s:%d)\n", s1, s2,
                    (int)(calculated_file_size & 0x7));
         }
         else
         {
-            printf("  ERROR: incorrect file size (actual size: %lld, calculated: %lld)\n",
-                   (long long)(real_file_size >> 3), (long long)(calculated_file_size >> 3));
+            printf("  ERROR: incorrect file size (actual size: %s, calculated: %s)\n", s1, s2);
         }
-        count_size_error++;
-    }
-    else
-    {
-        count_bytes += (calculated_file_size >> 3) + (calculated_file_size & 0x7 ? 1 : 0);
+        found_errors = 1;
     }
 
     return 0;
@@ -746,13 +721,11 @@ static void check_file(char *filename)
 
     printf("%s\n", filename);
 
-    count_files++;
-
     if (coda_recognize_file(filename, &file_size, &format, &product_class, &product_type, &version) != 0)
     {
         printf("  ERROR: %s\n\n", coda_errno_to_string(coda_errno));
         coda_set_error(CODA_SUCCESS, NULL);
-        count_open_error++;
+        found_errors = 1;
         return;
     }
 
@@ -780,7 +753,7 @@ static void check_file(char *filename)
     {
         printf("  ERROR: %s\n\n", coda_errno_to_string(coda_errno));
         coda_set_error(CODA_SUCCESS, NULL);
-        count_open_error++;
+        found_errors = 1;
         return;
     }
 
@@ -831,13 +804,11 @@ static void check_file(char *filename)
 
 int main(int argc, char **argv)
 {
-    clock_t T1, T2;
     int option_stdin;
     int i;
 
     option_stdin = 0;
     option_verbose = 0;
-    option_totals = 0;
     option_quick = 0;
 
     if (argc == 1 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)
@@ -857,10 +828,6 @@ int main(int argc, char **argv)
         if (strcmp(argv[i], "-V") == 0 || strcmp(argv[i], "--verbose") == 0)
         {
             option_verbose = 1;
-        }
-        else if (strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--totals") == 0)
-        {
-            option_totals = 1;
         }
         else if (strcmp(argv[i], "-q") == 0 || strcmp(argv[i], "--quick") == 0)
         {
@@ -883,8 +850,6 @@ int main(int argc, char **argv)
             exit(1);
         }
     }
-
-    T1 = clock();
 
     if (getenv("CODA_DEFINITION") == NULL)
     {
@@ -961,27 +926,7 @@ int main(int argc, char **argv)
 
     coda_done();
 
-    T2 = clock();
-
-    if (option_totals)
-    {
-        printf("\n");
-        printf("  files processed ...........................: %12ld\n", count_files);
-        printf("  bytes processed ...........................: %12lld (%.1f MB)\n\n", (long long)count_bytes,
-               (double)count_bytes / 1048576.0);
-        printf("  files open failures .......................: %12ld --> %s\n", count_open_error,
-               count_open_error ? "ERRORS DETECTED" : "PERFECT");
-        printf("  file size mismatches ......................: %12ld --> %s\n", count_size_error,
-               count_size_error ? "ERRORS DETECTED" : "PERFECT");
-        printf("  format errors .............................: %12ld --> %s\n", count_format_error,
-               count_format_error ? "ERRORS DETECTED" : "PERFECT");
-        printf("  generic product errors ....................: %12ld --> %s\n", count_product_error,
-               count_product_error ? "ERRORS DETECTED" : "PERFECT");
-
-        printf("  CPU time used (does not include I/O) ......: %16.3f seconds\n\n", (double)(T2 - T1) / CLOCKS_PER_SEC);
-    }
-
-    if (count_open_error || count_size_error || count_format_error || count_product_error)
+    if (found_errors)
     {
         exit(1);
     }

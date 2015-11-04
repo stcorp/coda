@@ -1,5 +1,5 @@
 # autoconf file for CODA
-AC_INIT(CODA, 1.2.2)
+AC_INIT(CODA, 1.2.3)
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE(foreign 1.8.3 -Wall)
 
@@ -93,9 +93,9 @@ AC_CONFIG_FILES([win32/coda.iss win32/setup.py])
 #    increment age.
 # 6. If any interfaces have been removed or changed since the last public
 #    release, then set age to 0.
-LIBCODA_CURRENT=1
+LIBCODA_CURRENT=2
 LIBCODA_REVISION=0
-LIBCODA_AGE=0
+LIBCODA_AGE=1
 AC_SUBST(LIBCODA_CURRENT)
 AC_SUBST(LIBCODA_REVISION)
 AC_SUBST(LIBCODA_AGE)

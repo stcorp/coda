@@ -830,7 +830,7 @@ LIBCODA_API int coda_cursor_has_ascii_content(const coda_Cursor *cursor, int *ha
  * The length that is returned does not include the additional byte needed for the terminating 0. This means that if
  * you want to call coda_cursor_read_string() you should allocate \a length + 1 amount of bytes and pass a value of
  * \a length + 1 for the dst_size parameter of coda_cursor_read_string().
- * If the cursor does not point to ascii data the function will return an error.
+ * If the cursor does not point to string data the function will return an error.
  * \param cursor Pointer to a valid CODA cursor.
  * \param length Pointer to the variable where the string length will be stored.
  * \return

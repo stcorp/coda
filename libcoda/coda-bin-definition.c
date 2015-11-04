@@ -662,9 +662,12 @@ int coda_bin_raw_validate(coda_binRaw *raw)
         byte_size = (raw->bit_size >> 3) + (raw->bit_size & 0x7 ? 1 : 0);
         if (byte_size != raw->fixed_value_length)
         {
+            char s[21];
+
+            coda_str64(byte_size, s);
             coda_set_error(CODA_ERROR_DATA_DEFINITION,
-                           "length of fixed value (%ld) should equal rounded byte size (%lld) for raw definition",
-                           raw->fixed_value_length, (long long)byte_size);
+                           "length of fixed value (%ld) should equal rounded byte size (%s) for raw definition",
+                           raw->fixed_value_length, s);
             return -1;
         }
     }

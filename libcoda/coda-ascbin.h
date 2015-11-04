@@ -26,7 +26,7 @@
 coda_DynamicType *coda_ascbin_empty_record(void);
 
 void coda_ascbin_done(void);
-int coda_ascbin_open(const char *filename, int64_t file_size, coda_format format, coda_ProductFile **pf);
+int coda_ascbin_open(const char *filename, int64_t file_size, coda_ProductFile **pf);
 int coda_ascbin_close(coda_ProductFile *pf);
 
 int coda_ascbin_recognize_file(const char *filename, int64_t size, coda_ProductDefinition **definition);

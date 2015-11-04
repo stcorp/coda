@@ -234,25 +234,29 @@ static void write_basic_data(FILE *f, int depth)
                     case coda_native_type_int64:
                         {
                             int64_t data;
+                            char s[21];
 
                             if (coda_cursor_read_int64(&traverse_info.cursor, &data) != 0)
                             {
                                 handle_coda_error();
                             }
 
-                            fprintf(f, "%lld", (long long)data);
+                            coda_str64(data, s);
+                            fprintf(f, "%s", s);
                         }
                         break;
                     case coda_native_type_uint64:
                         {
                             uint64_t data;
+                            char s[21];
 
                             if (coda_cursor_read_uint64(&traverse_info.cursor, &data) != 0)
                             {
                                 handle_coda_error();
                             }
 
-                            fprintf(f, "%llu", (unsigned long long)data);
+                            coda_str64u(data, s);
+                            fprintf(f, "%s", s);
                         }
                         break;
                     case coda_native_type_float:

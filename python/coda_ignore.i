@@ -50,3 +50,5 @@
 %ignore CODA_CURSOR_MAXDEPTH;
 
 %ignore coda_set_definition_path;
+%ignore coda_str64;
+%ignore coda_str64u;

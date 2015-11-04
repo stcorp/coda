@@ -30,7 +30,6 @@ long coda_ascii_parse_uint64(const char *buffer, long buffer_length, uint64_t *d
 long coda_ascii_parse_double(const char *buffer, long buffer_length, double *dst, int ignore_trailing_bytes);
 
 int coda_ascii_recognize_file(const char *filename, int64_t size, coda_ProductDefinition **definition);
-int coda_ascii_open(const char *filename, int64_t file_size, coda_ProductFile **pf);
 int coda_ascii_close(coda_ProductFile *pf);
 
 int coda_ascii_get_type_for_dynamic_type(coda_DynamicType *dynamic_type, coda_Type **type);

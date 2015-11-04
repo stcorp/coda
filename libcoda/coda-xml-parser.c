@@ -689,12 +689,14 @@ int coda_xml_parse_and_interpret(coda_xmlProductFile *pf)
         result = XML_Parse(info.parser, buff, length, (length == 0));
         if (result == XML_STATUS_ERROR || coda_errno != 0)
         {
+            char s[21];
+
             if (coda_errno == 0)
             {
                 coda_set_error(CODA_ERROR_XML, "xml parse error: %s", XML_ErrorString(XML_GetErrorCode(info.parser)));
             }
-            coda_add_error_message(" (line: %lu, byte offset: %lld)", (long)XML_GetCurrentLineNumber(info.parser),
-                                   (int64_t)XML_GetCurrentByteIndex(info.parser));
+            coda_str64(XML_GetCurrentByteIndex(info.parser), s);
+            coda_add_error_message(" (line: %lu, byte offset: %s)", (long)XML_GetCurrentLineNumber(info.parser), s);
             XML_ParserFree(info.parser);
             coda_xml_release_dynamic_type((coda_xmlDynamicType *)info.root);
             delete_element_dictionary(info.dictionary);
@@ -908,11 +910,13 @@ static void XMLCALL definition_character_data_handler(void *data, const char *s,
 
         if (info->element->tag == tag_xml_record_dynamic)
         {
+            char s[21];
+
             abort_parser(info);
+            coda_str64(XML_GetCurrentByteIndex(info->parser), s);
             coda_set_error(CODA_ERROR_PRODUCT, "non-whitespace character data not allowed for element '%s' "
-                           "(line: %lu, byte offset: %lld)", info->element->type->xml_name,
-                           (long)XML_GetCurrentLineNumber(info->parser),
-                           (int64_t)XML_GetCurrentByteIndex(info->parser));
+                           "(line: %lu, byte offset: %s)", info->element->type->xml_name,
+                           (long)XML_GetCurrentLineNumber(info->parser), s);
             return;
         }
         if (info->element->cdata_delta_offset == 0)
@@ -946,10 +950,13 @@ static void XMLCALL definition_start_cdata_section_handler(void *data)
 
     if (info->element->type->tag == tag_xml_record_dynamic)
     {
+        char s[21];
+
         abort_parser(info);
+        coda_str64(XML_GetCurrentByteIndex(info->parser), s);
         coda_set_error(CODA_ERROR_PRODUCT, "CDATA content not allowed for element '%s' "
-                       "(line: %lu, byte offset: %lld)", info->element->type->xml_name,
-                       (long)XML_GetCurrentLineNumber(info->parser), (int64_t)XML_GetCurrentByteIndex(info->parser));
+                       "(line: %lu, byte offset: %s)", info->element->type->xml_name,
+                       (long)XML_GetCurrentLineNumber(info->parser), s);
         return;
     }
 
@@ -1055,12 +1062,14 @@ int coda_xml_parse_with_definition(coda_xmlProductFile *pf)
         result = XML_Parse(info.parser, buff, length, (length == 0));
         if (result == XML_STATUS_ERROR || coda_errno != 0)
         {
+            char s[21];
+
             if (coda_errno == 0)
             {
                 coda_set_error(CODA_ERROR_XML, "xml parse error: %s", XML_ErrorString(XML_GetErrorCode(info.parser)));
             }
-            coda_add_error_message(" (line: %lu, byte offset: %lld)", (long)XML_GetCurrentLineNumber(info.parser),
-                                   (int64_t)XML_GetCurrentByteIndex(info.parser));
+            coda_str64(XML_GetCurrentByteIndex(info.parser), s);
+            coda_add_error_message(" (line: %lu, byte offset: %s)", (long)XML_GetCurrentLineNumber(info.parser), s);
             XML_ParserFree(info.parser);
             coda_xml_release_dynamic_type((coda_xmlDynamicType *)info.root);
             return -1;
@@ -1299,12 +1308,14 @@ int coda_xml_parse_for_detection(int fd, const char *filename, coda_ProductDefin
         }
         if (result == XML_STATUS_ERROR || coda_errno != 0)
         {
+            char s[21];
+
             if (coda_errno == 0)
             {
                 coda_set_error(CODA_ERROR_XML, "xml parse error: %s", XML_ErrorString(XML_GetErrorCode(info.parser)));
             }
-            coda_add_error_message(" (line: %lu, byte offset: %lld)", (long)XML_GetCurrentLineNumber(info.parser),
-                                   (int64_t)XML_GetCurrentByteIndex(info.parser));
+            coda_str64(XML_GetCurrentByteIndex(info.parser), s);
+            coda_add_error_message(" (line: %lu, byte offset: %s)", (long)XML_GetCurrentLineNumber(info.parser), s);
             XML_ParserFree(info.parser);
             return -1;
         }

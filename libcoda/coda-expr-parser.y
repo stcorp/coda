@@ -873,8 +873,20 @@ nonrootnode:
             $$ = coda_expr_new(expr_goto_field, strdup($3), $1, NULL, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
+    | '[' intexpr ']' {
+            $$ = coda_expr_new(expr_goto_array_element, NULL, NULL, $2, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
     | node '[' intexpr ']' {
             $$ = coda_expr_new(expr_goto_array_element, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | '@' NAME {
+            $$ = coda_expr_new(expr_goto_attribute, $2, NULL, NULL, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | '@' identifier {
+            $$ = coda_expr_new(expr_goto_attribute, strdup($2), NULL, NULL, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
     | node '@' NAME {

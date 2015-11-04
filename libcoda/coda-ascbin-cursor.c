@@ -802,9 +802,11 @@ int coda_ascbin_cursor_get_num_elements(const coda_Cursor *cursor, long *num_ele
                             }
                             if (var_dim < 0)
                             {
+                                char s[21];
+
+                                coda_str64(var_dim, s);
                                 coda_set_error(CODA_ERROR_PRODUCT, "product error detected in %s (invalid array size - "
-                                               "calculated array size = %lld)", cursor->pf->filename,
-                                               (long long)var_dim);
+                                               "calculated array size = %s)", cursor->pf->filename, s);
                                 return -1;
                             }
                             n *= (long)var_dim;
@@ -888,10 +890,14 @@ int coda_ascbin_cursor_get_available_union_field_index(const coda_Cursor *cursor
     }
     if (index64 < 0 || index64 >= dd_union->num_fields)
     {
+        char s1[21];
+        char s2[21];
+
+        coda_str64(index64, s1);
+        coda_str64((cursor->stack[cursor->n - 1].bit_offset >> 3), s2);
         coda_set_error(CODA_ERROR_PRODUCT,
-                       "possible product error detected in %s (invalid result (%lld) from union field expression - num "
-                       "fields = %ld - byte:bit offset = %lld:%d)", cursor->pf->filename, (long long)index64,
-                       dd_union->num_fields, (long long)(cursor->stack[cursor->n - 1].bit_offset >> 3),
+                       "possible product error detected in %s (invalid result (%s) from union field expression - num "
+                       "fields = %ld - byte:bit offset = %s:%d)", cursor->pf->filename, s1, dd_union->num_fields, s2,
                        (int)(cursor->stack[cursor->n - 1].bit_offset & 0x7));
         return -1;
     }
@@ -919,8 +925,11 @@ int coda_ascbin_cursor_get_array_dim(const coda_Cursor *cursor, int *num_dims, l
             }
             if (var_dim < 0)
             {
-                coda_set_error(CODA_ERROR_PRODUCT, "product error detected in %s (invalid array size (%lld))",
-                               cursor->pf->filename, (long long)var_dim);
+                char s[21];
+
+                coda_str64(var_dim, s);
+                coda_set_error(CODA_ERROR_PRODUCT, "product error detected in %s (invalid array size (%s))",
+                               cursor->pf->filename, s);
                 return -1;
             }
             dim[i] = (long)var_dim;
