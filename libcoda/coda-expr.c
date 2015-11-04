@@ -18,6 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "coda-internal.h"
 #include "coda-expr-internal.h"
 
 #include <assert.h>
@@ -379,16 +380,27 @@ coda_Expr *coda_expr_new(coda_exprType tag, char *string_value, coda_Expr *op1, 
         case expr_goto_root:
             expr->result_type = expr_result_node;
             break;
+        case expr_abs:
+        case expr_neg:
+            expr->result_type = op1->result_type;
+            break;
         case expr_add:
         case expr_divide:
         case expr_max:
         case expr_min:
         case expr_modulo:
         case expr_multiply:
-        case expr_neg:
         case expr_power:
         case expr_subtract:
-            expr->result_type = op1->result_type;
+            if (op1->result_type == expr_result_double || op2->result_type == expr_result_double)
+            {
+                /* allow one of the arguments to be an integer */
+                expr->result_type = expr_result_double;
+            }
+            else
+            {
+                expr->result_type = op1->result_type;
+            }
             break;
         case expr_array_add:
         case expr_if:
@@ -444,7 +456,8 @@ static int eval_boolean(eval_info *info, const coda_Expr *expr, int *value)
     switch (opexpr->tag)
     {
         case expr_equal:
-            if (opexpr->operand[0]->result_type == expr_result_double)
+            if (opexpr->operand[0]->result_type == expr_result_double ||
+                opexpr->operand[1]->result_type == expr_result_double)
             {
                 double a, b;
 
@@ -516,7 +529,8 @@ static int eval_boolean(eval_info *info, const coda_Expr *expr, int *value)
             }
             break;
         case expr_not_equal:
-            if (opexpr->operand[0]->result_type == expr_result_double)
+            if (opexpr->operand[0]->result_type == expr_result_double ||
+                opexpr->operand[1]->result_type == expr_result_double)
             {
                 double a, b;
 
@@ -588,7 +602,8 @@ static int eval_boolean(eval_info *info, const coda_Expr *expr, int *value)
             }
             break;
         case expr_greater:
-            if (opexpr->operand[0]->result_type == expr_result_double)
+            if (opexpr->operand[0]->result_type == expr_result_double ||
+                opexpr->operand[1]->result_type == expr_result_double)
             {
                 double a, b;
 
@@ -623,7 +638,7 @@ static int eval_boolean(eval_info *info, const coda_Expr *expr, int *value)
                 long index;
                 char *a;
                 char *b;
-                
+
                 if (eval_string(info, opexpr->operand[0], &off_a, &len_a, &a) != 0)
                 {
                     return -1;
@@ -656,7 +671,8 @@ static int eval_boolean(eval_info *info, const coda_Expr *expr, int *value)
             }
             break;
         case expr_greater_equal:
-            if (opexpr->operand[0]->result_type == expr_result_double)
+            if (opexpr->operand[0]->result_type == expr_result_double ||
+                opexpr->operand[1]->result_type == expr_result_double)
             {
                 double a, b;
 
@@ -691,7 +707,7 @@ static int eval_boolean(eval_info *info, const coda_Expr *expr, int *value)
                 long index;
                 char *a;
                 char *b;
-                
+
                 if (eval_string(info, opexpr->operand[0], &off_a, &len_a, &a) != 0)
                 {
                     return -1;
@@ -724,7 +740,8 @@ static int eval_boolean(eval_info *info, const coda_Expr *expr, int *value)
             }
             break;
         case expr_less:
-            if (opexpr->operand[0]->result_type == expr_result_double)
+            if (opexpr->operand[0]->result_type == expr_result_double ||
+                opexpr->operand[1]->result_type == expr_result_double)
             {
                 double a, b;
 
@@ -759,7 +776,7 @@ static int eval_boolean(eval_info *info, const coda_Expr *expr, int *value)
                 long index;
                 char *a;
                 char *b;
-                
+
                 if (eval_string(info, opexpr->operand[0], &off_a, &len_a, &a) != 0)
                 {
                     return -1;
@@ -792,7 +809,8 @@ static int eval_boolean(eval_info *info, const coda_Expr *expr, int *value)
             }
             break;
         case expr_less_equal:
-            if (opexpr->operand[0]->result_type == expr_result_double)
+            if (opexpr->operand[0]->result_type == expr_result_double ||
+                opexpr->operand[1]->result_type == expr_result_double)
             {
                 double a, b;
 
@@ -827,7 +845,7 @@ static int eval_boolean(eval_info *info, const coda_Expr *expr, int *value)
                 long index;
                 char *a;
                 char *b;
-                
+
                 if (eval_string(info, opexpr->operand[0], &off_a, &len_a, &a) != 0)
                 {
                     return -1;
@@ -1058,6 +1076,19 @@ static int eval_double(eval_info *info, const coda_Expr *expr, double *value)
 {
     const coda_ExprOperation *opexpr;
 
+    /* we allow auto conversion of integer to double */
+    if (expr->result_type == expr_result_integer)
+    {
+        int64_t intvalue;
+
+        if (eval_integer(info, expr, &intvalue) != 0)
+        {
+            return -1;
+        }
+        *value = (double)intvalue;
+        return 0;
+    }
+
     if (expr->tag == expr_constant_double)
     {
         *value = ((coda_ExprDoubleConstant *)expr)->value;
@@ -1093,7 +1124,7 @@ static int eval_double(eval_info *info, const coda_Expr *expr, double *value)
                 coda_set_option_perform_conversions(perform_conversions);
                 info->cursor = prev_cursor;
             }
-            if (opexpr->operand[0]->result_type == expr_result_string)
+            else if (opexpr->operand[0]->result_type == expr_result_string)
             {
                 long offset;
                 long length;
@@ -1133,6 +1164,13 @@ static int eval_double(eval_info *info, const coda_Expr *expr, double *value)
                 return -1;
             }
             *value = -(*value);
+            break;
+        case expr_abs:
+            if (eval_double(info, opexpr->operand[0], value) != 0)
+            {
+                return -1;
+            }
+            *value = ((*value) >= 0 ? *value : -(*value));
             break;
         case expr_add:
             {
@@ -1176,7 +1214,7 @@ static int eval_double(eval_info *info, const coda_Expr *expr, double *value)
                 {
                     return -1;
                 }
-                *value = a - b;
+                *value = a * b;
             }
             break;
         case expr_divide:
@@ -1435,6 +1473,13 @@ static int eval_integer(eval_info *info, const coda_Expr *expr, int64_t *value)
                 return -1;
             }
             *value = -(*value);
+            break;
+        case expr_abs:
+            if (eval_integer(info, opexpr->operand[0], value) != 0)
+            {
+                return -1;
+            }
+            *value = ((*value) >= 0 ? *value : -(*value));
             break;
         case expr_add:
             {
@@ -2351,6 +2396,7 @@ static int eval_string(eval_info *info, const coda_Expr *expr, long *offset, lon
             break;
         case expr_filename:
             {
+                const char *filepath;
                 const char *filename;
 
                 if (info->orig_cursor == NULL)
@@ -2358,9 +2404,18 @@ static int eval_string(eval_info *info, const coda_Expr *expr, long *offset, lon
                     info->not_constant = 1;
                     return -1;
                 }
-                if (coda_get_product_filename(info->orig_cursor->pf, &filename) != 0)
+                if (coda_get_product_filename(info->orig_cursor->pf, &filepath) != 0)
                 {
                     return -1;
+                }
+                filename = filepath;
+                while (*filepath != '\0')
+                {
+                    if (*filepath == '/')
+                    {
+                        filename = &filepath[1];
+                    }
+                    filepath++;
                 }
                 *offset = 0;
                 *length = strlen(filename);

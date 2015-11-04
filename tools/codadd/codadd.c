@@ -863,6 +863,11 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
     
     switch (expr->tag)
     {
+        case expr_abs:
+            ff_printf("<b>abs</b>(");
+            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 10);
+            ff_printf(")");
+            break;
         case expr_add:
             if (precedence < 4)
             {

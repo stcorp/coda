@@ -7,7 +7,7 @@
 
 
 /* This is the current version of coda */
-#define CODA_VERSION "0.1"
+#define CODA_VERSION "1.0"
 
 /* Define to 1 if HDF4 Vdata/Vgroup attributes can be used (only enable if
    CODA is linked against HDF4 library version 4.2r2 or higher). */
@@ -151,13 +151,13 @@
 #define PACKAGE_NAME "CODA"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "CODA 0.1"
+#define PACKAGE_STRING "CODA 1.0"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "coda"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.1"
+#define PACKAGE_VERSION "1.0"
 
 /* Define to the compiler attribute to test for printf format compliance */
 #cmakedefine PRINTF_ATTR ${PRINTF_ATTR}
@@ -169,7 +169,7 @@
 #cmakedefine TM_IN_SYS_TIME ${TM_IN_SYS_TIME}
 
 /* Version number of package */
-#define VERSION "0.1"
+#define VERSION "1.0"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
@@ -253,10 +253,7 @@
 #cmakedefine realloc ${realloc}
 
 /* Define to `unsigned int' if <sys/types.h> does not define. */
-#cmakedefine HAVE_SIZE_T ${HAVE_SIZE_T}
-#if !defined(HAVE_SIZE_T)
-#define size_t @SIZE_T@
-#endif
+#cmakedefine size_t ${size_t}
 
 /* Define to the type of an unsigned integer type of width exactly 16 bits if
    such a type exists and the standard includes do not define it. */

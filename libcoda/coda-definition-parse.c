@@ -2691,6 +2691,11 @@ static int cd_text_ascii_set_byte_size(parser_info *info)
     return 0;
 }
 
+static int cd_text_ascii_finalise(parser_info *info)
+{
+    return coda_ascii_text_validate((coda_asciiText *)info->node->data);
+}
+
 static int cd_text_init(parser_info *info, const char **attr)
 {
     const char *xmlname = NULL;
@@ -2708,6 +2713,7 @@ static int cd_text_init(parser_info *info, const char **attr)
                                  cd_text_ascii_set_byte_size);
             register_sub_element(info->node, element_cd_fixed_value, string_data_init, cd_text_ascii_set_fixed_value);
             register_sub_element(info->node, element_cd_native_type, cd_native_type_init, cd_text_ascii_set_read_type);
+            info->node->finalise_element = cd_text_ascii_finalise;
             break;
         case coda_format_binary:
             coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid format 'binary' for Text");

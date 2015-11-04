@@ -171,20 +171,20 @@ static void coda_matlab_set_definition_path(void)
 #ifdef WIN32
         const char *definition_path = "../definitions";
 #else
-        const char *definition_path = "../../../share/"PACKAGE"/definitions";
+        const char *definition_path = "../../../share/" PACKAGE "/definitions";
 #endif
         mxArray *mxpath;
         mxArray *arg;
         char *location;
         char *path;
         int path_length;
-        
+
         arg = mxCreateString("coda_matlab");
         if (mexCallMATLAB(1, &mxpath, 1, &arg, "which") != 0)
         {
             mexErrMsgTxt("Could not retrieve module path");
         }
-        
+
         path_length = mxGetN(mxpath) * mxGetM(mxpath) + 1;
         path = mxCalloc(path_length + 1, 1);
         if (mxGetString(mxpath, path, path_length + 1) != 0)

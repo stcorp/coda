@@ -11,12 +11,12 @@
 
 find_path(ZLIB_INCLUDE_DIR
   NAMES zlib.h 
-  PATHS ENV ZLIB_INCLUDE)
+  PATHS ${ZLIB_INCLUDE} ENV ZLIB_INCLUDE)
 
-set(ZLIB_NAMES z zlib zdll)
+set(ZLIB_NAMES z zlib1 zlib zdll)
 find_library(ZLIB_LIBRARY 
   NAMES ${ZLIB_NAMES}
-  PATHS ENV ZLIB_LIB)
+  PATHS ${ZLIB_LIB} ENV ZLIB_LIB)
 if (ZLIB_LIBRARY)
   check_library_exists(${ZLIB_LIBRARY} deflate "" HAVE_ZLIB)
   if (HAVE_ZLIB)

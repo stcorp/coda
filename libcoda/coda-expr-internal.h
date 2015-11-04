@@ -25,6 +25,7 @@
 
 enum coda_exprType_enum
 {
+    expr_abs,
     expr_add,
     expr_and,
     expr_array_add,

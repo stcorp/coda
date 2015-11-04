@@ -20,8 +20,10 @@ include(CheckTypeSize)
 include(TestBigEndian)
 include(CheckTypeExists)
 
-set(CMAKE_VERBOSE_MAKEFILE OFF)
-
+#set(CMAKE_VERBOSE_MAKEFILE OFF)
+#if (MSVC)
+#  set(CMAKE_C_FLAGS_RELEASE "/O2 /Ob2 /DNDEBUG" CACHE STRING "Flags used by the compiler during release builds." FORCE)
+#endif (MSVC)
 
 # Option handling
 #
@@ -42,19 +44,18 @@ if (NOT DISABLE_HDF4_VDATA_ATTRIBUTES)
 endif (NOT DISABLE_HDF4_VDATA_ATTRIBUTES)
 
 # zlib is needed by libcoda independent of hdf.
-
+#
 find_package(ZLIB)
 
 if (NOT ZLIB_FOUND)
-  message(FATAL_ERROR, "zlib libraries and/or header files are not found. Try setting the ZLIB_LIB and ZLIB_INCLUDE environment variables to the location of your zlib library and include files.")
+  message(FATAL_ERROR "zlib libraries and/or header files are not found. Try setting the ZLIB_LIB and ZLIB_INCLUDE environment variables to the location of your zlib library and include files.")
 else (NOT ZLIB_FOUND)
   include_directories(${ZLIB_INCLUDE_DIR})
-  link_libraries(${ZLIB_LIBRARIES})
   set (HAVE_ZLIB 1)
 endif (NOT ZLIB_FOUND)
 
 # hdf
-
+#
 if (WITH_HDF4)
 
   find_package(HDF4)
@@ -62,9 +63,7 @@ if (WITH_HDF4)
   if (NOT HDF4_FOUND)
     message(FATAL_ERROR "HDF4 libraries and/or header files are not found. Try setting the HDF4_LIB and HDF4_INCLUDE environment variables to the location of your HDF4 library and include files.")
   else (NOT HDF4_FOUND)
-    include_directories(${HDF4_INCLUDE})
-    link_libraries(${HDF4_LIBRARIES})
-    set(HAVE_HDF4 1)
+    include_directories(${HDF4_INCLUDE_DIR})
   endif (NOT HDF4_FOUND)
 
 endif (WITH_HDF4)
@@ -77,9 +76,7 @@ if (WITH_HDF5)
   if (NOT HDF5_FOUND)
     message(FATAL_ERROR "HDF5 libraries and/or header files are not found. Try setting the HDF5_LIB and HDF5_INCLUDE environment variables to the location of your HDF5 library and include files.")
   else (NOT HDF5_FOUND)
-    include_directories(${HDF5_INCLUDE})
-    link_libraries(${HDF5_LIBRARIES})
-    set(HAVE_HDF5 1)
+    include_directories(${HDF5_INCLUDE_DIR})
   endif (NOT HDF5_FOUND)
 
 endif (WITH_HDF5)
@@ -244,9 +241,9 @@ include_directories(
 
 ADD_DEFINITIONS(-DHAVE_CONFIG_H -DHAVE_CODA_CONFIG)
 
-CONFIGURE_FILE(config.h.cmake.in config.h)
-CONFIGURE_FILE(libcoda/coda.h.cmake.in coda.h)
-CONFIGURE_FILE(idl/coda-idl.dlm.in idl/coda-idl.dlm)
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/libcoda/coda.h.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/coda.h)
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/idl/coda-idl.dlm.in ${CMAKE_CURRENT_BINARY_DIR}/idl/coda-idl.dlm)
 
 # The Doxyfile uses some autoconf variables CMake does not have.
 # We set them here manually, so that we can use the same .in
@@ -255,7 +252,7 @@ CONFIGURE_FILE(idl/coda-idl.dlm.in idl/coda-idl.dlm)
 set(top_builddir ${CMAKE_BINARY_DIR})
 set(top_srcdir ${CMAKE_SOURCE_DIR})
 set(srcdir ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/doc)
-CONFIGURE_FILE(libcoda/doc/Doxyfile.in libcoda/doc/Doxyfile)
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/libcoda/doc/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/libcoda/doc/Doxyfile)
 
 # libcoda sources
 #
@@ -316,8 +313,6 @@ set(LIBCODA_SOURCES
   libcoda/ziparchive.h
 )
 
-# HDF4/HDF5 stuff not used yet.
-#
 set(LIBCODA_HDF4_FILES
   libcoda/coda-hdf4-cursor.c
   libcoda/coda-hdf4-definition.c
@@ -373,12 +368,6 @@ install(FILES coda.h DESTINATION include)
 #
 
 
-if (MSVC)
-  set_SOURCE_FILES_PROPERTIES(${LIBCODA_SOURCES}
-    COMPILE_FLAGS "/nologo /Gm /GX /ZI /D_MBCS /D_USRDLL /DLIBCODADLL_EXPORTS /DLIBCODADLL /DHAVE_CONFIG_H /YX /FD /c"
-    )
-endif (MSVC)
-
 
 # Set dynamic library version
 
@@ -386,11 +375,9 @@ set(LIBCODA_CURRENT 0)
 set(LIBCODA_REVISION 0)
 set(LIBCODA_AGE 0)
 
-
 #add_library(coda SHARED ${LIBCODA_SOURCES})
-#target_link_libraries(coda expat ${ZLIB_LIBRARIES})
+#target_link_libraries(coda expat ${ZLIB_LIBRARIES} ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
 #set_target_properties(coda PROPERTIES
-#  LINK_FLAGS "/VERBOSE:LIB"
 #  VERSION ${LIBCODA_CURRENT}.${LIBCODA_REVISION}.${LIBCODA_AGE}
 #  SOVERSION ${LIBCODA_CURRENT}
 #)
@@ -399,9 +386,23 @@ set(LIBCODA_AGE 0)
 add_library(coda-static STATIC ${LIBCODA_SOURCES})
 target_link_libraries(coda-static expat ${ZLIB_LIBRARIES})
 set_target_properties(coda-static PROPERTIES
-  OUTPUT_NAME "coda"
+  OUTPUT_NAME "libcoda"
 )
 install(TARGETS coda-static DESTINATION lib)
+
+if (MSVC)
+#  set(CMAKE_C_FLAGS_RELEASE "/O2 /Ob2 /DNDEBUG")
+  set_source_files_properties(coda-expr-tokenizer.c PROPERTIES
+    COMPILE_FLAGS "/D YY_NO_UNISTD_H"
+    )
+#  set_target_properties(coda-static PROPERTIES
+#    COMPILE_FLAGS "/nologo /GX /D_MBCS /D_LIB /YX /FD /c"
+#    )
+#  set_target_properties(coda PROPERTIES
+#    COMPILE_FLAGS "/nologo /GX /D_MBCS /YX /FD /c /D_USRDLL /DLIBCODADLL_EXPORTS /DLIBCODADLL"
+#    )
+  
+endif (MSVC)
 
 
 # tools codacheck
@@ -410,7 +411,12 @@ set(codacheck_SOURCES
   tools/codacheck/codacheck.c
   )
 add_executable(codacheck ${codacheck_SOURCES})
-target_link_libraries(codacheck coda-static)
+target_link_libraries(codacheck coda-static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
+if (MSVC)
+  set_target_properties(codacheck PROPERTIES
+    COMPILE_FLAGS "/nologo /GX /D_CONSOLE /D_MBCS /YX /FD"
+    )
+endif (MSVC)
 
 # tools codacmp
 
@@ -418,7 +424,7 @@ set(codacmp_SOURCES
   tools/codacmp/codacmp.c
   )
 add_executable(codacmp ${codacmp_SOURCES})
-target_link_libraries(codacmp coda-static)
+target_link_libraries(codacmp coda-static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
 
 # tools/codadump
 
@@ -439,7 +445,7 @@ if (WITH_HDF4)
   set (codadump_SOURCES ${codadump_SOURCES} ${codadump_hdf4_files})
 endif (WITH_HDF4)
 add_executable(codadump ${codadump_SOURCES})
-target_link_libraries(codadump coda-static)
+target_link_libraries(codadump coda-static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
 
 # tools codafind
 
@@ -447,7 +453,7 @@ set(codafind_SOURCES
   tools/codafind/codafind.c
   )
 add_executable(codafind ${codafind_SOURCES})
-target_link_libraries(codafind coda-static)
+target_link_libraries(codafind coda-static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
 
 # tools codadd
 
@@ -455,7 +461,7 @@ set(codadd_SOURCES
   tools/codadd/codadd.c
   )
 add_executable(codadd ${codadd_SOURCES})
-target_link_libraries(codadd coda-static)
+target_link_libraries(codadd coda-static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
 
 # fortran
 
@@ -484,7 +490,7 @@ set(generate_finc_SOURCES
   )
 
 add_executable(generate-finc ${generate_finc_SOURCES})
-target_link_libraries(generate-finc coda-static)
+target_link_libraries(generate-finc)
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/fortran/coda.inc
   MAIN_DEPENDENCY generate-finc
@@ -614,10 +620,8 @@ endif(NOT SUBPACKAGE_MODE)
 
 # Windows stuff
 
-# Notice that doing this on Linux does not copy the 
+# Notice that doing this on Linux does not copy the
 # DOS line endings (CMake bug 0008506)
-CONFIGURE_FILE(win32/config.h.cmake.in win32/config.h)
-CONFIGURE_FILE(win32/coda.iss.in win32/coda.iss)
-CONFIGURE_FILE(win32/setup.py.in win32/setup.py)
-
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/win32/coda.iss.in ${CMAKE_CURRENT_BINARY_DIR}/win32/coda.iss)
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/win32/setup.py.in ${CMAKE_CURRENT_BINARY_DIR}/win32/setup.py)
 

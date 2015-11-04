@@ -331,6 +331,7 @@ static int get_entries(zaFile *zf)
 zaFile *za_open(const char *filename, void (*error_handler) (const char *, ...))
 {
     zaFile *zf;
+    int open_flags;
 
     zf = malloc(sizeof(zaFile));
     if (zf == NULL)
@@ -363,7 +364,11 @@ zaFile *za_open(const char *filename, void (*error_handler) (const char *, ...))
         zf->handle_error = default_error_handler;
     }
 
-    zf->fd = open(filename, O_RDONLY);
+    open_flags = O_RDONLY;
+#ifdef WIN32
+    open_flags |= _O_BINARY;
+#endif
+    zf->fd = open(filename, open_flags);
     if (zf->fd < 0)
     {
         zf->handle_error("could not open file '%s' (%s)\n", filename, strerror(errno));

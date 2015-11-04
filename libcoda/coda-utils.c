@@ -389,10 +389,11 @@ static void clean_path(char *path)
                 if (path[from + 2] == '.' &&
                     (path[from + 3] == '\0' || path[from + 3] == '/' || path[from + 3] == '\\'))
                 {
-                    if  (!(to >= 2 && path[to - 1] == '.' && path[to - 2] == '.' &&
-                           (to == 2 || path[to - 3] == '/' || path[to - 3] == '\\')))
+                    if (!(to >= 2 && path[to - 1] == '.' && path[to - 2] == '.' &&
+                          (to == 2 || path[to - 3] == '/' || path[to - 3] == '\\')))
                     {
                         int prev = to - 1;
+
                         /* find previous / or \ */
                         while (prev >= 0 && path[prev] != '/' && path[prev] != '\\')
                         {
@@ -435,13 +436,13 @@ int coda_path_find_file(const char *searchpath, const char *filename, char **loc
     char *filepath = NULL;
     int filepath_length = 0;
     int filename_length = strlen(filename);
-    
+
     if (searchpath == NULL || searchpath[0] == '\0')
     {
         *location = NULL;
         return 0;
     }
-    
+
     path = strdup(searchpath);
     if (path == NULL)
     {
@@ -455,7 +456,7 @@ int coda_path_find_file(const char *searchpath, const char *filename, char **loc
         struct stat sb;
         char *p;
         int path_component_length;
-        
+
         p = path_component;
         while (*p != '\0' && *p != path_separator_char)
         {
@@ -466,11 +467,12 @@ int coda_path_find_file(const char *searchpath, const char *filename, char **loc
             *p = '\0';
             p++;
         }
-        
+
         path_component_length = strlen(path_component);
         if (filepath_length < path_component_length + filename_length + 1)
         {
             char *new_filepath;
+
             new_filepath = realloc(filepath, path_component_length + filename_length + 2);
             if (new_filepath == NULL)
             {
@@ -485,8 +487,8 @@ int coda_path_find_file(const char *searchpath, const char *filename, char **loc
             filepath = new_filepath;
             filepath_length = path_component_length + filename_length + 1;
         }
-        sprintf(filepath, "%s/%s", path_component, filename); 
-        
+        sprintf(filepath, "%s/%s", path_component, filename);
+
         if (stat(filepath, &sb) == 0)
         {
             if (sb.st_mode & S_IFREG)
@@ -497,27 +499,27 @@ int coda_path_find_file(const char *searchpath, const char *filename, char **loc
                 return 0;
             }
         }
-        
+
         path_component = p;
     }
-    
+
     if (filepath != NULL)
     {
         free(filepath);
     }
     free(path);
-    
+
     /* the file was not found */
     *location = NULL;
     return 0;
 }
-        
+
 int coda_path_from_path(const char *initialpath, int is_filepath, const char *appendpath, char **resultpath)
 {
     char *path;
     int initialpath_length;
     int appendpath_length;
-    
+
     initialpath_length = strlen(initialpath);
     appendpath_length = (appendpath == NULL ? 0 : strlen(appendpath));
 
@@ -604,6 +606,7 @@ int coda_path_for_program(const char *argv0, char **location)
         if (argv0_length <= 4 || strcmp(&argv0[argv0_length - 4], ".exe") != 0)
         {
             char *filepath;
+
             filepath = malloc(argv0_length + 5);
             if (filepath == NULL)
             {
@@ -662,7 +665,7 @@ int coda_path_for_program(const char *argv0, char **location)
     {
         char cwd[1024 + 1];
         char *relative_location;
-        
+
         /* change relative path into absolute path */
 
         if (getcwd(cwd, 1024) == NULL)
@@ -671,7 +674,7 @@ int coda_path_for_program(const char *argv0, char **location)
             return 0;
         }
         cwd[1024] = '\0';
-        
+
         relative_location = *location;
         if (coda_path_from_path(cwd, 0, relative_location, location) != 0)
         {
@@ -680,8 +683,8 @@ int coda_path_for_program(const char *argv0, char **location)
         }
         free(relative_location);
     }
-    
-    return 0;    
+
+    return 0;
 }
 
 void coda_path_free(char *path)
@@ -834,13 +837,13 @@ LIBCODA_API double coda_MinInf(void)
 int coda_month_to_integer(const char month[3])
 {
     char month_str[4];
-    
+
     /* just for safety reasons (strncasecmp behavior) we make 'month' a 0-terminated string */
     month_str[0] = month[0];
     month_str[1] = month[1];
     month_str[2] = month[2];
     month_str[3] = '\0';
-    
+
     if (strncasecmp(month_str, "jan", 3) == 0)
     {
         return 1;
@@ -889,7 +892,7 @@ int coda_month_to_integer(const char month[3])
     {
         return 12;
     }
-    
+
     coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid month argument (%s) (%s:%u)", month_str, __FILE__, __LINE__);
     return -1;
 }

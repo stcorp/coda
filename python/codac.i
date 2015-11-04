@@ -379,7 +379,7 @@ POSIX_SCALAR_OUTPUT_HELPER(uint64_t, PyLong_FromUnsignedLongLong)
 /*
     coda_cursor_read_complex_double_split()::double *dst_re, double *dst_im
     coda_datetime_to_double()::double *datetime
-    coda_get_time_from_string()::double *time
+    coda_string_to_time()::double *time
 */
 %apply double *OUTPUT { double *dst,
                         double *dst_re, double *dst_im,

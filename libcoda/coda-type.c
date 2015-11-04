@@ -633,7 +633,7 @@ LIBCODA_API int coda_type_get_unit(const coda_Type *type, const char **unit)
     if (type->type_class == coda_array_class)
     {
         coda_Type *base_type;
-        
+
         if (coda_type_get_array_base_type(type, &base_type) != 0)
         {
             return -1;

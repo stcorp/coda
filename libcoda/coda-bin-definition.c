@@ -122,6 +122,10 @@ static void delete_bin_vsf_integer(coda_binVSFInteger *vsf_integer)
     {
         free(vsf_integer->description);
     }
+    if (vsf_integer->unit != NULL)
+    {
+        free(vsf_integer->unit);
+    }
     if (vsf_integer->base_type != NULL)
     {
         coda_bin_release_type(vsf_integer->base_type);

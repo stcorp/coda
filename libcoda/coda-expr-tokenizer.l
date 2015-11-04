@@ -81,6 +81,7 @@ WHITESPACE   [[:space:]]+
 "inf"                   return INF_VALUE;
 "true"                  return TRUE_VALUE;
 "false"                 return FALSE_VALUE;
+"abs"                   return FUNC_ABS;
 "add"                   return FUNC_ADD;
 "all"                   return FUNC_ALL;
 "bitoffset"             return FUNC_BITOFFSET;

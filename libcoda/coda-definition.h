@@ -26,7 +26,7 @@
 
 struct coda_ProductVariable_struct
 {
-    const char *name;
+    char *name;
     coda_Expr *size_expr;
     coda_Expr *init_expr;
 };

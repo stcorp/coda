@@ -1,6 +1,6 @@
 Copyright (C) 2007-2008 S&T, The Netherlands
 
-                CODA 1.0.0 Release Notes
+                CODA 1.1.0 Release Notes
 
 
 CODA is the Common Data Access framework that allows reading of scientific data
@@ -25,6 +25,12 @@ use of CODA.
 Since HDF4 and HDF5 files are selfdescribing (i.e. their format can be
 determined from the file itself), you can still use CODA without any .codadef
 files to access HDF4 and HDF5 data.
+
+
+Changes
+=======
+
+On overview of the changes in this release can be found in the CHANGES file.
 
 
 Download

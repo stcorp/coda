@@ -616,7 +616,7 @@ int coda_ascii_text_validate(coda_asciiText *text)
 {
     if (text->byte_size_expr == NULL && text->bit_size == -1)
     {
-        coda_set_error(CODA_ERROR_DATA_DEFINITION, "missing bit size or bit size expression for text definition");
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "missing byte size or byte size expression for text definition");
         return -1;
     }
     if (text->read_type == coda_native_type_not_available)
@@ -627,14 +627,14 @@ int coda_ascii_text_validate(coda_asciiText *text)
     if (text->bit_size == -1 && text->fixed_value != NULL)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION,
-                       "bit size should be fixed if a fixed value is provided for text definition");
+                       "byte size should be fixed if a fixed value is provided for text definition");
         return -1;
     }
     /* if there is a fixed_value its length should equal the byte size of the data element */
     if (text->fixed_value != NULL && text->bit_size != 8 * (int64_t)strlen(text->fixed_value))
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION,
-                       "bit size of fixed value (%ld) should equal bit size (%ld) for text definition",
+                       "byte size of fixed value (%ld) should equal byte size (%ld) for text definition",
                        8 * strlen(text->fixed_value), (long)text->bit_size);
         return -1;
     }

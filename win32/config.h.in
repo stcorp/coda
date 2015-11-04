@@ -20,7 +20,7 @@
 #undef VERSION
 
 /* some defines that are needed to configure expat */
-#define HAVE_MEMMOVE
+#define HAVE_MEMMOVE 1
 /* we need to redefine ELEMENT_TYPE because it conflicts with io.h contents */
 #define ELEMENT_TYPE ELEMENT_TYPE_RENAMED
 #define XML_NS 1

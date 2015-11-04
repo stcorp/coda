@@ -78,7 +78,7 @@ static void print_help()
 static void set_definition_path(const char *argv0)
 {
     char *location;
-    
+
     if (coda_path_for_program(argv0, &location) != 0)
     {
         printf("  ERROR: %s\n", coda_errno_to_string(coda_errno));
@@ -89,10 +89,10 @@ static void set_definition_path(const char *argv0)
 #ifdef WIN32
         const char *definition_path = "../definitions";
 #else
-        const char *definition_path = "../share/"PACKAGE"/definitions";
+        const char *definition_path = "../share/" PACKAGE "/definitions";
 #endif
         char *path;
-        
+
         if (coda_path_from_path(location, 1, definition_path, &path) != 0)
         {
             printf("  ERROR: %s\n", coda_errno_to_string(coda_errno));

@@ -40,8 +40,7 @@
 %rename(c_index_to_fortran_index) coda_c_index_to_fortran_index;
 %rename(datetime_to_double) coda_datetime_to_double;
 %rename(double_to_datetime) coda_double_to_datetime;
-%rename(get_utc_string_from_time) coda_get_utc_string_from_time;
-%rename(get_time_from_string) coda_get_time_from_string;
+%rename(string_to_time) coda_string_to_time;
 %rename(match_filefilter) coda_match_filefilter;
 %rename(set_error) coda_set_error;
 %rename(errno_to_string) coda_errno_to_string;

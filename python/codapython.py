@@ -868,16 +868,16 @@ def time_to_string(times):
 
     time_to_string(68260079.0)
 
-    would return the string '01-MAR-2002 01:07:59.000000'.
+    would return the string '2002-03-01 01:07:59.000000'.
 
     It is possible to input a list or tuple of doubles, in which case a
     list of strings will be returned.
     """
 
     if _isIterable(times):
-        return [get_utc_string_from_time(t) for t in times]
+        return [coda_time_to_string(t) for t in times]
     else:
-        return get_utc_string_from_time(times)
+        return coda_time_to_string(times)
 
 
 def get_unit(start, *path):

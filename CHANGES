@@ -1,6 +1,24 @@
 
-1.0.0
-~~~~~
+1.1.0 2008-10-10
+~~~~~~~~~~~~~~~~
+
+* Fixed the following CODA expression operations
+  - multiplication of floating point values
+  - reading of floating point values
+
+* CODA expressions now allow combining integer and floating point arguments
+  in a floating point expression (e.g. compare integer against float, or add
+  float to integer) without the need to explicitly cast the integer to a float.
+
+* Added abs() function to CODA expressions
+
+* Upgraded to expat 2.0.1
+
+* Files with an ASCII definition are now properly marked as files with an ASCII
+  format.
+
+1.0.0 2008-09-24
+~~~~~~~~~~~~~~~~
 
 * First official release.
 

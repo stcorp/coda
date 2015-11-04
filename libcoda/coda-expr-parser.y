@@ -66,6 +66,9 @@
 #define yyname   coda_expr_yyname
 #define yyrule   coda_expr_yyrule
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "coda-expr-internal.h"
 
 #include <assert.h>
@@ -118,6 +121,7 @@ static void coda_expr_error(const char *error)
 %token                INF_VALUE
 %token                TRUE_VALUE
 %token                FALSE_VALUE
+%token                FUNC_ABS
 %token                FUNC_ADD
 %token                FUNC_ALL
 %token                FUNC_BITOFFSET
@@ -181,6 +185,7 @@ identifier:
     | INF_VALUE { $$ = "inf"; }
     | TRUE_VALUE { $$ = "true"; }
     | FALSE_VALUE { $$ = "false"; }
+    | FUNC_ABS { $$ = "abs"; }
     | FUNC_ADD { $$ = "add"; }
     | FUNC_ALL { $$ = "all"; }
     | FUNC_BITOFFSET { $$ = "bitoffset"; }
@@ -292,7 +297,23 @@ boolexpr:
             $$ = coda_expr_new(expr_greater_equal, NULL, $1, $3, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
+    | floatexpr GREATER_EQUAL intexpr {
+            $$ = coda_expr_new(expr_greater_equal, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | intexpr GREATER_EQUAL floatexpr {
+            $$ = coda_expr_new(expr_greater_equal, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
     | floatexpr LESS_EQUAL floatexpr {
+            $$ = coda_expr_new(expr_less_equal, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | floatexpr LESS_EQUAL intexpr {
+            $$ = coda_expr_new(expr_less_equal, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | intexpr LESS_EQUAL floatexpr {
             $$ = coda_expr_new(expr_less_equal, NULL, $1, $3, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
@@ -300,7 +321,23 @@ boolexpr:
             $$ = coda_expr_new(expr_equal, NULL, $1, $3, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
+    | floatexpr EQUAL intexpr {
+            $$ = coda_expr_new(expr_equal, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | intexpr EQUAL floatexpr {
+            $$ = coda_expr_new(expr_equal, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
     | floatexpr NOT_EQUAL floatexpr {
+            $$ = coda_expr_new(expr_not_equal, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | floatexpr NOT_EQUAL intexpr {
+            $$ = coda_expr_new(expr_not_equal, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | intexpr NOT_EQUAL floatexpr {
             $$ = coda_expr_new(expr_not_equal, NULL, $1, $3, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
@@ -308,7 +345,23 @@ boolexpr:
             $$ = coda_expr_new(expr_less, NULL, $1, $3, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
+    | floatexpr '<' intexpr {
+            $$ = coda_expr_new(expr_less, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | intexpr '<' floatexpr {
+            $$ = coda_expr_new(expr_less, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
     | floatexpr '>' floatexpr {
+            $$ = coda_expr_new(expr_greater, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | floatexpr '>' intexpr {
+            $$ = coda_expr_new(expr_greater, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | intexpr '>' floatexpr {
             $$ = coda_expr_new(expr_greater, NULL, $1, $3, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
@@ -422,6 +475,10 @@ intexpr:
             if ($$ == NULL) YYERROR;
         }
     | '(' intexpr ')' { $$ = $2; }
+    | FUNC_ABS '(' intexpr ')' {
+            $$ = coda_expr_new(expr_abs, NULL, $3, NULL, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
     | FUNC_MAX '(' intexpr ',' intexpr ')' {
             $$ = coda_expr_new(expr_max, NULL, $3, $5, NULL, NULL);
             if ($$ == NULL) YYERROR;
@@ -526,7 +583,23 @@ floatexpr:
             $$ = coda_expr_new(expr_add, NULL, $1, $3, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
+    | floatexpr '+' intexpr {
+            $$ = coda_expr_new(expr_add, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | intexpr '+' floatexpr {
+            $$ = coda_expr_new(expr_add, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
     | floatexpr '-' floatexpr {
+            $$ = coda_expr_new(expr_subtract, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | floatexpr '-' intexpr {
+            $$ = coda_expr_new(expr_subtract, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | intexpr '-' floatexpr {
             $$ = coda_expr_new(expr_subtract, NULL, $1, $3, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
@@ -534,7 +607,23 @@ floatexpr:
             $$ = coda_expr_new(expr_multiply, NULL, $1, $3, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
+    | floatexpr '*' intexpr {
+            $$ = coda_expr_new(expr_multiply, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | intexpr '*' floatexpr {
+            $$ = coda_expr_new(expr_multiply, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
     | floatexpr '/' floatexpr {
+            $$ = coda_expr_new(expr_divide, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | floatexpr '/' intexpr {
+            $$ = coda_expr_new(expr_divide, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | intexpr '/' floatexpr {
             $$ = coda_expr_new(expr_divide, NULL, $1, $3, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
@@ -542,7 +631,23 @@ floatexpr:
             $$ = coda_expr_new(expr_modulo, NULL, $1, $3, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
+    | floatexpr '%' intexpr {
+            $$ = coda_expr_new(expr_modulo, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | intexpr '%' floatexpr {
+            $$ = coda_expr_new(expr_modulo, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
     | floatexpr '^' floatexpr {
+            $$ = coda_expr_new(expr_power, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | floatexpr '^' intexpr {
+            $$ = coda_expr_new(expr_power, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | intexpr '^' floatexpr {
             $$ = coda_expr_new(expr_power, NULL, $1, $3, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
@@ -551,7 +656,23 @@ floatexpr:
             $$ = coda_expr_new(expr_max, NULL, $3, $5, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
+    | FUNC_MAX '(' floatexpr ',' intexpr ')' {
+            $$ = coda_expr_new(expr_max, NULL, $3, $5, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_MAX '(' intexpr ',' floatexpr ')' {
+            $$ = coda_expr_new(expr_max, NULL, $3, $5, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
     | FUNC_MIN '(' floatexpr ',' floatexpr ')' {
+            $$ = coda_expr_new(expr_min, NULL, $3, $5, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_MIN '(' floatexpr ',' intexpr ')' {
+            $$ = coda_expr_new(expr_min, NULL, $3, $5, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_MIN '(' intexpr ',' floatexpr ')' {
             $$ = coda_expr_new(expr_min, NULL, $3, $5, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
@@ -560,6 +681,14 @@ floatexpr:
             if ($$ == NULL) YYERROR;
         }
     | FUNC_IF '(' boolexpr ',' floatexpr ',' floatexpr ')' {
+            $$ = coda_expr_new(expr_if, NULL, $3, $5, $7, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_IF '(' boolexpr ',' floatexpr ',' intexpr ')' {
+            $$ = coda_expr_new(expr_if, NULL, $3, $5, $7, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_IF '(' boolexpr ',' intexpr ',' floatexpr ')' {
             $$ = coda_expr_new(expr_if, NULL, $3, $5, $7, NULL);
             if ($$ == NULL) YYERROR;
         }

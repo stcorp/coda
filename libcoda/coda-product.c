@@ -309,7 +309,7 @@ LIBCODA_API int coda_recognize_file(const char *filename, int64_t *file_size, co
     }
     if (file_format != NULL)
     {
-        *file_format = format;
+        *file_format = (definition != NULL ? definition->format : format);
     }
     if (product_class != NULL)
     {

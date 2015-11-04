@@ -313,6 +313,10 @@ void coda_product_variable_delete(coda_ProductVariable *product_variable)
 {
     assert(product_variable != NULL);
 
+    if (product_variable->name != NULL)
+    {
+        free(product_variable->name);
+    }
     if (product_variable->size_expr != NULL)
     {
         coda_expr_delete(product_variable->size_expr);
@@ -1204,7 +1208,7 @@ int coda_data_dictionary_remove_product_class(coda_ProductClass *product_class)
             exit(1);
         }
     }
-    
+
     /* rebuild detection tree */
     if (data_dictionary_rebuild_detection_tree() != 0)
     {

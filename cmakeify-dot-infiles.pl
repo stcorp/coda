@@ -20,12 +20,12 @@ use File::Basename;
 my %ConfVars	= (
     PACKAGE             => "\"coda\"",
 	PACKAGE_NAME		=> "\"CODA\"",
-	PACKAGE_VERSION		=> "\"0.1\"",
-	PACKAGE_STRING		=> "\"CODA 0.1\"",
+	PACKAGE_VERSION		=> "\"1.0\"",
+	PACKAGE_STRING		=> "\"CODA 1.0\"",
 	PACKAGE_TARNAME		=> "\"coda\"",
 	PACKAGE_BUGREPORT	=> "\"\"",
-    CODA_VERSION     => "\"0.1\"",
-    VERSION             => "\"0.1\""
+    CODA_VERSION     => "\"1.0\"",
+    VERSION             => "\"1.0\""
 	);
 
 

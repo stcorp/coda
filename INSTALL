@@ -370,7 +370,7 @@ interfaces) on a Windows platform :
     the file so it matches your local path and release number of MATLAB (you
     should be aware that if you have multiple versions of MATLAB on your system
     that unlike for the IDL interface for CODA you can have multiple versions
-    of the MATLAB interface installed. MATALB releases R13 - R2007a can share
+    of the MATLAB interface installed. MATLAB releases R13 - R2007a can share
     the same MATLAB build of CODA but for R12 you need to create a separate
     build).
     Then save the batch file and run it. After completion there should be a

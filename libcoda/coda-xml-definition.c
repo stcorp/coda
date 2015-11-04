@@ -441,7 +441,7 @@ int coda_xml_record_add_field(coda_xmlElement *element, coda_xmlField *field)
                        field->name);
         return -1;
     }
-    
+
     new_field = realloc(element->field, (element->num_fields + 1) * sizeof(coda_xmlField *));
     if (new_field == NULL)
     {

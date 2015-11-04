@@ -5054,7 +5054,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_coda_string_to_time(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_string_to_time(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   char *arg1 = (char *) 0 ;
   double *arg2 = (double *) 0 ;
@@ -5067,10 +5067,10 @@ SWIGINTERN PyObject *_wrap_coda_string_to_time(PyObject *SWIGUNUSEDPARM(self), P
   PyObject * obj0 = 0 ;
   
   arg2 = &temp2;
-  if (!PyArg_ParseTuple(args,(char *)"O:coda_string_to_time",&obj0)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"O:string_to_time",&obj0)) SWIG_fail;
   res1 = SWIG_AsCharPtrAndSize(obj0, &buf1, NULL, &alloc1);
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "coda_string_to_time" "', argument " "1"" of type '" "char const *""'");
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "string_to_time" "', argument " "1"" of type '" "char const *""'");
   }
   arg1 = (char *)(buf1);
   {
@@ -8513,7 +8513,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"datetime_to_double", _wrap_datetime_to_double, METH_VARARGS, NULL},
 	 { (char *)"double_to_datetime", _wrap_double_to_datetime, METH_VARARGS, NULL},
 	 { (char *)"coda_time_to_string", _wrap_coda_time_to_string, METH_VARARGS, NULL},
-	 { (char *)"coda_string_to_time", _wrap_coda_string_to_time, METH_VARARGS, NULL},
+	 { (char *)"string_to_time", _wrap_string_to_time, METH_VARARGS, NULL},
 	 { (char *)"recognize_file", _wrap_recognize_file, METH_VARARGS, NULL},
 	 { (char *)"open", _wrap_open, METH_VARARGS, NULL},
 	 { (char *)"close", _wrap_close, METH_VARARGS, NULL},

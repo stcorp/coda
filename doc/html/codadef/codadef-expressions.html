@@ -176,8 +176,8 @@
       <p>This function only works if node points to an array in the product. It will then walk the elements of the array, evaluate the integer expression for each element and return the sum of those results.</p>
 
       <p>Example:</p>
-      <div class="fragment"><code><b>float</b>(<b>add</b>(/calibration/value, <b>float</b>(.))) / <b>float</b>(<b>numelements</b>(/calibration/value))</code></div>
-      <p>This will calculate the average of the values in the value array.</p>
+      <div class="fragment"><code><b>float</b>(<b>add</b>(/calibration/value, <b>int</b>(.))) / <b>float</b>(<b>numelements</b>(/calibration/value))</code></div>
+      <p>This will calculate the average of the integer values in the value array.</p>
 
       <h5>length(string)</h5>
 
@@ -237,6 +237,8 @@
 
       <p>All float expressions are evaluated using a IEE754 double precision floating point value.</p>
 
+      <p>Any expression that expects a float expression as input will also except an integer expression. In these cases the resulting integer value will be silently cast to a floating point value (e.g. as if the <code>float(integer)</code> function was used).</p>
+
       <h3>constant values</h3>
       
       <p>Floating point constant values should always have a '<code>.</code>' and can optionally have an exponent. The special values '<code>nan</code>', and '<code>inf</code>' can be used to represent the IEEE754 special cases not-a-number and infinity.</p>
@@ -288,6 +290,14 @@ inf
       <h5>min(float, float)</h5>
 
       <p>Returns the minimum of both floating point values.</p>
+
+      <h5>add(node, float)</h5>
+
+      <p>This function only works if node points to an array in the product. It will then walk the elements of the array, evaluate the float expression for each element and return the sum of those results.</p>
+
+      <p>Example:</p>
+      <div class="fragment"><code><b>float</b>(<b>add</b>(/calibration/value, <b>float</b>(.))) / <b>float</b>(<b>numelements</b>(/calibration/value))</code></div>
+      <p>This will calculate the average of the floating point values in the value array.</p>
 
       <h5>if(boolean, float, float)</h5>
 
@@ -418,34 +428,13 @@ floatvalue = (intvalue, '.', [intvalue] | '.', intvalue), [('E' | 'e'), [sign], 
 strvalue = '"', [{character-'"' | ('\', '"')}], '"' ;
 
 voidexpr =
-	'$' identifier '=' int |
-	'$' identifier '[' ']' '=' int |
-	'false' |
-	boolexpr, '&&', boolexpr |
-	boolexpr, '||', boolexpr |
-	'!', boolexpr |
-	intexpr, '==', intexpr |
-	intexpr, '!=', intexpr |
-	intexpr, '>', intexpr |
-	intexpr, '>=', intexpr |
-	intexpr, '<', intexpr |
-	intexpr, '<=', intexpr |
-	floatexpr, '==', floatexpr |
-	floatexpr, '!=', floatexpr |
-	floatexpr, '>', floatexpr |
-	floatexpr, '>=', floatexpr |
-	floatexpr, '<', floatexpr |
-	floatexpr, '<=', floatexpr |
-	stringexpr, '==', stringexpr |
-	stringexpr, '!=', stringexpr |
-	stringexpr, '>', stringexpr |
-	stringexpr, '>=', stringexpr |
-	stringexpr, '<', stringexpr |
-	stringexpr, '<=', stringexpr |
-	'(', boolexpr, ')' |
-	'exists', '(', node, ')' |
-	'exists', '(', node, ',', boolexpr, ')' |
-	'all', '(', node, ',', boolexpr, ')' ;
+	'$' identifier '=' intexpr |
+	'$' identifier '[' intexpr ']' '=' intexpr |
+	voidexpr ';' voidexpr |
+	'for' 'i' '=' intexpr 'to' intexpr 'do' voidexpr |
+	'for' 'i' '=' intexpr 'to' intexpr 'step' intexpr 'do' voidexpr |
+	'for' 'i' '=' intexpr 'to' intexpr 'step' intexpr 'do' voidexpr |
+	'goto' '(' node ')' ;
 
 boolexpr =
 	'true' |
@@ -460,11 +449,23 @@ boolexpr =
 	intexpr, '<', intexpr |
 	intexpr, '<=', intexpr |
 	floatexpr, '==', floatexpr |
+	floatexpr, '==', intexpr |
+	intexpr, '==', floatexpr |
 	floatexpr, '!=', floatexpr |
+	floatexpr, '!=', intexpr |
+	intexpr, '!=', floatexpr |
 	floatexpr, '>', floatexpr |
+	floatexpr, '>', intexpr |
+	intexpr, '>', floatexpr |
 	floatexpr, '>=', floatexpr |
+	floatexpr, '>=', intexpr |
+	intexpr, '>=', floatexpr |
 	floatexpr, '<', floatexpr |
+	floatexpr, '<', intexpr |
+	intexpr, '<', floatexpr |
 	floatexpr, '<=', floatexpr |
+	floatexpr, '<=', intexpr |
+	intexpr, '<=', floatexpr |
 	stringexpr, '==', stringexpr |
 	stringexpr, '!=', stringexpr |
 	stringexpr, '>', stringexpr |
@@ -518,15 +519,33 @@ floatexpr =
 	'-', floatexpr |
 	'+', floatexpr |
 	floatexpr, '+', floatexpr |
+	floatexpr, '+', intexpr |
+	intexpr, '+', floatexpr |
 	floatexpr, '-', floatexpr |
+	floatexpr, '-', intexpr |
+	intexpr, '-', floatexpr |
 	floatexpr, '*', floatexpr |
+	floatexpr, '*', intexpr |
+	intexpr, '*', floatexpr |
 	floatexpr, '/', floatexpr |
+	floatexpr, '/', intexpr |
+	intexpr, '/', floatexpr |
 	floatexpr, '%', floatexpr |
+	floatexpr, '%', intexpr |
+	intexpr, '%', floatexpr |
 	floatexpr, '^', floatexpr |
+	floatexpr, '^', intexpr |
+	intexpr, '^', floatexpr |
 	'(', floatexpr, ')' |
 	'min', '(', floatexpr, ',', floatexpr, ')' |
+	'min', '(', floatexpr, ',', intexpr, ')' |
+	'min', '(', intexpr, ',', floatexpr, ')' |
 	'max', '(', floatexpr, ',', floatexpr, ')' |
-	'if', '(' boolexpr, ',', floatexpr, ',', floatexpr, ')' ;
+	'max', '(', floatexpr, ',', intexpr, ')' |
+	'max', '(', intexpr, ',', floatexpr, ')' |
+	'if', '(' boolexpr, ',', floatexpr, ',', floatexpr, ')' |
+	'if', '(' boolexpr, ',', floatexpr, ',', intexpr, ')' |
+	'if', '(' boolexpr, ',', intexpr, ',', floatexpr, ')' ;
 
 stringexpr = 
 	stringvalue |

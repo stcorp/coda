@@ -82,7 +82,7 @@ static void idl_coda_set_definition_path(void)
 #ifdef WIN32
         const char *definition_path = "../definitions";
 #else
-        const char *definition_path = "../../../share/"PACKAGE"/definitions";
+        const char *definition_path = "../../../share/" PACKAGE "/definitions";
 #endif
         char *path;
 

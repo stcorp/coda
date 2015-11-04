@@ -21,7 +21,14 @@
 #ifndef CODA_EXPR_H
 #define CODA_EXPR_H
 
-#include "coda-internal.h"
+#include "coda.h"
+
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+/* *INDENT-ON* */
 
 typedef struct coda_Expr_struct coda_Expr;
 
@@ -34,5 +41,11 @@ int coda_expr_eval_bool(const coda_Expr *expr, const coda_Cursor *cursor, int *v
 int coda_expr_eval_integer(const coda_Expr *expr, const coda_Cursor *cursor, int64_t *value);
 
 int coda_expr_get_result_type(const coda_Expr *expr, coda_native_type *result_type);
+
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+}
+#endif
+/* *INDENT-ON* */
 
 #endif
