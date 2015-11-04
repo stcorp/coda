@@ -2,7 +2,7 @@
 #
 project(CODA)
 
-set(VERSION 1.4.1)
+set(VERSION 1.5)
 set(CODA_VERSION \"${VERSION}\")
 
 # General setup
@@ -102,6 +102,7 @@ set(XML_NS 1)
 set(XML_DTD 1)
 set(XML_LARGE_SIZE 1)
 set(XML_CONTEXT_BYTES 1024)
+set(CODA_EXPAT_NAME_MANGLE 1)
 
 
 # Lex / Yacc - adapted from CMake's own CMakeLists.txt
@@ -283,6 +284,12 @@ set(LIBCODA_SOURCES
   libcoda/coda-expr.h
   libcoda/coda-filefilter.c
   libcoda/coda-filefilter.h
+  libcoda/coda-grib-cursor.c
+  libcoda/coda-grib-dynamic.c
+  libcoda/coda-grib-internal.h
+  libcoda/coda-grib-type.c
+  libcoda/coda-grib.c
+  libcoda/coda-grib.h
   libcoda/coda-internal.h
   libcoda/coda-netcdf-cursor.c
   libcoda/coda-netcdf-dynamic.c
@@ -674,9 +681,9 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/coda.h DESTINATION include)
 #
 # Set dynamic library version
 #
-set(LIBCODA_CURRENT 1)
+set(LIBCODA_CURRENT 4)
 set(LIBCODA_REVISION 0)
-set(LIBCODA_AGE 0)
+set(LIBCODA_AGE 3)
 
 add_library(coda SHARED ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBPCRE_SOURCES} ${LIBZLIB_SOURCES})
 target_link_libraries(coda ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})

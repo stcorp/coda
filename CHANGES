@@ -1,3 +1,17 @@
+1.5 2010-12-20
+~~~~~~~~~~~~~~~~
+
+* Added coda_get_product_definition_file().
+
+* Added support for Bit Maps for GRIB1 and GRIB2.
+
+* Fixed possible memory corruption when coda_init() was called again after
+  coda_done().
+
+* Fixed memory leaks in GRIB backend for coda_done().
+
+* Fixes in CMake build.
+
 1.4.1 2010-12-01
 ~~~~~~~~~~~~~~~~
 

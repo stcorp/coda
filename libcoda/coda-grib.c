@@ -39,8 +39,8 @@ static struct
 {
     coda_grib_basic_type *localRecordIndex;
     coda_grib_basic_type *gridRecordIndex;
-    coda_grib_basic_type *editionNumber;
     coda_grib_basic_type *table2Version;
+    coda_grib_basic_type *editionNumber;
     coda_grib_basic_type *grib1_centre;
     coda_grib_basic_type *grib2_centre;
     coda_grib_basic_type *generatingProcessIdentifier;
@@ -99,8 +99,8 @@ static struct
     coda_grib_basic_type *grib1_N;
     coda_grib_basic_type *grib2_N;
     coda_grib_basic_type *scanningMode;
-    coda_grib_array *pv_array;
     coda_grib_basic_type *pv;
+    coda_grib_array *pv_array;
     coda_grib_basic_type *sourceOfGridDefinition;
     coda_grib_basic_type *numberOfDataPoints;
     coda_grib_basic_type *gridDefinitionTemplateNumber;
@@ -112,11 +112,11 @@ static struct
     coda_grib_record *grib2_grid;
     coda_grib_record *grib1_data;
     coda_grib_record *grib2_data;
-    coda_grib_record *grib1_message;
-    coda_grib_record *grib2_message;
     coda_grib_array *grib2_local_array;
     coda_grib_array *grib2_grid_array;
     coda_grib_array *grib2_data_array;
+    coda_grib_record *grib1_message;
+    coda_grib_record *grib2_message;
     coda_grib_array *grib1_root;
     coda_grib_array *grib2_root;
 } grib_types;
@@ -759,13 +759,13 @@ void grib_types_done(void)
     {
         coda_release_type((coda_type *)grib_types.gridRecordIndex);
     }
-    if (grib_types.editionNumber != NULL)
-    {
-        coda_release_type((coda_type *)grib_types.editionNumber);
-    }
     if (grib_types.table2Version != NULL)
     {
         coda_release_type((coda_type *)grib_types.table2Version);
+    }
+    if (grib_types.editionNumber != NULL)
+    {
+        coda_release_type((coda_type *)grib_types.editionNumber);
     }
     if (grib_types.grib1_centre != NULL)
     {
@@ -779,9 +779,17 @@ void grib_types_done(void)
     {
         coda_release_type((coda_type *)grib_types.generatingProcessIdentifier);
     }
+    if (grib_types.gridDefinition != NULL)
+    {
+        coda_release_type((coda_type *)grib_types.gridDefinition);
+    }
     if (grib_types.indicatorOfParameter != NULL)
     {
         coda_release_type((coda_type *)grib_types.indicatorOfParameter);
+    }
+    if (grib_types.indicatorOfTypeOfLevel != NULL)
+    {
+        coda_release_type((coda_type *)grib_types.indicatorOfTypeOfLevel);
     }
     if (grib_types.level != NULL)
     {
@@ -794,6 +802,10 @@ void grib_types_done(void)
     if (grib_types.year != NULL)
     {
         coda_release_type((coda_type *)grib_types.year);
+    }
+    if (grib_types.month != NULL)
+    {
+        coda_release_type((coda_type *)grib_types.month);
     }
     if (grib_types.day != NULL)
     {
@@ -866,6 +878,14 @@ void grib_types_done(void)
     if (grib_types.significanceOfReferenceTime != NULL)
     {
         coda_release_type((coda_type *)grib_types.significanceOfReferenceTime);
+    }
+    if (grib_types.productionStatusOfProcessedData != NULL)
+    {
+        coda_release_type((coda_type *)grib_types.productionStatusOfProcessedData);
+    }
+    if (grib_types.typeOfProcessedData != NULL)
+    {
+        coda_release_type((coda_type *)grib_types.typeOfProcessedData);
     }
     if (grib_types.local != NULL)
     {
@@ -979,13 +999,13 @@ void grib_types_done(void)
     {
         coda_release_type((coda_type *)grib_types.scanningMode);
     }
-    if (grib_types.pv_array != NULL)
-    {
-        coda_release_type((coda_type *)grib_types.pv_array);
-    }
     if (grib_types.pv != NULL)
     {
         coda_release_type((coda_type *)grib_types.pv);
+    }
+    if (grib_types.pv_array != NULL)
+    {
+        coda_release_type((coda_type *)grib_types.pv_array);
     }
     if (grib_types.sourceOfGridDefinition != NULL)
     {
@@ -1019,17 +1039,17 @@ void grib_types_done(void)
     {
         coda_release_type((coda_type *)grib_types.grib1_grid);
     }
+    if (grib_types.grib2_grid != NULL)
+    {
+        coda_release_type((coda_type *)grib_types.grib2_grid);
+    }
     if (grib_types.grib1_data != NULL)
     {
         coda_release_type((coda_type *)grib_types.grib1_data);
     }
-    if (grib_types.grib1_message != NULL)
+    if (grib_types.grib2_data != NULL)
     {
-        coda_release_type((coda_type *)grib_types.grib1_message);
-    }
-    if (grib_types.grib2_message != NULL)
-    {
-        coda_release_type((coda_type *)grib_types.grib2_message);
+        coda_release_type((coda_type *)grib_types.grib2_data);
     }
     if (grib_types.grib2_local_array != NULL)
     {
@@ -1042,6 +1062,14 @@ void grib_types_done(void)
     if (grib_types.grib2_data_array != NULL)
     {
         coda_release_type((coda_type *)grib_types.grib2_data_array);
+    }
+    if (grib_types.grib1_message != NULL)
+    {
+        coda_release_type((coda_type *)grib_types.grib1_message);
+    }
+    if (grib_types.grib2_message != NULL)
+    {
+        coda_release_type((coda_type *)grib_types.grib2_message);
     }
     if (grib_types.grib1_root != NULL)
     {
@@ -1185,6 +1213,7 @@ static int read_grib1_message(coda_grib_product *product, coda_grib_dynamic_reco
 {
     coda_grib_dynamic_type *type;
     coda_grib_dynamic_record *bds;
+    uint8_t *bitmask = NULL;
     uint8_t buffer[28];
     long section_size;
     int has_gds, has_bms;
@@ -1670,13 +1699,41 @@ static int read_grib1_message(coda_grib_product *product, coda_grib_dynamic_reco
     if (has_bms)
     {
         /* Section 3: Bit Map Section (BMS) */
-        coda_set_error(CODA_ERROR_PRODUCT, "Bit Map Section not supported");
-        return -1;
+        if (read(product->fd, buffer, 6) < 0)
+        {
+            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename, strerror(errno));
+            return -1;
+        }
+
+        section_size = ((buffer[0] * 256) + buffer[1]) * 256 + buffer[2];
+        if ((buffer[4] * 256) + buffer[5] != 0)
+        {
+            coda_set_error(CODA_ERROR_PRODUCT, "Bit Map Section with predefined bit map not supported");
+            return -1;
+        }
+        
+        bitmask = malloc((section_size - 6) * sizeof(uint8_t));
+        if (bitmask == NULL)
+        {
+            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                           (long)((section_size - 6) * sizeof(uint8_t)), __FILE__, __LINE__);
+            return -1;
+        }
+        if (read(product->fd, bitmask, section_size - 6) < 0)
+        {
+            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename, strerror(errno));
+            return -1;
+        }
+        file_offset += section_size;
     }
 
     /* Section 4: Binary Data Section (BDS) */
     if (read(product->fd, buffer, 11) < 0)
     {
+        if (bitmask != NULL)
+        {
+            free(bitmask);
+        }
         coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename, strerror(errno));
         return -1;
     }
@@ -1684,17 +1741,29 @@ static int read_grib1_message(coda_grib_product *product, coda_grib_dynamic_reco
     section_size = ((buffer[0] * 256) + buffer[1]) * 256 + buffer[2];
     if (buffer[3] & 0x80)
     {
+        if (bitmask != NULL)
+        {
+            free(bitmask);
+        }
         coda_set_error(CODA_ERROR_PRODUCT, "spherical harmonic coefficients data not supported");
         return -1;
     }
     if (buffer[3] & 0x40)
     {
+        if (bitmask != NULL)
+        {
+            free(bitmask);
+        }
         coda_set_error(CODA_ERROR_PRODUCT, "second order ('Complex') Packing not supported");
         return -1;
     }
     isIntegerData = (buffer[3] & 0x20 ? 1 : 0);
     if (buffer[3] & 0x10)
     {
+        if (bitmask != NULL)
+        {
+            free(bitmask);
+        }
         coda_set_error(CODA_ERROR_PRODUCT, "presence of additional flags in BDS not supported");
         return -1;
     }
@@ -1703,6 +1772,10 @@ static int read_grib1_message(coda_grib_product *product, coda_grib_dynamic_reco
     bitsPerValue = buffer[10];
     if (bitsPerValue > 63)
     {
+        if (bitmask != NULL)
+        {
+            free(bitmask);
+        }
         coda_set_error(CODA_ERROR_PRODUCT, "bitsPerValue (%d) too large in BDS", bitsPerValue);
         return -1;
     }
@@ -1721,7 +1794,7 @@ static int read_grib1_message(coda_grib_product *product, coda_grib_dynamic_reco
 
     type = (coda_grib_dynamic_type *)coda_grib_dynamic_value_array_new(grib_types.values, num_elements,
                                                                        file_offset, bitsPerValue, decimalScaleFactor,
-                                                                       binaryScaleFactor, referenceValue);
+                                                                       binaryScaleFactor, referenceValue, bitmask);
     coda_grib_dynamic_record_set_field(bds, "values", type);
     coda_grib_release_dynamic_type(type);
 
@@ -1765,6 +1838,9 @@ static int read_grib2_message(coda_grib_product *product, coda_grib_dynamic_reco
     coda_grib_dynamic_array *gridArray;
     coda_grib_dynamic_array *dataArray;
     coda_grib_dynamic_type *type;
+    int has_bitmask = 0;
+    int64_t bitmask_offset = -1;
+    int64_t bitmask_length = 0;
     long localRecordIndex = -1;
     long gridSectionIndex = -1;
     int16_t decimalScaleFactor = 0;
@@ -2267,9 +2343,28 @@ static int read_grib2_message(coda_grib_product *product, coda_grib_dynamic_reco
                                strerror(errno));
                 return -1;
             }
-            if (*buffer != 255)
+            if (*buffer == 0)
             {
-                coda_set_error(CODA_ERROR_PRODUCT, "Bit Maps not supported");
+                has_bitmask = 1;
+                bitmask_offset = file_offset + 1;
+                bitmask_length = section_size - 6;
+            }
+            else if (*buffer == 254)
+            {
+                has_bitmask = 1;
+                if (bitmask_offset == -1)
+                {
+                    coda_set_error(CODA_ERROR_PRODUCT, "no previously defined Bit Map found");
+                    return -1;
+                }
+            }
+            else if (*buffer == 255)
+            {
+                has_bitmask = 0;
+            }
+            else
+            {
+                coda_set_error(CODA_ERROR_PRODUCT, "pre-defined Bit Maps not supported");
                 return -1;
             }
             file_offset++;
@@ -2293,6 +2388,7 @@ static int read_grib2_message(coda_grib_product *product, coda_grib_dynamic_reco
         else if (*buffer == 7)
         {
             coda_grib_dynamic_record *data;
+            uint8_t *bitmask = NULL;
 
             /* Section 7: Data Section */
             if (prev_section != 5 && prev_section != 6)
@@ -2322,10 +2418,50 @@ static int read_grib2_message(coda_grib_product *product, coda_grib_dynamic_reco
             type = (coda_grib_dynamic_type *)coda_grib_dynamic_real_new(grib_types.referenceValue, referenceValue);
             coda_grib_dynamic_record_set_field(data, "referenceValue", type);
             coda_grib_release_dynamic_type(type);
+
+            if (has_bitmask)
+            {
+                /* read bitmask array */
+                bitmask = malloc(bitmask_length * sizeof(uint8_t));
+                if (bitmask == NULL)
+                {
+                    coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                                   (long)(bitmask_length * sizeof(uint8_t)), __FILE__, __LINE__);
+                    return -1;
+                }
+                if (lseek(product->fd, (off_t)bitmask_offset, SEEK_SET) < 0)
+                {
+                    char file_offset_str[21];
+
+                    free(bitmask);
+                    coda_str64(bitmask_offset, file_offset_str);
+                    coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %s in file %s (%s)",
+                                   file_offset_str, product->filename, strerror(errno));
+                    return -1;
+                }
+                if (read(product->fd, bitmask, bitmask_length) < 0)
+                {
+                    free(bitmask);
+                    coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
+                                   strerror(errno));
+                    return -1;
+                }                
+                if (lseek(product->fd, (off_t)file_offset, SEEK_SET) < 0)
+                {
+                    char file_offset_str[21];
+                    
+                    free(bitmask);
+                    coda_str64(file_offset, file_offset_str);
+                    coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %s in file %s (%s)",
+                                   file_offset_str, product->filename, strerror(errno));
+                    return -1;
+                }
+            }
+
             type = (coda_grib_dynamic_type *)coda_grib_dynamic_value_array_new(grib_types.values, num_elements,
                                                                                file_offset, bitsPerValue,
                                                                                decimalScaleFactor, binaryScaleFactor,
-                                                                               referenceValue);
+                                                                               referenceValue, bitmask);
             coda_grib_dynamic_record_set_field(data, "values", type);
             coda_grib_release_dynamic_type(type);
 

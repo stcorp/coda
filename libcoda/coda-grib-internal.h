@@ -197,6 +197,7 @@ typedef struct coda_grib_dynamic_value_array_struct
     int16_t decimalScaleFactor;
     int16_t binaryScaleFactor;
     float referenceValue;
+    uint8_t *bitmask;
 } coda_grib_dynamic_value_array;
 
 
@@ -265,7 +266,7 @@ coda_grib_dynamic_raw *coda_grib_dynamic_raw_new(coda_grib_basic_type *definitio
 coda_grib_dynamic_value_array *coda_grib_dynamic_value_array_new(coda_grib_array *definition, int num_elements,
                                                                  int64_t byte_offset, int element_bit_size,
                                                                  int16_t decimalScaleFactor, int16_t binaryScaleFactor,
-                                                                 float referenceValue);
+                                                                 float referenceValue, uint8_t *bitmask);
 
 coda_grib_dynamic_record *coda_grib_empty_dynamic_record();
 

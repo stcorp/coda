@@ -132,7 +132,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "codapython"=".\codajava.dsp" - Package Owner=<4>
+Project: "codajava"=".\codajava.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{

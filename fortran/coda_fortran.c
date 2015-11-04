@@ -330,6 +330,15 @@ int UFNAME(CODA_GET_PRODUCT_ROOT_TYPE,coda_get_product_root_type)(void *pf, void
     return coda_get_product_root_type(*(coda_product **)pf, (coda_type **)type);
 }
 
+int UFNAME(CODA_GET_PRODUCT_DEFINITION_FILE,coda_get_product_definition_file)(void *pf, char *definition_file, int definition_file_size)
+{
+    int result;
+    OUTSTR_BEGIN(definition_file)
+    result = coda_get_product_class(*(coda_product **)pf, &definition_file_s);
+    OUTSTR_END(definition_file)
+    return result;
+}
+
 int UFNAME(CODA_GET_PRODUCT_VARIABLE_VALUE,coda_get_product_variable_value)(void *pf, char *variable, int *index, int64_t *value, int variable_size)
 {
     int result;

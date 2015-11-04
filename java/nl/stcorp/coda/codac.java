@@ -223,6 +223,10 @@ public class codac implements codacConstants {
     return codacJNI.get_product_version(SWIGTYPE_p_coda_product_struct.getCPtr(product), version);
   }
 
+  public static int get_product_definition_file(SWIGTYPE_p_coda_product_struct product, String[] definition_file) throws nl.stcorp.coda.CodaException {
+    return codacJNI.get_product_definition_file(SWIGTYPE_p_coda_product_struct.getCPtr(product), definition_file);
+  }
+
   public static int get_product_root_type(SWIGTYPE_p_coda_product_struct product, SWIGTYPE_p_coda_type_struct type) throws nl.stcorp.coda.CodaException {
     return codacJNI.get_product_root_type(SWIGTYPE_p_coda_product_struct.getCPtr(product), type);
   }

@@ -129,6 +129,10 @@ static void dynamic_value_array_delete(coda_grib_dynamic_value_array *type)
     {
         coda_grib_release_dynamic_type(type->base_type);
     }
+    if (type->bitmask != NULL)
+    {
+        free(type->bitmask);
+    }
     free(type);
 }
 
@@ -462,7 +466,7 @@ static coda_grib_dynamic_type *dynamic_value_new(coda_grib_type *definition)
 coda_grib_dynamic_value_array *coda_grib_dynamic_value_array_new(coda_grib_array *definition, int num_elements,
                                                                  int64_t byte_offset, int element_bit_size,
                                                                  int16_t decimalScaleFactor, int16_t binaryScaleFactor,
-                                                                 float referenceValue)
+                                                                 float referenceValue, uint8_t *bitmask)
 {
     coda_grib_dynamic_value_array *type;
 
@@ -487,6 +491,7 @@ coda_grib_dynamic_value_array *coda_grib_dynamic_value_array_new(coda_grib_array
     type->decimalScaleFactor = decimalScaleFactor;
     type->binaryScaleFactor = binaryScaleFactor;
     type->referenceValue = referenceValue;
+    type->bitmask = bitmask;
 
     type->base_type = dynamic_value_new(definition->base_type);
     if (type->base_type == NULL)

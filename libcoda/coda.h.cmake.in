@@ -36,7 +36,10 @@ extern "C"
 #ifdef WIN32
 #include <windows.h>
 
-#ifdef _MSC_VER
+#if (_MSC_VER < 1600)
+/* For Visual Studio we can use stdint.h as of Visual Studio 2010
+ * For earlier versions we need to provide our own defines
+ */
 #ifndef int8_t
 #define int8_t  signed char
 #endif
@@ -349,6 +352,7 @@ LIBCODA_API int coda_get_product_format(const coda_product *product, coda_format
 LIBCODA_API int coda_get_product_class(const coda_product *product, const char **product_class);
 LIBCODA_API int coda_get_product_type(const coda_product *product, const char **product_type);
 LIBCODA_API int coda_get_product_version(const coda_product *product, int *version);
+LIBCODA_API int coda_get_product_definition_file(const coda_product *product, const char **definition_file);
 LIBCODA_API int coda_get_product_root_type(const coda_product *product, coda_type **type);
 
 LIBCODA_API int coda_get_product_variable_value(coda_product *product, const char *variable, long index,

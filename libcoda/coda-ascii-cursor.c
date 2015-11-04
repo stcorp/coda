@@ -870,7 +870,12 @@ static long get_buffer_size(int64_t bit_size, int64_t size_boundary, int64_t rem
         }
         if (size_boundary >= 0 && bit_size > size_boundary)
         {
-            coda_set_error(CODA_ERROR_OUT_OF_BOUNDS_READ, NULL);
+            char bs[21];
+            char sb[21];
+            
+            coda_str64(bit_size, bs);
+            coda_str64(size_boundary, sb);
+            coda_set_error(CODA_ERROR_PRODUCT, "trying to read %s bits from %s bit buffer", bs, sb);
             return -1;
         }
         *dynamic_size = 0;
@@ -1707,7 +1712,12 @@ static int read_string(const coda_cursor *cursor, char *dst, long dst_size, int6
     {
         if (size_boundary >= 0 && read_size > (size_boundary >> 3))
         {
-            coda_set_error(CODA_ERROR_OUT_OF_BOUNDS_READ, NULL);
+            char rs[21];
+            char sb[21];
+            
+            coda_str64(read_size, rs);
+            coda_str64(size_boundary >> 3, sb);
+            coda_set_error(CODA_ERROR_PRODUCT, "trying to read %s bytes from %s byte buffer", rs, sb);
             return -1;
         }
         if (read_bytes(cursor->product, bit_offset >> 3, read_size, dst) != 0)

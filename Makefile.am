@@ -114,6 +114,7 @@ libexpat_internal_la_SOURCES = \
 	libcoda/expat/xmlrole.h \
 	libcoda/expat/xmltok.h \
 	libcoda/expat/xmltok_impl.h
+libexpat_internal_la_CPPFLAGS = -Ilibcoda/expat -I$(srcdir)/libcoda/expat $(AM_CPPFLAGS)
 EXTRA_DIST += libcoda/expat/xmltok_impl.c libcoda/expat/xmltok_ns.c
 EXTRA_DIST += libcoda/expat/COPYING libcoda/expat/README
 
@@ -146,6 +147,7 @@ libpcre_internal_la_SOURCES = \
 	libcoda/pcre/pcre_version.c \
 	libcoda/pcre/pcre_xclass.c \
 	libcoda/pcre/ucp.h
+libpcre_internal_la_CPPFLAGS = -Ilibcoda/pcre -I$(srcdir)/libcoda/pcre $(AM_CPPFLAGS)
 EXTRA_DIST += libcoda/pcre/COPYING libcoda/pcre/README
 
 # zlib
@@ -166,6 +168,7 @@ libz_internal_la_SOURCES = \
 	libcoda/zlib/zlib.h \
 	libcoda/zlib/zutil.c \
 	libcoda/zlib/zutil.h
+libz_internal_la_CPPFLAGS = -Ilibcoda/zlib -I$(srcdir)/libcoda/zlib $(AM_CPPFLAGS)
 EXTRA_DIST += libcoda/zlib/COPYING libcoda/zlib/README
 
 # libcoda

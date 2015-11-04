@@ -535,6 +535,7 @@ int coda_cursor_read_char_array(const coda_cursor *cursor, char *dst, coda_array
    coda_get_product_filename()::const char **filename
    coda_get_product_class()::const char **product_class
    coda_get_product_type()::const char **product_type
+   coda_get_product_definition_file()::const char **definition_file
    coda_type_get_name()::const char **name
    coda_type_get_description()::const char **description
    coda_type_get_unit()::const char **unit
@@ -547,6 +548,7 @@ int coda_cursor_read_char_array(const coda_cursor *cursor, char *dst, coda_array
 */
 %apply char **STRING_OUT { const char **product_class,
          const char **product_type,
+         const char **definition_file,
          const char **filename,
          const char **name,
          const char **description,

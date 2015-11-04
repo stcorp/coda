@@ -2495,6 +2495,54 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_get_1product_1version(JNIEn
 }
 
 
+SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_get_1product_1definition_1file(JNIEnv *jenv, jclass jcls, jlong jarg1, jobjectArray jarg2) {
+  jint jresult = 0 ;
+  coda_product *arg1 = (coda_product *) 0 ;
+  char **arg2 = (char **) 0 ;
+  char *temp2 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(coda_product **)&jarg1; 
+  {
+    if (!jarg2) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg2) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    arg2 = &temp2; 
+  }
+  {
+    result = (int)coda_get_product_definition_file((struct coda_product_struct const *)arg1,(char const **)arg2);
+    
+    if (result < 0)
+    {
+      int namelen = strlen("coda_get_product_definition_file");
+      const char *codamsg = coda_errno_to_string(coda_errno);
+      char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
+      jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
+      
+      sprintf(fullMessage, "coda_get_product_definition_file(): %s", codamsg);
+      (*jenv)->ThrowNew(jenv, clazz, fullMessage);
+      free(fullMessage);
+      return 0;
+    }
+  }
+  {
+    jstring jnewstring = NULL;
+    if(arg2) {
+      jnewstring = (*jenv)->NewStringUTF(jenv, *arg2);
+    }
+    (*jenv)->SetObjectArrayElement(jenv, jarg2, 0, jnewstring); 
+  }
+  return jresult;
+}
+
+
 SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_get_1product_1root_1type(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg2) {
   jint jresult = 0 ;
   coda_product *arg1 = (coda_product *) 0 ;

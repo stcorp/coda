@@ -542,6 +542,34 @@ static int read_basic_type(const coda_cursor *cursor, void *dst)
             return 0;
         }
         index = cursor->stack[cursor->n - 1].index;
+        if (array->bitmask != NULL)
+        {
+            uint8_t bm;
+            long value_index = 0;
+            long i;
+
+            bm = array->bitmask[index >> 3];
+            if (!((bm >> (7 - (index & 0x7))) & 1))
+            {
+                /* bitmask value is 0 -> return NaN */
+                *((float *)dst) = coda_NaN();
+                return 0;
+            }
+
+            /* bitmask value is 1 -> update index to be the index in the value array */
+            for (i = 0; i < (index >> 3); i++)
+            {
+                bm = array->bitmask[i];
+                value_index += ((bm >> 7) & 1) + ((bm >> 6) & 1) + ((bm >> 5) & 1) + ((bm >> 4) & 1) + ((bm >> 3) & 1) +
+                    ((bm >> 2) & 1) + ((bm >> 1) & 1) + (bm & 1);
+            }
+            bm = array->bitmask[index >> 3];
+            for (i = 0; i < (index & 0x7); i++)
+            {
+                value_index += (bm >> (7 - i)) & 1;
+            }
+            index = value_index;
+        }
         buffer = &((uint8_t *)&ivalue)[8 - bit_size_to_byte_size(array->element_bit_size)];
         read_bits((coda_grib_product *)cursor->product, array->bit_offset + index * array->element_bit_size,
                   array->element_bit_size, buffer);

@@ -284,6 +284,7 @@ static void print_function_definitions(void)
     PRINT_FUNCDEF(coda_get_product_class, int);
     PRINT_FUNCDEF(coda_get_product_type, int);
     PRINT_FUNCDEF(coda_get_product_version, int);
+    PRINT_FUNCDEF(coda_get_product_definition_file, int);
     PRINT_FUNCDEF(coda_get_product_root_type, int);
 
     PRINT_FUNCDEF(coda_get_product_variable_value, int);

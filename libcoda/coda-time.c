@@ -1063,10 +1063,9 @@ static int register_leap_second(double leap_second)
                            (num_leap_seconds + BLOCK_SIZE) * sizeof(double), __FILE__, __LINE__);
             return -1;
         }
-        memcpy(new_leap_second_table, leap_second_table, num_leap_seconds * sizeof(double));
         leap_second_table = new_leap_second_table;
     }
-    if (leap_second <= leap_second_table[num_leap_seconds - 1])
+    if (num_leap_seconds > 0 && leap_second <= leap_second_table[num_leap_seconds - 1])
     {
         /* do sorted insert */
         for (i = 0; i < num_leap_seconds; i++)
@@ -1164,6 +1163,7 @@ void coda_leap_second_table_done(void)
         free(leap_second_table);
         leap_second_table = NULL;
     }
+    num_leap_seconds = 0;
 }
 
 int coda_leap_second_table_init(void)

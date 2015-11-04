@@ -6083,6 +6083,58 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_get_product_definition_file(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  coda_product *arg1 = (coda_product *) 0 ;
+  char **arg2 = (char **) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  char const *tmp2 = NULL ;
+  PyObject * obj0 = 0 ;
+  int result;
+  
+  {
+    arg2 = (char **)&tmp2;
+  }
+  if (!PyArg_ParseTuple(args,(char *)"O:get_product_definition_file",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_coda_product_struct, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "get_product_definition_file" "', argument " "1"" of type '" "coda_product const *""'"); 
+  }
+  arg1 = (coda_product *)(argp1);
+  {
+    result = (int)coda_get_product_definition_file((struct coda_product_struct const *)arg1,(char const **)arg2);
+    
+    if (result < 0)
+    {
+      return PyErr_Format(codacError,"coda_get_product_definition_file(): %s", coda_errno_to_string(coda_errno));
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  {
+    PyObject *tmp_result;
+    
+    if (*arg2 == NULL)
+    {
+      Py_INCREF(Py_None);
+      tmp_result = Py_None;
+    }
+    else
+    {
+      tmp_result = PyString_FromString(*arg2);
+      if (tmp_result == NULL)
+      {
+        return NULL;
+      }
+    }
+    resultobj = t_output_helper(resultobj, tmp_result);
+  }
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_get_product_root_type(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   coda_product *arg1 = (coda_product *) 0 ;
@@ -9444,6 +9496,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"get_product_class", _wrap_get_product_class, METH_VARARGS, NULL},
 	 { (char *)"get_product_type", _wrap_get_product_type, METH_VARARGS, NULL},
 	 { (char *)"get_product_version", _wrap_get_product_version, METH_VARARGS, NULL},
+	 { (char *)"get_product_definition_file", _wrap_get_product_definition_file, METH_VARARGS, NULL},
 	 { (char *)"get_product_root_type", _wrap_get_product_root_type, METH_VARARGS, NULL},
 	 { (char *)"get_product_variable_value", _wrap_get_product_variable_value, METH_VARARGS, NULL},
 	 { (char *)"type_has_ascii_content", _wrap_type_has_ascii_content, METH_VARARGS, NULL},

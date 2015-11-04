@@ -757,6 +757,43 @@ LIBCODA_API int coda_get_product_root_type(const coda_product *product, coda_typ
     return coda_get_type_for_dynamic_type(product->root_type, type);
 }
 
+/** Get path to the coda definition file that describes the format for this product.
+ * This function will return a full path to the coda definition (.codadef) file that contains the format description
+ * for this product. If the format is not taken from an external coda definition description but based on the
+ * self-describing format information from the file itself or based on a hardcoded format definition within one of the
+ * coda backends then \a definition_file will be set to NULL.
+ * \param product Pointer to a product file handle. 
+ * \param definition_file Pointer to the variable where the path to used coda definition file will be stored (or NULL if
+ * not applicable).
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_get_product_definition_file(const coda_product *product, const char **definition_file)
+{
+    if (product == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "product file argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (definition_file == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "definition_file argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    
+    if (product->product_definition != NULL)
+    {
+        *definition_file = product->product_definition->product_type->product_class->definition_file;
+    }
+    else
+    {
+        *definition_file = NULL;
+    }
+    
+    return 0;
+}
+
 /** Get the value for a product variable.
  * CODA supports a mechanism called product variables to store frequently needed information of a product (i.e.
  * information that is needed to calculate byte offsets or array sizes within a product). With this function you

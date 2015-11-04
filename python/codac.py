@@ -392,6 +392,10 @@ def get_product_version(*args):
   return _codac.get_product_version(*args)
 get_product_version = _codac.get_product_version
 
+def get_product_definition_file(*args):
+  return _codac.get_product_definition_file(*args)
+get_product_definition_file = _codac.get_product_definition_file
+
 def get_product_root_type(*args):
   return _codac.get_product_root_type(*args)
 get_product_root_type = _codac.get_product_root_type

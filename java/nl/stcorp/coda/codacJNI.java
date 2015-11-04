@@ -62,6 +62,7 @@ public class codacJNI {
   public final static native int get_product_class(long jarg1, String[] jarg2) throws nl.stcorp.coda.CodaException;
   public final static native int get_product_type(long jarg1, String[] jarg2) throws nl.stcorp.coda.CodaException;
   public final static native int get_product_version(long jarg1, int[] jarg2) throws nl.stcorp.coda.CodaException;
+  public final static native int get_product_definition_file(long jarg1, String[] jarg2) throws nl.stcorp.coda.CodaException;
   public final static native int get_product_root_type(long jarg1, SWIGTYPE_p_coda_type_struct jarg2) throws nl.stcorp.coda.CodaException;
   public final static native int get_product_variable_value(long jarg1, String jarg2, int jarg3, long[] jarg4) throws nl.stcorp.coda.CodaException;
   public final static native int type_has_ascii_content(long jarg1, int[] jarg2) throws nl.stcorp.coda.CodaException;

@@ -57,6 +57,7 @@
 %rename(get_product_type) coda_get_product_type;
 %rename(get_product_version) coda_get_product_version;
 %rename(get_product_root_type) coda_get_product_root_type;
+%rename(get_product_definition_file) coda_get_product_definition_file;
 %rename(get_product_variable_value) coda_get_product_variable_value;
 %rename(type_get_format_name) coda_type_get_format_name;
 %rename(type_get_class_name) coda_type_get_class_name;
