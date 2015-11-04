@@ -27,7 +27,6 @@ int coda_bin_open(const char *filename, int64_t file_size, const coda_product_de
                   coda_product **product);
 int coda_bin_close(coda_product *product);
 
-int coda_bin_cursor_use_base_type_of_special_type(coda_cursor *cursor);
 int coda_bin_cursor_get_string_length(const coda_cursor *cursor, long *length);
 int coda_bin_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size);
 int coda_bin_cursor_get_num_elements(const coda_cursor *cursor, long *num_elements);
@@ -57,8 +56,6 @@ int coda_bin_cursor_read_int64_array(const coda_cursor *cursor, int64_t *dst, co
 int coda_bin_cursor_read_uint64_array(const coda_cursor *cursor, uint64_t *dst, coda_array_ordering array_ordering);
 int coda_bin_cursor_read_float_array(const coda_cursor *cursor, float *dst, coda_array_ordering array_ordering);
 int coda_bin_cursor_read_double_array(const coda_cursor *cursor, double *dst, coda_array_ordering array_ordering);
-int coda_bin_cursor_read_double_pairs_array(const coda_cursor *cursor, double *dst, coda_array_ordering array_ordering);
-int coda_bin_cursor_read_double_split_array(const coda_cursor *cursor, double *dst_1, double *dst_2,
-                                            coda_array_ordering array_ordering);
+int coda_bin_cursor_read_char_array(const coda_cursor *cursor, char *dst, coda_array_ordering array_ordering);
 
 #endif

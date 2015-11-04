@@ -62,6 +62,8 @@ static void print_help()
     printf("                    (do not traverse the full product)\n");
     printf("            -V, --verbose\n");
     printf("                    show more information while performing the check\n");
+    printf("            --no-mmap\n");
+    printf("                    disable the use of mmap when opening files\n");
     printf("\n");
     printf("        If you pass a '-' for the <files> section then the list of files will\n");
     printf("        be read from stdin.\n");
@@ -168,11 +170,13 @@ int main(int argc, char *argv[])
     const char *definition_path = "../share/" PACKAGE "/definitions";
 #endif
     int option_stdin;
+    int option_use_mmap;
     int i;
 
     option_stdin = 0;
     option_verbose = 0;
     option_quick = 0;
+    option_use_mmap = 1;
     option_require_definition = 0;
 
     if (argc == 1 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)
@@ -200,6 +204,10 @@ int main(int argc, char *argv[])
         else if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--definition") == 0)
         {
             option_require_definition = 1;
+        }
+        else if (strcmp(argv[i], "--no-mmap") == 0)
+        {
+            option_use_mmap = 0;
         }
         else if (strcmp(argv[i], "-") == 0 && i == argc - 1)
         {
@@ -240,6 +248,9 @@ int main(int argc, char *argv[])
 
     /* We disable conversions since this speeds up the check of reading all numerical data */
     coda_set_option_perform_conversions(0);
+
+    /* Set mmap based on the chosen option */
+    coda_set_option_use_mmap(option_use_mmap);
 
     if (option_stdin)
     {

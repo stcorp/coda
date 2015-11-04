@@ -269,7 +269,14 @@ static void write_basic_data(FILE *f, int depth)
                                 handle_coda_error();
                             }
 
-                            fprintf(f, "%.16g", data);
+                            if (read_type == coda_native_type_float)
+                            {
+                                fprintf(f, "%.7g", data);
+                            }
+                            else
+                            {
+                                fprintf(f, "%.16g", data);
+                            }
                         }
                         break;
                     case coda_native_type_not_available:
@@ -310,7 +317,7 @@ static void write_basic_data(FILE *f, int depth)
                                 }
                                 else
                                 {
-                                    if (coda_time_to_string(data, str) != 0)
+                                    if (coda_time_double_to_string(data, "yyyy-MM-dd HH:mm:ss.SSSSSS", str) != 0)
                                     {
                                         handle_coda_error();
                                     }

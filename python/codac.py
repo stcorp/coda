@@ -339,6 +339,46 @@ def set_option_use_mmap(*args):
   return _codac.set_option_use_mmap(*args)
 set_option_use_mmap = _codac.set_option_use_mmap
 
+def time_double_to_parts(*args):
+  return _codac.time_double_to_parts(*args)
+time_double_to_parts = _codac.time_double_to_parts
+
+def time_double_to_parts_utc(*args):
+  return _codac.time_double_to_parts_utc(*args)
+time_double_to_parts_utc = _codac.time_double_to_parts_utc
+
+def time_parts_to_double(*args):
+  return _codac.time_parts_to_double(*args)
+time_parts_to_double = _codac.time_parts_to_double
+
+def time_parts_to_double_utc(*args):
+  return _codac.time_parts_to_double_utc(*args)
+time_parts_to_double_utc = _codac.time_parts_to_double_utc
+
+def time_parts_to_string(*args):
+  return _codac.time_parts_to_string(*args)
+time_parts_to_string = _codac.time_parts_to_string
+
+def time_string_to_parts(*args):
+  return _codac.time_string_to_parts(*args)
+time_string_to_parts = _codac.time_string_to_parts
+
+def time_double_to_string(*args):
+  return _codac.time_double_to_string(*args)
+time_double_to_string = _codac.time_double_to_string
+
+def time_double_to_string_utc(*args):
+  return _codac.time_double_to_string_utc(*args)
+time_double_to_string_utc = _codac.time_double_to_string_utc
+
+def time_string_to_double(*args):
+  return _codac.time_string_to_double(*args)
+time_string_to_double = _codac.time_string_to_double
+
+def time_string_to_double_utc(*args):
+  return _codac.time_string_to_double_utc(*args)
+time_string_to_double_utc = _codac.time_string_to_double_utc
+
 def datetime_to_double(*args):
   return _codac.datetime_to_double(*args)
 datetime_to_double = _codac.datetime_to_double

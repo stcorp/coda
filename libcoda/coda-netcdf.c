@@ -46,7 +46,7 @@ static int read_dim_array(coda_netcdf_product *product, int64_t *offset, int32_t
     int32_t tag;
     long i;
 
-    if (read_bytes((coda_product *)product, *offset, 4, &tag) < 0)
+    if (read_bytes(product->raw_product, *offset, 4, &tag) < 0)
     {
         return -1;
     }
@@ -55,7 +55,7 @@ static int read_dim_array(coda_netcdf_product *product, int64_t *offset, int32_t
 #endif
     *offset += 4;
 
-    if (read_bytes((coda_product *)product, *offset, 4, num_dims) < 0)
+    if (read_bytes(product->raw_product, *offset, 4, num_dims) < 0)
     {
         return -1;
     }
@@ -95,7 +95,7 @@ static int read_dim_array(coda_netcdf_product *product, int64_t *offset, int32_t
         int32_t string_length;
 
         /* nelems */
-        if (read_bytes((coda_product *)product, *offset, 4, &string_length) < 0)
+        if (read_bytes(product->raw_product, *offset, 4, &string_length) < 0)
         {
             free(*dim_length);
             return -1;
@@ -111,7 +111,7 @@ static int read_dim_array(coda_netcdf_product *product, int64_t *offset, int32_t
             *offset += 4 - (string_length & 3);
         }
         /* dim_length */
-        if (read_bytes((coda_product *)product, *offset, 4, &(*dim_length)[i]) < 0)
+        if (read_bytes(product->raw_product, *offset, 4, &(*dim_length)[i]) < 0)
         {
             return -1;
         }
@@ -138,7 +138,7 @@ static int read_att_array(coda_netcdf_product *product, int64_t *offset, coda_me
     int32_t num_att;
     long i;
 
-    if (read_bytes((coda_product *)product, *offset, 4, &tag) < 0)
+    if (read_bytes(product->raw_product, *offset, 4, &tag) < 0)
     {
         return -1;
     }
@@ -147,7 +147,7 @@ static int read_att_array(coda_netcdf_product *product, int64_t *offset, coda_me
 #endif
     *offset += 4;
 
-    if (read_bytes((coda_product *)product, *offset, 4, &num_att) < 0)
+    if (read_bytes(product->raw_product, *offset, 4, &num_att) < 0)
     {
         return -1;
     }
@@ -180,7 +180,7 @@ static int read_att_array(coda_netcdf_product *product, int64_t *offset, coda_me
     {
         return -1;
     }
-    *attributes = coda_mem_record_new(attributes_definition);
+    *attributes = coda_mem_record_new(attributes_definition, NULL);
     coda_type_release((coda_type *)attributes_definition);
     if (*attributes == NULL)
     {
@@ -197,7 +197,7 @@ static int read_att_array(coda_netcdf_product *product, int64_t *offset, coda_me
         char *name;
 
         /* nelems */
-        if (read_bytes((coda_product *)product, *offset, 4, &string_length) < 0)
+        if (read_bytes(product->raw_product, *offset, 4, &string_length) < 0)
         {
             coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
             return -1;
@@ -216,7 +216,7 @@ static int read_att_array(coda_netcdf_product *product, int64_t *offset, coda_me
             return -1;
         }
         name[string_length] = '\0';
-        if (read_bytes((coda_product *)product, *offset, string_length, name) < 0)
+        if (read_bytes(product->raw_product, *offset, string_length, name) < 0)
         {
             free(name);
             coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
@@ -229,7 +229,7 @@ static int read_att_array(coda_netcdf_product *product, int64_t *offset, coda_me
             *offset += 4 - (string_length & 3);
         }
         /* nc_type */
-        if (read_bytes((coda_product *)product, *offset, 4, &nc_type) < 0)
+        if (read_bytes(product->raw_product, *offset, 4, &nc_type) < 0)
         {
             free(name);
             coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
@@ -240,7 +240,7 @@ static int read_att_array(coda_netcdf_product *product, int64_t *offset, coda_me
 #endif
         *offset += 4;
         /* nelems */
-        if (read_bytes((coda_product *)product, *offset, 4, &nelems) < 0)
+        if (read_bytes(product->raw_product, *offset, 4, &nelems) < 0)
         {
             free(name);
             coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
@@ -282,7 +282,7 @@ static int read_att_array(coda_netcdf_product *product, int64_t *offset, coda_me
                 {
                     float value;
 
-                    if (read_bytes((coda_product *)product, *offset, 4, &value) < 0)
+                    if (read_bytes(product->raw_product, *offset, 4, &value) < 0)
                     {
                         free(name);
                         coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
@@ -304,7 +304,7 @@ static int read_att_array(coda_netcdf_product *product, int64_t *offset, coda_me
                 {
                     double value;
 
-                    if (read_bytes((coda_product *)product, *offset, 8, &value) < 0)
+                    if (read_bytes(product->raw_product, *offset, 8, &value) < 0)
                     {
                         free(name);
                         coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
@@ -339,7 +339,7 @@ static int read_att_array(coda_netcdf_product *product, int64_t *offset, coda_me
                     double as_double[1];
                 } value;
 
-                if (read_bytes((coda_product *)product, *offset, value_length, value.as_int8) < 0)
+                if (read_bytes(product->raw_product, *offset, value_length, value.as_int8) < 0)
                 {
                     free(name);
                     coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
@@ -445,7 +445,7 @@ static int read_var_array(coda_netcdf_product *product, int64_t *offset, int32_t
     int32_t num_var;
     long i;
 
-    if (read_bytes((coda_product *)product, *offset, 4, &tag) < 0)
+    if (read_bytes(product->raw_product, *offset, 4, &tag) < 0)
     {
         coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename, strerror(errno));
         return -1;
@@ -455,7 +455,7 @@ static int read_var_array(coda_netcdf_product *product, int64_t *offset, int32_t
 #endif
     *offset += 4;
 
-    if (read_bytes((coda_product *)product, *offset, 4, &num_var) < 0)
+    if (read_bytes(product->raw_product, *offset, 4, &num_var) < 0)
     {
         coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename, strerror(errno));
         return -1;
@@ -503,7 +503,7 @@ static int read_var_array(coda_netcdf_product *product, int64_t *offset, int32_t
         long j;
 
         /* nelems */
-        if (read_bytes((coda_product *)product, *offset, 4, &string_length) < 0)
+        if (read_bytes(product->raw_product, *offset, 4, &string_length) < 0)
         {
             return -1;
         }
@@ -520,7 +520,7 @@ static int read_var_array(coda_netcdf_product *product, int64_t *offset, int32_t
             return -1;
         }
         name[string_length] = '\0';
-        if (read_bytes((coda_product *)product, *offset, string_length, name) < 0)
+        if (read_bytes(product->raw_product, *offset, string_length, name) < 0)
         {
             free(name);
             return -1;
@@ -532,7 +532,7 @@ static int read_var_array(coda_netcdf_product *product, int64_t *offset, int32_t
             *offset += 4 - (string_length & 3);
         }
         /* nelems */
-        if (read_bytes((coda_product *)product, *offset, 4, &nelems) < 0)
+        if (read_bytes(product->raw_product, *offset, 4, &nelems) < 0)
         {
             free(name);
             return -1;
@@ -545,7 +545,7 @@ static int read_var_array(coda_netcdf_product *product, int64_t *offset, int32_t
         for (j = 0; j < nelems; j++)
         {
             /* dimid */
-            if (read_bytes((coda_product *)product, *offset, 4, &dim_id) < 0)
+            if (read_bytes(product->raw_product, *offset, 4, &dim_id) < 0)
             {
                 free(name);
                 return -1;
@@ -599,7 +599,7 @@ static int read_var_array(coda_netcdf_product *product, int64_t *offset, int32_t
         }
 
         /* nc_type */
-        if (read_bytes((coda_product *)product, *offset, 4, &nc_type) < 0)
+        if (read_bytes(product->raw_product, *offset, 4, &nc_type) < 0)
         {
             coda_dynamic_type_delete((coda_dynamic_type *)attributes);
             coda_conversion_delete(conversion);
@@ -623,7 +623,7 @@ static int read_var_array(coda_netcdf_product *product, int64_t *offset, int32_t
         }
 
         /* vsize */
-        if (read_bytes((coda_product *)product, *offset, 4, &vsize) < 0)
+        if (read_bytes(product->raw_product, *offset, 4, &vsize) < 0)
         {
             coda_dynamic_type_delete((coda_dynamic_type *)attributes);
             coda_conversion_delete(conversion);
@@ -644,7 +644,7 @@ static int read_var_array(coda_netcdf_product *product, int64_t *offset, int32_t
         {
             int32_t offset32;
 
-            if (read_bytes((coda_product *)product, *offset, 4, &offset32) < 0)
+            if (read_bytes(product->raw_product, *offset, 4, &offset32) < 0)
             {
                 coda_dynamic_type_delete((coda_dynamic_type *)attributes);
                 coda_conversion_delete(conversion);
@@ -659,7 +659,7 @@ static int read_var_array(coda_netcdf_product *product, int64_t *offset, int32_t
         }
         else
         {
-            if (read_bytes((coda_product *)product, *offset, 8, &var_offset) < 0)
+            if (read_bytes(product->raw_product, *offset, 8, &var_offset) < 0)
             {
                 coda_dynamic_type_delete((coda_dynamic_type *)attributes);
                 coda_conversion_delete(conversion);
@@ -797,11 +797,11 @@ int coda_netcdf_open(const char *filename, int64_t file_size, const coda_product
     product_file->product_definition = definition;
     product_file->product_variable_size = NULL;
     product_file->product_variable = NULL;
+    product_file->mem_size = 0;
+    product_file->mem_ptr = NULL;
 #if CODA_USE_QIAP
     product_file->qiap_info = NULL;
 #endif
-    product_file->use_mmap = 0;
-    product_file->fd = -1;
 
     product_file->netcdf_version = 1;
     product_file->record_size = 0;
@@ -815,7 +815,7 @@ int coda_netcdf_open(const char *filename, int64_t file_size, const coda_product
         return -1;
     }
 
-    if (coda_bin_product_open((coda_bin_product *)product_file) != 0)
+    if (coda_bin_open_raw(filename, file_size, &product_file->raw_product) != 0)
     {
         coda_netcdf_close((coda_product *)product_file);
         return -1;
@@ -828,7 +828,7 @@ int coda_netcdf_open(const char *filename, int64_t file_size, const coda_product
         coda_netcdf_close((coda_product *)product_file);
         return -1;
     }
-    root = coda_mem_record_new(root_definition);
+    root = coda_mem_record_new(root_definition, NULL);
     coda_type_release((coda_type *)root_definition);
     if (root == NULL)
     {
@@ -838,7 +838,7 @@ int coda_netcdf_open(const char *filename, int64_t file_size, const coda_product
     product_file->root_type = (coda_dynamic_type *)root;
 
     /* magic */
-    if (read_bytes((coda_product *)product_file, offset, 4, magic) < 0)
+    if (read_bytes(product_file->raw_product, offset, 4, magic) < 0)
     {
         coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product_file->filename,
                        strerror(errno));
@@ -857,7 +857,7 @@ int coda_netcdf_open(const char *filename, int64_t file_size, const coda_product
     offset += 4;
 
     /* numrecs */
-    if (read_bytes((coda_product *)product_file, offset, 4, &num_records) < 0)
+    if (read_bytes(product_file->raw_product, offset, 4, &num_records) < 0)
     {
         coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product_file->filename,
                        strerror(errno));
@@ -924,19 +924,17 @@ int coda_netcdf_close(coda_product *product)
 {
     coda_netcdf_product *product_file = (coda_netcdf_product *)product;
 
-    if (coda_bin_product_close((coda_bin_product *)product) != 0)
+    if (product_file->filename != NULL)
     {
-        return -1;
+        free(product_file->filename);
     }
-
     if (product_file->root_type != NULL)
     {
         coda_dynamic_type_delete(product_file->root_type);
     }
-
-    if (product_file->filename != NULL)
+    if (product_file->raw_product != NULL)
     {
-        free(product_file->filename);
+        coda_bin_close((coda_product *)product_file->raw_product);
     }
 
     free(product_file);

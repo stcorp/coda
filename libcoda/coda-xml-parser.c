@@ -19,6 +19,7 @@
  */
 
 #include "coda-xml-internal.h"
+#include "coda-mem-internal.h"
 
 #include "expat.h"
 
@@ -51,17 +52,176 @@ static int is_whitespace(const char *s, int len)
     return 1;
 }
 
+static int convert_to_text(coda_type **definition)
+{
+    coda_type *text_definition;
+
+    assert((*definition)->type_class == coda_record_class && (*definition)->format == coda_format_xml);
+
+    text_definition = (coda_type *)coda_type_text_new(coda_format_xml);
+    if (text_definition == NULL)
+    {
+        return -1;
+    }
+    if ((*definition)->attributes != NULL)
+    {
+        text_definition->attributes = (*definition)->attributes;
+        text_definition->attributes->retain_count++;
+    }
+    coda_type_release(*definition);
+    *definition = text_definition;
+    text_definition->retain_count++;
+
+    return 0;
+}
+
+static coda_mem_record *attribute_record_new(coda_type_record *definition, coda_xml_product *product, const char **attr,
+                                             int update_definition)
+{
+    coda_mem_record *attributes;
+    int attribute_index;
+    int i;
+
+    assert(definition != NULL);
+    attributes = coda_mem_record_new(definition, NULL);
+
+    /* add attributes to attribute list */
+    for (i = 0; attr[2 * i] != NULL; i++)
+    {
+        coda_mem_data *attribute;
+        int update_mem_record = update_definition;
+
+        attribute_index = hashtable_get_index_from_name(definition->real_name_hash_data, attr[2 * i]);
+        if (update_definition)
+        {
+            if (attribute_index < 0)
+            {
+                coda_type_text *attribute_definition;
+
+                attribute_definition = coda_type_text_new(coda_format_xml);
+                if (attribute_definition == NULL)
+                {
+                    coda_dynamic_type_delete((coda_dynamic_type *)attributes);
+                    return NULL;
+                }
+                attribute = coda_mem_string_new(attribute_definition, NULL, (coda_product *)product, attr[2 * i + 1]);
+                coda_type_release((coda_type *)attribute_definition);
+            }
+            else if (attributes->field_type[attribute_index] != NULL)
+            {
+                /* we only add the first occurence when there are multiple attributes with the same attribute name */
+                continue;
+            }
+            else
+            {
+                attribute = coda_mem_string_new((coda_type_text *)definition->field[attribute_index]->type, NULL,
+                                                (coda_product *)product, attr[2 * i + 1]);
+                update_mem_record = 0;
+            }
+        }
+        else
+        {
+            if (attribute_index == -1)
+            {
+                coda_set_error(CODA_ERROR_PRODUCT, "xml attribute '%s' is not allowed", attr[2 * i]);
+                coda_dynamic_type_delete((coda_dynamic_type *)attributes);
+                return NULL;
+            }
+            attribute = coda_mem_string_new((coda_type_text *)definition->field[attribute_index]->type, NULL,
+                                            (coda_product *)product, attr[2 * i + 1]);
+        }
+        if (attribute == NULL)
+        {
+            coda_dynamic_type_delete((coda_dynamic_type *)attributes);
+            return NULL;
+        }
+
+        if (coda_mem_record_add_field(attributes, attr[2 * i], (coda_dynamic_type *)attribute, update_mem_record) != 0)
+        {
+            coda_dynamic_type_delete((coda_dynamic_type *)attribute);
+            coda_dynamic_type_delete((coda_dynamic_type *)attributes);
+            return NULL;
+        }
+    }
+
+    for (i = 0; i < definition->num_fields; i++)
+    {
+        if (!definition->field[i]->optional && attributes->field_type[i] == NULL)
+        {
+            if (update_definition)
+            {
+                definition->field[i]->optional = 1;
+            }
+            else
+            {
+                const char *real_name;
+
+                coda_type_get_record_field_real_name((coda_type *)definition, i, &real_name);
+                coda_set_error(CODA_ERROR_PRODUCT, "mandatory xml attribute '%s' is missing", real_name);
+                coda_dynamic_type_delete((coda_dynamic_type *)attributes);
+                return NULL;
+            }
+        }
+    }
+
+    return attributes;
+}
+
 struct parser_info_struct
 {
     XML_Parser parser;
     int abort_parser;
     coda_xml_product *product;
-    coda_xml_root *root;
-    coda_xml_element *element;
+    int depth;
+    coda_type **definition[CODA_CURSOR_MAXDEPTH];
+    coda_mem_record *record[CODA_CURSOR_MAXDEPTH];
+    long index[CODA_CURSOR_MAXDEPTH];
+    const char *xml_name[CODA_CURSOR_MAXDEPTH];
+    coda_dynamic_type *attributes;
     int update_definition;      /* 1: we are interpreting the XML file dynamically; 0: external definition is used */
-    int unparsed_depth; /* keep track of how deep we are in an XML element that we interpret as text */
+    long value_length;  /* number of used characters within value buffer */
+    long value_size;    /* allocated size for value buffer */
+    char *value;
 };
 typedef struct parser_info_struct parser_info;
+
+static void parser_info_cleanup(parser_info *info)
+{
+    int i;
+
+    if (info->parser != NULL)
+    {
+        XML_ParserFree(info->parser);
+    }
+    for (i = 0; i < info->depth; i++)
+    {
+        if (info->record[i] != NULL)
+        {
+            coda_dynamic_type_delete((coda_dynamic_type *)info->record[i]);
+        }
+    }
+    if (info->attributes != NULL)
+    {
+        coda_dynamic_type_delete(info->attributes);
+    }
+    if (info->value != NULL)
+    {
+        free(info->value);
+    }
+}
+
+static void parser_info_init(parser_info *info)
+{
+    info->parser = NULL;
+    info->abort_parser = 0;
+    info->product = NULL;
+    info->depth = -1;
+    info->attributes = NULL;
+    info->update_definition = 0;
+    info->value_length = 0;
+    info->value_size = 0;
+    info->value = NULL;
+}
 
 static void abort_parser(parser_info *info)
 {
@@ -82,126 +242,195 @@ static int XMLCALL not_standalone_handler(void *data)
 static void XMLCALL start_element_handler(void *data, const char *el, const char **attr)
 {
     parser_info *info;
-    int64_t outer_bit_offset;
-    int64_t inner_bit_offset;
+    coda_type *definition;
+    coda_mem_record *parent;
+    int index;
 
     info = (parser_info *)data;
 
-    if (info->unparsed_depth > 0)
+    if (info->record[info->depth] != NULL)
     {
-        info->unparsed_depth++;
-        return;
-    }
-
-    outer_bit_offset = 8 * (int64_t)XML_GetCurrentByteIndex(info->parser);
-    inner_bit_offset = outer_bit_offset + 8 * (int64_t)XML_GetCurrentByteCount(info->parser);
-    if (info->element != NULL)
-    {
-        if (info->element->definition->type_class != coda_record_class ||
-            info->element->definition->format != coda_format_xml)
+        if (info->record[info->depth]->definition->format != coda_format_xml)
         {
-            /* all subelements of the parent element will be ignored because the parent element is not an xml record */
-            info->unparsed_depth = 1;
-            return;
-        }
-        if (coda_xml_element_add_element(info->element, el, attr, outer_bit_offset, inner_bit_offset,
-                                         info->update_definition, &info->element) != 0)
-        {
+            coda_set_error(CODA_ERROR_PRODUCT, "xml element '%s' not allowed inside %s data",
+                           info->xml_name[info->depth],
+                           coda_type_get_format_name(info->record[info->depth]->definition->format));
             abort_parser(info);
             return;
         }
     }
     else
     {
-        /* use the root definition from the product type  */
-        if (coda_xml_root_add_element(info->root, el, attr, outer_bit_offset, inner_bit_offset,
-                                      info->update_definition) != 0)
+        coda_set_error(CODA_ERROR_PRODUCT, "mixed content for element '%s' is not supported",
+                       info->xml_name[info->depth]);
+        abort_parser(info);
+        return;
+    }
+
+    info->value_length = 0;
+
+    info->depth++;
+    if (info->depth >= CODA_CURSOR_MAXDEPTH)
+    {
+        coda_set_error(CODA_ERROR_PRODUCT, "xml file exceeds maximum supported hierarchical depth (%d)",
+                       CODA_CURSOR_MAXDEPTH);
+        abort_parser(info);
+        return;
+    }
+
+    info->record[info->depth] = NULL;
+    parent = info->record[info->depth - 1];
+    index = hashtable_get_index_from_name(parent->definition->real_name_hash_data, el);
+    if (index < 0)
+    {
+        index = hashtable_get_index_from_name(parent->definition->real_name_hash_data,
+                                              coda_element_name_from_xml_name(el));
+    }
+    if (index < 0)
+    {
+        if (info->update_definition)
         {
+            /* all xml elements start out as empty records */
+            definition = (coda_type *)coda_type_record_new(coda_format_xml);
+            if (definition == NULL)
+            {
+                abort_parser(info);
+                return;
+            }
+            if (coda_type_record_create_field(parent->definition, el, definition) != 0)
+            {
+                coda_type_release(definition);
+                abort_parser(info);
+                return;
+            }
+            coda_type_release(definition);
+
+            if (coda_mem_type_update((coda_dynamic_type **)&parent, (coda_type *)parent->definition) != 0)
+            {
+                abort_parser(info);
+                return;
+            }
+            /* updating the parent should only have changed the fields, and not the main record */
+            assert(parent == info->record[info->depth - 1]);
+            index = hashtable_get_index_from_name(parent->definition->real_name_hash_data, el);
+            assert(index >= 0);
+        }
+        else
+        {
+            if (info->depth == 1)
+            {
+                coda_set_error(CODA_ERROR_PRODUCT, "xml element '%s' is not allowed as root element", el);
+            }
+            else
+            {
+                coda_set_error(CODA_ERROR_PRODUCT, "xml element '%s' is not allowed within element '%s'", el,
+                               info->xml_name[info->depth - 1]);
+            }
             abort_parser(info);
             return;
         }
-        info->element = info->root->element;
     }
-}
-
-static void XMLCALL end_element_handler(void *data, const char *el)
-{
-    coda_xml_element *element;
-    parser_info *info;
-
-    el = el;
-
-    info = (parser_info *)data;
-
-    if (info->abort_parser)
+    info->index[info->depth] = index;
+    info->definition[info->depth] = &parent->definition->field[index]->type;
+    if (coda_type_get_record_field_real_name((coda_type *)parent->definition, index, &info->xml_name[info->depth]) != 0)
     {
+        abort_parser(info);
         return;
     }
+    definition = *info->definition[info->depth];
 
-    if (info->unparsed_depth > 0)
+    if (definition->type_class == coda_array_class)
     {
-        info->unparsed_depth--;
-        return;
-    }
-
-    assert(info->element != NULL);
-    element = info->element;
-
-    if (!info->update_definition)
-    {
-        if (coda_xml_element_validate(element) != 0)
+        /* use the base type when the definition points to an array of xml elements */
+        if (definition->format == coda_format_xml)
         {
+            if (parent->field_type[index] == NULL)
+            {
+                parent->field_type[index] = (coda_dynamic_type *)coda_mem_array_new((coda_type_array *)definition,
+                                                                                    NULL);
+                if (parent->field_type[index] == NULL)
+                {
+                    abort_parser(info);
+                    return;
+                }
+            }
+            /* take the array element definition */
+            info->definition[info->depth] = &((coda_type_array *)definition)->base_type;
+            definition = *info->definition[info->depth];
+        }
+    }
+    else if (parent->field_type[index] != NULL)
+    {
+        if (info->update_definition)
+        {
+            coda_mem_array *array;
+            coda_type_array *array_definition;
+
+            /* change scalar to array in definition */
+            array_definition = coda_type_array_new(coda_format_xml);
+            if (array_definition == NULL)
+            {
+                abort_parser(info);
+                return;
+            }
+            if (coda_type_array_set_base_type(array_definition, definition) != 0)
+            {
+                coda_type_release((coda_type *)array_definition);
+                abort_parser(info);
+                return;
+            }
+            *info->definition[info->depth] = (coda_type *)array_definition;
+            coda_type_release(definition);
+            if (coda_type_array_add_variable_dimension(array_definition, NULL) != 0)
+            {
+                abort_parser(info);
+                return;
+            }
+
+            /* create the array and add the existing element */
+            array = coda_mem_array_new(array_definition, NULL);
+            if (array == NULL)
+            {
+                abort_parser(info);
+                return;
+            }
+            if (coda_mem_array_add_element(array, parent->field_type[index]) != 0)
+            {
+                abort_parser(info);
+                return;
+            }
+            parent->field_type[index] = (coda_dynamic_type *)array;
+
+            /* take the array element definition */
+            info->definition[info->depth] = &array_definition->base_type;
+            definition = *info->definition[info->depth];
+        }
+        else
+        {
+            coda_set_error(CODA_ERROR_PRODUCT, "xml element '%s' is not allowed more than once within element '%s'",
+                           el, info->xml_name[info->depth - 1]);
             abort_parser(info);
             return;
         }
     }
 
-    if (element->cdata_delta_offset > 0)
+    /* create attributes record */
+    if (definition->attributes == NULL)
     {
-        /* we use the CDATA content as content for this element -> update the delta value for the CDATA size */
-        /* the size of the CDATA content was temporarily stored in inner_bit_size */
-        element->cdata_delta_size = (int32_t)(element->inner_bit_size -
-                                              8 * (int64_t)XML_GetCurrentByteIndex(info->parser));
-    }
-    else
-    {
-        /* no CDATA -> reset the CDATA delta values  */
-        element->cdata_delta_offset = 0;
-        element->cdata_delta_size = 0;
-    }
-    element->inner_bit_size = 8 * (int64_t)XML_GetCurrentByteIndex(info->parser) - element->inner_bit_offset;
-    element->outer_bit_size = 8 * (int64_t)(XML_GetCurrentByteIndex(info->parser) +
-                                            XML_GetCurrentByteCount(info->parser)) - element->outer_bit_offset;
-    /* apply the CDATA delta value to the inner offset and size */
-    element->inner_bit_offset += element->cdata_delta_offset;
-    element->inner_bit_size += element->cdata_delta_size;
-
-    info->element = element->parent;
-}
-
-static void XMLCALL character_data_handler(void *data, const char *s, int len)
-{
-    parser_info *info;
-
-    info = (parser_info *)data;
-
-    if (info->unparsed_depth > 0)
-    {
-        return;
-    }
-
-    if (!is_whitespace(s, len))
-    {
-        /* the XML parser should already give an error for any non-whitespace data outside the root element.
-         * this means we should always have a root element when we get here.
-         */
-        assert(info->element != NULL);
-
-        if (info->element->definition->type_class == coda_record_class)
+        info->attributes = NULL;
+        if (attr[0] != NULL)
         {
             if (info->update_definition)
             {
-                if (coda_xml_element_convert_to_text(info->element) != 0)
+                definition->attributes = coda_type_record_new(coda_format_xml);
+                if (definition->attributes == NULL)
+                {
+                    abort_parser(info);
+                    return;
+                }
+                info->attributes = (coda_dynamic_type *)attribute_record_new(definition->attributes, info->product,
+                                                                             attr, info->update_definition);
+                if (info->attributes == NULL)
                 {
                     abort_parser(info);
                     return;
@@ -209,134 +438,241 @@ static void XMLCALL character_data_handler(void *data, const char *s, int len)
             }
             else
             {
-                char s[21];
-
-                abort_parser(info);
-                coda_str64(XML_GetCurrentByteIndex(info->parser), s);
-                coda_set_error(CODA_ERROR_PRODUCT, "non-whitespace character data not allowed for element '%s' "
-                               "(line: %lu, byte offset: %s)", info->element->xml_name,
-                               (long)XML_GetCurrentLineNumber(info->parser), s);
-                return;
-            }
-        }
-        if (info->element->cdata_delta_offset == 0)
-        {
-            /* we have non-whitespace character data before any CDATA element so disable CDATA from here on */
-            info->element->cdata_delta_offset = -1;
-        }
-        else if (info->element->cdata_delta_offset > 0 && info->element->cdata_delta_size != 0)
-        {
-            /* we have non-whitespace character data after a CDATA element so disable the CDATA */
-            info->element->cdata_delta_offset = -1;
-        }
-    }
-}
-
-static void XMLCALL start_cdata_section_handler(void *data)
-{
-    parser_info *info;
-
-    info = (parser_info *)data;
-
-    if (info->unparsed_depth > 0)
-    {
-        return;
-    }
-
-    /* the XML parser should already give an error when a CDATA section outside the root element is encountered.
-     * this means we should always have a root element when we get here.
-     */
-    assert(info->element != NULL);
-
-    if (info->element->definition->type_class == coda_record_class)
-    {
-        if (info->update_definition)
-        {
-            if (coda_xml_element_convert_to_text(info->element) != 0)
-            {
+                coda_set_error(CODA_ERROR_PRODUCT, "xml attribute '%s' is not allowed", attr[0]);
                 abort_parser(info);
                 return;
             }
         }
-        else
+    }
+    else
+    {
+        info->attributes = (coda_dynamic_type *)attribute_record_new(definition->attributes, info->product, attr,
+                                                                     info->update_definition);
+        if (info->attributes == NULL)
         {
-            char s[21];
-
             abort_parser(info);
-            coda_str64(XML_GetCurrentByteIndex(info->parser), s);
-            coda_set_error(CODA_ERROR_PRODUCT,
-                           "CDATA content not allowed for element '%s' (line: %lu, byte offset: %s)",
-                           info->element->xml_name, (long)XML_GetCurrentLineNumber(info->parser), s);
             return;
         }
     }
 
-    if (info->element->cdata_delta_offset == 0)
+    /* xml records are already created here in order to allow adding child xml elements */
+    if (definition->format == coda_format_xml && definition->type_class == coda_record_class)
     {
-        info->element->cdata_delta_offset = (int32_t)
-            (8 * (int64_t)(XML_GetCurrentByteIndex(info->parser) + XML_GetCurrentByteCount(info->parser)) -
-             info->element->inner_bit_offset);
-    }
-    else if (info->element->cdata_delta_offset > 0)
-    {
-        /* this is a second CDATA section; we only allow single CDATA sections */
-        info->element->cdata_delta_offset = -1;
+        int i;
+
+        info->record[info->depth] = coda_mem_record_new((coda_type_record *)definition, info->attributes);
+        if (info->record[info->depth] == NULL)
+        {
+            abort_parser(info);
+            return;
+        }
+        /* create empty arrays for array child elements */
+        for (i = 0; i < info->record[info->depth]->num_fields; i++)
+        {
+            if (((coda_type_record *)definition)->field[i]->type->type_class == coda_array_class &&
+                ((coda_type_record *)definition)->field[i]->type->format == coda_format_xml)
+            {
+                coda_type *array_definition = ((coda_type_record *)definition)->field[i]->type;
+
+                info->record[info->depth]->field_type[i] =
+                    (coda_dynamic_type *)coda_mem_array_new((coda_type_array *)array_definition, NULL);
+                if (info->record[info->depth]->field_type[i] == NULL)
+                {
+                    abort_parser(info);
+                    return;
+                }
+            }
+        }
+        info->attributes = NULL;
     }
 }
 
-static void XMLCALL end_cdata_section_handler(void *data)
+static void XMLCALL end_element_handler(void *data, const char *el)
 {
-    parser_info *info;
+    parser_info *info = (parser_info *)data;
+    coda_mem_record *parent;
+    coda_mem_type *type;
+    int index;
 
-    info = (parser_info *)data;
+    el = el;
 
     if (info->abort_parser)
     {
         return;
     }
 
-    if (info->unparsed_depth > 0)
+    /* we are dealing with a record if info->record[info->depth] != NULL */
+    if (info->record[info->depth] != NULL && info->value_length > 0 && !is_whitespace(info->value, info->value_length))
     {
+        assert(info->update_definition);        /* other case is already handled in character_data_handler() */
+        if (((coda_type_record *)info->record[info->depth]->definition)->num_fields > 0)
+        {
+            coda_set_error(CODA_ERROR_PRODUCT, "mixed content for element '%s' is not supported",
+                           info->xml_name[info->depth]);
+            abort_parser(info);
+            return;
+        }
+        /* convert definition from record to text */
+        info->attributes = info->record[info->depth]->attributes;
+        info->record[info->depth]->attributes = NULL;
+        if (convert_to_text(info->definition[info->depth]) != 0)
+        {
+            abort_parser(info);
+            return;
+        }
+        /* delete the record we created in start_element_handler() */
+        coda_dynamic_type_delete((coda_dynamic_type *)info->record[info->depth]);
+        info->record[info->depth] = NULL;
+    }
+
+    if (info->record[info->depth] == NULL)
+    {
+        coda_type *definition = *info->definition[info->depth];
+
+        if (definition->type_class == coda_special_class)
+        {
+            coda_dynamic_type *base_type;
+
+            assert(!info->update_definition);
+
+            base_type = (coda_dynamic_type *)coda_mem_data_new(((coda_type_special *)definition)->base_type, NULL,
+                                                               (coda_product *)info->product, info->value_length,
+                                                               (uint8_t *)info->value);
+            if (base_type == NULL)
+            {
+                abort_parser(info);
+                return;
+            }
+
+            type = (coda_mem_type *)coda_mem_time_new((coda_type_special *)definition, info->attributes, base_type);
+            if (type == NULL)
+            {
+                coda_dynamic_type_delete(base_type);
+                abort_parser(info);
+                return;
+            }
+        }
+        else
+        {
+            type = (coda_mem_type *)coda_mem_data_new(definition, info->attributes, (coda_product *)info->product,
+                                                      info->value_length, (uint8_t *)info->value);
+            if (type == NULL)
+            {
+                abort_parser(info);
+                return;
+            }
+        }
+        info->attributes = NULL;
+    }
+    else
+    {
+        if (!info->update_definition)
+        {
+            int i;
+
+            if (coda_mem_record_validate(info->record[info->depth]) != 0)
+            {
+                abort_parser(info);
+                return;
+            }
+
+            /* also validate all fields that are arrays of xml elements */
+            for (i = 0; i < info->record[info->depth]->num_fields; i++)
+            {
+                coda_dynamic_type *field_type = info->record[info->depth]->field_type[i];
+
+                if (field_type != NULL)
+                {
+                    if (field_type->definition->type_class == coda_array_class &&
+                        field_type->definition->format == coda_format_xml)
+                    {
+                        if (coda_mem_array_validate((coda_mem_array *)field_type) != 0)
+                        {
+                            abort_parser(info);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+        type = (coda_mem_type *)info->record[info->depth];
+        info->record[info->depth] = NULL;
+    }
+
+    assert(info->attributes == NULL);
+
+    parent = info->record[info->depth - 1];
+    index = info->index[info->depth];
+    if (parent->field_type[index] != NULL)
+    {
+        /* add the child element to the array */
+        assert(parent->field_type[index]->definition->type_class == coda_array_class &&
+               parent->field_type[index]->definition->format == coda_format_xml);
+        if (coda_mem_array_add_element((coda_mem_array *)parent->field_type[index], (coda_dynamic_type *)type) != 0)
+        {
+            coda_dynamic_type_delete((coda_dynamic_type *)type);
+            abort_parser(info);
+            return;
+        }
+    }
+    else
+    {
+        parent->field_type[index] = (coda_dynamic_type *)type;
+    }
+
+    info->depth--;
+    info->value_length = 0;
+}
+
+static void XMLCALL character_data_handler(void *data, const char *s, int len)
+{
+    parser_info *info = (parser_info *)data;
+
+    if (!info->update_definition && info->record[info->depth] != NULL && !is_whitespace(s, len))
+    {
+        coda_set_error(CODA_ERROR_PRODUCT, "non-whitespace character data not allowed for element '%s'",
+                       info->xml_name[info->depth]);
+        abort_parser(info);
         return;
     }
 
-    if (info->element->cdata_delta_offset > 0)
+    /* add character data to our string value */
+    if (info->value_length + len > info->value_size)
     {
-        /* temporarily store the CDATA inner size in the inner_bit_size field of the element */
-        info->element->inner_bit_size = 8 * (int64_t)XML_GetCurrentByteIndex(info->parser) -
-            (info->element->cdata_delta_offset + info->element->inner_bit_size);
-        /* set cdata_delta_size to -1 to indicate that our CDATA section has finished */
-        info->element->cdata_delta_size = -1;
-    }
-}
+        char *new_value;
 
-static void XMLCALL skipped_entity_handler(void *data, const char *entity_name, int is_parameter_entity)
-{
-    data = data;
-    entity_name = entity_name;
-    if (!is_parameter_entity)
-    {
-        /* We need to treat this as character data -> call the character data handler with some dummy
-         * non-whitespace string
-         */
-        character_data_handler(data, "&entity;", 8);
+        new_value = realloc(info->value, info->value_length + len);
+        if (new_value == NULL)
+        {
+            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %ld bytes) (%s:%u)",
+                           info->value_length + len, __FILE__, __LINE__);
+            abort_parser(info);
+            return;
+        }
+        info->value = new_value;
+        info->value_size = info->value_length + len;
     }
+    memcpy(&info->value[info->value_length], s, len);
+    info->value_length += len;
 }
 
 int coda_xml_parse(coda_xml_product *product)
 {
     char buff[BUFFSIZE];
     parser_info info;
+    long num_blocks;
+    long i;
 
+    parser_info_init(&info);
     info.parser = XML_ParserCreateNS(NULL, ' ');
     if (info.parser == NULL)
     {
         coda_set_error(CODA_ERROR_XML, "could not create XML parser");
         return -1;
     }
-    info.abort_parser = 0;
     info.product = product;
     info.update_definition = (product->product_definition == NULL);
+    /* the root of the product is always a record, which will contain the top-level xml element as a field */
     if (info.update_definition)
     {
         coda_type_record *definition;
@@ -347,46 +683,69 @@ int coda_xml_parse(coda_xml_product *product)
             XML_ParserFree(info.parser);
             return -1;
         }
-        info.root = coda_xml_root_new(definition);
+        info.record[0] = coda_mem_record_new(definition, NULL);
         coda_type_release((coda_type *)definition);
     }
     else
     {
-        info.root = coda_xml_root_new((coda_type_record *)product->product_definition->root_type);
+        assert(product->product_definition->root_type->type_class == coda_record_class);
+        info.record[0] = coda_mem_record_new((coda_type_record *)product->product_definition->root_type, NULL);
     }
-    if (info.root == NULL)
+    if (info.record[0] == NULL)
     {
-        XML_ParserFree(info.parser);
+        parser_info_cleanup(&info);
         return -1;
     }
-    info.element = NULL;
-    info.unparsed_depth = 0;
+    info.definition[0] = (coda_type **)&info.record[0]->definition;
+    info.index[0] = -1;
+    info.xml_name[0] = NULL;
+    info.depth = 0;
 
     XML_SetUserData(info.parser, &info);
     XML_SetParamEntityParsing(info.parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetElementHandler(info.parser, start_element_handler, end_element_handler);
     XML_SetCharacterDataHandler(info.parser, character_data_handler);
-    XML_SetCdataSectionHandler(info.parser, start_cdata_section_handler, end_cdata_section_handler);
-    XML_SetSkippedEntityHandler(info.parser, skipped_entity_handler);
     XML_SetNotStandaloneHandler(info.parser, not_standalone_handler);
 
-    for (;;)
+    /* we also need to parse in blocks for mmap-ed files since the file size may exceed MAX_INT */
+    num_blocks = (product->raw_product->file_size / BUFFSIZE);
+    if (product->raw_product->file_size > num_blocks * BUFFSIZE)
     {
+        num_blocks++;
+    }
+    for (i = 0; i < num_blocks; i++)
+    {
+        const char *buff_ptr;
         int length;
         int result;
 
-        length = read(product->fd, buff, BUFFSIZE);
-        if (length < 0)
+        if (((coda_bin_product *)product->raw_product)->use_mmap)
         {
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                           strerror(errno));
-            XML_ParserFree(info.parser);
-            coda_dynamic_type_delete((coda_dynamic_type *)info.root);
-            return -1;
+            if (i < num_blocks - 1)
+            {
+                length = BUFFSIZE;
+            }
+            else
+            {
+                length = (int)(product->raw_product->file_size - (num_blocks - 1) * BUFFSIZE);
+            }
+            buff_ptr = (const char *)&(product->raw_product->mem_ptr[i * BUFFSIZE]);
+        }
+        else
+        {
+            length = read(((coda_bin_product *)product->raw_product)->fd, buff, BUFFSIZE);
+            if (length < 0)
+            {
+                coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
+                               strerror(errno));
+                parser_info_cleanup(&info);
+                return -1;
+            }
+            buff_ptr = buff;
         }
 
         coda_errno = 0;
-        result = XML_Parse(info.parser, buff, length, (length == 0));
+        result = XML_Parse(info.parser, buff_ptr, length, (i == num_blocks - 1));
         if (result == XML_STATUS_ERROR || coda_errno != 0)
         {
             char s[21];
@@ -397,30 +756,27 @@ int coda_xml_parse(coda_xml_product *product)
             }
             coda_str64(XML_GetCurrentByteIndex(info.parser), s);
             coda_add_error_message(" (line: %lu, byte offset: %s)", (long)XML_GetCurrentLineNumber(info.parser), s);
-            XML_ParserFree(info.parser);
-            coda_dynamic_type_delete((coda_dynamic_type *)info.root);
+            parser_info_cleanup(&info);
             return -1;
-        }
-
-        if (length == 0)
-        {
-            /* end of file */
-            break;
         }
     }
 
     XML_ParserFree(info.parser);
+    info.parser = NULL;
 
     if (info.update_definition)
     {
-        if (coda_dynamic_type_update((coda_dynamic_type **)&info.root, (coda_type **)&info.root->definition) != 0)
+        if (coda_mem_type_update((coda_dynamic_type **)&info.record[0], (coda_type *)info.record[0]->definition) != 0)
         {
-            coda_dynamic_type_delete((coda_dynamic_type *)info.root);
+            parser_info_cleanup(&info);
             return -1;
         }
     }
 
-    product->root_type = (coda_dynamic_type *)info.root;
+    product->root_type = (coda_dynamic_type *)info.record[0];
+    info.depth = 0;
+
+    parser_info_cleanup(&info);
 
     return 0;
 }
@@ -469,7 +825,7 @@ static int detection_match_rule(detection_parser_info *info, coda_detection_rule
     return 1;
 }
 
-static void XMLCALL detection_string_handler(void *data, const char *s, int len)
+static void XMLCALL detection_character_data_handler(void *data, const char *s, int len)
 {
     detection_parser_info *info;
 
@@ -663,7 +1019,7 @@ int coda_xml_parse_for_detection(int fd, const char *filename, coda_product_defi
     XML_SetUserData(info.parser, &info);
     XML_SetParamEntityParsing(info.parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
     XML_SetElementHandler(info.parser, detection_start_element_handler, detection_end_element_handler);
-    XML_SetCharacterDataHandler(info.parser, detection_string_handler);
+    XML_SetCharacterDataHandler(info.parser, detection_character_data_handler);
     XML_SetNotStandaloneHandler(info.parser, not_standalone_handler);
 
     for (;;)

@@ -67,12 +67,15 @@
             <li><a href="#coda_isMinInf"><code>coda.isMinInf</code></a></li>
             <li><a href="#coda_c_index_to_fortran_index"><code>coda.c_index_to_fortran_index</code></a></li>
             <li><a href="#coda_match_filefilter"><code>coda.match_filefilter</code></a></li>
-            <li><a href="#coda_datetime_to_double"><code>coda.datetime_to_double</code></a></li>
-            <li><a href="#coda_double_to_datetime"><code>coda.double_to_datetime</code></a></li>
-            <li><a href="#coda_string_to_time"><code>coda.string_to_time</code></a></li>
-            <li><a href="#coda_utcdatetime_to_double"><code>coda.utcdatetime_to_double</code></a></li>
-            <li><a href="#coda_double_to_utcdatetime"><code>coda.double_to_utcdatetime</code></a></li>
-            <li><a href="#coda_utcstring_to_time"><code>coda.utcstring_to_time</code></a></li>
+            <li><a href="#coda_time_double_to_parts"><code>coda.time_double_to_parts</code></a></li>
+            <li><a href="#coda_time_double_to_parts_utc"><code>coda.time_double_to_parts_utc</code></a></li>
+            <li><a href="#coda_time_parts_to_double_utc"><code>coda.time_parts_to_double_utc</code></a></li>
+            <li><a href="#coda_time_parts_to_string"><code>coda.time_parts_to_string</code></a></li>
+            <li><a href="#coda_time_string_to_parts"><code>coda.time_string_to_parts</code></a></li>
+            <li><a href="#coda_time_double_to_string"><code>coda.time_double_to_string</code></a></li>
+            <li><a href="#coda_time_double_to_string_utc"><code>coda.time_double_to_string_utc</code></a></li>
+            <li><a href="#coda_time_string_to_double"><code>coda.time_string_to_double</code></a></li>
+            <li><a href="#coda_time_string_to_double_utc"><code>coda.time_string_to_double_utc</code></a></li>
             <li><a href="#coda_recognize_file"><code>coda.recognize_file</code></a></li>
             <li><a href="#coda_open"><code>coda.open</code></a></li>
             <li><a href="#coda_open_as"><code>coda.open_as</code></a></li>
@@ -367,7 +370,7 @@ import coda
       <p>Convert a number of seconds since 2000-01-01 to a human readable string format. For example:</p>
 
 <div class="fragment"><pre>
->>> coda.time_to_utcstring(68260079.0)
+>>> coda.time_to_string(68260079.0)
 </pre></div>
 
       <p>would return the string <code>'2002-03-01 01:07:59.000000'</code>.</p>
@@ -379,7 +382,7 @@ import coda
       <p>Convert a TAI number of seconds since 2000-01-01 (TAI) to a human readable string format in UTC format. For example:</p>
 
 <div class="fragment"><pre>
->>> coda.time_to_string(68260111.0)
+>>> coda.time_to_utcstring(68260111.0)
 </pre></div>
 
       <p>would return the string <code>'2002-03-01 01:07:59.000000'</code>.</p>
@@ -480,12 +483,16 @@ except coda.CodacError, e:
 ...     return 0
 >>> coda.match_filefilter('', '/home/codauser', findhelper)
 </pre></div>
-      <h5 id="coda_datetime_to_double"><code>datetime = coda.datetime_to_double(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC)</code></h5>
-      <h5 id="coda_double_to_datetime"><code>[YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC] = coda.double_to_datetime(datetime)</code></h5>
-      <h5 id="coda_string_to_time"><code>time = coda.string_to_time(str)</code></h5>
-      <h5 id="coda_utcdatetime_to_double"><code>datetime = coda.utcdatetime_to_double(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC)</code></h5>
-      <h5 id="coda_double_to_utcdatetime"><code>[YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC] = coda.double_to_utcdatetime(datetime)</code></h5>
-      <h5 id="coda_utcstring_to_time"><code>time = coda.utcstring_to_time(str)</code></h5>
+      <h5 id="coda_time_double_to_parts"><code>[YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC] = coda.time_double_to_parts(datetime)</code></h5>
+      <h5 id="coda_time_double_to_parts_utc"><code>[YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC] = coda.time_double_to_parts_utc(datetime)</code></h5>
+      <h5 id="coda_time_parts_to_double"><code>datetime = coda.time_parts_to_double(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC)</code></h5>
+      <h5 id="coda_time_parts_to_double_utc"><code>datetime = coda.time_parts_to_double_utc(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC)</code></h5>
+      <h5 id="coda_time_parts_to_string"><code>str = coda.time_parts_to_string(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC, format)</code></h5>
+      <h5 id="coda_time_string_to_parts"><code>[YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC] = coda.time_string_to_parts(format, str)</code></h5>
+      <h5 id="coda_time_double_to_string"><code>str = coda.time_double_to_string(datetime, format)</code></h5>
+      <h5 id="coda_time_double_to_string_utc"><code>str = coda.time_double_to_string_utc(datetime, format)</code></h5>
+      <h5 id="coda_time_string_to_double"><code>datetime = coda.time_string_to_double(format, str)</code></h5>
+      <h5 id="coda_time_string_to_double_utc"><code>datetime = coda.time_string_to_double_utc(format, str)</code></h5>
       <h5 id="coda_recognize_file"><code>[file_size, format, product_class, product_type, version] = coda.recognize_file(filename)</code></h5>
       <h5 id="coda_open"><code>pf = coda.open(filename)</code></h5>
       <p>The product file handle returned by this function can also be used with the <a href="#high_level_functions">high level CODA functions</a>.</p>
@@ -623,7 +630,7 @@ except coda.CodacError, e:
 
       <div class="footer">
         <hr />
-        <p>Copyright &copy; 2007-2013 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+        <p>Copyright &copy; 2007-2014 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
       </div>
 
     </div>

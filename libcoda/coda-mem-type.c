@@ -31,9 +31,9 @@ void coda_mem_type_delete(coda_dynamic_type *type)
     assert(type != NULL);
     assert(type->backend == coda_backend_memory);
 
-    switch (type->definition->type_class)
+    switch (((coda_mem_type *)type)->tag)
     {
-        case coda_record_class:
+        case tag_mem_record:
             if (((coda_mem_record *)type)->field_type != NULL)
             {
                 for (i = 0; i < ((coda_mem_record *)type)->num_fields; i++)
@@ -46,7 +46,7 @@ void coda_mem_type_delete(coda_dynamic_type *type)
                 free(((coda_mem_record *)type)->field_type);
             }
             break;
-        case coda_array_class:
+        case tag_mem_array:
             if (((coda_mem_array *)type)->element != NULL)
             {
                 for (i = 0; i < ((coda_mem_array *)type)->num_elements; i++)
@@ -59,23 +59,9 @@ void coda_mem_type_delete(coda_dynamic_type *type)
                 free(((coda_mem_array *)type)->element);
             }
             break;
-        case coda_integer_class:
+        case tag_mem_data:
             break;
-        case coda_real_class:
-            break;
-        case coda_text_class:
-            if (((coda_mem_text *)type)->text != NULL)
-            {
-                free(((coda_mem_text *)type)->text);
-            }
-            break;
-        case coda_raw_class:
-            if (((coda_mem_raw *)type)->data != NULL)
-            {
-                free(((coda_mem_raw *)type)->data);
-            }
-            break;
-        case coda_special_class:
+        case tag_mem_special:
             if (((coda_mem_special *)type)->base_type != NULL)
             {
                 coda_dynamic_type_delete(((coda_mem_special *)type)->base_type);
@@ -93,17 +79,78 @@ void coda_mem_type_delete(coda_dynamic_type *type)
     free(type);
 }
 
-int coda_mem_type_update(coda_dynamic_type **type, coda_type **definition)
+/* run on product root type after setting up dynamic type tree (without having used definition from data dictionary!)
+ * this function will then internally be called recursively to update the whole dynamic type tree.
+ * certain aspects of the definition (e.g. optional availability of fields) may also still be modified.
+ */
+int coda_mem_type_update(coda_dynamic_type **type, coda_type *definition)
 {
+    coda_mem_type *mem_type;
     int i;
 
-    assert((*type)->definition == *definition);
-
-    switch ((*definition)->type_class)
+    if ((*type)->backend == coda_backend_ascii || (*type)->backend == coda_backend_binary)
     {
-        case coda_record_class:
+        assert(coda_get_type_for_dynamic_type(*type) == definition);
+        return 0;
+    }
+
+    assert((*type)->backend == coda_backend_memory);
+
+    if ((*type)->definition != definition)
+    {
+        if (definition->type_class == coda_array_class && (*type)->definition->type_class != coda_array_class)
+        {
+            assert(definition->format == coda_format_xml);
+
+            /* convert the single element into an array of a single element */
+            mem_type = (coda_mem_type *)coda_mem_array_new((coda_type_array *)definition, NULL);
+            if (mem_type == NULL)
             {
-                coda_mem_record *record_type = (coda_mem_record *)*type;
+                return -1;
+            }
+            /* make sure that the array element is updated to allow it to be added to the array */
+            if (coda_mem_type_update(type, ((coda_type_array *)definition)->base_type) != 0)
+            {
+                coda_dynamic_type_delete((coda_dynamic_type *)mem_type);
+                return -1;
+            }
+            if (coda_mem_array_add_element((coda_mem_array *)mem_type, *type) != 0)
+            {
+                coda_dynamic_type_delete((coda_dynamic_type *)mem_type);
+                return -1;
+            }
+            *type = (coda_dynamic_type *)mem_type;
+
+            /* finally update the array itself (for e.g. attributes) */
+            return coda_mem_type_update(type, definition);
+        }
+
+        if ((*type)->definition->type_class == coda_record_class && definition->type_class == coda_text_class)
+        {
+            assert((*type)->definition->format == coda_format_xml);
+            assert(((coda_type_record *)(*type)->definition)->num_fields == 0);
+
+            /* convert record to text */
+            mem_type = (coda_mem_type *)coda_mem_string_new((coda_type_text *)definition, NULL, NULL, NULL);
+            mem_type->attributes = ((coda_mem_record *)*type)->attributes;
+            ((coda_mem_type *)*type)->attributes = NULL;
+            coda_dynamic_type_delete(*type);
+            *type = (coda_dynamic_type *)mem_type;
+        }
+        else
+        {
+            assert(0);
+            exit(1);
+        }
+    }
+
+    mem_type = (coda_mem_type *)*type;
+
+    switch (mem_type->tag)
+    {
+        case tag_mem_record:
+            {
+                coda_mem_record *record_type = (coda_mem_record *)mem_type;
 
                 if (record_type->num_fields < record_type->definition->num_fields)
                 {
@@ -138,8 +185,8 @@ int coda_mem_type_update(coda_dynamic_type **type, coda_type **definition)
                     }
                     else
                     {
-                        if (coda_dynamic_type_update(&record_type->field_type[i],
-                                                     &record_type->definition->field[i]->type) != 0)
+                        if (coda_mem_type_update(&record_type->field_type[i],
+                                                 record_type->definition->field[i]->type) != 0)
                         {
                             return -1;
                         }
@@ -147,49 +194,41 @@ int coda_mem_type_update(coda_dynamic_type **type, coda_type **definition)
                 }
             }
             break;
-        case coda_array_class:
+        case tag_mem_array:
             {
-                coda_mem_array *array_type = (coda_mem_array *)*type;
-                coda_type *element_definition = array_type->definition->base_type;
-
-                for (i = 0; i < array_type->num_elements; i++)
+                for (i = 0; i < ((coda_mem_array *)mem_type)->num_elements; i++)
                 {
-                    if (coda_dynamic_type_update(&array_type->element[i], &element_definition) != 0)
+                    if (coda_mem_type_update(&((coda_mem_array *)mem_type)->element[i],
+                                             ((coda_mem_array *)mem_type)->definition->base_type) != 0)
                     {
                         return -1;
                     }
                 }
-                /* we don't(/shouldn't have to) support modification of the base type definition of the array */
-                assert(element_definition == array_type->definition->base_type);
             }
             break;
-        case coda_integer_class:
-        case coda_real_class:
-        case coda_text_class:
-        case coda_raw_class:
+        case tag_mem_data:
             break;
-        case coda_special_class:
-            if (coda_dynamic_type_update(&((coda_mem_special *)*type)->base_type,
-                                         &((coda_type_special *)*definition)->base_type) != 0)
+        case tag_mem_special:
+            if (coda_mem_type_update(&((coda_mem_special *)mem_type)->base_type,
+                                     ((coda_mem_special *)mem_type)->definition->base_type) != 0)
             {
                 return -1;
             }
             break;
     }
 
-    if (((coda_mem_type *)*type)->attributes == NULL && (*type)->definition->attributes != NULL)
+    if (mem_type->attributes == NULL && mem_type->definition->attributes != NULL)
     {
-        ((coda_mem_type *)*type)->attributes =
-            (coda_dynamic_type *)coda_mem_record_new((*type)->definition->attributes);
-        if (((coda_mem_type *)*type)->attributes == NULL)
+        mem_type->attributes = (coda_dynamic_type *)coda_mem_record_new(mem_type->definition->attributes, NULL);
+        if (mem_type->attributes == NULL)
         {
             return -1;
         }
     }
-    if (((coda_mem_type *)*type)->attributes != NULL)
+    if (mem_type->attributes != NULL)
     {
-        if (coda_dynamic_type_update((coda_dynamic_type **)&((coda_mem_type *)*type)->attributes,
-                                     (coda_type **)&(*type)->definition->attributes) != 0)
+        if (coda_mem_type_update((coda_dynamic_type **)&mem_type->attributes,
+                                 (coda_type *)mem_type->definition->attributes) != 0)
         {
             return -1;
         }
@@ -202,7 +241,7 @@ static int create_attributes_record(coda_mem_type *type)
 {
     if (type->definition->attributes != NULL)
     {
-        type->attributes = (coda_dynamic_type *)coda_mem_record_new(type->definition->attributes);
+        type->attributes = (coda_dynamic_type *)coda_mem_record_new(type->definition->attributes, NULL);
         if (type->attributes == NULL)
         {
             return -1;
@@ -245,7 +284,7 @@ int coda_mem_type_add_attribute(coda_mem_type *type, const char *real_name, coda
                     return -1;
                 }
             }
-            type->attributes = (coda_dynamic_type *)coda_mem_record_new(type->definition->attributes);
+            type->attributes = (coda_dynamic_type *)coda_mem_record_new(type->definition->attributes, NULL);
             if (type->attributes == NULL)
             {
                 return -1;
@@ -369,7 +408,7 @@ int coda_mem_type_set_attributes(coda_mem_type *type, coda_dynamic_type *attribu
     return 0;
 }
 
-coda_mem_record *coda_mem_record_new(coda_type_record *definition)
+coda_mem_record *coda_mem_record_new(coda_type_record *definition, coda_dynamic_type *attributes)
 {
     coda_mem_record *type;
 
@@ -388,13 +427,18 @@ coda_mem_record *coda_mem_record_new(coda_type_record *definition)
     type->backend = coda_backend_memory;
     type->definition = definition;
     definition->retain_count++;
-    type->attributes = NULL;
+    type->tag = tag_mem_record;
+    type->attributes = attributes;
     type->num_fields = 0;
     type->field_type = NULL;
-    if (create_attributes_record((coda_mem_type *)type) != 0)
+
+    if (type->attributes == NULL)
     {
-        coda_mem_type_delete((coda_dynamic_type *)type);
-        return NULL;
+        if (create_attributes_record((coda_mem_type *)type) != 0)
+        {
+            coda_mem_type_delete((coda_dynamic_type *)type);
+            return NULL;
+        }
     }
     if (definition->num_fields > 0)
     {
@@ -512,7 +556,7 @@ int coda_mem_record_validate(coda_mem_record *type)
     return 0;
 }
 
-coda_mem_array *coda_mem_array_new(coda_type_array *definition)
+coda_mem_array *coda_mem_array_new(coda_type_array *definition, coda_dynamic_type *attributes)
 {
     coda_mem_array *type;
 
@@ -531,14 +575,18 @@ coda_mem_array *coda_mem_array_new(coda_type_array *definition)
     type->backend = coda_backend_memory;
     type->definition = definition;
     definition->retain_count++;
-    type->attributes = NULL;
+    type->tag = tag_mem_array;
+    type->attributes = attributes;
     type->num_elements = 0;
     type->element = NULL;
 
-    if (create_attributes_record((coda_mem_type *)type) != 0)
+    if (attributes == NULL)
     {
-        coda_mem_type_delete((coda_dynamic_type *)type);
-        return NULL;
+        if (create_attributes_record((coda_mem_type *)type) != 0)
+        {
+            coda_mem_type_delete((coda_dynamic_type *)type);
+            return NULL;
+        }
     }
     if (type->definition->num_elements > 0)
     {
@@ -660,154 +708,19 @@ int coda_mem_array_validate(coda_mem_array *type)
     return 0;
 }
 
-coda_mem_integer *coda_mem_integer_new(coda_type_number *definition, int64_t value)
+coda_mem_data *coda_mem_data_new(coda_type *definition, coda_dynamic_type *attributes, coda_product *product,
+                                 long length, const uint8_t *data)
 {
-    coda_mem_integer *type;
+    coda_mem_data *type;
+    long current_num_blocks;
+    long new_num_blocks;
 
     if (definition == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "definition argument is NULL (%s:%u)", __FILE__, __LINE__);
         return NULL;
     }
-    if (definition->type_class != coda_integer_class)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "definition is not an integer (%s:%u)", __FILE__, __LINE__);
-        return NULL;
-    }
-    type = (coda_mem_integer *)malloc(sizeof(coda_mem_integer));
-    if (type == NULL)
-    {
-        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_mem_integer), __FILE__, __LINE__);
-        return NULL;
-    }
-    type->backend = coda_backend_memory;
-    type->definition = definition;
-    definition->retain_count++;
-    type->attributes = NULL;
-    type->value = value;
-
-    if (create_attributes_record((coda_mem_type *)type) != 0)
-    {
-        coda_mem_type_delete((coda_dynamic_type *)type);
-        return NULL;
-    }
-
-    return type;
-}
-
-coda_mem_real *coda_mem_real_new(coda_type_number *definition, double value)
-{
-    coda_mem_real *type;
-
-    if (definition == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "definition argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return NULL;
-    }
-    if (definition->type_class != coda_real_class)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "definition is not a floating point number (%s:%u)", __FILE__,
-                       __LINE__);
-        return NULL;
-    }
-    type = (coda_mem_real *)malloc(sizeof(coda_mem_real));
-    if (type == NULL)
-    {
-        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_mem_real), __FILE__, __LINE__);
-        return NULL;
-    }
-    type->backend = coda_backend_memory;
-    type->definition = definition;
-    definition->retain_count++;
-    type->attributes = NULL;
-    type->value = value;
-
-    if (create_attributes_record((coda_mem_type *)type) != 0)
-    {
-        coda_mem_type_delete((coda_dynamic_type *)type);
-        return NULL;
-    }
-
-    return type;
-}
-
-coda_mem_text *coda_mem_char_new(coda_type_text *definition, char value)
-{
-    char text[2];
-
-    text[0] = value;
-    text[1] = '\0';
-
-    return coda_mem_text_new(definition, text);
-}
-
-coda_mem_text *coda_mem_text_new(coda_type_text *definition, const char *text)
-{
-    coda_mem_text *type;
-
-    if (definition == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "definition argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return NULL;
-    }
-    if (definition->bit_size >= 0)
-    {
-        long length;
-
-        length = (long)(definition->bit_size >> 3) + (definition->bit_size & 0x7 ? 1 : 0);
-        if (length != (long)strlen(text))
-        {
-            coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "length of text (%ld) does not match that of definition (%ld) "
-                           "(%s:%u)", strlen(text), length, __FILE__, __LINE__);
-            return NULL;
-        }
-    }
-    if (definition->read_type == coda_native_type_char && strlen(text) != 1)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "length of text (%ld) should be 1 for 'char' text (%s:%u)",
-                       strlen(text), __FILE__, __LINE__);
-        return NULL;
-    }
-    type = (coda_mem_text *)malloc(sizeof(coda_mem_text));
-    if (type == NULL)
-    {
-        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_mem_text), __FILE__, __LINE__);
-        return NULL;
-    }
-    type->backend = coda_backend_memory;
-    type->definition = definition;
-    definition->retain_count++;
-    type->attributes = NULL;
-    type->text = strdup(text);
-    if (type->text == NULL)
-    {
-        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
-                       __LINE__);
-        coda_mem_type_delete((coda_dynamic_type *)type);
-        return NULL;
-    }
-
-    if (create_attributes_record((coda_mem_type *)type) != 0)
-    {
-        coda_mem_type_delete((coda_dynamic_type *)type);
-        return NULL;
-    }
-
-    return type;
-}
-
-coda_mem_raw *coda_mem_raw_new(coda_type_raw *definition, long length, const uint8_t *data)
-{
-    coda_mem_raw *type;
-
-    if (definition == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "definition argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return NULL;
-    }
+    assert(length >= 0);
     if (length > 0 && data == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "data argument is NULL (%s:%u)", __FILE__, __LINE__);
@@ -815,54 +728,187 @@ coda_mem_raw *coda_mem_raw_new(coda_type_raw *definition, long length, const uin
     }
     if (definition->bit_size >= 0)
     {
-        long definition_length;
+        long expected_length;
 
-        definition_length = (long)(definition->bit_size >> 3) + (definition->bit_size & 0x7 ? 1 : 0);
-        if (definition_length != length)
+        expected_length = (long)(definition->bit_size >> 3) + (definition->bit_size & 0x7 ? 1 : 0);
+        if (expected_length != length)
         {
-            coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "length of raw data (%ld) does not match that of definition "
-                           "(%ld) (%s:%u)", length, definition_length, __FILE__, __LINE__);
+            coda_set_error(CODA_ERROR_PRODUCT, "length of data (%ld) does not match that of definition (%ld)", length,
+                           expected_length);
             return NULL;
         }
     }
-    type = (coda_mem_raw *)malloc(sizeof(coda_mem_raw));
+    if (definition->read_type == coda_native_type_char && length != 1)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "length of text (%ld) should be 1 for 'char' text (%s:%u)", length,
+                       __FILE__, __LINE__);
+        return NULL;
+    }
+
+    type = (coda_mem_data *)malloc(sizeof(coda_mem_data));
     if (type == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_mem_raw), __FILE__, __LINE__);
+                       (long)sizeof(coda_mem_data), __FILE__, __LINE__);
         return NULL;
     }
     type->backend = coda_backend_memory;
     type->definition = definition;
     definition->retain_count++;
-    type->attributes = NULL;
+    type->tag = tag_mem_data;
+    type->attributes = attributes;
     type->length = length;
-    type->data = NULL;
+    type->offset = 0;
+
     if (length > 0)
     {
-        type->data = malloc(length * sizeof(uint8_t));
-        if (type->data == NULL)
+        if (product == NULL)
         {
-            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           (long)(length * sizeof(uint8_t)), __FILE__, __LINE__);
+            coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "product argument is NULL (%s:%u)", __FILE__, __LINE__);
             coda_mem_type_delete((coda_dynamic_type *)type);
             return NULL;
         }
-        memcpy(type->data, data, length);
+        /* num_blocks = ((mem_size - 1) / block_size) + 1, since we need to round up */
+        current_num_blocks = product->mem_size == 0 ? 0 : ((product->mem_size - 1) / DATA_BLOCK_SIZE) + 1;
+        new_num_blocks = length == 0 ? current_num_blocks : ((product->mem_size + length - 1) / DATA_BLOCK_SIZE) + 1;
+        if (new_num_blocks > current_num_blocks)
+        {
+            uint8_t *new_mem_ptr;
+
+            new_mem_ptr = (uint8_t *)realloc(product->mem_ptr, new_num_blocks * DATA_BLOCK_SIZE);
+            if (new_mem_ptr == NULL)
+            {
+                coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %ld bytes) (%s:%u)",
+                               new_num_blocks * DATA_BLOCK_SIZE, __FILE__, __LINE__);
+                coda_mem_type_delete((coda_dynamic_type *)type);
+                return NULL;
+            }
+            product->mem_ptr = new_mem_ptr;
+        }
+        type->offset = product->mem_size;
+        memcpy(&product->mem_ptr[product->mem_size], data, (size_t)length);
+        product->mem_size += length;
     }
 
-    if (create_attributes_record((coda_mem_type *)type) != 0)
+    if (type->attributes == NULL)
     {
-        coda_mem_type_delete((coda_dynamic_type *)type);
-        return NULL;
+        if (create_attributes_record((coda_mem_type *)type) != 0)
+        {
+            coda_mem_type_delete((coda_dynamic_type *)type);
+            return NULL;
+        }
     }
 
     return type;
 }
 
-coda_mem_time *coda_mem_time_new(coda_type_special *definition, double value, coda_dynamic_type *base_type)
+coda_mem_data *coda_mem_int8_new(coda_type_number *definition, coda_dynamic_type *attributes, coda_product *product,
+                                 int8_t value)
 {
-    coda_mem_time *type;
+    assert(definition->bit_size == 8);
+    assert(definition->read_type == coda_native_type_int8);
+    return coda_mem_data_new((coda_type *)definition, attributes, product, sizeof(int8_t), (uint8_t *)&value);
+}
+
+coda_mem_data *coda_mem_uint8_new(coda_type_number *definition, coda_dynamic_type *attributes, coda_product *product,
+                                  uint8_t value)
+{
+    assert(definition->bit_size == 8);
+    assert(definition->read_type == coda_native_type_uint8);
+    return coda_mem_data_new((coda_type *)definition, attributes, product, sizeof(uint8_t), (uint8_t *)&value);
+}
+
+coda_mem_data *coda_mem_int16_new(coda_type_number *definition, coda_dynamic_type *attributes, coda_product *product,
+                                  int16_t value)
+{
+    assert(definition->bit_size == 16);
+    assert(definition->read_type == coda_native_type_int16);
+    return coda_mem_data_new((coda_type *)definition, attributes, product, sizeof(int16_t), (uint8_t *)&value);
+}
+
+coda_mem_data *coda_mem_uint16_new(coda_type_number *definition, coda_dynamic_type *attributes, coda_product *product,
+                                   uint16_t value)
+{
+    assert(definition->bit_size == 16);
+    assert(definition->read_type == coda_native_type_uint16);
+    return coda_mem_data_new((coda_type *)definition, attributes, product, sizeof(uint16_t), (uint8_t *)&value);
+}
+
+coda_mem_data *coda_mem_int32_new(coda_type_number *definition, coda_dynamic_type *attributes, coda_product *product,
+                                  int32_t value)
+{
+    assert(definition->bit_size == 32);
+    assert(definition->read_type == coda_native_type_int32);
+    return coda_mem_data_new((coda_type *)definition, attributes, product, sizeof(int32_t), (uint8_t *)&value);
+}
+
+coda_mem_data *coda_mem_uint32_new(coda_type_number *definition, coda_dynamic_type *attributes, coda_product *product,
+                                   uint32_t value)
+{
+    assert(definition->bit_size == 32);
+    assert(definition->read_type == coda_native_type_uint32);
+    return coda_mem_data_new((coda_type *)definition, attributes, product, sizeof(uint32_t), (uint8_t *)&value);
+}
+
+coda_mem_data *coda_mem_int64_new(coda_type_number *definition, coda_dynamic_type *attributes, coda_product *product,
+                                  int64_t value)
+{
+    assert(definition->bit_size == 64);
+    assert(definition->read_type == coda_native_type_int64);
+    return coda_mem_data_new((coda_type *)definition, attributes, product, sizeof(int64_t), (uint8_t *)&value);
+}
+
+coda_mem_data *coda_mem_uint64_new(coda_type_number *definition, coda_dynamic_type *attributes, coda_product *product,
+                                   uint64_t value)
+{
+    assert(definition->bit_size == 64);
+    assert(definition->read_type == coda_native_type_uint64);
+    return coda_mem_data_new((coda_type *)definition, attributes, product, sizeof(uint64_t), (uint8_t *)&value);
+}
+
+coda_mem_data *coda_mem_float_new(coda_type_number *definition, coda_dynamic_type *attributes, coda_product *product,
+                                  float value)
+{
+    assert(definition->bit_size == 32);
+    assert(definition->read_type == coda_native_type_float);
+    return coda_mem_data_new((coda_type *)definition, attributes, product, sizeof(float), (uint8_t *)&value);
+}
+
+coda_mem_data *coda_mem_double_new(coda_type_number *definition, coda_dynamic_type *attributes, coda_product *product,
+                                   double value)
+{
+    assert(definition->bit_size == 64);
+    assert(definition->read_type == coda_native_type_double);
+    return coda_mem_data_new((coda_type *)definition, attributes, product, sizeof(double), (uint8_t *)&value);
+}
+
+coda_mem_data *coda_mem_char_new(coda_type_text *definition, coda_dynamic_type *attributes, coda_product *product,
+                                 char value)
+{
+    assert(definition->bit_size == 8);
+    assert(definition->read_type == coda_native_type_char);
+    return coda_mem_data_new((coda_type *)definition, attributes, product, sizeof(char), (uint8_t *)&value);
+}
+
+coda_mem_data *coda_mem_string_new(coda_type_text *definition, coda_dynamic_type *attributes, coda_product *product,
+                                   const char *str)
+{
+    assert(definition->read_type == coda_native_type_string);
+    return coda_mem_data_new((coda_type *)definition, attributes, product, str == NULL ? 0 : strlen(str),
+                             (const uint8_t *)str);
+}
+
+coda_mem_data *coda_mem_raw_new(coda_type_raw *definition, coda_dynamic_type *attributes, coda_product *product,
+                                long length, const uint8_t *data)
+{
+    assert(definition->type_class == coda_raw_class);
+    return coda_mem_data_new((coda_type *)definition, attributes, product, length, data);
+}
+
+coda_mem_special *coda_mem_time_new(coda_type_special *definition, coda_dynamic_type *attributes,
+                                    coda_dynamic_type *base_type)
+{
+    coda_mem_special *type;
 
     if (definition == NULL)
     {
@@ -879,25 +925,34 @@ coda_mem_time *coda_mem_time_new(coda_type_special *definition, double value, co
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "definition is not a time type (%s:%u)", __FILE__, __LINE__);
         return NULL;
     }
+    if (((coda_type_special *)definition)->base_type != base_type->definition)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "definition of base type should be the same as base type of "
+                       "definition (%s:%u)", __FILE__, __LINE__);
+        return NULL;
+    }
 
-    type = (coda_mem_time *)malloc(sizeof(coda_mem_time));
+    type = (coda_mem_special *)malloc(sizeof(coda_mem_special));
     if (type == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_mem_time), __FILE__, __LINE__);
+                       (long)sizeof(coda_mem_special), __FILE__, __LINE__);
         return NULL;
     }
     type->backend = coda_backend_memory;
     type->definition = definition;
     definition->retain_count++;
-    type->attributes = NULL;
+    type->tag = tag_mem_special;
+    type->attributes = attributes;
     type->base_type = base_type;
-    type->value = value;
 
-    if (create_attributes_record((coda_mem_type *)type) != 0)
+    if (type->attributes == NULL)
     {
-        coda_mem_type_delete((coda_dynamic_type *)type);
-        return NULL;
+        if (create_attributes_record((coda_mem_type *)type) != 0)
+        {
+            coda_mem_type_delete((coda_dynamic_type *)type);
+            return NULL;
+        }
     }
 
     return type;
@@ -917,6 +972,7 @@ coda_mem_special *coda_mem_no_data_new(coda_format format)
     }
     type->backend = coda_backend_memory;
     type->definition = NULL;
+    type->tag = tag_mem_special;
     type->attributes = NULL;
     type->base_type = NULL;
 
@@ -928,7 +984,7 @@ coda_mem_special *coda_mem_no_data_new(coda_format format)
     }
     type->definition->retain_count++;
     base_definition = (coda_type_raw *)((coda_type_special *)type->definition)->base_type;
-    type->base_type = (coda_dynamic_type *)coda_mem_raw_new(base_definition, 0, NULL);
+    type->base_type = (coda_dynamic_type *)coda_mem_raw_new(base_definition, NULL, NULL, 0, NULL);
     if (type->base_type == NULL)
     {
         coda_mem_type_delete((coda_dynamic_type *)type);

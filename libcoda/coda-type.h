@@ -27,40 +27,6 @@
 /* note that this includes strings with time information (which also map to floating point numbers) */
 #define MAX_ASCII_NUMBER_LENGTH 64
 
-enum coda_time_type_enum
-{
-    datetime_ascii_envisat,             /**< Fixed length ASCII string with the following format:
-                                             "DD-MMM-YYYY hh:mm:ss.uuuuuu" */
-    datetime_ascii_gome,                /**< Fixed length ASCII string with the following format:
-                                             "DD-MMM-YYYY hh:mm:ss.uuu" */
-    datetime_ascii_eps,                 /**< Fixed length ASCII string with the following format: "YYYYMMDDHHMMSSZ"
-                                             (with exception "xxxxxxxxxxxxxxZ") */
-    datetime_ascii_eps_long,            /**< Fixed length ASCII string with the following format: "YYYYMMDDHHMMSSmmmZ"
-                                             (with exception "xxxxxxxxxxxxxxxxxZ") */
-    datetime_ascii_ccsds_ymd1,          /**< Fixed length ASCII string with the following format: "YYYY-MM-DDThh:mm:ss"
-                                             */
-    datetime_ascii_ccsds_ymd1_with_ref, /**< Fixed length ASCII string with the following format:
-                                             "RRR=YYYY-MM-DDThh:mm:ss". "RRR" can be any of "UT1", "UTC", "TAI", or
-                                             "GPS" */
-    datetime_ascii_ccsds_ymd2,          /**< Fixed length ASCII string with the following format:
-                                             "YYYY-MM-DDThh:mm:ss.uuuuuu" */
-    datetime_ascii_ccsds_ymd2_with_ref, /**< Fixed length ASCII string with the following format:
-                                             "RRR=YYYY-MM-DDThh:mm:ss.uuuuuu". "RRR" can be any of "UT1", "UTC", "TAI",
-                                             or "GPS" */
-    datetime_ascii_ccsds_utc1,          /**< Fixed length ASCII string with the following format: "YYYY-DDDThh:mm:ss" */
-    datetime_ascii_ccsds_utc2,          /**< Fixed length ASCII string with the following format:
-                                             "YYYY-DDDThh:mm:ss.uuuuuu" */
-    datetime_binary_envisat,            /**< Record with 3 fields: days since 1 Jan 2000 (int32), seconds since that day
-                                             (uint32), microseconds since that second (uint32). */
-    datetime_binary_gome,               /**< Record with 2 fields: days since 1 Jan 1950 (int32), milliseconds since
-                                             that day (uint32). */
-    datetime_binary_eps,                /**< Record with 2 fields: days since 1 Jan 2000 (uint16), milliseconds since
-                                             that day (uint32). */
-    datetime_binary_eps_long            /**< Record with 3 fields: days since 1 Jan 2000 (uint16), milliseconds since
-                                             that day (uint32), microseconds since that millisecond (uint16). */
-};
-typedef enum coda_time_type_enum coda_time_type;
-
 enum coda_ascii_special_text_type_enum
 {
     ascii_text_default,
@@ -311,6 +277,8 @@ int coda_type_text_validate(const coda_type_text *type);
 coda_type_raw *coda_type_raw_new(coda_format format);
 int coda_type_raw_set_fixed_value(coda_type_raw *type, long length, const char *fixed_value);
 int coda_type_raw_validate(const coda_type_raw *type);
+
+coda_type_raw *coda_type_raw_file_singleton(void);
 
 coda_type_special *coda_type_no_data_singleton(coda_format format);
 

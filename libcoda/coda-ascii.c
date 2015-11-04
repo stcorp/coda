@@ -59,9 +59,12 @@ int coda_ascii_open(const char *filename, int64_t file_size, const coda_product_
     product_file->product_definition = definition;
     product_file->product_variable_size = NULL;
     product_file->product_variable = NULL;
+    product_file->mem_size = 0;
+    product_file->mem_ptr = NULL;
 #if CODA_USE_QIAP
     product_file->qiap_info = NULL;
 #endif
+
     product_file->use_mmap = 0;
     product_file->fd = -1;
 
@@ -194,7 +197,7 @@ int coda_ascii_init_asciilines(coda_product *product)
         {
             break;
         }
-        if (read_bytes(product, byte_offset, blocksize, buffer) != 0)
+        if (read_bytes((coda_product *)product_file, byte_offset, blocksize, buffer) != 0)
         {
             return -1;
         }

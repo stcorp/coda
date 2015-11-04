@@ -36,7 +36,7 @@ What you will need
     and all documentation and examples. For the IDL and MATLAB interfaces,
     pre-built versions are included for IDL 6.3 and higher for Windows, and
     MATLAB R2007b (v7.5) and higher for Windows. For the Python interface, a
-    pre-built version for Python 2.6 is included. For the Java interface, a
+    pre-built version for Python 2.7 is included. For the Java interface, a
     pre-built version for JDK 6.0 is included. All CODA interfaces have been
     compiled with HDF4 and HDF5 support built in.
 
@@ -287,20 +287,20 @@ home directory (~/matlab/startup.m) that contains the line:
 If you enabled Python then you won't have to do anything if you installed CODA
 in the same directory as you installed Python (e.g. if both are installed under
 /usr/local for instance). You can verify whether this is the case by checking
-that the file <CODA installdir>/lib/python2.6/os.py exists. (the python2.x
+that the file <CODA installdir>/lib/python2.7/os.py exists. (the python2.x
 directory name will depend on the Python version that you are using).
 If you installed CODA in another location then you should create a 'coda.pth'
-file in the directory <Python installdir>/lib/python2.6/site-packages
+file in the directory <Python installdir>/lib/python2.7/site-packages
 containing one text line with the location of the Python package:
 
-    <CODA installdir>/lib/python2.6/site-packages
+    <CODA installdir>/lib/python2.7/site-packages
 
 Python will then automatically load the coda.pth file at startup and add the
 path to the Python package to the Python searchpath. You can also manually
 modify the searchpath from within Python by calling the following Python
 commands:
     >>> import sys
-    >>> sys.path.append('<CODA installdir>/lib/python2.6/site-packages')
+    >>> sys.path.append('<CODA installdir>/lib/python2.7/site-packages')
 But this manual modification will be lost as soon as you quit Python.
 
 For Java you can find the CODA jni/jar files, an example script and an Ant

@@ -21,6 +21,8 @@
 #include "coda-bin-internal.h"
 #include "coda-definition.h"
 #include "coda-read-bits.h"
+#include "coda-read-array.h"
+#include "coda-transpose-array.h"
 #include "coda-ascbin.h"
 
 #include <assert.h>
@@ -34,20 +36,10 @@
 #include <unistd.h>
 #endif
 
-int coda_bin_cursor_use_base_type_of_special_type(coda_cursor *cursor)
-{
-    coda_type_special *type = (coda_type_special *)cursor->stack[cursor->n - 1].type;
-
-    cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)type->base_type;
-
-    return 0;
-}
-
 int coda_bin_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size)
 {
-    coda_type *type;
+    coda_type *type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
 
-    type = (coda_type *)cursor->stack[cursor->n - 1].type;
     if (type->bit_size >= 0)
     {
         *bit_size = type->bit_size;
@@ -63,19 +55,26 @@ int coda_bin_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size)
         case coda_real_class:
         case coda_text_class:
         case coda_raw_class:
-            if (coda_expression_eval_integer(type->size_expr, cursor, bit_size) != 0)
+            if (type->size_expr == NULL)
             {
-                return -1;
+                *bit_size = -1;
             }
-            if (type->bit_size == -8)
+            else
             {
-                *bit_size *= 8;
-            }
-            if (*bit_size < 0)
-            {
-                coda_set_error(CODA_ERROR_PRODUCT, "calculated size is negative (%ld bits)", (long)*bit_size);
-                coda_cursor_add_to_error_message(cursor);
-                return -1;
+                if (coda_expression_eval_integer(type->size_expr, cursor, bit_size) != 0)
+                {
+                    return -1;
+                }
+                if (type->bit_size == -8)
+                {
+                    *bit_size *= 8;
+                }
+                if (*bit_size < 0)
+                {
+                    coda_set_error(CODA_ERROR_PRODUCT, "calculated size is negative (%ld bits)", (long)*bit_size);
+                    coda_cursor_add_to_error_message(cursor);
+                    return -1;
+                }
             }
             break;
         case coda_special_class:
@@ -83,7 +82,7 @@ int coda_bin_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size)
                 coda_cursor spec_cursor;
 
                 spec_cursor = *cursor;
-                if (coda_bin_cursor_use_base_type_of_special_type(&spec_cursor) != 0)
+                if (coda_ascbin_cursor_use_base_type_of_special_type(&spec_cursor) != 0)
                 {
                     return -1;
                 }
@@ -120,7 +119,7 @@ int coda_bin_cursor_get_string_length(const coda_cursor *cursor, long *length)
 
 int coda_bin_cursor_get_num_elements(const coda_cursor *cursor, long *num_elements)
 {
-    switch (((coda_type *)cursor->stack[cursor->n - 1].type)->type_class)
+    switch (coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type)->type_class)
     {
         case coda_array_class:
         case coda_record_class:
@@ -135,7 +134,8 @@ int coda_bin_cursor_get_num_elements(const coda_cursor *cursor, long *num_elemen
 
 int coda_bin_cursor_read_int8(const coda_cursor *cursor, int8_t *dst)
 {
-    int64_t bit_size = ((coda_type *)cursor->stack[cursor->n - 1].type)->bit_size;
+    coda_type *type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    int64_t bit_size = type->bit_size;
     int64_t bit_offset = cursor->stack[cursor->n - 1].bit_offset;
 
     if (bit_size < 0)
@@ -150,7 +150,7 @@ int coda_bin_cursor_read_int8(const coda_cursor *cursor, int8_t *dst)
             char s2[21];
 
             coda_str64(bit_size, s1);
-            coda_str64(cursor->stack[cursor->n - 1].bit_offset >> 3, s1);
+            coda_str64(cursor->stack[cursor->n - 1].bit_offset >> 3, s2);
             coda_set_error(CODA_ERROR_PRODUCT,
                            "possible product error detected in %s (invalid bit size (%s) for binary int8 integer - "
                            "byte:bit offset = %s:%d)", cursor->product->filename, s1, s2,
@@ -191,7 +191,8 @@ int coda_bin_cursor_read_int8(const coda_cursor *cursor, int8_t *dst)
 
 int coda_bin_cursor_read_uint8(const coda_cursor *cursor, uint8_t *dst)
 {
-    int64_t bit_size = ((coda_type *)cursor->stack[cursor->n - 1].type)->bit_size;
+    coda_type *type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    int64_t bit_size = type->bit_size;
     int64_t bit_offset = cursor->stack[cursor->n - 1].bit_offset;
 
     if (bit_size == -1)
@@ -206,7 +207,7 @@ int coda_bin_cursor_read_uint8(const coda_cursor *cursor, uint8_t *dst)
             char s2[21];
 
             coda_str64(bit_size, s1);
-            coda_str64(cursor->stack[cursor->n - 1].bit_offset >> 3, s1);
+            coda_str64(cursor->stack[cursor->n - 1].bit_offset >> 3, s2);
             coda_set_error(CODA_ERROR_PRODUCT,
                            "possible product error detected in %s (invalid bit size (%s) for binary uint8 integer - "
                            "byte:bit offset = %s:%d)", cursor->product->filename, s1, s2,
@@ -236,9 +237,10 @@ int coda_bin_cursor_read_uint8(const coda_cursor *cursor, uint8_t *dst)
 
 int coda_bin_cursor_read_int16(const coda_cursor *cursor, int16_t *dst)
 {
-    int64_t bit_size = ((coda_type *)cursor->stack[cursor->n - 1].type)->bit_size;
+    coda_type *type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    int64_t bit_size = type->bit_size;
     int64_t bit_offset = cursor->stack[cursor->n - 1].bit_offset;
-    coda_endianness endianness = ((coda_type_number *)cursor->stack[cursor->n - 1].type)->endianness;
+    coda_endianness endianness = ((coda_type_number *)type)->endianness;
 
     if (bit_size == -1)
     {
@@ -252,7 +254,7 @@ int coda_bin_cursor_read_int16(const coda_cursor *cursor, int16_t *dst)
             char s2[21];
 
             coda_str64(bit_size, s1);
-            coda_str64(cursor->stack[cursor->n - 1].bit_offset >> 3, s1);
+            coda_str64(cursor->stack[cursor->n - 1].bit_offset >> 3, s2);
             coda_set_error(CODA_ERROR_PRODUCT,
                            "possible product error detected in %s (invalid bit size (%s) for binary int16 integer - "
                            "byte:bit offset = %s:%d)", cursor->product->filename, s1, s2,
@@ -318,9 +320,10 @@ int coda_bin_cursor_read_int16(const coda_cursor *cursor, int16_t *dst)
 
 int coda_bin_cursor_read_uint16(const coda_cursor *cursor, uint16_t *dst)
 {
-    int64_t bit_size = ((coda_type *)cursor->stack[cursor->n - 1].type)->bit_size;
+    coda_type *type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    int64_t bit_size = type->bit_size;
     int64_t bit_offset = cursor->stack[cursor->n - 1].bit_offset;
-    coda_endianness endianness = ((coda_type_number *)cursor->stack[cursor->n - 1].type)->endianness;
+    coda_endianness endianness = ((coda_type_number *)type)->endianness;
 
     if (bit_size == -1)
     {
@@ -334,7 +337,7 @@ int coda_bin_cursor_read_uint16(const coda_cursor *cursor, uint16_t *dst)
             char s2[21];
 
             coda_str64(bit_size, s1);
-            coda_str64(cursor->stack[cursor->n - 1].bit_offset >> 3, s1);
+            coda_str64(cursor->stack[cursor->n - 1].bit_offset >> 3, s2);
             coda_set_error(CODA_ERROR_PRODUCT,
                            "possible product error detected in %s (invalid bit size (%s) for binary uint16 integer - "
                            "byte:bit offset = %s:%d)", cursor->product->filename, s1, s2,
@@ -388,9 +391,10 @@ int coda_bin_cursor_read_uint16(const coda_cursor *cursor, uint16_t *dst)
 
 int coda_bin_cursor_read_int32(const coda_cursor *cursor, int32_t *dst)
 {
-    int64_t bit_size = ((coda_type *)cursor->stack[cursor->n - 1].type)->bit_size;
+    coda_type *type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    int64_t bit_size = type->bit_size;
     int64_t bit_offset = cursor->stack[cursor->n - 1].bit_offset;
-    coda_endianness endianness = ((coda_type_number *)cursor->stack[cursor->n - 1].type)->endianness;
+    coda_endianness endianness = ((coda_type_number *)type)->endianness;
 
     if (bit_size == -1)
     {
@@ -404,7 +408,7 @@ int coda_bin_cursor_read_int32(const coda_cursor *cursor, int32_t *dst)
             char s2[21];
 
             coda_str64(bit_size, s1);
-            coda_str64(cursor->stack[cursor->n - 1].bit_offset >> 3, s1);
+            coda_str64(cursor->stack[cursor->n - 1].bit_offset >> 3, s2);
             coda_set_error(CODA_ERROR_PRODUCT,
                            "possible product error detected in %s (invalid bit size (%s) for binary int32 integer - "
                            "byte:bit offset = %s:%d)", cursor->product->filename, s1, s2,
@@ -472,9 +476,10 @@ int coda_bin_cursor_read_int32(const coda_cursor *cursor, int32_t *dst)
 
 int coda_bin_cursor_read_uint32(const coda_cursor *cursor, uint32_t *dst)
 {
-    int64_t bit_size = ((coda_type *)cursor->stack[cursor->n - 1].type)->bit_size;
+    coda_type *type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    int64_t bit_size = type->bit_size;
     int64_t bit_offset = cursor->stack[cursor->n - 1].bit_offset;
-    coda_endianness endianness = ((coda_type_number *)cursor->stack[cursor->n - 1].type)->endianness;
+    coda_endianness endianness = ((coda_type_number *)type)->endianness;
 
     if (bit_size == -1)
     {
@@ -488,7 +493,7 @@ int coda_bin_cursor_read_uint32(const coda_cursor *cursor, uint32_t *dst)
             char s2[21];
 
             coda_str64(bit_size, s1);
-            coda_str64(cursor->stack[cursor->n - 1].bit_offset >> 3, s1);
+            coda_str64(cursor->stack[cursor->n - 1].bit_offset >> 3, s2);
             coda_set_error(CODA_ERROR_PRODUCT,
                            "possible product error detected in %s (invalid bit size (%s) for binary uint32 integer - "
                            "byte:bit offset = %s:%d)", cursor->product->filename, s1, s2,
@@ -544,9 +549,10 @@ int coda_bin_cursor_read_uint32(const coda_cursor *cursor, uint32_t *dst)
 
 int coda_bin_cursor_read_int64(const coda_cursor *cursor, int64_t *dst)
 {
-    int64_t bit_size = ((coda_type *)cursor->stack[cursor->n - 1].type)->bit_size;
+    coda_type *type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    int64_t bit_size = type->bit_size;
     int64_t bit_offset = cursor->stack[cursor->n - 1].bit_offset;
-    coda_endianness endianness = ((coda_type_number *)cursor->stack[cursor->n - 1].type)->endianness;
+    coda_endianness endianness = ((coda_type_number *)type)->endianness;
 
     if (bit_size == -1)
     {
@@ -560,7 +566,7 @@ int coda_bin_cursor_read_int64(const coda_cursor *cursor, int64_t *dst)
             char s2[21];
 
             coda_str64(bit_size, s1);
-            coda_str64(cursor->stack[cursor->n - 1].bit_offset >> 3, s1);
+            coda_str64(cursor->stack[cursor->n - 1].bit_offset >> 3, s2);
             coda_set_error(CODA_ERROR_PRODUCT,
                            "possible product error detected in %s (invalid bit size (%s) for binary int64 integer - "
                            "byte:bit offset = %s:%d)", cursor->product->filename, s1, s2,
@@ -631,9 +637,10 @@ int coda_bin_cursor_read_int64(const coda_cursor *cursor, int64_t *dst)
 
 int coda_bin_cursor_read_uint64(const coda_cursor *cursor, uint64_t *dst)
 {
-    int64_t bit_size = ((coda_type *)cursor->stack[cursor->n - 1].type)->bit_size;
+    coda_type *type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    int64_t bit_size = type->bit_size;
     int64_t bit_offset = cursor->stack[cursor->n - 1].bit_offset;
-    coda_endianness endianness = ((coda_type_number *)cursor->stack[cursor->n - 1].type)->endianness;
+    coda_endianness endianness = ((coda_type_number *)type)->endianness;
 
     if (bit_size == -1)
     {
@@ -647,7 +654,7 @@ int coda_bin_cursor_read_uint64(const coda_cursor *cursor, uint64_t *dst)
             char s2[21];
 
             coda_str64(bit_size, s1);
-            coda_str64(cursor->stack[cursor->n - 1].bit_offset >> 3, s1);
+            coda_str64(cursor->stack[cursor->n - 1].bit_offset >> 3, s2);
             coda_set_error(CODA_ERROR_PRODUCT,
                            "possible product error detected in %s (invalid bit size (%s) for binary uint64 integer - "
                            "byte:bit offset = %s:%d)", cursor->product->filename, s1, s2,
@@ -708,8 +715,9 @@ int coda_bin_cursor_read_uint64(const coda_cursor *cursor, uint64_t *dst)
 
 int coda_bin_cursor_read_float(const coda_cursor *cursor, float *dst)
 {
+    coda_type *type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     int64_t bit_offset = cursor->stack[cursor->n - 1].bit_offset;
-    coda_endianness endianness = ((coda_type_number *)cursor->stack[cursor->n - 1].type)->endianness;
+    coda_endianness endianness = ((coda_type_number *)type)->endianness;
 
     if (bit_offset & 0x7)
     {
@@ -752,8 +760,9 @@ int coda_bin_cursor_read_float(const coda_cursor *cursor, float *dst)
 
 static int read_double(const coda_cursor *cursor, double *dst)
 {
+    coda_type *type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     int64_t bit_offset = cursor->stack[cursor->n - 1].bit_offset;
-    coda_endianness endianness = ((coda_type_number *)cursor->stack[cursor->n - 1].type)->endianness;
+    coda_endianness endianness = ((coda_type_number *)type)->endianness;
 
     if (bit_offset & 0x7)
     {
@@ -828,7 +837,7 @@ static int read_vsf_integer(const coda_cursor *cursor, double *dst)
     double base_value;
 
     vsf_cursor = *cursor;
-    if (coda_bin_cursor_use_base_type_of_special_type(&vsf_cursor) != 0)
+    if (coda_ascbin_cursor_use_base_type_of_special_type(&vsf_cursor) != 0)
     {
         return -1;
     }
@@ -858,9 +867,11 @@ static int read_vsf_integer(const coda_cursor *cursor, double *dst)
 
 int coda_bin_cursor_read_double(const coda_cursor *cursor, double *dst)
 {
-    if (((coda_type *)cursor->stack[cursor->n - 1].type)->type_class == coda_special_class)
+    coda_type *type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    if (type->type_class == coda_special_class)
     {
-        switch (((coda_type_special *)cursor->stack[cursor->n - 1].type)->special_type)
+        switch (((coda_type_special *)type)->special_type)
         {
             case coda_special_vsf_integer:
                 return read_vsf_integer(cursor, dst);
@@ -894,6 +905,19 @@ int coda_bin_cursor_read_string(const coda_cursor *cursor, char *dst, long dst_s
 
         if (coda_bin_cursor_get_bit_size(cursor, &bit_size) != 0)
         {
+            return -1;
+        }
+        if (bit_size < 0)
+        {
+            char s1[21];
+            char s2[21];
+
+            coda_str64(bit_size, s1);
+            coda_str64(cursor->stack[cursor->n - 1].bit_offset >> 3, s2);
+            coda_set_error(CODA_ERROR_PRODUCT,
+                           "possible product error detected in %s (invalid bit size (%s) for binary string - "
+                           "byte:bit offset = %s:%d)", cursor->product->filename, s1, s2,
+                           (int)(cursor->stack[cursor->n - 1].bit_offset & 0x7));
             return -1;
         }
         if ((bit_size & 0x7) != 0)
@@ -939,6 +963,292 @@ int coda_bin_cursor_read_bytes(const coda_cursor *cursor, uint8_t *dst, int64_t 
         return coda_bin_cursor_read_bits(cursor, dst, 8 * offset, 8 * length);
     }
     return read_bytes(cursor->product, (cursor->stack[cursor->n - 1].bit_offset >> 3) + offset, length, dst);
+}
+
+int coda_bin_cursor_read_int8_array(const coda_cursor *cursor, int8_t *dst, coda_array_ordering array_ordering)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    if (type->base_type->format == coda_format_binary)
+    {
+        return read_array(cursor, (read_function)&coda_bin_cursor_read_int8, (uint8_t *)dst, sizeof(int8_t),
+                          array_ordering);
+    }
+    assert(type->base_type->format == coda_format_ascii);
+    if (read_array(cursor, (read_function)&coda_bin_cursor_read_int8, (uint8_t *)dst, sizeof(int8_t),
+                   coda_array_ordering_c) != 0)
+    {
+        return -1;
+    }
+    if (array_ordering != coda_array_ordering_c)
+    {
+        if (transpose_array(cursor, dst, sizeof(int8_t)) != 0)
+        {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int coda_bin_cursor_read_uint8_array(const coda_cursor *cursor, uint8_t *dst, coda_array_ordering array_ordering)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    if (type->base_type->format == coda_format_binary)
+    {
+        return read_array(cursor, (read_function)&coda_bin_cursor_read_uint8, (uint8_t *)dst, sizeof(uint8_t),
+                          array_ordering);
+    }
+    assert(type->base_type->format == coda_format_ascii);
+    if (read_array(cursor, (read_function)&coda_bin_cursor_read_uint8, (uint8_t *)dst, sizeof(uint8_t),
+                   coda_array_ordering_c) != 0)
+    {
+        return -1;
+    }
+    if (array_ordering != coda_array_ordering_c)
+    {
+        if (transpose_array(cursor, dst, sizeof(uint8_t)) != 0)
+        {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int coda_bin_cursor_read_int16_array(const coda_cursor *cursor, int16_t *dst, coda_array_ordering array_ordering)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    if (type->base_type->format == coda_format_binary)
+    {
+        return read_array(cursor, (read_function)&coda_bin_cursor_read_int16, (uint8_t *)dst, sizeof(int16_t),
+                          array_ordering);
+    }
+    assert(type->base_type->format == coda_format_ascii);
+    if (read_array(cursor, (read_function)&coda_bin_cursor_read_int16, (uint8_t *)dst, sizeof(int16_t),
+                   coda_array_ordering_c) != 0)
+    {
+        return -1;
+    }
+    if (array_ordering != coda_array_ordering_c)
+    {
+        if (transpose_array(cursor, dst, sizeof(int16_t)) != 0)
+        {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int coda_bin_cursor_read_uint16_array(const coda_cursor *cursor, uint16_t *dst, coda_array_ordering array_ordering)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    if (type->base_type->format == coda_format_binary)
+    {
+        return read_array(cursor, (read_function)&coda_bin_cursor_read_uint16, (uint8_t *)dst, sizeof(uint16_t),
+                          array_ordering);
+    }
+    assert(type->base_type->format == coda_format_ascii);
+    if (read_array(cursor, (read_function)&coda_bin_cursor_read_uint16, (uint8_t *)dst, sizeof(uint16_t),
+                   coda_array_ordering_c) != 0)
+    {
+        return -1;
+    }
+    if (array_ordering != coda_array_ordering_c)
+    {
+        if (transpose_array(cursor, dst, sizeof(uint16_t)) != 0)
+        {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int coda_bin_cursor_read_int32_array(const coda_cursor *cursor, int32_t *dst, coda_array_ordering array_ordering)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    if (type->base_type->format == coda_format_binary)
+    {
+        return read_array(cursor, (read_function)&coda_bin_cursor_read_int32, (uint8_t *)dst, sizeof(int32_t),
+                          array_ordering);
+    }
+    assert(type->base_type->format == coda_format_ascii);
+    if (read_array(cursor, (read_function)&coda_bin_cursor_read_int32, (uint8_t *)dst, sizeof(int32_t),
+                   coda_array_ordering_c) != 0)
+    {
+        return -1;
+    }
+    if (array_ordering != coda_array_ordering_c)
+    {
+        if (transpose_array(cursor, dst, sizeof(int32_t)) != 0)
+        {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int coda_bin_cursor_read_uint32_array(const coda_cursor *cursor, uint32_t *dst, coda_array_ordering array_ordering)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    if (type->base_type->format == coda_format_binary)
+    {
+        return read_array(cursor, (read_function)&coda_bin_cursor_read_uint32, (uint8_t *)dst, sizeof(uint32_t),
+                          array_ordering);
+    }
+    assert(type->base_type->format == coda_format_ascii);
+    if (read_array(cursor, (read_function)&coda_bin_cursor_read_uint32, (uint8_t *)dst, sizeof(uint32_t),
+                   coda_array_ordering_c) != 0)
+    {
+        return -1;
+    }
+    if (array_ordering != coda_array_ordering_c)
+    {
+        if (transpose_array(cursor, dst, sizeof(uint32_t)) != 0)
+        {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int coda_bin_cursor_read_int64_array(const coda_cursor *cursor, int64_t *dst, coda_array_ordering array_ordering)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    if (type->base_type->format == coda_format_binary)
+    {
+        return read_array(cursor, (read_function)&coda_bin_cursor_read_int64, (uint8_t *)dst, sizeof(int64_t),
+                          array_ordering);
+    }
+    assert(type->base_type->format == coda_format_ascii);
+    if (read_array(cursor, (read_function)&coda_bin_cursor_read_int64, (uint8_t *)dst, sizeof(int64_t),
+                   coda_array_ordering_c) != 0)
+    {
+        return -1;
+    }
+    if (array_ordering != coda_array_ordering_c)
+    {
+        if (transpose_array(cursor, dst, sizeof(int64_t)) != 0)
+        {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int coda_bin_cursor_read_uint64_array(const coda_cursor *cursor, uint64_t *dst, coda_array_ordering array_ordering)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    if (type->base_type->format == coda_format_binary)
+    {
+        return read_array(cursor, (read_function)&coda_bin_cursor_read_uint64, (uint8_t *)dst, sizeof(uint64_t),
+                          array_ordering);
+    }
+    assert(type->base_type->format == coda_format_ascii);
+    if (read_array(cursor, (read_function)&coda_bin_cursor_read_uint64, (uint8_t *)dst, sizeof(uint64_t),
+                   coda_array_ordering_c) != 0)
+    {
+        return -1;
+    }
+    if (array_ordering != coda_array_ordering_c)
+    {
+        if (transpose_array(cursor, dst, sizeof(uint64_t)) != 0)
+        {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int coda_bin_cursor_read_float_array(const coda_cursor *cursor, float *dst, coda_array_ordering array_ordering)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    if (type->base_type->format == coda_format_binary)
+    {
+        return read_array(cursor, (read_function)&coda_bin_cursor_read_float, (uint8_t *)dst, sizeof(float),
+                          array_ordering);
+    }
+    assert(type->base_type->format == coda_format_ascii);
+    if (read_array(cursor, (read_function)&coda_bin_cursor_read_float, (uint8_t *)dst, sizeof(float),
+                   coda_array_ordering_c) != 0)
+    {
+        return -1;
+    }
+    if (array_ordering != coda_array_ordering_c)
+    {
+        if (transpose_array(cursor, dst, sizeof(float)) != 0)
+        {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int coda_bin_cursor_read_double_array(const coda_cursor *cursor, double *dst, coda_array_ordering array_ordering)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    if (type->base_type->format == coda_format_binary)
+    {
+        return read_array(cursor, (read_function)&coda_bin_cursor_read_double, (uint8_t *)dst, sizeof(double),
+                          array_ordering);
+    }
+    assert(type->base_type->format == coda_format_ascii);
+    if (read_array(cursor, (read_function)&coda_bin_cursor_read_double, (uint8_t *)dst, sizeof(double),
+                   coda_array_ordering_c) != 0)
+    {
+        return -1;
+    }
+    if (array_ordering != coda_array_ordering_c)
+    {
+        if (transpose_array(cursor, dst, sizeof(double)) != 0)
+        {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int coda_bin_cursor_read_char_array(const coda_cursor *cursor, char *dst, coda_array_ordering array_ordering)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    if (type->base_type->format == coda_format_binary)
+    {
+        return read_array(cursor, (read_function)&coda_bin_cursor_read_char, (uint8_t *)dst, sizeof(char),
+                          array_ordering);
+    }
+    assert(type->base_type->format == coda_format_ascii);
+    if (read_array(cursor, (read_function)&coda_bin_cursor_read_char, (uint8_t *)dst, sizeof(char),
+                   coda_array_ordering_c) != 0)
+    {
+        return -1;
+    }
+    if (array_ordering != coda_array_ordering_c)
+    {
+        if (transpose_array(cursor, dst, sizeof(char)) != 0)
+        {
+            return -1;
+        }
+    }
+
+    return 0;
 }
 
 /** @} */

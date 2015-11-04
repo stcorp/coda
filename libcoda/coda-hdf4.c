@@ -451,6 +451,8 @@ int coda_hdf4_open(const char *filename, int64_t file_size, const coda_product_d
     product_file->product_definition = definition;
     product_file->product_variable_size = NULL;
     product_file->product_variable = NULL;
+    product_file->mem_size = 0;
+    product_file->mem_ptr = NULL;
 #if CODA_USE_QIAP
     product_file->qiap_info = NULL;
 #endif

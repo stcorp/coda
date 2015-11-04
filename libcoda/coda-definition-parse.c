@@ -2882,6 +2882,10 @@ static int cd_time_init(parser_info *info, const char **attr)
     register_type_elements(info->node, cd_time_set_type);
     register_sub_element(info->node, element_cd_description, string_data_init, type_set_description);
     register_sub_element(info->node, element_cd_mapping, cd_mapping_init, cd_time_add_mapping);
+    if (info->node->format != coda_format_ascii && info->node->format != coda_format_binary)
+    {
+        register_sub_element(info->node, element_cd_attribute, cd_attribute_init, type_add_attribute);
+    }
     info->node->finalise_element = cd_time_finalise;
 
     return 0;

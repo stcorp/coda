@@ -35,7 +35,7 @@ coda_dynamic_type *coda_mem_empty_record(coda_format format)
     assert(format < num_empty_record_singletons);
     if (empty_record_singleton[format] == NULL)
     {
-        empty_record_singleton[format] = coda_mem_record_new(coda_type_empty_record(format));
+        empty_record_singleton[format] = coda_mem_record_new(coda_type_empty_record(format), NULL);
         assert(empty_record_singleton[format] != NULL);
     }
 

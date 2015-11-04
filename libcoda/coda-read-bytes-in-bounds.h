@@ -18,8 +18,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef CODA_READ_BYTES_H
-#define CODA_READ_BYTES_H
+#ifndef CODA_READ_BYTES_IN_BOUNDS_H
+#define CODA_READ_BYTES_IN_BOUNDS_H
 
 #include "coda-bin-internal.h"
 
@@ -40,41 +40,15 @@
  * done without using this function, if there is a need for it).
  */
 
-static int read_bytes(coda_product *product, int64_t byte_offset, int64_t length, void *dst)
+static int read_bytes_in_bounds(coda_product *product, int64_t byte_offset, int64_t length, void *dst)
 {
     if (product->mem_ptr != NULL)
     {
-        if (((uint64_t)byte_offset + length) > ((uint64_t)product->mem_size))
-        {
-            if (product->format == coda_format_ascii || product->format == coda_format_binary)
-            {
-                coda_set_error(CODA_ERROR_OUT_OF_BOUNDS_READ, "trying to read beyond the end of the file");
-                return -1;
-            }
-            else
-            {
-                char accessed_str[21];
-                char offset_str[21];
-                char size_str[21];
-
-                coda_str64(length, accessed_str);
-                coda_str64(byte_offset, offset_str);
-                coda_str64(product->mem_size, size_str);
-                coda_set_error(CODA_ERROR_OUT_OF_BOUNDS_READ, "trying to read %s bytes at position %s in block of "
-                               "size %s", accessed_str, offset_str, size_str);
-                return -1;
-            }
-        }
         memcpy(dst, product->mem_ptr + byte_offset, (size_t)length);
     }
     else
     {
         assert(product->format == coda_format_ascii || product->format == coda_format_binary);
-        if (((uint64_t)byte_offset + length) > ((uint64_t)product->file_size))
-        {
-            coda_set_error(CODA_ERROR_OUT_OF_BOUNDS_READ, "trying to read beyond the end of the file");
-            return -1;
-        }
 #if HAVE_PREAD
         if (pread(((coda_bin_product *)product)->fd, dst, (size_t)length, (off_t)byte_offset) < 0)
         {

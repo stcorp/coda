@@ -43,7 +43,7 @@ if not exist "%ZLIB_LIB%"                     goto NO_ZLIB
 if not exist "%HDF4_LIB%"                     goto NO_HDF4
 if not exist "%HDF5_LIB%"                     goto NO_HDF5
 if not exist "%PYTHONHOME%\include\Python.h"  goto NO_PYTHON
-if not exist "%PYTHONHOME%\libs\python26.lib" goto NO_PYTHON
+if not exist "%PYTHONHOME%\libs\python27.lib" goto NO_PYTHON
 
 rem Configure the Visual Studio environment
 call "%VS90COMNTOOLS%\vsvars32.bat" > nul

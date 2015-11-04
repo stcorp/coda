@@ -136,6 +136,8 @@ static coda_type_record *empty_record_singleton[] =
 
 #define num_empty_record_singletons ((int)(sizeof(empty_record_singleton)/sizeof(empty_record_singleton[0])))
 
+static coda_type_raw *raw_file_singleton = NULL;
+
 static coda_type_special *no_data_singleton[] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
 #define num_no_data_singletons ((int)(sizeof(no_data_singleton)/sizeof(no_data_singleton[0])))
@@ -2126,6 +2128,35 @@ int coda_type_raw_validate(const coda_type_raw *type)
     return 0;
 }
 
+coda_type_raw *coda_type_raw_file_singleton(void)
+{
+    if (raw_file_singleton == NULL)
+    {
+        coda_type_raw *type;
+        coda_expression *byte_size_expr;
+
+        type = coda_type_raw_new(coda_format_binary);
+        if (type == NULL)
+        {
+            return NULL;
+        }
+        if (coda_expression_from_string("filesize()", &byte_size_expr) != 0)
+        {
+            raw_delete(type);
+        }
+        if (coda_type_set_byte_size_expression((coda_type *)type, byte_size_expr) != 0)
+        {
+            coda_expression_delete(byte_size_expr);
+            raw_delete(type);
+            return NULL;
+        }
+
+        raw_file_singleton = type;
+    }
+
+    return raw_file_singleton;
+}
+
 coda_type_special *coda_type_no_data_singleton(coda_format format)
 {
     assert(format < num_no_data_singletons);
@@ -2328,13 +2359,10 @@ coda_type_special *coda_type_time_new(coda_format format, coda_expression *value
 {
     coda_type_special *type;
 
-    if (format == coda_format_ascii || format == coda_format_binary || format == coda_format_cdf)
+    if (value_expr == NULL)
     {
-        if (value_expr == NULL)
-        {
-            coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "value_expr argument is NULL (%s:%u)", __FILE__, __LINE__);
-            return NULL;
-        }
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "value_expr argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return NULL;
     }
 
     type = (coda_type_special *)malloc(sizeof(coda_type_special));
@@ -2391,6 +2419,11 @@ int coda_type_time_add_ascii_float_mapping(coda_type_special *type, coda_ascii_f
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "cannot add floating point ascii mapping to '%s' special type",
                        coda_type_get_special_type_name(type->special_type));
+        return -1;
+    }
+    if (type->base_type == NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "special type does not have a base type");
         return -1;
     }
     if (type->base_type->type_class != coda_text_class)

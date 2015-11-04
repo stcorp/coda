@@ -41,18 +41,21 @@ struct coda_ascii_product_struct
     const coda_product_definition *product_definition;
     long *product_variable_size;
     int64_t **product_variable;
+    int64_t mem_size;
+    const uint8_t *mem_ptr;
 #if CODA_USE_QIAP
     void *qiap_info;
 #endif
 
-    int use_mmap;       /* indicates whether the file was opened using mmap */
-    int fd;     /* file handle when not using mmap */
+    /* fields shared with 'bin' product */
+    int use_mmap;       /* indicates whether to use mem_ptr (or the file descriptor 'fd') */
+    int fd;     /* file handle when not using mem_ptr */
 #ifdef WIN32
     HANDLE file;
     HANDLE file_mapping;
 #endif
-    const uint8_t *mmap_ptr;
 
+    /* 'ascii' product specific fields */
     eol_type end_of_line;
     long num_asciilines;
     long *asciiline_end_offset; /* byte offset of the termination of the line (eol or eof) */

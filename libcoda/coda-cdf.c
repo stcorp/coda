@@ -65,13 +65,14 @@ static int read_attribute_sub(coda_cdf_product *product_file, int64_t offset, in
                            (long)byte_size + 1, __FILE__, __LINE__);
             return -1;
         }
-        if (read_bytes((coda_product *)product_file, offset, byte_size, buffer) != 0)
+        if (read_bytes(product_file->raw_product, offset, byte_size, buffer) != 0)
         {
             free(buffer);
             return -1;
         }
         buffer[byte_size] = '\0';
-        *attribute = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)definition, buffer);
+        *attribute = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)definition, NULL,
+                                                              (coda_product *)product_file, buffer);
         free(buffer);
     }
     else
@@ -94,7 +95,7 @@ static int read_attribute_sub(coda_cdf_product *product_file, int64_t offset, in
             double as_double[1];
         } buffer;
 
-        if (read_bytes((coda_product *)product_file, offset, byte_size, buffer.as_int8) != 0)
+        if (read_bytes(product_file->raw_product, offset, byte_size, buffer.as_int8) != 0)
         {
             return -1;
         }
@@ -118,52 +119,50 @@ static int read_attribute_sub(coda_cdf_product *product_file, int64_t offset, in
                     exit(1);
             }
         }
-        if (definition->type_class == coda_real_class)
+        switch (definition->read_type)
         {
-            double value;
-
-            if (definition->read_type == coda_native_type_float)
-            {
-                value = buffer.as_float[0];
-            }
-            else
-            {
-                value = buffer.as_double[0];
-            }
-            *attribute = (coda_dynamic_type *)coda_mem_real_new((coda_type_number *)definition, value);
-        }
-        else
-        {
-            int64_t value;
-
-            switch (definition->read_type)
-            {
-                case coda_native_type_int8:
-                    value = buffer.as_int8[0];
-                    break;
-                case coda_native_type_uint8:
-                    value = buffer.as_uint8[0];
-                    break;
-                case coda_native_type_int16:
-                    value = buffer.as_int16[0];
-                    break;
-                case coda_native_type_uint16:
-                    value = buffer.as_uint16[0];
-                    break;
-                case coda_native_type_int32:
-                    value = buffer.as_int32[0];
-                    break;
-                case coda_native_type_uint32:
-                    value = buffer.as_uint32[0];
-                    break;
-                case coda_native_type_int64:
-                    value = buffer.as_int64[0];
-                    break;
-                default:
-                    assert(0);
-                    exit(1);
-            }
-            *attribute = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)definition, value);
+            case coda_native_type_int8:
+                *attribute = (coda_dynamic_type *)coda_mem_int8_new((coda_type_number *)definition, NULL,
+                                                                    (coda_product *)product_file, buffer.as_int8[0]);
+                break;
+            case coda_native_type_uint8:
+                *attribute = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)definition, NULL,
+                                                                     (coda_product *)product_file, buffer.as_uint8[0]);
+                break;
+            case coda_native_type_int16:
+                *attribute = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)definition, NULL,
+                                                                     (coda_product *)product_file, buffer.as_int16[0]);
+                break;
+            case coda_native_type_uint16:
+                *attribute = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)definition, NULL,
+                                                                      (coda_product *)product_file,
+                                                                      buffer.as_uint16[0]);
+                break;
+            case coda_native_type_int32:
+                *attribute = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)definition, NULL,
+                                                                     (coda_product *)product_file, buffer.as_int32[0]);
+                break;
+            case coda_native_type_uint32:
+                *attribute = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)definition, NULL,
+                                                                      (coda_product *)product_file,
+                                                                      buffer.as_uint32[0]);
+                break;
+            case coda_native_type_int64:
+                *attribute = (coda_dynamic_type *)coda_mem_int64_new((coda_type_number *)definition, NULL,
+                                                                     (coda_product *)product_file, buffer.as_int64[0]);
+                break;
+            case coda_native_type_float:
+                *attribute = (coda_dynamic_type *)coda_mem_float_new((coda_type_number *)definition, NULL,
+                                                                     (coda_product *)product_file, buffer.as_float[0]);
+                break;
+            case coda_native_type_double:
+                *attribute = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)definition, NULL,
+                                                                      (coda_product *)product_file,
+                                                                      buffer.as_double[0]);
+                break;
+            default:
+                assert(0);
+                exit(1);
         }
     }
     if (*attribute == NULL)
@@ -265,6 +264,21 @@ static int read_attribute(coda_cdf_product *product_file, int64_t offset, int32_
         coda_type_release(definition);
         return -1;
     }
+    if (type_class != coda_text_class)
+    {
+        if (coda_type_set_byte_size(definition, byte_size) != 0)
+        {
+            coda_type_release(definition);
+            return -1;
+        }
+#ifndef WORDS_BIGENDIAN
+        if (coda_type_number_set_endianness((coda_type_number *)definition, coda_little_endian) != 0)
+        {
+            coda_type_release(definition);
+            return -1;
+        }
+#endif
+    }
 
     if (num_elems != 1 && data_type != 51 && data_type != 52)
     {
@@ -291,7 +305,7 @@ static int read_attribute(coda_cdf_product *product_file, int64_t offset, int32_
             coda_type_release((coda_type *)array_definition);
             return -1;
         }
-        array = coda_mem_array_new(array_definition);
+        array = coda_mem_array_new(array_definition, NULL);
         if (array == NULL)
         {
             coda_type_release((coda_type *)array_definition);
@@ -341,7 +355,7 @@ static int read_AEDR(coda_cdf_product *product_file, int64_t offset, const char 
         return 0;
     }
 
-    if (read_bytes((coda_product *)product_file, offset + 8, 4, &record_type) < 0)
+    if (read_bytes(product_file->raw_product, offset + 8, 4, &record_type) < 0)
     {
         return -1;
     }
@@ -354,23 +368,23 @@ static int read_AEDR(coda_cdf_product *product_file, int64_t offset, const char 
         return -1;
     }
 
-    if (read_bytes((coda_product *)product_file, offset + 12, 8, &aedr_next) < 0)
+    if (read_bytes(product_file->raw_product, offset + 12, 8, &aedr_next) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 20, 4, &attr_num) < 0)
+    if (read_bytes(product_file->raw_product, offset + 20, 4, &attr_num) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 24, 4, &data_type) < 0)
+    if (read_bytes(product_file->raw_product, offset + 24, 4, &data_type) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 28, 4, &num) < 0)
+    if (read_bytes(product_file->raw_product, offset + 28, 4, &num) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 32, 4, &num_elems) < 0)
+    if (read_bytes(product_file->raw_product, offset + 32, 4, &num_elems) < 0)
     {
         return -1;
     }
@@ -448,7 +462,7 @@ static int read_ADR(coda_cdf_product *product_file, int64_t offset)
         return 0;
     }
 
-    if (read_bytes((coda_product *)product_file, offset + 8, 4, &record_type) < 0)
+    if (read_bytes(product_file->raw_product, offset + 8, 4, &record_type) < 0)
     {
         return -1;
     }
@@ -461,43 +475,43 @@ static int read_ADR(coda_cdf_product *product_file, int64_t offset)
         return -1;
     }
 
-    if (read_bytes((coda_product *)product_file, offset + 12, 8, &adr_next) < 0)
+    if (read_bytes(product_file->raw_product, offset + 12, 8, &adr_next) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 20, 8, &agredr_head) < 0)
+    if (read_bytes(product_file->raw_product, offset + 20, 8, &agredr_head) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 28, 4, &scope) < 0)
+    if (read_bytes(product_file->raw_product, offset + 28, 4, &scope) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 32, 4, &num) < 0)
+    if (read_bytes(product_file->raw_product, offset + 32, 4, &num) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 36, 4, &ngr_entries) < 0)
+    if (read_bytes(product_file->raw_product, offset + 36, 4, &ngr_entries) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 40, 4, &maxgr_entry) < 0)
+    if (read_bytes(product_file->raw_product, offset + 40, 4, &maxgr_entry) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 48, 8, &azedr_head) < 0)
+    if (read_bytes(product_file->raw_product, offset + 48, 8, &azedr_head) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 56, 4, &nz_entries) < 0)
+    if (read_bytes(product_file->raw_product, offset + 56, 4, &nz_entries) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 60, 4, &maxz_entry) < 0)
+    if (read_bytes(product_file->raw_product, offset + 60, 4, &maxz_entry) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 68, 256, name) < 0)
+    if (read_bytes(product_file->raw_product, offset + 68, 256, name) < 0)
     {
         return -1;
     }
@@ -555,7 +569,7 @@ static int read_VR(coda_cdf_product *product_file, coda_cdf_variable *variable, 
         return 0;
     }
 
-    if (read_bytes((coda_product *)product_file, offset + 8, 4, &record_type) < 0)
+    if (read_bytes(product_file->raw_product, offset + 8, 4, &record_type) < 0)
     {
         return -1;
     }
@@ -606,7 +620,7 @@ static int read_VR(coda_cdf_product *product_file, coda_cdf_variable *variable, 
             }
         }
 
-        if (read_bytes((coda_product *)product_file, offset + 16, 8, &csize) < 0)
+        if (read_bytes(product_file->raw_product, offset + 16, 8, &csize) < 0)
         {
             return -1;
         }
@@ -627,7 +641,7 @@ static int read_VR(coda_cdf_product *product_file, coda_cdf_variable *variable, 
                            (long)csize, __FILE__, __LINE__);
             return -1;
         }
-        if (read_bytes((coda_product *)product_file, offset, csize, buffer) < 0)
+        if (read_bytes(product_file->raw_product, offset, csize, buffer) < 0)
         {
             free(buffer);
             return -1;
@@ -725,7 +739,7 @@ static int read_VXR(coda_cdf_product *product_file, coda_cdf_variable *variable,
         return 0;
     }
 
-    if (read_bytes((coda_product *)product_file, offset + 8, 4, &record_type) < 0)
+    if (read_bytes(product_file->raw_product, offset + 8, 4, &record_type) < 0)
     {
         return -1;
     }
@@ -738,15 +752,15 @@ static int read_VXR(coda_cdf_product *product_file, coda_cdf_variable *variable,
         return -1;
     }
 
-    if (read_bytes((coda_product *)product_file, offset + 12, 8, &vxr_next) < 0)
+    if (read_bytes(product_file->raw_product, offset + 12, 8, &vxr_next) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 20, 4, &n_entries) < 0)
+    if (read_bytes(product_file->raw_product, offset + 20, 4, &n_entries) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 24, 4, &nused_entries) < 0)
+    if (read_bytes(product_file->raw_product, offset + 24, 4, &nused_entries) < 0)
     {
         return -1;
     }
@@ -763,15 +777,15 @@ static int read_VXR(coda_cdf_product *product_file, coda_cdf_variable *variable,
         int32_t vr_last;
         int64_t vr_offset;
 
-        if (read_bytes((coda_product *)product_file, offset + i * 4, 4, &vr_first) < 0)
+        if (read_bytes(product_file->raw_product, offset + i * 4, 4, &vr_first) < 0)
         {
             return -1;
         }
-        if (read_bytes((coda_product *)product_file, offset + (i + n_entries) * 4, 4, &vr_last) < 0)
+        if (read_bytes(product_file->raw_product, offset + (i + n_entries) * 4, 4, &vr_last) < 0)
         {
             return -1;
         }
-        if (read_bytes((coda_product *)product_file, offset + (i + n_entries) * 8, 8, &vr_offset) < 0)
+        if (read_bytes(product_file->raw_product, offset + (i + n_entries) * 8, 8, &vr_offset) < 0)
         {
             return -1;
         }
@@ -804,7 +818,7 @@ static int read_CPR(coda_cdf_product *product_file, int64_t offset)
         return 0;
     }
 
-    if (read_bytes((coda_product *)product_file, offset + 8, 4, &record_type) < 0)
+    if (read_bytes(product_file->raw_product, offset + 8, 4, &record_type) < 0)
     {
         return -1;
     }
@@ -817,7 +831,7 @@ static int read_CPR(coda_cdf_product *product_file, int64_t offset)
         return -1;
     }
 
-    if (read_bytes((coda_product *)product_file, offset + 12, 4, &ctype) < 0)
+    if (read_bytes(product_file->raw_product, offset + 12, 4, &ctype) < 0)
     {
         return -1;
     }
@@ -864,7 +878,7 @@ static int read_VDR(coda_cdf_product *product_file, int64_t offset, int is_zvar)
         return 0;
     }
 
-    if (read_bytes((coda_product *)product_file, offset + 8, 4, &record_type) < 0)
+    if (read_bytes(product_file->raw_product, offset + 8, 4, &record_type) < 0)
     {
         return -1;
     }
@@ -888,51 +902,51 @@ static int read_VDR(coda_cdf_product *product_file, int64_t offset, int is_zvar)
         }
     }
 
-    if (read_bytes((coda_product *)product_file, offset + 12, 8, &vdr_next) < 0)
+    if (read_bytes(product_file->raw_product, offset + 12, 8, &vdr_next) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 20, 4, &data_type) < 0)
+    if (read_bytes(product_file->raw_product, offset + 20, 4, &data_type) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 24, 4, &max_rec) < 0)
+    if (read_bytes(product_file->raw_product, offset + 24, 4, &max_rec) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 28, 8, &vxr_head) < 0)
+    if (read_bytes(product_file->raw_product, offset + 28, 8, &vxr_head) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 36, 8, &vxr_tail) < 0)
+    if (read_bytes(product_file->raw_product, offset + 36, 8, &vxr_tail) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 44, 4, &flags) < 0)
+    if (read_bytes(product_file->raw_product, offset + 44, 4, &flags) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 48, 4, &srecords) < 0)
+    if (read_bytes(product_file->raw_product, offset + 48, 4, &srecords) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 64, 4, &num_elems) < 0)
+    if (read_bytes(product_file->raw_product, offset + 64, 4, &num_elems) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 68, 4, &num) < 0)
+    if (read_bytes(product_file->raw_product, offset + 68, 4, &num) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 72, 8, &cpr_spr_offset) < 0)
+    if (read_bytes(product_file->raw_product, offset + 72, 8, &cpr_spr_offset) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 80, 4, &blocking_factor) < 0)
+    if (read_bytes(product_file->raw_product, offset + 80, 4, &blocking_factor) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 84, 256, name) < 0)
+    if (read_bytes(product_file->raw_product, offset + 84, 256, name) < 0)
     {
         return -1;
     }
@@ -959,7 +973,7 @@ static int read_VDR(coda_cdf_product *product_file, int64_t offset, int is_zvar)
     }
     if (is_zvar)
     {
-        if (read_bytes((coda_product *)product_file, offset + 340, 4, &num_dims) < 0)
+        if (read_bytes(product_file->raw_product, offset + 340, 4, &num_dims) < 0)
         {
             return -1;
         }
@@ -982,7 +996,7 @@ static int read_VDR(coda_cdf_product *product_file, int64_t offset, int is_zvar)
         {
             for (i = 0; i < num_dims; i++)
             {
-                if (read_bytes((coda_product *)product_file, offset + i * 4, 4, &zdim_sizes[i]) < 0)
+                if (read_bytes(product_file->raw_product, offset + i * 4, 4, &zdim_sizes[i]) < 0)
                 {
                     return -1;
                 }
@@ -1002,7 +1016,7 @@ static int read_VDR(coda_cdf_product *product_file, int64_t offset, int is_zvar)
     {
         for (i = 0; i < num_dims; i++)
         {
-            if (read_bytes((coda_product *)product_file, offset + i * 4, 4, &dim_varys[i]) < 0)
+            if (read_bytes(product_file->raw_product, offset + i * 4, 4, &dim_varys[i]) < 0)
             {
                 return -1;
             }
@@ -1081,7 +1095,7 @@ static int read_GDR(coda_cdf_product *product_file, int64_t offset)
     int32_t num_attr;
     int32_t nz_vars;
 
-    if (read_bytes((coda_product *)product_file, offset + 8, 4, &record_type) < 0)
+    if (read_bytes(product_file->raw_product, offset + 8, 4, &record_type) < 0)
     {
         return -1;
     }
@@ -1094,35 +1108,35 @@ static int read_GDR(coda_cdf_product *product_file, int64_t offset)
         return -1;
     }
 
-    if (read_bytes((coda_product *)product_file, offset + 12, 8, &rvdr_head) < 0)
+    if (read_bytes(product_file->raw_product, offset + 12, 8, &rvdr_head) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 20, 8, &zvdr_head) < 0)
+    if (read_bytes(product_file->raw_product, offset + 20, 8, &zvdr_head) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 28, 8, &adr_head) < 0)
+    if (read_bytes(product_file->raw_product, offset + 28, 8, &adr_head) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 36, 8, &eof) < 0)
+    if (read_bytes(product_file->raw_product, offset + 36, 8, &eof) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 44, 4, &nr_vars) < 0)
+    if (read_bytes(product_file->raw_product, offset + 44, 4, &nr_vars) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 48, 4, &num_attr) < 0)
+    if (read_bytes(product_file->raw_product, offset + 48, 4, &num_attr) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 56, 4, &product_file->rnum_dims) < 0)
+    if (read_bytes(product_file->raw_product, offset + 56, 4, &product_file->rnum_dims) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, offset + 60, 4, &nz_vars) < 0)
+    if (read_bytes(product_file->raw_product, offset + 60, 4, &nz_vars) < 0)
     {
         return -1;
     }
@@ -1180,7 +1194,7 @@ static int read_file(coda_cdf_product *product_file)
     int32_t flags;
 
     /* CDF Descriptor Record */
-    if (read_bytes((coda_product *)product_file, 16, 4, &record_type) < 0)
+    if (read_bytes(product_file->raw_product, 16, 4, &record_type) < 0)
     {
         return -1;
     }
@@ -1193,27 +1207,27 @@ static int read_file(coda_cdf_product *product_file)
         return -1;
     }
 
-    if (read_bytes((coda_product *)product_file, 20, 8, &gdr_offset) < 0)
+    if (read_bytes(product_file->raw_product, 20, 8, &gdr_offset) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, 28, 4, &product_file->cdf_version) < 0)
+    if (read_bytes(product_file->raw_product, 28, 4, &product_file->cdf_version) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, 32, 4, &product_file->cdf_release) < 0)
+    if (read_bytes(product_file->raw_product, 32, 4, &product_file->cdf_release) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, 36, 4, &encoding) < 0)
+    if (read_bytes(product_file->raw_product, 36, 4, &encoding) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, 40, 4, &flags) < 0)
+    if (read_bytes(product_file->raw_product, 40, 4, &flags) < 0)
     {
         return -1;
     }
-    if (read_bytes((coda_product *)product_file, 52, 4, &product_file->cdf_increment) < 0)
+    if (read_bytes(product_file->raw_product, 52, 4, &product_file->cdf_increment) < 0)
     {
         return -1;
     }
@@ -1300,11 +1314,11 @@ int coda_cdf_open(const char *filename, int64_t file_size, const coda_product_de
     product_file->product_definition = definition;
     product_file->product_variable_size = NULL;
     product_file->product_variable = NULL;
+    product_file->mem_size = 0;
+    product_file->mem_ptr = NULL;
 #if CODA_USE_QIAP
     product_file->qiap_info = NULL;
 #endif
-    product_file->use_mmap = 0;
-    product_file->fd = -1;
 
     product_file->filename = strdup(filename);
     if (product_file->filename == NULL)
@@ -1315,14 +1329,14 @@ int coda_cdf_open(const char *filename, int64_t file_size, const coda_product_de
         return -1;
     }
 
-    if (coda_bin_product_open((coda_bin_product *)product_file) != 0)
+    if (coda_bin_open_raw(filename, file_size, &product_file->raw_product) != 0)
     {
         coda_cdf_close((coda_product *)product_file);
         return -1;
     }
 
     /* magic */
-    if (read_bytes((coda_product *)product_file, 0, 8, magic) < 0)
+    if (read_bytes(product_file->raw_product, 0, 8, magic) < 0)
     {
         coda_cdf_close((coda_product *)product_file);
         return -1;
@@ -1354,7 +1368,7 @@ int coda_cdf_open(const char *filename, int64_t file_size, const coda_product_de
         coda_cdf_close((coda_product *)product_file);
         return -1;
     }
-    product_file->root_type = coda_mem_record_new(root_definition);
+    product_file->root_type = coda_mem_record_new(root_definition, NULL);
     if (product_file->root_type == NULL)
     {
         coda_cdf_close((coda_product *)product_file);
@@ -1378,19 +1392,17 @@ int coda_cdf_close(coda_product *product)
 {
     coda_cdf_product *product_file = (coda_cdf_product *)product;
 
-    if (coda_bin_product_close((coda_bin_product *)product_file) != 0)
+    if (product_file->filename != NULL)
     {
-        return -1;
+        free(product_file->filename);
     }
-
     if (product_file->root_type != NULL)
     {
         coda_dynamic_type_delete((coda_dynamic_type *)product_file->root_type);
     }
-
-    if (product_file->filename != NULL)
+    if (product_file->raw_product != NULL)
     {
-        free(product_file->filename);
+        coda_bin_close((coda_product *)product_file->raw_product);
     }
 
     free(product_file);

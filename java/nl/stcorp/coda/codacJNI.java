@@ -14,6 +14,9 @@ public class codacJNI {
   public final static native void delete_coda_cursor(long jarg1);
   public final static native long deepcopy_coda_cursor(long jarg1);
   public final static native String helper_coda_cursor_read_string(long jarg1);
+  public final static native String helper_coda_time_parts_to_string(int jarg1, int jarg2, int jarg3, int jarg4, int jarg5, int jarg6, int jarg7, String jarg8);
+  public final static native String helper_coda_time_double_to_string(double jarg1, String jarg2);
+  public final static native String helper_coda_time_double_to_string_utc(double jarg1, String jarg2);
   public final static native String helper_coda_time_to_string(double jarg1);
   public final static native String helper_coda_time_to_utcstring(double jarg1);
   public final static native void done();
@@ -49,6 +52,13 @@ public class codacJNI {
   public final static native int set_option_use_fast_size_expressions(int jarg1) throws nl.stcorp.coda.CodaException;
   public final static native int set_option_use_mmap(int jarg1) throws nl.stcorp.coda.CodaException;
   public final static native int c_index_to_fortran_index(int jarg1, int[] jarg2, int jarg3) throws nl.stcorp.coda.CodaException;
+  public final static native int time_double_to_parts(double jarg1, int[] jarg2, int[] jarg3, int[] jarg4, int[] jarg5, int[] jarg6, int[] jarg7, int[] jarg8) throws nl.stcorp.coda.CodaException;
+  public final static native int time_double_to_parts_utc(double jarg1, int[] jarg2, int[] jarg3, int[] jarg4, int[] jarg5, int[] jarg6, int[] jarg7, int[] jarg8) throws nl.stcorp.coda.CodaException;
+  public final static native int time_parts_to_double(int jarg1, int jarg2, int jarg3, int jarg4, int jarg5, int jarg6, int jarg7, double[] jarg8) throws nl.stcorp.coda.CodaException;
+  public final static native int time_parts_to_double_utc(int jarg1, int jarg2, int jarg3, int jarg4, int jarg5, int jarg6, int jarg7, double[] jarg8) throws nl.stcorp.coda.CodaException;
+  public final static native int time_string_to_parts(String jarg1, String jarg2, int[] jarg3, int[] jarg4, int[] jarg5, int[] jarg6, int[] jarg7, int[] jarg8, int[] jarg9) throws nl.stcorp.coda.CodaException;
+  public final static native int time_string_to_double(String jarg1, String jarg2, double[] jarg3) throws nl.stcorp.coda.CodaException;
+  public final static native int time_string_to_double_utc(String jarg1, String jarg2, double[] jarg3) throws nl.stcorp.coda.CodaException;
   public final static native int datetime_to_double(int jarg1, int jarg2, int jarg3, int jarg4, int jarg5, int jarg6, int jarg7, double[] jarg8) throws nl.stcorp.coda.CodaException;
   public final static native int double_to_datetime(double jarg1, int[] jarg2, int[] jarg3, int[] jarg4, int[] jarg5, int[] jarg6, int[] jarg7, int[] jarg8) throws nl.stcorp.coda.CodaException;
   public final static native int string_to_time(String jarg1, double[] jarg2) throws nl.stcorp.coda.CodaException;

@@ -63,7 +63,6 @@ int coda_xml_open(const char *filename, int64_t file_size, const coda_product_de
                   coda_product **product)
 {
     coda_xml_product *product_file;
-    int open_flags;
 
     product_file = (coda_xml_product *)malloc(sizeof(coda_xml_product));
     if (product_file == NULL)
@@ -79,11 +78,12 @@ int coda_xml_open(const char *filename, int64_t file_size, const coda_product_de
     product_file->product_definition = definition;
     product_file->product_variable_size = NULL;
     product_file->product_variable = NULL;
+    product_file->mem_size = 0;
+    product_file->mem_ptr = NULL;
 #if CODA_USE_QIAP
     product_file->qiap_info = NULL;
 #endif
-    product_file->use_mmap = 0;
-    product_file->fd = -1;
+    product_file->raw_product = NULL;
 
     product_file->filename = strdup(filename);
     if (product_file->filename == NULL)
@@ -94,14 +94,8 @@ int coda_xml_open(const char *filename, int64_t file_size, const coda_product_de
         return -1;
     }
 
-    open_flags = O_RDONLY;
-#ifdef WIN32
-    open_flags |= _O_BINARY;
-#endif
-    product_file->fd = open(product_file->filename, open_flags);
-    if (product_file->fd < 0)
+    if (coda_bin_open_raw(filename, file_size, &product_file->raw_product) != 0)
     {
-        coda_set_error(CODA_ERROR_FILE_OPEN, "could not open file %s (%s)", product_file->filename, strerror(errno));
         coda_xml_close((coda_product *)product_file);
         return -1;
     }
@@ -129,9 +123,9 @@ int coda_xml_close(coda_product *product)
     {
         coda_dynamic_type_delete(product_file->root_type);
     }
-    if (product_file->fd >= 0)
+    if (product_file->raw_product != NULL)
     {
-        close(product_file->fd);
+        coda_bin_close((coda_product *)product_file->raw_product);
     }
 
     free(product_file);
@@ -595,4 +589,14 @@ int coda_xml_detection_tree_add_rule(void *detection_tree, coda_detection_rule *
 coda_xml_detection_node *coda_xml_get_detection_tree(void)
 {
     return (coda_xml_detection_node *)coda_global_data_dictionary->xml_detection_tree;
+}
+
+int coda_xml_cursor_set_product(coda_cursor *cursor, coda_product *product)
+{
+    cursor->product = product;
+    cursor->n = 1;
+    cursor->stack[0].type = product->root_type;
+    cursor->stack[0].index = -1;        /* there is no index for the root of the product */
+    cursor->stack[0].bit_offset = 0;
+    return 0;
 }

@@ -439,7 +439,7 @@ int coda_cdf_variable_add_attribute(coda_cdf_variable *type, const char *real_na
                     return -1;
                 }
             }
-            type->attributes = coda_mem_record_new(type->definition->attributes);
+            type->attributes = coda_mem_record_new(type->definition->attributes, NULL);
             if (type->attributes == NULL)
             {
                 return -1;

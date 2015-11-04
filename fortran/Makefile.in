@@ -30,7 +30,7 @@ all: example
 coda_fortran.o: coda_fortran.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c coda_fortran.c
 
-example.o: example.f
+example.o: example.f coda.inc
 	$(F77) $(FFLAGS) -c example.f
 
 example: example.o coda_fortran.o

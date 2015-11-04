@@ -201,8 +201,8 @@ int coda_grib_cursor_read_float(const coda_cursor *cursor, float *dst)
             index = value_index;
         }
         buffer = &((uint8_t *)&ivalue)[8 - bit_size_to_byte_size(array->element_bit_size)];
-        if (read_bits(cursor->product, array->bit_offset + index * array->element_bit_size, array->element_bit_size,
-                      buffer) != 0)
+        if (read_bits(((coda_grib_product *)cursor->product)->raw_product,
+                      array->bit_offset + index * array->element_bit_size, array->element_bit_size, buffer) != 0)
         {
             return -1;
         }
@@ -215,7 +215,8 @@ int coda_grib_cursor_read_float(const coda_cursor *cursor, float *dst)
     }
     else
     {
-        if (read_bytes(cursor->product, (array->bit_offset >> 3) + index * 4, 4, dst) != 0)
+        if (read_bytes(((coda_grib_product *)cursor->product)->raw_product, (array->bit_offset >> 3) + index * 4, 4,
+                       dst) != 0)
         {
             return -1;
         }

@@ -26,10 +26,12 @@
 void coda_mem_done(void);
 
 void coda_mem_type_delete(coda_dynamic_type *type);
-int coda_mem_type_update(coda_dynamic_type **type, coda_type **definition);
+
+void coda_mem_cursor_update_offset(coda_cursor *cursor);
 
 int coda_mem_cursor_goto_record_field_by_index(coda_cursor *cursor, long index);
 int coda_mem_cursor_goto_next_record_field(coda_cursor *cursor);
+int coda_mem_cursor_goto_available_union_field(coda_cursor *cursor);
 int coda_mem_cursor_goto_array_element(coda_cursor *cursor, int num_subs, const long subs[]);
 int coda_mem_cursor_goto_array_element_by_index(coda_cursor *cursor, long index);
 int coda_mem_cursor_goto_next_array_element(coda_cursor *cursor);
@@ -39,6 +41,7 @@ int coda_mem_cursor_get_string_length(const coda_cursor *cursor, long *length);
 int coda_mem_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size);
 int coda_mem_cursor_get_num_elements(const coda_cursor *cursor, long *num_elements);
 int coda_mem_cursor_get_record_field_available_status(const coda_cursor *cursor, long index, int *available);
+int coda_mem_cursor_get_available_union_field_index(const coda_cursor *cursor, long *index);
 int coda_mem_cursor_get_array_dim(const coda_cursor *cursor, int *num_dims, long dim[]);
 
 int coda_mem_cursor_read_int8(const coda_cursor *cursor, int8_t *dst);
@@ -56,16 +59,16 @@ int coda_mem_cursor_read_string(const coda_cursor *cursor, char *dst, long dst_s
 int coda_mem_cursor_read_bits(const coda_cursor *cursor, uint8_t *dst, int64_t bit_offset, int64_t bit_length);
 int coda_mem_cursor_read_bytes(const coda_cursor *cursor, uint8_t *dst, int64_t offset, int64_t length);
 
-int coda_mem_cursor_read_int8_array(const coda_cursor *cursor, int8_t *dst);
-int coda_mem_cursor_read_uint8_array(const coda_cursor *cursor, uint8_t *dst);
-int coda_mem_cursor_read_int16_array(const coda_cursor *cursor, int16_t *dst);
-int coda_mem_cursor_read_uint16_array(const coda_cursor *cursor, uint16_t *dst);
-int coda_mem_cursor_read_int32_array(const coda_cursor *cursor, int32_t *dst);
-int coda_mem_cursor_read_uint32_array(const coda_cursor *cursor, uint32_t *dst);
-int coda_mem_cursor_read_int64_array(const coda_cursor *cursor, int64_t *dst);
-int coda_mem_cursor_read_uint64_array(const coda_cursor *cursor, uint64_t *dst);
-int coda_mem_cursor_read_float_array(const coda_cursor *cursor, float *dst);
-int coda_mem_cursor_read_double_array(const coda_cursor *cursor, double *dst);
-int coda_mem_cursor_read_char_array(const coda_cursor *cursor, char *dst);
+int coda_mem_cursor_read_int8_array(const coda_cursor *cursor, int8_t *dst, coda_array_ordering array_ordering);
+int coda_mem_cursor_read_uint8_array(const coda_cursor *cursor, uint8_t *dst, coda_array_ordering array_ordering);
+int coda_mem_cursor_read_int16_array(const coda_cursor *cursor, int16_t *dst, coda_array_ordering array_ordering);
+int coda_mem_cursor_read_uint16_array(const coda_cursor *cursor, uint16_t *dst, coda_array_ordering array_ordering);
+int coda_mem_cursor_read_int32_array(const coda_cursor *cursor, int32_t *dst, coda_array_ordering array_ordering);
+int coda_mem_cursor_read_uint32_array(const coda_cursor *cursor, uint32_t *dst, coda_array_ordering array_ordering);
+int coda_mem_cursor_read_int64_array(const coda_cursor *cursor, int64_t *dst, coda_array_ordering array_ordering);
+int coda_mem_cursor_read_uint64_array(const coda_cursor *cursor, uint64_t *dst, coda_array_ordering array_ordering);
+int coda_mem_cursor_read_float_array(const coda_cursor *cursor, float *dst, coda_array_ordering array_ordering);
+int coda_mem_cursor_read_double_array(const coda_cursor *cursor, double *dst, coda_array_ordering array_ordering);
+int coda_mem_cursor_read_char_array(const coda_cursor *cursor, char *dst, coda_array_ordering array_ordering);
 
 #endif

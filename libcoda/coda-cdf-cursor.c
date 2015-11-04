@@ -226,7 +226,8 @@ static int read_array(const coda_cursor *cursor, void *dst)
         }
         else
         {
-            if (read_bytes(cursor->product, variable->offset[i], record_size, &((uint8_t *)dst)[i * record_size]) != 0)
+            if (read_bytes(((coda_cdf_product *)cursor->product)->raw_product, variable->offset[i], record_size,
+                           &((uint8_t *)dst)[i * record_size]) != 0)
             {
                 return -1;
             }
@@ -319,7 +320,7 @@ static int read_basic_type(const coda_cursor *cursor, void *dst, long size_bound
     }
     else
     {
-        if (read_bytes(cursor->product, offset, value_size, dst) != 0)
+        if (read_bytes(((coda_cdf_product *)cursor->product)->raw_product, offset, value_size, dst) != 0)
         {
             return -1;
         }

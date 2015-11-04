@@ -155,27 +155,433 @@ public class Coda
      * Retrieve the number of seconds since Jan 1st 2000 for a certain date and
      * time.
      * 
-     * @warning This function does _not_ perform any leap second correction. The
-     *          returned value is therefore not an exact UTC time
-     * @param YEAR
+     * @warning This function does _not_ perform any leap second correction.
+     *          The returned value is just a straightforward conversion using
+     *          86400 seconds per day.
+     * @param year
      *            The year.
-     * @param MONTH
+     * @param month
      *            The month of the year (1 - 12).
-     * @param DAY
+     * @param day
      *            The day of the month (1 - 31).
-     * @param HOUR
+     * @param hour
      *            The hour of the day (0 - 23).
-     * @param MINUTE
+     * @param minute
      *            The minute of the hour (0 - 59).
-     * @param SECOND
+     * @param second
      *            The second of the minute (0 - 59).
-     * @param MUSEC
+     * @param musec
      *            The microseconds of the second (0 - 999999).
      * @return Variable where the amount of seconds since Jan
      *            1st 2000 will be stored.
      * @throws CodaException
      *             If an error occurred.
      */
+    public static double time_parts_to_double(int year, int month, int day,
+            int hour, int minute, int second, int musec) throws CodaException
+    {
+        double[] datetime = new double[1];
+        codac.time_parts_to_double(year,
+                month,
+                day,
+                hour,
+                minute,
+                second,
+                musec,
+                datetime);
+        return datetime[0];
+    }
+
+
+    /**
+     * Retrieve the number of TAI seconds since Jan 1st 2000 for a certain
+     * UTC date and time using leap second correction. This function assumes
+     * the input to be an UTC datetime. The returned value will be the 
+     * seconds since 2000-01-01 in the TAI time system (using proper leap
+     * second handling for the UTC to TAI conversion).
+     * For example:
+     * 1972-01-01 00:00:00 UTC will be -883612790
+     * 2000-01-01 00:00:00 UTC will be 32
+     * 2008-12-31 23:59:59 UTC will be 284083232
+     * 2008-12-31 23:59:60 UTC will be 284083233
+     * 2009-01-01 00:00:00 UTC will be 284083234
+     * @warning For dates before 1972-01-01 UTC a fixed leap second offset of
+     *          10 is used.
+     * @note CODA has a built in table of leap seconds. To use a more recent
+     *       leap second table, download the most recent file from
+     *       ftp://maia.usno.navy.mil/ser7/tai-utc.dat and set the environment
+     *       variable CODA_LEAP_SECOND_TABLE with a full path to this file.
+     * @param year
+     *            The year.
+     * @param month
+     *            The month of the year (1 - 12).
+     * @param day
+     *            The day of the month (1 - 31).
+     * @param hour
+     *            The hour of the day (0 - 23).
+     * @param minute
+     *            The minute of the hour (0 - 59).
+     * @param second
+     *            The second of the minute (0 - 59).
+     * @param musec
+     *            The microseconds of the second (0 - 999999).
+     * @return Variable where the amount of seconds since Jan
+     *            1st 2000 will be stored.
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public static double time_parts_to_double_utc(int year, int month, int day,
+            int hour, int minute, int second, int musec) throws CodaException
+    {
+        double[] datetime = new double[1];
+        codac.time_parts_to_double_utc(year,
+                month,
+                day,
+                hour,
+                minute,
+                second,
+                musec,
+                datetime);
+        return datetime[0];
+    }
+
+
+    /**
+     * Retrieve the decomposed date corresponding with the given amount of
+     * seconds since Jan 1st 2000.
+     * 
+     * @warning This function does _not_ perform any leap second correction.
+     *          The returned value is just a straightforward conversion using
+     *          86400 seconds per day.
+     * @param datetime
+     *            Floating point value representing the number of seconds since
+     *            January 1st, 2000 00:00:00.000000.
+     * @return A 7-element array containing the following representation of 
+     *            the date:
+     * \arg \c [0] year - The year.
+     * \arg \c [1] month - The month of the year (1 - 12)
+     * \arg \c [2] day - The day of the month (1 - 31)
+     * \arg \c [3] hour - The hour of the day (0 - 23)
+     * \arg \c [4] minute - The minute of the hour (0 - 59)
+     * \arg \c [5] second - The second of the minute (0 - 59)
+     * \arg \c [6] musec - The microseconds of the second (0 - 999999)
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public static int[] time_double_to_parts(double datetime) throws CodaException
+    {
+        int[] year = new int[1];
+        int[] month = new int[1];
+        int[] day = new int[1];
+        int[] hour = new int[1];
+        int[] minute = new int[1];
+        int[] second = new int[1];
+        int[] musec = new int[1];
+
+        codac.time_double_to_parts(datetime,
+                year,
+                month,
+                day,
+                hour,
+                minute,
+                second,
+                musec);
+        int[] result = new int[7];
+        result[0] = year[0];
+        result[1] = month[0];
+        result[2] = day[0];
+        result[3] = hour[0];
+        result[4] = minute[0];
+        result[5] = second[0];
+        result[6] = musec[0];
+        return result;
+    }
+
+
+    /**
+     * Retrieve the decomposed UTC date corresponding with the given amount of
+     * TAI seconds since Jan 1st 2000.
+     * This function assumes the input to by the number of seconds since
+     * 2000-01-01 in the TAI system. The returned date/time components will be
+     * the corresponding UTC datetime (using proper leap second handling for
+     * the TAI to UTC conversion).
+     * For example:
+     * -88361290 will be 1972-01-01 00:00:00 UTC
+     * 0 will be 1999-31-12 23:59:28 UTC
+     * 284083232 will be 2008-12-31 23:59:59 UTC
+     * 284083233 will be 2008-12-31 23:59:60 UTC
+     * 284083234 will be 2009-01-01 00:00:00 UTC
+     * @warning For dates before 1972-01-01 UTC a fixed leap second offset of
+     *          10 is used.
+     * @note CODA has a built in table of leap seconds. To use a more recent
+     *       leap second table, download the most recent file from
+     *       ftp://maia.usno.navy.mil/ser7/tai-utc.dat and set the environment
+     *       variable CODA_LEAP_SECOND_TABLE with a full path to this file.
+     * @param datetime
+     *            Floating point value representing the number of seconds since
+     *            January 1st, 2000 00:00:00.000000.
+     * @return A 7-element array containing the following representation of 
+     *            the date:
+     * \arg \c [0] year - The year.
+     * \arg \c [1] month - The month of the year (1 - 12)
+     * \arg \c [2] day - The day of the month (1 - 31)
+     * \arg \c [3] hour - The hour of the day (0 - 23)
+     * \arg \c [4] minute - The minute of the hour (0 - 59)
+     * \arg \c [5] second - The second of the minute (0 - 59)
+     * \arg \c [6] musec - The microseconds of the second (0 - 999999)
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public static int[] time_double_to_parts_utc(double datetime) throws CodaException
+    {
+        int[] year = new int[1];
+        int[] month = new int[1];
+        int[] day = new int[1];
+        int[] hour = new int[1];
+        int[] minute = new int[1];
+        int[] second = new int[1];
+        int[] musec = new int[1];
+
+        codac.time_double_to_parts(datetime,
+                year,
+                month,
+                day,
+                hour,
+                minute,
+                second,
+                musec);
+        int[] result = new int[7];
+        result[0] = year[0];
+        result[1] = month[0];
+        result[2] = day[0];
+        result[3] = hour[0];
+        result[4] = minute[0];
+        result[5] = second[0];
+        result[6] = musec[0];
+        return result;
+    }
+
+
+    /**
+     * Create a string representation for a specific data and time.
+     * The string will be formatted using the format that is provided as
+     * first parameter. The time string will be stored in the \a str
+     * parameter. This parameter should be allocated by the user and should
+     * be long enough to hold the formatted time string and a 0 termination
+     * character.
+     *
+     * The specification for the time format parameter is the same as the
+     * <a href="../codadef/codadef-expressions.html#timeformat">date/time
+     * format patterns in coda expressions</a>.
+     *
+     * @param year
+     *            The year.
+     * @param month
+     *            The month of the year (1 - 12).
+     * @param day
+     *            The day of the month (1 - 31).
+     * @param hour
+     *            The hour of the day (0 - 23).
+     * @param minute
+     *            The minute of the hour (0 - 59).
+     * @param second
+     *            The second of the minute (0 - 59).
+     * @param musec
+     *            The microseconds of the second (0 - 999999).
+     * @param format
+     *            Date/time format to use for the string representation of
+     *            the datetime value.
+     * @return Variable where the amount of seconds since Jan
+     *            1st 2000 will be stored.
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public static String time_parts_to_string(int year, int month, int day,
+            int hour, int minute, int second, int musec, String format) throws CodaException
+    {
+        return codac.helper_coda_time_parts_to_string(year,
+                month,
+                day,
+                hour,
+                minute,
+                second,
+                musec,
+                format);
+    }
+
+    /**
+     * Convert a time string to a date and time using a specified format.
+     * The string will be parsed using the format that is provided as first
+     * parameter. This can be a '|' separated list of formats that will be
+     * tried in sequence until one succeeds.
+     *
+     * The specification for the time format parameter is the same as the
+     * <a href="../codadef/codadef-expressions.html#timeformat">date/time
+     * format patterns in coda expressions</a>.
+     *
+     * @param format
+     *            Date/time format to use for the string representation of the
+     *            datetime value.
+     * @param str
+     *            String representation of the floating point time value.
+     * @return A 7-element array containing the following representation of 
+     *            the date:
+     * \arg \c [0] year - The year.
+     * \arg \c [1] month - The month of the year (1 - 12)
+     * \arg \c [2] day - The day of the month (1 - 31)
+     * \arg \c [3] hour - The hour of the day (0 - 23)
+     * \arg \c [4] minute - The minute of the hour (0 - 59)
+     * \arg \c [5] second - The second of the minute (0 - 59)
+     * \arg \c [6] musec - The microseconds of the second (0 - 999999)
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public static int[] time_string_to_parts(String format, String str) throws CodaException
+    {
+        int[] year = new int[1];
+        int[] month = new int[1];
+        int[] day = new int[1];
+        int[] hour = new int[1];
+        int[] minute = new int[1];
+        int[] second = new int[1];
+        int[] musec = new int[1];
+
+        codac.time_string_to_parts(format,
+                str,
+                year,
+                month,
+                day,
+                hour,
+                minute,
+                second,
+                musec);
+        int[] result = new int[7];
+        result[0] = year[0];
+        result[1] = month[0];
+        result[2] = day[0];
+        result[3] = hour[0];
+        result[4] = minute[0];
+        result[5] = second[0];
+        result[6] = musec[0];
+        return result;
+    }
+
+    /**
+     * Convert a floating point time value to a string using a specified
+     * format.
+     * The string will be formatted using the format that is provided as second
+     * parameter.
+     * The time string will be stored in the \a str parameter. This parameter
+     * should be allocated by the user and should be long enough to hold the
+     * formatted time string and a 0 termination character.
+     *
+     * The specification for the time format parameter is the same as the
+     * <a href="../codadef/codadef-expressions.html#timeformat">date/time
+     * format patterns in coda expressions</a>.
+     * 
+     * @param datetime
+     *            Floating point value representing the number of seconds since
+     *            January 1st, 2000 00:00:00.000000.
+     * @param format
+     *            Date/time format to use for the string representation of the
+     *            datetime value.
+     * @return String representation of the floating point time value.
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public static String time_double_to_string(double datetime, String format) throws CodaException
+    {
+        return codac.helper_coda_time_double_to_string(datetime, format);
+    }
+
+    /**
+     * Convert a floating point TAI time value to a UTC string.
+     * The string will be formatted using the format that is provided as
+     * second parameter.
+     * The time string will be stored in the \a str parameter. This parameter
+     * should be allocated by the user and should be long enough to hold the
+     * formatted time string and a 0 termination character.
+     *
+     * The specification for the time format parameter is the same as the
+     * <a href="../codadef/codadef-expressions.html#timeformat">date/time
+     * format patterns in coda expressions</a>.
+     *
+     * This function performs proper leap second correction in the conversion
+     * from TAI to UTC (see also \a time_double_to_parts_utc()).
+     * 
+     * @param datetime
+     *            Floating point value representing the number of seconds since
+     *            January 1st, 2000 00:00:00.000000.
+     * @param format
+     *            Date/time format to use for the string representation of the
+     *            datetime value.
+     * @return String representation of the floating point time value.
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public static String time_double_to_string_utc(double datetime, String format) throws CodaException
+    {
+        return codac.helper_coda_time_double_to_string_utc(datetime, format);
+    }
+
+    /**
+     * Convert a time string to a floating point time value.
+     * The string will be parsed using the format that is provided as first
+     * parameter. This can be a '|' separated list of formats that will be
+     * tried in sequence until one succeeds.
+     *
+     * The specification for the time format parameter is the same as the
+     * <a href="../codadef/codadef-expressions.html#timeformat">date/time
+     * format patterns in coda expressions</a>.
+     *
+     * @param format
+     *            Date/time format to use for the string representation of the
+     *            datetime value.
+     * @param str
+     *            String containing the time in one of the supported formats.
+     * @return datetime Floating point value representing the number of seconds
+     *         since January 1st, 2000 00:00:00.000000.
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public static double time_string_to_double(String format, String str) throws CodaException
+    {
+        double[] datetime = new double[1];
+        codac.time_string_to_double(format,	 str, datetime);
+        return datetime[0];
+    }
+
+    /**
+     * Convert a UTC time string to a TAI floating point time value.
+     * The string will be parsed using the format that is provided as first
+     * parameter. This can be a '|' separated list of formats that will be
+     * tried in sequence until one succeeds.
+     *
+     * The specification for the time format parameter is the same as the
+     * <a href="../codadef/codadef-expressions.html#timeformat">date/time
+     * format patterns in coda expressions</a>.
+     *
+     * This function performs proper leap second correction in the conversion
+     * from UTC to TAI (see also \a time_parts_to_double_utc()).
+     *
+     * @param format
+     *            Date/time format to use for the string representation of the
+     *            datetime value.
+     * @param str
+     *            String containing the time in one of the supported formats.
+     * @return datetime Floating point value representing the number of seconds
+     *         since January 1st, 2000 00:00:00.000000.
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public static double time_string_to_double_utc(String format, String str) throws CodaException
+    {
+        double[] datetime = new double[1];
+        codac.time_string_to_double_utc(format,	 str, datetime);
+        return datetime[0];
+    }
+
+    /* deprecated datetime functions */
     public static double datetime_to_double(int YEAR, int MONTH, int DAY,
             int HOUR, int MINUTE, int SECOND, int MUSEC) throws CodaException
     {
@@ -192,25 +598,6 @@ public class Coda
     }
 
 
-    /**
-     * Retrieve the decomposed date corresponding with the given amount of
-     * seconds since Jan 1st 2000.
-     * 
-     * @warning This function does _not_ perform any leap second correction. The
-     *          returned value is therefore not an exact UTC time
-     * @param datetime
-     * @return A 7-element array containing the following representation of 
-     *            the date:
-     * \arg \c [0] YEAR - The year.
-     * \arg \c [1] MONTH - The month of the year (1 - 12)
-     * \arg \c [2] DAY - The day of the month (1 - 31)
-     * \arg \c [3] HOUR - The hour of the day (0 - 23)
-     * \arg \c [4] MINUTE - The minute of the hour (0 - 59)
-     * \arg \c [5] SECOND - The second of the minute (0 - 59)
-     * \arg \c [6] MUSEC - The microseconds of the second (0 - 999999)
-     * @throws CodaException
-     *             If an error occurred.
-     */
     public static int[] double_to_datetime(double datetime) throws CodaException
     {
         int[] YEAR = new int[1];
@@ -241,32 +628,12 @@ public class Coda
     }
 
 
-    /**
-     * Convert a floating point time value to a string.
-     * 
-     * @param datetime
-     *            Floating point value representing the number of seconds since
-     *            January 1st, 2000 00:00:00.000000.
-     * @return String representation of the floating point time value.
-     * @throws CodaException
-     *             If an error occurred.
-     */
     public static String time_to_string(double datetime) throws CodaException
     {
         return codac.helper_coda_time_to_string(datetime);
     }
 
 
-    /**
-     * Convert a time string to a floating point time value.
-     * 
-     * @param str
-     *            String containing the time in one of the supported formats.
-     * @return datetime Floating point value representing the number of seconds
-     *         since January 1st, 2000 00:00:00.000000.
-     * @throws CodaException
-     *             If an error occurred.
-     */
     public static double string_to_time(String str) throws CodaException
     {
         double[] datetime = new double[1];
@@ -451,7 +818,7 @@ public class Coda
     
 
     /**
-     * Initializes CODA. /**
+     * Initializes CODA.
      * 
      * @throws CodaException
      *             If an error occurred.

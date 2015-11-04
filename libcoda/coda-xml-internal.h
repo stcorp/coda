@@ -22,6 +22,7 @@
 #define CODA_XML_INTERNAL_H
 
 #include "coda-xml.h"
+#include "coda-bin-internal.h"
 #include "coda-mem-internal.h"
 #include "coda-definition.h"
 
@@ -66,7 +67,7 @@ typedef struct coda_xml_element_struct
 
     /* data for record */
     long num_elements;
-    coda_dynamic_type **element;        /* mem_array or xml_element */
+    coda_dynamic_type **element;        /* xml_element, mem_array or mem_special */
 
     /* pointer to parent element (only used during xml parsing) */
     struct coda_xml_element_struct *parent;
@@ -110,12 +111,14 @@ struct coda_xml_product_struct
     const coda_product_definition *product_definition;
     long *product_variable_size;
     int64_t **product_variable;
+    int64_t mem_size;
+    const uint8_t *mem_ptr;
 #if CODA_USE_QIAP
     void *qiap_info;
 #endif
 
-    int use_mmap;       /* this field is needed for when the ascii backend wants to read data - the value is always 0 */
-    int fd;
+    /* 'xml' product specific fields */
+    coda_product *raw_product;
 };
 typedef struct coda_xml_product_struct coda_xml_product;
 
@@ -123,10 +126,11 @@ int coda_xml_parse(coda_xml_product *product);
 int coda_xml_parse_for_detection(int fd, const char *filename, coda_product_definition **definition);
 
 coda_xml_root *coda_xml_root_new(coda_type_record *definition);
-int coda_xml_root_add_element(coda_xml_root *root, const char *el, const char **attr, int64_t outer_bit_offset,
-                              int64_t inner_bit_offset, int update_definition);
-int coda_xml_element_add_element(coda_xml_element *parent, const char *el, const char **attr, int64_t outer_bit_offset,
-                                 int64_t inner_bit_offset, int update_definition, coda_xml_element **new_element);
+int coda_xml_root_add_element(coda_xml_root *root, coda_xml_product *product, const char *el, const char **attr,
+                              int64_t outer_bit_offset, int64_t inner_bit_offset, int update_definition);
+int coda_xml_element_add_element(coda_xml_element *parent, coda_xml_product *product, const char *el, const char **attr,
+                                 int64_t outer_bit_offset, int64_t inner_bit_offset, int update_definition,
+                                 coda_xml_element **new_element);
 int coda_xml_element_convert_to_text(coda_xml_element *element);
 int coda_xml_element_validate(coda_xml_element *element);
 

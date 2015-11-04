@@ -90,29 +90,31 @@ static void print_parameterdef2(void)
 
 static void print_funcdef(const char *name, const char *returntype)
 {
+    const char *type_name = NULL;
+
     if (strcmp(returntype, "void") == 0)
     {
         return;
     }
-    printf("      ");
     if (strcmp(returntype, "int") == 0)
     {
-        printf("integer ");
+        type_name = "integer ";
     }
     else if (strcmp(returntype, "double") == 0)
     {
-        printf("double precision ");
+        type_name = "double precision ";
     }
     else if (strcmp(returntype, "void *") == 0)
     {
-        printf("integer ");
+        printf("C use 'integer %s' for 32-bit\n", name);
+        type_name = "integer*8 ";
     }
     else
     {
         fprintf(stderr, "ERROR: unknown return type '%s' for function '%s'\n", returntype, name);
         exit(1);
     }
-    printf("%s\n", name);
+    printf("      %s %s\n", type_name, name);
 }
 
 #define PRINT_EMPTY printf("\n")
@@ -262,6 +264,19 @@ static void print_function_definitions(void)
     PRINT_EMPTY;
 
     PRINT_FUNCDEF(coda_time, double);
+    PRINT_FUNCDEF(coda_time_double_to_parts, int);
+    PRINT_FUNCDEF(coda_time_double_to_parts_utc, int);
+    PRINT_FUNCDEF(coda_time_parts_to_double, int);
+    PRINT_FUNCDEF(coda_time_parts_to_double_utc, int);
+    PRINT_FUNCDEF(coda_time_parts_to_string, int);
+    PRINT_FUNCDEF(coda_time_string_to_parts, int);
+    PRINT_FUNCDEF(coda_time_double_to_string, int);
+    PRINT_FUNCDEF(coda_time_double_to_string_utc, int);
+    PRINT_FUNCDEF(coda_time_string_to_double, int);
+    PRINT_FUNCDEF(coda_time_string_to_double_utc, int);
+
+    PRINT_EMPTY;
+
     PRINT_FUNCDEF(coda_datetime_to_double, int);
     PRINT_FUNCDEF(coda_double_to_datetime, int);
     PRINT_FUNCDEF(coda_time_to_string, int);

@@ -589,9 +589,11 @@ inf
       
       <p>For parsing and printing date/time values in textual format, CODA uses a pattern description that is largely based on the Unicode Technical Standard #35 regarding Date Format Patterns. Note that only a very specific subset of patterns are supported and that the pattern for the abbreviated month deviates from the standard.</p>
 
-      <p>In a date/time format pattern certain character series have special meaning and correspond to the various components of a date/time value. Characters that need to matched literally can be included between two single quote characters ('). Any alphabetical character that is to be treated literally <i>has</i> to be included between quotes. Other characters may be included between quotes (but don't have to). Two single quotes represents a literal single quote, either inside or outside single quotes.</p>
+      <p>In a date/time format pattern certain character series have special meaning and correspond to the various components of a date/time value. Characters that need to be matched literally can be included between two single quote characters ('). Any alphabetical character that is to be treated literally <i>has</i> to be included between quotes. This includes the special characters '|' and '*'. Other characters may be included between quotes (but don't have to). Two single quotes represents a literal single quote, either inside or outside single quotes.</p>
       
-      <p>To provide a list of multiple patterns that are tried in sequence until one succeeds, provide the list of patterns separated by '|' (vertical bar) characters in a single format string. When converting a time value to a string, the first pattern of a list will be used for the conversion. Note that due to this special treatment of the '|' character this character will have to be included between single quotes in case it is to be matched literally.</p>
+      <p>To provide a list of multiple patterns that are tried in sequence until one succeeds, provide the list of patterns separated by '|' (vertical bar) characters in a single format string. When converting a time value to a string, the first pattern of a list will be used for the conversion.</p>
+
+      <p>A pattern for a date/time component can have a '*' appended to the format to indicate that it should use leading spaces instead of leading zeros (both for parsing and for printing).</p>
 
       <p>The table below provides an overview of the patterns that are supported in CODA for date/time formats:</p>
 
@@ -608,12 +610,13 @@ inf
         <tr><td>S<br />SS<br />SSS<br />...<td>n-digit fraction of a second.<br />A 3-digit fraction would represent milliseconds and a 6-digit fraction would represent microseconds.<br />Values will be printed truncated (i.e. 12.159 seconds with format ss.SS will be printed as 12.15). Any digits beyond the 6th digit will be ignored when parsing (i.e. values will always be truncated at microsecond resolution).</td></tr>
       </table>
 
-      <p>Several examples of formats and their string values for the date 4 December 2012 19:32:56.123456:</p>
+      <p>Several examples of formats and their string values for the date 4 July 2012 19:32:56.123456:</p>
       <ul>
-      <li>"yyyy-MM-dd" : "2012-12-04"</li>
-      <li>"yyyy-MM-dd'T'HH:mm:ss" : "2012-12-04T19:32:56"</li>
-      <li>"dd-MMM-yyyy HH:mm:ss.SSSSSS" : "04-DEC-2012 19:32:56.123456"</li>
-      <li>"yyyy DDD" : "2012 339"</li>
+      <li>"yyyy-MM-dd" : "2012-07-04"</li>
+      <li>"yyyy MM* dd*" : "2012  7  4"</li>
+      <li>"yyyy-MM-dd'T'HH:mm:ss" : "2012-07-04T19:32:56"</li>
+      <li>"dd-MMM-yyyy HH:mm:ss.SSSSSS" : "04-JUL-2012 19:32:56.123456"</li>
+      <li>"yyyy DDD" : "2012 186"</li>
       </ul>
 
       <h2 id="bnf">formal definition</h2>
@@ -833,7 +836,7 @@ node =
 
       <div class="footer">
         <hr />
-        <p>Copyright &copy; 2007-2013 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+        <p>Copyright &copy; 2007-2014 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
       </div>
 
     </div>

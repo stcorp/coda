@@ -212,7 +212,7 @@ static int read_array(const coda_cursor *cursor, void *dst)
 
     for (i = 0; i < num_blocks; i++)
     {
-        if (read_bytes(cursor->product, type->base_type->offset + i * product->record_size, block_size,
+        if (read_bytes(product->raw_product, type->base_type->offset + i * product->record_size, block_size,
                        &((uint8_t *)dst)[i * block_size]) != 0)
         {
             return -1;
@@ -288,14 +288,14 @@ static int read_basic_type(const coda_cursor *cursor, void *dst, long size_bound
 
     if (size_boundary >= 0 && byte_size > size_boundary)
     {
-        if (read_bytes(cursor->product, offset, size_boundary, dst) != 0)
+        if (read_bytes(product->raw_product, offset, size_boundary, dst) != 0)
         {
             return -1;
         }
     }
     else
     {
-        if (read_bytes(cursor->product, offset, byte_size, dst) != 0)
+        if (read_bytes(product->raw_product, offset, byte_size, dst) != 0)
         {
             return -1;
         }

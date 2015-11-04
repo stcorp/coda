@@ -31,6 +31,18 @@ public class codac implements codacConstants {
     return codacJNI.helper_coda_cursor_read_string(SWIGTYPE_p_coda_cursor_struct.getCPtr(cursor));
   }
 
+  public static String helper_coda_time_parts_to_string(int year, int month, int day, int hour, int minute, int second, int musec, String format) {
+    return codacJNI.helper_coda_time_parts_to_string(year, month, day, hour, minute, second, musec, format);
+  }
+
+  public static String helper_coda_time_double_to_string(double datetime, String format) {
+    return codacJNI.helper_coda_time_double_to_string(datetime, format);
+  }
+
+  public static String helper_coda_time_double_to_string_utc(double datetime, String format) {
+    return codacJNI.helper_coda_time_double_to_string_utc(datetime, format);
+  }
+
   public static String helper_coda_time_to_string(double datetime) {
     return codacJNI.helper_coda_time_to_string(datetime);
   }
@@ -171,24 +183,52 @@ public class codac implements codacConstants {
     return codacJNI.c_index_to_fortran_index(num_dims, dim, index);
   }
 
-  public static int datetime_to_double(int YEAR, int MONTH, int DAY, int HOUR, int MINUTE, int SECOND, int MUSEC, double[] datetime) throws nl.stcorp.coda.CodaException {
-    return codacJNI.datetime_to_double(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC, datetime);
+  public static int time_double_to_parts(double datetime, int[] year, int[] month, int[] day, int[] hour, int[] minute, int[] second, int[] musec) throws nl.stcorp.coda.CodaException {
+    return codacJNI.time_double_to_parts(datetime, year, month, day, hour, minute, second, musec);
   }
 
-  public static int double_to_datetime(double datetime, int[] YEAR, int[] MONTH, int[] DAY, int[] HOUR, int[] MINUTE, int[] SECOND, int[] MUSEC) throws nl.stcorp.coda.CodaException {
-    return codacJNI.double_to_datetime(datetime, YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC);
+  public static int time_double_to_parts_utc(double datetime, int[] year, int[] month, int[] day, int[] hour, int[] minute, int[] second, int[] musec) throws nl.stcorp.coda.CodaException {
+    return codacJNI.time_double_to_parts_utc(datetime, year, month, day, hour, minute, second, musec);
+  }
+
+  public static int time_parts_to_double(int year, int month, int day, int hour, int minute, int second, int musec, double[] datetime) throws nl.stcorp.coda.CodaException {
+    return codacJNI.time_parts_to_double(year, month, day, hour, minute, second, musec, datetime);
+  }
+
+  public static int time_parts_to_double_utc(int year, int month, int day, int hour, int minute, int second, int musec, double[] datetime) throws nl.stcorp.coda.CodaException {
+    return codacJNI.time_parts_to_double_utc(year, month, day, hour, minute, second, musec, datetime);
+  }
+
+  public static int time_string_to_parts(String format, String str, int[] year, int[] month, int[] day, int[] hour, int[] minute, int[] second, int[] musec) throws nl.stcorp.coda.CodaException {
+    return codacJNI.time_string_to_parts(format, str, year, month, day, hour, minute, second, musec);
+  }
+
+  public static int time_string_to_double(String format, String str, double[] datetime) throws nl.stcorp.coda.CodaException {
+    return codacJNI.time_string_to_double(format, str, datetime);
+  }
+
+  public static int time_string_to_double_utc(String format, String str, double[] datetime) throws nl.stcorp.coda.CodaException {
+    return codacJNI.time_string_to_double_utc(format, str, datetime);
+  }
+
+  public static int datetime_to_double(int year, int month, int day, int hour, int minute, int second, int musec, double[] datetime) throws nl.stcorp.coda.CodaException {
+    return codacJNI.datetime_to_double(year, month, day, hour, minute, second, musec, datetime);
+  }
+
+  public static int double_to_datetime(double datetime, int[] year, int[] month, int[] day, int[] hour, int[] minute, int[] second, int[] musec) throws nl.stcorp.coda.CodaException {
+    return codacJNI.double_to_datetime(datetime, year, month, day, hour, minute, second, musec);
   }
 
   public static int string_to_time(String str, double[] datetime) throws nl.stcorp.coda.CodaException {
     return codacJNI.string_to_time(str, datetime);
   }
 
-  public static int utcdatetime_to_double(int YEAR, int MONTH, int DAY, int HOUR, int MINUTE, int SECOND, int MUSEC, double[] datetime) throws nl.stcorp.coda.CodaException {
-    return codacJNI.utcdatetime_to_double(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC, datetime);
+  public static int utcdatetime_to_double(int year, int month, int day, int hour, int minute, int secon, int musec, double[] datetime) throws nl.stcorp.coda.CodaException {
+    return codacJNI.utcdatetime_to_double(year, month, day, hour, minute, secon, musec, datetime);
   }
 
-  public static int double_to_utcdatetime(double datetime, int[] YEAR, int[] MONTH, int[] DAY, int[] HOUR, int[] MINUTE, int[] SECOND, int[] MUSEC) throws nl.stcorp.coda.CodaException {
-    return codacJNI.double_to_utcdatetime(datetime, YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC);
+  public static int double_to_utcdatetime(double datetime, int[] year, int[] month, int[] day, int[] hour, int[] minute, int[] second, int[] musec) throws nl.stcorp.coda.CodaException {
+    return codacJNI.double_to_utcdatetime(datetime, year, month, day, hour, minute, second, musec);
   }
 
   public static int utcstring_to_time(String str, double[] datetime) throws nl.stcorp.coda.CodaException {

@@ -315,11 +315,12 @@ POSIX_SCALAR_OUTPUT_HELPER(uint64_t, PyLong_FromUnsignedLongLong)
     handle standard integral C type output arguments.
 */
 /*
-    coda_double_to_datetime()::int *YEAR, int *MONTH, int *DAY, 
-                               int *HOUR, int *MINUTE, int *SECOND, int *MUSEC
-    coda_double_to_utcdatetime()::int *YEAR, int *MONTH, int *DAY, 
-                                  int *HOUR, int *MINUTE, int *SECOND,
-                                  int *MUSEC
+    coda_time_double_to_parts()::int *year, int *month, int *day, 
+                                 int *hour, int *minute, int *second, int *musec
+    coda_time_double_to_parts_utc()::int *year, int *month, int *day, 
+                                     int *hour, int *minute, int *second, int *musec
+    coda_time_string_to_parts()::int *year, int *month, int *day, 
+                                 int *hour, int *minute, int *second, int *musec
     coda_get_product_version()::int *version
     coda_type_has_ascii_content()::int *has_ascii_content
     coda_type_has_attributes()::int *has_attributes
@@ -334,8 +335,8 @@ POSIX_SCALAR_OUTPUT_HELPER(uint64_t, PyLong_FromUnsignedLongLong)
     coda_recognize_file()::int *product_version
     coda_expression_eval_bool():int *value
 */
-%apply int *OUTPUT { int *YEAR, int *MONTH, int *DAY, 
-                     int *HOUR, int *MINUTE, int *SECOND, int *MUSEC,
+%apply int *OUTPUT { int *year, int *month, int *day, 
+                     int *hour, int *minute, int *second, int *musec,
                      int *version,
                      int *has_ascii_content,
                      int *has_attributes,
@@ -410,6 +411,13 @@ POSIX_SCALAR_OUTPUT_HELPER(uint64_t, PyLong_FromUnsignedLongLong)
 */
 %cstring_bounded_output(char *str, 26);
 
+/*
+    coda_time_parts_to_string()::char *str
+    coda_time_double_to_string()::char *str
+    coda_time_double_to_string_utc()::char *str
+*/
+%apply (const char *FORMAT, char *STRING) {(const char *format, char *str)}
+
 
 /*
     special string handling for strings allocated by CODA that
@@ -449,9 +457,9 @@ POSIX_SCALAR_OUTPUT_HELPER(uint64_t, PyLong_FromUnsignedLongLong)
     $2[0] = '\0';
 }
 
-%typemap(argout,fragment="t_output_helper") (const coda_cursor *cursor, char *dst, long dst_size)
+%typemap(argout) (const coda_cursor *cursor, char *dst, long dst_size)
 {
-    $result = t_output_helper($result, PyString_FromString($2));
+    $result = SWIG_Python_AppendOutput($result, PyString_FromString($2));
 }
 
 %typemap(freearg) (const coda_cursor *cursor, char *dst, long dst_size)

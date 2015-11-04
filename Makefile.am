@@ -254,8 +254,10 @@ libcoda_la_SOURCES = \
 	libcoda/coda-netcdf.h \
 	libcoda/coda-path.h \
 	libcoda/coda-product.c \
+	libcoda/coda-read-array.h \
 	libcoda/coda-read-bits.h \
 	libcoda/coda-read-bytes.h \
+	libcoda/coda-read-bytes-in-bounds.h \
 	libcoda/coda-rinex.c \
 	libcoda/coda-rinex.h \
 	libcoda/coda-sp3.c \
@@ -264,15 +266,14 @@ libcoda_la_SOURCES = \
 	libcoda/coda-swap4.h \
 	libcoda/coda-swap8.h \
 	libcoda/coda-time.c \
+	libcoda/coda-transpose-array.h \
 	libcoda/coda-tree.c \
 	libcoda/coda-tree.h \
 	libcoda/coda-type.c \
 	libcoda/coda-type.h \
 	libcoda/coda-utils.c \
-	libcoda/coda-xml-cursor.c \
 	libcoda/coda-xml-internal.h \
 	libcoda/coda-xml-parser.c \
-	libcoda/coda-xml-type.c \
 	libcoda/coda-xml.c \
 	libcoda/coda-xml.h \
 	libcoda/coda.c \
@@ -358,8 +359,10 @@ libcoda_internal_la_SOURCES = \
 	libcoda/coda-netcdf.h \
 	libcoda/coda-path.h \
 	libcoda/coda-product.c \
+	libcoda/coda-read-array.h \
 	libcoda/coda-read-bits.h \
 	libcoda/coda-read-bytes.h \
+	libcoda/coda-read-bytes-in-bounds.h \
 	libcoda/coda-rinex.c \
 	libcoda/coda-rinex.h \
 	libcoda/coda-sp3.c \
@@ -368,15 +371,14 @@ libcoda_internal_la_SOURCES = \
 	libcoda/coda-swap4.h \
 	libcoda/coda-swap8.h \
 	libcoda/coda-time.c \
+	libcoda/coda-transpose-array.h \
 	libcoda/coda-tree.c \
 	libcoda/coda-tree.h \
 	libcoda/coda-type.c \
 	libcoda/coda-type.h \
 	libcoda/coda-utils.c \
-	libcoda/coda-xml-cursor.c \
 	libcoda/coda-xml-internal.h \
 	libcoda/coda-xml-parser.c \
-	libcoda/coda-xml-type.c \
 	libcoda/coda-xml.c \
 	libcoda/coda-xml.h \
 	libcoda/coda.c \

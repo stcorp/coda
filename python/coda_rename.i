@@ -39,6 +39,16 @@
 %rename(isMinInf) coda_isMinInf;
 %rename(c_index_to_fortran_index) coda_c_index_to_fortran_index;
 %rename(match_filefilter) coda_match_filefilter;
+%rename(time_double_to_parts) coda_time_double_to_parts;
+%rename(time_double_to_parts_utc) coda_time_double_to_parts_utc;
+%rename(time_parts_to_double) coda_time_parts_to_double;
+%rename(time_parts_to_double_utc) coda_time_parts_to_double_utc;
+%rename(time_parts_to_string) coda_time_parts_to_string;
+%rename(time_string_to_parts) coda_time_string_to_parts;
+%rename(time_double_to_string) coda_time_double_to_string;
+%rename(time_double_to_string_utc) coda_time_double_to_string_utc;
+%rename(time_string_to_double) coda_time_string_to_double;
+%rename(time_string_to_double_utc) coda_time_string_to_double_utc;
 %rename(datetime_to_double) coda_datetime_to_double;
 %rename(double_to_datetime) coda_double_to_datetime;
 // time_to_string is handled in codapython.py

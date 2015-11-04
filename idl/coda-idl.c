@@ -619,14 +619,15 @@ static IDL_VPTR x_coda_time_to_string(int argc, IDL_VPTR *argv)
 
                 if (coda_idl_option_time_unit_days)
                 {
-                    if (coda_time_to_string(day2sec(IDL_DoubleScalar(argv[0])), str) != 0)
+                    if (coda_time_double_to_string(day2sec(IDL_DoubleScalar(argv[0])), "yyyy-MM-dd HH:mm:ss.SSSSSS",
+                                                   str) != 0)
                     {
                         return mk_coda_error(coda_errno);
                     }
                 }
                 else
                 {
-                    if (coda_time_to_string(IDL_DoubleScalar(argv[0]), str) != 0)
+                    if (coda_time_double_to_string(IDL_DoubleScalar(argv[0]), "yyyy-MM-dd HH:mm:ss.SSSSSS", str) != 0)
                     {
                         return mk_coda_error(coda_errno);
                     }

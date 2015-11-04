@@ -806,6 +806,31 @@ static jdoubleArray SWIG_JavaArrayOutDouble (JNIEnv *jenv, double *result, jsize
     }
 
 
+    char *helper_coda_time_parts_to_string(int year, int month, int day, int hour, int minute, int second, int musec,
+                                           const char *format)
+    {
+        char *dst = (char *)malloc(strlen(format) + 1);
+        coda_time_parts_to_string(year, month, day, hour, minute, second, musec, format, dst);
+        return dst;
+    }
+
+
+    char *helper_coda_time_double_to_string(double datetime, const char *format)
+    {
+        char *dst = (char *)malloc(strlen(format) + 1);
+        coda_time_double_to_string(datetime, format, dst);
+        return dst;
+    }
+
+
+    char *helper_coda_time_double_to_string_utc(double datetime, const char *format)
+    {
+        char *dst = (char *)malloc(strlen(format) + 1);
+        coda_time_double_to_string_utc(datetime, format, dst);
+        return dst;
+    }
+
+
     char *helper_coda_time_to_string(double datetime)
     {
         char *dst = (char *)malloc(27);
@@ -884,6 +909,84 @@ SWIGEXPORT jstring JNICALL Java_nl_stcorp_coda_codacJNI_helper_1coda_1cursor_1re
   arg1 = *(coda_cursor **)&jarg1; 
   result = (char *)helper_coda_cursor_read_string((struct coda_cursor_struct const *)arg1);
   if (result) jresult = (*jenv)->NewStringUTF(jenv, (const char *)result);
+  free(result);
+  return jresult;
+}
+
+
+SWIGEXPORT jstring JNICALL Java_nl_stcorp_coda_codacJNI_helper_1coda_1time_1parts_1to_1string(JNIEnv *jenv, jclass jcls, jint jarg1, jint jarg2, jint jarg3, jint jarg4, jint jarg5, jint jarg6, jint jarg7, jstring jarg8) {
+  jstring jresult = 0 ;
+  int arg1 ;
+  int arg2 ;
+  int arg3 ;
+  int arg4 ;
+  int arg5 ;
+  int arg6 ;
+  int arg7 ;
+  char *arg8 = (char *) 0 ;
+  char *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = (int)jarg1; 
+  arg2 = (int)jarg2; 
+  arg3 = (int)jarg3; 
+  arg4 = (int)jarg4; 
+  arg5 = (int)jarg5; 
+  arg6 = (int)jarg6; 
+  arg7 = (int)jarg7; 
+  arg8 = 0;
+  if (jarg8) {
+    arg8 = (char *)(*jenv)->GetStringUTFChars(jenv, jarg8, 0);
+    if (!arg8) return 0;
+  }
+  result = (char *)helper_coda_time_parts_to_string(arg1,arg2,arg3,arg4,arg5,arg6,arg7,(char const *)arg8);
+  if (result) jresult = (*jenv)->NewStringUTF(jenv, (const char *)result);
+  if (arg8) (*jenv)->ReleaseStringUTFChars(jenv, jarg8, (const char *)arg8);
+  free(result);
+  return jresult;
+}
+
+
+SWIGEXPORT jstring JNICALL Java_nl_stcorp_coda_codacJNI_helper_1coda_1time_1double_1to_1string(JNIEnv *jenv, jclass jcls, jdouble jarg1, jstring jarg2) {
+  jstring jresult = 0 ;
+  double arg1 ;
+  char *arg2 = (char *) 0 ;
+  char *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = (double)jarg1; 
+  arg2 = 0;
+  if (jarg2) {
+    arg2 = (char *)(*jenv)->GetStringUTFChars(jenv, jarg2, 0);
+    if (!arg2) return 0;
+  }
+  result = (char *)helper_coda_time_double_to_string(arg1,(char const *)arg2);
+  if (result) jresult = (*jenv)->NewStringUTF(jenv, (const char *)result);
+  if (arg2) (*jenv)->ReleaseStringUTFChars(jenv, jarg2, (const char *)arg2);
+  free(result);
+  return jresult;
+}
+
+
+SWIGEXPORT jstring JNICALL Java_nl_stcorp_coda_codacJNI_helper_1coda_1time_1double_1to_1string_1utc(JNIEnv *jenv, jclass jcls, jdouble jarg1, jstring jarg2) {
+  jstring jresult = 0 ;
+  double arg1 ;
+  char *arg2 = (char *) 0 ;
+  char *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = (double)jarg1; 
+  arg2 = 0;
+  if (jarg2) {
+    arg2 = (char *)(*jenv)->GetStringUTFChars(jenv, jarg2, 0);
+    if (!arg2) return 0;
+  }
+  result = (char *)helper_coda_time_double_to_string_utc(arg1,(char const *)arg2);
+  if (result) jresult = (*jenv)->NewStringUTF(jenv, (const char *)result);
+  if (arg2) (*jenv)->ReleaseStringUTFChars(jenv, jarg2, (const char *)arg2);
   free(result);
   return jresult;
 }
@@ -1626,6 +1729,737 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_c_1index_1to_1fortran_1inde
   jresult = (jint)result; 
   SWIG_JavaArrayArgoutLong(jenv, jarr2, (long *)arg2, jarg2); 
   free(arg2); 
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_time_1double_1to_1parts(JNIEnv *jenv, jclass jcls, jdouble jarg1, jintArray jarg2, jintArray jarg3, jintArray jarg4, jintArray jarg5, jintArray jarg6, jintArray jarg7, jintArray jarg8) {
+  jint jresult = 0 ;
+  double arg1 ;
+  int *arg2 = (int *) 0 ;
+  int *arg3 = (int *) 0 ;
+  int *arg4 = (int *) 0 ;
+  int *arg5 = (int *) 0 ;
+  int *arg6 = (int *) 0 ;
+  int *arg7 = (int *) 0 ;
+  int *arg8 = (int *) 0 ;
+  int temp2 ;
+  int temp3 ;
+  int temp4 ;
+  int temp5 ;
+  int temp6 ;
+  int temp7 ;
+  int temp8 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = (double)jarg1; 
+  {
+    if (!jarg2) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg2) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    temp2 = (int)0;
+    arg2 = &temp2; 
+  }
+  {
+    if (!jarg3) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg3) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    temp3 = (int)0;
+    arg3 = &temp3; 
+  }
+  {
+    if (!jarg4) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg4) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    temp4 = (int)0;
+    arg4 = &temp4; 
+  }
+  {
+    if (!jarg5) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg5) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    temp5 = (int)0;
+    arg5 = &temp5; 
+  }
+  {
+    if (!jarg6) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg6) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    temp6 = (int)0;
+    arg6 = &temp6; 
+  }
+  {
+    if (!jarg7) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg7) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    temp7 = (int)0;
+    arg7 = &temp7; 
+  }
+  {
+    if (!jarg8) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg8) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    temp8 = (int)0;
+    arg8 = &temp8; 
+  }
+  {
+    result = (int)coda_time_double_to_parts(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8);
+    
+    if (result < 0)
+    {
+      int namelen = strlen("coda_time_double_to_parts");
+      const char *codamsg = coda_errno_to_string(coda_errno);
+      char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
+      jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
+      
+      sprintf(fullMessage, "coda_time_double_to_parts(): %s", codamsg);
+      (*jenv)->ThrowNew(jenv, clazz, fullMessage);
+      free(fullMessage);
+      return 0;
+    }
+  }
+  {
+    jint jvalue = (jint)temp2;
+    (*jenv)->SetIntArrayRegion(jenv, jarg2, 0, 1, &jvalue);
+  }
+  {
+    jint jvalue = (jint)temp3;
+    (*jenv)->SetIntArrayRegion(jenv, jarg3, 0, 1, &jvalue);
+  }
+  {
+    jint jvalue = (jint)temp4;
+    (*jenv)->SetIntArrayRegion(jenv, jarg4, 0, 1, &jvalue);
+  }
+  {
+    jint jvalue = (jint)temp5;
+    (*jenv)->SetIntArrayRegion(jenv, jarg5, 0, 1, &jvalue);
+  }
+  {
+    jint jvalue = (jint)temp6;
+    (*jenv)->SetIntArrayRegion(jenv, jarg6, 0, 1, &jvalue);
+  }
+  {
+    jint jvalue = (jint)temp7;
+    (*jenv)->SetIntArrayRegion(jenv, jarg7, 0, 1, &jvalue);
+  }
+  {
+    jint jvalue = (jint)temp8;
+    (*jenv)->SetIntArrayRegion(jenv, jarg8, 0, 1, &jvalue);
+  }
+  
+  
+  
+  
+  
+  
+  
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_time_1double_1to_1parts_1utc(JNIEnv *jenv, jclass jcls, jdouble jarg1, jintArray jarg2, jintArray jarg3, jintArray jarg4, jintArray jarg5, jintArray jarg6, jintArray jarg7, jintArray jarg8) {
+  jint jresult = 0 ;
+  double arg1 ;
+  int *arg2 = (int *) 0 ;
+  int *arg3 = (int *) 0 ;
+  int *arg4 = (int *) 0 ;
+  int *arg5 = (int *) 0 ;
+  int *arg6 = (int *) 0 ;
+  int *arg7 = (int *) 0 ;
+  int *arg8 = (int *) 0 ;
+  int temp2 ;
+  int temp3 ;
+  int temp4 ;
+  int temp5 ;
+  int temp6 ;
+  int temp7 ;
+  int temp8 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = (double)jarg1; 
+  {
+    if (!jarg2) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg2) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    temp2 = (int)0;
+    arg2 = &temp2; 
+  }
+  {
+    if (!jarg3) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg3) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    temp3 = (int)0;
+    arg3 = &temp3; 
+  }
+  {
+    if (!jarg4) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg4) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    temp4 = (int)0;
+    arg4 = &temp4; 
+  }
+  {
+    if (!jarg5) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg5) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    temp5 = (int)0;
+    arg5 = &temp5; 
+  }
+  {
+    if (!jarg6) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg6) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    temp6 = (int)0;
+    arg6 = &temp6; 
+  }
+  {
+    if (!jarg7) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg7) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    temp7 = (int)0;
+    arg7 = &temp7; 
+  }
+  {
+    if (!jarg8) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg8) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    temp8 = (int)0;
+    arg8 = &temp8; 
+  }
+  {
+    result = (int)coda_time_double_to_parts_utc(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8);
+    
+    if (result < 0)
+    {
+      int namelen = strlen("coda_time_double_to_parts_utc");
+      const char *codamsg = coda_errno_to_string(coda_errno);
+      char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
+      jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
+      
+      sprintf(fullMessage, "coda_time_double_to_parts_utc(): %s", codamsg);
+      (*jenv)->ThrowNew(jenv, clazz, fullMessage);
+      free(fullMessage);
+      return 0;
+    }
+  }
+  {
+    jint jvalue = (jint)temp2;
+    (*jenv)->SetIntArrayRegion(jenv, jarg2, 0, 1, &jvalue);
+  }
+  {
+    jint jvalue = (jint)temp3;
+    (*jenv)->SetIntArrayRegion(jenv, jarg3, 0, 1, &jvalue);
+  }
+  {
+    jint jvalue = (jint)temp4;
+    (*jenv)->SetIntArrayRegion(jenv, jarg4, 0, 1, &jvalue);
+  }
+  {
+    jint jvalue = (jint)temp5;
+    (*jenv)->SetIntArrayRegion(jenv, jarg5, 0, 1, &jvalue);
+  }
+  {
+    jint jvalue = (jint)temp6;
+    (*jenv)->SetIntArrayRegion(jenv, jarg6, 0, 1, &jvalue);
+  }
+  {
+    jint jvalue = (jint)temp7;
+    (*jenv)->SetIntArrayRegion(jenv, jarg7, 0, 1, &jvalue);
+  }
+  {
+    jint jvalue = (jint)temp8;
+    (*jenv)->SetIntArrayRegion(jenv, jarg8, 0, 1, &jvalue);
+  }
+  
+  
+  
+  
+  
+  
+  
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_time_1parts_1to_1double(JNIEnv *jenv, jclass jcls, jint jarg1, jint jarg2, jint jarg3, jint jarg4, jint jarg5, jint jarg6, jint jarg7, jdoubleArray jarg8) {
+  jint jresult = 0 ;
+  int arg1 ;
+  int arg2 ;
+  int arg3 ;
+  int arg4 ;
+  int arg5 ;
+  int arg6 ;
+  int arg7 ;
+  double *arg8 = (double *) 0 ;
+  double temp8 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = (int)jarg1; 
+  arg2 = (int)jarg2; 
+  arg3 = (int)jarg3; 
+  arg4 = (int)jarg4; 
+  arg5 = (int)jarg5; 
+  arg6 = (int)jarg6; 
+  arg7 = (int)jarg7; 
+  {
+    if (!jarg8) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg8) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    temp8 = (double)0;
+    arg8 = &temp8; 
+  }
+  {
+    result = (int)coda_time_parts_to_double(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8);
+    
+    if (result < 0)
+    {
+      int namelen = strlen("coda_time_parts_to_double");
+      const char *codamsg = coda_errno_to_string(coda_errno);
+      char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
+      jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
+      
+      sprintf(fullMessage, "coda_time_parts_to_double(): %s", codamsg);
+      (*jenv)->ThrowNew(jenv, clazz, fullMessage);
+      free(fullMessage);
+      return 0;
+    }
+  }
+  {
+    jdouble jvalue = (jdouble)temp8;
+    (*jenv)->SetDoubleArrayRegion(jenv, jarg8, 0, 1, &jvalue);
+  }
+  
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_time_1parts_1to_1double_1utc(JNIEnv *jenv, jclass jcls, jint jarg1, jint jarg2, jint jarg3, jint jarg4, jint jarg5, jint jarg6, jint jarg7, jdoubleArray jarg8) {
+  jint jresult = 0 ;
+  int arg1 ;
+  int arg2 ;
+  int arg3 ;
+  int arg4 ;
+  int arg5 ;
+  int arg6 ;
+  int arg7 ;
+  double *arg8 = (double *) 0 ;
+  double temp8 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = (int)jarg1; 
+  arg2 = (int)jarg2; 
+  arg3 = (int)jarg3; 
+  arg4 = (int)jarg4; 
+  arg5 = (int)jarg5; 
+  arg6 = (int)jarg6; 
+  arg7 = (int)jarg7; 
+  {
+    if (!jarg8) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg8) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    temp8 = (double)0;
+    arg8 = &temp8; 
+  }
+  {
+    result = (int)coda_time_parts_to_double_utc(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8);
+    
+    if (result < 0)
+    {
+      int namelen = strlen("coda_time_parts_to_double_utc");
+      const char *codamsg = coda_errno_to_string(coda_errno);
+      char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
+      jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
+      
+      sprintf(fullMessage, "coda_time_parts_to_double_utc(): %s", codamsg);
+      (*jenv)->ThrowNew(jenv, clazz, fullMessage);
+      free(fullMessage);
+      return 0;
+    }
+  }
+  {
+    jdouble jvalue = (jdouble)temp8;
+    (*jenv)->SetDoubleArrayRegion(jenv, jarg8, 0, 1, &jvalue);
+  }
+  
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_time_1string_1to_1parts(JNIEnv *jenv, jclass jcls, jstring jarg1, jstring jarg2, jintArray jarg3, jintArray jarg4, jintArray jarg5, jintArray jarg6, jintArray jarg7, jintArray jarg8, jintArray jarg9) {
+  jint jresult = 0 ;
+  char *arg1 = (char *) 0 ;
+  char *arg2 = (char *) 0 ;
+  int *arg3 = (int *) 0 ;
+  int *arg4 = (int *) 0 ;
+  int *arg5 = (int *) 0 ;
+  int *arg6 = (int *) 0 ;
+  int *arg7 = (int *) 0 ;
+  int *arg8 = (int *) 0 ;
+  int *arg9 = (int *) 0 ;
+  int temp3 ;
+  int temp4 ;
+  int temp5 ;
+  int temp6 ;
+  int temp7 ;
+  int temp8 ;
+  int temp9 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = 0;
+  if (jarg1) {
+    arg1 = (char *)(*jenv)->GetStringUTFChars(jenv, jarg1, 0);
+    if (!arg1) return 0;
+  }
+  arg2 = 0;
+  if (jarg2) {
+    arg2 = (char *)(*jenv)->GetStringUTFChars(jenv, jarg2, 0);
+    if (!arg2) return 0;
+  }
+  {
+    if (!jarg3) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg3) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    temp3 = (int)0;
+    arg3 = &temp3; 
+  }
+  {
+    if (!jarg4) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg4) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    temp4 = (int)0;
+    arg4 = &temp4; 
+  }
+  {
+    if (!jarg5) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg5) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    temp5 = (int)0;
+    arg5 = &temp5; 
+  }
+  {
+    if (!jarg6) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg6) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    temp6 = (int)0;
+    arg6 = &temp6; 
+  }
+  {
+    if (!jarg7) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg7) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    temp7 = (int)0;
+    arg7 = &temp7; 
+  }
+  {
+    if (!jarg8) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg8) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    temp8 = (int)0;
+    arg8 = &temp8; 
+  }
+  {
+    if (!jarg9) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg9) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    temp9 = (int)0;
+    arg9 = &temp9; 
+  }
+  {
+    result = (int)coda_time_string_to_parts((char const *)arg1,(char const *)arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9);
+    
+    if (result < 0)
+    {
+      int namelen = strlen("coda_time_string_to_parts");
+      const char *codamsg = coda_errno_to_string(coda_errno);
+      char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
+      jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
+      
+      sprintf(fullMessage, "coda_time_string_to_parts(): %s", codamsg);
+      (*jenv)->ThrowNew(jenv, clazz, fullMessage);
+      free(fullMessage);
+      return 0;
+    }
+  }
+  {
+    jint jvalue = (jint)temp3;
+    (*jenv)->SetIntArrayRegion(jenv, jarg3, 0, 1, &jvalue);
+  }
+  {
+    jint jvalue = (jint)temp4;
+    (*jenv)->SetIntArrayRegion(jenv, jarg4, 0, 1, &jvalue);
+  }
+  {
+    jint jvalue = (jint)temp5;
+    (*jenv)->SetIntArrayRegion(jenv, jarg5, 0, 1, &jvalue);
+  }
+  {
+    jint jvalue = (jint)temp6;
+    (*jenv)->SetIntArrayRegion(jenv, jarg6, 0, 1, &jvalue);
+  }
+  {
+    jint jvalue = (jint)temp7;
+    (*jenv)->SetIntArrayRegion(jenv, jarg7, 0, 1, &jvalue);
+  }
+  {
+    jint jvalue = (jint)temp8;
+    (*jenv)->SetIntArrayRegion(jenv, jarg8, 0, 1, &jvalue);
+  }
+  {
+    jint jvalue = (jint)temp9;
+    (*jenv)->SetIntArrayRegion(jenv, jarg9, 0, 1, &jvalue);
+  }
+  if (arg1) (*jenv)->ReleaseStringUTFChars(jenv, jarg1, (const char *)arg1);
+  if (arg2) (*jenv)->ReleaseStringUTFChars(jenv, jarg2, (const char *)arg2);
+  
+  
+  
+  
+  
+  
+  
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_time_1string_1to_1double(JNIEnv *jenv, jclass jcls, jstring jarg1, jstring jarg2, jdoubleArray jarg3) {
+  jint jresult = 0 ;
+  char *arg1 = (char *) 0 ;
+  char *arg2 = (char *) 0 ;
+  double *arg3 = (double *) 0 ;
+  double temp3 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = 0;
+  if (jarg1) {
+    arg1 = (char *)(*jenv)->GetStringUTFChars(jenv, jarg1, 0);
+    if (!arg1) return 0;
+  }
+  arg2 = 0;
+  if (jarg2) {
+    arg2 = (char *)(*jenv)->GetStringUTFChars(jenv, jarg2, 0);
+    if (!arg2) return 0;
+  }
+  {
+    if (!jarg3) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg3) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    temp3 = (double)0;
+    arg3 = &temp3; 
+  }
+  {
+    result = (int)coda_time_string_to_double((char const *)arg1,(char const *)arg2,arg3);
+    
+    if (result < 0)
+    {
+      int namelen = strlen("coda_time_string_to_double");
+      const char *codamsg = coda_errno_to_string(coda_errno);
+      char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
+      jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
+      
+      sprintf(fullMessage, "coda_time_string_to_double(): %s", codamsg);
+      (*jenv)->ThrowNew(jenv, clazz, fullMessage);
+      free(fullMessage);
+      return 0;
+    }
+  }
+  {
+    jdouble jvalue = (jdouble)temp3;
+    (*jenv)->SetDoubleArrayRegion(jenv, jarg3, 0, 1, &jvalue);
+  }
+  if (arg1) (*jenv)->ReleaseStringUTFChars(jenv, jarg1, (const char *)arg1);
+  if (arg2) (*jenv)->ReleaseStringUTFChars(jenv, jarg2, (const char *)arg2);
+  
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_time_1string_1to_1double_1utc(JNIEnv *jenv, jclass jcls, jstring jarg1, jstring jarg2, jdoubleArray jarg3) {
+  jint jresult = 0 ;
+  char *arg1 = (char *) 0 ;
+  char *arg2 = (char *) 0 ;
+  double *arg3 = (double *) 0 ;
+  double temp3 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = 0;
+  if (jarg1) {
+    arg1 = (char *)(*jenv)->GetStringUTFChars(jenv, jarg1, 0);
+    if (!arg1) return 0;
+  }
+  arg2 = 0;
+  if (jarg2) {
+    arg2 = (char *)(*jenv)->GetStringUTFChars(jenv, jarg2, 0);
+    if (!arg2) return 0;
+  }
+  {
+    if (!jarg3) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg3) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    temp3 = (double)0;
+    arg3 = &temp3; 
+  }
+  {
+    result = (int)coda_time_string_to_double_utc((char const *)arg1,(char const *)arg2,arg3);
+    
+    if (result < 0)
+    {
+      int namelen = strlen("coda_time_string_to_double_utc");
+      const char *codamsg = coda_errno_to_string(coda_errno);
+      char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
+      jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
+      
+      sprintf(fullMessage, "coda_time_string_to_double_utc(): %s", codamsg);
+      (*jenv)->ThrowNew(jenv, clazz, fullMessage);
+      free(fullMessage);
+      return 0;
+    }
+  }
+  {
+    jdouble jvalue = (jdouble)temp3;
+    (*jenv)->SetDoubleArrayRegion(jenv, jarg3, 0, 1, &jvalue);
+  }
+  if (arg1) (*jenv)->ReleaseStringUTFChars(jenv, jarg1, (const char *)arg1);
+  if (arg2) (*jenv)->ReleaseStringUTFChars(jenv, jarg2, (const char *)arg2);
+  
   return jresult;
 }
 

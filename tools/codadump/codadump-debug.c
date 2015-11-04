@@ -354,6 +354,7 @@ static void print_data(coda_cursor *cursor)
         case coda_text_class:
         case coda_raw_class:
             {
+                coda_native_type read_type;
                 int has_ascii_content;
 
                 if (coda_cursor_has_ascii_content(cursor, &has_ascii_content) != 0)
@@ -387,130 +388,133 @@ static void print_data(coda_cursor *cursor)
                     ff_printf("\" (length=%ld)\n", length);
                     free(data);
                 }
-                else
+
+                if (coda_cursor_get_read_type(cursor, &read_type) != 0)
                 {
-                    coda_native_type read_type;
+                    handle_coda_error();
+                }
+                switch (read_type)
+                {
+                    case coda_native_type_bytes:
+                        {
+                            int64_t bit_size;
+                            int64_t byte_size;
+                            uint8_t *data;
+                            char s[21];
 
-                    if (coda_cursor_get_read_type(cursor, &read_type) != 0)
-                    {
-                        handle_coda_error();
-                    }
-                    switch (read_type)
-                    {
-                        case coda_native_type_bytes:
+                            if (coda_cursor_get_bit_size(cursor, &bit_size) != 0)
                             {
-                                int64_t bit_size;
-                                int64_t byte_size;
-                                uint8_t *data;
-                                char s[21];
-
-                                if (coda_cursor_get_bit_size(cursor, &bit_size) != 0)
-                                {
-                                    handle_coda_error();
-                                }
-                                byte_size = (bit_size >> 3) + (bit_size & 0x7 ? 1 : 0);
-                                data = (uint8_t *)malloc((size_t)byte_size);
-                                if (data == NULL)
-                                {
-                                    coda_set_error(CODA_ERROR_OUT_OF_MEMORY,
-                                                   "out of memory (could not allocate %lu bytes) (%s:%u)",
-                                                   (long)byte_size, __FILE__, __LINE__);
-                                    handle_coda_error();
-                                }
-                                if (coda_cursor_read_bits(cursor, data, 0, bit_size) != 0)
-                                {
-                                    handle_coda_error();
-                                }
-
-                                fi_printf("\"");
-                                print_escaped((char *)data, (long)byte_size);
-                                ff_printf("\" (size=");
-                                coda_str64(bit_size >> 3, s);
-                                ff_printf("%s", s);
-                                if ((bit_size & 0x7) != 0)
-                                {
-                                    ff_printf(":%d", (int)(bit_size & 0x7));
-                                }
-                                ff_printf(")\n");
-
-                                free(data);
+                                handle_coda_error();
                             }
-                            break;
-                        case coda_native_type_int8:
-                        case coda_native_type_int16:
-                        case coda_native_type_int32:
+                            byte_size = (bit_size >> 3) + (bit_size & 0x7 ? 1 : 0);
+                            data = (uint8_t *)malloc((size_t)byte_size);
+                            if (data == NULL)
                             {
-                                int32_t data;
-
-                                if (coda_cursor_read_int32(cursor, &data) != 0)
-                                {
-                                    handle_coda_error();
-                                }
-
-                                fi_printf("%ld\n", (long)data);
+                                coda_set_error(CODA_ERROR_OUT_OF_MEMORY,
+                                               "out of memory (could not allocate %lu bytes) (%s:%u)",
+                                               (long)byte_size, __FILE__, __LINE__);
+                                handle_coda_error();
                             }
-                            break;
-                        case coda_native_type_uint8:
-                        case coda_native_type_uint16:
-                        case coda_native_type_uint32:
+                            if (coda_cursor_read_bits(cursor, data, 0, bit_size) != 0)
                             {
-                                uint32_t data;
-
-                                if (coda_cursor_read_uint32(cursor, &data) != 0)
-                                {
-                                    handle_coda_error();
-                                }
-
-                                fi_printf("%lu\n", (unsigned long)data);
+                                handle_coda_error();
                             }
-                            break;
-                        case coda_native_type_int64:
+
+                            fi_printf("\"");
+                            print_escaped((char *)data, (long)byte_size);
+                            ff_printf("\" (size=");
+                            coda_str64(bit_size >> 3, s);
+                            ff_printf("%s", s);
+                            if ((bit_size & 0x7) != 0)
                             {
-                                int64_t data;
-                                char s[21];
-
-                                if (coda_cursor_read_int64(cursor, &data) != 0)
-                                {
-                                    handle_coda_error();
-                                }
-
-                                coda_str64(data, s);
-                                fi_printf("%s\n", s);
+                                ff_printf(":%d", (int)(bit_size & 0x7));
                             }
-                            break;
-                        case coda_native_type_uint64:
+                            ff_printf(")\n");
+
+                            free(data);
+                        }
+                        break;
+                    case coda_native_type_int8:
+                    case coda_native_type_int16:
+                    case coda_native_type_int32:
+                        {
+                            int32_t data;
+
+                            if (coda_cursor_read_int32(cursor, &data) != 0)
                             {
-                                uint64_t data;
-                                char s[21];
-
-                                if (coda_cursor_read_uint64(cursor, &data) != 0)
-                                {
-                                    handle_coda_error();
-                                }
-
-                                coda_str64u(data, s);
-                                fi_printf("%s\n", s);
+                                handle_coda_error();
                             }
-                            break;
-                        case coda_native_type_float:
-                        case coda_native_type_double:
+
+                            fi_printf("%ld\n", (long)data);
+                        }
+                        break;
+                    case coda_native_type_uint8:
+                    case coda_native_type_uint16:
+                    case coda_native_type_uint32:
+                        {
+                            uint32_t data;
+
+                            if (coda_cursor_read_uint32(cursor, &data) != 0)
                             {
-                                double data;
-
-                                if (coda_cursor_read_double(cursor, &data) != 0)
-                                {
-                                    handle_coda_error();
-                                }
-
-                                fi_printf("%g\n", data);
+                                handle_coda_error();
                             }
-                            break;
-                        case coda_native_type_char:
-                        case coda_native_type_string:
-                        case coda_native_type_not_available:
-                            assert(0);
-                            exit(1);
-                    }
+
+                            fi_printf("%lu\n", (unsigned long)data);
+                        }
+                        break;
+                    case coda_native_type_int64:
+                        {
+                            int64_t data;
+                            char s[21];
+
+                            if (coda_cursor_read_int64(cursor, &data) != 0)
+                            {
+                                handle_coda_error();
+                            }
+
+                            coda_str64(data, s);
+                            fi_printf("%s\n", s);
+                        }
+                        break;
+                    case coda_native_type_uint64:
+                        {
+                            uint64_t data;
+                            char s[21];
+
+                            if (coda_cursor_read_uint64(cursor, &data) != 0)
+                            {
+                                handle_coda_error();
+                            }
+
+                            coda_str64u(data, s);
+                            fi_printf("%s\n", s);
+                        }
+                        break;
+                    case coda_native_type_float:
+                    case coda_native_type_double:
+                        {
+                            double data;
+
+                            if (coda_cursor_read_double(cursor, &data) != 0)
+                            {
+                                handle_coda_error();
+                            }
+
+                            if (read_type == coda_native_type_float)
+                            {
+                                fi_printf("%.7g\n", data);
+                            }
+                            else
+                            {
+                                fi_printf("%.16g\n", data);
+                            }
+                        }
+                        break;
+                    case coda_native_type_char:
+                    case coda_native_type_string:
+                    case coda_native_type_not_available:
+                        assert(has_ascii_content);
+                        break;
                 }
             }
             break;
@@ -521,6 +525,17 @@ static void print_data(coda_cursor *cursor)
                 if (coda_cursor_get_special_type(cursor, &special_type) != 0)
                 {
                     handle_coda_error();
+                }
+
+                if (special_type != coda_special_no_data)
+                {
+                    coda_cursor base_cursor = *cursor;
+
+                    if (coda_cursor_use_base_type_of_special_type(&base_cursor) != 0)
+                    {
+                        handle_coda_error();
+                    }
+                    print_data(&base_cursor);
                 }
 
                 fi_printf("<%s>", coda_type_get_special_type_name(special_type));
@@ -556,7 +571,7 @@ static void print_data(coda_cursor *cursor)
                             }
                             else
                             {
-                                if (coda_time_to_string(data, str) != 0)
+                                if (coda_time_double_to_string(data, "yyyy-MM-dd HH:mm:ss.SSSSSS", str) != 0)
                                 {
                                     ff_printf(" {--invalid time value--}\n");
                                 }
@@ -579,18 +594,6 @@ static void print_data(coda_cursor *cursor)
                             ff_printf(" %g + %gi\n", re, im);
                         }
                         break;
-                }
-                if (special_type != coda_special_no_data)
-                {
-                    coda_cursor base_cursor = *cursor;
-
-                    if (coda_cursor_use_base_type_of_special_type(&base_cursor) != 0)
-                    {
-                        handle_coda_error();
-                    }
-                    INDENT++;
-                    print_data(&base_cursor);
-                    INDENT--;
                 }
             }
             break;

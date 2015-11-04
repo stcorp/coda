@@ -16,23 +16,21 @@
 
       <p>CODA provides access to XML by creating a view on the XML files using the CODA <a href="codadef-format.html">data types</a>. Below we will describe how CODA maps the XML product structure to one that is based on the CODA data types.</p>
 
-      <p>XML products are partial self describing products. When an XML file is opened the structure of a product can be retrieved from the file itself. However, in order to properly interpret the ASCII data within an XML element (i.e. is it an integer, real, string, etc.?) one would have to rely on an external definition. With an external definition one can also prescribe the occurence of each xml element.</p>
+      <p>XML products are partial self describing products. When an XML file is opened the structure of a product can be retrieved from the file itself. However, in order to properly interpret the ASCII data within an XML element (i.e. is it an integer, real, string, etc.?) an external definition is required. With an external definition one can also prescribe the occurence of each xml element.</p>
 
-      <p>A common way of providing such external definitions is by means of an XML Schema file. However, CODA does not rely on XML Schema files for the XML definitions but uses its own description mechansim for XML files. The main reason behind this choice is that the regular CODA product format descriptions (for raw ascii/binary files) can then be reused to describe the ASCII content of XML leaf elements.</p>
+      <p>A common way of providing such external definitions is by means of an XML Schema file. However, CODA does not rely on XML Schema files for the XML definitions but uses its own description mechansim for XML files. The main reason behind this choice is that the regular CODA product format descriptions (for raw ascii/binary files) can then be reused to describe the ASCII content of XML leaf elements (allowing for non-standard time or boolean formats, multi-dimensional arrays of numbers, etc.).</p>
 
       <p>When there is no description provided for an XML file, then CODA will still be able to open the file. CODA will parse the whole file and build up a dynamic definition of the file. In this definition all XML leaf elements will be interpreted as plain text (i.e. string types).</p>
-
-      <p>Providing a description for an XML file can be done in two ways. The first approach is to provide definitions for individual XML tags (using the XML namespace), which is similar to the way XML Schemas work. The other approach is via a product type definition. Using a single expression (which tests for availability of a certain XML element or tests for equality of the XML element ASCII content against a predefined value) it is determined wheter a certain (version of a) product type interpretation of an XML file can be used. A product type definition of an XML file will define all elements of the file (i.e. there can be no xml tags left undefined, this will be treated as an error).</p>
       
       <h3>XML elements</h3>
       
-      <p>Each XML element in an XML file is mapped to a record field. The name of the record field is based on the XML element name. These names can sometimes differ because in CODA fieldnames have to be formatted as an identifier (i.e. no spaces and special characters may be used). The approach of turning an element name into an identifier is to convert all characters that or not alphanumerical characters (0-9, a-z, A-Z) to an underscore.</p>
+      <p>Each XML element in an XML file is mapped to a record field. The name of the record field is based on the XML element name. These names can sometimes differ because fieldnames have to be formatted as an identifier in CODA (i.e. no spaces and special characters may be used). The approach of turning an element name into an identifier is to convert all characters that or not alphanumerical characters (0-9, a-z, A-Z) to an underscore.</p>
       
       <p>When an XML element can occur more than once within its parent element then the field will be an array. Arrays of XML elements are always one dimensional and their size is always dynamic.</p>
       
       <h3>XML element content</h3>
       
-      <p>XML elements can contain only other elements (in which case it is mapped to a record), contain pure text data (in which case its content is described using CODA ascii types), or mixed content. Mixed content is not supported by CODA, so CODA will map the whole block to a single string data element.</p>
+      <p>XML elements can contain only other elements (in which case it is mapped to a record), contain pure text data (in which case its content is described using CODA ascii types), or mixed content (as in XHTML). Mixed content is not supported by CODA and opening files with such content will result in an error.</p>
 
       <h3>Root of the product</h3>
       
@@ -40,11 +38,11 @@
       
       <h3>Attributes</h3>
       
-      <p>CODA will provide an attribute record for each XML element containing all attributes for the element as they are stored in the XML file.</p>
+      <p>CODA will provide an attribute record for each XML element and it contains all attributes for the element as they are stored in the XML file.</p>
       
       <div class="footer">
         <hr />
-        <p>Copyright &copy; 2007-2013 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+        <p>Copyright &copy; 2007-2014 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
       </div>
 
     </div>

@@ -1669,14 +1669,34 @@ static int eval_float(eval_info *info, const coda_expression *expr, double *valu
                 {
                     return -1;
                 }
+                if (len_timestr < 0)
+                {
+                    coda_set_error(CODA_ERROR_EXPRESSION, "negative length for time string");
+                    return -1;
+                }
+                if (len_timestr == 0)
+                {
+                    coda_set_error(CODA_ERROR_EXPRESSION, "time string is empty");
+                    return -1;
+                }
                 timestr[off_timestr + len_timestr] = '\0';      /* add terminating zero */
                 if (eval_string(info, opexpr->operand[1], &off_format, &len_format, &format) != 0)
                 {
                     free(timestr);
                     return -1;
                 }
+                if (len_format < 0)
+                {
+                    coda_set_error(CODA_ERROR_EXPRESSION, "negative length for time format");
+                    return -1;
+                }
+                if (len_format == 0)
+                {
+                    coda_set_error(CODA_ERROR_EXPRESSION, "time format is empty");
+                    return -1;
+                }
                 format[off_format + len_format] = '\0'; /* add terminating zero */
-                if (coda_string_to_time_with_format(&format[off_format], &timestr[off_timestr], value) != 0)
+                if (coda_time_string_to_double(&format[off_format], &timestr[off_timestr], value) != 0)
                 {
                     free(format);
                     free(timestr);
@@ -3182,6 +3202,16 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                     {
                         return -1;
                     }
+                    if (len_format < 0)
+                    {
+                        coda_set_error(CODA_ERROR_EXPRESSION, "negative length for time format");
+                        return -1;
+                    }
+                    if (len_format == 0)
+                    {
+                        coda_set_error(CODA_ERROR_EXPRESSION, "empty time format");
+                        return -1;
+                    }
                     format[off_format + len_format] = '\0';     /* add terminating zero */
                 }
                 else
@@ -3201,7 +3231,7 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                                    *length + 1, __FILE__, __LINE__);
                     return -1;
                 }
-                if (coda_time_to_string_with_format(&format[off_format], timevalue, *value) != 0)
+                if (coda_time_double_to_string(timevalue, &format[off_format], *value) != 0)
                 {
                     if (opexpr->operand[1] != NULL)
                     {

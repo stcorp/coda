@@ -1524,7 +1524,7 @@ static void coda_matlab_time_to_string(int nlhs, mxArray *plhs[], int nrhs, cons
     num_elements = mxGetNumberOfElements(prhs[0]);
     if (num_elements == 1)
     {
-        if (coda_time_to_string(mxGetScalar(prhs[0]), str) != 0)
+        if (coda_time_double_to_string(mxGetScalar(prhs[0]), "yyyy-MM-dd HH:mm:ss.SSSSSS", str) != 0)
         {
             coda_matlab_coda_error();
         }
@@ -1545,7 +1545,7 @@ static void coda_matlab_time_to_string(int nlhs, mxArray *plhs[], int nrhs, cons
 
         for (i = 0; i < num_elements; i++)
         {
-            if (coda_time_to_string(time_value[i], str) != 0)
+            if (coda_time_double_to_string(time_value[i], "yyyy-MM-dd HH:mm:ss.SSSSSS", str) != 0)
             {
                 coda_matlab_coda_error();
             }

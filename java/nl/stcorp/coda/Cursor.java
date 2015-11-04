@@ -46,7 +46,7 @@ public class Cursor
 
     // Constructor used instead of explicit coda_set_product().
     /**
-     * Construct a Cursor instance to point to an entire Product. /**
+     * Construct a Cursor instance to point to an entire Product.
      * 
      * @param product
      *            A Product instance.

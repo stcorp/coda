@@ -33,6 +33,7 @@ int coda_ascbin_cursor_goto_array_element(coda_cursor *cursor, int num_subs, con
 int coda_ascbin_cursor_goto_array_element_by_index(coda_cursor *cursor, long index);
 int coda_ascbin_cursor_goto_next_array_element(coda_cursor *cursor);
 int coda_ascbin_cursor_goto_attributes(coda_cursor *cursor);
+int coda_ascbin_cursor_use_base_type_of_special_type(coda_cursor *cursor);
 int coda_ascbin_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size);
 int coda_ascbin_cursor_get_num_elements(const coda_cursor *cursor, long *num_elements);
 int coda_ascbin_cursor_get_record_field_available_status(const coda_cursor *cursor, long index, int *available);

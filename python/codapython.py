@@ -863,9 +863,9 @@ def time_to_string(times):
     """
 
     if _isIterable(times):
-        return [coda_time_to_string(t) for t in times]
+        return [time_double_to_string(t, "yyyy-MM-dd HH:mm:ss.SSSSSS") for t in times]
     else:
-        return coda_time_to_string(times)
+        return time_double_to_string(times, "yyyy-MM-dd HH:mm:ss.SSSSSS")
 
 
 def time_to_utcstring(times):
@@ -887,9 +887,9 @@ def time_to_utcstring(times):
     """
 
     if _isIterable(times):
-        return [coda_time_to_utcstring(t) for t in times]
+        return [time_double_to_string_utc(t, "yyyy-MM-dd HH:mm:ss.SSSSSS") for t in times]
     else:
-        return coda_time_to_utcstring(times)
+        return time_double_to_string_utc(times, "yyyy-MM-dd HH:mm:ss.SSSSSS")
 
 
 def get_unit(start, *path):

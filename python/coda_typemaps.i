@@ -39,9 +39,9 @@
     $1 = &tmp;
 }
 
-%typemap(argout, fragment="t_output_helper") opaque_pointer **OUTPUT
+%typemap(argout) opaque_pointer **OUTPUT
 {
-    $result = t_output_helper($result, SWIG_NewPointerObj(*$1, $*1_descriptor, 0));
+    $result = SWIG_Python_AppendOutput($result, SWIG_NewPointerObj(*$1, $*1_descriptor, 0));
 }
 
 
@@ -204,8 +204,8 @@
     $2 = tmp_array;
 }
 
-%typemap(argout, fragment = "t_output_helper") (int *COUNT, long OUTPUT_ARRAY[]),
-                                               (int *COUNT, long *OUTPUT_ARRAY )
+%typemap(argout) (int *COUNT, long OUTPUT_ARRAY[]),
+                 (int *COUNT, long *OUTPUT_ARRAY )
 {
     long i;
 
@@ -220,7 +220,7 @@
         PyObject *o = PyInt_FromLong((long)$2[i]);
         PyList_SET_ITEM(tmp, i, o);
     }
-    $result = t_output_helper($result, tmp);
+    $result = SWIG_Python_AppendOutput($result, tmp);
 }
 
 
@@ -234,9 +234,9 @@
     $1 = &tmp;
 }
 
-%typemap(argout, fragment = "t_output_helper") __posix_type *OUTPUT
+%typemap(argout) __posix_type *OUTPUT
 {
-    $result = t_output_helper($result, __Python_from_method(*$1));
+    $result = SWIG_Python_AppendOutput($result, __Python_from_method(*$1));
 }
 %enddef
 
@@ -250,7 +250,7 @@
     $1 = (char **)&tmp;
 }
 
-%typemap(argout,fragment="t_output_helper") const char **OUTPUT
+%typemap(argout) const char **OUTPUT
 {
     PyObject *tmp_result;
 
@@ -267,7 +267,7 @@
             return NULL;
         }
     }
-    $result = t_output_helper($result, tmp_result);
+    $result = SWIG_Python_AppendOutput($result, tmp_result);
 }
 
 
@@ -282,7 +282,7 @@
     $2 = &tmp_length;
 }
 
-%typemap(argout, fragment = "t_output_helper") (const char **BINARY_OUTPUT, long *LENGTH)
+%typemap(argout) (const char **BINARY_OUTPUT, long *LENGTH)
 {
     PyObject *tmp_result;
 
@@ -299,7 +299,35 @@
             return NULL;
         }
     }
-    $result = t_output_helper($result, tmp_result);
+    $result = SWIG_Python_AppendOutput($result, tmp_result);
+}
+
+%typemap(in, numinputs = 1) (const char *FORMAT, char *STRING) (int alloc = 0)
+{
+	int length;
+	int res = SWIG_AsCharPtr($input, &$1, &alloc);
+    if (!SWIG_IsOK(res))
+    {
+        %variable_fail(res,"$1_type","$1_name");
+    }
+    length = (alloc == SWIG_NEWOBJ ? strlen($1) : 0);
+ 	$2 = malloc(length + 1);
+    if( $2 == NULL )
+    {
+        return PyErr_NoMemory();
+    }
+    $2[0] = '\0';
+}
+
+%typemap(argout) (const char *FORMAT, char *STRING)
+{
+    $result = SWIG_Python_AppendOutput($result, SWIG_FromCharPtr($2));
+}
+
+%typemap(freearg) (const char *FORMAT, char *STRING)
+{
+	if (alloc$argnum == SWIG_NEWOBJ) free($1);
+    free($2);
 }
 
 

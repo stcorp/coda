@@ -211,6 +211,43 @@ coda_cursor *deepcopy_coda_cursor(coda_cursor *self);
 %ignore coda_cursor_read_string; /* ignore the real method being wrapped */
 
 
+%newobject helper_coda_time_parts_to_string;
+%inline
+%{
+    char *helper_coda_time_parts_to_string(int year, int month, int day, int hour, int minute, int second, int musec,
+                                           const char *format)
+    {
+        char *dst = (char *)malloc(strlen(format) + 1);
+        coda_time_parts_to_string(year, month, day, hour, minute, second, musec, format, dst);
+        return dst;
+    }
+%}
+%ignore coda_time_parts_to_string; /* ignore the real method being wrapped */
+
+%newobject helper_coda_time_double_to_string;
+%inline
+%{
+    char *helper_coda_time_double_to_string(double datetime, const char *format)
+    {
+        char *dst = (char *)malloc(strlen(format) + 1);
+        coda_time_double_to_string(datetime, format, dst);
+        return dst;
+    }
+%}
+%ignore coda_time_double_to_string; /* ignore the real method being wrapped */
+
+%newobject helper_coda_time_double_to_string_utc;
+%inline
+%{
+    char *helper_coda_time_double_to_string_utc(double datetime, const char *format)
+    {
+        char *dst = (char *)malloc(strlen(format) + 1);
+        coda_time_double_to_string_utc(datetime, format, dst);
+        return dst;
+    }
+%}
+%ignore coda_time_double_to_string_utc; /* ignore the real method being wrapped */
+
 %newobject helper_coda_time_to_string;
 %inline
 %{
@@ -361,10 +398,16 @@ int coda_expression_is_constant(const coda_expression *expr);
 /*
   Typemap for scalar output arguments of type 'int':
 
-  coda_double_to_datetime()::int *YEAR, int *MONTH, int *DAY,
-                             int *HOUR, int *MINUTE, int *SECOND, int *MUSEC
-  coda_double_to_utcdatetime()::int *YEAR, int *MONTH, int *DAY,
-                                int *HOUR, int *MINUTE, int *SECOND, int *MUSEC
+  coda_double_to_datetime()::int *year, int *month, int *day,
+                             int *hour, int *minute, int *second, int *musec
+  coda_double_to_utcdatetime()::int *year, int *month, int *day,
+                                int *hour, int *minute, int *second, int *musec
+  coda_time_double_to_parts()::int *year, int *month, int *day,
+                               int *hour, int *minute, int *second, int *musec
+  coda_time_double_to_parts_utc()::int *year, int *month, int *day,
+                                   int *hour, int *minute, int *second, int *musec
+  coda_time_string_to_parts()::int *year, int *month, int *day,
+                               int *hour, int *minute, int *second, int *musec
   coda_get_product_version()::int *version
   coda_type_has_ascii_content()::int *has_ascii_content
   coda_type_has_attributes()::int *has_attributes
@@ -379,8 +422,8 @@ int coda_expression_is_constant(const coda_expression *expr);
   coda_recognize_file()::int *product_version
   coda_expression_eval_bool():int *value
 */
-%apply int *OUTPUT { int *YEAR, int *MONTH, int *DAY,
-         int *HOUR, int *MINUTE, int *SECOND, int *MUSEC,
+%apply int *OUTPUT { int *year, int *month, int *day,
+         int *hour, int *minute, int *second, int *musec,
          int *version,
          int *has_ascii_content,
          int *has_attributes,
@@ -450,6 +493,10 @@ int coda_expression_is_constant(const coda_expression *expr);
   coda_expression_eval_float()::double *value
   coda_utcdatetime_to_double()::double *datetime
   coda_string_to_time()::double *datetime
+  coda_time_parts_to_double()::double *datetime
+  coda_time_parts_to_double_utc()::double *datetime
+  coda_time_string_to_double()::double *datetime
+  coda_time_string_to_double_utc()::double *datetime
   coda_utcstring_to_time()::double *datetime
 */
 %apply double *OUTPUT { double *dst_re, double *dst_im,

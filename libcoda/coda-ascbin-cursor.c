@@ -203,6 +203,7 @@ int coda_ascbin_cursor_set_product(coda_cursor *cursor, coda_product *product)
 {
     cursor->product = product;
     cursor->n = 1;
+    assert(product->root_type != NULL);
     cursor->stack[0].type = product->root_type;
     cursor->stack[0].index = -1;        /* there is no index for the root of the product */
     cursor->stack[0].bit_offset = 0;
@@ -547,6 +548,15 @@ int coda_ascbin_cursor_goto_attributes(coda_cursor *cursor)
     /* we use the special index value '-1' to indicate that we are pointing to the attributes of the parent */
     cursor->stack[cursor->n - 1].index = -1;
     cursor->stack[cursor->n - 1].bit_offset = -1;       /* virtual types do not have a bit offset */
+
+    return 0;
+}
+
+int coda_ascbin_cursor_use_base_type_of_special_type(coda_cursor *cursor)
+{
+    coda_type_special *type = (coda_type_special *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)type->base_type;
 
     return 0;
 }

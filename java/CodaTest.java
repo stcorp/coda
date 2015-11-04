@@ -223,7 +223,7 @@ public class CodaTest
                 if (specialType == SpecialTypeEnum.coda_special_time)
                 {
                     double datetime = cursor.readDouble();
-                    String utcString = Coda.time_to_string(datetime);
+                    String utcString = Coda.time_double_to_string(datetime, "yyyy-MM-dd HH:mm:ss.SSSSSS");
                     System.out.print(utcString);
                 }
                 else

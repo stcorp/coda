@@ -354,7 +354,7 @@ static int detect_definition(const char *filename, coda_format *format, int64_t 
             }
             break;
         case coda_format_ascii:
-            /* not a format that can be returned by get_format_and_size() */
+            /* not a format that can be returned by get_format() */
             assert(0);
             exit(1);
     }

@@ -33,20 +33,23 @@ struct coda_bin_product_struct
     const coda_product_definition *product_definition;
     long *product_variable_size;
     int64_t **product_variable;
+    int64_t mem_size;
+    const uint8_t *mem_ptr;
 #if CODA_USE_QIAP
     void *qiap_info;
 #endif
 
-    int use_mmap;       /* indicates whether the file was opened using mmap */
-    int fd;     /* file handle when not using mmap */
+    /* 'bin' product specific fields */
+    int use_mmap;       /* indicates whether to use mem_ptr (or the file descriptor 'fd') */
+    int fd;     /* file handle when not using mem_ptr */
 #ifdef WIN32
     HANDLE file;
     HANDLE file_mapping;
 #endif
-    const uint8_t *mmap_ptr;
 };
 typedef struct coda_bin_product_struct coda_bin_product;
 
+int coda_bin_open_raw(const char *filename, int64_t file_size, coda_product **product);
 int coda_bin_product_open(coda_bin_product *product);
 int coda_bin_product_close(coda_bin_product *product);
 

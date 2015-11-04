@@ -26,11 +26,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "coda-read-array.h"
+#include "coda-transpose-array.h"
+
 #include "coda-ascbin.h"
 #include "coda-ascii.h"
 #include "coda-bin.h"
 #include "coda-mem.h"
-#include "coda-xml.h"
 #include "coda-cdf.h"
 #include "coda-netcdf.h"
 #include "coda-grib.h"
@@ -44,8 +46,6 @@
 #ifdef CODA_USE_QIAP
 #include "coda-qiap.h"
 #endif
-
-typedef int (*read_function) (const coda_cursor *, void *);
 
 static int get_read_type(const coda_cursor *cursor, coda_native_type *read_type)
 {
@@ -116,259 +116,6 @@ static int get_array_element_unconverted_read_type(coda_type *type, coda_native_
     else
     {
         *conversion = NULL;
-    }
-
-    return 0;
-}
-
-static int transpose_array(const coda_cursor *cursor, void *array, int element_size)
-{
-    long dim[CODA_MAX_NUM_DIMS];
-    int num_dims;
-    long num_elements;
-    long multiplier[CODA_MAX_NUM_DIMS + 1];
-    long rsub[CODA_MAX_NUM_DIMS + 1];   /* reversed index in multi dim array */
-    long rdim[CODA_MAX_NUM_DIMS + 1];   /* reversed order of dim[] */
-    long index = 0;
-    long i;
-    uint8_t *src;
-    uint8_t *dst;
-
-    if (coda_cursor_get_array_dim(cursor, &num_dims, dim) != 0)
-    {
-        return -1;
-    }
-
-    if (num_dims <= 1)
-    {
-        /* nothing to do */
-        return 0;
-    }
-
-    src = (uint8_t *)array;
-
-    num_elements = 1;
-    for (i = 0; i < num_dims; i++)
-    {
-        num_elements *= dim[i];
-        rsub[i] = 0;
-        rdim[i] = dim[num_dims - 1 - i];
-    }
-    if (num_elements <= 1)
-    {
-        /* nothing to do */
-        return 0;
-    }
-
-    multiplier[num_dims] = 1;
-    rdim[num_dims] = 1;
-    for (i = num_dims; i > 0; i--)
-    {
-        multiplier[i - 1] = multiplier[i] * rdim[i];
-    }
-    rdim[num_dims] = 0;
-    rsub[num_dims] = 0;
-
-    dst = (uint8_t *)malloc(num_elements * element_size);
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       num_elements * element_size, __FILE__, __LINE__);
-        return -1;
-    }
-
-    switch (element_size)
-    {
-        case 1:
-            for (i = 0; i < num_elements; i++)
-            {
-                int j = 0;
-
-                dst[index] = src[i];
-                index += multiplier[j];
-                rsub[j]++;
-                while (rsub[j] == rdim[j])
-                {
-                    rsub[j] = 0;
-                    index -= multiplier[j] * rdim[j];
-                    j++;
-                    index += multiplier[j];
-                    rsub[j]++;
-                }
-            }
-            break;
-        case 2:
-            for (i = 0; i < num_elements; i++)
-            {
-                int j = 0;
-
-                ((uint16_t *)dst)[index] = ((uint16_t *)src)[i];
-                index += multiplier[j];
-                rsub[j]++;
-                while (rsub[j] == rdim[j])
-                {
-                    rsub[j] = 0;
-                    index -= multiplier[j] * rdim[j];
-                    j++;
-                    index += multiplier[j];
-                    rsub[j]++;
-                }
-            }
-            break;
-        case 4:
-            for (i = 0; i < num_elements; i++)
-            {
-                int j = 0;
-
-                ((uint32_t *)dst)[index] = ((uint32_t *)src)[i];
-                index += multiplier[j];
-                rsub[j]++;
-                while (rsub[j] == rdim[j])
-                {
-                    rsub[j] = 0;
-                    index -= multiplier[j] * rdim[j];
-                    j++;
-                    index += multiplier[j];
-                    rsub[j]++;
-                }
-            }
-            break;
-        case 8:
-            for (i = 0; i < num_elements; i++)
-            {
-                int j = 0;
-
-                ((uint64_t *)dst)[index] = ((uint64_t *)src)[i];
-                index += multiplier[j];
-                rsub[j]++;
-                while (rsub[j] == rdim[j])
-                {
-                    rsub[j] = 0;
-                    index -= multiplier[j] * rdim[j];
-                    j++;
-                    index += multiplier[j];
-                    rsub[j]++;
-                }
-            }
-            break;
-        default:
-            assert(0);
-            exit(1);
-    }
-
-    memcpy(array, dst, num_elements * element_size);
-
-    free(dst);
-
-    return 0;
-}
-
-static int read_array(const coda_cursor *cursor, read_function read_basic_type_function, uint8_t *dst,
-                      int basic_type_size, coda_array_ordering array_ordering)
-{
-    coda_cursor array_cursor;
-    long dim[CODA_MAX_NUM_DIMS];
-    int num_dims;
-    long num_elements;
-    int i;
-
-    if (coda_cursor_get_array_dim(cursor, &num_dims, dim) != 0)
-    {
-        return -1;
-    }
-
-    array_cursor = *cursor;
-    if (num_dims <= 1 || array_ordering != coda_array_ordering_fortran)
-    {
-        /* C-style array ordering */
-
-        num_elements = 1;
-        for (i = 0; i < num_dims; i++)
-        {
-            num_elements *= dim[i];
-        }
-
-        if (num_elements > 0)
-        {
-            if (coda_cursor_goto_array_element_by_index(&array_cursor, 0) != 0)
-            {
-                return -1;
-            }
-            for (i = 0; i < num_elements; i++)
-            {
-                if ((*read_basic_type_function)(&array_cursor, &dst[i * basic_type_size]) != 0)
-                {
-                    return -1;
-                }
-                if (i < num_elements - 1)
-                {
-                    if (coda_cursor_goto_next_array_element(&array_cursor) != 0)
-                    {
-                        return -1;
-                    }
-                }
-            }
-        }
-    }
-    else
-    {
-        long incr[CODA_MAX_NUM_DIMS + 1];
-        long increment;
-        long c_index;
-        long fortran_index;
-
-        /* Fortran-style array ordering */
-
-        incr[0] = 1;
-        for (i = 0; i < num_dims; i++)
-        {
-            incr[i + 1] = incr[i] * dim[i];
-        }
-
-        increment = incr[num_dims - 1];
-        num_elements = incr[num_dims];
-
-        if (num_elements > 0)
-        {
-            c_index = 0;
-            fortran_index = 0;
-            if (coda_cursor_goto_array_element_by_index(&array_cursor, 0) != 0)
-            {
-                return -1;
-            }
-            for (;;)
-            {
-                do
-                {
-                    if ((*read_basic_type_function)(&array_cursor, &dst[fortran_index * basic_type_size]) != 0)
-                    {
-                        return -1;
-                    }
-                    c_index++;
-                    if (c_index < num_elements)
-                    {
-                        if (coda_cursor_goto_next_array_element(&array_cursor) != 0)
-                        {
-                            return -1;
-                        }
-                    }
-                    fortran_index += increment;
-                } while (fortran_index < num_elements);
-
-                if (c_index == num_elements)
-                {
-                    break;
-                }
-
-                fortran_index += incr[num_dims - 2] - incr[num_dims];
-                i = num_dims - 3;
-                while (i >= 0 && fortran_index >= incr[i + 2])
-                {
-                    fortran_index += incr[i] - incr[i + 2];
-                    i--;
-                }
-            }
-        }
     }
 
     return 0;
@@ -546,13 +293,11 @@ static int read_int8(const coda_cursor *cursor, int8_t *dst)
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
-            return coda_ascii_cursor_read_int8(cursor, dst, -1);
+            return coda_ascii_cursor_read_int8(cursor, dst);
         case coda_backend_binary:
             return coda_bin_cursor_read_int8(cursor, dst);
         case coda_backend_memory:
             return coda_mem_cursor_read_int8(cursor, dst);
-        case coda_backend_xml:
-            return coda_xml_cursor_read_int8(cursor, dst);
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_int8(cursor, dst);
@@ -593,13 +338,11 @@ static int read_uint8(const coda_cursor *cursor, uint8_t *dst)
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
-            return coda_ascii_cursor_read_uint8(cursor, dst, -1);
+            return coda_ascii_cursor_read_uint8(cursor, dst);
         case coda_backend_binary:
             return coda_bin_cursor_read_uint8(cursor, dst);
         case coda_backend_memory:
             return coda_mem_cursor_read_uint8(cursor, dst);
-        case coda_backend_xml:
-            return coda_xml_cursor_read_uint8(cursor, dst);
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_uint8(cursor, dst);
@@ -639,13 +382,11 @@ static int read_int16(const coda_cursor *cursor, int16_t *dst)
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
-            return coda_ascii_cursor_read_int16(cursor, dst, -1);
+            return coda_ascii_cursor_read_int16(cursor, dst);
         case coda_backend_binary:
             return coda_bin_cursor_read_int16(cursor, dst);
         case coda_backend_memory:
             return coda_mem_cursor_read_int16(cursor, dst);
-        case coda_backend_xml:
-            return coda_xml_cursor_read_int16(cursor, dst);
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_int16(cursor, dst);
@@ -686,13 +427,11 @@ static int read_uint16(const coda_cursor *cursor, uint16_t *dst)
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
-            return coda_ascii_cursor_read_uint16(cursor, dst, -1);
+            return coda_ascii_cursor_read_uint16(cursor, dst);
         case coda_backend_binary:
             return coda_bin_cursor_read_uint16(cursor, dst);
         case coda_backend_memory:
             return coda_mem_cursor_read_uint16(cursor, dst);
-        case coda_backend_xml:
-            return coda_xml_cursor_read_uint16(cursor, dst);
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_uint16(cursor, dst);
@@ -732,14 +471,12 @@ static int read_int32(const coda_cursor *cursor, int32_t *dst)
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
-            return coda_ascii_cursor_read_int32(cursor, dst, -1);
+            return coda_ascii_cursor_read_int32(cursor, dst);
         case coda_backend_binary:
             return coda_bin_cursor_read_int32(cursor, dst);
         case coda_backend_memory:
             return coda_mem_cursor_read_int32(cursor, dst);
             break;
-        case coda_backend_xml:
-            return coda_xml_cursor_read_int32(cursor, dst);
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_int32(cursor, dst);
@@ -780,13 +517,11 @@ static int read_uint32(const coda_cursor *cursor, uint32_t *dst)
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
-            return coda_ascii_cursor_read_uint32(cursor, dst, -1);
+            return coda_ascii_cursor_read_uint32(cursor, dst);
         case coda_backend_binary:
             return coda_bin_cursor_read_uint32(cursor, dst);
         case coda_backend_memory:
             return coda_mem_cursor_read_uint32(cursor, dst);
-        case coda_backend_xml:
-            return coda_xml_cursor_read_uint32(cursor, dst);
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_uint32(cursor, dst);
@@ -826,13 +561,11 @@ static int read_int64(const coda_cursor *cursor, int64_t *dst)
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
-            return coda_ascii_cursor_read_int64(cursor, dst, -1);
+            return coda_ascii_cursor_read_int64(cursor, dst);
         case coda_backend_binary:
             return coda_bin_cursor_read_int64(cursor, dst);
         case coda_backend_memory:
             return coda_mem_cursor_read_int64(cursor, dst);
-        case coda_backend_xml:
-            return coda_xml_cursor_read_int64(cursor, dst);
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_int64(cursor, dst);
@@ -872,13 +605,11 @@ static int read_uint64(const coda_cursor *cursor, uint64_t *dst)
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
-            return coda_ascii_cursor_read_uint64(cursor, dst, -1);
+            return coda_ascii_cursor_read_uint64(cursor, dst);
         case coda_backend_binary:
             return coda_bin_cursor_read_uint64(cursor, dst);
         case coda_backend_memory:
             return coda_mem_cursor_read_uint64(cursor, dst);
-        case coda_backend_xml:
-            return coda_xml_cursor_read_uint64(cursor, dst);
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_uint64(cursor, dst);
@@ -917,13 +648,11 @@ static int read_float(const coda_cursor *cursor, float *dst)
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
-            return coda_ascii_cursor_read_float(cursor, dst, -1);
+            return coda_ascii_cursor_read_float(cursor, dst);
         case coda_backend_binary:
             return coda_bin_cursor_read_float(cursor, dst);
         case coda_backend_memory:
             return coda_mem_cursor_read_float(cursor, dst);
-        case coda_backend_xml:
-            return coda_xml_cursor_read_float(cursor, dst);
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_float(cursor, dst);
@@ -964,21 +693,18 @@ static int read_double(const coda_cursor *cursor, double *dst)
     }
 #endif
     type = (coda_type *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
-    if (type->type_class == coda_special_class && cursor->stack[cursor->n - 1].type->backend != coda_backend_memory &&
-        ((coda_type_special *)type)->special_type == coda_special_time)
+    if (type->type_class == coda_special_class && ((coda_type_special *)type)->special_type == coda_special_time)
     {
         return read_time(cursor, dst);
     }
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
-            return coda_ascii_cursor_read_double(cursor, dst, -1);
+            return coda_ascii_cursor_read_double(cursor, dst);
         case coda_backend_binary:
             return coda_bin_cursor_read_double(cursor, dst);
         case coda_backend_memory:
             return coda_mem_cursor_read_double(cursor, dst);
-        case coda_backend_xml:
-            return coda_xml_cursor_read_double(cursor, dst);
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_double(cursor, dst);
@@ -1019,13 +745,11 @@ static int read_char(const coda_cursor *cursor, char *dst)
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
-            return coda_ascii_cursor_read_char(cursor, dst, -1);
+            return coda_ascii_cursor_read_char(cursor, dst);
         case coda_backend_binary:
             return coda_bin_cursor_read_char(cursor, dst);
         case coda_backend_memory:
             return coda_mem_cursor_read_char(cursor, dst);
-        case coda_backend_xml:
-            return coda_xml_cursor_read_char(cursor, dst);
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_char(cursor, dst);
@@ -1066,13 +790,11 @@ static int read_string(const coda_cursor *cursor, char *dst, long dst_size)
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
-            return coda_ascii_cursor_read_string(cursor, dst, dst_size, -1);
+            return coda_ascii_cursor_read_string(cursor, dst, dst_size);
         case coda_backend_binary:
             return coda_bin_cursor_read_string(cursor, dst, dst_size);
         case coda_backend_memory:
             return coda_mem_cursor_read_string(cursor, dst, dst_size);
-        case coda_backend_xml:
-            return coda_xml_cursor_read_string(cursor, dst, dst_size);
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_read_string(cursor, dst, dst_size);
@@ -1120,25 +842,11 @@ static int read_int8_array(const coda_cursor *cursor, int8_t *dst, coda_array_or
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
-            if (coda_ascii_cursor_read_int8_array(cursor, dst, -1) != 0)
-            {
-                return -1;
-            }
-            break;
+            return coda_ascii_cursor_read_int8_array(cursor, dst, array_ordering);
         case coda_backend_binary:
-            return read_array(cursor, (read_function)&read_int8, (uint8_t *)dst, sizeof(int8_t), array_ordering);
+            return coda_bin_cursor_read_int8_array(cursor, dst, array_ordering);
         case coda_backend_memory:
-            if (coda_mem_cursor_read_int8_array(cursor, dst) != 0)
-            {
-                return -1;
-            }
-            break;
-        case coda_backend_xml:
-            if (coda_xml_cursor_read_int8_array(cursor, dst) != 0)
-            {
-                return -1;
-            }
-            break;
+            return coda_mem_cursor_read_int8_array(cursor, dst, array_ordering);
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             if (coda_hdf4_cursor_read_int8_array(cursor, dst) != 0)
@@ -1207,25 +915,11 @@ static int read_uint8_array(const coda_cursor *cursor, uint8_t *dst, coda_array_
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
-            if (coda_ascii_cursor_read_uint8_array(cursor, dst, -1) != 0)
-            {
-                return -1;
-            }
-            break;
+            return coda_ascii_cursor_read_uint8_array(cursor, dst, array_ordering);
         case coda_backend_binary:
-            return read_array(cursor, (read_function)&read_uint8, (uint8_t *)dst, sizeof(uint8_t), array_ordering);
+            return coda_bin_cursor_read_uint8_array(cursor, dst, array_ordering);
         case coda_backend_memory:
-            if (coda_mem_cursor_read_uint8_array(cursor, dst) != 0)
-            {
-                return -1;
-            }
-            break;
-        case coda_backend_xml:
-            if (coda_xml_cursor_read_uint8_array(cursor, dst) != 0)
-            {
-                return -1;
-            }
-            break;
+            return coda_mem_cursor_read_uint8_array(cursor, dst, array_ordering);
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             if (coda_hdf4_cursor_read_uint8_array(cursor, dst) != 0)
@@ -1289,25 +983,11 @@ static int read_int16_array(const coda_cursor *cursor, int16_t *dst, coda_array_
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
-            if (coda_ascii_cursor_read_int16_array(cursor, dst, -1) != 0)
-            {
-                return -1;
-            }
-            break;
+            return coda_ascii_cursor_read_int16_array(cursor, dst, array_ordering);
         case coda_backend_binary:
-            return read_array(cursor, (read_function)&read_int16, (uint8_t *)dst, sizeof(int16_t), array_ordering);
+            return coda_bin_cursor_read_int16_array(cursor, dst, array_ordering);
         case coda_backend_memory:
-            if (coda_mem_cursor_read_int16_array(cursor, dst) != 0)
-            {
-                return -1;
-            }
-            break;
-        case coda_backend_xml:
-            if (coda_xml_cursor_read_int16_array(cursor, dst) != 0)
-            {
-                return -1;
-            }
-            break;
+            return coda_mem_cursor_read_int16_array(cursor, dst, array_ordering);
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             if (coda_hdf4_cursor_read_int16_array(cursor, dst) != 0)
@@ -1376,25 +1056,11 @@ static int read_uint16_array(const coda_cursor *cursor, uint16_t *dst, coda_arra
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
-            if (coda_ascii_cursor_read_uint16_array(cursor, dst, -1) != 0)
-            {
-                return -1;
-            }
-            break;
+            return coda_ascii_cursor_read_uint16_array(cursor, dst, array_ordering);
         case coda_backend_binary:
-            return read_array(cursor, (read_function)&read_uint16, (uint8_t *)dst, sizeof(uint16_t), array_ordering);
+            return coda_bin_cursor_read_uint16_array(cursor, dst, array_ordering);
         case coda_backend_memory:
-            if (coda_mem_cursor_read_uint16_array(cursor, dst) != 0)
-            {
-                return -1;
-            }
-            break;
-        case coda_backend_xml:
-            if (coda_xml_cursor_read_uint16_array(cursor, dst) != 0)
-            {
-                return -1;
-            }
-            break;
+            return coda_mem_cursor_read_uint16_array(cursor, dst, array_ordering);
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             if (coda_hdf4_cursor_read_uint16_array(cursor, dst) != 0)
@@ -1458,25 +1124,11 @@ static int read_int32_array(const coda_cursor *cursor, int32_t *dst, coda_array_
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
-            if (coda_ascii_cursor_read_int32_array(cursor, dst, -1) != 0)
-            {
-                return -1;
-            }
-            break;
+            return coda_ascii_cursor_read_int32_array(cursor, dst, array_ordering);
         case coda_backend_binary:
-            return read_array(cursor, (read_function)&read_int32, (uint8_t *)dst, sizeof(int32_t), array_ordering);
+            return coda_bin_cursor_read_int32_array(cursor, dst, array_ordering);
         case coda_backend_memory:
-            if (coda_mem_cursor_read_int32_array(cursor, dst) != 0)
-            {
-                return -1;
-            }
-            break;
-        case coda_backend_xml:
-            if (coda_xml_cursor_read_int32_array(cursor, dst) != 0)
-            {
-                return -1;
-            }
-            break;
+            return coda_mem_cursor_read_int32_array(cursor, dst, array_ordering);
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             if (coda_hdf4_cursor_read_int32_array(cursor, dst) != 0)
@@ -1545,25 +1197,11 @@ static int read_uint32_array(const coda_cursor *cursor, uint32_t *dst, coda_arra
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
-            if (coda_ascii_cursor_read_uint32_array(cursor, dst, -1) != 0)
-            {
-                return -1;
-            }
-            break;
+            return coda_ascii_cursor_read_uint32_array(cursor, dst, array_ordering);
         case coda_backend_binary:
-            return read_array(cursor, (read_function)&read_uint32, (uint8_t *)dst, sizeof(uint32_t), array_ordering);
+            return coda_bin_cursor_read_uint32_array(cursor, dst, array_ordering);
         case coda_backend_memory:
-            if (coda_mem_cursor_read_uint32_array(cursor, dst) != 0)
-            {
-                return -1;
-            }
-            break;
-        case coda_backend_xml:
-            if (coda_xml_cursor_read_uint32_array(cursor, dst) != 0)
-            {
-                return -1;
-            }
-            break;
+            return coda_mem_cursor_read_uint32_array(cursor, dst, array_ordering);
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             if (coda_hdf4_cursor_read_uint32_array(cursor, dst) != 0)
@@ -1627,25 +1265,11 @@ static int read_int64_array(const coda_cursor *cursor, int64_t *dst, coda_array_
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
-            if (coda_ascii_cursor_read_int64_array(cursor, dst, -1) != 0)
-            {
-                return -1;
-            }
-            break;
+            return coda_ascii_cursor_read_int64_array(cursor, dst, array_ordering);
         case coda_backend_binary:
-            return read_array(cursor, (read_function)&read_int64, (uint8_t *)dst, sizeof(int64_t), array_ordering);
+            return coda_bin_cursor_read_int64_array(cursor, dst, array_ordering);
         case coda_backend_memory:
-            if (coda_mem_cursor_read_int64_array(cursor, dst) != 0)
-            {
-                return -1;
-            }
-            break;
-        case coda_backend_xml:
-            if (coda_xml_cursor_read_int64_array(cursor, dst) != 0)
-            {
-                return -1;
-            }
-            break;
+            return coda_mem_cursor_read_int64_array(cursor, dst, array_ordering);
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             if (coda_hdf4_cursor_read_int64_array(cursor, dst) != 0)
@@ -1709,25 +1333,11 @@ static int read_uint64_array(const coda_cursor *cursor, uint64_t *dst, coda_arra
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
-            if (coda_ascii_cursor_read_uint64_array(cursor, dst, -1) != 0)
-            {
-                return -1;
-            }
-            break;
+            return coda_ascii_cursor_read_uint64_array(cursor, dst, array_ordering);
         case coda_backend_binary:
-            return read_array(cursor, (read_function)&read_uint64, (uint8_t *)dst, sizeof(uint64_t), array_ordering);
+            return coda_bin_cursor_read_uint64_array(cursor, dst, array_ordering);
         case coda_backend_memory:
-            if (coda_mem_cursor_read_uint64_array(cursor, dst) != 0)
-            {
-                return -1;
-            }
-            break;
-        case coda_backend_xml:
-            if (coda_xml_cursor_read_uint64_array(cursor, dst) != 0)
-            {
-                return -1;
-            }
-            break;
+            return coda_mem_cursor_read_uint64_array(cursor, dst, array_ordering);
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             if (coda_hdf4_cursor_read_uint64_array(cursor, dst) != 0)
@@ -1786,25 +1396,11 @@ static int read_float_array(const coda_cursor *cursor, float *dst, coda_array_or
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
-            if (coda_ascii_cursor_read_float_array(cursor, dst, -1) != 0)
-            {
-                return -1;
-            }
-            break;
+            return coda_ascii_cursor_read_float_array(cursor, dst, array_ordering);
         case coda_backend_binary:
-            return read_array(cursor, (read_function)&read_float, (uint8_t *)dst, sizeof(float), array_ordering);
+            return coda_bin_cursor_read_float_array(cursor, dst, array_ordering);
         case coda_backend_memory:
-            if (coda_mem_cursor_read_float_array(cursor, dst) != 0)
-            {
-                return -1;
-            }
-            break;
-        case coda_backend_xml:
-            if (coda_xml_cursor_read_float_array(cursor, dst) != 0)
-            {
-                return -1;
-            }
-            break;
+            return coda_mem_cursor_read_float_array(cursor, dst, array_ordering);
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             if (coda_hdf4_cursor_read_float_array(cursor, dst) != 0)
@@ -1884,25 +1480,11 @@ static int read_double_array(const coda_cursor *cursor, double *dst, coda_array_
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
-            if (coda_ascii_cursor_read_double_array(cursor, dst, -1) != 0)
-            {
-                return -1;
-            }
-            break;
+            return coda_ascii_cursor_read_double_array(cursor, dst, array_ordering);
         case coda_backend_binary:
-            return read_array(cursor, (read_function)&read_double, (uint8_t *)dst, sizeof(double), array_ordering);
+            return coda_bin_cursor_read_double_array(cursor, dst, array_ordering);
         case coda_backend_memory:
-            if (coda_mem_cursor_read_double_array(cursor, dst) != 0)
-            {
-                return -1;
-            }
-            break;
-        case coda_backend_xml:
-            if (coda_xml_cursor_read_double_array(cursor, dst) != 0)
-            {
-                return -1;
-            }
-            break;
+            return coda_mem_cursor_read_double_array(cursor, dst, array_ordering);
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             if (coda_hdf4_cursor_read_double_array(cursor, dst) != 0)
@@ -1971,25 +1553,11 @@ static int read_char_array(const coda_cursor *cursor, char *dst, coda_array_orde
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
-            if (coda_ascii_cursor_read_char_array(cursor, dst, -1) != 0)
-            {
-                return -1;
-            }
-            break;
+            return coda_ascii_cursor_read_char_array(cursor, dst, array_ordering);
         case coda_backend_binary:
-            return read_array(cursor, (read_function)&read_char, (uint8_t *)dst, sizeof(char), array_ordering);
+            return coda_bin_cursor_read_char_array(cursor, dst, array_ordering);
         case coda_backend_memory:
-            if (coda_mem_cursor_read_char_array(cursor, dst) != 0)
-            {
-                return -1;
-            }
-            break;
-        case coda_backend_xml:
-            if (coda_xml_cursor_read_char_array(cursor, dst) != 0)
-            {
-                return -1;
-            }
-            break;
+            return coda_mem_cursor_read_char_array(cursor, dst, array_ordering);
         case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             if (coda_hdf4_cursor_read_char_array(cursor, dst) != 0)
@@ -3100,8 +2668,6 @@ LIBCODA_API int coda_cursor_read_bits(const coda_cursor *cursor, uint8_t *dst, i
             return coda_bin_cursor_read_bits(cursor, dst, bit_offset, bit_length);
         case coda_backend_memory:
             return coda_mem_cursor_read_bits(cursor, dst, bit_offset, bit_length);
-        case coda_backend_xml:
-            return coda_xml_cursor_read_bits(cursor, dst, bit_offset, bit_length);
         case coda_backend_hdf4:
         case coda_backend_hdf5:
         case coda_backend_cdf:
@@ -3163,8 +2729,6 @@ LIBCODA_API int coda_cursor_read_bytes(const coda_cursor *cursor, uint8_t *dst, 
             return coda_bin_cursor_read_bytes(cursor, dst, offset, length);
         case coda_backend_memory:
             return coda_mem_cursor_read_bytes(cursor, dst, offset, length);
-        case coda_backend_xml:
-            return coda_xml_cursor_read_bytes(cursor, dst, offset, length);
         case coda_backend_hdf4:
         case coda_backend_hdf5:
         case coda_backend_cdf:

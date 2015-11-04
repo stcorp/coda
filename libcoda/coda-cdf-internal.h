@@ -23,6 +23,7 @@
 
 #include "coda-cdf.h"
 
+#include "coda-bin-internal.h"
 #include "coda-mem-internal.h"
 
 typedef enum cdf_type_tag_enum
@@ -73,18 +74,14 @@ typedef struct coda_cdf_product_struct
     const coda_product_definition *product_definition;
     long *product_variable_size;
     int64_t **product_variable;
+    int64_t mem_size;
+    const uint8_t *mem_ptr;
 #if CODA_USE_QIAP
     void *qiap_info;
 #endif
 
-    int use_mmap;       /* indicates whether the file was opened using mmap */
-    int fd;     /* file handle when not using mmap */
-#ifdef WIN32
-    HANDLE file;
-    HANDLE file_mapping;
-#endif
-    const uint8_t *mmap_ptr;
-
+    /* 'cdf' product specific fields */
+    coda_product *raw_product;
     int32_t cdf_version;
     int32_t cdf_release;
     int32_t cdf_increment;

@@ -2,7 +2,7 @@
 #
 project(CODA)
 
-set(VERSION 2.10.1)
+set(VERSION 2.11)
 set(CODA_VERSION \"${VERSION}\")
 
 # General setup
@@ -312,8 +312,10 @@ set(LIBCODA_SOURCES
   libcoda/coda-netcdf.h
   libcoda/coda-path.h
   libcoda/coda-product.c
+  libcoda/coda-read-array.h
   libcoda/coda-read-bits.h
   libcoda/coda-read-bytes.h
+  libcoda/coda-read-bytes-in-bounds.h
   libcoda/coda-rinex.c
   libcoda/coda-rinex.h
   libcoda/coda-sp3.c
@@ -322,15 +324,14 @@ set(LIBCODA_SOURCES
   libcoda/coda-swap4.h
   libcoda/coda-swap8.h
   libcoda/coda-time.c
+  libcoda/coda-transpose-array.h
   libcoda/coda-tree.c
   libcoda/coda-tree.h
   libcoda/coda-type.c
   libcoda/coda-type.h
   libcoda/coda-utils.c
-  libcoda/coda-xml-cursor.c
   libcoda/coda-xml-internal.h
   libcoda/coda-xml-parser.c
-  libcoda/coda-xml-type.c
   libcoda/coda-xml.c
   libcoda/coda-xml.h
   libcoda/coda.c
@@ -716,9 +717,9 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
   #
   # Set dynamic library version
   #
-  set(LIBCODA_CURRENT 10)
-  set(LIBCODA_REVISION 3)
-  set(LIBCODA_AGE 4)
+  set(LIBCODA_CURRENT 11)
+  set(LIBCODA_REVISION 0)
+  set(LIBCODA_AGE 5)
   math(EXPR LIBCODA_MAJOR "${LIBCODA_CURRENT} - ${LIBCODA_AGE}")
   set(LIBCODA_MINOR ${LIBCODA_AGE})
   

@@ -321,17 +321,37 @@ LIBCODA_API int coda_match_filefilter(const char *filefilter, int num_filepaths,
 
 /* CODA Time */
 
-LIBCODA_API int coda_datetime_to_double(int YEAR, int MONTH, int DAY, int HOUR, int MINUTE, int SECOND, int MUSEC,
+LIBCODA_API int coda_time_double_to_parts(double datetime, int *year, int *month, int *day, int *hour, int *minute,
+                                          int *second, int *musec);
+LIBCODA_API int coda_time_double_to_parts_utc(double datetime, int *year, int *month, int *day, int *hour, int *minute,
+                                              int *second, int *musec);
+LIBCODA_API int coda_time_parts_to_double(int year, int month, int day, int hour, int minute, int second, int musec,
+                                          double *datetime);
+LIBCODA_API int coda_time_parts_to_double_utc(int year, int month, int day, int hour, int minute, int second, int musec,
+                                              double *datetime);
+
+LIBCODA_API int coda_time_parts_to_string(int year, int month, int day, int hour, int minute, int second, int musec,
+                                          const char *format, char *str);
+LIBCODA_API int coda_time_string_to_parts(const char *format, const char *str, int *year, int *month, int *day,
+                                          int *hour, int *minute, int *second, int *musec);
+
+LIBCODA_API int coda_time_double_to_string(double datetime, const char *format, char *str);
+LIBCODA_API int coda_time_double_to_string_utc(double datetime, const char *format, char *str);
+LIBCODA_API int coda_time_string_to_double(const char *format, const char *str, double *datetime);
+LIBCODA_API int coda_time_string_to_double_utc(const char *format, const char *str, double *datetime);
+
+/* deprecated backward compatible functions */
+LIBCODA_API int coda_datetime_to_double(int year, int month, int day, int hour, int minute, int second, int musec,
                                         double *datetime);
-LIBCODA_API int coda_double_to_datetime(double datetime, int *YEAR, int *MONTH, int *DAY, int *HOUR, int *MINUTE,
-                                        int *SECOND, int *MUSEC);
+LIBCODA_API int coda_double_to_datetime(double datetime, int *year, int *month, int *day, int *hour, int *minute,
+                                        int *second, int *musec);
 LIBCODA_API int coda_time_to_string(double datetime, char *str);
 LIBCODA_API int coda_string_to_time(const char *str, double *datetime);
 
-LIBCODA_API int coda_utcdatetime_to_double(int YEAR, int MONTH, int DAY, int HOUR, int MINUTE, int SECOND, int MUSEC,
+LIBCODA_API int coda_utcdatetime_to_double(int year, int month, int day, int hour, int minute, int secon, int musec,
                                            double *datetime);
-LIBCODA_API int coda_double_to_utcdatetime(double datetime, int *YEAR, int *MONTH, int *DAY, int *HOUR, int *MINUTE,
-                                           int *SECOND, int *MUSEC);
+LIBCODA_API int coda_double_to_utcdatetime(double datetime, int *year, int *month, int *day, int *hour, int *minute,
+                                           int *second, int *musec);
 LIBCODA_API int coda_time_to_utcstring(double datetime, char *str);
 LIBCODA_API int coda_utcstring_to_time(const char *str, double *datetime);
 

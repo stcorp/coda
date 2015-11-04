@@ -53,7 +53,6 @@ enum coda_backend_enum
 
     /* then all backends that have separate dynamic types */
     coda_backend_memory = first_dynamic_backend_id,   /**< Backend that feeds data from memory */
-    coda_backend_xml,   /**< Backend that reads data from an XML file */
     coda_backend_hdf4,  /**< Backend that reads data via the HDF4 library */
     coda_backend_hdf5,  /**< Backend that reads data via the HDF5 library */
     coda_backend_cdf,   /**< Backend that reads data from CDF files */
@@ -64,7 +63,7 @@ typedef enum coda_backend_enum coda_backend;
 
 /* type 'base class' that describes the dynamic (i.e. instance specific) type information of a data element */
 /* this is the type that is used within coda_product for the root type and within coda_cursor */
-/* depending on the backend a coda_dynamic_type instance can also be a coda_type (or vice versa) */
+/* depending on the backend a coda_dynamic_type instance can also be a coda_type */
 struct coda_dynamic_type_struct
 {
     coda_backend backend;
@@ -85,6 +84,8 @@ struct coda_product_struct
     const coda_product_definition *product_definition;
     long *product_variable_size;
     int64_t **product_variable;
+    int64_t mem_size;
+    uint8_t *mem_ptr;
 #if CODA_USE_QIAP
     void *qiap_info;
 #endif
@@ -112,7 +113,6 @@ coda_dynamic_type *coda_no_data_singleton(coda_format format);
 coda_dynamic_type *coda_mem_empty_record(coda_format format);
 coda_type *coda_get_type_for_dynamic_type(coda_dynamic_type *dynamic_type);
 void coda_dynamic_type_delete(coda_dynamic_type *type);
-int coda_dynamic_type_update(coda_dynamic_type **type, coda_type **definition);
 
 LIBCODA_API int coda_type_get_record_field_index_from_name_n(const coda_type *type, const char *name, int name_length,
                                                              long *index);
@@ -131,8 +131,6 @@ char *coda_short_identifier_from_name(const char *name, hashtable *hash_data, in
 
 int coda_dayofyear_to_month_day(int year, int day_of_year, int *month, int *day_of_month);
 int coda_month_to_integer(const char month[3]);
-int coda_string_to_time_with_format(const char *format, const char *str, double *datetime);
-int coda_time_to_string_with_format(const char *format, double datetime, char *str);
 int coda_leap_second_table_init(void);
 void coda_leap_second_table_done(void);
 

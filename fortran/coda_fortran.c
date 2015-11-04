@@ -208,6 +208,104 @@ double UFNAME(CODA_TIME,coda_time)(void)
     return time(NULL) - 10957 * 86400;
 }
 
+int UFNAME(CODA_TIME_DOUBLE_TO_PARTS,coda_time_double_to_parts)(double *datetime, int *year, int *month, int *day, int *hour, int *minute, int *second, int *musec)
+{
+    return coda_time_double_to_parts(*datetime, year, month, day, hour, minute, second, musec);
+}
+
+int UFNAME(CODA_TIME_DOUBLE_TO_PARTS_UTC,coda_time_double_to_parts_utc)(double *datetime, int *year, int *month, int *day, int *hour, int *minute, int *second, int *musec)
+{
+    return coda_time_double_to_parts_utc(*datetime, year, month, day, hour, minute, second, musec);
+}
+
+int UFNAME(CODA_TIME_PARTS_TO_DOUBLE,coda_time_parts_to_double)(int *year, int *month, int *day, int *hour, int *minute, int *second, int *musec, double *datetime)
+{
+    return coda_time_parts_to_double(*year, *month, *day, *hour, *minute, *second, *musec, datetime);
+}
+
+int UFNAME(CODA_TIME_PARTS_TO_DOUBLE_UTC,coda_time_parts_to_double_utc)(int *year, int *month, int *day, int *hour, int *minute, int *second, int *musec, double *datetime)
+{
+    return coda_time_parts_to_double_utc(*year, *month, *day, *hour, *minute, *second, *musec, datetime);
+}
+
+int UFNAME(CODA_TIME_PARTS_TO_STRING,coda_time_parts_to_string)(int *year, int *month, int *day, int *hour, int *minute, int *second, int *musec, const char *format, char *str, int format_size, int str_size)
+{
+    int result;
+    INSTR_BEGIN_DEF(format)
+    INOUTSTR_BEGIN_DEF(str)
+    INSTR_BEGIN_INIT(format)
+    INOUTSTR_BEGIN_INIT(str)
+    result = coda_time_parts_to_string(*year, *month, *day, *hour, *minute, *second, *musec, format_s, str_s);
+    INSTR_END(format)
+    INOUTSTR_END(str)
+    return result;
+}
+
+int UFNAME(CODA_TIME_STRING_TO_PARTS,coda_time_string_to_parts)(const char *format, const char *str, int *year, int *month, int *day, int *hour, int *minute, int *second, int *musec, int format_size, int str_size)
+{
+    int result;
+    INSTR_BEGIN_DEF(format)
+    INSTR_BEGIN_DEF(str)
+    INSTR_BEGIN_INIT(format)
+    INSTR_BEGIN_INIT(str)
+    result = coda_time_string_to_parts(format_s, str_s, year, month, day, hour, minute, second, musec);
+    INSTR_END(format)
+    INSTR_END(str)
+    return result;
+}
+
+int UFNAME(CODA_TIME_DOUBLE_TO_STRING,coda_time_double_to_string)(double *datetime, const char *format, char *str, int format_size, int str_size)
+{
+    int result;
+    INSTR_BEGIN_DEF(format)
+    INOUTSTR_BEGIN_DEF(str)
+    INSTR_BEGIN_INIT(format)
+    INOUTSTR_BEGIN_INIT(str)
+    result = coda_time_double_to_string(*datetime, format_s, str_s);
+    INSTR_END(format)
+    INOUTSTR_END(str)
+    return result;
+}
+
+int UFNAME(CODA_TIME_DOUBLE_TO_STRING_UTC,coda_time_double_to_string_utc)(double *datetime, const char *format, char *str, int format_size, int str_size)
+{
+    int result;
+    INSTR_BEGIN_DEF(format)
+    INOUTSTR_BEGIN_DEF(str)
+    INSTR_BEGIN_INIT(format)
+    INOUTSTR_BEGIN_INIT(str)
+    result = coda_time_double_to_string_utc(*datetime, format_s, str_s);
+    INSTR_END(format)
+    INOUTSTR_END(str)
+    return result;
+}
+
+int UFNAME(CODA_TIME_STRING_TO_DOUBLE,coda_time_string_to_double)(const char *format, const char *str, double *datetime, int format_size, int str_size)
+{
+    int result;
+    INSTR_BEGIN_DEF(format)
+    INSTR_BEGIN_DEF(str)
+    INSTR_BEGIN_INIT(format)
+    INSTR_BEGIN_INIT(str)
+    result = coda_time_string_to_double(format_s, str_s, datetime);
+    INSTR_END(format)
+    INSTR_END(str)
+    return result;
+}
+
+int UFNAME(CODA_TIME_STRING_TO_DOUBLE_UTC,coda_time_string_to_double_utc)(const char *format, const char *str, double *datetime, int format_size, int str_size)
+{
+    int result;
+    INSTR_BEGIN_DEF(format)
+    INSTR_BEGIN_DEF(str)
+    INSTR_BEGIN_INIT(format)
+    INSTR_BEGIN_INIT(str)
+    result = coda_time_string_to_double_utc(format_s, str_s, datetime);
+    INSTR_END(format)
+    INSTR_END(str)
+    return result;
+}
+
 int UFNAME(CODA_DATETIME_TO_DOUBLE,coda_datetime_to_double)(int *YEAR, int *MONTH, int *DAY, int *HOUR, int *MINUTE, int *SECOND, int *MUSEC, double *datetime)
 {
     return coda_datetime_to_double(*YEAR, *MONTH, *DAY, *HOUR, *MINUTE, *SECOND, *MUSEC, datetime);

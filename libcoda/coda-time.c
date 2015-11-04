@@ -159,8 +159,16 @@ int coda_month_to_integer(const char month[3])
     return -1;
 }
 
-static int parse_integer(const char *buffer, int num_digits, int *value)
+static int parse_integer(const char *buffer, int num_digits, int use_leading_spaces, int *value)
 {
+    if (use_leading_spaces)
+    {
+        while (num_digits > 1 && *buffer == ' ')
+        {
+            buffer++;
+            num_digits--;
+        }
+    }
     *value = 0;
     while (num_digits > 0)
     {
@@ -181,12 +189,12 @@ static int y(int Y)
     return Y + (Y < 0);
 }
 
-static int coda_div(int a, int b)
+static int int_div(int a, int b)
 {
     return a / b - (a % b < 0);
 }
 
-static int coda_mod(int a, int b)
+static int int_mod(int a, int b)
 {
     return a % b + b * (a % b < 0);
 }
@@ -219,7 +227,7 @@ static int dmy_to_mjd2000_julian(int D, int M, int Y, int *jd)
         return -1;
     }
 
-    *jd = D + 365 * y(Y) + coda_div(y(Y), 4) + tabel[M - 1] - ((M <= 2) && (y(Y) % 4 == 0)) + 1721058;
+    *jd = D + 365 * y(Y) + int_div(y(Y), 4) + tabel[M - 1] - ((M <= 2) && (y(Y) % 4 == 0)) + 1721058;
 
     return 0;
 }
@@ -252,7 +260,7 @@ static int dmy_to_mjd2000_gregorian(int D, int M, int Y, int *gd)
         return -1;
     }
 
-    *gd = D + tabel[M - 1] + 365 * y(Y) + coda_div(y(Y), 4) - coda_div(y(Y), 100) + coda_div(y(Y), 400) +
+    *gd = D + tabel[M - 1] + 365 * y(Y) + int_div(y(Y), 4) - int_div(y(Y), 100) + int_div(y(Y), 400) +
         -((M <= 2) && ((y(Y) % 4 == 0) - (y(Y) % 100 == 0) + (y(Y) % 400 == 0))) - 579551;
 
     return 0;
@@ -365,8 +373,8 @@ static void mjd2000_to_dmy_julian(int mjd, int *D, int *M, int *Y)
     *Y = 2000;
     date = mjd - 13;    /* true date 1-1-2000 is now 0 */
 
-    *Y += 4 * coda_div(date, 1461);
-    date = coda_mod(date, 1461);
+    *Y += 4 * int_div(date, 1461);
+    date = int_mod(date, 1461);
 
     if (date < 366)
     {
@@ -378,8 +386,8 @@ static void mjd2000_to_dmy_julian(int mjd, int *D, int *M, int *Y)
         *Y += 1;
         date -= 366;
 
-        *Y += coda_div(date, 365);
-        date = coda_mod(date, 365);
+        *Y += int_div(date, 365);
+        date = int_mod(date, 365);
 
         getday_nonleapyear(date, D, M);
     }
@@ -396,15 +404,15 @@ static void mjd2000_to_dmy_gregorian(int mjd, int *D, int *M, int *Y)
     *Y = 2000;
     date = mjd;
 
-    *Y += 400 * coda_div(date, 146097);
-    date = coda_mod(date, 146097);
+    *Y += 400 * int_div(date, 146097);
+    date = int_mod(date, 146097);
 
     if (date < 36525)
     {
         /* first century */
 
-        *Y += 4 * coda_div(date, 1461);
-        date = coda_mod(date, 1461);
+        *Y += 4 * int_div(date, 1461);
+        date = int_mod(date, 1461);
 
         if (date < 366)
         {
@@ -416,8 +424,8 @@ static void mjd2000_to_dmy_gregorian(int mjd, int *D, int *M, int *Y)
             *Y += 1;
             date -= 366;
 
-            *Y += coda_div(date, 365);
-            date = coda_mod(date, 365);
+            *Y += int_div(date, 365);
+            date = int_mod(date, 365);
 
             getday_nonleapyear(date, D, M);
         }
@@ -428,15 +436,15 @@ static void mjd2000_to_dmy_gregorian(int mjd, int *D, int *M, int *Y)
         date -= 36525;
         *Y += 100;
 
-        *Y += 100 * coda_div(date, 36524);
-        date = coda_mod(date, 36524);
+        *Y += 100 * int_div(date, 36524);
+        date = int_mod(date, 36524);
 
         /* first 4-year period had 1460 days, others have 1461 days. */
 
         if (date < 1460)
         {
-            *Y += coda_div(date, 365);
-            date = coda_mod(date, 365);
+            *Y += int_div(date, 365);
+            date = int_mod(date, 365);
 
             getday_nonleapyear(date, D, M);
         }
@@ -445,8 +453,8 @@ static void mjd2000_to_dmy_gregorian(int mjd, int *D, int *M, int *Y)
             date -= 1460;
             *Y += 4;
 
-            *Y += 4 * coda_div(date, 1461);
-            date = coda_mod(date, 1461);
+            *Y += 4 * int_div(date, 1461);
+            date = int_mod(date, 1461);
 
             if (date < 366)
             {
@@ -458,8 +466,8 @@ static void mjd2000_to_dmy_gregorian(int mjd, int *D, int *M, int *Y)
                 *Y += 1;
                 date -= 366;
 
-                *Y += coda_div(date, 365);
-                date = coda_mod(date, 365);
+                *Y += int_div(date, 365);
+                date = int_mod(date, 365);
 
                 getday_nonleapyear(date, D, M);
             }
@@ -496,16 +504,16 @@ static int mjd2000_to_dmy(int mjd2000, int *D, int *M, int *Y)
     return 0;
 }
 
-static int hms_to_daytime(const long HOUR, const long MINUTE, const long SECOND, const long MUSEC, double *daytime)
+static int hms_to_daytime(const long hour, const long minute, const long second, const long musec, double *daytime)
 {
-    if (HOUR < 0 || HOUR > 23 || MINUTE < 0 || MINUTE > 59 || SECOND < 0 || SECOND > 60 || MUSEC < 0 || MUSEC > 999999)
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 60 || musec < 0 || musec > 999999)
     {
         coda_set_error(CODA_ERROR_INVALID_DATETIME, "invalid date/time argument (%02ld:%02ld:%02ld.%06ld) (%s:%u)",
-                       HOUR, MINUTE, SECOND, MUSEC, __FILE__, __LINE__);
+                       hour, minute, second, musec, __FILE__, __LINE__);
         return -1;
     }
 
-    *daytime = 3600.0 * HOUR + 60.0 * MINUTE + 1.0 * SECOND + MUSEC / 1000000.0;
+    *daytime = 3600.0 * hour + 60.0 * minute + 1.0 * second + musec / 1000000.0;
 
     return 0;
 }
@@ -546,912 +554,24 @@ int coda_dayofyear_to_month_day(int year, int day_of_year, int *month, int *day_
     return 0;
 }
 
-/** Retrieve the number of seconds since Jan 1st 2000 for a certain date and time.
- * \warning This function does _not_ perform any leap second correction. The returned value is just a straightforward
- * conversion using 86400 seconds per day.
- * UTC time
- * \param YEAR     The year.
- * \param MONTH    The month of the year (1 - 12).
- * \param DAY      The day of the month (1 - 31).
- * \param HOUR     The hour of the day (0 - 23).
- * \param MINUTE   The minute of the hour (0 - 59).
- * \param SECOND   The second of the minute (0 - 59).
- * \param MUSEC    The microseconds of the second (0 - 999999).
- * \param datetime Pointer to the variable where the amount of seconds since Jan 1st 2000 will be stored.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_datetime_to_double(int YEAR, int MONTH, int DAY, int HOUR, int MINUTE, int SECOND,
-                                        int MUSEC, double *datetime)
+static int seconds_to_hms(int dayseconds, int *hour, int *minute, int *second)
 {
-    double daytime;
-    int mjd2000;
+    int s = dayseconds;
 
-    if (datetime == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "datetime argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    if (dmy_to_mjd2000(DAY, MONTH, YEAR, &mjd2000) != 0)
-    {
-        return -1;
-    }
-
-    if (hms_to_daytime(HOUR, MINUTE, SECOND, MUSEC, &daytime) != 0)
-    {
-        return -1;
-    }
-
-    *datetime = 86400.0 * mjd2000 + daytime;
-
-    return 0;
-}
-
-/** Retrieve the number of TAI seconds since Jan 1st 2000 for a certain UTC date and time using leap second correction.
- * This function assumes the input to be an UTC datetime. The returned value will be the seconds since
- * 2000-01-01 in the TAI time system (using proper leap second handling for the UTC to TAI conversion).
- * For example:
- * 1972-01-01 00:00:00 UTC will be -883612790
- * 2000-01-01 00:00:00 UTC will be 32
- * 2008-12-31 23:59:59 UTC will be 284083232
- * 2008-12-31 23:59:60 UTC will be 284083233
- * 2009-01-01 00:00:00 UTC will be 284083234
- * \warning For dates before 1972-01-01 UTC a fixed leap second offset of 10 is used.
- * \note CODA has a built in table of leap seconds. To use a more recent leap second table, download
- * the most recent file from ftp://maia.usno.navy.mil/ser7/tai-utc.dat and set the environment variable
- * CODA_LEAP_SECOND_TABLE with a full path to this file.
- * \param YEAR     The year.
- * \param MONTH    The month of the year (1 - 12).
- * \param DAY      The day of the month (1 - 31).
- * \param HOUR     The hour of the day (0 - 23).
- * \param MINUTE   The minute of the hour (0 - 59).
- * \param SECOND   The second of the minute (0 - 60).
- * \param MUSEC    The microseconds of the second (0 - 999999).
- * \param datetime Pointer to the variable where the amount of seconds since Jan 1st 2000 will be stored.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_utcdatetime_to_double(int YEAR, int MONTH, int DAY, int HOUR, int MINUTE, int SECOND, int MUSEC,
-                                           double *datetime)
-{
-    double daytime;
-    double t;
-    int mjd2000;
-    int leap_sec;
-
-    if (datetime == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "datetime argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    if (dmy_to_mjd2000(DAY, MONTH, YEAR, &mjd2000) != 0)
-    {
-        return -1;
-    }
-
-    if (hms_to_daytime(HOUR, MINUTE, SECOND, MUSEC, &daytime) != 0)
-    {
-        return -1;
-    }
-
-    t = 86400.0 * mjd2000 + 10;
-
-    assert(leap_second_table != NULL && num_leap_seconds > 0);
-    leap_sec = 0;
-    while (leap_sec < num_leap_seconds && t >= leap_second_table[leap_sec])
-    {
-        t++;
-        leap_sec++;
-    }
-
-    *datetime = t + daytime;
-
-    return 0;
-}
-
-static int seconds_to_hms(int dayseconds, int *H, int *M, int *S)
-{
-    int sec = dayseconds;
-
-    if (sec < 0 || sec > 86399)
+    if (s < 0 || s > 86399)
     {
         coda_set_error(CODA_ERROR_INVALID_DATETIME, "dayseconds argument (%d) is not in the range [0,86400) (%s:%u)",
-                       sec, __FILE__, __LINE__);
+                       s, __FILE__, __LINE__);
         return -1;
     }
 
-    *H = sec / 3600;
-    sec %= 3600;
-    *M = sec / 60;
-    sec %= 60;
-    *S = sec;
+    *hour = s / 3600;
+    s %= 3600;
+    *minute = s / 60;
+    s %= 60;
+    *second = s;
 
     return 0;
-}
-
-/** Retrieve the decomposed date corresponding with the given amount of seconds since Jan 1st 2000.
- * \warning This function does _not_ perform any leap second correction. The returned value is just a straightforward
- * conversion using 86400 seconds per day.
- * \param datetime The amount of seconds since Jan 1st 2000.
- * \param YEAR     Pointer to the variable where the year will be stored.
- * \param MONTH    Pointer to the variable where the month of the year (1 - 12) will be stored.
- * \param DAY      Pointer to the variable where the day of the month (1 - 31) will be stored.
- * \param HOUR     Pointer to the variable where the hour of the day (0 - 23) will be stored.
- * \param MINUTE   Pointer to the variable where the minute of the hour (0 - 59) will be stored.
- * \param SECOND   Pointer to the variable where the second of the minute (0 - 59) will be stored.
- * \param MUSEC    Pointer to the variable where the microseconds of the second (0 - 999999) will be stored.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_double_to_datetime(double datetime, int *YEAR, int *MONTH, int *DAY, int *HOUR, int *MINUTE,
-                                        int *SECOND, int *MUSEC)
-{
-    double seconds;
-    int d, m, y;
-    int h, min, sec, musec;
-    int days, dayseconds;
-
-    if (YEAR == NULL || MONTH == NULL || DAY == NULL || HOUR == NULL || MINUTE == NULL || SECOND == NULL ||
-        MUSEC == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "date/time argument(s) are NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    if (coda_isNaN(datetime))
-    {
-        coda_set_error(CODA_ERROR_INVALID_DATETIME, "datetime argument is NaN (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (coda_isInf(datetime))
-    {
-        coda_set_error(CODA_ERROR_INVALID_DATETIME, "datetime argument is Infinite (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    /* we add 0.5 milliseconds so the floor() becomes a round() that rounds at the millisecond */
-    datetime += 5E-7;
-
-    seconds = floor(datetime);
-
-    days = (int)floor(seconds / 86400.0);
-
-    if (mjd2000_to_dmy(days, &d, &m, &y) != 0)
-    {
-        return -1;
-    }
-
-    dayseconds = (int)(seconds - days * 86400.0);
-
-    if (seconds_to_hms(dayseconds, &h, &min, &sec) != 0)
-    {
-        return -1;
-    }
-
-    musec = (int)floor((datetime - seconds) * 1E6);
-
-    *YEAR = y;
-    *MONTH = m;
-    *DAY = d;
-    *HOUR = h;
-    *MINUTE = min;
-    *SECOND = sec;
-    *MUSEC = musec;
-
-    return 0;
-
-}
-
-/** Retrieve the decomposed UTC date corresponding with the given amount of TAI seconds since Jan 1st 2000.
- * This function assumes the input to by the number of seconds since 2000-01-01 in the TAI system. The returned
- * date/time components will be the corresponding UTC datetime (using proper leap second handling for the TAI to UTC
- * conversion).
- * For example:
- * -88361290 will be 1972-01-01 00:00:00 UTC
- * 0 will be 1999-31-12 23:59:28 UTC
- * 284083232 will be 2008-12-31 23:59:59 UTC
- * 284083233 will be 2008-12-31 23:59:60 UTC
- * 284083234 will be 2009-01-01 00:00:00 UTC
- * \warning For dates before 1972-01-01 UTC a fixed leap second offset of 10 is used.
- * \note CODA has a built in table of leap seconds. To use a more recent leap second table, download
- * the most recent file from ftp://maia.usno.navy.mil/ser7/tai-utc.dat and set the environment variable
- * CODA_LEAP_SECOND_TABLE with a full path to this file.
- * \param datetime The amount of seconds since Jan 1st 2000.
- * \param YEAR     Pointer to the variable where the year will be stored.
- * \param MONTH    Pointer to the variable where the month of the year (1 - 12) will be stored.
- * \param DAY      Pointer to the variable where the day of the month (1 - 31) will be stored.
- * \param HOUR     Pointer to the variable where the hour of the day (0 - 23) will be stored.
- * \param MINUTE   Pointer to the variable where the minute of the hour (0 - 59) will be stored.
- * \param SECOND   Pointer to the variable where the second of the minute (0 - 60) will be stored.
- * \param MUSEC    Pointer to the variable where the microseconds of the second (0 - 999999) will be stored.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_double_to_utcdatetime(double datetime, int *YEAR, int *MONTH, int *DAY, int *HOUR, int *MINUTE,
-                                           int *SECOND, int *MUSEC)
-{
-    double seconds;
-    int d, m, y;
-    int h, min, sec, musec;
-    int days, dayseconds;
-    int leap_sec;
-    int is_leap_sec;
-
-    if (YEAR == NULL || MONTH == NULL || DAY == NULL || HOUR == NULL || MINUTE == NULL || SECOND == NULL ||
-        MUSEC == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "date/time argument(s) are NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    if (coda_isNaN(datetime))
-    {
-        coda_set_error(CODA_ERROR_INVALID_DATETIME, "datetime argument is NaN (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (coda_isInf(datetime))
-    {
-        coda_set_error(CODA_ERROR_INVALID_DATETIME, "datetime argument is Infinite (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    /* we add 0.5 milliseconds so the floor() becomes a round() that rounds at the millisecond */
-    datetime += 5E-7;
-
-    seconds = floor(datetime);
-
-    assert(leap_second_table != NULL && num_leap_seconds > 0);
-    leap_sec = 0;
-    while (leap_sec < num_leap_seconds && seconds > leap_second_table[leap_sec])
-    {
-        leap_sec++;
-    }
-    is_leap_sec = fabs(seconds - leap_second_table[leap_sec]) < 0.1;
-    seconds -= 10 + leap_sec + is_leap_sec;
-    datetime -= 10 + leap_sec + is_leap_sec;
-
-    days = (int)floor(seconds / 86400.0);
-
-    if (mjd2000_to_dmy(days, &d, &m, &y) != 0)
-    {
-        return -1;
-    }
-
-    dayseconds = (int)(seconds - days * 86400.0);
-
-    if (seconds_to_hms(dayseconds, &h, &min, &sec) != 0)
-    {
-        return -1;
-    }
-
-    musec = (int)floor((datetime - seconds) * 1E6);
-
-    *YEAR = y;
-    *MONTH = m;
-    *DAY = d;
-    *HOUR = h;
-    *MINUTE = min;
-    *SECOND = sec + is_leap_sec;
-    *MUSEC = musec;
-
-    return 0;
-}
-
-static int string_to_datetime(const char *format, const char *str, int *year, int *month, int *day, int *hour,
-                              int *minute, int *second, int *musec)
-{
-    int literal = 0;
-    int fi = 0;
-    int si = 0;
-    int n;
-
-    /* initialize with epoch 2000-01-01T00:00:00.000000 */
-    *year = 2000;
-    *month = 1;
-    *day = 1;
-    *hour = 0;
-    *minute = 0;
-    *second = 0;
-    *musec = 0;
-
-    while (format[fi] != '\0' && (literal || format[fi] != '|'))
-    {
-        if (format[fi] == '\'')
-        {
-            fi++;
-            if (format[fi] != '\'')
-            {
-                literal = !literal;
-                continue;
-            }
-        }
-        if (literal)
-        {
-            /* literal match */
-            if (format[fi] != str[si])
-            {
-                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect fixed character "
-                               "(format: %s)", str, format);
-                return -1;
-            }
-            fi++;
-            si++;
-        }
-        else if (format[fi] == 'y' && format[fi + 1] == 'y' && format[fi + 2] == 'y' && format[fi + 3] == 'y')
-        {
-            if (parse_integer(&str[si], 4, year) != 0)
-            {
-                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect year value "
-                               "(format: %s)", str, format);
-                return -1;
-            }
-            fi += 4;
-            si += 4;
-        }
-        else if (format[fi] == 'M' && format[fi + 1] == 'M')
-        {
-            if (format[fi + 2] == 'M')
-            {
-                /* coda_month_to_integer already limits comparison to only 3 characters */
-                *month = coda_month_to_integer(&str[si]);
-                if (*month == -1)
-                {
-                    coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect month value "
-                                   "(format: %s)", str, format);
-                    return -1;
-                }
-                fi += 3;
-                si += 3;
-            }
-            else
-            {
-                if (parse_integer(&str[si], 2, month) != 0)
-                {
-                    coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect month value "
-                                   "(format: %s)", str, format);
-                    return -1;
-                }
-                fi += 2;
-                si += 2;
-            }
-        }
-        else if (format[fi] == 'd' && format[fi + 1] == 'd')
-        {
-            if (parse_integer(&str[si], 2, day) != 0)
-            {
-                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect day value "
-                               "(format: %s)", str, format);
-                return -1;
-            }
-            fi += 2;
-            si += 2;
-        }
-        else if (format[fi] == 'D' && format[fi + 1] == 'D' && format[fi + 2] == 'D')
-        {
-            int day_of_year;
-
-            /* uses currently parsed year value to determine the actual month/day within the year */
-            if (parse_integer(&str[si], 3, &day_of_year) != 0)
-            {
-                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect day value "
-                               "(format: %s)", str, format);
-                return -1;
-            }
-            if (coda_dayofyear_to_month_day(*year, day_of_year, month, day) != 0)
-            {
-                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an invalid day value "
-                               "(format: %s)", str, format);
-                return -1;
-            }
-            fi += 3;
-            si += 3;
-        }
-        else if (format[fi] == 'H' && format[fi + 1] == 'H')
-        {
-            if (parse_integer(&str[si], 2, hour) != 0)
-            {
-                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect hour value "
-                               "(format: %s)", str, format);
-                return -1;
-            }
-            fi += 2;
-            si += 2;
-        }
-        else if (format[fi] == 'm' && format[fi + 1] == 'm')
-        {
-            if (parse_integer(&str[si], 2, minute) != 0)
-            {
-                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect minute value "
-                               "(format: %s)", str, format);
-                return -1;
-            }
-            fi += 2;
-            si += 2;
-        }
-        else if (format[fi] == 's' && format[fi + 1] == 's')
-        {
-            if (parse_integer(&str[si], 2, second) != 0)
-            {
-                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect second value "
-                               "(format: %s)", str, format);
-                return -1;
-            }
-            fi += 2;
-            si += 2;
-        }
-        else if (format[fi] == 'S')
-        {
-            n = 0;
-            while (format[fi] == 'S')
-            {
-                fi++;
-                n++;
-            }
-            if (parse_integer(&str[si], n > 6 ? 6 : n, musec) != 0)
-            {
-                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect fractional "
-                               "second value (format: %s)", str, format);
-                return -1;
-            }
-            si += n;
-            while (n < 6)
-            {
-                *musec *= 10;
-                n++;
-            }
-        }
-        else if ((format[fi] >= 'A' && format[fi] <= 'Z') || (format[fi] >= 'a' && format[fi] <= 'z'))
-        {
-            /* reserved character */
-            coda_set_error(CODA_ERROR_INVALID_FORMAT, "unsuppored character sequence in date/time format (%s)", format);
-            return -1;
-        }
-        else
-        {
-            /* literal match */
-            if (format[fi] != str[si])
-            {
-                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect fixed character "
-                               "(format: %s)", str, format);
-                return -1;
-            }
-            fi++;
-            si++;
-        }
-    }
-    if (literal)
-    {
-        coda_set_error(CODA_ERROR_INVALID_FORMAT, "missing closing ' in date/time format (%s)", format);
-        return -1;
-    }
-    if (str[si] != '\0')
-    {
-        coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) contains additional characters "
-                       "(format: %s)", str, format);
-        return -1;
-    }
-
-    return 0;
-}
-
-int coda_string_to_time_with_format(const char *format, const char *str, double *datetime)
-{
-    int year, month, day, hour, minute, second, musec;
-    int literal = 0;
-    int n = 0;
-
-    while (format[n] != '\0' && (literal || format[n] != '|'))
-    {
-        if (format[n] == '\'')
-        {
-            literal = !literal;
-        }
-        n++;
-    }
-    if (format[n] == '|')
-    {
-        int offset = 0;
-
-        /* try multiple formats */
-        while (1)
-        {
-            if (string_to_datetime(&format[offset], str, &year, &month, &day, &hour, &minute, &second, &musec) == 0)
-            {
-                /* found a format that works */
-                break;
-            }
-            if (format[n] == '\0')
-            {
-                /* the string matched none of the formats */
-                coda_set_error(CODA_ERROR_INVALID_DATETIME,
-                               "date/time argument (%s) did not match any of the formats (%s)", str, format);
-                return -1;
-            }
-            n++;
-            offset = n;
-            while (format[n] != '\0' && (literal || format[n] != '|'))
-            {
-                if (format[n] == '\'')
-                {
-                    literal = !literal;
-                }
-                n++;
-            }
-        }
-    }
-    else
-    {
-        if (string_to_datetime(format, str, &year, &month, &day, &hour, &minute, &second, &musec) != 0)
-        {
-            return -1;
-        }
-    }
-
-    return coda_datetime_to_double(year, month, day, hour, minute, second, musec, datetime);
-}
-
-/* the date/time formats that we support guarantee that strlen(format) >= strlen(str) for all formats */
-int coda_time_to_string_with_format(const char *format, double datetime, char *str)
-{
-    const char *month_name[] = { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
-    int year, month, day, hour, minute, second, musec;
-    int literal = 0;
-    int fi = 0;
-    int si = 0;
-
-    if (coda_double_to_datetime(datetime, &year, &month, &day, &hour, &minute, &second, &musec) != 0)
-    {
-        return -1;
-    }
-    if (year < 0 || year > 9999)
-    {
-        coda_set_error(CODA_ERROR_INVALID_DATETIME, "the year can not be represented using a positive four digit "
-                       "number");
-        return -1;
-    }
-
-    while (format[fi] != '\0' && (literal || format[fi] != '|'))
-    {
-        if (format[fi] == '\'')
-        {
-            fi++;
-            if (format[fi] != '\'')
-            {
-                literal = !literal;
-                continue;
-            }
-        }
-        if (literal)
-        {
-            str[si] = format[fi];
-            fi++;
-            si++;
-        }
-        else if (format[fi] == 'y' && format[fi + 1] == 'y' && format[fi + 2] == 'y' && format[fi + 3] == 'y')
-        {
-            sprintf(&str[si], "%04d", year);
-            fi += 4;
-            si += 4;
-        }
-        else if (format[fi] == 'M' && format[fi + 1] == 'M')
-        {
-            if (format[fi + 2] == 'M')
-            {
-                sprintf(&str[si], "%s", month_name[month]);
-                fi += 3;
-                si += 3;
-            }
-            else
-            {
-                sprintf(&str[si], "%02d", month);
-                fi += 2;
-                si += 2;
-            }
-        }
-        else if (format[fi] == 'd' && format[fi + 1] == 'd')
-        {
-            sprintf(&str[si], "%02d", day);
-            fi += 2;
-            si += 2;
-        }
-        else if (format[fi] == 'D' && format[fi + 1] == 'D' && format[fi + 2] == 'D')
-        {
-            int mjd, mjd_offset;
-
-            if (dmy_to_mjd2000(day, month, year, &mjd) != 0)
-            {
-                return -1;
-            }
-            if (dmy_to_mjd2000(1, 1, year, &mjd_offset) != 0)
-            {
-                return -1;
-            }
-            sprintf(&str[si], "%03d", mjd - mjd_offset + 1);
-            fi += 3;
-            si += 3;
-        }
-        else if (format[fi] == 'H' && format[fi + 1] == 'H')
-        {
-            sprintf(&str[si], "%02d", hour);
-            fi += 2;
-            si += 2;
-        }
-        else if (format[fi] == 'm' && format[fi + 1] == 'm')
-        {
-            sprintf(&str[si], "%02d", minute);
-            fi += 2;
-            si += 2;
-        }
-        else if (format[fi] == 's' && format[fi + 1] == 's')
-        {
-            sprintf(&str[si], "%02d", second);
-            fi += 2;
-            si += 2;
-        }
-        else if (format[fi] == 'S')
-        {
-            int fraction = musec;
-            int n = 0;
-            int i;
-
-            while (format[fi] == 'S')
-            {
-                fi++;
-                n++;
-            }
-            for (i = n; i < 6; i++)
-            {
-                fraction /= 10;
-            }
-            sprintf(&str[si], "%0*d", n, fraction);
-            si += n;
-        }
-        else if ((format[fi] >= 'A' && format[fi] <= 'Z') || (format[fi] >= 'a' && format[fi] <= 'z'))
-        {
-            /* reserved character */
-            coda_set_error(CODA_ERROR_INVALID_FORMAT, "unsuppored character sequence in date/time format (%s)", format);
-            return -1;
-        }
-        else
-        {
-            str[si] = format[fi];
-            fi++;
-            si++;
-        }
-    }
-    if (literal)
-    {
-        coda_set_error(CODA_ERROR_INVALID_FORMAT, "missing closing ' in date/time format (%s)", format);
-        return -1;
-    }
-
-    return 0;
-}
-
-/** Convert a floating point time value to a string.
- * The string will be formatted as "YYYY-MM-DD HH:MM:SS.mmmmmm" and it will have a fixed length.<br>
- * The time string will be stored in the \a str parameter. This parameter should be allocated by the user
- * and should be 27 bytes long.
- *
- * The \a str parameter will be 0 terminated.
- *
- * \warning This function does not perform any leap second correction.
- * \param datetime  Floating point value representing the number of seconds since January 1st, 2000 00:00:00.000000.
- * \param str       String representation of the floating point time value.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_time_to_string(double datetime, char *str)
-{
-    int DAY, MONTH, YEAR, HOUR, MINUTE, SECOND, MUSEC;
-
-    if (str == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "string argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    if (coda_double_to_datetime(datetime, &YEAR, &MONTH, &DAY, &HOUR, &MINUTE, &SECOND, &MUSEC) != 0)
-    {
-        return -1;
-    }
-    if (YEAR < 0 || YEAR > 9999)
-    {
-        coda_set_error(CODA_ERROR_INVALID_DATETIME, "the year can not be represented using a positive four digit "
-                       "number");
-        return -1;
-    }
-    sprintf(str, "%04d-%02d-%02d %02d:%02d:%02d.%06u", YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC);
-
-    return 0;
-}
-
-/** Convert a floating point TAI time value to a UTC string.
- * The string will be formatted as "YYYY-MM-DD HH:MM:SS.mmmmmm" and it will have a fixed length.<br>
- * The time string will be stored in the \a str parameter. This parameter should be allocated by the user
- * and should be 27 bytes long.
- *
- * The \a str parameter will be 0 terminated.
- *
- * This function performs proper leap second correction in the conversion from TAI to UTC
- * (see also \a coda_double_to_utcdatetime()).
- *
- * \warning This function does not perform any leap second correction.
- * \param datetime  Floating point value representing the number of seconds since January 1st, 2000 00:00:00.000000.
- * \param str       String representation of the floating point time value.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_time_to_utcstring(double datetime, char *str)
-{
-    int DAY, MONTH, YEAR, HOUR, MINUTE, SECOND, MUSEC;
-
-    if (str == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "string argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    if (coda_double_to_utcdatetime(datetime, &YEAR, &MONTH, &DAY, &HOUR, &MINUTE, &SECOND, &MUSEC) != 0)
-    {
-        return -1;
-    }
-    if (YEAR < 0 || YEAR > 9999)
-    {
-        coda_set_error(CODA_ERROR_INVALID_DATETIME, "the year can not be represented using a positive four digit "
-                       "number");
-        return -1;
-    }
-    sprintf(str, "%04d-%02d-%02d %02d:%02d:%02d.%06u", YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC);
-
-    return 0;
-}
-
-/** Convert a time string to a floating point time value.
- * The time string needs to have one of the following formats:
- * - "YYYY-MM-DD hh:mm:ss.uuuuuu"
- * - "YYYY-MM-DD hh:mm:ss"
- * - "YYYY-MM-DD"
- * - "DD-MMM-YYYY hh:mm:ss.uuuuuu"
- * - "DD-MMM-YYYY hh:mm:ss"
- * - "DD-MMM-YYYY"
- *
- * As an example, both the strings "2000-01-01 00:00:01.234567" and "01-JAN-2000 00:00:01.234567" will result in a
- * time value of 1.234567.<br>
- *
- * \warning This function does not perform any leap second correction.
- * \param str       String containing the time in one of the supported formats.
- * \param datetime  Floating point value representing the number of seconds since January 1st, 2000 00:00:00.000000.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_string_to_time(const char *str, double *datetime)
-{
-    int n[3];
-    int DAY;
-    int MONTH;
-    int YEAR;
-    int HOUR = 0;
-    int MINUTE = 0;
-    int SECOND = 0;
-    int MUSEC = 0;
-    int result;
-
-    if (str == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "str argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (datetime == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "time argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    result = sscanf(str, "%4d-%2d-%2d%n %d:%d:%d%n.%6d%n", &YEAR, &MONTH, &DAY, &n[0], &HOUR, &MINUTE, &SECOND, &n[1],
-                    &MUSEC, &n[2]);
-    if (!((result == 3 && n[0] == 10 && str[10] == '\0') || (result == 6 && n[1] == 19 && str[19] == '\0') ||
-          (result == 7 && n[2] == 26 && str[26] == '\0')))
-    {
-        char month[3];
-
-        result = sscanf(str, "%2d-%c%c%c-%4d%n %d:%d:%d%n.%6d%n", &DAY, &month[0], &month[1], &month[2], &YEAR, &n[0],
-                        &HOUR, &MINUTE, &SECOND, &n[1], &MUSEC, &n[2]);
-        if (!((result == 5 && n[0] == 11 && str[11] == '\0') || (result == 8 && n[1] == 20 && str[20] == '\0') ||
-              (result == 9 && n[2] == 27 && str[27] == '\0')))
-        {
-            coda_set_error(CODA_ERROR_INVALID_FORMAT, "date/time argument (%s) has an incorrect format", str);
-            return -1;
-        }
-
-        MONTH = coda_month_to_integer(month);
-        if (MONTH == -1)
-        {
-            return -1;
-        }
-    }
-
-    return coda_datetime_to_double(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC, datetime);
-}
-
-/** Convert a UTC time string to a TAI floating point time value.
- * The time string needs to have one of the following formats:
- * - "YYYY-MM-DD hh:mm:ss.uuuuuu"
- * - "YYYY-MM-DD hh:mm:ss"
- * - "YYYY-MM-DD"
- * - "DD-MMM-YYYY hh:mm:ss.uuuuuu"
- * - "DD-MMM-YYYY hh:mm:ss"
- * - "DD-MMM-YYYY"
- *
- * This function performs proper leap second correction in the conversion from UTC to TAI
- * (see also \a coda_utcdatetime_to_double()).
- *
- * As an example, both the strings "2000-01-01 00:00:01.234567" and "01-JAN-2000 00:00:01.234567" will result in a
- * time value of 33.234567.<br>
- *
- * \warning This function does not perform any leap second correction.
- * \param str       String containing the time in one of the supported formats.
- * \param datetime  Floating point value representing the number of seconds since January 1st, 2000 00:00:00.000000.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_utcstring_to_time(const char *str, double *datetime)
-{
-    int n[3];
-    int DAY;
-    int MONTH;
-    int YEAR;
-    int HOUR = 0;
-    int MINUTE = 0;
-    int SECOND = 0;
-    int MUSEC = 0;
-    int result;
-
-    if (str == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "str argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (datetime == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "time argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    result = sscanf(str, "%4d-%2d-%2d%n %d:%d:%d%n.%6d%n", &YEAR, &MONTH, &DAY, &n[0], &HOUR, &MINUTE, &SECOND, &n[1],
-                    &MUSEC, &n[2]);
-    if (!((result == 3 && n[0] == 10 && str[10] == '\0') || (result == 6 && n[1] == 19 && str[19] == '\0') ||
-          (result == 7 && n[2] == 26 && str[26] == '\0')))
-    {
-        char month[3];
-
-        result = sscanf(str, "%2d-%c%c%c-%4d%n %d:%d:%d%n.%6d%n", &DAY, &month[0], &month[1], &month[2], &YEAR, &n[0],
-                        &HOUR, &MINUTE, &SECOND, &n[1], &MUSEC, &n[2]);
-        if (!((result == 5 && n[0] == 11 && str[11] == '\0') || (result == 8 && n[1] == 20 && str[20] == '\0') ||
-              (result == 9 && n[2] == 27 && str[27] == '\0')))
-        {
-            coda_set_error(CODA_ERROR_INVALID_FORMAT, "date/time argument (%s) has an incorrect format", str);
-            return -1;
-        }
-
-        MONTH = coda_month_to_integer(month);
-        if (MONTH == -1)
-        {
-            return -1;
-        }
-    }
-
-    return coda_utcdatetime_to_double(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC, datetime);
 }
 
 static int register_leap_second(double leap_second)
@@ -1614,6 +734,936 @@ int coda_leap_second_table_init(void)
     }
 
     return 0;
+}
+
+/** Retrieve the decomposed date corresponding with the given amount of seconds since Jan 1st 2000.
+ * \warning This function does _not_ perform any leap second correction. The returned value is just a straightforward
+ * conversion using 86400 seconds per day.
+ * \param datetime The amount of seconds since Jan 1st 2000.
+ * \param year     Pointer to the variable where the year will be stored.
+ * \param month    Pointer to the variable where the month of the year (1 - 12) will be stored.
+ * \param day      Pointer to the variable where the day of the month (1 - 31) will be stored.
+ * \param hour     Pointer to the variable where the hour of the day (0 - 23) will be stored.
+ * \param minute   Pointer to the variable where the minute of the hour (0 - 59) will be stored.
+ * \param second   Pointer to the variable where the second of the minute (0 - 59) will be stored.
+ * \param musec    Pointer to the variable where the microseconds of the second (0 - 999999) will be stored.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_time_double_to_parts(double datetime, int *year, int *month, int *day, int *hour, int *minute,
+                                          int *second, int *musec)
+{
+    double seconds;
+    int d, m, y;
+    int h, min, s, us;
+    int days, dayseconds;
+
+    if (year == NULL || month == NULL || day == NULL || hour == NULL || minute == NULL || second == NULL ||
+        musec == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "date/time argument(s) are NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    if (coda_isNaN(datetime))
+    {
+        coda_set_error(CODA_ERROR_INVALID_DATETIME, "datetime argument is NaN (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (coda_isInf(datetime))
+    {
+        coda_set_error(CODA_ERROR_INVALID_DATETIME, "datetime argument is Infinite (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    /* we add 0.5 milliseconds so the floor() becomes a round() that rounds at the millisecond */
+    datetime += 5E-7;
+
+    seconds = floor(datetime);
+
+    days = (int)floor(seconds / 86400.0);
+
+    if (mjd2000_to_dmy(days, &d, &m, &y) != 0)
+    {
+        return -1;
+    }
+
+    dayseconds = (int)(seconds - days * 86400.0);
+
+    if (seconds_to_hms(dayseconds, &h, &min, &s) != 0)
+    {
+        return -1;
+    }
+
+    us = (int)floor((datetime - seconds) * 1E6);
+
+    *year = y;
+    *month = m;
+    *day = d;
+    *hour = h;
+    *minute = min;
+    *second = s;
+    *musec = us;
+
+    return 0;
+
+}
+
+/** Retrieve the decomposed UTC date corresponding with the given amount of TAI seconds since Jan 1st 2000.
+ * This function assumes the input to by the number of seconds since 2000-01-01 in the TAI system. The returned
+ * date/time components will be the corresponding UTC datetime (using proper leap second handling for the TAI to UTC
+ * conversion).
+ * For example:
+ * -88361290 will be 1972-01-01 00:00:00 UTC
+ * 0 will be 1999-31-12 23:59:28 UTC
+ * 284083232 will be 2008-12-31 23:59:59 UTC
+ * 284083233 will be 2008-12-31 23:59:60 UTC
+ * 284083234 will be 2009-01-01 00:00:00 UTC
+ * \warning For dates before 1972-01-01 UTC a fixed leap second offset of 10 is used.
+ * \note CODA has a built in table of leap seconds. To use a more recent leap second table, download
+ * the most recent file from ftp://maia.usno.navy.mil/ser7/tai-utc.dat and set the environment variable
+ * CODA_LEAP_SECOND_TABLE with a full path to this file.
+ * \param datetime The amount of seconds since Jan 1st 2000.
+ * \param year     Pointer to the variable where the year will be stored.
+ * \param month    Pointer to the variable where the month of the year (1 - 12) will be stored.
+ * \param day      Pointer to the variable where the day of the month (1 - 31) will be stored.
+ * \param hour     Pointer to the variable where the hour of the day (0 - 23) will be stored.
+ * \param minute   Pointer to the variable where the minute of the hour (0 - 59) will be stored.
+ * \param second   Pointer to the variable where the second of the minute (0 - 60) will be stored.
+ * \param musec    Pointer to the variable where the microseconds of the second (0 - 999999) will be stored.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_time_double_to_parts_utc(double datetime, int *year, int *month, int *day, int *hour, int *minute,
+                                              int *second, int *musec)
+{
+    double seconds;
+    int d, m, y;
+    int h, min, s, us;
+    int days, dayseconds;
+    int leap_sec;
+    int is_leap_sec;
+
+    if (year == NULL || month == NULL || day == NULL || hour == NULL || minute == NULL || second == NULL ||
+        musec == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "date/time argument(s) are NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    if (coda_isNaN(datetime))
+    {
+        coda_set_error(CODA_ERROR_INVALID_DATETIME, "datetime argument is NaN (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (coda_isInf(datetime))
+    {
+        coda_set_error(CODA_ERROR_INVALID_DATETIME, "datetime argument is Infinite (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    /* we add 0.5 milliseconds so the floor() becomes a round() that rounds at the millisecond */
+    datetime += 5E-7;
+
+    seconds = floor(datetime);
+
+    assert(leap_second_table != NULL && num_leap_seconds > 0);
+    leap_sec = 0;
+    while (leap_sec < num_leap_seconds && seconds > leap_second_table[leap_sec])
+    {
+        leap_sec++;
+    }
+    is_leap_sec = fabs(seconds - leap_second_table[leap_sec]) < 0.1;
+    seconds -= 10 + leap_sec + is_leap_sec;
+    datetime -= 10 + leap_sec + is_leap_sec;
+
+    days = (int)floor(seconds / 86400.0);
+
+    if (mjd2000_to_dmy(days, &d, &m, &y) != 0)
+    {
+        return -1;
+    }
+
+    dayseconds = (int)(seconds - days * 86400.0);
+
+    if (seconds_to_hms(dayseconds, &h, &min, &s) != 0)
+    {
+        return -1;
+    }
+
+    us = (int)floor((datetime - seconds) * 1E6);
+
+    *year = y;
+    *month = m;
+    *day = d;
+    *hour = h;
+    *minute = min;
+    *second = s + is_leap_sec;
+    *musec = us;
+
+    return 0;
+}
+
+/** Retrieve the number of seconds since Jan 1st 2000 for a certain date and time.
+ * \warning This function does _not_ perform any leap second correction. The returned value is just a straightforward
+ * conversion using 86400 seconds per day.
+ * \param year     The year.
+ * \param month    The month of the year (1 - 12).
+ * \param day      The day of the month (1 - 31).
+ * \param hour     The hour of the day (0 - 23).
+ * \param minute   The minute of the hour (0 - 59).
+ * \param second   The second of the minute (0 - 59).
+ * \param musec    The microseconds of the second (0 - 999999).
+ * \param datetime Pointer to the variable where the amount of seconds since Jan 1st 2000 will be stored.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_time_parts_to_double(int year, int month, int day, int hour, int minute, int second, int musec,
+                                          double *datetime)
+{
+    double daytime;
+    int mjd2000;
+
+    if (datetime == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "datetime argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    if (dmy_to_mjd2000(day, month, year, &mjd2000) != 0)
+    {
+        return -1;
+    }
+
+    if (hms_to_daytime(hour, minute, second, musec, &daytime) != 0)
+    {
+        return -1;
+    }
+
+    *datetime = 86400.0 * mjd2000 + daytime;
+
+    return 0;
+}
+
+/** Retrieve the number of TAI seconds since Jan 1st 2000 for a certain UTC date and time using leap second correction.
+ * This function assumes the input to be an UTC datetime. The returned value will be the seconds since
+ * 2000-01-01 in the TAI time system (using proper leap second handling for the UTC to TAI conversion).
+ * For example:
+ * 1972-01-01 00:00:00 UTC will be -883612790
+ * 2000-01-01 00:00:00 UTC will be 32
+ * 2008-12-31 23:59:59 UTC will be 284083232
+ * 2008-12-31 23:59:60 UTC will be 284083233
+ * 2009-01-01 00:00:00 UTC will be 284083234
+ * \warning For dates before 1972-01-01 UTC a fixed leap second offset of 10 is used.
+ * \note CODA has a built in table of leap seconds. To use a more recent leap second table, download
+ * the most recent file from ftp://maia.usno.navy.mil/ser7/tai-utc.dat and set the environment variable
+ * CODA_LEAP_SECOND_TABLE with a full path to this file.
+ * \param year     The year.
+ * \param month    The month of the year (1 - 12).
+ * \param day      The day of the month (1 - 31).
+ * \param hour     The hour of the day (0 - 23).
+ * \param minute   The minute of the hour (0 - 59).
+ * \param second   The second of the minute (0 - 60).
+ * \param musec    The microseconds of the second (0 - 999999).
+ * \param datetime Pointer to the variable where the amount of seconds since Jan 1st 2000 will be stored.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_time_parts_to_double_utc(int year, int month, int day, int hour, int minute, int second,
+                                              int musec, double *datetime)
+{
+    double daytime;
+    double t;
+    int mjd2000;
+    int leap_sec;
+
+    if (datetime == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "datetime argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    if (dmy_to_mjd2000(day, month, year, &mjd2000) != 0)
+    {
+        return -1;
+    }
+
+    if (hms_to_daytime(hour, minute, second, musec, &daytime) != 0)
+    {
+        return -1;
+    }
+
+    t = 86400.0 * mjd2000 + 10;
+
+    assert(leap_second_table != NULL && num_leap_seconds > 0);
+    leap_sec = 0;
+    while (leap_sec < num_leap_seconds && t >= leap_second_table[leap_sec])
+    {
+        t++;
+        leap_sec++;
+    }
+
+    *datetime = t + daytime;
+
+    return 0;
+}
+
+/** Create a string representation for a specific data and time.
+ * The string will be formatted using the format that is provided as first parameter.
+ * The time string will be stored in the \a str parameter. This parameter should be allocated by the user
+ * and should be long enough to hold the formatted time string and a 0 termination character.
+ *
+ * The specification for the time format parameter is the same as the
+ * <a href="../codadef/codadef-expressions.html#timeformat">date/time format patterns in coda expressions</a>.
+ *
+ * \warning This function does not perform any leap second correction.
+ * \param year     The year.
+ * \param month    The month of the year (1 - 12).
+ * \param day      The day of the month (1 - 31).
+ * \param hour     The hour of the day (0 - 23).
+ * \param minute   The minute of the hour (0 - 59).
+ * \param second   The second of the minute (0 - 60).
+ * \param musec    The microseconds of the second (0 - 999999).
+ * \param format    Date/time format to use for the string representation of the datetime value.
+ * \param str       String representation of the given date and time.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_time_parts_to_string(int year, int month, int day, int hour, int minute, int second, int musec,
+                                          const char *format, char *str)
+{
+    const char *month_name[] = { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
+    int literal = 0;
+    int fi = 0;
+    int si = 0;
+
+    if (format == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "format argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (str == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "str argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    while (format[fi] != '\0' && (literal || format[fi] != '|'))
+    {
+        if (format[fi] == '\'')
+        {
+            fi++;
+            if (format[fi] != '\'')
+            {
+                literal = !literal;
+                continue;
+            }
+        }
+        if (literal)
+        {
+            str[si] = format[fi];
+            fi++;
+            si++;
+        }
+        else if (format[fi] == 'y' && format[fi + 1] == 'y' && format[fi + 2] == 'y' && format[fi + 3] == 'y')
+        {
+            if (year < 0 || year > 9999)
+            {
+                coda_set_error(CODA_ERROR_INVALID_DATETIME, "the year can not be represented using a positive four "
+                               "digit number");
+                return -1;
+            }
+            sprintf(&str[si], "%04d", year);
+            fi += 4;
+            si += 4;
+        }
+        else if (format[fi] == 'M' && format[fi + 1] == 'M')
+        {
+            if (month < 1 || month > 12)
+            {
+                coda_set_error(CODA_ERROR_INVALID_DATETIME, "the month value is not within range (1 - 12)");
+                return -1;
+            }
+            if (format[fi + 2] == 'M')
+            {
+                sprintf(&str[si], "%s", month_name[month]);
+                fi += 3;
+                si += 3;
+            }
+            else
+            {
+                sprintf(&str[si], "%02d", month);
+                fi += 2;
+                si += 2;
+            }
+        }
+        else if (format[fi] == 'd' && format[fi + 1] == 'd')
+        {
+            if (day < 1 || day > 31)
+            {
+                coda_set_error(CODA_ERROR_INVALID_DATETIME, "the day value is not within range (1 - 31)");
+                return -1;
+            }
+            sprintf(&str[si], "%02d", day);
+            fi += 2;
+            si += 2;
+        }
+        else if (format[fi] == 'D' && format[fi + 1] == 'D' && format[fi + 2] == 'D')
+        {
+            int mjd, mjd_offset;
+
+            if (dmy_to_mjd2000(day, month, year, &mjd) != 0)
+            {
+                return -1;
+            }
+            if (dmy_to_mjd2000(1, 1, year, &mjd_offset) != 0)
+            {
+                return -1;
+            }
+            sprintf(&str[si], "%03d", mjd - mjd_offset + 1);
+            fi += 3;
+            si += 3;
+        }
+        else if (format[fi] == 'H' && format[fi + 1] == 'H')
+        {
+            if (hour < 0 || hour > 23)
+            {
+                coda_set_error(CODA_ERROR_INVALID_DATETIME, "the hour value is not within range (0 - 23)");
+                return -1;
+            }
+            sprintf(&str[si], "%02d", hour);
+            fi += 2;
+            si += 2;
+        }
+        else if (format[fi] == 'm' && format[fi + 1] == 'm')
+        {
+            if (minute < 0 || minute > 59)
+            {
+                coda_set_error(CODA_ERROR_INVALID_DATETIME, "the minute value is not within range (0 - 59)");
+                return -1;
+            }
+            sprintf(&str[si], "%02d", minute);
+            fi += 2;
+            si += 2;
+        }
+        else if (format[fi] == 's' && format[fi + 1] == 's')
+        {
+            if (second < 0 || second > 60)
+            {
+                coda_set_error(CODA_ERROR_INVALID_DATETIME, "the second value is not within range (0 - 60)");
+                return -1;
+            }
+            sprintf(&str[si], "%02d", second);
+            fi += 2;
+            si += 2;
+        }
+        else if (format[fi] == 'S')
+        {
+            int fraction = musec;
+            int n = 0;
+            int i;
+
+            if (musec < 0 || musec > 999999)
+            {
+                coda_set_error(CODA_ERROR_INVALID_DATETIME, "the microsecond value is not within range (0 - 999999)");
+                return -1;
+            }
+            while (format[fi] == 'S')
+            {
+                fi++;
+                n++;
+            }
+            for (i = n; i < 6; i++)
+            {
+                fraction /= 10;
+            }
+            sprintf(&str[si], "%0*d", n, fraction);
+            si += n;
+        }
+        else if ((format[fi] >= 'A' && format[fi] <= 'Z') || (format[fi] >= 'a' && format[fi] <= 'z'))
+        {
+            /* reserved character */
+            coda_set_error(CODA_ERROR_INVALID_FORMAT, "unsuppored character sequence in date/time format (%s)", format);
+            return -1;
+        }
+        else
+        {
+            str[si] = format[fi];
+            fi++;
+            si++;
+        }
+    }
+    if (literal)
+    {
+        coda_set_error(CODA_ERROR_INVALID_FORMAT, "missing closing ' in date/time format (%s)", format);
+        return -1;
+    }
+
+    return 0;
+}
+
+static int string_to_parts(const char *format, const char *str, int *year, int *month, int *day, int *hour,
+                           int *minute, int *second, int *musec)
+{
+    int use_leading_spaces;
+    int format_index = 0;
+    int string_index = 0;
+    int literal = 0;
+    int n;
+
+    /* initialize with epoch 2000-01-01T00:00:00.000000 */
+    *year = 2000;
+    *month = 1;
+    *day = 1;
+    *hour = 0;
+    *minute = 0;
+    *second = 0;
+    *musec = 0;
+
+    while (format[format_index] != '\0' && (literal || format[format_index] != '|'))
+    {
+        if (format[format_index] == '\'')
+        {
+            format_index++;
+            if (format[format_index] != '\'')
+            {
+                literal = !literal;
+                continue;
+            }
+        }
+        if (literal)
+        {
+            /* literal match */
+            if (format[format_index] != str[string_index])
+            {
+                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect fixed character "
+                               "(format: %s)", str, format);
+                return -1;
+            }
+            format_index++;
+            string_index++;
+        }
+        else if (format[format_index] == 'y' && format[format_index + 1] == 'y' && format[format_index + 2] == 'y' &&
+                 format[format_index + 3] == 'y')
+        {
+            use_leading_spaces = format[format_index + 4] == '*';
+            if (parse_integer(&str[string_index], 4, use_leading_spaces, year) != 0)
+            {
+                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect year value "
+                               "(format: %s)", str, format);
+                return -1;
+            }
+            format_index += 4 + (format[format_index] == '*');
+            string_index += 4;
+        }
+        else if (format[format_index] == 'M' && format[format_index + 1] == 'M')
+        {
+            if (format[format_index + 2] == 'M')
+            {
+                /* coda_month_to_integer already limits comparison to only 3 characters */
+                *month = coda_month_to_integer(&str[string_index]);
+                if (*month == -1)
+                {
+                    coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect month value "
+                                   "(format: %s)", str, format);
+                    return -1;
+                }
+                format_index += 3;
+                string_index += 3;
+            }
+            else
+            {
+                use_leading_spaces = format[format_index + 2] == '*';
+                if (parse_integer(&str[string_index], 2, use_leading_spaces, month) != 0)
+                {
+                    coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect month value "
+                                   "(format: %s)", str, format);
+                    return -1;
+                }
+                format_index += 2 + (format[format_index + 2] == '*');
+                string_index += 2;
+            }
+        }
+        else if (format[format_index] == 'd' && format[format_index + 1] == 'd')
+        {
+            use_leading_spaces = format[format_index + 2] == '*';
+            if (parse_integer(&str[string_index], 2, use_leading_spaces, day) != 0)
+            {
+                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect day value "
+                               "(format: %s)", str, format);
+                return -1;
+            }
+            format_index += 2 + (format[format_index + 2] == '*');
+            string_index += 2;
+        }
+        else if (format[format_index] == 'D' && format[format_index + 1] == 'D' && format[format_index + 2] == 'D')
+        {
+            int day_of_year;
+
+            use_leading_spaces = format[format_index + 3] == '*';
+            /* uses currently parsed year value to determine the actual month/day within the year */
+            if (parse_integer(&str[string_index], 3, use_leading_spaces, &day_of_year) != 0)
+            {
+                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect day value "
+                               "(format: %s)", str, format);
+                return -1;
+            }
+            if (coda_dayofyear_to_month_day(*year, day_of_year, month, day) != 0)
+            {
+                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an invalid day value "
+                               "(format: %s)", str, format);
+                return -1;
+            }
+            format_index += 3 + (format[format_index + 3] == '*');
+            string_index += 3;
+        }
+        else if (format[format_index] == 'H' && format[format_index + 1] == 'H')
+        {
+            use_leading_spaces = format[format_index + 2] == '*';
+            if (parse_integer(&str[string_index], 2, use_leading_spaces, hour) != 0)
+            {
+                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect hour value "
+                               "(format: %s)", str, format);
+                return -1;
+            }
+            format_index += 2 + (format[format_index + 2] == '*');
+            string_index += 2;
+        }
+        else if (format[format_index] == 'm' && format[format_index + 1] == 'm')
+        {
+            use_leading_spaces = format[format_index + 2] == '*';
+            if (parse_integer(&str[string_index], 2, use_leading_spaces, minute) != 0)
+            {
+                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect minute value "
+                               "(format: %s)", str, format);
+                return -1;
+            }
+            format_index += 2 + (format[format_index + 2] == '*');
+            string_index += 2;
+        }
+        else if (format[format_index] == 's' && format[format_index + 1] == 's')
+        {
+            use_leading_spaces = format[format_index + 2] == '*';
+            if (parse_integer(&str[string_index], 2, use_leading_spaces, second) != 0)
+            {
+                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect second value "
+                               "(format: %s)", str, format);
+                return -1;
+            }
+            format_index += 2 + (format[format_index + 2] == '*');
+            string_index += 2;
+        }
+        else if (format[format_index] == 'S')
+        {
+            n = 0;
+            while (format[format_index] == 'S')
+            {
+                format_index++;
+                n++;
+            }
+            if (parse_integer(&str[string_index], n > 6 ? 6 : n, 0, musec) != 0)
+            {
+                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect fractional "
+                               "second value (format: %s)", str, format);
+                return -1;
+            }
+            string_index += n;
+            while (n < 6)
+            {
+                *musec *= 10;
+                n++;
+            }
+        }
+        else if ((format[format_index] >= 'A' && format[format_index] <= 'Z') ||
+                 (format[format_index] >= 'a' && format[format_index] <= 'z') || format[format_index] == '*')
+        {
+            /* reserved character */
+            coda_set_error(CODA_ERROR_INVALID_FORMAT, "unsuppored character sequence in date/time format (%s)", format);
+            return -1;
+        }
+        else
+        {
+            /* literal match */
+            if (format[format_index] != str[string_index])
+            {
+                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect fixed character "
+                               "(format: %s)", str, format);
+                return -1;
+            }
+            format_index++;
+            string_index++;
+        }
+    }
+    if (literal)
+    {
+        coda_set_error(CODA_ERROR_INVALID_FORMAT, "missing closing ' in date/time format (%s)", format);
+        return -1;
+    }
+    if (str[string_index] != '\0')
+    {
+        coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) contains additional characters "
+                       "(format: %s)", str, format);
+        return -1;
+    }
+
+    return 0;
+}
+
+/** Convert a time string to a date and time using a specified format.
+ * The string will be parsed using the format that is provided as first parameter. This can be a '|' separated list
+ * of formats that will be tried in sequence until one succeeds.
+ *
+ * The specification for the time format parameter is the same as the
+ * <a href="../codadef/codadef-expressions.html#timeformat">date/time format patterns in coda expressions</a>.
+ *
+ * \warning This function does not perform any leap second correction.
+ * \param format String containing the datetime format(s) to use for parsing the datetime value.
+ * \param str    String containing the time in one of the supported formats.
+ * \param year   Pointer to the variable where the year will be stored.
+ * \param month  Pointer to the variable where the month of the year (1 - 12) will be stored.
+ * \param day    Pointer to the variable where the day of the month (1 - 31) will be stored.
+ * \param hour   Pointer to the variable where the hour of the day (0 - 23) will be stored.
+ * \param minute Pointer to the variable where the minute of the hour (0 - 59) will be stored.
+ * \param second Pointer to the variable where the second of the minute (0 - 59) will be stored.
+ * \param musec  Pointer to the variable where the microseconds of the second (0 - 999999) will be stored.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_time_string_to_parts(const char *format, const char *str, int *year, int *month, int *day,
+                                          int *hour, int *minute, int *second, int *musec)
+{
+    int literal = 0;
+    int n = 0;
+
+    if (format == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "format argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (str == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "str argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (year == NULL || month == NULL || day == NULL || hour == NULL || minute == NULL || second == NULL ||
+        musec == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "date/time argument(s) are NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    while (format[n] != '\0' && (literal || format[n] != '|'))
+    {
+        if (format[n] == '\'')
+        {
+            literal = !literal;
+        }
+        n++;
+    }
+    if (format[n] == '|')
+    {
+        int offset = 0;
+
+        /* try multiple formats */
+        while (1)
+        {
+            if (string_to_parts(&format[offset], str, year, month, day, hour, minute, second, musec) == 0)
+            {
+                /* found a format that works */
+                return 0;
+            }
+            if (format[n] == '\0')
+            {
+                /* the string matched none of the formats */
+                coda_set_error(CODA_ERROR_INVALID_DATETIME,
+                               "date/time argument (%s) did not match any of the formats (%s)", str, format);
+                return -1;
+            }
+            n++;
+            offset = n;
+            while (format[n] != '\0' && (literal || format[n] != '|'))
+            {
+                if (format[n] == '\'')
+                {
+                    literal = !literal;
+                }
+                n++;
+            }
+        }
+    }
+
+    return string_to_parts(format, str, year, month, day, hour, minute, second, musec);
+}
+
+/** Convert a floating point time value to a string using a specified format.
+ * The string will be formatted using the format that is provided as second parameter.
+ * The time string will be stored in the \a str parameter. This parameter should be allocated by the user
+ * and should be long enough to hold the formatted time string and a 0 termination character.
+ *
+ * The specification for the time format parameter is the same as the
+ * <a href="../codadef/codadef-expressions.html#timeformat">date/time format patterns in coda expressions</a>.
+ *
+ * \warning This function does not perform any leap second correction.
+ * \param datetime  Floating point value representing the number of seconds since January 1st, 2000 00:00:00.000000.
+ * \param format    Date/time format to use for the string representation of the datetime value.
+ * \param str       String representation of the floating point time value.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+/* the date/time formats that we support guarantee that strlen(format) >= strlen(str) for all formats */
+LIBCODA_API int coda_time_double_to_string(double datetime, const char *format, char *str)
+{
+    int year, month, day, hour, minute, second, musec;
+
+    if (coda_time_double_to_parts(datetime, &year, &month, &day, &hour, &minute, &second, &musec) != 0)
+    {
+        return -1;
+    }
+
+    return coda_time_parts_to_string(year, month, day, hour, minute, second, musec, format, str);
+}
+
+/** Convert a floating point TAI time value to a UTC string.
+ * The string will be formatted using the format that is provided as second parameter.
+ * The time string will be stored in the \a str parameter. This parameter should be allocated by the user
+ * and should be long enough to hold the formatted time string and a 0 termination character.
+ *
+ * The specification for the time format parameter is the same as the
+ * <a href="../codadef/codadef-expressions.html#timeformat">date/time format patterns in coda expressions</a>.
+ *
+ * This function performs proper leap second correction in the conversion from TAI to UTC
+ * (see also \a coda_time_double_to_parts_utc()).
+ *
+ * \param datetime  Floating point value representing the number of seconds since January 1st, 2000 00:00:00.000000.
+ * \param format    Date/time format to use for the string representation of the datetime value.
+ * \param str       String representation of the floating point time value.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+/* the date/time formats that we support guarantee that strlen(format) >= strlen(str) for all formats */
+LIBCODA_API int coda_time_double_to_string_utc(double datetime, const char *format, char *str)
+{
+    int year, month, day, hour, minute, second, musec;
+
+    if (coda_time_double_to_parts_utc(datetime, &year, &month, &day, &hour, &minute, &second, &musec) != 0)
+    {
+        return -1;
+    }
+
+    return coda_time_parts_to_string(year, month, day, hour, minute, second, musec, format, str);
+}
+
+/** Convert a time string to a floating point time value.
+ * The string will be parsed using the format that is provided as first parameter. This can be a '|' separated list
+ * of formats that will be tried in sequence until one succeeds.
+ *
+ * The specification for the time format parameter is the same as the
+ * <a href="../codadef/codadef-expressions.html#timeformat">date/time format patterns in coda expressions</a>.
+ *
+ * \warning This function does not perform any leap second correction.
+ * \param format    String containing the datetime format(s) to use for parsing the datetime value.
+ * \param str       String containing the time in one of the supported formats.
+ * \param datetime  Floating point value representing the number of seconds since January 1st, 2000 00:00:00.000000.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_time_string_to_double(const char *format, const char *str, double *datetime)
+{
+    int year, month, day, hour, minute, second, musec;
+
+    if (coda_time_string_to_parts(format, str, &year, &month, &day, &hour, &minute, &second, &musec) != 0)
+    {
+        return -1;
+    }
+    return coda_time_parts_to_double(year, month, day, hour, minute, second, musec, datetime);
+}
+
+/** Convert a UTC time string to a TAI floating point time value.
+ * The string will be parsed using the format that is provided as first parameter. This can be a '|' separated list
+ * of formats that will be tried in sequence until one succeeds.
+ *
+ * The specification for the time format parameter is the same as the
+ * <a href="../codadef/codadef-expressions.html#timeformat">date/time format patterns in coda expressions</a>.
+ *
+ * This function performs proper leap second correction in the conversion from UTC to TAI
+ * (see also \a coda_time_parts_to_double_utc()).
+ *
+ * \param format    String containing the datetime format(s) to use for parsing the datetime value.
+ * \param str       String containing the time in one of the supported formats.
+ * \param datetime  Floating point value representing the number of seconds since January 1st, 2000 00:00:00.000000.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+int coda_time_string_to_double_utc(const char *format, const char *str, double *datetime)
+{
+    int year, month, day, hour, minute, second, musec;
+
+    if (coda_time_string_to_parts(format, str, &year, &month, &day, &hour, &minute, &second, &musec) != 0)
+    {
+        return -1;
+    }
+    return coda_time_parts_to_double_utc(year, month, day, hour, minute, second, musec, datetime);
+}
+
+
+/* Deprecated backward compatibility functions */
+
+LIBCODA_API int coda_datetime_to_double(int year, int month, int day, int hour, int minute, int second, int musec,
+                                        double *datetime)
+{
+    return coda_time_parts_to_double(year, month, day, hour, minute, second, musec, datetime);
+}
+
+LIBCODA_API int coda_double_to_datetime(double datetime, int *year, int *month, int *day, int *hour, int *minute,
+                                        int *second, int *musec)
+{
+    return coda_time_double_to_parts(datetime, year, month, day, hour, minute, second, musec);
+}
+
+LIBCODA_API int coda_time_to_string(double datetime, char *str)
+{
+    return coda_time_double_to_string(datetime, "yyyy-MM-dd HH:mm:ss.SSSSSS", str);
+}
+
+LIBCODA_API int coda_string_to_time(const char *str, double *datetime)
+{
+    const char *format = "yyyy-MM-dd HH:mm:ss.SSSSSS|yyyy-MM-dd HH:mm:ss|yyyy-MM-dd|"
+        "dd-MMM-yyyy HH:mm:ss.SSSSSS|dd-MMM-yyyy HH:mm:ss|dd-MMM-yyyy";
+    return coda_time_string_to_double(format, str, datetime);
+}
+
+LIBCODA_API int coda_utcdatetime_to_double(int year, int month, int day, int hour, int minute, int second, int musec,
+                                           double *datetime)
+{
+    return coda_time_parts_to_double_utc(year, month, day, hour, minute, second, musec, datetime);
+}
+
+LIBCODA_API int coda_double_to_utcdatetime(double datetime, int *year, int *month, int *day, int *hour, int *minute,
+                                           int *second, int *musec)
+{
+    return coda_time_double_to_parts_utc(datetime, year, month, day, hour, minute, second, musec);
+}
+
+LIBCODA_API int coda_time_to_utcstring(double datetime, char *str)
+{
+    return coda_time_double_to_string_utc(datetime, "yyyy-MM-dd HH:mm:ss.SSSSSS", str);
+}
+
+LIBCODA_API int coda_utcstring_to_time(const char *str, double *datetime)
+{
+    const char *format = "yyyy-MM-dd HH:mm:ss.SSSSSS|yyyy-MM-dd HH:mm:ss|yyyy-MM-dd|"
+        "dd-MMM-yyyy HH:mm:ss.SSSSSS|dd-MMM-yyyy HH:mm:ss|dd-MMM-yyyy";
+    return coda_time_string_to_double_utc(format, str, datetime);
 }
 
 /** @} */

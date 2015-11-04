@@ -1,5 +1,5 @@
 # autoconf file for CODA
-AC_INIT([CODA],[2.10.1])
+AC_INIT([CODA],[2.11])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE(foreign subdir-objects 1.10 -Wall)
 
@@ -99,9 +99,9 @@ AC_CONFIG_FILES([windows/coda.iss windows/setup.py])
 #    increment age.
 # 6. If any interfaces have been removed or changed since the last public
 #    release, then set age to 0.
-LIBCODA_CURRENT=10
-LIBCODA_REVISION=3
-LIBCODA_AGE=4
+LIBCODA_CURRENT=11
+LIBCODA_REVISION=0
+LIBCODA_AGE=5
 AC_SUBST(LIBCODA_CURRENT)
 AC_SUBST(LIBCODA_REVISION)
 AC_SUBST(LIBCODA_AGE)
@@ -369,7 +369,11 @@ Try setting the JAVA and JAVAC environment variables to the full paths to your j
   fi
   if test `uname -s` = Darwin ; then
     JNIEXT=.jnilib
-    JNICPPFLAGS=-I`javaconfig Headers`
+    if test -x /usr/bin/javaconfig; then
+      JNICPPFLAGS=-I`javaconfig Headers`
+    elif test -e /System/Library/Frameworks/JavaVM.framework/Headers; then # javaconfig does not exist on Mac 10.8
+      JNICPPFLAGS=-I/System/Library/Frameworks/JavaVM.framework/Headers
+    fi
   else
     AC_CHECK_FILE($JAVA_HOME/include/jni.h, , 
       [AC_MSG_ERROR([BOXED_TEXT([ERROR: The Java Native Interface (jni.h) is required for the Java interface. Make sure you have the full JDK installed, not just the Runtime Environment (JRE).])])])

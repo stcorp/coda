@@ -195,8 +195,10 @@
 		<File RelativePath="..\libcoda\coda-netcdf.h"/>
 		<File RelativePath="..\libcoda\coda-path.h"/>
 		<File RelativePath="..\libcoda\coda-product.c"/>
+		<File RelativePath="..\libcoda\coda-read-array.h"/>
 		<File RelativePath="..\libcoda\coda-read-bits.h"/>
 		<File RelativePath="..\libcoda\coda-read-bytes.h"/>
+		<File RelativePath="..\libcoda\coda-read-bytes-in-bounds.h"/>
 		<File RelativePath="..\libcoda\coda-rinex.c"/>
 		<File RelativePath="..\libcoda\coda-rinex.h"/>
 		<File RelativePath="..\libcoda\coda-sp3.c"/>
@@ -205,13 +207,12 @@
 		<File RelativePath="..\libcoda\coda-swap4.h"/>
 		<File RelativePath="..\libcoda\coda-swap8.h"/>
 		<File RelativePath="..\libcoda\coda-time.c"/>
+		<File RelativePath="..\libcoda\coda-transpose-array.h"/>
 		<File RelativePath="..\libcoda\coda-tree.c"/>
 		<File RelativePath="..\libcoda\coda-type.c"/>
 		<File RelativePath="..\libcoda\coda-utils.c"/>
-		<File RelativePath="..\libcoda\coda-xml-cursor.c"/>
 		<File RelativePath="..\libcoda\coda-xml-internal.h"/>
 		<File RelativePath="..\libcoda\coda-xml-parser.c"/>
-		<File RelativePath="..\libcoda\coda-xml-type.c"/>
 		<File RelativePath="..\libcoda\coda-xml.c"/>
 		<File RelativePath="..\libcoda\coda-xml.h"/>
 		<File RelativePath="..\libcoda\coda.c"/>

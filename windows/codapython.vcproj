@@ -32,7 +32,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="python26.lib coda.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="python27.lib coda.lib odbc32.lib odbccp32.lib"
 				OutputFile="$(OutDir)_codac.pyd"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(OutDir),$(PYTHONHOME)\libs"
@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="python26_d.lib coda_d.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="python27_d.lib coda_d.lib odbc32.lib odbccp32.lib"
 				OutputFile="$(OutDir)_codac.pyd"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(OutDir),$(PYTHONHOME)"
@@ -92,7 +92,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="python26.lib coda.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="python27.lib coda.lib odbc32.lib odbccp32.lib"
 				OutputFile="$(OutDir)_codac.pyd"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(OutDir),$(PYTHONHOME)\libs"
@@ -121,7 +121,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="python26_d.lib coda_d.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="python27_d.lib coda_d.lib odbc32.lib odbccp32.lib"
 				OutputFile="$(OutDir)_codac.pyd"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(OutDir),$(PYTHONHOME)"

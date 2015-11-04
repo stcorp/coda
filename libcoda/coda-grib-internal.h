@@ -23,6 +23,7 @@
 
 #include "coda-grib.h"
 #include "coda-type.h"
+#include "coda-bin-internal.h"
 
 typedef struct coda_grib_value_array_struct
 {
@@ -53,18 +54,14 @@ typedef struct coda_grib_product_struct
     const coda_product_definition *product_definition;
     long *product_variable_size;
     int64_t **product_variable;
+    int64_t mem_size;
+    const uint8_t *mem_ptr;
 #if CODA_USE_QIAP
     void *qiap_info;
 #endif
 
-    int use_mmap;       /* indicates whether the file was opened using mmap */
-    int fd;     /* file handle when not using mmap */
-#ifdef WIN32
-    HANDLE file;
-    HANDLE file_mapping;
-#endif
-    const uint8_t *mmap_ptr;
-
+    /* 'grib' product specific fields */
+    coda_product *raw_product;
     int grib_version;
     long record_size;
 } coda_grib_product;

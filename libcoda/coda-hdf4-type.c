@@ -1830,7 +1830,7 @@ int coda_hdf4_create_root(coda_hdf4_product *product)
     {
         return -1;
     }
-    product->root_type = coda_mem_record_new(root_definition);
+    product->root_type = coda_mem_record_new(root_definition, NULL);
     if (product->root_type == NULL)
     {
         coda_type_release((coda_type *)root_definition);

@@ -42,7 +42,6 @@ int coda_bin_product_open(coda_bin_product *product)
 {
     product->use_mmap = 0;
     product->fd = -1;
-    product->mmap_ptr = NULL;
 #ifdef WIN32
     product->file_mapping = INVALID_HANDLE_VALUE;
     product->file = INVALID_HANDLE_VALUE;
@@ -51,10 +50,10 @@ int coda_bin_product_open(coda_bin_product *product)
     if (coda_option_use_mmap)
     {
         /* Perform an mmap() of the file, filling the following fields:
-         *   product->use_mmap = 1
+         *   product->use_mem_ptr = 1
          *   product->file         (windows only )
          *   product->file_mapping (windows only )
-         *   product->mmap_ptr     (windows, *nix)
+         *   product->mem_ptr      (windows, *nix)
          */
 #ifdef WIN32
         product->use_mmap = 1;
@@ -110,8 +109,8 @@ int coda_bin_product_open(coda_bin_product *product)
             return -1;
         }
 
-        product->mmap_ptr = (uint8_t *)MapViewOfFile(product->file_mapping, FILE_MAP_READ, 0, 0, 0);
-        if (product->mmap_ptr == NULL)
+        product->mem_ptr = (uint8_t *)MapViewOfFile(product->file_mapping, FILE_MAP_READ, 0, 0, 0);
+        if (product->mem_ptr == NULL)
         {
             LPVOID lpMsgBuf;
 
@@ -141,12 +140,12 @@ int coda_bin_product_open(coda_bin_product *product)
             return -1;
         }
 
-        product->mmap_ptr = (uint8_t *)mmap(0, product->file_size, PROT_READ, MAP_SHARED, fd, 0);
-        if (product->mmap_ptr == (uint8_t *)MAP_FAILED)
+        product->mem_ptr = (uint8_t *)mmap(0, product->file_size, PROT_READ, MAP_SHARED, fd, 0);
+        if (product->mem_ptr == (uint8_t *)MAP_FAILED)
         {
             coda_set_error(CODA_ERROR_FILE_OPEN, "could not map file %s into memory (%s)", product->filename,
                            strerror(errno));
-            product->mmap_ptr = NULL;
+            product->mem_ptr = NULL;
             close(fd);
             return -1;
         }
@@ -154,13 +153,14 @@ int coda_bin_product_open(coda_bin_product *product)
         /* close file descriptor (the file handle is not needed anymore) */
         close(fd);
 #endif
+        product->mem_size = product->file_size;
     }
     else
     {
         int open_flags;
 
         /* Perform a normal open of the file, filling the following fields:
-         *   product->use_mmap = 0
+         *   product->use_mem_ptr = 0
          *   product->fd             (windows, *nix)
          */
         open_flags = O_RDONLY;
@@ -183,10 +183,10 @@ int coda_bin_product_close(coda_bin_product *product)
     if (product->use_mmap)
     {
 #ifdef WIN32
-        if (product->mmap_ptr != NULL)
+        if (product->mem_ptr != NULL)
         {
-            UnmapViewOfFile(product->mmap_ptr);
-            product->mmap_ptr = NULL;
+            UnmapViewOfFile(product->mem_ptr);
+            product->mem_ptr = NULL;
         }
         if (product->file_mapping != INVALID_HANDLE_VALUE)
         {
@@ -199,10 +199,10 @@ int coda_bin_product_close(coda_bin_product *product)
             product->file = INVALID_HANDLE_VALUE;
         }
 #else
-        if (product->mmap_ptr != NULL)
+        if (product->mem_ptr != NULL)
         {
-            munmap((void *)product->mmap_ptr, product->file_size);
-            product->mmap_ptr = NULL;
+            munmap((void *)product->mem_ptr, product->file_size);
+            product->mem_ptr = NULL;
         }
 #endif
         product->use_mmap = 0;
@@ -215,6 +215,60 @@ int coda_bin_product_close(coda_bin_product *product)
             product->fd = -1;
         }
     }
+
+    return 0;
+}
+
+int coda_bin_open_raw(const char *filename, int64_t file_size, coda_product **product)
+{
+    coda_bin_product *product_file;
+
+    product_file = (coda_bin_product *)malloc(sizeof(coda_bin_product));
+    if (product_file == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                       sizeof(coda_bin_product), __FILE__, __LINE__);
+        return -1;
+    }
+    product_file->filename = NULL;
+    product_file->file_size = file_size;
+    product_file->format = coda_format_binary;
+    product_file->root_type = NULL;
+    product_file->product_definition = NULL;
+    product_file->product_variable_size = NULL;
+    product_file->product_variable = NULL;
+    product_file->mem_size = 0;
+    product_file->mem_ptr = NULL;
+#if CODA_USE_QIAP
+    product_file->qiap_info = NULL;
+#endif
+
+    product_file->use_mmap = 0;
+    product_file->fd = -1;
+
+    product_file->root_type = (coda_dynamic_type *)coda_type_raw_file_singleton();
+    if (product_file->root_type == NULL)
+    {
+        coda_bin_close((coda_product *)product_file);
+        return -1;
+    }
+
+    product_file->filename = strdup(filename);
+    if (product_file->filename == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate filename string) (%s:%u)",
+                       __FILE__, __LINE__);
+        coda_bin_close((coda_product *)product_file);
+        return -1;
+    }
+
+    if (coda_bin_product_open(product_file) != 0)
+    {
+        coda_bin_close((coda_product *)product_file);
+        return -1;
+    }
+
+    *product = (coda_product *)product_file;
 
     return 0;
 }
@@ -244,9 +298,12 @@ int coda_bin_open(const char *filename, int64_t file_size, const coda_product_de
     product_file->product_definition = definition;
     product_file->product_variable_size = NULL;
     product_file->product_variable = NULL;
+    product_file->mem_size = 0;
+    product_file->mem_ptr = NULL;
 #if CODA_USE_QIAP
     product_file->qiap_info = NULL;
 #endif
+
     product_file->use_mmap = 0;
     product_file->fd = -1;
 

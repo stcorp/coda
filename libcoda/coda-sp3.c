@@ -122,6 +122,7 @@ static coda_type **sp3_type = NULL;
 typedef struct ingest_info_struct
 {
     FILE *f;
+    coda_product *product;
     coda_mem_record *header;    /* actual data for /header */
     coda_mem_array *records;    /* actual data for /record */
     coda_mem_record *record;    /* actual data for /record[] */
@@ -194,13 +195,21 @@ void ingest_info_init(ingest_info *info)
 
 static int sp3_init(void)
 {
+    coda_endianness endianness;
     coda_type_record_field *field;
+    coda_expression *expr;
     int i;
 
     if (sp3_type != NULL)
     {
         return 0;
     }
+
+#ifdef WORDS_BIGENDIAN
+    endianness = coda_big_endian;
+#else
+    endianness = coda_little_endian;
+#endif
 
     sp3_type = malloc(num_sp3_types * sizeof(coda_type *));
     if (sp3_type == NULL)
@@ -222,13 +231,18 @@ static int sp3_init(void)
 
     sp3_type[sp3_datetime_start_string] = (coda_type *)coda_type_text_new(coda_format_sp3);
 
-    sp3_type[sp3_datetime_start] = (coda_type *)coda_type_time_new(coda_format_sp3, NULL);
+    expr = NULL;
+    coda_expression_from_string("time(str(.),\"yyyy MM dd HH mm ss*.SSSSSSSS|yyyy MM* dd* HH* mm* ss*.SSSSSSSS\")",
+                                &expr);
+    sp3_type[sp3_datetime_start] = (coda_type *)coda_type_time_new(coda_format_sp3, expr);
     coda_type_time_set_base_type((coda_type_special *)sp3_type[sp3_datetime_start],
                                  sp3_type[sp3_datetime_start_string]);
     coda_type_set_description(sp3_type[sp3_datetime_start], "Start time");
 
     sp3_type[sp3_num_epochs] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_num_epochs], endianness);
     coda_type_set_read_type(sp3_type[sp3_num_epochs], coda_native_type_int32);
+    coda_type_set_bit_size(sp3_type[sp3_num_epochs], 32);
     coda_type_set_description(sp3_type[sp3_num_epochs], "Number of Epochs");
 
     sp3_type[sp3_data_used] = (coda_type *)coda_type_text_new(coda_format_sp3);
@@ -248,24 +262,36 @@ static int sp3_init(void)
     coda_type_set_description(sp3_type[sp3_agency], "Agency");
 
     sp3_type[sp3_gps_week] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_gps_week], endianness);
     coda_type_set_read_type(sp3_type[sp3_gps_week], coda_native_type_int16);
+    coda_type_set_bit_size(sp3_type[sp3_gps_week], 16);
     coda_type_set_description(sp3_type[sp3_gps_week], "GPS Week");
 
     sp3_type[sp3_sec_of_week] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_real_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_sec_of_week], endianness);
+    coda_type_set_bit_size(sp3_type[sp3_sec_of_week], 64);
     coda_type_set_description(sp3_type[sp3_sec_of_week], "Seconds of Week");
 
     sp3_type[sp3_epoch_interval] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_real_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_epoch_interval], endianness);
+    coda_type_set_bit_size(sp3_type[sp3_epoch_interval], 64);
     coda_type_set_description(sp3_type[sp3_epoch_interval], "Epoch Interval");
 
     sp3_type[sp3_mjd_start] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_mjd_start], endianness);
     coda_type_set_read_type(sp3_type[sp3_mjd_start], coda_native_type_int32);
+    coda_type_set_bit_size(sp3_type[sp3_mjd_start], 32);
     coda_type_set_description(sp3_type[sp3_mjd_start], "Modified Julian Day Start");
 
     sp3_type[sp3_frac_day] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_real_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_frac_day], endianness);
+    coda_type_set_bit_size(sp3_type[sp3_frac_day], 64);
     coda_type_set_description(sp3_type[sp3_frac_day], "Fractional Day");
 
     sp3_type[sp3_num_satellites] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_num_satellites], endianness);
     coda_type_set_read_type(sp3_type[sp3_num_satellites], coda_native_type_uint8);
+    coda_type_set_bit_size(sp3_type[sp3_num_satellites], 8);
     coda_type_set_description(sp3_type[sp3_num_satellites], "Number of Satellites");
 
     sp3_type[sp3_sat_id] = (coda_type *)coda_type_text_new(coda_format_sp3);
@@ -273,7 +299,9 @@ static int sp3_init(void)
     coda_type_set_description(sp3_type[sp3_sat_id], "Satellite Id");
 
     sp3_type[sp3_sat_accuracy] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_sat_accuracy], endianness);
     coda_type_set_read_type(sp3_type[sp3_sat_accuracy], coda_native_type_int16);
+    coda_type_set_bit_size(sp3_type[sp3_sat_accuracy], 16);
     coda_type_set_description(sp3_type[sp3_sat_accuracy], "Satellite Accuracy");
 
     sp3_type[sp3_file_type] = (coda_type *)coda_type_text_new(coda_format_sp3);
@@ -285,14 +313,21 @@ static int sp3_init(void)
     coda_type_set_description(sp3_type[sp3_time_system], "Time System");
 
     sp3_type[sp3_base_pos_vel] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_real_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_base_pos_vel], endianness);
+    coda_type_set_bit_size(sp3_type[sp3_base_pos_vel], 64);
     coda_type_set_description(sp3_type[sp3_base_pos_vel], "Base for Pos/Vel (mm or 10**-4 mm/sec)");
 
     sp3_type[sp3_base_clk_rate] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_real_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_base_clk_rate], endianness);
+    coda_type_set_bit_size(sp3_type[sp3_base_clk_rate], 64);
     coda_type_set_description(sp3_type[sp3_base_clk_rate], "Base for Clk/Rate (psec or 10**-4 psec/sec)");
 
     sp3_type[sp3_epoch_string] = (coda_type *)coda_type_text_new(coda_format_sp3);
 
-    sp3_type[sp3_epoch] = (coda_type *)coda_type_time_new(coda_format_sp3, NULL);
+    expr = NULL;
+    coda_expression_from_string("time(str(.),\"yyyy MM dd HH mm ss*.SSSSSSSS|yyyy MM* dd* HH* mm* ss*.SSSSSSSS\")",
+                                &expr);
+    sp3_type[sp3_epoch] = (coda_type *)coda_type_time_new(coda_format_sp3, expr);
     coda_type_time_set_base_type((coda_type_special *)sp3_type[sp3_epoch], sp3_type[sp3_epoch_string]);
     coda_type_set_description(sp3_type[sp3_epoch], "Epoch Start");
 
@@ -301,35 +336,51 @@ static int sp3_init(void)
     coda_type_set_description(sp3_type[sp3_vehicle_id], "Vehicle Id");
 
     sp3_type[sp3_P_x_coordinate] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_real_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_P_x_coordinate], endianness);
+    coda_type_set_bit_size(sp3_type[sp3_P_x_coordinate], 64);
     coda_type_set_description(sp3_type[sp3_P_x_coordinate], "x coordinate");
     coda_type_number_set_unit((coda_type_number *)sp3_type[sp3_P_x_coordinate], "km");
 
     sp3_type[sp3_P_y_coordinate] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_real_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_P_y_coordinate], endianness);
+    coda_type_set_bit_size(sp3_type[sp3_P_y_coordinate], 64);
     coda_type_set_description(sp3_type[sp3_P_y_coordinate], "y coordinate");
     coda_type_number_set_unit((coda_type_number *)sp3_type[sp3_P_y_coordinate], "km");
 
     sp3_type[sp3_P_z_coordinate] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_real_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_P_z_coordinate], endianness);
+    coda_type_set_bit_size(sp3_type[sp3_P_z_coordinate], 64);
     coda_type_set_description(sp3_type[sp3_P_z_coordinate], "z coordinate");
     coda_type_number_set_unit((coda_type_number *)sp3_type[sp3_P_z_coordinate], "km");
 
     sp3_type[sp3_P_clock] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_real_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_P_clock], endianness);
+    coda_type_set_bit_size(sp3_type[sp3_P_clock], 64);
     coda_type_set_description(sp3_type[sp3_P_clock], "clock");
     coda_type_number_set_unit((coda_type_number *)sp3_type[sp3_P_clock], "1e-6 s");
 
     sp3_type[sp3_P_x_sdev] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_P_x_sdev], endianness);
     coda_type_set_read_type(sp3_type[sp3_P_x_sdev], coda_native_type_int8);
+    coda_type_set_bit_size(sp3_type[sp3_P_x_sdev], 8);
     coda_type_set_description(sp3_type[sp3_P_x_sdev], "x sdev (b**n mm)");
 
     sp3_type[sp3_P_y_sdev] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_P_y_sdev], endianness);
     coda_type_set_read_type(sp3_type[sp3_P_y_sdev], coda_native_type_int8);
+    coda_type_set_bit_size(sp3_type[sp3_P_y_sdev], 8);
     coda_type_set_description(sp3_type[sp3_P_y_sdev], "y sdev (b**n mm)");
 
     sp3_type[sp3_P_z_sdev] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_P_z_sdev], endianness);
     coda_type_set_read_type(sp3_type[sp3_P_z_sdev], coda_native_type_int8);
+    coda_type_set_bit_size(sp3_type[sp3_P_z_sdev], 8);
     coda_type_set_description(sp3_type[sp3_P_z_sdev], "z sdev (b**n mm)");
 
     sp3_type[sp3_P_clock_sdev] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_P_clock_sdev], endianness);
     coda_type_set_read_type(sp3_type[sp3_P_clock_sdev], coda_native_type_int16);
+    coda_type_set_bit_size(sp3_type[sp3_P_clock_sdev], 16);
     coda_type_set_description(sp3_type[sp3_P_clock_sdev], "clock sdev (b**n psec)");
 
     sp3_type[sp3_P_clock_event_flag] = (coda_type *)coda_type_text_new(coda_format_sp3);
@@ -349,123 +400,179 @@ static int sp3_init(void)
     coda_type_set_description(sp3_type[sp3_P_orbit_pred_flag], "Orbit Pred. Flag");
 
     sp3_type[sp3_EP_x_sdev] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_EP_x_sdev], endianness);
     coda_type_set_read_type(sp3_type[sp3_EP_x_sdev], coda_native_type_int16);
+    coda_type_set_bit_size(sp3_type[sp3_EP_x_sdev], 16);
     coda_type_set_description(sp3_type[sp3_EP_x_sdev], "x sdev");
     coda_type_number_set_unit((coda_type_number *)sp3_type[sp3_EP_x_sdev], "mm");
 
     sp3_type[sp3_EP_y_sdev] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_EP_y_sdev], endianness);
     coda_type_set_read_type(sp3_type[sp3_EP_y_sdev], coda_native_type_int16);
+    coda_type_set_bit_size(sp3_type[sp3_EP_y_sdev], 16);
     coda_type_set_description(sp3_type[sp3_EP_y_sdev], "y sdev");
     coda_type_number_set_unit((coda_type_number *)sp3_type[sp3_EP_y_sdev], "mm");
 
     sp3_type[sp3_EP_z_sdev] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_EP_z_sdev], endianness);
     coda_type_set_read_type(sp3_type[sp3_EP_z_sdev], coda_native_type_int16);
+    coda_type_set_bit_size(sp3_type[sp3_EP_z_sdev], 16);
     coda_type_set_description(sp3_type[sp3_EP_z_sdev], "z sdev");
     coda_type_number_set_unit((coda_type_number *)sp3_type[sp3_EP_z_sdev], "mm");
 
     sp3_type[sp3_EP_clock_sdev] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_EP_clock_sdev], endianness);
     coda_type_set_read_type(sp3_type[sp3_EP_clock_sdev], coda_native_type_int32);
+    coda_type_set_bit_size(sp3_type[sp3_EP_clock_sdev], 32);
     coda_type_set_description(sp3_type[sp3_EP_clock_sdev], "clock sdev");
     coda_type_number_set_unit((coda_type_number *)sp3_type[sp3_EP_clock_sdev], "ps");
 
     sp3_type[sp3_EP_xy_corr] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_EP_xy_corr], endianness);
     coda_type_set_read_type(sp3_type[sp3_EP_xy_corr], coda_native_type_int32);
+    coda_type_set_bit_size(sp3_type[sp3_EP_xy_corr], 32);
     coda_type_set_description(sp3_type[sp3_EP_xy_corr], "xy correlation");
 
     sp3_type[sp3_EP_xz_corr] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_EP_xz_corr], endianness);
     coda_type_set_read_type(sp3_type[sp3_EP_xz_corr], coda_native_type_int32);
+    coda_type_set_bit_size(sp3_type[sp3_EP_xz_corr], 32);
     coda_type_set_description(sp3_type[sp3_EP_xz_corr], "xz correlation");
 
     sp3_type[sp3_EP_xc_corr] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_EP_xc_corr], endianness);
     coda_type_set_read_type(sp3_type[sp3_EP_xc_corr], coda_native_type_int32);
+    coda_type_set_bit_size(sp3_type[sp3_EP_xc_corr], 32);
     coda_type_set_description(sp3_type[sp3_EP_xc_corr], "xc correlation");
 
     sp3_type[sp3_EP_yz_corr] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_EP_yz_corr], endianness);
     coda_type_set_read_type(sp3_type[sp3_EP_yz_corr], coda_native_type_int32);
+    coda_type_set_bit_size(sp3_type[sp3_EP_yz_corr], 32);
     coda_type_set_description(sp3_type[sp3_EP_yz_corr], "yz correlation");
 
     sp3_type[sp3_EP_yc_corr] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_EP_yc_corr], endianness);
     coda_type_set_read_type(sp3_type[sp3_EP_yc_corr], coda_native_type_int32);
+    coda_type_set_bit_size(sp3_type[sp3_EP_yc_corr], 32);
     coda_type_set_description(sp3_type[sp3_EP_yc_corr], "yc correlation");
 
     sp3_type[sp3_EP_zc_corr] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_EP_zc_corr], endianness);
     coda_type_set_read_type(sp3_type[sp3_EP_zc_corr], coda_native_type_int32);
+    coda_type_set_bit_size(sp3_type[sp3_EP_zc_corr], 32);
     coda_type_set_description(sp3_type[sp3_EP_zc_corr], "zc correlation");
 
     sp3_type[sp3_V_x_velocity] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_real_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_V_x_velocity], endianness);
+    coda_type_set_bit_size(sp3_type[sp3_V_x_velocity], 64);
     coda_type_set_description(sp3_type[sp3_V_x_velocity], "x velocity");
     coda_type_number_set_unit((coda_type_number *)sp3_type[sp3_V_x_velocity], "dm/s");
 
     sp3_type[sp3_V_y_velocity] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_real_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_V_y_velocity], endianness);
+    coda_type_set_bit_size(sp3_type[sp3_V_y_velocity], 64);
     coda_type_set_description(sp3_type[sp3_V_y_velocity], "y velocity");
     coda_type_number_set_unit((coda_type_number *)sp3_type[sp3_V_y_velocity], "dm/s");
 
     sp3_type[sp3_V_z_velocity] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_real_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_V_z_velocity], endianness);
+    coda_type_set_bit_size(sp3_type[sp3_V_z_velocity], 64);
     coda_type_set_description(sp3_type[sp3_V_z_velocity], "z velocity");
     coda_type_number_set_unit((coda_type_number *)sp3_type[sp3_V_z_velocity], "dm/s");
 
     sp3_type[sp3_V_clock_rate] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_real_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_V_clock_rate], endianness);
+    coda_type_set_bit_size(sp3_type[sp3_V_clock_rate], 64);
     coda_type_set_description(sp3_type[sp3_V_clock_rate], "clock rate change");
     coda_type_number_set_unit((coda_type_number *)sp3_type[sp3_V_clock_rate], "1e-10 s/s");
 
     sp3_type[sp3_V_xvel_sdev] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_V_xvel_sdev], endianness);
     coda_type_set_read_type(sp3_type[sp3_V_xvel_sdev], coda_native_type_int8);
+    coda_type_set_bit_size(sp3_type[sp3_V_xvel_sdev], 8);
     coda_type_set_description(sp3_type[sp3_V_xvel_sdev], "xvel sdev (b**n 1e-4 mm/sec)");
 
     sp3_type[sp3_V_yvel_sdev] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_V_yvel_sdev], endianness);
     coda_type_set_read_type(sp3_type[sp3_V_yvel_sdev], coda_native_type_int8);
+    coda_type_set_bit_size(sp3_type[sp3_V_yvel_sdev], 8);
     coda_type_set_description(sp3_type[sp3_V_yvel_sdev], "yvel sdev (b**n 1e-4 mm/sec)");
 
     sp3_type[sp3_V_zvel_sdev] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_V_zvel_sdev], endianness);
     coda_type_set_read_type(sp3_type[sp3_V_zvel_sdev], coda_native_type_int8);
+    coda_type_set_bit_size(sp3_type[sp3_V_zvel_sdev], 8);
     coda_type_set_description(sp3_type[sp3_V_zvel_sdev], "zvel sdev (b**n 1e-4 mm/sec)");
 
     sp3_type[sp3_V_clkrate_sdev] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_V_clkrate_sdev], endianness);
     coda_type_set_read_type(sp3_type[sp3_V_clkrate_sdev], coda_native_type_int16);
+    coda_type_set_bit_size(sp3_type[sp3_V_clkrate_sdev], 16);
     coda_type_set_description(sp3_type[sp3_V_clkrate_sdev], "clock rate sdev (b**n 1e-4 psec/sec)");
 
     sp3_type[sp3_EV_xvel_sdev] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_EV_xvel_sdev], endianness);
     coda_type_set_read_type(sp3_type[sp3_EV_xvel_sdev], coda_native_type_int16);
+    coda_type_set_bit_size(sp3_type[sp3_EV_xvel_sdev], 16);
     coda_type_set_description(sp3_type[sp3_EV_xvel_sdev], "xvel sdev");
     coda_type_number_set_unit((coda_type_number *)sp3_type[sp3_EV_xvel_sdev], "1e-4 mm/s)");
 
     sp3_type[sp3_EV_yvel_sdev] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_EV_yvel_sdev], endianness);
     coda_type_set_read_type(sp3_type[sp3_EV_yvel_sdev], coda_native_type_int16);
+    coda_type_set_bit_size(sp3_type[sp3_EV_yvel_sdev], 16);
     coda_type_set_description(sp3_type[sp3_EV_yvel_sdev], "yvel sdev");
     coda_type_number_set_unit((coda_type_number *)sp3_type[sp3_EV_yvel_sdev], "1e-4 mm/s)");
 
     sp3_type[sp3_EV_zvel_sdev] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_EV_zvel_sdev], endianness);
     coda_type_set_read_type(sp3_type[sp3_EV_zvel_sdev], coda_native_type_int16);
+    coda_type_set_bit_size(sp3_type[sp3_EV_zvel_sdev], 16);
     coda_type_set_description(sp3_type[sp3_EV_zvel_sdev], "zvel sdev");
     coda_type_number_set_unit((coda_type_number *)sp3_type[sp3_EV_zvel_sdev], "1e-4 mm/s)");
 
     sp3_type[sp3_EV_clkrate_sdev] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_EV_clkrate_sdev], endianness);
     coda_type_set_read_type(sp3_type[sp3_EV_clkrate_sdev], coda_native_type_int16);
+    coda_type_set_bit_size(sp3_type[sp3_EV_clkrate_sdev], 16);
     coda_type_set_description(sp3_type[sp3_EV_clkrate_sdev], "clock rate sdev");
     coda_type_number_set_unit((coda_type_number *)sp3_type[sp3_EV_clkrate_sdev], "1e-4 ps/s");
 
     sp3_type[sp3_EV_xy_corr] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_EV_xy_corr], endianness);
     coda_type_set_read_type(sp3_type[sp3_EV_xy_corr], coda_native_type_int32);
+    coda_type_set_bit_size(sp3_type[sp3_EV_xy_corr], 32);
     coda_type_set_description(sp3_type[sp3_EV_xy_corr], "xy correlation");
 
     sp3_type[sp3_EV_xz_corr] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_EV_xz_corr], endianness);
     coda_type_set_read_type(sp3_type[sp3_EV_xz_corr], coda_native_type_int32);
+    coda_type_set_bit_size(sp3_type[sp3_EV_xz_corr], 32);
     coda_type_set_description(sp3_type[sp3_EV_xz_corr], "xz correlation");
 
     sp3_type[sp3_EV_xc_corr] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_EV_xc_corr], endianness);
     coda_type_set_read_type(sp3_type[sp3_EV_xc_corr], coda_native_type_int32);
+    coda_type_set_bit_size(sp3_type[sp3_EV_xc_corr], 32);
     coda_type_set_description(sp3_type[sp3_EV_xc_corr], "xc correlation");
 
     sp3_type[sp3_EV_yz_corr] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_EV_yz_corr], endianness);
     coda_type_set_read_type(sp3_type[sp3_EV_yz_corr], coda_native_type_int32);
+    coda_type_set_bit_size(sp3_type[sp3_EV_yz_corr], 32);
     coda_type_set_description(sp3_type[sp3_EV_yz_corr], "yz correlation");
 
     sp3_type[sp3_EV_yc_corr] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_EV_yc_corr], endianness);
     coda_type_set_read_type(sp3_type[sp3_EV_yc_corr], coda_native_type_int32);
+    coda_type_set_bit_size(sp3_type[sp3_EV_yc_corr], 32);
     coda_type_set_description(sp3_type[sp3_EV_yc_corr], "yc correlation");
 
     sp3_type[sp3_EV_zc_corr] = (coda_type *)coda_type_number_new(coda_format_sp3, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)sp3_type[sp3_EV_zc_corr], endianness);
     coda_type_set_read_type(sp3_type[sp3_EV_zc_corr], coda_native_type_int32);
+    coda_type_set_bit_size(sp3_type[sp3_EV_zc_corr], 32);
     coda_type_set_description(sp3_type[sp3_EV_zc_corr], "zc correlation");
 
     sp3_type[sp3_sat_id_array] = (coda_type *)coda_type_array_new(coda_format_sp3);
@@ -772,8 +879,7 @@ static int read_header(ingest_info *info)
     coda_dynamic_type *value;
     coda_dynamic_type *array;
     char line[MAX_LINE_LENGTH];
-    int year, month, day, hour, minute;
-    double second, double_value;
+    double double_value;
     int64_t int_value;
     char str[61];
     long linelength;
@@ -797,32 +903,14 @@ static int read_header(ingest_info *info)
     info->posvel = line[2];
     str[0] = line[2];
     str[1] = '\0';
-    value = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)sp3_type[sp3_pos_vel], str);
+    value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)sp3_type[sp3_pos_vel], NULL, info->product, str);
     coda_mem_record_add_field(info->header, "pos_vel", value, 0);
 
     memcpy(str, &line[3], 28);
     str[28] = '\0';
-    if (sscanf(str, "%4d %2d %2d %2d %2d", &year, &month, &day, &hour, &minute) != 5)
-    {
-        coda_set_error(CODA_ERROR_FILE_READ, "invalid time string '%s' (line: %ld, byte offset: %ld)",
-                       str, info->linenumber, info->offset + 3);
-        return -1;
-    }
-    if (coda_datetime_to_double(year, month, day, hour, minute, 0, 0, &double_value) != 0)
-    {
-        coda_set_error(CODA_ERROR_FILE_READ, "invalid time value (line: %ld, byte offset: %ld)",
-                       info->linenumber, info->offset + 3);
-        return -1;
-    }
-    if (coda_ascii_parse_double(&str[17], 11, &second, 0) < 0)
-    {
-        coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 20);
-        return -1;
-    }
-    double_value += second;
-    base_type = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)sp3_type[sp3_datetime_start_string], str);
-    value = (coda_dynamic_type *)coda_mem_time_new((coda_type_special *)sp3_type[sp3_datetime_start],
-                                                   double_value, base_type);
+    base_type = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)sp3_type[sp3_datetime_start_string], NULL,
+                                                         info->product, str);
+    value = (coda_dynamic_type *)coda_mem_time_new((coda_type_special *)sp3_type[sp3_datetime_start], NULL, base_type);
     coda_mem_record_add_field(info->header, "datetime_start", value, 0);
 
     if (coda_ascii_parse_int64(&line[32], 7, &int_value, 0) < 0)
@@ -830,27 +918,31 @@ static int read_header(ingest_info *info)
         coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 32);
         return -1;
     }
-    value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_num_epochs], int_value);
+    value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_num_epochs], NULL, info->product,
+                                                    int_value);
     coda_mem_record_add_field(info->header, "num_epochs", value, 0);
 
     memcpy(str, &line[40], 5);
     str[5] = '\0';
-    value = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)sp3_type[sp3_data_used], str);
+    value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)sp3_type[sp3_data_used], NULL, info->product,
+                                                     str);
     coda_mem_record_add_field(info->header, "data_used", value, 0);
 
     memcpy(str, &line[46], 5);
     str[5] = '\0';
-    value = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)sp3_type[sp3_coordinate_sys], str);
+    value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)sp3_type[sp3_coordinate_sys], NULL,
+                                                     info->product, str);
     coda_mem_record_add_field(info->header, "coordinate_sys", value, 0);
 
     memcpy(str, &line[52], 3);
     str[3] = '\0';
-    value = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)sp3_type[sp3_orbit_type], str);
+    value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)sp3_type[sp3_orbit_type], NULL, info->product,
+                                                     str);
     coda_mem_record_add_field(info->header, "orbit_type", value, 0);
 
     memcpy(str, &line[56], 4);
     str[4] = '\0';
-    value = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)sp3_type[sp3_agency], str);
+    value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)sp3_type[sp3_agency], NULL, info->product, str);
     coda_mem_record_add_field(info->header, "agency", value, 0);
 
     /* Line Two */
@@ -879,7 +971,8 @@ static int read_header(ingest_info *info)
         coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 3);
         return -1;
     }
-    value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_gps_week], int_value);
+    value = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)sp3_type[sp3_gps_week], NULL, info->product,
+                                                    int_value);
     coda_mem_record_add_field(info->header, "gps_week", value, 0);
 
     if (coda_ascii_parse_double(&line[8], 15, &double_value, 0) < 0)
@@ -887,7 +980,8 @@ static int read_header(ingest_info *info)
         coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 8);
         return -1;
     }
-    value = (coda_dynamic_type *)coda_mem_real_new((coda_type_number *)sp3_type[sp3_sec_of_week], double_value);
+    value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)sp3_type[sp3_sec_of_week], NULL, info->product,
+                                                     double_value);
     coda_mem_record_add_field(info->header, "sec_of_week", value, 0);
 
     if (coda_ascii_parse_double(&line[24], 14, &double_value, 0) < 0)
@@ -895,7 +989,8 @@ static int read_header(ingest_info *info)
         coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 24);
         return -1;
     }
-    value = (coda_dynamic_type *)coda_mem_real_new((coda_type_number *)sp3_type[sp3_epoch_interval], double_value);
+    value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)sp3_type[sp3_epoch_interval], NULL,
+                                                     info->product, double_value);
     coda_mem_record_add_field(info->header, "epoch_interval", value, 0);
 
     if (coda_ascii_parse_int64(&line[39], 5, &int_value, 0) < 0)
@@ -903,7 +998,8 @@ static int read_header(ingest_info *info)
         coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 39);
         return -1;
     }
-    value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_mjd_start], int_value);
+    value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_mjd_start], NULL, info->product,
+                                                    int_value);
     coda_mem_record_add_field(info->header, "mjd_start", value, 0);
 
     if (coda_ascii_parse_double(&line[45], 15, &double_value, 0) < 0)
@@ -911,7 +1007,8 @@ static int read_header(ingest_info *info)
         coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 45);
         return -1;
     }
-    value = (coda_dynamic_type *)coda_mem_real_new((coda_type_number *)sp3_type[sp3_frac_day], double_value);
+    value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)sp3_type[sp3_frac_day], NULL, info->product,
+                                                     double_value);
     coda_mem_record_add_field(info->header, "frac_day", value, 0);
 
     /* Line Three to Seven */
@@ -940,11 +1037,12 @@ static int read_header(ingest_info *info)
         coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 4);
         return -1;
     }
-    value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_num_satellites], int_value);
+    value = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)sp3_type[sp3_num_satellites], NULL,
+                                                    info->product, int_value);
     coda_mem_record_add_field(info->header, "num_satellites", value, 0);
     info->num_satellites = (int)int_value;
 
-    array = (coda_dynamic_type *)coda_mem_array_new((coda_type_array *)sp3_type[sp3_sat_id_array]);
+    array = (coda_dynamic_type *)coda_mem_array_new((coda_type_array *)sp3_type[sp3_sat_id_array], NULL);
     for (i = 0; i < 5 * 17; i++)
     {
         if (i % 17 == 0 && i > 0)
@@ -977,14 +1075,15 @@ static int read_header(ingest_info *info)
         {
             memcpy(str, &line[9 + (i % 17) * 3], 3);
             str[3] = '\0';
-            value = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)sp3_type[sp3_sat_id], str);
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)sp3_type[sp3_sat_id], NULL,
+                                                             info->product, str);
             coda_mem_array_add_element((coda_mem_array *)array, value);
         }
     }
     coda_mem_record_add_field(info->header, "sat_id", array, 0);
 
     /* Line Eight to Twelve */
-    array = (coda_dynamic_type *)coda_mem_array_new((coda_type_array *)sp3_type[sp3_sat_accuracy_array]);
+    array = (coda_dynamic_type *)coda_mem_array_new((coda_type_array *)sp3_type[sp3_sat_accuracy_array], NULL);
     for (i = 0; i < 5 * 17; i++)
     {
         if (i % 17 == 0)
@@ -1021,8 +1120,8 @@ static int read_header(ingest_info *info)
                                        (i % 17) * 3);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_sat_accuracy],
-                                                              int_value);
+            value = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)sp3_type[sp3_sat_accuracy], NULL,
+                                                            info->product, int_value);
             coda_mem_array_add_element((coda_mem_array *)array, value);
         }
     }
@@ -1051,12 +1150,14 @@ static int read_header(ingest_info *info)
 
     memcpy(str, &line[3], 2);
     str[2] = '\0';
-    value = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)sp3_type[sp3_file_type], str);
+    value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)sp3_type[sp3_file_type], NULL, info->product,
+                                                     str);
     coda_mem_record_add_field(info->header, "file_type", value, 0);
 
     memcpy(str, &line[9], 3);
     str[3] = '\0';
-    value = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)sp3_type[sp3_time_system], str);
+    value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)sp3_type[sp3_time_system], NULL, info->product,
+                                                     str);
     coda_mem_record_add_field(info->header, "time_system", value, 0);
 
     /* Line Fourteen */
@@ -1106,7 +1207,8 @@ static int read_header(ingest_info *info)
         coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 3);
         return -1;
     }
-    value = (coda_dynamic_type *)coda_mem_real_new((coda_type_number *)sp3_type[sp3_base_pos_vel], double_value);
+    value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)sp3_type[sp3_base_pos_vel], NULL,
+                                                     info->product, double_value);
     coda_mem_record_add_field(info->header, "base_pos_vel", value, 0);
 
     if (coda_ascii_parse_double(&line[14], 12, &double_value, 0) < 0)
@@ -1114,7 +1216,8 @@ static int read_header(ingest_info *info)
         coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 14);
         return -1;
     }
-    value = (coda_dynamic_type *)coda_mem_real_new((coda_type_number *)sp3_type[sp3_base_clk_rate], double_value);
+    value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)sp3_type[sp3_base_clk_rate], NULL,
+                                                     info->product, double_value);
     coda_mem_record_add_field(info->header, "base_clk_rate", value, 0);
 
     /* Line Sixteen to Twenty two */
@@ -1137,8 +1240,7 @@ static int read_records(ingest_info *info)
     coda_dynamic_type *base_type;
     coda_dynamic_type *value;
     char line[MAX_LINE_LENGTH];
-    int year, month, day, hour, minute;
-    double second, double_value;
+    double double_value;
     int64_t int_value;
     char str[61];
     long linelength;
@@ -1166,12 +1268,12 @@ static int read_records(ingest_info *info)
                 coda_mem_array_add_element(info->records, (coda_dynamic_type *)info->record);
                 info->record = NULL;
             }
-            info->pos_clk_array = coda_mem_array_new((coda_type_array *)sp3_type[sp3_pos_clk_array]);
+            info->pos_clk_array = coda_mem_array_new((coda_type_array *)sp3_type[sp3_pos_clk_array], NULL);
             if (info->posvel == 'V')
             {
-                info->vel_rate_array = coda_mem_array_new((coda_type_array *)sp3_type[sp3_vel_rate_array]);
+                info->vel_rate_array = coda_mem_array_new((coda_type_array *)sp3_type[sp3_vel_rate_array], NULL);
             }
-            info->record = coda_mem_record_new((coda_type_record *)sp3_type[sp3_record]);
+            info->record = coda_mem_record_new((coda_type_record *)sp3_type[sp3_record], NULL);
             if (linelength < 31)
             {
                 coda_set_error(CODA_ERROR_FILE_READ, "record line length (%ld) too short (line: %ld, byte offset: %ld)",
@@ -1180,27 +1282,9 @@ static int read_records(ingest_info *info)
             }
             memcpy(str, &line[3], 28);
             str[28] = '\0';
-            if (sscanf(str, "%4d %2d %2d %2d %2d", &year, &month, &day, &hour, &minute) != 5)
-            {
-                coda_set_error(CODA_ERROR_FILE_READ, "invalid time string '%s' (line: %ld, byte offset: %ld)",
-                               str, info->linenumber, info->offset + 3);
-                return -1;
-            }
-            if (coda_datetime_to_double(year, month, day, hour, minute, 0, 0, &double_value) != 0)
-            {
-                coda_set_error(CODA_ERROR_FILE_READ, "invalid time value (line: %ld, byte offset: %ld)",
-                               info->linenumber, info->offset + 3);
-                return -1;
-            }
-            if (coda_ascii_parse_double(&str[17], 11, &second, 0) < 0)
-            {
-                coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 20);
-                return -1;
-            }
-            double_value += second;
-            base_type = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)sp3_type[sp3_epoch_string], str);
-            value = (coda_dynamic_type *)coda_mem_time_new((coda_type_special *)sp3_type[sp3_epoch], double_value,
-                                                           base_type);
+            base_type = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)sp3_type[sp3_epoch_string], NULL,
+                                                                 info->product, str);
+            value = (coda_dynamic_type *)coda_mem_time_new((coda_type_special *)sp3_type[sp3_epoch], NULL, base_type);
             coda_mem_record_add_field(info->record, "epoch", value, 0);
         }
         else if (line[0] == 'P')
@@ -1211,7 +1295,7 @@ static int read_records(ingest_info *info)
                                "(line: %ld, byte offset: %ld)", info->linenumber, info->offset);
                 return -1;
             }
-            info->pos_clk = coda_mem_record_new((coda_type_record *)sp3_type[sp3_pos_clk]);
+            info->pos_clk = coda_mem_record_new((coda_type_record *)sp3_type[sp3_pos_clk], NULL);
 
             if (linelength < 60)
             {
@@ -1222,7 +1306,8 @@ static int read_records(ingest_info *info)
 
             memcpy(str, &line[1], 3);
             str[3] = '\0';
-            value = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)sp3_type[sp3_vehicle_id], str);
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)sp3_type[sp3_vehicle_id], NULL,
+                                                             info->product, str);
             coda_mem_record_add_field(info->pos_clk, "vehicle_id", value, 0);
 
             if (coda_ascii_parse_double(&line[4], 14, &double_value, 0) < 0)
@@ -1230,8 +1315,8 @@ static int read_records(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 4);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_real_new((coda_type_number *)sp3_type[sp3_P_x_coordinate],
-                                                           double_value);
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)sp3_type[sp3_P_x_coordinate], NULL,
+                                                             info->product, double_value);
             coda_mem_record_add_field(info->pos_clk, "x_coordinate", value, 0);
 
             if (coda_ascii_parse_double(&line[18], 14, &double_value, 0) < 0)
@@ -1239,8 +1324,8 @@ static int read_records(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 18);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_real_new((coda_type_number *)sp3_type[sp3_P_y_coordinate],
-                                                           double_value);
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)sp3_type[sp3_P_y_coordinate], NULL,
+                                                             info->product, double_value);
             coda_mem_record_add_field(info->pos_clk, "y_coordinate", value, 0);
 
             if (coda_ascii_parse_double(&line[32], 14, &double_value, 0) < 0)
@@ -1248,8 +1333,8 @@ static int read_records(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 32);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_real_new((coda_type_number *)sp3_type[sp3_P_z_coordinate],
-                                                           double_value);
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)sp3_type[sp3_P_z_coordinate], NULL,
+                                                             info->product, double_value);
             coda_mem_record_add_field(info->pos_clk, "z_coordinate", value, 0);
 
             if (coda_ascii_parse_double(&line[46], 14, &double_value, 0) < 0)
@@ -1257,7 +1342,8 @@ static int read_records(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 46);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_real_new((coda_type_number *)sp3_type[sp3_P_clock], double_value);
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)sp3_type[sp3_P_clock], NULL,
+                                                             info->product, double_value);
             coda_mem_record_add_field(info->pos_clk, "clock", value, 0);
 
             if (linelength < 64 || memcmp(&line[61], "  ", 2) == 0)
@@ -1269,7 +1355,8 @@ static int read_records(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 61);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_P_x_sdev], int_value);
+            value = (coda_dynamic_type *)coda_mem_int8_new((coda_type_number *)sp3_type[sp3_P_x_sdev], NULL,
+                                                           info->product, int_value);
             coda_mem_record_add_field(info->pos_clk, "x_sdev", value, 0);
 
             if (linelength < 66 || memcmp(&line[64], "  ", 2) == 0)
@@ -1281,7 +1368,8 @@ static int read_records(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 64);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_P_y_sdev], int_value);
+            value = (coda_dynamic_type *)coda_mem_int8_new((coda_type_number *)sp3_type[sp3_P_y_sdev], NULL,
+                                                           info->product, int_value);
             coda_mem_record_add_field(info->pos_clk, "y_sdev", value, 0);
 
             if (linelength < 69 || memcmp(&line[67], "  ", 2) == 0)
@@ -1293,7 +1381,8 @@ static int read_records(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 67);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_P_z_sdev], int_value);
+            value = (coda_dynamic_type *)coda_mem_int8_new((coda_type_number *)sp3_type[sp3_P_z_sdev], NULL,
+                                                           info->product, int_value);
             coda_mem_record_add_field(info->pos_clk, "z_sdev", value, 0);
 
             if (linelength < 73 || memcmp(&line[70], "   ", 3) == 0)
@@ -1305,25 +1394,29 @@ static int read_records(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 70);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_P_clock_sdev],
-                                                              int_value);
+            value = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)sp3_type[sp3_P_clock_sdev], NULL,
+                                                            info->product, int_value);
             coda_mem_record_add_field(info->pos_clk, "clock_sdev", value, 0);
 
             str[0] = linelength < 75 ? ' ' : line[74];
             str[1] = '\0';
-            value = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)sp3_type[sp3_P_clock_event_flag], str);
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)sp3_type[sp3_P_clock_event_flag], NULL,
+                                                             info->product, str);
             coda_mem_record_add_field(info->pos_clk, "clock_event_flag", value, 0);
 
             str[0] = linelength < 76 ? ' ' : line[75];
-            value = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)sp3_type[sp3_P_clock_pred_flag], str);
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)sp3_type[sp3_P_clock_pred_flag], NULL,
+                                                             info->product, str);
             coda_mem_record_add_field(info->pos_clk, "clock_pred_flag", value, 0);
 
             str[0] = linelength < 79 ? ' ' : line[78];
-            value = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)sp3_type[sp3_P_maneuver_flag], str);
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)sp3_type[sp3_P_maneuver_flag], NULL,
+                                                             info->product, str);
             coda_mem_record_add_field(info->pos_clk, "maneuver_flag", value, 0);
 
             str[0] = linelength < 80 ? ' ' : line[79];
-            value = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)sp3_type[sp3_P_orbit_pred_flag], str);
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)sp3_type[sp3_P_orbit_pred_flag], NULL,
+                                                             info->product, str);
             coda_mem_record_add_field(info->pos_clk, "orbit_pred_flag", value, 0);
         }
         else if (line[0] == 'V')
@@ -1340,7 +1433,7 @@ static int read_records(ingest_info *info)
                                "(line: %ld, byte offset: %ld)", info->linenumber, info->offset);
                 return -1;
             }
-            info->vel_rate = coda_mem_record_new((coda_type_record *)sp3_type[sp3_vel_rate]);
+            info->vel_rate = coda_mem_record_new((coda_type_record *)sp3_type[sp3_vel_rate], NULL);
 
             if (linelength < 60)
             {
@@ -1351,7 +1444,8 @@ static int read_records(ingest_info *info)
 
             memcpy(str, &line[1], 3);
             str[3] = '\0';
-            value = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)sp3_type[sp3_vehicle_id], str);
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)sp3_type[sp3_vehicle_id], NULL,
+                                                             info->product, str);
             coda_mem_record_add_field(info->vel_rate, "vehicle_id", value, 0);
 
             if (coda_ascii_parse_double(&line[4], 14, &double_value, 0) < 0)
@@ -1359,8 +1453,8 @@ static int read_records(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 4);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_real_new((coda_type_number *)sp3_type[sp3_V_x_velocity],
-                                                           double_value);
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)sp3_type[sp3_V_x_velocity], NULL,
+                                                             info->product, double_value);
             coda_mem_record_add_field(info->vel_rate, "x_velocity", value, 0);
 
             if (coda_ascii_parse_double(&line[18], 14, &double_value, 0) < 0)
@@ -1368,8 +1462,8 @@ static int read_records(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 18);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_real_new((coda_type_number *)sp3_type[sp3_V_y_velocity],
-                                                           double_value);
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)sp3_type[sp3_V_y_velocity], NULL,
+                                                             info->product, double_value);
             coda_mem_record_add_field(info->vel_rate, "y_velocity", value, 0);
 
             if (coda_ascii_parse_double(&line[32], 14, &double_value, 0) < 0)
@@ -1377,8 +1471,8 @@ static int read_records(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 32);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_real_new((coda_type_number *)sp3_type[sp3_V_z_velocity],
-                                                           double_value);
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)sp3_type[sp3_V_z_velocity], NULL,
+                                                             info->product, double_value);
             coda_mem_record_add_field(info->vel_rate, "z_velocity", value, 0);
 
             if (coda_ascii_parse_double(&line[46], 14, &double_value, 0) < 0)
@@ -1386,8 +1480,8 @@ static int read_records(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 46);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_real_new((coda_type_number *)sp3_type[sp3_V_clock_rate],
-                                                           double_value);
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)sp3_type[sp3_V_clock_rate], NULL,
+                                                             info->product, double_value);
             coda_mem_record_add_field(info->vel_rate, "clock_rate", value, 0);
 
             if (linelength < 63 || memcmp(&line[61], "  ", 2) == 0)
@@ -1399,7 +1493,8 @@ static int read_records(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 61);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_V_xvel_sdev], int_value);
+            value = (coda_dynamic_type *)coda_mem_int8_new((coda_type_number *)sp3_type[sp3_V_xvel_sdev], NULL,
+                                                           info->product, int_value);
             coda_mem_record_add_field(info->vel_rate, "xvel_sdev", value, 0);
 
             if (linelength < 66 || memcmp(&line[64], "  ", 2) == 0)
@@ -1411,7 +1506,8 @@ static int read_records(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 64);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_V_yvel_sdev], int_value);
+            value = (coda_dynamic_type *)coda_mem_int8_new((coda_type_number *)sp3_type[sp3_V_yvel_sdev], NULL,
+                                                           info->product, int_value);
             coda_mem_record_add_field(info->vel_rate, "yvel_sdev", value, 0);
 
             if (linelength < 69 || memcmp(&line[67], "  ", 2) == 0)
@@ -1423,7 +1519,8 @@ static int read_records(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 67);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_V_zvel_sdev], int_value);
+            value = (coda_dynamic_type *)coda_mem_int8_new((coda_type_number *)sp3_type[sp3_V_zvel_sdev], NULL,
+                                                           info->product, int_value);
             coda_mem_record_add_field(info->vel_rate, "zvel_sdev", value, 0);
 
             if (linelength < 73 || memcmp(&line[70], "   ", 3) == 0)
@@ -1435,8 +1532,8 @@ static int read_records(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 70);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_V_clkrate_sdev],
-                                                              int_value);
+            value = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)sp3_type[sp3_V_clkrate_sdev], NULL,
+                                                            info->product, int_value);
             coda_mem_record_add_field(info->vel_rate, "clkrate_sdev", value, 0);
         }
         else
@@ -1464,7 +1561,7 @@ static int read_records(ingest_info *info)
                                    "Clock Record (line: %ld, byte offset: %ld)", info->linenumber, info->offset);
                     return -1;
                 }
-                info->corr = coda_mem_record_new((coda_type_record *)sp3_type[sp3_P_corr]);
+                info->corr = coda_mem_record_new((coda_type_record *)sp3_type[sp3_P_corr], NULL);
 
                 if (linelength < 8 || memcmp(&line[4], "    ", 4) == 0)
                 {
@@ -1475,8 +1572,8 @@ static int read_records(ingest_info *info)
                     coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 4);
                     return -1;
                 }
-                value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_EP_x_sdev],
-                                                                  int_value);
+                value = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)sp3_type[sp3_EP_x_sdev], NULL,
+                                                                info->product, int_value);
                 coda_mem_record_add_field(info->corr, "x_sdev", value, 0);
 
                 if (linelength < 13 || memcmp(&line[9], "    ", 4) == 0)
@@ -1488,8 +1585,8 @@ static int read_records(ingest_info *info)
                     coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 9);
                     return -1;
                 }
-                value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_EP_y_sdev],
-                                                                  int_value);
+                value = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)sp3_type[sp3_EP_y_sdev], NULL,
+                                                                info->product, int_value);
                 coda_mem_record_add_field(info->corr, "y_sdev", value, 0);
 
                 if (linelength < 18 || memcmp(&line[14], "    ", 4) == 0)
@@ -1501,8 +1598,8 @@ static int read_records(ingest_info *info)
                     coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 14);
                     return -1;
                 }
-                value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_EP_z_sdev],
-                                                                  int_value);
+                value = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)sp3_type[sp3_EP_z_sdev], NULL,
+                                                                info->product, int_value);
                 coda_mem_record_add_field(info->corr, "z_sdev", value, 0);
 
                 if (linelength < 26 || memcmp(&line[19], "       ", 7) == 0)
@@ -1514,8 +1611,8 @@ static int read_records(ingest_info *info)
                     coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 19);
                     return -1;
                 }
-                value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_EP_clock_sdev],
-                                                                  int_value);
+                value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_EP_clock_sdev], NULL,
+                                                                info->product, int_value);
                 coda_mem_record_add_field(info->corr, "clock_sdev", value, 0);
 
                 if (linelength < 35 || memcmp(&line[27], "        ", 8) == 0)
@@ -1527,8 +1624,8 @@ static int read_records(ingest_info *info)
                     coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 27);
                     return -1;
                 }
-                value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_EP_xy_corr],
-                                                                  int_value);
+                value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_EP_xy_corr], NULL,
+                                                                info->product, int_value);
                 coda_mem_record_add_field(info->corr, "xy_corr", value, 0);
 
                 if (linelength < 44 || memcmp(&line[36], "        ", 8) == 0)
@@ -1540,8 +1637,8 @@ static int read_records(ingest_info *info)
                     coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 36);
                     return -1;
                 }
-                value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_EP_xz_corr],
-                                                                  int_value);
+                value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_EP_xz_corr], NULL,
+                                                                info->product, int_value);
                 coda_mem_record_add_field(info->corr, "xz_corr", value, 0);
 
                 if (linelength < 53 || memcmp(&line[45], "        ", 8) == 0)
@@ -1553,8 +1650,8 @@ static int read_records(ingest_info *info)
                     coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 45);
                     return -1;
                 }
-                value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_EP_xc_corr],
-                                                                  int_value);
+                value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_EP_xc_corr], NULL,
+                                                                info->product, int_value);
                 coda_mem_record_add_field(info->corr, "xc_corr", value, 0);
 
                 if (linelength < 62 || memcmp(&line[54], "        ", 8) == 0)
@@ -1566,8 +1663,8 @@ static int read_records(ingest_info *info)
                     coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 54);
                     return -1;
                 }
-                value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_EP_yz_corr],
-                                                                  int_value);
+                value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_EP_yz_corr], NULL,
+                                                                info->product, int_value);
                 coda_mem_record_add_field(info->corr, "yz_corr", value, 0);
 
                 if (linelength < 71 || memcmp(&line[63], "        ", 8) == 0)
@@ -1579,8 +1676,8 @@ static int read_records(ingest_info *info)
                     coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 63);
                     return -1;
                 }
-                value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_EP_yc_corr],
-                                                                  int_value);
+                value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_EP_yc_corr], NULL,
+                                                                info->product, int_value);
                 coda_mem_record_add_field(info->corr, "yc_corr", value, 0);
 
                 if (linelength < 80 || memcmp(&line[72], "        ", 8) == 0)
@@ -1592,8 +1689,8 @@ static int read_records(ingest_info *info)
                     coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 72);
                     return -1;
                 }
-                value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_EP_zc_corr],
-                                                                  int_value);
+                value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_EP_zc_corr], NULL,
+                                                                info->product, int_value);
                 coda_mem_record_add_field(info->corr, "zc_corr", value, 0);
 
                 coda_mem_record_add_field(info->pos_clk, "corr", (coda_dynamic_type *)info->corr, 0);
@@ -1607,7 +1704,7 @@ static int read_records(ingest_info *info)
                                    "Rate Record (line: %ld, byte offset: %ld)", info->linenumber, info->offset);
                     return -1;
                 }
-                info->corr = coda_mem_record_new((coda_type_record *)sp3_type[sp3_V_corr]);
+                info->corr = coda_mem_record_new((coda_type_record *)sp3_type[sp3_V_corr], NULL);
 
                 if (linelength < 8 || memcmp(&line[4], "    ", 4) == 0)
                 {
@@ -1618,8 +1715,8 @@ static int read_records(ingest_info *info)
                     coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 4);
                     return -1;
                 }
-                value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_EV_xvel_sdev],
-                                                                  int_value);
+                value = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)sp3_type[sp3_EV_xvel_sdev], NULL,
+                                                                info->product, int_value);
                 coda_mem_record_add_field(info->corr, "xvel_sdev", value, 0);
 
                 if (linelength < 13 || memcmp(&line[9], "    ", 4) == 0)
@@ -1631,8 +1728,8 @@ static int read_records(ingest_info *info)
                     coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 9);
                     return -1;
                 }
-                value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_EV_yvel_sdev],
-                                                                  int_value);
+                value = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)sp3_type[sp3_EV_yvel_sdev], NULL,
+                                                                info->product, int_value);
                 coda_mem_record_add_field(info->corr, "yvel_sdev", value, 0);
 
                 if (linelength < 18 || memcmp(&line[14], "    ", 4) == 0)
@@ -1644,8 +1741,8 @@ static int read_records(ingest_info *info)
                     coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 14);
                     return -1;
                 }
-                value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_EV_zvel_sdev],
-                                                                  int_value);
+                value = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)sp3_type[sp3_EV_zvel_sdev], NULL,
+                                                                info->product, int_value);
                 coda_mem_record_add_field(info->corr, "zvel_sdev", value, 0);
 
                 if (linelength < 28 || memcmp(&line[19], "       ", 7) == 0)
@@ -1657,8 +1754,8 @@ static int read_records(ingest_info *info)
                     coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 19);
                     return -1;
                 }
-                value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_EV_clkrate_sdev],
-                                                                  int_value);
+                value = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)sp3_type[sp3_EV_clkrate_sdev],
+                                                                NULL, info->product, int_value);
                 coda_mem_record_add_field(info->corr, "clkrate_sdev", value, 0);
 
                 if (linelength < 35 || memcmp(&line[27], "        ", 8) == 0)
@@ -1670,8 +1767,8 @@ static int read_records(ingest_info *info)
                     coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 27);
                     return -1;
                 }
-                value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_EV_xy_corr],
-                                                                  int_value);
+                value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_EV_xy_corr], NULL,
+                                                                info->product, int_value);
                 coda_mem_record_add_field(info->corr, "xy_corr", value, 0);
 
                 if (linelength < 44 || memcmp(&line[36], "        ", 8) == 0)
@@ -1683,8 +1780,8 @@ static int read_records(ingest_info *info)
                     coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 36);
                     return -1;
                 }
-                value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_EV_xz_corr],
-                                                                  int_value);
+                value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_EV_xz_corr], NULL,
+                                                                info->product, int_value);
                 coda_mem_record_add_field(info->corr, "xz_corr", value, 0);
 
                 if (linelength < 53 || memcmp(&line[45], "        ", 8) == 0)
@@ -1696,8 +1793,8 @@ static int read_records(ingest_info *info)
                     coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 45);
                     return -1;
                 }
-                value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_EV_xc_corr],
-                                                                  int_value);
+                value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_EV_xc_corr], NULL,
+                                                                info->product, int_value);
                 coda_mem_record_add_field(info->corr, "xc_corr", value, 0);
 
                 if (linelength < 62 || memcmp(&line[54], "        ", 8) == 0)
@@ -1709,8 +1806,8 @@ static int read_records(ingest_info *info)
                     coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 54);
                     return -1;
                 }
-                value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_EV_yz_corr],
-                                                                  int_value);
+                value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_EV_yz_corr], NULL,
+                                                                info->product, int_value);
                 coda_mem_record_add_field(info->corr, "yz_corr", value, 0);
 
                 if (linelength < 71 || memcmp(&line[63], "        ", 8) == 0)
@@ -1722,8 +1819,8 @@ static int read_records(ingest_info *info)
                     coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 63);
                     return -1;
                 }
-                value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_EV_yc_corr],
-                                                                  int_value);
+                value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_EV_yc_corr], NULL,
+                                                                info->product, int_value);
                 coda_mem_record_add_field(info->corr, "yc_corr", value, 0);
 
                 if (linelength < 80 || memcmp(&line[72], "        ", 8) == 0)
@@ -1735,8 +1832,8 @@ static int read_records(ingest_info *info)
                     coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 72);
                     return -1;
                 }
-                value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)sp3_type[sp3_EV_zc_corr],
-                                                                  int_value);
+                value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_EV_zc_corr], NULL,
+                                                                info->product, int_value);
                 coda_mem_record_add_field(info->corr, "zc_corr", value, 0);
 
                 coda_mem_record_add_field(info->vel_rate, "corr", (coda_dynamic_type *)info->corr, 0);
@@ -1776,12 +1873,13 @@ static int read_records(ingest_info *info)
     return 0;
 }
 
-static int read_file(const char *filename, coda_dynamic_type **root)
+static int read_file(const char *filename, coda_product *product)
 {
     coda_mem_record *root_type = NULL;
     ingest_info info;
 
     ingest_info_init(&info);
+    info.product = product;
 
     info.f = fopen(filename, "r");
     if (info.f == NULL)
@@ -1790,8 +1888,8 @@ static int read_file(const char *filename, coda_dynamic_type **root)
         return -1;
     }
 
-    info.header = coda_mem_record_new((coda_type_record *)sp3_type[sp3_header]);
-    info.records = coda_mem_array_new((coda_type_array *)sp3_type[sp3_records]);
+    info.header = coda_mem_record_new((coda_type_record *)sp3_type[sp3_header], NULL);
+    info.records = coda_mem_array_new((coda_type_array *)sp3_type[sp3_records], NULL);
 
     if (read_header(&info) != 0)
     {
@@ -1806,13 +1904,13 @@ static int read_file(const char *filename, coda_dynamic_type **root)
     }
 
     /* create root record */
-    root_type = coda_mem_record_new((coda_type_record *)sp3_type[sp3_file]);
+    root_type = coda_mem_record_new((coda_type_record *)sp3_type[sp3_file], NULL);
     coda_mem_record_add_field(root_type, "header", (coda_dynamic_type *)info.header, 0);
     info.header = NULL;
     coda_mem_record_add_field(root_type, "record", (coda_dynamic_type *)info.records, 0);
     info.records = NULL;
 
-    *root = (coda_dynamic_type *)root_type;
+    product->root_type = (coda_dynamic_type *)root_type;
 
     ingest_info_cleanup(&info);
 
@@ -1843,6 +1941,8 @@ int coda_sp3_open(const char *filename, int64_t file_size, const coda_product_de
     product_file->product_definition = definition;
     product_file->product_variable_size = NULL;
     product_file->product_variable = NULL;
+    product_file->mem_size = 0;
+    product_file->mem_ptr = NULL;
 #if CODA_USE_QIAP
     product_file->qiap_info = NULL;
 #endif
@@ -1857,7 +1957,7 @@ int coda_sp3_open(const char *filename, int64_t file_size, const coda_product_de
     }
 
     /* create root type */
-    if (read_file(filename, &product_file->root_type) != 0)
+    if (read_file(filename, product_file) != 0)
     {
         coda_sp3_close(product_file);
         return -1;

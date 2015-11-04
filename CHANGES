@@ -1,3 +1,50 @@
+2.11 2014-08-27
+~~~~~~~~~~~~~~~
+
+* Refactored XML backend and memory backend
+  All XML data is now first fully read in memory (using expat) and then
+  accessed from there. Since CODA no longer tries to directly read from
+  the files anymore this means that:
+  - all data will now be correctly returned as UTF-8
+    (even if the XML file had a different encoding)
+  - XML entities are now properly parsed
+  - error messages that quote xml element content will no longer display
+    parts of the xml closing tag in case the xml content was shorter than
+    expected.
+  Other backends that used in-memory storage (e.g. SP3, RINEX, GRIB, CDF)
+  also have been refactored to use the new memory backend.
+
+* SP3, RINEX, CDF and GRIB backends now present numbers more accurately
+  (i.e. matching the underlying float or double precission).
+
+* Reworked all CODA time functions. The following functions have
+  been introduced:
+    coda_time_double_to_parts(), coda_time_double_to_parts_utc(),
+    coda_time_parts_to_double(), coda_time_parts_to_double_utc(),
+    coda_time_parts_to_string(), coda_time_string_to_parts(),
+    coda_time_double_to_string(), coda_time_double_to_string_utc(),
+    coda_time_string_to_double(), coda_time_string_to_double_utc().
+  The following functions are now deprecated and will be removed in a
+  future CODA release:
+    coda_datetime_to_double(), coda_double_to_datetime(),
+    coda_time_to_string(), coda_string_to_time(),
+    coda_utcdatetime_to_double(), coda_double_to_utcdatetime(),
+    coda_time_to_utcstring(), coda_utcstring_to_time() 
+  Refer to the bottom section of the libcoda/coda-time.c source code
+  to see how to map from the old functions to the new functions.
+
+* The CODA expressions time format now supports '*' as a special character to
+  indicate that values should have leading spaces instead of leading zeros.
+
+* Improved debug output of codadump 
+
+* Added --no-mmap option to codacheck
+
+* Improved Fortran interface documentation. Default configuration and examples
+  now use 64-bit interface instead of 32-bit interface.
+
+* Changed default Python version for Windows build to Python 2.7.
+
 2.10.1 2014-03-21
 ~~~~~~~~~~~~~~~~~
 
