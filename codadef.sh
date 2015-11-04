@@ -4,8 +4,14 @@
 # directory is the current directory
 
 if test $# -eq 0 -o $# -gt 2 ; then
-  echo "Usage: $0 <input directory> [<output directory>]"
+  echo "Usage: $0 [--date] <input directory> [<output directory>]"
   exit 1
+fi
+
+dateonly=no
+if test ${1} = "--date" ; then
+  dateonly=yes
+  shift
 fi
 
 inputdir=${1}
@@ -46,9 +52,16 @@ fi
 
 class=`grep "<cd:ProductClass" ${inputdir}/index.xml | sed -e 's:^.*name=\"\([^"]*\).*$:\1:'`
 
-echo Determining last modification date for $class definitions
+if test ${dateonly} = "no" ; then
+  echo Determining last modification date for $class definitions
+fi
 files=`find ${inputdir} ${inputdir}/types ${inputdir}/products -maxdepth 1 -name "*.xml"`
 date=`grep -m 1 last-modified $files | sed -e 's:^.*last-modified=\"\([^"]*\).*$:\1:' | sort -r | head -1 | sed 's:-::g'`
+
+if test ${dateonly} = "yes" ; then
+  echo ${date}
+  exit 0
+fi
 
 echo Creating $class-$date.codadef
 rm -f ${class}-${date}.codadef

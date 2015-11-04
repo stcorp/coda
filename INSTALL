@@ -55,8 +55,10 @@ What you will need
     MATLAB : The MATLAB interface will only work with MATLAB version 5.3 (R11)
     and higher.
 
-  - If you plan on using the Python interface you need Python version 2.6 and
-    the Python 'numpy' package (version 1.1 or higer).
+  - If you plan on using the Python interface you need Python version 2.4 and
+    the Python 'numpy' package (version 1.2 or higher).
+
+  - If you plan on using the Java interface you need JDK/JRE version 6.
 
 
   The following items are only needed if you use the CODA source distribution:
@@ -149,6 +151,9 @@ a Unix-based platform :
     Python executable is located (e.g. PYTHON=/usr/bin/python). Make sure that
     you provide an absolute path for the Python executable (i.e. the path
     should start with a '/').
+
+    --enable-java : By default CODA is built without the Java interface.
+    Use this option to enable building of the interface to Java.
 
     --with-hdf4 : CODA is able to read HDF4 files and provide some export
     functionality using this format. By default this capability is not included
@@ -250,6 +255,8 @@ and Python interfaces of CODA will be able to find the .codadef files.
 
 If you also want to use the CODA IDL, MATLAB or Python interfaces, the final
 step is to tell IDL/MATLAB/Python where they can find CODA.
+For each of the instructions below, make sure to use full absolute paths to the
+CODA directories (i.e. don't use a '~' or '$HOME' in your path references).
 
 For IDL you will have to add <CODA installdir>/lib/coda/idl to your DLM_PATH.
 You do this by setting an IDL_DLM_PATH environment variable and add this
@@ -290,6 +297,9 @@ commands:
     >>> sys.path.append('<CODA installdir>/lib/python2.6/site-packages')
 But this manual modification will be lost as soon as you quit Python.
 
+For Java you can find the CODA jni/jar files, an example script and an Ant
+build script in '<CODA installdir>/share/coda/java'.
+
 Of course you should replace <CODA installdir> with the installation directory
 you have chosen with the --prefix option for the configure script or otherwise
 /usr/local (the default install location for CODA).
@@ -322,13 +332,16 @@ interfaces) on a Windows platform :
     variable PYTHONHOME that points to your Python directory
     (e.g. PYTHONHOME=C:\Python24).
 
- 4) Go to the win32 subdirectory of your unpacked source package.
+ 4) If you want to build the Java interfaces, make sure you have installed
+    Java and that the JAVA_HOME environment variable is properly set.
+
+ 5) Go to the win32 subdirectory of your unpacked source package.
  
- 5) Open the coda.dsw workspace file with Visual C++. Visual C++ 7.1 is
+ 6) Open the coda.dsw workspace file with Visual C++. Visual C++ 7.1 is
     perfered (this will automatically convert the project to a .sln), but
     Visual C++ 6.0 should also work.
 
- 6) From Visual C++ choose 'Batch Build...' from the 'Build' menu. Enable all
+ 7) From Visual C++ choose 'Batch Build...' from the 'Build' menu. Enable all
     targets. Then disable the 'with HDF' targets if you do not have HDF4 and
     HDF5 installed or did not perform step 2. If you do not want to build the
     Python interfaces then disable the python target (codapython). Then, to
@@ -344,7 +357,7 @@ interfaces) on a Windows platform :
     subdirectory, but this directory only contains intermediate files for the
     builds, so you may ignore its contents.
 
- 7) If you want to build the IDL interface for CODA first build the C Library
+ 8) If you want to build the IDL interface for CODA first build the C Library
     (as explained in the previous step). Then edit the coda-idl.bat file in the
     win32 subdirectory and change the IDL_DIR and IDL_VERSION settings at the
     top of the file so it matches your local path and version of IDL (you
@@ -352,8 +365,8 @@ interfaces) on a Windows platform :
     then you can use the IDL interface with only one of these versions).
     Then save the batch file and run it. After completion there should be an
     idl subdirectory containing all the files you need to use CODA within IDL.
- 
- 8) If you want to build the MATLAB interfaces for CODA first build the C
+
+ 9) If you want to build the MATLAB interfaces for CODA first build the C
     Library (as explained in step 4). Then you have to configure MEX for
     MATLAB. Run the mex.bat file, that is located in the bin/win32 directory of
     your MATLAB installation, with the -setup option and choose the same
@@ -436,6 +449,9 @@ to use coda from python, just start python and import the coda package. Make
 sure you keep the directory where the CODA library is installed in your PATH
 (the CODA installer already automatically modifies the PATH variable for you).
 Otherwise the Python interface will not work anymore.
+
+For Java you can find the CODA jni/jar files, an example script and an Ant
+build script in 'C:\CODA\java'.
 
 Note: The binary installer for Windows comes with full HDF4 and HDF5 support
 included in all CODA modules.

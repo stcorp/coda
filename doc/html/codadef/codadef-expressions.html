@@ -265,7 +265,17 @@
 
       <h5>unboundindex(node, boolean)</h5>
 
-      <p>This function has the same behavior as the <code><b>index</b>(<i>node</i>, <i>boolean</i>)</code> function, but it will not check for the array size. It just treats the array as an unlimited array, which means you should be careful that the expression will not try to read beyond its boundary (e.g. by including a check of the <code>byteoffset</code> against the <code>filesize</code> in the boolean expression for ascii/binary files).</p>
+      <p>This function has the same behavior as the <code><b>index</b>(<i>node</i>, <i>boolean</i>)</code> function, but it will not check for the array size. This function only has use for binary/ascii data where data outside the boundary can be reinterpreted as array elements this way. Since arrays are treated as unlimited arrays, you should be careful that the expression will not try to read beyond the boundary of the overall ascii/binary block of data (e.g. the size of the file). You can do this by providing an explicit termination condition (see <code><b>unboundindex(node, boolean, boolean)</b></code>) or by including a check of e.g. the <code>byteoffset</code> against the <code>filesize</code> in the boolean expression of the second argument.</p>
+
+      <p>You should integrate the termination condition in the boolean expression of the second argument (and <i>not</i> provide an explicit termination condition as third argument) if you want the function to return the number of the last array element when the termination condition is reached.</p>
+
+      <h5>unboundindex(node, boolean, boolean)</h5>
+
+      <p>This function is similar to <code><b>unboundindex(node, boolean)</b></code>, but has an additional argument at the end to explicitly provide a termination condition.</p>
+      
+      <p>You should provide an explicit termination condition if you want the function to return -1 if no elements were found matching the boolean expression of the second argument.</p>
+      
+      <p>The function will, for each array element, always first evaluate the termination condition. Only if that evaluates to false will the boolean expression of the second argument be evaluated (otherwise the function will return -1).</p>
 
       <h2>float expressions</h2>
 
@@ -585,8 +595,9 @@ intexpr =
 	'byteoffset', '(', node, ')' |
 	'index', '(', node, ')' |
 	'index', '(', node, ',', boolexpr, ')' |
-	'if', '(', boolexpr, ',', intexpr, ',' intexpr, ')' ;
+	'if', '(', boolexpr, ',', intexpr, ',' intexpr, ')' |
 	'unboundindex', '(', node, ',', boolexpr, ')' |
+	'unboundindex', '(', node, ',', boolexpr, ',', boolexpr, ')' ;
 
 floatexpr = 
 	floatvalue |

@@ -124,7 +124,7 @@ EOF
             }
 
 
-            if (m/^(\s*)(#undef)\s+(\w+)/)
+            if (m/^(\s*)(#\s*undef)\s+(\w+)/)
             {
                 $_	= "$1#cmakedefine $3 ".'$'."{$3}$'";
 

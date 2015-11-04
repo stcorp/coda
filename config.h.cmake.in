@@ -186,7 +186,7 @@
 # endif
 #else
 # ifndef WORDS_BIGENDIAN
-#  undef WORDS_BIGENDIAN
+#cmakedefine WORDS_BIGENDIAN ${WORDS_BIGENDIAN}
 # endif
 #endif
 

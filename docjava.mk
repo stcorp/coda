@@ -13,12 +13,7 @@ JAVA_DOCFILES = \
 	doc/html/java/classnl_1_1stcorp_1_1coda_1_1_type.html \
 	doc/html/java/functions.html \
 	doc/html/java/functions_func.html \
-	doc/html/java/index.html \
-	doc/html/java/pages.html \
-	doc/html/java/tab_b.gif \
-	doc/html/java/tab_l.gif \
-	doc/html/java/tab_r.gif \
-	doc/html/java/tabs.css
+	doc/html/java/index.html
 doc/html/java/annotated.html:
 	$(MAKE) java_doc
 doc/html/java/classes.html:
@@ -48,14 +43,4 @@ doc/html/java/functions.html:
 doc/html/java/functions_func.html:
 	$(MAKE) java_doc
 doc/html/java/index.html:
-	$(MAKE) java_doc
-doc/html/java/pages.html:
-	$(MAKE) java_doc
-doc/html/java/tab_b.gif:
-	$(MAKE) java_doc
-doc/html/java/tab_l.gif:
-	$(MAKE) java_doc
-doc/html/java/tab_r.gif:
-	$(MAKE) java_doc
-doc/html/java/tabs.css:
 	$(MAKE) java_doc

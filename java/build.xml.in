@@ -58,7 +58,8 @@ This is the Ant build file for the CODA Java library example program.
            deprecation="${javac.deprecation}"
            source="${javac.source}"
            target="${javac.target}"
-           executable="${coda.javac.executable}" />
+           executable="${coda.javac.executable}"
+           includeantruntime="false" />
   </target>
 
 
@@ -75,7 +76,7 @@ This is the Ant build file for the CODA Java library example program.
     <jar jarfile="${jarfile}">
       <fileset dir="${build.dir}" includes="**/*" />
       <manifest>
-        <attribute name="Main-Class" value="nl.stcorp.coda.CodaTest" />
+        <attribute name="Main-Class" value="CodaTest" />
         <attribute name="Class-Path" value="${lib.list}" />
       </manifest>
     </jar>

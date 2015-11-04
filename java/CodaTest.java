@@ -1,9 +1,17 @@
 // Test file for the CODA Java library interface
 
 
-package nl.stcorp.coda;
-
 import java.lang.reflect.Field;
+
+import nl.stcorp.coda.Coda;
+import nl.stcorp.coda.CodaException;
+import nl.stcorp.coda.Cursor;
+import nl.stcorp.coda.FormatEnum;
+import nl.stcorp.coda.NativeTypeEnum;
+import nl.stcorp.coda.Product;
+import nl.stcorp.coda.SpecialTypeEnum;
+import nl.stcorp.coda.Type;
+import nl.stcorp.coda.TypeClassEnum;
 
 
 public class CodaTest

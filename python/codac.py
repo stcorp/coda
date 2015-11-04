@@ -74,7 +74,6 @@ class Cursor(_object):
 Cursor_swigregister = _codac.Cursor_swigregister
 Cursor_swigregister(Cursor)
 
-string_to_time = _codac.string_to_time
 cursor_read_int8_array = _codac.cursor_read_int8_array
 cursor_read_uint8_array = _codac.cursor_read_uint8_array
 cursor_read_int16_array = _codac.cursor_read_int16_array
@@ -111,6 +110,7 @@ isNaN = _codac.isNaN
 isInf = _codac.isInf
 isPlusInf = _codac.isPlusInf
 isMinInf = _codac.isMinInf
+string_to_time = _codac.string_to_time
 CODA_MAX_NUM_DIMS = _codac.CODA_MAX_NUM_DIMS
 CODA_ERROR_EXPRESSION = _codac.CODA_ERROR_EXPRESSION
 coda_array_ordering_c = _codac.coda_array_ordering_c

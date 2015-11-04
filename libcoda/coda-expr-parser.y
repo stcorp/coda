@@ -610,6 +610,10 @@ intexpr:
             $$ = coda_expr_new(expr_unbound_array_index, NULL, $3, $5, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
+    | FUNC_UNBOUNDINDEX '(' node ',' boolexpr ',' boolexpr ')' {
+            $$ = coda_expr_new(expr_unbound_array_index, NULL, $3, $5, $7, NULL);
+            if ($$ == NULL) YYERROR;
+        }
     ;
 
 floatexpr:

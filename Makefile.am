@@ -652,7 +652,7 @@ libcoda_doc: coda.h libcoda/doc/Doxyfile
 	  cd libcoda/doc ; \
 	  $(DOXYGEN) Doxyfile ; \
 	  cd ../.. ; \
-	  rm -rf doc/html/libcoda/doxygen.* doc/html/libcoda/pages.html ; \
+	  rm -rf doc/html/libcoda/doxygen.* doc/html/libcoda/pages.html doc/html/libcoda/*.png doc/html/libcoda/*.gif doc/html/libcoda/tabs.css ; \
 	  echo "creating doclibcoda.mk" ; \
 	  $(MAKE) doclibcoda_include ; \
 	fi
@@ -682,7 +682,7 @@ java_doc: $(java_files) java/doc/Doxyfile
 	  cd java/doc ; \
 	  $(DOXYGEN) Doxyfile ; \
 	  cd ../.. ; \
-	  rm -rf doc/html/java/doxygen.* ; \
+	  rm -rf doc/html/java/doxygen.* doc/html/java/pages.html doc/html/java/*.png doc/html/java/*.gif doc/html/java/tabs.css ; \
 	  echo "creating docjava.mk" ; \
 	  $(MAKE) docjava_include ; \
 	fi

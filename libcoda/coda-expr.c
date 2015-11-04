@@ -1961,18 +1961,33 @@ static int eval_integer(eval_info *info, const coda_Expr *expr, int64_t *value)
                 *value = 0;
                 while (!condition)
                 {
-                    if (eval_boolean(info, opexpr->operand[1], &condition) != 0)
+                    if (opexpr->operand[2] != NULL)
                     {
-                        coda_option_perform_boundary_checks = prev_option;
-                        return -1;
-                    }
-                    if (!condition)
-                    {
-                        (*value)++;
-                        if (coda_cursor_goto_next_array_element(&info->cursor) != 0)
+                        if (eval_boolean(info, opexpr->operand[1], &condition) != 0)
                         {
                             coda_option_perform_boundary_checks = prev_option;
                             return -1;
+                        }
+                    }
+                    if (condition)
+                    {
+                        *value = -1;
+                    }
+                    else 
+                    {
+                        if (eval_boolean(info, opexpr->operand[1], &condition) != 0)
+                        {
+                            coda_option_perform_boundary_checks = prev_option;
+                            return -1;
+                        }
+                        if (!condition)
+                        {
+                            (*value)++;
+                            if (coda_cursor_goto_next_array_element(&info->cursor) != 0)
+                            {
+                                coda_option_perform_boundary_checks = prev_option;
+                                return -1;
+                            }
                         }
                     }
                 }

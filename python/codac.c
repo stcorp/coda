@@ -2859,52 +2859,6 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             return new_cursor;
         }
 
-SWIGINTERN int
-SWIG_AsCharArray(PyObject * obj, char *val, size_t size)
-{ 
-  char* cptr = 0; size_t csize = 0; int alloc = SWIG_OLDOBJ;
-  int res = SWIG_AsCharPtrAndSize(obj, &cptr, &csize, &alloc);
-  if (SWIG_IsOK(res)) {
-    if ((csize == size + 1) && cptr && !(cptr[csize-1])) --csize;
-    if (csize <= size) {
-      if (val) {
-	if (csize) memcpy(val, cptr, csize*sizeof(char));
-	if (csize < size) memset(val + csize, 0, (size - csize)*sizeof(char));
-      }
-      if (alloc == SWIG_NEWOBJ) {
-	free((char*)cptr);
-	res = SWIG_DelNewMask(res);
-      }      
-      return res;
-    }
-    if (alloc == SWIG_NEWOBJ) free((char*)cptr);
-  }
-  return SWIG_TypeError;
-}
-
-
-SWIGINTERN int
-SWIG_AsVal_char (PyObject * obj, char *val)
-{    
-  int res = SWIG_AsCharArray(obj, val, 1);
-  if (!SWIG_IsOK(res)) {
-    long v;
-    res = SWIG_AddCast(SWIG_AsVal_long (obj, &v));
-    if (SWIG_IsOK(res)) {
-      if ((CHAR_MIN <= v) && (v <= CHAR_MAX)) {
-	if (val) *val = (char)(v);
-      } else {
-	res = SWIG_OverflowError;
-      }
-    }
-  }
-  return res;
-}
-
-
-  #define SWIG_From_double   PyFloat_FromDouble 
-
-
     PyObject *cursor_read_int8_array(const coda_Cursor *cursor)
     {
         int tmp_result, tmp_num_dims;
@@ -3669,6 +3623,52 @@ SWIG_AsVal_char (PyObject * obj, char *val)
     }
 
 
+  #define SWIG_From_double   PyFloat_FromDouble 
+
+
+SWIGINTERN int
+SWIG_AsCharArray(PyObject * obj, char *val, size_t size)
+{ 
+  char* cptr = 0; size_t csize = 0; int alloc = SWIG_OLDOBJ;
+  int res = SWIG_AsCharPtrAndSize(obj, &cptr, &csize, &alloc);
+  if (SWIG_IsOK(res)) {
+    if ((csize == size + 1) && cptr && !(cptr[csize-1])) --csize;
+    if (csize <= size) {
+      if (val) {
+	if (csize) memcpy(val, cptr, csize*sizeof(char));
+	if (csize < size) memset(val + csize, 0, (size - csize)*sizeof(char));
+      }
+      if (alloc == SWIG_NEWOBJ) {
+	free((char*)cptr);
+	res = SWIG_DelNewMask(res);
+      }      
+      return res;
+    }
+    if (alloc == SWIG_NEWOBJ) free((char*)cptr);
+  }
+  return SWIG_TypeError;
+}
+
+
+SWIGINTERN int
+SWIG_AsVal_char (PyObject * obj, char *val)
+{    
+  int res = SWIG_AsCharArray(obj, val, 1);
+  if (!SWIG_IsOK(res)) {
+    long v;
+    res = SWIG_AddCast(SWIG_AsVal_long (obj, &v));
+    if (SWIG_IsOK(res)) {
+      if ((CHAR_MIN <= v) && (v <= CHAR_MAX)) {
+	if (val) *val = (char)(v);
+      } else {
+	res = SWIG_OverflowError;
+      }
+    }
+  }
+  return res;
+}
+
+
 #define t_output_helper SWIG_Python_AppendOutput
 
 
@@ -3888,40 +3888,6 @@ SWIGINTERN PyObject *Cursor_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObjec
   SWIG_TypeNewClientData(SWIGTYPE_p_coda_Cursor_struct, SWIG_NewClientData(obj));
   return SWIG_Py_Void();
 }
-
-SWIGINTERN PyObject *_wrap_string_to_time(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  char *arg1 = (char *) 0 ;
-  double *arg2 = (double *) 0 ;
-  int res1 ;
-  char *buf1 = 0 ;
-  int alloc1 = 0 ;
-  double temp2 ;
-  int res2 = SWIG_TMPOBJ ;
-  PyObject * obj0 = 0 ;
-  
-  arg2 = &temp2;
-  if (!PyArg_ParseTuple(args,(char *)"O:string_to_time",&obj0)) SWIG_fail;
-  res1 = SWIG_AsCharPtrAndSize(obj0, &buf1, NULL, &alloc1);
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "string_to_time" "', argument " "1"" of type '" "char const *""'");
-  }
-  arg1 = (char *)(buf1);
-  coda_string_to_time((char const *)arg1,arg2);
-  resultobj = SWIG_Py_Void();
-  if (SWIG_IsTmpObj(res2)) {
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_double((*arg2)));
-  } else {
-    int new_flags = SWIG_IsNewObj(res2) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg2), SWIGTYPE_p_double, new_flags));
-  }
-  if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
-  return resultobj;
-fail:
-  if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
-  return NULL;
-}
-
 
 SWIGINTERN PyObject *_wrap_cursor_read_int8_array(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
@@ -4764,6 +4730,50 @@ SWIGINTERN PyObject *_wrap_isMinInf(PyObject *SWIGUNUSEDPARM(self), PyObject *ar
   resultobj = SWIG_From_int((int)(result));
   return resultobj;
 fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_string_to_time(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  char *arg1 = (char *) 0 ;
+  double *arg2 = (double *) 0 ;
+  int res1 ;
+  char *buf1 = 0 ;
+  int alloc1 = 0 ;
+  double temp2 ;
+  int res2 = SWIG_TMPOBJ ;
+  PyObject * obj0 = 0 ;
+  int result;
+  
+  arg2 = &temp2;
+  if (!PyArg_ParseTuple(args,(char *)"O:string_to_time",&obj0)) SWIG_fail;
+  res1 = SWIG_AsCharPtrAndSize(obj0, &buf1, NULL, &alloc1);
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "string_to_time" "', argument " "1"" of type '" "char const *""'");
+  }
+  arg1 = (char *)(buf1);
+  {
+    result = (int)coda_string_to_time((char const *)arg1,arg2);
+    
+    if (result < 0)
+    {
+      if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
+      
+      return PyErr_Format(codacError,"coda_string_to_time(): %s", coda_errno_to_string(coda_errno));
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  if (SWIG_IsTmpObj(res2)) {
+    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_double((*arg2)));
+  } else {
+    int new_flags = SWIG_IsNewObj(res2) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
+    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg2), SWIGTYPE_p_double, new_flags));
+  }
+  if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
+  return resultobj;
+fail:
+  if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
   return NULL;
 }
 
@@ -8527,7 +8537,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"delete_Cursor", _wrap_delete_Cursor, METH_VARARGS, NULL},
 	 { (char *)"Cursor___deepcopy__", _wrap_Cursor___deepcopy__, METH_VARARGS, NULL},
 	 { (char *)"Cursor_swigregister", Cursor_swigregister, METH_VARARGS, NULL},
-	 { (char *)"string_to_time", _wrap_string_to_time, METH_VARARGS, NULL},
 	 { (char *)"cursor_read_int8_array", _wrap_cursor_read_int8_array, METH_VARARGS, NULL},
 	 { (char *)"cursor_read_uint8_array", _wrap_cursor_read_uint8_array, METH_VARARGS, NULL},
 	 { (char *)"cursor_read_int16_array", _wrap_cursor_read_int16_array, METH_VARARGS, NULL},
@@ -8564,6 +8573,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"isInf", _wrap_isInf, METH_VARARGS, NULL},
 	 { (char *)"isPlusInf", _wrap_isPlusInf, METH_VARARGS, NULL},
 	 { (char *)"isMinInf", _wrap_isMinInf, METH_VARARGS, NULL},
+	 { (char *)"string_to_time", _wrap_string_to_time, METH_VARARGS, NULL},
 	 { (char *)"init", _wrap_init, METH_VARARGS, NULL},
 	 { (char *)"set_option_bypass_special_types", _wrap_set_option_bypass_special_types, METH_VARARGS, NULL},
 	 { (char *)"set_option_perform_boundary_checks", _wrap_set_option_perform_boundary_checks, METH_VARARGS, NULL},

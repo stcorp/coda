@@ -120,7 +120,7 @@ int coda_ascii_type_get_unit(const coda_Type *type, const char **unit)
             }
             break;
         case tag_ascii_time:
-            *unit = "MJD2000";
+            *unit = "s since 2000-01-01";
             break;
         default:
             /* no number -> no unit */

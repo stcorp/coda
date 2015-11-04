@@ -22,3 +22,4 @@ HTML_HEADER            = @srcdir@/header.html
 SEARCHENGINE           = NO
 DISABLE_INDEX          = YES
 GENERATE_LATEX         = NO
+CASE_SENSE_NAMES       = NO

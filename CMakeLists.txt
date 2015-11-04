@@ -2,7 +2,7 @@
 #
 project(CODA)
 
-set(VERSION 1.3.5)
+set(VERSION 1.3.6)
 set(CODA_VERSION \"${VERSION}\")
 
 # General setup
@@ -446,6 +446,16 @@ if(CODA_BUILD_MATLAB)
   
   if(MATLAB_DIR)
 
+    file(TO_CMAKE_PATH ${MATLAB_DIR} MATLAB_DIR)
+
+    if(NOT EXISTS "${MATLAB_DIR}")
+	    message(FATAL_ERROR "Specified MATLAB directory '${MATLAB_DIR}' does not exist")
+    endif(NOT EXISTS "${MATLAB_DIR}")
+
+    if(NOT IS_DIRECTORY "${MATLAB_DIR}")
+	    message(FATAL_ERROR "Specified MATLAB directory '${MATLAB_DIR}' exists, but is not a directory")
+    endif(NOT IS_DIRECTORY "${MATLAB_DIR}")
+
     set(MATLAB_DIR ${MATLAB_DIR} CACHE STRING "Root directory of MATLAB installation" FORCE)
     set(MATLAB_INSTALL_DIR "matlab")
 
@@ -459,26 +469,31 @@ if(CODA_BUILD_MATLAB)
       )
 
     # Configure the mex compiler
-    set(MEX ${MATLAB_DIR}/bin/mex)
-
-    set(MEXFLAGS -I${MATLAB_INCLUDE_DIR} -I. -I${CODA_BINARY_DIR} -I${CODA_SOURCE_DIR}/libcoda -DHAVE_CONFIG_H)
+	set(MEXFLAGS -I"${MATLAB_INCLUDE_DIR}" -I. -I"${CODA_BINARY_DIR}" -I"${CODA_SOURCE_DIR}/libcoda" -DHAVE_CONFIG_H)
+	# Note: The explicit mex.bat assignment is necessary because
+	# only with the .bat attached will nmake invoke the command
+	# using 'call' -- and only that works if the path name
+	# contains spaces (as in 'Program Files', the default for
+	# MATLAB 2007 and beyond). So relying (as we did before) on
+	# the fact that on Windows you can theoretically also invoke
+	# a batchfile without the extension will fail in that case.
     if(WIN32)
-      set(MEXEXT_PROG "mexext.bat")
+	  set(MEX "${MATLAB_DIR}/bin/mex.bat")
+      set(MEXEXT "mexw32")
       set(MEXFLAGS ${MEXFLAGS} -DWIN32_LEAN_AND_MEAN -DWIN32 -DHAVE_CONFIG_H -v)
     else(WIN32)
+	  set(MEX "${MATLAB_DIR}/bin/mex")
       set(MEXEXT_PROG "mexext")
       set(MEXFLAGS ${MEXFLAGS} -g -O)
+      file(TO_NATIVE_PATH "${MATLAB_DIR}/bin/${MEXEXT_PROG}" MEXEXT_CMD)
+      execute_process(
+        COMMAND "${MEXEXT_CMD}"
+        OUTPUT_VARIABLE MEXEXT
+        )
+      string(STRIP ${MEXEXT} MEXEXT)
     endif(WIN32)
 
-    file(TO_NATIVE_PATH ${MATLAB_DIR}/bin/${MEXEXT_PROG} MEXEXT_CMD)
-    execute_process(
-      COMMAND ${MEXEXT_CMD}
-      OUTPUT_VARIABLE MEXEXT
-      )
-    string(STRIP ${MEXEXT} MEXEXT)
-
     set(MEX_OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/coda_matlab.${MEXEXT})
-
 
     # Because we are essentially bypassing CMake with the mex command,
     # we need to specify exactly where the build libraries can be found.
