@@ -214,7 +214,8 @@ static int eval_expression(coda_cursor *cursor)
                 }
             }
             break;
-        default:
+        case coda_expression_void:
+        case coda_expression_node:
             assert(0);
             exit(1);
     }
@@ -349,11 +350,6 @@ int main(int argc, char *argv[])
                 exit(1);
             }
             i++;
-            if (coda_expression_get_type(node_expr, &expr_type) != 0)
-            {
-                fprintf(stderr, "ERROR: %s\n", coda_errno_to_string(coda_errno));
-                exit(1);
-            }
         }
         else if (argv[i][0] != '-')
         {
@@ -383,6 +379,17 @@ int main(int argc, char *argv[])
     }
     i++;
 
+    if (coda_expression_get_type(eval_expr, &expr_type) != 0)
+    {
+        fprintf(stderr, "ERROR: %s\n", coda_errno_to_string(coda_errno));
+        exit(1);
+    }
+    if (expr_type == coda_expression_node || expr_type == coda_expression_void)
+    {
+        fprintf(stderr, "ERROR: expression cannot be a '%s' expression\n", coda_expression_get_type_name(expr_type));
+        exit(1);
+    }
+
     if (check_only)
     {
         coda_expression_delete(eval_expr);
@@ -392,12 +399,6 @@ int main(int argc, char *argv[])
         }
 
         return 0;
-    }
-
-    if (coda_expression_get_type(eval_expr, &expr_type) != 0)
-    {
-        fprintf(stderr, "ERROR: %s\n", coda_errno_to_string(coda_errno));
-        exit(1);
     }
 
     if (i < argc)

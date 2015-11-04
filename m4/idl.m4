@@ -19,39 +19,3 @@ if test $ac_cv_path_idl = no || test $ac_cv_header_export_h = no ; then
  fi
  AC_MSG_RESULT($st_cv_have_idl)
 ])# ST_CHECK_IDL
-
-# ST_CHECK_IDL_SYSFUN_DEF2
-# ------------------------
-# Check whether IDL defines IDL_SYSFUN_DEF2
-AC_DEFUN([ST_CHECK_IDL_SYSFUN_DEF2],
-[AC_CACHE_CHECK([for IDL_SYSFUN_DEF2],
-                [st_cv_have_idl_sysfun_def2],
-                [AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
-                                   [#include <stdio.h>
-#include "export.h"],
-                                   [static IDL_SYSFUN_DEF2 sysfun;
-sysfun.name = "";])],
-                [st_cv_have_idl_sysfun_def2=yes],
-                [st_cv_have_idl_sysfun_def2=no])])
-if test $st_cv_have_idl_sysfun_def2 = yes ; then
-  AC_DEFINE(HAVE_IDL_SYSFUN_DEF2, 1, [Define to 1 if your IDL version supports the IDL_SYSFUN_DEF2 type.])
-fi
-])# ST_CHECK_IDL_SYSFUN_DEF2
-
-
-# ST_CHECK_IDL_SYSRTN_UNION
-# -------------------------
-# Check whether IDL defines IDL_SYSRTN_UNION
-AC_DEFUN([ST_CHECK_IDL_SYSRTN_UNION],
-[AC_CACHE_CHECK([for IDL_SYSRTN_UNION],
-                [st_cv_have_idl_sysrtn_union],
-                [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <stdio.h>
-#include "export.h"],
-                                   [static IDL_SYSRTN_UNION sysrtn;
-sysrtn.generic = NULL;])],
-                [st_cv_have_idl_sysrtn_union=yes],
-                [st_cv_have_idl_sysrtn_union=no])])
-if test $st_cv_have_idl_sysrtn_union = yes ; then
-  AC_DEFINE(HAVE_IDL_SYSRTN_UNION,1,[Define to 1 if your IDL version supports the IDL_SYSRTN_UNION type.])
-fi
-])# ST_CHECK_IDL_SYSRTN_UNION

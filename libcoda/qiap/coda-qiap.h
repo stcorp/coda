@@ -46,6 +46,7 @@ void coda_qiap_done(void);
 void coda_qiap_add_error_message(void);
 int coda_qiap_init_actions(coda_product *product);
 void coda_qiap_delete_actions(coda_product *product);
+
 int coda_qiap_perform_actions_for_int8(const coda_cursor *cursor, int8_t *dst);
 int coda_qiap_perform_actions_for_uint8(const coda_cursor *cursor, uint8_t *dst);
 int coda_qiap_perform_actions_for_int16(const coda_cursor *cursor, int16_t *dst);
@@ -58,6 +59,7 @@ int coda_qiap_perform_actions_for_float(const coda_cursor *cursor, float *dst);
 int coda_qiap_perform_actions_for_double(const coda_cursor *cursor, double *dst);
 int coda_qiap_perform_actions_for_char(const coda_cursor *cursor, char *dst);
 int coda_qiap_perform_actions_for_string(const coda_cursor *cursor, char *dst, long dst_size);
+
 int coda_qiap_perform_actions_for_int8_array(const coda_cursor *cursor, int8_t *dst);
 int coda_qiap_perform_actions_for_uint8_array(const coda_cursor *cursor, uint8_t *dst);
 int coda_qiap_perform_actions_for_int16_array(const coda_cursor *cursor, int16_t *dst);
@@ -69,5 +71,25 @@ int coda_qiap_perform_actions_for_uint64_array(const coda_cursor *cursor, uint64
 int coda_qiap_perform_actions_for_float_array(const coda_cursor *cursor, float *dst);
 int coda_qiap_perform_actions_for_double_array(const coda_cursor *cursor, double *dst);
 int coda_qiap_perform_actions_for_char_array(const coda_cursor *cursor, char *dst);
+
+int coda_qiap_perform_actions_for_int8_partial_array(const coda_cursor *cursor, long offset, long length, int8_t *dst);
+int coda_qiap_perform_actions_for_uint8_partial_array(const coda_cursor *cursor, long offset, long length,
+                                                      uint8_t *dst);
+int coda_qiap_perform_actions_for_int16_partial_array(const coda_cursor *cursor, long offset, long length,
+                                                      int16_t *dst);
+int coda_qiap_perform_actions_for_uint16_partial_array(const coda_cursor *cursor, long offset, long length,
+                                                       uint16_t *dst);
+int coda_qiap_perform_actions_for_int32_partial_array(const coda_cursor *cursor, long offset, long length,
+                                                      int32_t *dst);
+int coda_qiap_perform_actions_for_uint32_partial_array(const coda_cursor *cursor, long offset, long length,
+                                                       uint32_t *dst);
+int coda_qiap_perform_actions_for_int64_partial_array(const coda_cursor *cursor, long offset, long length,
+                                                      int64_t *dst);
+int coda_qiap_perform_actions_for_uint64_partial_array(const coda_cursor *cursor, long offset, long length,
+                                                       uint64_t *dst);
+int coda_qiap_perform_actions_for_float_partial_array(const coda_cursor *cursor, long offset, long length, float *dst);
+int coda_qiap_perform_actions_for_double_partial_array(const coda_cursor *cursor, long offset, long length,
+                                                       double *dst);
+int coda_qiap_perform_actions_for_char_partial_array(const coda_cursor *cursor, long offset, long length, char *dst);
 
 #endif

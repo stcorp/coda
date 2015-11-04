@@ -21,7 +21,10 @@
 #ifndef CODA_READ_ARRAY_H
 #define CODA_READ_ARRAY_H
 
+#ifndef CODA_READ_FUNC_TYPE_DEF
+#define CODA_READ_FUNC_TYPE_DEF
 typedef int (*read_function) (const coda_cursor *, void *);
+#endif
 
 static int read_array(const coda_cursor *cursor, read_function read_basic_type_function, uint8_t *dst,
                       int basic_type_size, coda_array_ordering array_ordering)

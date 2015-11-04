@@ -27,14 +27,6 @@
 #include "mex.h"
 #include "coda.h"
 
-#ifndef HAVE_MXCREATEDOUBLESCALAR
-mxArray *mxCreateDoubleScalar(double value);
-#endif
-
-#ifndef HAVE_MXCREATENUMERICMATRIX
-mxArray *mxCreateNumericMatrix(int m, int n, mxClassID classid, int cmplx_flag);
-#endif
-
 /* coda-matlab environment declarations */
 typedef struct coda_MatlabFileHandle_struct
 {

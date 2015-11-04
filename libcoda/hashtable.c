@@ -32,6 +32,7 @@ struct hashtable_struct
 {
     unsigned char *count;       /* number of stored names that match this specific hash */
     const char **name;
+    int *name_length;
     long *index;
     unsigned char power;
     long size;
@@ -41,10 +42,11 @@ struct hashtable_struct
 
 #define INITIAL_POWER 5
 
-static unsigned long strcasehash(const char *str)
+static unsigned long strcasehash(const char *str, int *length)
 {
     unsigned char *c = (unsigned char *)str;
     unsigned long hash = 0;
+    int l = 0;
 
     while (*c != '\0')
     {
@@ -52,8 +54,10 @@ static unsigned long strcasehash(const char *str)
 
         /* we use hash = hash * 1000003 ^ char */
         hash = (hash * 0xF4243) ^ (lc + 32 * (lc >= 'A' && lc <= 'Z'));
+        l++;
     }
 
+    *length = l;
     return hash;
 }
 
@@ -75,17 +79,20 @@ static unsigned long strncasehash(const char *str, int length)
     return hash;
 }
 
-static unsigned long strhash(const char *str)
+static unsigned long strhash(const char *str, int *length)
 {
     unsigned char *c = (unsigned char *)str;
     unsigned long hash = 0;
+    int l = 0;
 
     while (*c != '\0')
     {
         /* we use hash = hash * 1000003 ^ char */
         hash = (hash * 0xF4243) ^ (unsigned char)(*c++);
+        l++;
     }
 
+    *length = l;
     return hash;
 }
 
@@ -116,6 +123,7 @@ hashtable *hashtable_new(int case_sensitive)
     }
     table->count = NULL;
     table->name = NULL;
+    table->name_length = NULL;
     table->index = NULL;
     table->power = INITIAL_POWER;
     table->size = 0;
@@ -130,9 +138,10 @@ int hashtable_insert_name(hashtable *table, long index, const char *name)
     unsigned long mask;
     unsigned long hash;
     unsigned char step;
+    int name_length;
     long i;
 
-    hash = (table->case_sensitive ? strhash(name) : strcasehash(name));
+    hash = (table->case_sensitive ? strhash(name, &name_length) : strcasehash(name, &name_length));
 
     if (table->size == 0)
     {
@@ -141,6 +150,8 @@ int hashtable_insert_name(hashtable *table, long index, const char *name)
         assert(table->count != NULL);
         table->name = (const char **)malloc(table->size * sizeof(const char *));
         assert(table->name != NULL);
+        table->name_length = (int *)malloc(table->size * sizeof(int));
+        assert(table->name_length != NULL);
         table->index = (long *)malloc(table->size * sizeof(long));
         assert(table->index != NULL);
         memset(table->count, 0, table->size);
@@ -153,7 +164,8 @@ int hashtable_insert_name(hashtable *table, long index, const char *name)
         step = 0;
         while (table->count[i])
         {
-            if ((table->case_sensitive ? strcmp(name, table->name[i]) : strcasecmp(name, table->name[i])) == 0)
+            if (name_length == table->name_length[i] &&
+                (table->case_sensitive ? strcmp(name, table->name[i]) : strcasecmp(name, table->name[i])) == 0)
             {
                 return -1;
             }
@@ -170,6 +182,7 @@ int hashtable_insert_name(hashtable *table, long index, const char *name)
     {
         unsigned char *new_count;
         const char **new_name;
+        int *new_name_length;
         long *new_index;
         unsigned long new_mask;
         unsigned char new_power;
@@ -185,6 +198,8 @@ int hashtable_insert_name(hashtable *table, long index, const char *name)
         assert(new_count != NULL);
         new_name = (const char **)malloc(new_size * sizeof(const char *));
         assert(new_name != NULL);
+        new_name_length = (int *)malloc(new_size * sizeof(int));
+        assert(new_name_length != NULL);
         new_index = (long *)malloc(new_size * sizeof(long));
         assert(new_index != NULL);
 
@@ -194,9 +209,11 @@ int hashtable_insert_name(hashtable *table, long index, const char *name)
             if (table->count[i])
             {
                 unsigned long new_hash;
+                int length;
                 long j;
 
-                new_hash = (table->case_sensitive ? strhash(table->name[i]) : strcasehash(table->name[i]));
+                new_hash = (table->case_sensitive ? strhash(table->name[i], &length) :
+                            strcasehash(table->name[i], &length));
                 j = new_hash & new_mask;
                 step = 0;
                 while (new_count[j])
@@ -210,14 +227,17 @@ int hashtable_insert_name(hashtable *table, long index, const char *name)
                 }
                 new_count[j] = 1;
                 new_name[j] = table->name[i];
+                new_name_length[j] = table->name_length[i];
                 new_index[j] = table->index[i];
             }
         }
         free(table->count);
         free(table->name);
+        free(table->name_length);
         free(table->index);
         table->count = new_count;
         table->name = new_name;
+        table->name_length = new_name_length;
         table->index = new_index;
         table->power = new_power;
         table->size = new_size;
@@ -251,6 +271,7 @@ int hashtable_insert_name(hashtable *table, long index, const char *name)
 
     table->count[i] = 1;
     table->name[i] = name;
+    table->name_length[i] = name_length;
     table->index[i] = index;
     table->used++;
 
@@ -267,6 +288,7 @@ long hashtable_get_index_from_name(hashtable *table, const char *name)
     unsigned long mask;
     unsigned long hash;
     unsigned char step;
+    int name_length;
     long i;
 
     if (table->count == NULL)
@@ -274,13 +296,14 @@ long hashtable_get_index_from_name(hashtable *table, const char *name)
         return -1;
     }
 
-    hash = (table->case_sensitive ? strhash(name) : strcasehash(name));
+    hash = (table->case_sensitive ? strhash(name, &name_length) : strcasehash(name, &name_length));
     mask = (unsigned long)table->size - 1;
     i = hash & mask;
     step = 0;
     while (table->count[i])
     {
-        if ((table->case_sensitive ? strcmp(name, table->name[i]) : strcasecmp(name, table->name[i])) == 0)
+        if (name_length == table->name_length[i] &&
+            (table->case_sensitive ? strcmp(name, table->name[i]) : strcasecmp(name, table->name[i])) == 0)
         {
             return table->index[i];
         }
@@ -312,7 +335,8 @@ long hashtable_get_index_from_name_n(hashtable *table, const char *name, int nam
     step = 0;
     while (table->count[i])
     {
-        if ((table->case_sensitive ?
+        if (name_length == table->name_length[i] &&
+            (table->case_sensitive ?
              strncmp(name, table->name[i], name_length) : strncasecmp(name, table->name[i], name_length)) == 0)
         {
             return table->index[i];
@@ -338,6 +362,10 @@ void hashtable_delete(hashtable *table)
         if (table->name != NULL)
         {
             free(table->name);
+        }
+        if (table->name_length != NULL)
+        {
+            free(table->name_length);
         }
         if (table->index != NULL)
         {

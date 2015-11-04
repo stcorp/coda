@@ -143,7 +143,9 @@
 		<File RelativePath="..\tools\codadump\codadump-filter.c"/>
 		<File RelativePath="..\tools\codadump\codadump-filter.h"/>
 		<File RelativePath="..\tools\codadump\codadump-hdf4.c"/>
+		<File RelativePath="..\tools\codadump\codadump-json.c"/>
 		<File RelativePath="..\tools\codadump\codadump-traverse.c"/>
+		<File RelativePath="..\tools\codadump\codadump-yaml.c"/>
 		<File RelativePath="..\tools\codadump\codadump.c"/>
 		<File RelativePath="..\tools\codadump\codadump.h"/>
 	</Files>

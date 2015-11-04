@@ -43,6 +43,7 @@ public class codacJNI {
   public final static native int cursor_read_uint64(long jarg1, long[] jarg2) throws nl.stcorp.coda.CodaException;
   public final static native int cursor_read_char(long jarg1, byte[] jarg2) throws nl.stcorp.coda.CodaException;
   public final static native int cursor_read_char_array(long jarg1, byte[] jarg2, int jarg3) throws nl.stcorp.coda.CodaException;
+  public final static native int cursor_read_char_partial_array(long jarg1, int jarg2, int jarg3, byte[] jarg4) throws nl.stcorp.coda.CodaException;
   public final static native int init() throws nl.stcorp.coda.CodaException;
   public final static native int set_definition_path(String jarg1) throws nl.stcorp.coda.CodaException;
   public final static native int set_definition_path_conditional(String jarg1, String jarg2, String jarg3) throws nl.stcorp.coda.CodaException;
@@ -157,6 +158,16 @@ public class codacJNI {
   public final static native int cursor_read_uint64_array(long jarg1, long[] jarg2, int jarg3) throws nl.stcorp.coda.CodaException;
   public final static native int cursor_read_float_array(long jarg1, float[] jarg2, int jarg3) throws nl.stcorp.coda.CodaException;
   public final static native int cursor_read_double_array(long jarg1, double[] jarg2, int jarg3) throws nl.stcorp.coda.CodaException;
+  public final static native int cursor_read_int8_partial_array(long jarg1, int jarg2, int jarg3, byte[] jarg4) throws nl.stcorp.coda.CodaException;
+  public final static native int cursor_read_uint8_partial_array(long jarg1, int jarg2, int jarg3, byte[] jarg4) throws nl.stcorp.coda.CodaException;
+  public final static native int cursor_read_int16_partial_array(long jarg1, int jarg2, int jarg3, short[] jarg4) throws nl.stcorp.coda.CodaException;
+  public final static native int cursor_read_uint16_partial_array(long jarg1, int jarg2, int jarg3, short[] jarg4) throws nl.stcorp.coda.CodaException;
+  public final static native int cursor_read_int32_partial_array(long jarg1, int jarg2, int jarg3, int[] jarg4) throws nl.stcorp.coda.CodaException;
+  public final static native int cursor_read_uint32_partial_array(long jarg1, int jarg2, int jarg3, int[] jarg4) throws nl.stcorp.coda.CodaException;
+  public final static native int cursor_read_int64_partial_array(long jarg1, int jarg2, int jarg3, long[] jarg4) throws nl.stcorp.coda.CodaException;
+  public final static native int cursor_read_uint64_partial_array(long jarg1, int jarg2, int jarg3, long[] jarg4) throws nl.stcorp.coda.CodaException;
+  public final static native int cursor_read_float_partial_array(long jarg1, int jarg2, int jarg3, float[] jarg4) throws nl.stcorp.coda.CodaException;
+  public final static native int cursor_read_double_partial_array(long jarg1, int jarg2, int jarg3, double[] jarg4) throws nl.stcorp.coda.CodaException;
   public final static native int cursor_read_complex_double_pair(long jarg1, double[] jarg2) throws nl.stcorp.coda.CodaException;
   public final static native int cursor_read_complex_double_pairs_array(long jarg1, double[] jarg2, int jarg3) throws nl.stcorp.coda.CodaException;
   public final static native int cursor_read_complex_double_split(long jarg1, double[] jarg2, double[] jarg3) throws nl.stcorp.coda.CodaException;

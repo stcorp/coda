@@ -103,17 +103,17 @@
  * After you are done with a file you should close it with coda_close(). This function will also free the memory
  * that was allocated for the file handle by coda_open().
  * Below is a simple example that opens a file called productfile.dat and closes it again.
- * \code
+ * \code{.c}
  * coda_product *product;
  * if (coda_init() != 0)
  * {
- *   fprintf(stderr, "Error: %s\n", coda_errno_to_string(coda_errno));
- *   exit(1);
+ *     fprintf(stderr, "Error: %s\n", coda_errno_to_string(coda_errno));
+ *     exit(1);
  * }
  * if (coda_open("productfile.dat", &product) != 0)
  * {
- *   fprintf(stderr, "Error: %s\n", coda_errno_to_string(coda_errno));
- *   exit(1);
+ *     fprintf(stderr, "Error: %s\n", coda_errno_to_string(coda_errno));
+ *     exit(1);
  * }
  * coda_close(product);
  * coda_done();

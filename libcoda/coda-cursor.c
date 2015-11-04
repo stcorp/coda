@@ -87,7 +87,7 @@
  *
  * A small example that performs all these steps and prints the retrieved orbit number is given below. Note
  * that, for the sake of clarity, we omit error checking:
- * \code
+ * \code{.c}
  * coda_product *product;
  * coda_cursor cursor;
  * int32_t abs_orbit_val;
@@ -113,7 +113,7 @@
  * require any memory allocation. Another advantage of this kind of implementation is that you can easily make a copy
  * of a cursor. Suppose we have a cursor \c record_cursor that points to a record and we want to have an extra cursor
  * \c field_cursor that points to the 'dsr_time' field of this record. This can be done as follows:
- * \code
+ * \code{.c}
  * coda_cursor field_cursor;
  * field_cursor = record_cursor;
  * coda_cursor_goto_record_field_by_name(&field_cursor, "dsr_time");
@@ -621,7 +621,7 @@ LIBCODA_API int coda_cursor_goto_record_field_by_name(coda_cursor *cursor, const
  * is retained in that case, so you can still use coda_cursor_goto_parent, coda_cursor_goto_next_record_field, etc.).
  * \warning If the cursor already points to the last field of a record the function will return an error. So if you
  * want to enumerate all fields of a record use something like
- * \code
+ * \code{.c}
  * coda_cursor_get_num_elements(cursor, &num_fields);
  * if (num_fields > 0)
  * {
@@ -935,8 +935,8 @@ LIBCODA_API int coda_cursor_goto_array_element(coda_cursor *cursor, int num_subs
  * versa) is defined in such a way that the last element of a subscript array is the one that is the fastest running
  * index (i.e. C array ordering). All multidimensional arrays have their dimensions defined using C array ordering in
  * CODA.<br>
- * For example if we have a two dimensional array with dimensions (2,4) then the index (0) would map
- * to the subscript array (0, 0). (1) would map to (0, 1), (4) would map to (1, 0) and (7) would map to (1, 3).
+ * For example if we have a two dimensional array with dimensions (2,4) then the index 0 would map
+ * to the subscript array (0, 0). 1 would map to (0, 1), 4 would map to (1, 0) and 7 would map to (1, 3).
  * <br>
  * If the data array is one dimensional then this function will have the same result as calling
  * coda_cursor_goto_array_element() with \a num_subs = 1 and \a subs[0] = \a index.
@@ -1051,7 +1051,7 @@ LIBCODA_API int coda_cursor_goto_array_element_by_index(coda_cursor *cursor, lon
  * \a current_index + 1.
  * \warning If the cursor already points to the last element of an array the function will return an error. So if you
  * want to enumerate all elements of an array (as a one dimensional sequence) use something like
- * \code
+ * \code{.c}
  * coda_cursor_get_num_elements(cursor, &num_elements);
  * if (num_elements > 0)
  * {

@@ -325,7 +325,7 @@ static int coda_match_filepath(int ignore_other_file_types, coda_expression *exp
  * callback function, since coda_match_filefilter() will already return -1 if it encounters an error internally.
  *
  * A small example of a callback function is given below
- * \code
+ * \code{.c}
  * int callback(const char *filepath, coda_filefilter_status status, const char *error, void *userdata)
  * {
  *     switch (status)

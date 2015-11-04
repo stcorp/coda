@@ -3808,6 +3808,270 @@ SWIGINTERN coda_cursor *coda_cursor_struct___deepcopy__(struct coda_cursor_struc
     }        
 
 
+    PyObject *cursor_read_int8_partial_array(const coda_cursor *cursor, long offset, long length)
+    {
+        int tmp_result;
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
+        PyObject *tmp;
+
+		tmp_dims_int[0] = length;
+        tmp = PyArray_SimpleNew(1, tmp_dims_int, NPY_INT8);
+        if (tmp == NULL)
+        {
+            return PyErr_NoMemory();
+        }
+
+        tmp_result = coda_cursor_read_int8_partial_array(cursor, offset, length, (int8_t*)PyArray_DATA((PyArrayObject *)tmp));
+        if (tmp_result < 0)
+        {
+            Py_DECREF(tmp);
+            return PyErr_Format(codacError,"coda_cursor_read_int8_partial_array""(): %s", coda_errno_to_string(coda_errno));
+        }
+
+        return tmp;
+    }        
+
+
+    PyObject *cursor_read_uint8_partial_array(const coda_cursor *cursor, long offset, long length)
+    {
+        int tmp_result;
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
+        PyObject *tmp;
+
+		tmp_dims_int[0] = length;
+        tmp = PyArray_SimpleNew(1, tmp_dims_int, NPY_UINT8);
+        if (tmp == NULL)
+        {
+            return PyErr_NoMemory();
+        }
+
+        tmp_result = coda_cursor_read_uint8_partial_array(cursor, offset, length, (uint8_t*)PyArray_DATA((PyArrayObject *)tmp));
+        if (tmp_result < 0)
+        {
+            Py_DECREF(tmp);
+            return PyErr_Format(codacError,"coda_cursor_read_uint8_partial_array""(): %s", coda_errno_to_string(coda_errno));
+        }
+
+        return tmp;
+    }        
+
+
+    PyObject *cursor_read_int16_partial_array(const coda_cursor *cursor, long offset, long length)
+    {
+        int tmp_result;
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
+        PyObject *tmp;
+
+		tmp_dims_int[0] = length;
+        tmp = PyArray_SimpleNew(1, tmp_dims_int, NPY_INT16);
+        if (tmp == NULL)
+        {
+            return PyErr_NoMemory();
+        }
+
+        tmp_result = coda_cursor_read_int16_partial_array(cursor, offset, length, (int16_t*)PyArray_DATA((PyArrayObject *)tmp));
+        if (tmp_result < 0)
+        {
+            Py_DECREF(tmp);
+            return PyErr_Format(codacError,"coda_cursor_read_int16_partial_array""(): %s", coda_errno_to_string(coda_errno));
+        }
+
+        return tmp;
+    }        
+
+
+    PyObject *cursor_read_uint16_partial_array(const coda_cursor *cursor, long offset, long length)
+    {
+        int tmp_result;
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
+        PyObject *tmp;
+
+		tmp_dims_int[0] = length;
+        tmp = PyArray_SimpleNew(1, tmp_dims_int, NPY_UINT16);
+        if (tmp == NULL)
+        {
+            return PyErr_NoMemory();
+        }
+
+        tmp_result = coda_cursor_read_uint16_partial_array(cursor, offset, length, (uint16_t*)PyArray_DATA((PyArrayObject *)tmp));
+        if (tmp_result < 0)
+        {
+            Py_DECREF(tmp);
+            return PyErr_Format(codacError,"coda_cursor_read_uint16_partial_array""(): %s", coda_errno_to_string(coda_errno));
+        }
+
+        return tmp;
+    }        
+
+
+    PyObject *cursor_read_int32_partial_array(const coda_cursor *cursor, long offset, long length)
+    {
+        int tmp_result;
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
+        PyObject *tmp;
+
+		tmp_dims_int[0] = length;
+        tmp = PyArray_SimpleNew(1, tmp_dims_int, NPY_INT32);
+        if (tmp == NULL)
+        {
+            return PyErr_NoMemory();
+        }
+
+        tmp_result = coda_cursor_read_int32_partial_array(cursor, offset, length, (int32_t*)PyArray_DATA((PyArrayObject *)tmp));
+        if (tmp_result < 0)
+        {
+            Py_DECREF(tmp);
+            return PyErr_Format(codacError,"coda_cursor_read_int32_partial_array""(): %s", coda_errno_to_string(coda_errno));
+        }
+
+        return tmp;
+    }        
+
+
+    PyObject *cursor_read_uint32_partial_array(const coda_cursor *cursor, long offset, long length)
+    {
+        int tmp_result;
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
+        PyObject *tmp;
+
+		tmp_dims_int[0] = length;
+        tmp = PyArray_SimpleNew(1, tmp_dims_int, NPY_UINT32);
+        if (tmp == NULL)
+        {
+            return PyErr_NoMemory();
+        }
+
+        tmp_result = coda_cursor_read_uint32_partial_array(cursor, offset, length, (uint32_t*)PyArray_DATA((PyArrayObject *)tmp));
+        if (tmp_result < 0)
+        {
+            Py_DECREF(tmp);
+            return PyErr_Format(codacError,"coda_cursor_read_uint32_partial_array""(): %s", coda_errno_to_string(coda_errno));
+        }
+
+        return tmp;
+    }        
+
+
+    PyObject *cursor_read_int64_partial_array(const coda_cursor *cursor, long offset, long length)
+    {
+        int tmp_result;
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
+        PyObject *tmp;
+
+		tmp_dims_int[0] = length;
+        tmp = PyArray_SimpleNew(1, tmp_dims_int, NPY_INT64);
+        if (tmp == NULL)
+        {
+            return PyErr_NoMemory();
+        }
+
+        tmp_result = coda_cursor_read_int64_partial_array(cursor, offset, length, (int64_t*)PyArray_DATA((PyArrayObject *)tmp));
+        if (tmp_result < 0)
+        {
+            Py_DECREF(tmp);
+            return PyErr_Format(codacError,"coda_cursor_read_int64_partial_array""(): %s", coda_errno_to_string(coda_errno));
+        }
+
+        return tmp;
+    }        
+
+
+    PyObject *cursor_read_uint64_partial_array(const coda_cursor *cursor, long offset, long length)
+    {
+        int tmp_result;
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
+        PyObject *tmp;
+
+		tmp_dims_int[0] = length;
+        tmp = PyArray_SimpleNew(1, tmp_dims_int, NPY_UINT64);
+        if (tmp == NULL)
+        {
+            return PyErr_NoMemory();
+        }
+
+        tmp_result = coda_cursor_read_uint64_partial_array(cursor, offset, length, (uint64_t*)PyArray_DATA((PyArrayObject *)tmp));
+        if (tmp_result < 0)
+        {
+            Py_DECREF(tmp);
+            return PyErr_Format(codacError,"coda_cursor_read_uint64_partial_array""(): %s", coda_errno_to_string(coda_errno));
+        }
+
+        return tmp;
+    }        
+
+
+    PyObject *cursor_read_float_partial_array(const coda_cursor *cursor, long offset, long length)
+    {
+        int tmp_result;
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
+        PyObject *tmp;
+
+		tmp_dims_int[0] = length;
+        tmp = PyArray_SimpleNew(1, tmp_dims_int, NPY_FLOAT32);
+        if (tmp == NULL)
+        {
+            return PyErr_NoMemory();
+        }
+
+        tmp_result = coda_cursor_read_float_partial_array(cursor, offset, length, (float*)PyArray_DATA((PyArrayObject *)tmp));
+        if (tmp_result < 0)
+        {
+            Py_DECREF(tmp);
+            return PyErr_Format(codacError,"coda_cursor_read_float_partial_array""(): %s", coda_errno_to_string(coda_errno));
+        }
+
+        return tmp;
+    }        
+
+
+    PyObject *cursor_read_double_partial_array(const coda_cursor *cursor, long offset, long length)
+    {
+        int tmp_result;
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
+        PyObject *tmp;
+
+		tmp_dims_int[0] = length;
+        tmp = PyArray_SimpleNew(1, tmp_dims_int, NPY_FLOAT64);
+        if (tmp == NULL)
+        {
+            return PyErr_NoMemory();
+        }
+
+        tmp_result = coda_cursor_read_double_partial_array(cursor, offset, length, (double*)PyArray_DATA((PyArrayObject *)tmp));
+        if (tmp_result < 0)
+        {
+            Py_DECREF(tmp);
+            return PyErr_Format(codacError,"coda_cursor_read_double_partial_array""(): %s", coda_errno_to_string(coda_errno));
+        }
+
+        return tmp;
+    }        
+
+
+    PyObject *cursor_read_char_partial_array(const coda_cursor *cursor, long offset, long length)
+    {
+        int tmp_result;
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
+        PyObject *tmp;
+
+		tmp_dims_int[0] = length;
+        tmp = PyArray_SimpleNew(1, tmp_dims_int, NPY_INT8);
+        if (tmp == NULL)
+        {
+            return PyErr_NoMemory();
+        }
+
+        tmp_result = coda_cursor_read_char_partial_array(cursor, offset, length, (char*)PyArray_DATA((PyArrayObject *)tmp));
+        if (tmp_result < 0)
+        {
+            Py_DECREF(tmp);
+            return PyErr_Format(codacError,"coda_cursor_read_char_partial_array""(): %s", coda_errno_to_string(coda_errno));
+        }
+
+        return tmp;
+    }        
+
+
     PyObject *cursor_read_complex_double_pair(const coda_cursor *cursor)
     {
         npy_intp tmp_dims[1] = {2};
@@ -4536,6 +4800,468 @@ SWIGINTERN PyObject *_wrap_cursor_read_char_array(PyObject *SWIGUNUSEDPARM(self)
   }
   arg1 = (coda_cursor *)(argp1);
   result = (PyObject *)cursor_read_char_array((struct coda_cursor_struct const *)arg1);
+  {
+    resultobj = result;
+  }
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_cursor_read_int8_partial_array(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  coda_cursor *arg1 = (coda_cursor *) 0 ;
+  long arg2 ;
+  long arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  long val2 ;
+  int ecode2 = 0 ;
+  long val3 ;
+  int ecode3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:cursor_read_int8_partial_array",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_coda_cursor_struct, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cursor_read_int8_partial_array" "', argument " "1"" of type '" "coda_cursor const *""'"); 
+  }
+  arg1 = (coda_cursor *)(argp1);
+  ecode2 = SWIG_AsVal_long(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "cursor_read_int8_partial_array" "', argument " "2"" of type '" "long""'");
+  } 
+  arg2 = (long)(val2);
+  ecode3 = SWIG_AsVal_long(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "cursor_read_int8_partial_array" "', argument " "3"" of type '" "long""'");
+  } 
+  arg3 = (long)(val3);
+  result = (PyObject *)cursor_read_int8_partial_array((struct coda_cursor_struct const *)arg1,arg2,arg3);
+  {
+    resultobj = result;
+  }
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_cursor_read_uint8_partial_array(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  coda_cursor *arg1 = (coda_cursor *) 0 ;
+  long arg2 ;
+  long arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  long val2 ;
+  int ecode2 = 0 ;
+  long val3 ;
+  int ecode3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:cursor_read_uint8_partial_array",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_coda_cursor_struct, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cursor_read_uint8_partial_array" "', argument " "1"" of type '" "coda_cursor const *""'"); 
+  }
+  arg1 = (coda_cursor *)(argp1);
+  ecode2 = SWIG_AsVal_long(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "cursor_read_uint8_partial_array" "', argument " "2"" of type '" "long""'");
+  } 
+  arg2 = (long)(val2);
+  ecode3 = SWIG_AsVal_long(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "cursor_read_uint8_partial_array" "', argument " "3"" of type '" "long""'");
+  } 
+  arg3 = (long)(val3);
+  result = (PyObject *)cursor_read_uint8_partial_array((struct coda_cursor_struct const *)arg1,arg2,arg3);
+  {
+    resultobj = result;
+  }
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_cursor_read_int16_partial_array(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  coda_cursor *arg1 = (coda_cursor *) 0 ;
+  long arg2 ;
+  long arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  long val2 ;
+  int ecode2 = 0 ;
+  long val3 ;
+  int ecode3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:cursor_read_int16_partial_array",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_coda_cursor_struct, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cursor_read_int16_partial_array" "', argument " "1"" of type '" "coda_cursor const *""'"); 
+  }
+  arg1 = (coda_cursor *)(argp1);
+  ecode2 = SWIG_AsVal_long(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "cursor_read_int16_partial_array" "', argument " "2"" of type '" "long""'");
+  } 
+  arg2 = (long)(val2);
+  ecode3 = SWIG_AsVal_long(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "cursor_read_int16_partial_array" "', argument " "3"" of type '" "long""'");
+  } 
+  arg3 = (long)(val3);
+  result = (PyObject *)cursor_read_int16_partial_array((struct coda_cursor_struct const *)arg1,arg2,arg3);
+  {
+    resultobj = result;
+  }
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_cursor_read_uint16_partial_array(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  coda_cursor *arg1 = (coda_cursor *) 0 ;
+  long arg2 ;
+  long arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  long val2 ;
+  int ecode2 = 0 ;
+  long val3 ;
+  int ecode3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:cursor_read_uint16_partial_array",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_coda_cursor_struct, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cursor_read_uint16_partial_array" "', argument " "1"" of type '" "coda_cursor const *""'"); 
+  }
+  arg1 = (coda_cursor *)(argp1);
+  ecode2 = SWIG_AsVal_long(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "cursor_read_uint16_partial_array" "', argument " "2"" of type '" "long""'");
+  } 
+  arg2 = (long)(val2);
+  ecode3 = SWIG_AsVal_long(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "cursor_read_uint16_partial_array" "', argument " "3"" of type '" "long""'");
+  } 
+  arg3 = (long)(val3);
+  result = (PyObject *)cursor_read_uint16_partial_array((struct coda_cursor_struct const *)arg1,arg2,arg3);
+  {
+    resultobj = result;
+  }
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_cursor_read_int32_partial_array(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  coda_cursor *arg1 = (coda_cursor *) 0 ;
+  long arg2 ;
+  long arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  long val2 ;
+  int ecode2 = 0 ;
+  long val3 ;
+  int ecode3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:cursor_read_int32_partial_array",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_coda_cursor_struct, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cursor_read_int32_partial_array" "', argument " "1"" of type '" "coda_cursor const *""'"); 
+  }
+  arg1 = (coda_cursor *)(argp1);
+  ecode2 = SWIG_AsVal_long(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "cursor_read_int32_partial_array" "', argument " "2"" of type '" "long""'");
+  } 
+  arg2 = (long)(val2);
+  ecode3 = SWIG_AsVal_long(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "cursor_read_int32_partial_array" "', argument " "3"" of type '" "long""'");
+  } 
+  arg3 = (long)(val3);
+  result = (PyObject *)cursor_read_int32_partial_array((struct coda_cursor_struct const *)arg1,arg2,arg3);
+  {
+    resultobj = result;
+  }
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_cursor_read_uint32_partial_array(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  coda_cursor *arg1 = (coda_cursor *) 0 ;
+  long arg2 ;
+  long arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  long val2 ;
+  int ecode2 = 0 ;
+  long val3 ;
+  int ecode3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:cursor_read_uint32_partial_array",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_coda_cursor_struct, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cursor_read_uint32_partial_array" "', argument " "1"" of type '" "coda_cursor const *""'"); 
+  }
+  arg1 = (coda_cursor *)(argp1);
+  ecode2 = SWIG_AsVal_long(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "cursor_read_uint32_partial_array" "', argument " "2"" of type '" "long""'");
+  } 
+  arg2 = (long)(val2);
+  ecode3 = SWIG_AsVal_long(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "cursor_read_uint32_partial_array" "', argument " "3"" of type '" "long""'");
+  } 
+  arg3 = (long)(val3);
+  result = (PyObject *)cursor_read_uint32_partial_array((struct coda_cursor_struct const *)arg1,arg2,arg3);
+  {
+    resultobj = result;
+  }
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_cursor_read_int64_partial_array(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  coda_cursor *arg1 = (coda_cursor *) 0 ;
+  long arg2 ;
+  long arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  long val2 ;
+  int ecode2 = 0 ;
+  long val3 ;
+  int ecode3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:cursor_read_int64_partial_array",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_coda_cursor_struct, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cursor_read_int64_partial_array" "', argument " "1"" of type '" "coda_cursor const *""'"); 
+  }
+  arg1 = (coda_cursor *)(argp1);
+  ecode2 = SWIG_AsVal_long(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "cursor_read_int64_partial_array" "', argument " "2"" of type '" "long""'");
+  } 
+  arg2 = (long)(val2);
+  ecode3 = SWIG_AsVal_long(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "cursor_read_int64_partial_array" "', argument " "3"" of type '" "long""'");
+  } 
+  arg3 = (long)(val3);
+  result = (PyObject *)cursor_read_int64_partial_array((struct coda_cursor_struct const *)arg1,arg2,arg3);
+  {
+    resultobj = result;
+  }
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_cursor_read_uint64_partial_array(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  coda_cursor *arg1 = (coda_cursor *) 0 ;
+  long arg2 ;
+  long arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  long val2 ;
+  int ecode2 = 0 ;
+  long val3 ;
+  int ecode3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:cursor_read_uint64_partial_array",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_coda_cursor_struct, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cursor_read_uint64_partial_array" "', argument " "1"" of type '" "coda_cursor const *""'"); 
+  }
+  arg1 = (coda_cursor *)(argp1);
+  ecode2 = SWIG_AsVal_long(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "cursor_read_uint64_partial_array" "', argument " "2"" of type '" "long""'");
+  } 
+  arg2 = (long)(val2);
+  ecode3 = SWIG_AsVal_long(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "cursor_read_uint64_partial_array" "', argument " "3"" of type '" "long""'");
+  } 
+  arg3 = (long)(val3);
+  result = (PyObject *)cursor_read_uint64_partial_array((struct coda_cursor_struct const *)arg1,arg2,arg3);
+  {
+    resultobj = result;
+  }
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_cursor_read_float_partial_array(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  coda_cursor *arg1 = (coda_cursor *) 0 ;
+  long arg2 ;
+  long arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  long val2 ;
+  int ecode2 = 0 ;
+  long val3 ;
+  int ecode3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:cursor_read_float_partial_array",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_coda_cursor_struct, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cursor_read_float_partial_array" "', argument " "1"" of type '" "coda_cursor const *""'"); 
+  }
+  arg1 = (coda_cursor *)(argp1);
+  ecode2 = SWIG_AsVal_long(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "cursor_read_float_partial_array" "', argument " "2"" of type '" "long""'");
+  } 
+  arg2 = (long)(val2);
+  ecode3 = SWIG_AsVal_long(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "cursor_read_float_partial_array" "', argument " "3"" of type '" "long""'");
+  } 
+  arg3 = (long)(val3);
+  result = (PyObject *)cursor_read_float_partial_array((struct coda_cursor_struct const *)arg1,arg2,arg3);
+  {
+    resultobj = result;
+  }
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_cursor_read_double_partial_array(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  coda_cursor *arg1 = (coda_cursor *) 0 ;
+  long arg2 ;
+  long arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  long val2 ;
+  int ecode2 = 0 ;
+  long val3 ;
+  int ecode3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:cursor_read_double_partial_array",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_coda_cursor_struct, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cursor_read_double_partial_array" "', argument " "1"" of type '" "coda_cursor const *""'"); 
+  }
+  arg1 = (coda_cursor *)(argp1);
+  ecode2 = SWIG_AsVal_long(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "cursor_read_double_partial_array" "', argument " "2"" of type '" "long""'");
+  } 
+  arg2 = (long)(val2);
+  ecode3 = SWIG_AsVal_long(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "cursor_read_double_partial_array" "', argument " "3"" of type '" "long""'");
+  } 
+  arg3 = (long)(val3);
+  result = (PyObject *)cursor_read_double_partial_array((struct coda_cursor_struct const *)arg1,arg2,arg3);
+  {
+    resultobj = result;
+  }
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_cursor_read_char_partial_array(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  coda_cursor *arg1 = (coda_cursor *) 0 ;
+  long arg2 ;
+  long arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  long val2 ;
+  int ecode2 = 0 ;
+  long val3 ;
+  int ecode3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:cursor_read_char_partial_array",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_coda_cursor_struct, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cursor_read_char_partial_array" "', argument " "1"" of type '" "coda_cursor const *""'"); 
+  }
+  arg1 = (coda_cursor *)(argp1);
+  ecode2 = SWIG_AsVal_long(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "cursor_read_char_partial_array" "', argument " "2"" of type '" "long""'");
+  } 
+  arg2 = (long)(val2);
+  ecode3 = SWIG_AsVal_long(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "cursor_read_char_partial_array" "', argument " "3"" of type '" "long""'");
+  } 
+  arg3 = (long)(val3);
+  result = (PyObject *)cursor_read_char_partial_array((struct coda_cursor_struct const *)arg1,arg2,arg3);
   {
     resultobj = result;
   }
@@ -10273,6 +10999,17 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"cursor_read_float_array", _wrap_cursor_read_float_array, METH_VARARGS, NULL},
 	 { (char *)"cursor_read_double_array", _wrap_cursor_read_double_array, METH_VARARGS, NULL},
 	 { (char *)"cursor_read_char_array", _wrap_cursor_read_char_array, METH_VARARGS, NULL},
+	 { (char *)"cursor_read_int8_partial_array", _wrap_cursor_read_int8_partial_array, METH_VARARGS, NULL},
+	 { (char *)"cursor_read_uint8_partial_array", _wrap_cursor_read_uint8_partial_array, METH_VARARGS, NULL},
+	 { (char *)"cursor_read_int16_partial_array", _wrap_cursor_read_int16_partial_array, METH_VARARGS, NULL},
+	 { (char *)"cursor_read_uint16_partial_array", _wrap_cursor_read_uint16_partial_array, METH_VARARGS, NULL},
+	 { (char *)"cursor_read_int32_partial_array", _wrap_cursor_read_int32_partial_array, METH_VARARGS, NULL},
+	 { (char *)"cursor_read_uint32_partial_array", _wrap_cursor_read_uint32_partial_array, METH_VARARGS, NULL},
+	 { (char *)"cursor_read_int64_partial_array", _wrap_cursor_read_int64_partial_array, METH_VARARGS, NULL},
+	 { (char *)"cursor_read_uint64_partial_array", _wrap_cursor_read_uint64_partial_array, METH_VARARGS, NULL},
+	 { (char *)"cursor_read_float_partial_array", _wrap_cursor_read_float_partial_array, METH_VARARGS, NULL},
+	 { (char *)"cursor_read_double_partial_array", _wrap_cursor_read_double_partial_array, METH_VARARGS, NULL},
+	 { (char *)"cursor_read_char_partial_array", _wrap_cursor_read_char_partial_array, METH_VARARGS, NULL},
 	 { (char *)"cursor_read_complex_double_pair", _wrap_cursor_read_complex_double_pair, METH_VARARGS, NULL},
 	 { (char *)"cursor_read_complex_double_split_array", _wrap_cursor_read_complex_double_split_array, METH_VARARGS, NULL},
 	 { (char *)"cursor_read_complex_double_pairs_array", _wrap_cursor_read_complex_double_pairs_array, METH_VARARGS, NULL},

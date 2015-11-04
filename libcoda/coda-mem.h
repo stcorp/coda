@@ -71,4 +71,16 @@ int coda_mem_cursor_read_float_array(const coda_cursor *cursor, float *dst, coda
 int coda_mem_cursor_read_double_array(const coda_cursor *cursor, double *dst, coda_array_ordering array_ordering);
 int coda_mem_cursor_read_char_array(const coda_cursor *cursor, char *dst, coda_array_ordering array_ordering);
 
+int coda_mem_cursor_read_int8_partial_array(const coda_cursor *cursor, long offset, long length, int8_t *dst);
+int coda_mem_cursor_read_uint8_partial_array(const coda_cursor *cursor, long offset, long length, uint8_t *dst);
+int coda_mem_cursor_read_int16_partial_array(const coda_cursor *cursor, long offset, long length, int16_t *dst);
+int coda_mem_cursor_read_uint16_partial_array(const coda_cursor *cursor, long offset, long length, uint16_t *dst);
+int coda_mem_cursor_read_int32_partial_array(const coda_cursor *cursor, long offset, long length, int32_t *dst);
+int coda_mem_cursor_read_uint32_partial_array(const coda_cursor *cursor, long offset, long length, uint32_t *dst);
+int coda_mem_cursor_read_int64_partial_array(const coda_cursor *cursor, long offset, long length, int64_t *dst);
+int coda_mem_cursor_read_uint64_partial_array(const coda_cursor *cursor, long offset, long length, uint64_t *dst);
+int coda_mem_cursor_read_float_partial_array(const coda_cursor *cursor, long offset, long length, float *dst);
+int coda_mem_cursor_read_double_partial_array(const coda_cursor *cursor, long offset, long length, double *dst);
+int coda_mem_cursor_read_char_partial_array(const coda_cursor *cursor, long offset, long length, char *dst);
+
 #endif

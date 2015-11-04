@@ -40,5 +40,6 @@ int coda_grib_cursor_get_num_elements(const coda_cursor *cursor, long *num_eleme
 int coda_grib_cursor_get_array_dim(const coda_cursor *cursor, int *num_dims, long dim[]);
 int coda_grib_cursor_read_float(const coda_cursor *cursor, float *dst);
 int coda_grib_cursor_read_float_array(const coda_cursor *cursor, float *dst);
+int coda_grib_cursor_read_float_partial_array(const coda_cursor *cursor, long offset, long length, float *dst);
 
 #endif

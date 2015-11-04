@@ -23,6 +23,7 @@
 #include "coda-read-bytes.h"
 #include "coda-read-bytes-in-bounds.h"
 #include "coda-read-array.h"
+#include "coda-read-partial-array.h"
 #include "coda-transpose-array.h"
 #include "coda-ascbin.h"
 #include "ipow.h"
@@ -1667,6 +1668,105 @@ int coda_ascii_cursor_read_char_array(const coda_cursor *cursor, char *dst, coda
         }
     }
     return 0;
+}
+
+int coda_ascii_cursor_read_int8_partial_array(const coda_cursor *cursor, long offset, long length, int8_t *dst)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    assert(type->base_type->format == coda_format_ascii);
+    return read_partial_array(cursor, (read_function)&coda_ascii_cursor_read_int8, offset, length, (uint8_t *)dst,
+                              sizeof(int8_t));
+}
+
+int coda_ascii_cursor_read_uint8_partial_array(const coda_cursor *cursor, long offset, long length, uint8_t *dst)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    assert(type->base_type->format == coda_format_ascii);
+    return read_partial_array(cursor, (read_function)&coda_ascii_cursor_read_uint8, offset, length, (uint8_t *)dst,
+                              sizeof(uint8_t));
+}
+
+int coda_ascii_cursor_read_int16_partial_array(const coda_cursor *cursor, long offset, long length, int16_t *dst)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    assert(type->base_type->format == coda_format_ascii);
+    return read_partial_array(cursor, (read_function)&coda_ascii_cursor_read_int16, offset, length, (uint8_t *)dst,
+                              sizeof(int16_t));
+}
+
+int coda_ascii_cursor_read_uint16_partial_array(const coda_cursor *cursor, long offset, long length, uint16_t *dst)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    assert(type->base_type->format == coda_format_ascii);
+    return read_partial_array(cursor, (read_function)&coda_ascii_cursor_read_uint16, offset, length, (uint8_t *)dst,
+                              sizeof(uint16_t));
+}
+
+int coda_ascii_cursor_read_int32_partial_array(const coda_cursor *cursor, long offset, long length, int32_t *dst)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    assert(type->base_type->format == coda_format_ascii);
+    return read_partial_array(cursor, (read_function)&coda_ascii_cursor_read_int32, offset, length, (uint8_t *)dst,
+                              sizeof(int32_t));
+}
+
+int coda_ascii_cursor_read_uint32_partial_array(const coda_cursor *cursor, long offset, long length, uint32_t *dst)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    assert(type->base_type->format == coda_format_ascii);
+    return read_partial_array(cursor, (read_function)&coda_ascii_cursor_read_uint32, offset, length, (uint8_t *)dst,
+                              sizeof(uint32_t));
+}
+
+int coda_ascii_cursor_read_int64_partial_array(const coda_cursor *cursor, long offset, long length, int64_t *dst)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    assert(type->base_type->format == coda_format_ascii);
+    return read_partial_array(cursor, (read_function)&coda_ascii_cursor_read_int64, offset, length, (uint8_t *)dst,
+                              sizeof(int64_t));
+}
+
+int coda_ascii_cursor_read_uint64_partial_array(const coda_cursor *cursor, long offset, long length, uint64_t *dst)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    assert(type->base_type->format == coda_format_ascii);
+    return read_partial_array(cursor, (read_function)&coda_ascii_cursor_read_uint64, offset, length, (uint8_t *)dst,
+                              sizeof(uint64_t));
+}
+
+int coda_ascii_cursor_read_float_partial_array(const coda_cursor *cursor, long offset, long length, float *dst)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    assert(type->base_type->format == coda_format_ascii);
+    return read_partial_array(cursor, (read_function)&coda_ascii_cursor_read_float, offset, length, (uint8_t *)dst,
+                              sizeof(float));
+}
+
+int coda_ascii_cursor_read_double_partial_array(const coda_cursor *cursor, long offset, long length, double *dst)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    assert(type->base_type->format == coda_format_ascii);
+    return read_partial_array(cursor, (read_function)&coda_ascii_cursor_read_double, offset, length, (uint8_t *)dst,
+                              sizeof(double));
+}
+
+int coda_ascii_cursor_read_char_partial_array(const coda_cursor *cursor, long offset, long length, char *dst)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    assert(type->base_type->format == coda_format_ascii);
+    return read_partial_array(cursor, (read_function)&coda_ascii_cursor_read_char, offset, length, (uint8_t *)dst,
+                              sizeof(char));
 }
 
 /** @} */

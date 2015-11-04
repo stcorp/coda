@@ -1451,6 +1451,43 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1char_1array(J
 }
 
 
+SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1char_1partial_1array(JNIEnv *jenv, jclass jcls, jlong jarg1, jint jarg2, jint jarg3, jbyteArray jarg4) {
+  jint jresult = 0 ;
+  coda_cursor *arg1 = (coda_cursor *) 0 ;
+  long arg2 ;
+  long arg3 ;
+  char *arg4 = (char *) 0 ;
+  jbyte *jarr4 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(coda_cursor **)&jarg1; 
+  arg2 = (long)jarg2; 
+  arg3 = (long)jarg3; 
+  if (!SWIG_JavaArrayInSchar(jenv, &jarr4, (signed char **)&arg4, jarg4)) return 0; 
+  {
+    result = (int)coda_cursor_read_char_partial_array((struct coda_cursor_struct const *)arg1,arg2,arg3,arg4);
+    
+    if (result < 0)
+    {
+      int namelen = strlen("coda_cursor_read_char_partial_array");
+      const char *codamsg = coda_errno_to_string(coda_errno);
+      char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
+      jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
+      
+      sprintf(fullMessage, "coda_cursor_read_char_partial_array(): %s", codamsg);
+      (*jenv)->ThrowNew(jenv, clazz, fullMessage);
+      free(fullMessage);
+      return 0;
+    }
+  }
+  SWIG_JavaArrayArgoutSchar(jenv, jarr4, (signed char *)arg4, jarg4); 
+  free(arg4); 
+  return jresult;
+}
+
+
 SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_init(JNIEnv *jenv, jclass jcls) {
   jint jresult = 0 ;
   int result;
@@ -6876,6 +6913,390 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1double_1array
   }
   SWIG_JavaArrayArgoutDouble(jenv, jarr2, (double *)arg2, jarg2); 
   free(arg2); 
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1int8_1partial_1array(JNIEnv *jenv, jclass jcls, jlong jarg1, jint jarg2, jint jarg3, jbyteArray jarg4) {
+  jint jresult = 0 ;
+  coda_cursor *arg1 = (coda_cursor *) 0 ;
+  long arg2 ;
+  long arg3 ;
+  int8_t *arg4 = (int8_t *) 0 ;
+  jbyte *jarr4 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(coda_cursor **)&jarg1; 
+  arg2 = (long)jarg2; 
+  arg3 = (long)jarg3; 
+  if (!SWIG_JavaArrayInSchar(jenv, &jarr4, (signed char **)&arg4, jarg4)) return 0; 
+  {
+    result = (int)coda_cursor_read_int8_partial_array((struct coda_cursor_struct const *)arg1,arg2,arg3,arg4);
+    
+    if (result < 0)
+    {
+      int namelen = strlen("coda_cursor_read_int8_partial_array");
+      const char *codamsg = coda_errno_to_string(coda_errno);
+      char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
+      jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
+      
+      sprintf(fullMessage, "coda_cursor_read_int8_partial_array(): %s", codamsg);
+      (*jenv)->ThrowNew(jenv, clazz, fullMessage);
+      free(fullMessage);
+      return 0;
+    }
+  }
+  SWIG_JavaArrayArgoutSchar(jenv, jarr4, (signed char *)arg4, jarg4); 
+  free(arg4); 
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1uint8_1partial_1array(JNIEnv *jenv, jclass jcls, jlong jarg1, jint jarg2, jint jarg3, jbyteArray jarg4) {
+  jint jresult = 0 ;
+  coda_cursor *arg1 = (coda_cursor *) 0 ;
+  long arg2 ;
+  long arg3 ;
+  uint8_t *arg4 = (uint8_t *) 0 ;
+  jbyte *jarr4 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(coda_cursor **)&jarg1; 
+  arg2 = (long)jarg2; 
+  arg3 = (long)jarg3; 
+  if (!SWIG_JavaArrayInSchar(jenv, &jarr4, (signed char **)&arg4, jarg4)) return 0; 
+  {
+    result = (int)coda_cursor_read_uint8_partial_array((struct coda_cursor_struct const *)arg1,arg2,arg3,arg4);
+    
+    if (result < 0)
+    {
+      int namelen = strlen("coda_cursor_read_uint8_partial_array");
+      const char *codamsg = coda_errno_to_string(coda_errno);
+      char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
+      jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
+      
+      sprintf(fullMessage, "coda_cursor_read_uint8_partial_array(): %s", codamsg);
+      (*jenv)->ThrowNew(jenv, clazz, fullMessage);
+      free(fullMessage);
+      return 0;
+    }
+  }
+  SWIG_JavaArrayArgoutSchar(jenv, jarr4, (signed char *)arg4, jarg4); 
+  free(arg4); 
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1int16_1partial_1array(JNIEnv *jenv, jclass jcls, jlong jarg1, jint jarg2, jint jarg3, jshortArray jarg4) {
+  jint jresult = 0 ;
+  coda_cursor *arg1 = (coda_cursor *) 0 ;
+  long arg2 ;
+  long arg3 ;
+  int16_t *arg4 = (int16_t *) 0 ;
+  jshort *jarr4 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(coda_cursor **)&jarg1; 
+  arg2 = (long)jarg2; 
+  arg3 = (long)jarg3; 
+  if (!SWIG_JavaArrayInShort(jenv, &jarr4, (short **)&arg4, jarg4)) return 0; 
+  {
+    result = (int)coda_cursor_read_int16_partial_array((struct coda_cursor_struct const *)arg1,arg2,arg3,arg4);
+    
+    if (result < 0)
+    {
+      int namelen = strlen("coda_cursor_read_int16_partial_array");
+      const char *codamsg = coda_errno_to_string(coda_errno);
+      char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
+      jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
+      
+      sprintf(fullMessage, "coda_cursor_read_int16_partial_array(): %s", codamsg);
+      (*jenv)->ThrowNew(jenv, clazz, fullMessage);
+      free(fullMessage);
+      return 0;
+    }
+  }
+  SWIG_JavaArrayArgoutShort(jenv, jarr4, (short *)arg4, jarg4); 
+  free(arg4); 
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1uint16_1partial_1array(JNIEnv *jenv, jclass jcls, jlong jarg1, jint jarg2, jint jarg3, jshortArray jarg4) {
+  jint jresult = 0 ;
+  coda_cursor *arg1 = (coda_cursor *) 0 ;
+  long arg2 ;
+  long arg3 ;
+  uint16_t *arg4 = (uint16_t *) 0 ;
+  jshort *jarr4 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(coda_cursor **)&jarg1; 
+  arg2 = (long)jarg2; 
+  arg3 = (long)jarg3; 
+  if (!SWIG_JavaArrayInShort(jenv, &jarr4, (short **)&arg4, jarg4)) return 0; 
+  {
+    result = (int)coda_cursor_read_uint16_partial_array((struct coda_cursor_struct const *)arg1,arg2,arg3,arg4);
+    
+    if (result < 0)
+    {
+      int namelen = strlen("coda_cursor_read_uint16_partial_array");
+      const char *codamsg = coda_errno_to_string(coda_errno);
+      char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
+      jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
+      
+      sprintf(fullMessage, "coda_cursor_read_uint16_partial_array(): %s", codamsg);
+      (*jenv)->ThrowNew(jenv, clazz, fullMessage);
+      free(fullMessage);
+      return 0;
+    }
+  }
+  SWIG_JavaArrayArgoutShort(jenv, jarr4, (short *)arg4, jarg4); 
+  free(arg4); 
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1int32_1partial_1array(JNIEnv *jenv, jclass jcls, jlong jarg1, jint jarg2, jint jarg3, jintArray jarg4) {
+  jint jresult = 0 ;
+  coda_cursor *arg1 = (coda_cursor *) 0 ;
+  long arg2 ;
+  long arg3 ;
+  int32_t *arg4 = (int32_t *) 0 ;
+  jint *jarr4 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(coda_cursor **)&jarg1; 
+  arg2 = (long)jarg2; 
+  arg3 = (long)jarg3; 
+  if (!SWIG_JavaArrayInInt(jenv, &jarr4, (int **)&arg4, jarg4)) return 0; 
+  {
+    result = (int)coda_cursor_read_int32_partial_array((struct coda_cursor_struct const *)arg1,arg2,arg3,arg4);
+    
+    if (result < 0)
+    {
+      int namelen = strlen("coda_cursor_read_int32_partial_array");
+      const char *codamsg = coda_errno_to_string(coda_errno);
+      char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
+      jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
+      
+      sprintf(fullMessage, "coda_cursor_read_int32_partial_array(): %s", codamsg);
+      (*jenv)->ThrowNew(jenv, clazz, fullMessage);
+      free(fullMessage);
+      return 0;
+    }
+  }
+  SWIG_JavaArrayArgoutInt(jenv, jarr4, (int *)arg4, jarg4); 
+  free(arg4); 
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1uint32_1partial_1array(JNIEnv *jenv, jclass jcls, jlong jarg1, jint jarg2, jint jarg3, jintArray jarg4) {
+  jint jresult = 0 ;
+  coda_cursor *arg1 = (coda_cursor *) 0 ;
+  long arg2 ;
+  long arg3 ;
+  uint32_t *arg4 = (uint32_t *) 0 ;
+  jint *jarr4 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(coda_cursor **)&jarg1; 
+  arg2 = (long)jarg2; 
+  arg3 = (long)jarg3; 
+  if (!SWIG_JavaArrayInInt(jenv, &jarr4, (int **)&arg4, jarg4)) return 0; 
+  {
+    result = (int)coda_cursor_read_uint32_partial_array((struct coda_cursor_struct const *)arg1,arg2,arg3,arg4);
+    
+    if (result < 0)
+    {
+      int namelen = strlen("coda_cursor_read_uint32_partial_array");
+      const char *codamsg = coda_errno_to_string(coda_errno);
+      char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
+      jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
+      
+      sprintf(fullMessage, "coda_cursor_read_uint32_partial_array(): %s", codamsg);
+      (*jenv)->ThrowNew(jenv, clazz, fullMessage);
+      free(fullMessage);
+      return 0;
+    }
+  }
+  SWIG_JavaArrayArgoutInt(jenv, jarr4, (int *)arg4, jarg4); 
+  free(arg4); 
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1int64_1partial_1array(JNIEnv *jenv, jclass jcls, jlong jarg1, jint jarg2, jint jarg3, jlongArray jarg4) {
+  jint jresult = 0 ;
+  coda_cursor *arg1 = (coda_cursor *) 0 ;
+  long arg2 ;
+  long arg3 ;
+  int64_t *arg4 = (int64_t *) 0 ;
+  jlong *jarr4 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(coda_cursor **)&jarg1; 
+  arg2 = (long)jarg2; 
+  arg3 = (long)jarg3; 
+  if (!SWIG_JavaArrayInLonglong(jenv, &jarr4, (long long **)&arg4, jarg4)) return 0; 
+  {
+    result = (int)coda_cursor_read_int64_partial_array((struct coda_cursor_struct const *)arg1,arg2,arg3,arg4);
+    
+    if (result < 0)
+    {
+      int namelen = strlen("coda_cursor_read_int64_partial_array");
+      const char *codamsg = coda_errno_to_string(coda_errno);
+      char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
+      jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
+      
+      sprintf(fullMessage, "coda_cursor_read_int64_partial_array(): %s", codamsg);
+      (*jenv)->ThrowNew(jenv, clazz, fullMessage);
+      free(fullMessage);
+      return 0;
+    }
+  }
+  SWIG_JavaArrayArgoutLonglong(jenv, jarr4, (long long *)arg4, jarg4); 
+  free(arg4); 
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1uint64_1partial_1array(JNIEnv *jenv, jclass jcls, jlong jarg1, jint jarg2, jint jarg3, jlongArray jarg4) {
+  jint jresult = 0 ;
+  coda_cursor *arg1 = (coda_cursor *) 0 ;
+  long arg2 ;
+  long arg3 ;
+  uint64_t *arg4 = (uint64_t *) 0 ;
+  uint64_t temp4 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(coda_cursor **)&jarg1; 
+  arg2 = (long)jarg2; 
+  arg3 = (long)jarg3; 
+  {
+    if (!jarg4) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg4) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    temp4 = (uint64_t)0;
+    arg4 = &temp4; 
+  }
+  {
+    result = (int)coda_cursor_read_uint64_partial_array((struct coda_cursor_struct const *)arg1,arg2,arg3,arg4);
+    
+    if (result < 0)
+    {
+      int namelen = strlen("coda_cursor_read_uint64_partial_array");
+      const char *codamsg = coda_errno_to_string(coda_errno);
+      char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
+      jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
+      
+      sprintf(fullMessage, "coda_cursor_read_uint64_partial_array(): %s", codamsg);
+      (*jenv)->ThrowNew(jenv, clazz, fullMessage);
+      free(fullMessage);
+      return 0;
+    }
+  }
+  {
+    jlong jvalue = (jlong)temp4;
+    (*jenv)->SetLongArrayRegion(jenv, jarg4, 0, 1, &jvalue);
+  }
+  
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1float_1partial_1array(JNIEnv *jenv, jclass jcls, jlong jarg1, jint jarg2, jint jarg3, jfloatArray jarg4) {
+  jint jresult = 0 ;
+  coda_cursor *arg1 = (coda_cursor *) 0 ;
+  long arg2 ;
+  long arg3 ;
+  float *arg4 = (float *) 0 ;
+  jfloat *jarr4 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(coda_cursor **)&jarg1; 
+  arg2 = (long)jarg2; 
+  arg3 = (long)jarg3; 
+  if (!SWIG_JavaArrayInFloat(jenv, &jarr4, (float **)&arg4, jarg4)) return 0; 
+  {
+    result = (int)coda_cursor_read_float_partial_array((struct coda_cursor_struct const *)arg1,arg2,arg3,arg4);
+    
+    if (result < 0)
+    {
+      int namelen = strlen("coda_cursor_read_float_partial_array");
+      const char *codamsg = coda_errno_to_string(coda_errno);
+      char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
+      jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
+      
+      sprintf(fullMessage, "coda_cursor_read_float_partial_array(): %s", codamsg);
+      (*jenv)->ThrowNew(jenv, clazz, fullMessage);
+      free(fullMessage);
+      return 0;
+    }
+  }
+  SWIG_JavaArrayArgoutFloat(jenv, jarr4, (float *)arg4, jarg4); 
+  free(arg4); 
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1double_1partial_1array(JNIEnv *jenv, jclass jcls, jlong jarg1, jint jarg2, jint jarg3, jdoubleArray jarg4) {
+  jint jresult = 0 ;
+  coda_cursor *arg1 = (coda_cursor *) 0 ;
+  long arg2 ;
+  long arg3 ;
+  double *arg4 = (double *) 0 ;
+  jdouble *jarr4 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(coda_cursor **)&jarg1; 
+  arg2 = (long)jarg2; 
+  arg3 = (long)jarg3; 
+  if (!SWIG_JavaArrayInDouble(jenv, &jarr4, (double **)&arg4, jarg4)) return 0; 
+  {
+    result = (int)coda_cursor_read_double_partial_array((struct coda_cursor_struct const *)arg1,arg2,arg3,arg4);
+    
+    if (result < 0)
+    {
+      int namelen = strlen("coda_cursor_read_double_partial_array");
+      const char *codamsg = coda_errno_to_string(coda_errno);
+      char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
+      jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
+      
+      sprintf(fullMessage, "coda_cursor_read_double_partial_array(): %s", codamsg);
+      (*jenv)->ThrowNew(jenv, clazz, fullMessage);
+      free(fullMessage);
+      return 0;
+    }
+  }
+  SWIG_JavaArrayArgoutDouble(jenv, jarr4, (double *)arg4, jarg4); 
+  free(arg4); 
   return jresult;
 }
 

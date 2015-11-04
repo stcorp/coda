@@ -18,10 +18,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "coda-ascii-internal.h"
 #include "coda-bin-internal.h"
 #include "coda-definition.h"
 #include "coda-read-bits.h"
 #include "coda-read-array.h"
+#include "coda-read-partial-array.h"
 #include "coda-transpose-array.h"
 #include "coda-ascbin.h"
 
@@ -901,7 +903,7 @@ int coda_bin_cursor_read_int8_array(const coda_cursor *cursor, int8_t *dst, coda
                           array_ordering);
     }
     assert(type->base_type->format == coda_format_ascii);
-    if (read_array(cursor, (read_function)&coda_bin_cursor_read_int8, (uint8_t *)dst, sizeof(int8_t),
+    if (read_array(cursor, (read_function)&coda_ascii_cursor_read_int8, (uint8_t *)dst, sizeof(int8_t),
                    coda_array_ordering_c) != 0)
     {
         return -1;
@@ -927,7 +929,7 @@ int coda_bin_cursor_read_uint8_array(const coda_cursor *cursor, uint8_t *dst, co
                           array_ordering);
     }
     assert(type->base_type->format == coda_format_ascii);
-    if (read_array(cursor, (read_function)&coda_bin_cursor_read_uint8, (uint8_t *)dst, sizeof(uint8_t),
+    if (read_array(cursor, (read_function)&coda_ascii_cursor_read_uint8, (uint8_t *)dst, sizeof(uint8_t),
                    coda_array_ordering_c) != 0)
     {
         return -1;
@@ -953,7 +955,7 @@ int coda_bin_cursor_read_int16_array(const coda_cursor *cursor, int16_t *dst, co
                           array_ordering);
     }
     assert(type->base_type->format == coda_format_ascii);
-    if (read_array(cursor, (read_function)&coda_bin_cursor_read_int16, (uint8_t *)dst, sizeof(int16_t),
+    if (read_array(cursor, (read_function)&coda_ascii_cursor_read_int16, (uint8_t *)dst, sizeof(int16_t),
                    coda_array_ordering_c) != 0)
     {
         return -1;
@@ -979,7 +981,7 @@ int coda_bin_cursor_read_uint16_array(const coda_cursor *cursor, uint16_t *dst, 
                           array_ordering);
     }
     assert(type->base_type->format == coda_format_ascii);
-    if (read_array(cursor, (read_function)&coda_bin_cursor_read_uint16, (uint8_t *)dst, sizeof(uint16_t),
+    if (read_array(cursor, (read_function)&coda_ascii_cursor_read_uint16, (uint8_t *)dst, sizeof(uint16_t),
                    coda_array_ordering_c) != 0)
     {
         return -1;
@@ -1005,7 +1007,7 @@ int coda_bin_cursor_read_int32_array(const coda_cursor *cursor, int32_t *dst, co
                           array_ordering);
     }
     assert(type->base_type->format == coda_format_ascii);
-    if (read_array(cursor, (read_function)&coda_bin_cursor_read_int32, (uint8_t *)dst, sizeof(int32_t),
+    if (read_array(cursor, (read_function)&coda_ascii_cursor_read_int32, (uint8_t *)dst, sizeof(int32_t),
                    coda_array_ordering_c) != 0)
     {
         return -1;
@@ -1031,7 +1033,7 @@ int coda_bin_cursor_read_uint32_array(const coda_cursor *cursor, uint32_t *dst, 
                           array_ordering);
     }
     assert(type->base_type->format == coda_format_ascii);
-    if (read_array(cursor, (read_function)&coda_bin_cursor_read_uint32, (uint8_t *)dst, sizeof(uint32_t),
+    if (read_array(cursor, (read_function)&coda_ascii_cursor_read_uint32, (uint8_t *)dst, sizeof(uint32_t),
                    coda_array_ordering_c) != 0)
     {
         return -1;
@@ -1057,7 +1059,7 @@ int coda_bin_cursor_read_int64_array(const coda_cursor *cursor, int64_t *dst, co
                           array_ordering);
     }
     assert(type->base_type->format == coda_format_ascii);
-    if (read_array(cursor, (read_function)&coda_bin_cursor_read_int64, (uint8_t *)dst, sizeof(int64_t),
+    if (read_array(cursor, (read_function)&coda_ascii_cursor_read_int64, (uint8_t *)dst, sizeof(int64_t),
                    coda_array_ordering_c) != 0)
     {
         return -1;
@@ -1083,7 +1085,7 @@ int coda_bin_cursor_read_uint64_array(const coda_cursor *cursor, uint64_t *dst, 
                           array_ordering);
     }
     assert(type->base_type->format == coda_format_ascii);
-    if (read_array(cursor, (read_function)&coda_bin_cursor_read_uint64, (uint8_t *)dst, sizeof(uint64_t),
+    if (read_array(cursor, (read_function)&coda_ascii_cursor_read_uint64, (uint8_t *)dst, sizeof(uint64_t),
                    coda_array_ordering_c) != 0)
     {
         return -1;
@@ -1109,7 +1111,7 @@ int coda_bin_cursor_read_float_array(const coda_cursor *cursor, float *dst, coda
                           array_ordering);
     }
     assert(type->base_type->format == coda_format_ascii);
-    if (read_array(cursor, (read_function)&coda_bin_cursor_read_float, (uint8_t *)dst, sizeof(float),
+    if (read_array(cursor, (read_function)&coda_ascii_cursor_read_float, (uint8_t *)dst, sizeof(float),
                    coda_array_ordering_c) != 0)
     {
         return -1;
@@ -1135,7 +1137,7 @@ int coda_bin_cursor_read_double_array(const coda_cursor *cursor, double *dst, co
                           array_ordering);
     }
     assert(type->base_type->format == coda_format_ascii);
-    if (read_array(cursor, (read_function)&coda_bin_cursor_read_double, (uint8_t *)dst, sizeof(double),
+    if (read_array(cursor, (read_function)&coda_ascii_cursor_read_double, (uint8_t *)dst, sizeof(double),
                    coda_array_ordering_c) != 0)
     {
         return -1;
@@ -1161,7 +1163,7 @@ int coda_bin_cursor_read_char_array(const coda_cursor *cursor, char *dst, coda_a
                           array_ordering);
     }
     assert(type->base_type->format == coda_format_ascii);
-    if (read_array(cursor, (read_function)&coda_bin_cursor_read_char, (uint8_t *)dst, sizeof(char),
+    if (read_array(cursor, (read_function)&coda_ascii_cursor_read_char, (uint8_t *)dst, sizeof(char),
                    coda_array_ordering_c) != 0)
     {
         return -1;
@@ -1175,6 +1177,160 @@ int coda_bin_cursor_read_char_array(const coda_cursor *cursor, char *dst, coda_a
     }
 
     return 0;
+}
+
+int coda_bin_cursor_read_int8_partial_array(const coda_cursor *cursor, long offset, long length, int8_t *dst)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    if (type->base_type->format == coda_format_binary)
+    {
+        return read_partial_array(cursor, (read_function)&coda_bin_cursor_read_int8, offset, length, (uint8_t *)dst,
+                                  sizeof(int8_t));
+    }
+    assert(type->base_type->format == coda_format_ascii);
+    return read_partial_array(cursor, (read_function)&coda_ascii_cursor_read_int8, offset, length, (uint8_t *)dst,
+                              sizeof(int8_t));
+}
+
+int coda_bin_cursor_read_uint8_partial_array(const coda_cursor *cursor, long offset, long length, uint8_t *dst)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    if (type->base_type->format == coda_format_binary)
+    {
+        return read_partial_array(cursor, (read_function)&coda_bin_cursor_read_uint8, offset, length, (uint8_t *)dst,
+                                  sizeof(uint8_t));
+    }
+    assert(type->base_type->format == coda_format_ascii);
+    return read_partial_array(cursor, (read_function)&coda_ascii_cursor_read_uint8, offset, length, (uint8_t *)dst,
+                              sizeof(uint8_t));
+}
+
+int coda_bin_cursor_read_int16_partial_array(const coda_cursor *cursor, long offset, long length, int16_t *dst)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    if (type->base_type->format == coda_format_binary)
+    {
+        return read_partial_array(cursor, (read_function)&coda_bin_cursor_read_int16, offset, length, (uint8_t *)dst,
+                                  sizeof(int16_t));
+    }
+    assert(type->base_type->format == coda_format_ascii);
+    return read_partial_array(cursor, (read_function)&coda_ascii_cursor_read_int16, offset, length, (uint8_t *)dst,
+                              sizeof(int16_t));
+}
+
+int coda_bin_cursor_read_uint16_partial_array(const coda_cursor *cursor, long offset, long length, uint16_t *dst)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    if (type->base_type->format == coda_format_binary)
+    {
+        return read_partial_array(cursor, (read_function)&coda_bin_cursor_read_uint16, offset, length, (uint8_t *)dst,
+                                  sizeof(uint16_t));
+    }
+    assert(type->base_type->format == coda_format_ascii);
+    return read_partial_array(cursor, (read_function)&coda_ascii_cursor_read_uint16, offset, length, (uint8_t *)dst,
+                              sizeof(uint16_t));
+}
+
+int coda_bin_cursor_read_int32_partial_array(const coda_cursor *cursor, long offset, long length, int32_t *dst)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    if (type->base_type->format == coda_format_binary)
+    {
+        return read_partial_array(cursor, (read_function)&coda_bin_cursor_read_int32, offset, length, (uint8_t *)dst,
+                                  sizeof(int32_t));
+    }
+    assert(type->base_type->format == coda_format_ascii);
+    return read_partial_array(cursor, (read_function)&coda_ascii_cursor_read_int32, offset, length, (uint8_t *)dst,
+                              sizeof(int32_t));
+}
+
+int coda_bin_cursor_read_uint32_partial_array(const coda_cursor *cursor, long offset, long length, uint32_t *dst)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    if (type->base_type->format == coda_format_binary)
+    {
+        return read_partial_array(cursor, (read_function)&coda_bin_cursor_read_uint32, offset, length, (uint8_t *)dst,
+                                  sizeof(uint32_t));
+    }
+    assert(type->base_type->format == coda_format_ascii);
+    return read_partial_array(cursor, (read_function)&coda_ascii_cursor_read_uint32, offset, length, (uint8_t *)dst,
+                              sizeof(uint32_t));
+}
+
+int coda_bin_cursor_read_int64_partial_array(const coda_cursor *cursor, long offset, long length, int64_t *dst)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    if (type->base_type->format == coda_format_binary)
+    {
+        return read_partial_array(cursor, (read_function)&coda_bin_cursor_read_int64, offset, length, (uint8_t *)dst,
+                                  sizeof(int64_t));
+    }
+    assert(type->base_type->format == coda_format_ascii);
+    return read_partial_array(cursor, (read_function)&coda_ascii_cursor_read_int64, offset, length, (uint8_t *)dst,
+                              sizeof(int64_t));
+}
+
+int coda_bin_cursor_read_uint64_partial_array(const coda_cursor *cursor, long offset, long length, uint64_t *dst)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    if (type->base_type->format == coda_format_binary)
+    {
+        return read_partial_array(cursor, (read_function)&coda_bin_cursor_read_uint64, offset, length, (uint8_t *)dst,
+                                  sizeof(uint64_t));
+    }
+    assert(type->base_type->format == coda_format_ascii);
+    return read_partial_array(cursor, (read_function)&coda_ascii_cursor_read_uint64, offset, length, (uint8_t *)dst,
+                              sizeof(uint64_t));
+}
+
+int coda_bin_cursor_read_float_partial_array(const coda_cursor *cursor, long offset, long length, float *dst)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    if (type->base_type->format == coda_format_binary)
+    {
+        return read_partial_array(cursor, (read_function)&coda_bin_cursor_read_float, offset, length, (uint8_t *)dst,
+                                  sizeof(float));
+    }
+    assert(type->base_type->format == coda_format_ascii);
+    return read_partial_array(cursor, (read_function)&coda_ascii_cursor_read_float, offset, length, (uint8_t *)dst,
+                              sizeof(float));
+}
+
+int coda_bin_cursor_read_double_partial_array(const coda_cursor *cursor, long offset, long length, double *dst)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    if (type->base_type->format == coda_format_binary)
+    {
+        return read_partial_array(cursor, (read_function)&coda_bin_cursor_read_double, offset, length, (uint8_t *)dst,
+                                  sizeof(double));
+    }
+    assert(type->base_type->format == coda_format_ascii);
+    return read_partial_array(cursor, (read_function)&coda_ascii_cursor_read_double, offset, length, (uint8_t *)dst,
+                              sizeof(double));
+}
+
+int coda_bin_cursor_read_char_partial_array(const coda_cursor *cursor, long offset, long length, char *dst)
+{
+    coda_type_array *type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    if (type->base_type->format == coda_format_binary)
+    {
+        return read_partial_array(cursor, (read_function)&coda_bin_cursor_read_char, offset, length, (uint8_t *)dst,
+                                  sizeof(char));
+    }
+    assert(type->base_type->format == coda_format_ascii);
+    return read_partial_array(cursor, (read_function)&coda_ascii_cursor_read_char, offset, length, (uint8_t *)dst,
+                              sizeof(char));
 }
 
 /** @} */

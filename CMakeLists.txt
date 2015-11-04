@@ -2,7 +2,7 @@
 #
 project(CODA)
 
-set(VERSION 2.13)
+set(VERSION 2.14)
 set(CODA_VERSION \"${VERSION}\")
 
 # General setup
@@ -15,9 +15,9 @@ set(CMAKE_MODULE_PATH
 include(CheckFunctionExists)
 include(CheckLibraryExists)
 include(CheckIncludeFile)
+include(CheckSymbolExists)
 include(CheckTypeSize)
 include(TestBigEndian)
-include(CheckTypeExists)
 include(CMakeDependentOption)
 
 # Option handling
@@ -109,36 +109,12 @@ set(XML_CONTEXT_BYTES 1024)
 set(CODA_EXPAT_NAME_MANGLE 1)
 
 
-# Lex / Yacc - adapted from CMake's own CMakeLists.txt
-#
-find_program(YACC_EXECUTABLE
-  NAMES bison yacc
-  PATHS /usr/bin
-  DOC "Yacc or Bison executable")
-find_program(FLEX_EXECUTABLE
-  NAMES flex
-  PATHS /usr/bin
-  DOC "Flex executable")
-mark_as_advanced(YACC_EXECUTABLE FLEX_EXECUTABLE)
-if(YACC_EXECUTABLE)
-  add_custom_command(
-    OUTPUT coda-expr-parser.c coda-expr-parser.h
-    DEPENDS libcoda/coda-expr-parser.y
-    COMMAND ${YACC_EXECUTABLE} -d -o coda-expr-parser.c ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/coda-expr-parser.y)
-  add_custom_target(RerunYacc DEPENDS coda-expr-parser.c)
-endif(YACC_EXECUTABLE)
+# Lex / Yacc
+find_package(BISON)
+find_package(FLEX)
 
-if(FLEX_EXECUTABLE)
-  add_custom_command(
-    OUTPUT coda-expr-tokenizer.c
-    DEPENDS libcoda/coda-expr-tokenizer.l
-    COMMAND ${FLEX_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/coda-expr-tokenizer.l
-# copy lex.yy.c manually -- --outfile option to flex does not work,
-# because it gets explicitly overriden in the .l file.
-    COMMAND ${CMAKE_COMMAND} -E copy lex.yy.c coda-expr-tokenizer.c)
-  add_custom_target(RerunLex DEPENDS code-expr-tokenizer.c)
-endif(FLEX_EXECUTABLE)
-
+BISON_TARGET(coda-expr-parser ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/coda-expr-parser.y ${CMAKE_CURRENT_BINARY_DIR}/libcoda/coda-expr-parser.c)
+FLEX_TARGET(coda-expr-tokenizer ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/coda-expr-tokenizer.l ${CMAKE_CURRENT_BINARY_DIR}/libcoda/coda-expr-tokenizer.c)
 
 # Required include files
 #
@@ -198,11 +174,11 @@ endif(WIN32)
 
 # Required types (and their sizes)
 #
-check_type_exists(uchar "${INCLUDES}" HAVE_UCHAR)
+check_symbol_exists(uchar "${INCLUDES}" HAVE_UCHAR)
 set(UCHAR "unsigned char")
-check_type_exists(size_t "${INCLUDES}" HAVE_SIZE_T)
+check_symbol_exists(size_t "${INCLUDES}" HAVE_SIZE_T)
 set(SIZE_T "long")
-check_type_exists(ptrdiff_t "${INCLUDES}" HAVE_PTRDIFF_T)
+check_symbol_exists(ptrdiff_t "${INCLUDES}" HAVE_PTRDIFF_T)
 set(PTRDIFF_T "int")
 
 check_type_size(size_t SIZEOF_SIZE_T)
@@ -287,9 +263,9 @@ set(LIBCODA_SOURCES
   libcoda/coda-definition.c
   libcoda/coda-definition.h
   libcoda/coda-errno.c
-  coda-expr-parser.c
-  coda-expr-parser.h
-  coda-expr-tokenizer.c
+  libcoda/coda-expr-parser.c
+  libcoda/coda-expr-parser.h
+  libcoda/coda-expr-tokenizer.c
   libcoda/coda-expr.c
   libcoda/coda-expr.h
   libcoda/coda-filefilter.c
@@ -316,6 +292,7 @@ set(LIBCODA_SOURCES
   libcoda/coda-read-bits.h
   libcoda/coda-read-bytes.h
   libcoda/coda-read-bytes-in-bounds.h
+  libcoda/coda-read-partial-array.h
   libcoda/coda-rinex.c
   libcoda/coda-rinex.h
   libcoda/coda-sp3.c
@@ -404,8 +381,6 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
         set(IDL_INSTALL_DIR lib/idl)
       endif()
   
-      set(HAVE_IDL_SYSFUN_DEF2 1)
-      set(HAVE_IDL_SYSRTN_UNION 1)
       if(WIN32)
         set(IDL_COMPILE_FLAGS "-nologo -I. -I${CODA_BINARY_DIR} -I${CODA_SOURCE_DIR}/libcoda -DWIN32_LEAN_AND_MEAN -DWIN32 -DHAVE_CONFIG_H -DIDL_V5_4")
         set(IDL_LIBDIR "${IDL_DIR}/bin/bin.x86/")
@@ -718,8 +693,8 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
   #
   # Set dynamic library version
   #
-  set(LIBCODA_CURRENT 11)
-  set(LIBCODA_REVISION 4)
+  set(LIBCODA_CURRENT 12)
+  set(LIBCODA_REVISION 0)
   set(LIBCODA_AGE 5)
   math(EXPR LIBCODA_MAJOR "${LIBCODA_CURRENT} - ${LIBCODA_AGE}")
   set(LIBCODA_MINOR ${LIBCODA_AGE})
@@ -778,7 +753,9 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
       tools/codadump/codadump-debug.c
       tools/codadump/codadump-dim.c
       tools/codadump/codadump-filter.c
+      tools/codadump/codadump-json.c
       tools/codadump/codadump-traverse.c
+      tools/codadump/codadump-yaml.c
       tools/codadump/codadump.c
       tools/codadump/codadump-filter.h
       tools/codadump/codadump.h)

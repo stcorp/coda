@@ -105,15 +105,6 @@ int coda_hdf5_cursor_goto_record_field_by_index(coda_cursor *cursor, long index)
             }
             field_type = (coda_dynamic_type *)((coda_hdf5_compound_data_type *)record_type)->member[index];
             break;
-        case tag_hdf5_attribute_record:
-            if (index < 0 || index >= ((coda_hdf5_attribute_record *)record_type)->definition->num_fields)
-            {
-                coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
-                               ((coda_hdf5_attribute_record *)record_type)->definition->num_fields, __FILE__, __LINE__);
-                return -1;
-            }
-            field_type = (coda_dynamic_type *)((coda_hdf5_attribute_record *)record_type)->attribute[index];
-            break;
         case tag_hdf5_group:
             if (index < 0 || index >= ((coda_hdf5_group *)record_type)->definition->num_fields)
             {
@@ -157,9 +148,6 @@ int coda_hdf5_cursor_goto_array_element(coda_cursor *cursor, int num_subs, const
 
     switch (array_type->tag)
     {
-        case tag_hdf5_attribute:
-            base_type = (coda_dynamic_type *)((coda_hdf5_attribute *)array_type)->base_type;
-            break;
         case tag_hdf5_dataset:
             base_type = (coda_dynamic_type *)((coda_hdf5_dataset *)array_type)->base_type;
             break;
@@ -226,9 +214,6 @@ int coda_hdf5_cursor_goto_array_element_by_index(coda_cursor *cursor, long index
 
     switch (array_type->tag)
     {
-        case tag_hdf5_attribute:
-            base_type = (coda_dynamic_type *)((coda_hdf5_attribute *)array_type)->base_type;
-            break;
         case tag_hdf5_dataset:
             base_type = (coda_dynamic_type *)((coda_hdf5_dataset *)array_type)->base_type;
             break;
@@ -285,10 +270,6 @@ int coda_hdf5_cursor_goto_attributes(coda_cursor *cursor)
     {
         case tag_hdf5_basic_datatype:
         case tag_hdf5_compound_datatype:
-        case tag_hdf5_attribute:
-        case tag_hdf5_attribute_record:
-            cursor->stack[cursor->n - 1].type = coda_mem_empty_record(coda_format_hdf5);
-            break;
         case tag_hdf5_group:
             cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)((coda_hdf5_group *)type)->attributes;
             break;
@@ -316,12 +297,6 @@ int coda_hdf5_cursor_get_num_elements(const coda_cursor *cursor, long *num_eleme
             break;
         case tag_hdf5_compound_datatype:
             *num_elements = (long)((coda_hdf5_compound_data_type *)type)->definition->num_fields;
-            break;
-        case tag_hdf5_attribute:
-            *num_elements = (long)((coda_hdf5_attribute *)type)->definition->num_elements;
-            break;
-        case tag_hdf5_attribute_record:
-            *num_elements = ((coda_hdf5_attribute_record *)type)->definition->num_fields;
             break;
         case tag_hdf5_group:
             *num_elements = (long)((coda_hdf5_group *)type)->definition->num_fields;
@@ -422,14 +397,7 @@ static int read_array(const coda_cursor *cursor, void *dst)
         return -1;
     }
 
-    if (((coda_hdf5_type *)cursor->stack[cursor->n - 1].type)->tag == tag_hdf5_attribute)
-    {
-        base_type = (coda_hdf5_basic_data_type *)((coda_hdf5_attribute *)cursor->stack[cursor->n - 1].type)->base_type;
-    }
-    else
-    {
-        base_type = (coda_hdf5_basic_data_type *)((coda_hdf5_dataset *)cursor->stack[cursor->n - 1].type)->base_type;
-    }
+    base_type = (coda_hdf5_basic_data_type *)((coda_hdf5_dataset *)cursor->stack[cursor->n - 1].type)->base_type;
     assert(base_type->tag == tag_hdf5_basic_datatype);
 
     if (H5Tget_class(base_type->datatype_id) == H5T_ENUM)
@@ -446,24 +414,12 @@ static int read_array(const coda_cursor *cursor, void *dst)
         mem_type_id = H5Tcopy(mem_type_id);
     }
 
-    if (((coda_hdf5_type *)cursor->stack[cursor->n - 1].type)->tag == tag_hdf5_attribute)
+    if (H5Dread(((coda_hdf5_dataset *)cursor->stack[cursor->n - 1].type)->dataset_id, mem_type_id, H5S_ALL, H5S_ALL,
+                H5P_DEFAULT, dst) < 0)
     {
-        if (H5Aread(((coda_hdf5_attribute *)cursor->stack[cursor->n - 1].type)->attribute_id, mem_type_id, dst) < 0)
-        {
-            coda_set_error(CODA_ERROR_HDF5, NULL);
-            H5Tclose(mem_type_id);
-            return -1;
-        }
-    }
-    else
-    {
-        if (H5Dread(((coda_hdf5_dataset *)cursor->stack[cursor->n - 1].type)->dataset_id, mem_type_id, H5S_ALL, H5S_ALL,
-                    H5P_DEFAULT, dst) < 0)
-        {
-            coda_set_error(CODA_ERROR_HDF5, NULL);
-            H5Tclose(mem_type_id);
-            return -1;
-        }
+        coda_set_error(CODA_ERROR_HDF5, NULL);
+        H5Tclose(mem_type_id);
+        return -1;
     }
     H5Tclose(mem_type_id);
 
@@ -493,10 +449,147 @@ static int read_array(const coda_cursor *cursor, void *dst)
     return 0;
 }
 
+static int read_partial_array(const coda_cursor *cursor, long offset, long length, void *dst)
+{
+    coda_hdf5_basic_data_type *base_type;
+    coda_hdf5_dataset *dataset;
+    hsize_t start[CODA_MAX_NUM_DIMS];
+    hsize_t count[CODA_MAX_NUM_DIMS];
+    hsize_t hlength;
+    hid_t mem_type_id;
+    hid_t mem_space_id;
+    int element_to_size;
+    int num_dims;
+    long dim[CODA_MAX_NUM_DIMS];
+    long block_size = 1;
+    int i;
+
+    dataset = (coda_hdf5_dataset *)cursor->stack[cursor->n - 1].type;
+    base_type = (coda_hdf5_basic_data_type *)dataset->base_type;
+    assert(base_type->tag == tag_hdf5_basic_datatype);
+
+    if (coda_hdf5_cursor_get_array_dim(cursor, &num_dims, dim) != 0)
+    {
+        return -1;
+    }
+
+    /* determine hyperslab start/edge */
+    for (i = num_dims - 1; i >= 0; i--)
+    {
+        if (length <= block_size * dim[i])
+        {
+            if (length % block_size != 0)
+            {
+                coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "partial array reading for HDF5 Datasets requires length "
+                               "(%ld) to be a multiple of the subdimension size (%ld)", length, block_size);
+                return -1;
+            }
+            start[i] = (offset / block_size) % dim[i];
+            count[i] = length / block_size;
+            break;
+        }
+        start[i] = 0;
+        count[i] = dim[i];
+        block_size *= dim[i];
+    }
+    if (offset % block_size != 0)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "partial array reading for HDF5 Datasets requires offset (%ld) to "
+                       "be a multiple of the subdimension size (%ld)", offset, block_size);
+        return -1;
+    }
+    if (start[i] + count[i] > (hsize_t)dim[i])
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "partial array reading for HDF5 Datasets requires offset (%ld) "
+                       "and length (%ld) to represent a hyperslab (range [%ld,%ld] exceeds length of dimension #%d "
+                       "(%ld)))", offset, length, (long)start[i], (long)start[i] + count[i] - 1, i, dim[i]);
+        return -1;
+    }
+    while (i > 0)
+    {
+        block_size *= dim[i];
+        i--;
+        start[i] = (offset / block_size) % dim[i];
+        count[i] = 1;
+    }
+
+    if (H5Tget_class(base_type->datatype_id) == H5T_ENUM)
+    {
+        /* we read the data as an enumeration and perform the conversion to a native type after reading */
+        element_to_size = H5Tget_size(base_type->datatype_id);
+        /* we make a copy to ease the cleanup process */
+        mem_type_id = H5Tcopy(base_type->datatype_id);
+    }
+    else
+    {
+        get_hdf5_type_and_size(base_type->definition->read_type, &mem_type_id, &element_to_size);
+        /* we make a copy to ease the cleanup process */
+        mem_type_id = H5Tcopy(mem_type_id);
+    }
+
+    if (H5Sselect_hyperslab(dataset->dataspace_id, H5S_SELECT_SET, start, NULL, count, NULL) < 0)
+    {
+        coda_set_error(CODA_ERROR_HDF5, NULL);
+        return -1;
+    }
+
+    hlength = (hsize_t)length;
+    mem_space_id = H5Screate_simple(1, &hlength, NULL);
+    if (mem_space_id < 0)
+    {
+        coda_set_error(CODA_ERROR_HDF5, NULL);
+        H5Tclose(mem_type_id);
+        return -1;
+    }
+
+    if (H5Dread(dataset->dataset_id, mem_type_id, mem_space_id, dataset->dataspace_id, H5P_DEFAULT, dst) < 0)
+    {
+        coda_set_error(CODA_ERROR_HDF5, NULL);
+        H5Sclose(mem_space_id);
+        H5Tclose(mem_type_id);
+        return -1;
+    }
+
+    H5Sclose(mem_space_id);
+    H5Tclose(mem_type_id);
+    if (H5Sselect_all(dataset->dataspace_id) < 0)
+    {
+        coda_set_error(CODA_ERROR_HDF5, NULL);
+        return -1;
+    }
+
+    if (H5Tget_class(base_type->datatype_id) == H5T_ENUM)
+    {
+        hid_t super;
+        int native_element_size;
+
+        /* convert the enumeration data to our native type */
+        super = H5Tget_super(base_type->datatype_id);
+        if (super < 0)
+        {
+            coda_set_error(CODA_ERROR_HDF5, NULL);
+            return -1;
+        }
+        get_hdf5_type_and_size(base_type->definition->read_type, &mem_type_id, &native_element_size);
+        assert(native_element_size == element_to_size);
+        if (H5Tconvert(super, mem_type_id, length, dst, NULL, H5P_DEFAULT) < 0)
+        {
+            coda_set_error(CODA_ERROR_HDF5, NULL);
+            H5Tclose(super);
+            return -1;
+        }
+        H5Tclose(super);
+    }
+
+    return 0;
+}
+
 static int read_basic_type(const coda_cursor *cursor, void *dst, long dst_size)
 {
     coda_hdf5_basic_data_type *base_type;
     coda_hdf5_compound_data_type *compound_type = NULL;
+    coda_hdf5_dataset *dataset;
+    hid_t mem_space_id;
     hid_t datatype_to;
     char *buffer = NULL;
     char *buffer_offset;        /* position in buffer where our value is stored */
@@ -526,8 +619,7 @@ static int read_basic_type(const coda_cursor *cursor, void *dst, long dst_size)
         array_depth = cursor->n - 2;
         datatype_to = base_type->datatype_id;
     }
-    assert(((coda_hdf5_type *)cursor->stack[array_depth].type)->tag == tag_hdf5_attribute ||
-           ((coda_hdf5_type *)cursor->stack[array_depth].type)->tag == tag_hdf5_dataset);
+    assert(((coda_hdf5_type *)cursor->stack[array_depth].type)->tag == tag_hdf5_dataset);
 
     array_index = cursor->stack[array_depth + 1].index;
 
@@ -536,131 +628,98 @@ static int read_basic_type(const coda_cursor *cursor, void *dst, long dst_size)
         size = H5Tget_size(datatype_to);
     }
 
-    if (((coda_hdf5_type *)cursor->stack[array_depth].type)->tag == tag_hdf5_attribute)
+    dataset = (coda_hdf5_dataset *)cursor->stack[array_depth].type;
+
+    if (dataset->definition->num_dims > 0)
     {
-        coda_hdf5_attribute *attribute;
+        hsize_t coord[CODA_MAX_NUM_DIMS];
+        int i;
 
-        /* for attributes only the full array can be read (i.e. there is no data space that can be set) */
-
-        attribute = (coda_hdf5_attribute *)cursor->stack[array_depth].type;
-
-        buffer = malloc((size_t)attribute->definition->num_elements * size);
-        if (buffer == NULL)
+        for (i = dataset->definition->num_dims - 1; i >= 0; i--)
         {
-            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           (long)attribute->definition->num_elements * size, __FILE__, __LINE__);
+            coord[i] = array_index % dataset->definition->dim[i];
+            array_index = array_index / dataset->definition->dim[i];
+        }
+        if (H5Sselect_elements(dataset->dataspace_id, H5S_SELECT_SET, 1, (const hsize_t *)coord) < 0)
+        {
+            coda_set_error(CODA_ERROR_HDF5, NULL);
+            return -1;
+        }
+    }
+
+    if (base_type->is_variable_string)
+    {
+        hsize_t buffer_size;
+
+        if (H5Dvlen_get_buf_size(dataset->dataset_id, base_type->datatype_id, dataset->dataspace_id, &buffer_size) < 0)
+        {
+            coda_set_error(CODA_ERROR_HDF5, NULL);
             return -1;
         }
 
-        if (H5Aread(attribute->attribute_id, datatype_to, buffer) < 0)
+        /* if the data type uses 'H5T_STR_NULLTERM', we need to subtract 1 to get the actual string length */
+        if (buffer_size > 0 && H5Tget_strpad(base_type->datatype_id) == H5T_STR_NULLTERM)
+        {
+            buffer_size--;
+        }
+
+        size = (long)buffer_size;
+    }
+
+    buffer = malloc(size);
+    if (buffer == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                       (long)size, __FILE__, __LINE__);
+        return -1;
+    }
+
+    mem_space_id = H5Screate_simple(0, NULL, NULL);
+    if (mem_space_id < 0)
+    {
+        coda_set_error(CODA_ERROR_HDF5, NULL);
+        free(buffer);
+        return -1;
+    }
+    if (base_type->is_variable_string)
+    {
+        char *vlen_ptr;
+
+        if (H5Dread(dataset->dataset_id, datatype_to, mem_space_id, dataset->dataspace_id, H5P_DEFAULT, &vlen_ptr) < 0)
         {
             coda_set_error(CODA_ERROR_HDF5, NULL);
+            H5Sclose(mem_space_id);
             free(buffer);
             return -1;
         }
-
-        buffer_offset = &buffer[array_index * size];
+        memcpy(buffer, vlen_ptr, size);
+        if (H5Dvlen_reclaim(datatype_to, mem_space_id, H5P_DEFAULT, &vlen_ptr) < 0)
+        {
+            coda_set_error(CODA_ERROR_HDF5, NULL);
+            H5Sclose(mem_space_id);
+            free(buffer);
+            return -1;
+        }
     }
     else
     {
-        coda_hdf5_dataset *dataset;
-        hid_t mem_space_id;
-
-        dataset = (coda_hdf5_dataset *)cursor->stack[array_depth].type;
-
-        if (dataset->definition->num_dims > 0)
-        {
-            hsize_t coord[CODA_MAX_NUM_DIMS];
-            int i;
-
-            for (i = dataset->definition->num_dims - 1; i >= 0; i--)
-            {
-                coord[i] = array_index % dataset->definition->dim[i];
-                array_index = array_index / dataset->definition->dim[i];
-            }
-            if (H5Sselect_elements(dataset->dataspace_id, H5S_SELECT_SET, 1, (const hsize_t *)coord) < 0)
-            {
-                coda_set_error(CODA_ERROR_HDF5, NULL);
-                return -1;
-            }
-        }
-
-        if (base_type->is_variable_string)
-        {
-            hsize_t buffer_size;
-
-            if (H5Dvlen_get_buf_size(dataset->dataset_id, base_type->datatype_id, dataset->dataspace_id,
-                                     &buffer_size) < 0)
-            {
-                coda_set_error(CODA_ERROR_HDF5, NULL);
-                return -1;
-            }
-
-            /* if the data type uses 'H5T_STR_NULLTERM', we need to subtract 1 to get the actual string length */
-            if (buffer_size > 0 && H5Tget_strpad(base_type->datatype_id) == H5T_STR_NULLTERM)
-            {
-                buffer_size--;
-            }
-
-            size = (long)buffer_size;
-        }
-
-        buffer = malloc(size);
-        if (buffer == NULL)
-        {
-            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           (long)size, __FILE__, __LINE__);
-            return -1;
-        }
-
-        mem_space_id = H5Screate_simple(0, NULL, NULL);
-        if (mem_space_id < 0)
+        if (H5Dread(dataset->dataset_id, datatype_to, mem_space_id, dataset->dataspace_id, H5P_DEFAULT, buffer) < 0)
         {
             coda_set_error(CODA_ERROR_HDF5, NULL);
+            H5Sclose(mem_space_id);
             free(buffer);
             return -1;
         }
-        if (base_type->is_variable_string)
-        {
-            char *vlen_ptr;
-
-            if (H5Dread(dataset->dataset_id, datatype_to, mem_space_id, dataset->dataspace_id, H5P_DEFAULT,
-                        &vlen_ptr) < 0)
-            {
-                coda_set_error(CODA_ERROR_HDF5, NULL);
-                H5Sclose(mem_space_id);
-                free(buffer);
-                return -1;
-            }
-            memcpy(buffer, vlen_ptr, size);
-            if (H5Dvlen_reclaim(datatype_to, mem_space_id, H5P_DEFAULT, &vlen_ptr) < 0)
-            {
-                coda_set_error(CODA_ERROR_HDF5, NULL);
-                H5Sclose(mem_space_id);
-                free(buffer);
-                return -1;
-            }
-        }
-        else
-        {
-            if (H5Dread(dataset->dataset_id, datatype_to, mem_space_id, dataset->dataspace_id, H5P_DEFAULT, buffer) < 0)
-            {
-                coda_set_error(CODA_ERROR_HDF5, NULL);
-                H5Sclose(mem_space_id);
-                free(buffer);
-                return -1;
-            }
-        }
-        H5Sclose(mem_space_id);
-        if (H5Sselect_all(dataset->dataspace_id) < 0)
-        {
-            coda_set_error(CODA_ERROR_HDF5, NULL);
-            free(buffer);
-            return -1;
-        }
-
-        buffer_offset = buffer;
     }
+    H5Sclose(mem_space_id);
+    if (H5Sselect_all(dataset->dataspace_id) < 0)
+    {
+        coda_set_error(CODA_ERROR_HDF5, NULL);
+        free(buffer);
+        return -1;
+    }
+
+    buffer_offset = buffer;
 
     /* convert buffer and store result in dst */
 
@@ -782,16 +841,6 @@ int coda_hdf5_cursor_read_double(const coda_cursor *cursor, double *dst)
     return read_basic_type(cursor, dst, -1);
 }
 
-int coda_hdf5_cursor_read_char(const coda_cursor *cursor, char *dst)
-{
-    (void)cursor;
-    (void)dst;
-
-    /* HDF5 does not have char types */
-    assert(0);
-    exit(1);
-}
-
 int coda_hdf5_cursor_read_string(const coda_cursor *cursor, char *dst, long dst_size)
 {
     return read_basic_type(cursor, dst, dst_size);
@@ -847,12 +896,52 @@ int coda_hdf5_cursor_read_double_array(const coda_cursor *cursor, double *dst)
     return read_array(cursor, dst);
 }
 
-int coda_hdf5_cursor_read_char_array(const coda_cursor *cursor, char *dst)
+int coda_hdf5_cursor_read_int8_partial_array(const coda_cursor *cursor, long offset, long length, int8_t *dst)
 {
-    (void)cursor;
-    (void)dst;
+    return read_partial_array(cursor, offset, length, dst);
+}
 
-    /* HDF5 does not have single char types */
-    assert(0);
-    exit(1);
+int coda_hdf5_cursor_read_uint8_partial_array(const coda_cursor *cursor, long offset, long length, uint8_t *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
+}
+
+int coda_hdf5_cursor_read_int16_partial_array(const coda_cursor *cursor, long offset, long length, int16_t *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
+}
+
+int coda_hdf5_cursor_read_uint16_partial_array(const coda_cursor *cursor, long offset, long length, uint16_t *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
+}
+
+int coda_hdf5_cursor_read_int32_partial_array(const coda_cursor *cursor, long offset, long length, int32_t *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
+}
+
+int coda_hdf5_cursor_read_uint32_partial_array(const coda_cursor *cursor, long offset, long length, uint32_t *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
+}
+
+int coda_hdf5_cursor_read_int64_partial_array(const coda_cursor *cursor, long offset, long length, int64_t *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
+}
+
+int coda_hdf5_cursor_read_uint64_partial_array(const coda_cursor *cursor, long offset, long length, uint64_t *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
+}
+
+int coda_hdf5_cursor_read_float_partial_array(const coda_cursor *cursor, long offset, long length, float *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
+}
+
+int coda_hdf5_cursor_read_double_partial_array(const coda_cursor *cursor, long offset, long length, double *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
 }

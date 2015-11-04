@@ -252,3 +252,28 @@ int coda_grib_cursor_read_float_array(const coda_cursor *cursor, float *dst)
 
     return 0;
 }
+
+int coda_grib_cursor_read_float_partial_array(const coda_cursor *cursor, long offset, long length, float *dst)
+{
+    coda_grib_value_array *array = (coda_grib_value_array *)cursor->stack[cursor->n - 1].type;
+
+    if (array->num_elements > 0)
+    {
+        coda_cursor element_cursor = *cursor;
+        long i;
+
+        element_cursor.n++;
+        element_cursor.stack[element_cursor.n - 1].type = array->base_type;
+        element_cursor.stack[element_cursor.n - 1].bit_offset = -1;
+        for (i = 0; i < length; i++)
+        {
+            element_cursor.stack[element_cursor.n - 1].index = offset + i;
+            if (coda_grib_cursor_read_float(&element_cursor, &((float *)dst)[i]) != 0)
+            {
+                return -1;
+            }
+        }
+    }
+
+    return 0;
+}

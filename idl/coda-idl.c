@@ -3524,14 +3524,7 @@ static void register_idl_struct_types(void)
 
 static int register_idl_functions_and_procedures(void)
 {
-
-#ifdef HAVE_IDL_SYSFUN_DEF2
-
-    /* new-style function declarations */
-
-#ifdef HAVE_IDL_SYSRTN_UNION
-
-    /* sysrtn is a union in sysfun_def2 */
+    /* new-function declarations */
 
     static IDL_SYSFUN_DEF2 idl_func_addr[] = {
         {{x_coda_attributes}, "CODA_ATTRIBUTES", 1, IDL_MAXPARAMS, 0, 0},
@@ -3558,92 +3551,14 @@ static int register_idl_functions_and_procedures(void)
         {{x_coda_version}, "CODA_VERSION", 0, 0, 0, 0}
     };
 
-    /* new-style procedure declarations */
+    /* procedure declarations */
 
     static IDL_SYSFUN_DEF2 idl_proc_addr[] = {
         {{(IDL_SYSRTN_GENERIC)x_coda_unload}, "CODA_UNLOAD", 0, 0, 0, 0}
     };
 
-#else
-
-    /* sysrtn is of type IDL_FUN_RET */
-
-    static IDL_SYSFUN_DEF2 idl_func_addr[] = {
-        {x_coda_attributes, "CODA_ATTRIBUTES", 1, IDL_MAXPARAMS, 0, 0},
-        {x_coda_close, "CODA_CLOSE", 1, 1, 0, 0},
-        {x_coda_description, "CODA_DESCRIPTION", 1, IDL_MAXPARAMS, 0, 0},
-        {x_coda_eval, "CODA_EVAL", 1, IDL_MAXPARAMS, 0, 0},
-        {x_coda_fetch, "CODA_FETCH", 1, IDL_MAXPARAMS, 0, 0},
-        {x_coda_fetch_datahandle, "CODA_FETCH_DATAHANDLE", 1, IDL_MAXPARAMS, 0, 0},
-        {x_coda_fieldavailable, "CODA_FIELDAVAILABLE", 2, IDL_MAXPARAMS, 0, 0},
-        {x_coda_fieldcount, "CODA_FIELDCOUNT", 1, IDL_MAXPARAMS, 0, 0},
-        {x_coda_fieldnames, "CODA_FIELDNAMES", 1, IDL_MAXPARAMS, 0, 0},
-        {x_coda_getopt, "CODA_GETOPT", 1, 1, 0, 0},
-        {x_coda_is_no_data, "CODA_IS_NO_DATA", 1, 1, 0, 0},
-        {x_coda_is_error, "CODA_IS_ERROR", 1, 1, 0, 0},
-        {x_coda_open, "CODA_OPEN", 1, 1, 0, 0},
-        {x_coda_open_as, "CODA_OPEN_AS", 4, 4, 0, 0},
-        {x_coda_product_class, "CODA_PRODUCT_CLASS", 1, 1, 0, 0},
-        {x_coda_product_type, "CODA_PRODUCT_TYPE", 1, 1, 0, 0},
-        {x_coda_product_version, "CODA_PRODUCT_VERSION", 1, 1, 0, 0},
-        {x_coda_setopt, "CODA_SETOPT", 2, 2, 0, 0},
-        {x_coda_size, "CODA_SIZE", 1, IDL_MAXPARAMS, 0, 0},
-        {x_coda_time_to_string, "CODA_TIME_TO_STRING", 1, 1, 0, 0},
-        {x_coda_unit, "CODA_UNIT", 1, IDL_MAXPARAMS, 0, 0},
-        {x_coda_version, "CODA_VERSION", 0, 0, 0, 0}
-    };
-
-    /* new-style procedure declarations */
-
-    static IDL_SYSFUN_DEF2 idl_proc_addr[] = {
-        {(IDL_FUN_RET)x_coda_unload, "CODA_UNLOAD", 0, 0, 0, 0}
-    };
-
-#endif
-
     return IDL_SysRtnAdd(idl_func_addr, TRUE, sizeof(idl_func_addr) / sizeof(IDL_SYSFUN_DEF2)) &&
         IDL_SysRtnAdd(idl_proc_addr, FALSE, sizeof(idl_proc_addr) / sizeof(IDL_SYSFUN_DEF2));
-
-#else
-
-    /* old-style function declarations */
-
-    static IDL_SYSFUN_DEF idl_func_addr[] = {
-        {x_coda_attributes, "CODA_ATTRIBUTES", 1, IDL_MAXPARAMS, 0},
-        {x_coda_close, "CODA_CLOSE", 1, 1, 0},
-        {x_coda_description, "CODA_DESCRIPTION", 1, IDL_MAXPARAMS, 0},
-        {x_coda_eval, "CODA_EVAL", 1, IDL_MAXPARAMS, 0},
-        {x_coda_fetch, "CODA_FETCH", 1, IDL_MAXPARAMS, 0},
-        {x_coda_fetch_datahandle, "CODA_FETCH_DATAHANDLE", 1, IDL_MAXPARAMS, 0},
-        {x_coda_fieldavailable, "CODA_FIELDAVAILABLE", 2, IDL_MAXPARAMS, 0},
-        {x_coda_fieldcount, "CODA_FIELDCOUNT", 1, IDL_MAXPARAMS, 0},
-        {x_coda_fieldnames, "CODA_FIELDNAMES", 1, IDL_MAXPARAMS, 0},
-        {x_coda_getopt, "CODA_GETOPT", 1, 1, 0},
-        {x_coda_is_no_data, "CODA_IS_NO_DATA", 1, 1, 0},
-        {x_coda_is_error, "CODA_IS_ERROR", 1, 1, 0},
-        {x_coda_open, "CODA_OPEN", 1, 1, 0},
-        {x_coda_open_as, "CODA_OPEN_AS", 4, 4, 0},
-        {x_coda_product_class, "CODA_PRODUCT_CLASS", 1, 1, 0},
-        {x_coda_product_type, "CODA_PRODUCT_TYPE", 1, 1, 0},
-        {x_coda_product_version, "CODA_PRODUCT_VERSION", 1, 1, 0},
-        {x_coda_setopt, "CODA_SETOPT", 2, 2, 0},
-        {x_coda_size, "CODA_SIZE", 1, IDL_MAXPARAMS, 0},
-        {x_coda_time_to_string, "CODA_TIME_TO_STRING", 1, 1, 0},
-        {x_coda_unit, "CODA_UNIT", 1, IDL_MAXPARAMS, 0},
-        {x_coda_version, "CODA_VERSION", 0, 0, 0}
-    };
-
-    /* old-style procedure declarations */
-
-    static IDL_SYSFUN_DEF idl_proc_addr[] = {
-        {(IDL_FUN_RET)x_coda_unload, "CODA_UNLOAD", 0, 0, 0}
-    };
-
-    return IDL_AddSystemRoutine(idl_func_addr, TRUE, sizeof(idl_func_addr) / sizeof(IDL_SYSFUN_DEF)) &&
-        IDL_AddSystemRoutine(idl_proc_addr, FALSE, sizeof(idl_proc_addr) / sizeof(IDL_SYSFUN_DEF));
-
-#endif
-
 }
 
 void init_dlm_state(void)

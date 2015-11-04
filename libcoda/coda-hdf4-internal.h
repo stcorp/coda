@@ -34,6 +34,7 @@ typedef enum hdf4_type_tag_enum
 {
     tag_hdf4_basic_type,        /* coda_integer_class, coda_real_class, coda_text_class */
     tag_hdf4_basic_type_array,  /* coda_array_class */
+    tag_hdf4_string,    /* coda_text_class (= attribute containing array of chars) */
     tag_hdf4_attributes,        /* coda_record_class */
     tag_hdf4_file_attributes,   /* coda_record_class */
     tag_hdf4_GRImage,   /* coda_array_class */

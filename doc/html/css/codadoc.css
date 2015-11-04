@@ -95,7 +95,8 @@ a.elRef { font-weight: bold; }
 a.code { text-decoration: none; font-weight: normal; color: #4444ee; background-color: inherit; }
 a.codeRef { font-weight: normal; color: #4444ee; background-color: inherit; }
 dl.el { margin-left: -1cm }
-div.fragment { width: 100%; border: none; color: inherit; background-color: #eeeeee; }
+div.fragment { width: 100%; border: none; color: inherit; background-color: #eeeeee; padding: 4px 6px; margin: 4px 8px 4px 2px; }
+div.line { font-family: monospace, fixed; line-height: 1.0; text-wrap: unrestricted; white-space: pre; line-height: 1.25;}
 div.ah { background-color: black; font-weight: bold; color: #ffffff; background-color: inherit; margin-bottom: 3px; margin-top: 3px }
 div.groupHeader { margin-left: 16px; margin-top: 12px; margin-bottom: 6px; font-weight: bold }
 div.groupText { margin-left: 16px; font-style: italic; font-size: smaller }

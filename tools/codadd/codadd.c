@@ -101,6 +101,14 @@ static void print_help()
     printf("            -o, --output <filename>\n");
     printf("                    write output to specified file\n");
     printf("\n");
+    printf("    codadd [-D definitionpath] definition [<definition options>] <product file>\n");
+    printf("        Create a CODA definition XML file with the format definition of a\n");
+    printf("        product. The XML file is a standalone definition file similar to those\n");
+    printf("        used within .codadef files.\n");
+    printf("        Definition options:\n");
+    printf("            -o, --output <filename>\n");
+    printf("                    write output to specified file\n");
+    printf("\n");
     printf("    codadd [-D definitionpath] dtree <format>\n");
     printf("        Shows the product recognition detection tree for the given file format.\n");
     printf("        Supported file formats are: ascii, binary, xml\n");
@@ -366,7 +374,7 @@ int main(int argc, char *argv[])
             exit(1);
         }
     }
-    else if (strcmp(argv[i], "def") == 0)
+    else if (strcmp(argv[i], "definition") == 0)
     {
         const char *output_file_name = NULL;
 

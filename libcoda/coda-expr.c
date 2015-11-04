@@ -39,7 +39,7 @@
  * More information on the CODA expression language and its ascii syntax can be found in the CODA documentation.
  *
  * The example below shows how to evaluate a simple integer expression that does not make use of any product data:
- * \code
+ * \code{.c}
  * const char *equation = "1+2";
  * coda_expression *expr;
  * long result;
@@ -53,7 +53,7 @@
  * However, in most cases you will want to run an expression on actual product data. In the example below the expression
  * expects a cursor that points to a record which has two fields, 'numerator' and 'denominator', and it will return a
  * floating point value with the division of those two field values.
- * \code
+ * \code{.c}
  * const char *equation = "float(./numerator)/float(./denominator)";
  * coda_cursor cursor;
  * coda_expression *expr;
@@ -3560,7 +3560,7 @@ int coda_expression_eval_void(const coda_expression *expr, const coda_cursor *cu
  */
 
 /** \fn int coda_expression_from_string(const char *exprstring, coda_expression **expr)
- * \brief Create a new CODA expression object by parsing a string containing a CODA expression.
+ * Create a new CODA expression object by parsing a string containing a CODA expression.
  * The string should contain a valid CODA expression.
  * The returned expression object should be cleaned up using coda_expression_delete() after it has been used.
  * \param exprstring A string containing the string representation of the CODA expression 

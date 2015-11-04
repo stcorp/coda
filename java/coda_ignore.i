@@ -53,4 +53,3 @@
 %ignore coda_str64;
 %ignore coda_str64u;
 %ignore coda_strfl;
-

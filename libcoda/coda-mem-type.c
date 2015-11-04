@@ -592,11 +592,11 @@ coda_mem_array *coda_mem_array_new(coda_type_array *definition, coda_dynamic_typ
     {
         long i;
 
-        type->element = malloc(BLOCK_SIZE * sizeof(coda_dynamic_type *));
+        type->element = malloc(type->definition->num_elements * sizeof(coda_dynamic_type *));
         if (type->element == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           BLOCK_SIZE * sizeof(coda_dynamic_type *), __FILE__, __LINE__);
+                           type->definition->num_elements * sizeof(coda_dynamic_type *), __FILE__, __LINE__);
             coda_mem_type_delete((coda_dynamic_type *)type);
             return NULL;
         }

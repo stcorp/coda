@@ -1,6 +1,6 @@
 Copyright (C) 2007-2015 S[&]T, The Netherlands
 
-                CODA 2.13 Release Notes
+                CODA 2.14 Release Notes
 
 
 CODA is the Common Data Access framework that allows reading of scientific data
@@ -15,7 +15,7 @@ Basic Envisat Atmospheric Toolbox (BEAT) and the Basic Radar Altimetry Toolbox
 The CODA software package comes with interfaces for C, Fortran, IDL, MATLAB,
 Python, and Java and several useful command-line tools.
 
-In order to make use of the data acces facilities of CODA, you will need to
+In order to make use of the data reading facilities of CODA, you will need to
 have the CODA product format definition files (.codadef files) for the data
 products that you want to access. It is important to note that the CODA
 software package does not come with any product format definition files itself!
@@ -24,7 +24,7 @@ use of CODA.
 
 For files in netCDF, CDF, HDF4, HDF5, GRIB, RINEX, or SP3 format you can use
 CODA without any .codadef files, since for these formats CODA either comes with
-a build in definition of the format or CODA determines the format from the file
+a built in definition of the format or CODA determines the format from the file
 itself.
 
 

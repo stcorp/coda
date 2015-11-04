@@ -488,6 +488,7 @@ int coda_hdf4_open(const char *filename, int64_t file_size, const coda_product_d
         if (product_file->file_id == -1)
         {
             coda_set_error(CODA_ERROR_HDF4, NULL);
+            coda_hdf4_close((coda_product *)product_file);
             return -1;
         }
         if (Vstart(product_file->file_id) != 0)

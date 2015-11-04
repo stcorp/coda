@@ -274,6 +274,106 @@ static int read_array(const coda_cursor *cursor, void *dst)
     return 0;
 }
 
+static int read_partial_array(const coda_cursor *cursor, long offset, long length, void *dst)
+{
+    coda_cdf_variable *variable = (coda_cdf_variable *)cursor->stack[cursor->n - 1].type;
+    coda_type_class type_class;
+    long record_size = variable->num_values_per_record * variable->value_size;
+    int record_from_id, record_to_id;
+    int64_t target_offset;
+    int i;
+
+    assert(variable->tag == tag_cdf_variable);
+    if (variable->base_type == NULL)
+    {
+        type_class = variable->definition->type_class;
+    }
+    else
+    {
+        type_class = variable->base_type->definition->type_class;
+    }
+
+    record_from_id = offset / variable->num_values_per_record;
+    record_to_id = (offset + length) / variable->num_values_per_record;
+    target_offset = 0;
+
+    for (i = record_from_id; i <= record_to_id; i++)
+    {
+        int64_t local_offset = 0;       /* byte offset within record */
+        int64_t local_size = record_size;       /* amount of bytes to read */
+
+        /* TODO: handle sparse records */
+        if (variable->offset[i] < 0)
+        {
+            coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, "Missing record not supported for CDF variable");
+            return -1;
+        }
+
+        if (offset + length < (i + 1) * variable->num_values_per_record)
+        {
+            local_size = (offset + length - i * variable->num_values_per_record) * variable->value_size;
+        }
+        if (offset > i * variable->num_values_per_record)
+        {
+            local_offset = (offset - i * variable->num_values_per_record) * variable->value_size;
+            local_size -= local_offset;
+        }
+
+        if (variable->data != NULL)
+        {
+            memcpy(&((uint8_t *)dst)[target_offset], &variable->data[variable->offset[i] + local_offset], local_size);
+        }
+        else
+        {
+            if (read_bytes(((coda_cdf_product *)cursor->product)->raw_product, variable->offset[i] + local_offset,
+                           local_size, &((uint8_t *)dst)[target_offset]) != 0)
+            {
+                return -1;
+            }
+        }
+        target_offset += local_size;
+    }
+    if (type_class != coda_text_class)
+    {
+#ifdef WORDS_BIGENDIAN
+        coda_endianness system_endianness = coda_big_endian;
+#else
+        coda_endianness system_endianness = coda_little_endian;
+#endif
+        if (((coda_cdf_product *)cursor->product)->endianness != system_endianness)
+        {
+            switch (variable->value_size)
+            {
+                case 1:
+                    break;
+                case 2:
+                    for (i = 0; i < length; i++)
+                    {
+                        swap2(&((int16_t *)dst)[i]);
+                    }
+                    break;
+                case 4:
+                    for (i = 0; i < length; i++)
+                    {
+                        swap4(&((int32_t *)dst)[i]);
+                    }
+                    break;
+                case 8:
+                    for (i = 0; i < length; i++)
+                    {
+                        swap8(&((int64_t *)dst)[i]);
+                    }
+                    break;
+                default:
+                    assert(0);
+                    exit(1);
+            }
+        }
+    }
+
+    return 0;
+}
+
 static int read_basic_type(const coda_cursor *cursor, void *dst, long size_boundary)
 {
     coda_cdf_variable *variable = (coda_cdf_variable *)cursor->stack[cursor->n - 1].type;
@@ -465,4 +565,54 @@ int coda_cdf_cursor_read_double_array(const coda_cursor *cursor, double *dst)
 int coda_cdf_cursor_read_char_array(const coda_cursor *cursor, char *dst)
 {
     return read_array(cursor, dst);
+}
+
+int coda_cdf_cursor_read_int8_partial_array(const coda_cursor *cursor, long offset, long length, int8_t *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
+}
+
+int coda_cdf_cursor_read_uint8_partial_array(const coda_cursor *cursor, long offset, long length, uint8_t *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
+}
+
+int coda_cdf_cursor_read_int16_partial_array(const coda_cursor *cursor, long offset, long length, int16_t *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
+}
+
+int coda_cdf_cursor_read_uint16_partial_array(const coda_cursor *cursor, long offset, long length, uint16_t *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
+}
+
+int coda_cdf_cursor_read_int32_partial_array(const coda_cursor *cursor, long offset, long length, int32_t *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
+}
+
+int coda_cdf_cursor_read_uint32_partial_array(const coda_cursor *cursor, long offset, long length, uint32_t *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
+}
+
+int coda_cdf_cursor_read_int64_partial_array(const coda_cursor *cursor, long offset, long length, int64_t *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
+}
+
+int coda_cdf_cursor_read_float_partial_array(const coda_cursor *cursor, long offset, long length, float *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
+}
+
+int coda_cdf_cursor_read_double_partial_array(const coda_cursor *cursor, long offset, long length, double *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
+}
+
+int coda_cdf_cursor_read_char_partial_array(const coda_cursor *cursor, long offset, long length, char *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
 }

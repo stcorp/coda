@@ -53,7 +53,7 @@ What you will need
     higher, but earlier versions may also work.
 
   - If you plan on using the MATLAB interface you need a recent version of
-    MATLAB: The MATLAB interface will only work with MATLAB version 5.3 (R11)
+    MATLAB: The MATLAB interface will only work with MATLAB version 6.5 (R13)
     and higher.
 
   - If you plan on using the Python interface you need Python version 2.6 or

@@ -30,6 +30,8 @@
           </ul>
         </li>
         <li><a href="#filtering">Filtering of data</a></li>
+        <li><a href="#json">Viewing and exporting data in JSON format</a></li>
+        <li><a href="#yaml">Viewing and exporting data in YAML format</a></li>
         <li><a href="#debug">Debugging a product file</a></li>
       </ul>
 
@@ -297,6 +299,51 @@ Vgroup "dataset" containing:
       <p>When parsing a filter string, codadump will eliminate all duplicate entries in a filter. Say that your filter string would contain 'rec;rec.field_1'. In such a case codadump is able to deduce that the 'rec.field_1' filter part is already included in the previous filter part ('rec') and codadump will thus skip the 'rec.field_1' filter entry.</p>
 
       <p>When performing a codadump operation with a filter, codadump will handle the filter entries in the order that they are specified in the filter string. For instance, if you try to display fields 'field_1' and 'field_2' with the filter string 'field_2;field_1' then codadump will first display field_2 and then field_1.</p>
+
+      <h2 id="json">Viewing and exporting data in JSON format</h2>
+
+<pre>
+    codadump [-D definitionpath] json [&lt;json options&gt;] &lt;product file&gt;
+        Write the contents of a product file to a JSON file
+        JSON options:
+            -a, --attributes
+                    include attributes - items with attributes will be
+                    encapsulated in a {'attr':&lt;attr&gt;,'data':&lt;data&gt;} object
+            -d, --disable_conversions
+                    do not perform unit/value conversions
+            -o, --output &lt;filename&gt;
+                    write output to specified file
+            -p, --path &lt;path&gt;
+                    path (in the form of a CODA node expression) to the
+                    location in the product where the operation should begin
+            --no_special_types
+                    bypass special data types from the CODA format definition -
+                    data with a special type is treated using its non-special
+                    base type
+ </pre>
+
+      <h2 id="yaml">Viewing and exporting data in YAML format</h2>
+
+<pre>
+    codadump [-D definitionpath] yaml [&lt;json options&gt;] &lt;product file&gt;
+        Write the contents of a product file to a YAML file
+        YAML options:
+            -a, --attributes
+                    include attributes - items with attributes will be
+                    encapsulated in a an associative array with keys 'attr'
+                    and 'data'
+            -d, --disable_conversions
+                    do not perform unit/value conversions
+            -o, --output &lt;filename&gt;
+                    write output to specified file
+            -p, --path &lt;path&gt;
+                    path (in the form of a CODA node expression) to the
+                    location in the product where the operation should begin
+            --no_special_types
+                    bypass special data types from the CODA format definition -
+                    data with a special type is treated using its non-special
+                    base type
+ </pre>
 
       <h2 id="debug">Debugging a product file</h2>
 

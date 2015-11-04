@@ -434,6 +434,18 @@ static void print_function_definitions(void)
     PRINT_FUNCDEF(coda_cursor_read_double_array, int);
     PRINT_FUNCDEF(coda_cursor_read_char_array, int);
 
+    PRINT_FUNCDEF(coda_cursor_read_int8_partial_array, int);
+    PRINT_FUNCDEF(coda_cursor_read_uint8_partial_array, int);
+    PRINT_FUNCDEF(coda_cursor_read_int16_partial_array, int);
+    PRINT_FUNCDEF(coda_cursor_read_uint16_partial_array, int);
+    PRINT_FUNCDEF(coda_cursor_read_int32_partial_array, int);
+    PRINT_FUNCDEF(coda_cursor_read_uint32_partial_array, int);
+    PRINT_FUNCDEF(coda_cursor_read_int64_partial_array, int);
+    PRINT_FUNCDEF(coda_cursor_read_uint64_partial_array, int);
+    PRINT_FUNCDEF(coda_cursor_read_float_partial_array, int);
+    PRINT_FUNCDEF(coda_cursor_read_double_partial_array, int);
+    PRINT_FUNCDEF(coda_cursor_read_char_partial_array, int);
+
     PRINT_FUNCDEF(coda_cursor_read_complex_double_pair, int);
     PRINT_FUNCDEF(coda_cursor_read_complex_double_pairs_array, int);
     PRINT_FUNCDEF(coda_cursor_read_complex_double_split, int);

@@ -1,3 +1,39 @@
+2.14 2015-09-04
+~~~~~~~~~~~~~~~
+
+* HDF4 character array attributes are now interpreted as strings.
+  Note that this breaks backward compatibility for any routines that
+  read attribute data from HDF4 files using CODA.
+
+* Improved support for reading of HDF5 attributes:
+  - Scalar attributes are no longer inside an array element
+  - Allow reading of scalar variable length string attributes
+
+* Added partial (offset+length) array reading functions to C, Python,
+  Fortran, and Java interfaces.
+
+* Added JSON and YAML export options to codadump.
+
+* codaeval now properly throws an error when trying to evaluate a 'void'
+  or 'node' expression.
+
+* Fixed sorting of product classes (last item was not allways sorted).
+
+* Fixed memory issue in gracefull handling of HDF5 files with invalid
+  content.
+
+* Fixed issue where coda_cursor_goto() could navigate to the wrong record
+  field in case there was a field available whose name started with that of
+  another field in the same record.
+
+* Added 'definition' mode to codadd tool.
+
+* MATLAB MEX extensions on Unix-based platforms are no longer build using
+  the 'mex' script that comes with MATLAB, but using self derived compilation
+  settings.
+
+* Dropped support for MATLAB R11/R12 and IDL V5.x.
+
 2.13 2015-04-29
 ~~~~~~~~~~~~~~~
 

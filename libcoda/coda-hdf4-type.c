@@ -44,6 +44,8 @@ void coda_hdf4_type_delete(coda_dynamic_type *type)
         case tag_hdf4_basic_type_array:
             coda_dynamic_type_delete((coda_dynamic_type *)((coda_hdf4_basic_type_array *)type)->basic_type);
             break;
+        case tag_hdf4_string:
+            break;
         case tag_hdf4_attributes:
             if (((coda_hdf4_attributes *)type)->attribute != NULL)
             {
@@ -183,7 +185,7 @@ static int get_conversion_from_attributes(const coda_hdf4_product *product, coda
     return 0;
 }
 
-static coda_hdf4_type *coda_hdf4_basic_type_new(coda_format format, int32 data_type, coda_conversion *conversion)
+static coda_hdf4_type *basic_type_new(int32 data_type, coda_conversion *conversion)
 {
     coda_hdf4_type *type;
     int result = 0;
@@ -201,15 +203,15 @@ static coda_hdf4_type *coda_hdf4_basic_type_new(coda_format format, int32 data_t
 
     if (data_type == DFNT_CHAR)
     {
-        type->definition = (coda_type *)coda_type_text_new(format);
+        type->definition = (coda_type *)coda_type_text_new(coda_format_hdf4);
     }
     else if (data_type == DFNT_FLOAT32 || data_type == DFNT_FLOAT64)
     {
-        type->definition = (coda_type *)coda_type_number_new(format, coda_real_class);
+        type->definition = (coda_type *)coda_type_number_new(coda_format_hdf4, coda_real_class);
     }
     else
     {
-        type->definition = (coda_type *)coda_type_number_new(format, coda_integer_class);
+        type->definition = (coda_type *)coda_type_number_new(coda_format_hdf4, coda_integer_class);
     }
     if (type->definition == NULL)
     {
@@ -275,8 +277,7 @@ static coda_hdf4_type *coda_hdf4_basic_type_new(coda_format format, int32 data_t
     return type;
 }
 
-static coda_hdf4_basic_type_array *coda_hdf4_basic_type_array_new(coda_format format, int32 data_type, int32 count,
-                                                                  coda_conversion *conversion)
+static coda_hdf4_basic_type_array *basic_type_array_new(int32 data_type, int32 count, coda_conversion *conversion)
 {
     coda_hdf4_basic_type_array *type;
 
@@ -292,7 +293,7 @@ static coda_hdf4_basic_type_array *coda_hdf4_basic_type_array_new(coda_format fo
     type->tag = tag_hdf4_basic_type_array;
     type->basic_type = NULL;
 
-    type->definition = coda_type_array_new(format);
+    type->definition = coda_type_array_new(coda_format_hdf4);
     if (type->definition == NULL)
     {
         coda_hdf4_type_delete((coda_dynamic_type *)type);
@@ -303,13 +304,43 @@ static coda_hdf4_basic_type_array *coda_hdf4_basic_type_array_new(coda_format fo
         coda_hdf4_type_delete((coda_dynamic_type *)type);
         return NULL;
     }
-    type->basic_type = coda_hdf4_basic_type_new(format, data_type, conversion);
+    type->basic_type = basic_type_new(data_type, conversion);
     if (type->basic_type == NULL)
     {
         coda_hdf4_type_delete((coda_dynamic_type *)type);
         return NULL;
     }
     if (coda_type_array_set_base_type(type->definition, type->basic_type->definition) != 0)
+    {
+        coda_hdf4_type_delete((coda_dynamic_type *)type);
+        return NULL;
+    }
+
+    return type;
+}
+
+static coda_hdf4_type *string_new(int32 count)
+{
+    coda_hdf4_type *type;
+
+    type = (coda_hdf4_type *)malloc(sizeof(coda_hdf4_type));
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                       (long)sizeof(coda_hdf4_type), __FILE__, __LINE__);
+        return NULL;
+    }
+    type->backend = coda_backend_hdf4;
+    type->definition = NULL;
+    type->tag = tag_hdf4_string;
+
+    type->definition = (coda_type *)coda_type_text_new(coda_format_hdf4);
+    if (type->definition == NULL)
+    {
+        coda_hdf4_type_delete((coda_dynamic_type *)type);
+        return NULL;
+    }
+    if (coda_type_set_byte_size(type->definition, count) != 0)
     {
         coda_hdf4_type_delete((coda_dynamic_type *)type);
         return NULL;
@@ -396,13 +427,15 @@ static coda_hdf4_attributes *attributes_for_GRImage(coda_hdf4_product *product, 
         }
         if (length == 1)
         {
-            type->attribute[attr_index - 1] =
-                (coda_hdf4_type *)coda_hdf4_basic_type_new(coda_format_hdf4, data_type, NULL);
+            type->attribute[attr_index - 1] = (coda_hdf4_type *)basic_type_new(data_type, NULL);
+        }
+        else if (data_type == DFNT_CHAR)
+        {
+            type->attribute[attr_index - 1] = string_new(length);
         }
         else
         {
-            type->attribute[attr_index - 1] =
-                (coda_hdf4_type *)coda_hdf4_basic_type_array_new(coda_format_hdf4, data_type, length, NULL);
+            type->attribute[attr_index - 1] = (coda_hdf4_type *)basic_type_array_new(data_type, length, NULL);
         }
         if (coda_type_record_create_field(type->definition, hdf4_name, type->attribute[attr_index - 1]->definition) !=
             0)
@@ -433,9 +466,7 @@ static coda_hdf4_attributes *attributes_for_GRImage(coda_hdf4_product *product, 
             for (i = 0; i < type->num_data_labels; i++)
             {
                 attr_index++;
-                type->attribute[attr_index - 1] =
-                    (coda_hdf4_type *)coda_hdf4_basic_type_array_new(product->format, DFNT_CHAR,
-                                                                     ANannlen(type->ann_id[i]), NULL);
+                type->attribute[attr_index - 1] = string_new(ANannlen(type->ann_id[i]));
                 if (type->attribute[attr_index - 1] == NULL)
                 {
                     coda_hdf4_type_delete((coda_dynamic_type *)type);
@@ -462,8 +493,7 @@ static coda_hdf4_attributes *attributes_for_GRImage(coda_hdf4_product *product, 
             {
                 attr_index++;
                 length = ANannlen(type->ann_id[type->num_data_labels + i]);
-                type->attribute[attr_index - 1] =
-                    (coda_hdf4_type *)coda_hdf4_basic_type_array_new(product->format, DFNT_CHAR, length, NULL);
+                type->attribute[attr_index - 1] = string_new(length);
                 if (type->attribute[attr_index - 1] == NULL)
                 {
                     coda_hdf4_type_delete((coda_dynamic_type *)type);
@@ -565,13 +595,15 @@ static coda_hdf4_attributes *attributes_for_SDS(coda_hdf4_product *product, int3
         }
         if (length == 1)
         {
-            type->attribute[attr_index - 1] =
-                (coda_hdf4_type *)coda_hdf4_basic_type_new(product->format, data_type, NULL);
+            type->attribute[attr_index - 1] = (coda_hdf4_type *)basic_type_new(data_type, NULL);
+        }
+        else if (data_type == DFNT_CHAR)
+        {
+            type->attribute[attr_index - 1] = string_new(length);
         }
         else
         {
-            type->attribute[attr_index - 1] =
-                (coda_hdf4_type *)coda_hdf4_basic_type_array_new(product->format, data_type, length, NULL);
+            type->attribute[attr_index - 1] = (coda_hdf4_type *)basic_type_array_new(data_type, length, NULL);
         }
         if (type->attribute[attr_index - 1] == NULL)
         {
@@ -607,9 +639,7 @@ static coda_hdf4_attributes *attributes_for_SDS(coda_hdf4_product *product, int3
             for (i = 0; i < type->num_data_labels; i++)
             {
                 attr_index++;
-                type->attribute[attr_index - 1] =
-                    (coda_hdf4_type *)coda_hdf4_basic_type_array_new(product->format, DFNT_CHAR,
-                                                                     ANannlen(type->ann_id[i]), NULL);
+                type->attribute[attr_index - 1] = string_new(ANannlen(type->ann_id[i]));
                 if (type->attribute[attr_index - 1] == NULL)
                 {
                     coda_hdf4_type_delete((coda_dynamic_type *)type);
@@ -636,8 +666,7 @@ static coda_hdf4_attributes *attributes_for_SDS(coda_hdf4_product *product, int3
             {
                 attr_index++;
                 length = ANannlen(type->ann_id[type->num_data_labels + i]);
-                type->attribute[attr_index - 1] =
-                    (coda_hdf4_type *)coda_hdf4_basic_type_array_new(product->format, DFNT_CHAR, length, NULL);
+                type->attribute[attr_index - 1] = string_new(length);
                 if (type->attribute[attr_index - 1] == NULL)
                 {
                     coda_hdf4_type_delete((coda_dynamic_type *)type);
@@ -731,13 +760,15 @@ static coda_hdf4_attributes *attributes_for_Vdata_field(int32 vdata_id, int32 in
         }
         if (length == 1)
         {
-            type->attribute[attr_index - 1] =
-                (coda_hdf4_type *)coda_hdf4_basic_type_new(coda_format_hdf4, data_type, NULL);
+            type->attribute[attr_index - 1] = (coda_hdf4_type *)basic_type_new(data_type, NULL);
+        }
+        else if (data_type == DFNT_CHAR)
+        {
+            type->attribute[attr_index - 1] = string_new(length);
         }
         else
         {
-            type->attribute[attr_index - 1] =
-                (coda_hdf4_type *)coda_hdf4_basic_type_array_new(coda_format_hdf4, data_type, length, NULL);
+            type->attribute[attr_index - 1] = (coda_hdf4_type *)basic_type_array_new(data_type, length, NULL);
         }
         if (coda_type_record_create_field(type->definition, hdf4_name, type->attribute[attr_index - 1]->definition) !=
             0)
@@ -845,13 +876,15 @@ static coda_hdf4_attributes *attributes_for_Vdata(coda_hdf4_product *product, in
         }
         if (length == 1)
         {
-            type->attribute[attr_index - 1] =
-                (coda_hdf4_type *)coda_hdf4_basic_type_new(coda_format_hdf4, data_type, NULL);
+            type->attribute[attr_index - 1] = (coda_hdf4_type *)basic_type_new(data_type, NULL);
+        }
+        else if (data_type == DFNT_CHAR)
+        {
+            type->attribute[attr_index - 1] = string_new(length);
         }
         else
         {
-            type->attribute[attr_index - 1] =
-                (coda_hdf4_type *)coda_hdf4_basic_type_array_new(coda_format_hdf4, data_type, length, NULL);
+            type->attribute[attr_index - 1] = (coda_hdf4_type *)basic_type_array_new(data_type, length, NULL);
         }
         if (coda_type_record_create_field(type->definition, hdf4_name, type->attribute[attr_index - 1]->definition) !=
             0)
@@ -882,9 +915,7 @@ static coda_hdf4_attributes *attributes_for_Vdata(coda_hdf4_product *product, in
             for (i = 0; i < type->num_data_labels; i++)
             {
                 attr_index++;
-                type->attribute[attr_index - 1] =
-                    (coda_hdf4_type *)coda_hdf4_basic_type_array_new(coda_format_hdf4, DFNT_CHAR,
-                                                                     ANannlen(type->ann_id[i]), NULL);
+                type->attribute[attr_index - 1] = string_new(ANannlen(type->ann_id[i]));
                 if (type->attribute[attr_index - 1] == NULL)
                 {
                     coda_hdf4_type_delete((coda_dynamic_type *)type);
@@ -911,8 +942,7 @@ static coda_hdf4_attributes *attributes_for_Vdata(coda_hdf4_product *product, in
             {
                 attr_index++;
                 length = ANannlen(type->ann_id[type->num_data_labels + i]);
-                type->attribute[attr_index - 1] =
-                    (coda_hdf4_type *)coda_hdf4_basic_type_array_new(coda_format_hdf4, DFNT_CHAR, length, NULL);
+                type->attribute[attr_index - 1] = string_new(length);
                 if (type->attribute[attr_index - 1] == NULL)
                 {
                     coda_hdf4_type_delete((coda_dynamic_type *)type);
@@ -1026,13 +1056,15 @@ static coda_hdf4_attributes *attributes_for_Vgroup(coda_hdf4_product *product, i
         }
         if (length == 1)
         {
-            type->attribute[attr_index - 1] =
-                (coda_hdf4_type *)coda_hdf4_basic_type_new(coda_format_hdf4, data_type, NULL);
+            type->attribute[attr_index - 1] = (coda_hdf4_type *)basic_type_new(data_type, NULL);
+        }
+        else if (data_type == DFNT_CHAR)
+        {
+            type->attribute[attr_index - 1] = string_new(length);
         }
         else
         {
-            type->attribute[attr_index - 1] =
-                (coda_hdf4_type *)coda_hdf4_basic_type_array_new(coda_format_hdf4, data_type, length, NULL);
+            type->attribute[attr_index - 1] = (coda_hdf4_type *)basic_type_array_new(data_type, length, NULL);
         }
         if (coda_type_record_create_field(type->definition, hdf4_name, type->attribute[attr_index - 1]->definition) !=
             0)
@@ -1063,9 +1095,7 @@ static coda_hdf4_attributes *attributes_for_Vgroup(coda_hdf4_product *product, i
             for (i = 0; i < type->num_data_labels; i++)
             {
                 attr_index++;
-                type->attribute[attr_index - 1] =
-                    (coda_hdf4_type *)coda_hdf4_basic_type_array_new(coda_format_hdf4, DFNT_CHAR,
-                                                                     ANannlen(type->ann_id[i]), NULL);
+                type->attribute[attr_index - 1] = string_new(ANannlen(type->ann_id[i]));
                 if (type->attribute[attr_index - 1] == NULL)
                 {
                     coda_hdf4_type_delete((coda_dynamic_type *)type);
@@ -1092,8 +1122,7 @@ static coda_hdf4_attributes *attributes_for_Vgroup(coda_hdf4_product *product, i
             {
                 attr_index++;
                 length = ANannlen(type->ann_id[type->num_data_labels + i]);
-                type->attribute[attr_index - 1] =
-                    (coda_hdf4_type *)coda_hdf4_basic_type_array_new(coda_format_hdf4, DFNT_CHAR, length, NULL);
+                type->attribute[attr_index - 1] = string_new(length);
                 if (type->attribute[attr_index - 1] == NULL)
                 {
                     coda_hdf4_type_delete((coda_dynamic_type *)type);
@@ -1192,13 +1221,15 @@ static coda_hdf4_file_attributes *attributes_for_root(coda_hdf4_product *product
         }
         if (length == 1)
         {
-            type->attribute[attr_index - 1] =
-                (coda_hdf4_type *)coda_hdf4_basic_type_new(coda_format_hdf4, data_type, NULL);
+            type->attribute[attr_index - 1] = (coda_hdf4_type *)basic_type_new(data_type, NULL);
+        }
+        else if (data_type == DFNT_CHAR)
+        {
+            type->attribute[attr_index - 1] = string_new(length);
         }
         else
         {
-            type->attribute[attr_index - 1] =
-                (coda_hdf4_type *)coda_hdf4_basic_type_array_new(coda_format_hdf4, data_type, length, NULL);
+            type->attribute[attr_index - 1] = (coda_hdf4_type *)basic_type_array_new(data_type, length, NULL);
         }
         if (coda_type_record_create_field(type->definition, hdf4_name, type->attribute[attr_index - 1]->definition) !=
             0)
@@ -1218,13 +1249,15 @@ static coda_hdf4_file_attributes *attributes_for_root(coda_hdf4_product *product
         }
         if (length == 1)
         {
-            type->attribute[attr_index - 1] =
-                (coda_hdf4_type *)coda_hdf4_basic_type_new(coda_format_hdf4, data_type, NULL);
+            type->attribute[attr_index - 1] = (coda_hdf4_type *)basic_type_new(data_type, NULL);
+        }
+        else if (data_type == DFNT_CHAR)
+        {
+            type->attribute[attr_index - 1] = string_new(length);
         }
         else
         {
-            type->attribute[attr_index - 1] =
-                (coda_hdf4_type *)coda_hdf4_basic_type_array_new(coda_format_hdf4, data_type, length, NULL);
+            type->attribute[attr_index - 1] = (coda_hdf4_type *)basic_type_array_new(data_type, length, NULL);
         }
         if (coda_type_record_create_field(type->definition, hdf4_name, type->attribute[attr_index - 1]->definition) !=
             0)
@@ -1243,8 +1276,7 @@ static coda_hdf4_file_attributes *attributes_for_root(coda_hdf4_product *product
             coda_hdf4_type_delete((coda_dynamic_type *)type);
             return NULL;
         }
-        type->attribute[attr_index - 1] =
-            (coda_hdf4_type *)coda_hdf4_basic_type_array_new(coda_format_hdf4, DFNT_CHAR, ANannlen(ann_id), NULL);
+        type->attribute[attr_index - 1] = string_new(ANannlen(ann_id));
         if (type->attribute[attr_index - 1] == NULL)
         {
             coda_hdf4_type_delete((coda_dynamic_type *)type);
@@ -1272,8 +1304,7 @@ static coda_hdf4_file_attributes *attributes_for_root(coda_hdf4_product *product
             coda_hdf4_type_delete((coda_dynamic_type *)type);
             return NULL;
         }
-        type->attribute[attr_index - 1] =
-            (coda_hdf4_type *)coda_hdf4_basic_type_array_new(coda_format_hdf4, DFNT_CHAR, ANannlen(ann_id), NULL);
+        type->attribute[attr_index - 1] = string_new(ANannlen(ann_id));
         if (type->attribute[attr_index - 1] == NULL)
         {
             coda_hdf4_type_delete((coda_dynamic_type *)type);
@@ -1394,7 +1425,7 @@ coda_hdf4_GRImage *coda_hdf4_GRImage_new(coda_hdf4_product *product, int32 index
         return NULL;
     }
 
-    type->basic_type = coda_hdf4_basic_type_new(coda_format_hdf4, type->data_type, conversion);
+    type->basic_type = basic_type_new(type->data_type, conversion);
     if (type->basic_type == NULL)
     {
         coda_conversion_delete(conversion);
@@ -1495,7 +1526,7 @@ coda_hdf4_SDS *coda_hdf4_SDS_new(coda_hdf4_product *product, int32 sds_index)
         return NULL;
     }
 
-    type->basic_type = coda_hdf4_basic_type_new(product->format, type->data_type, conversion);
+    type->basic_type = basic_type_new(type->data_type, conversion);
     if (type->basic_type == NULL)
     {
         coda_conversion_delete(conversion);
@@ -1595,7 +1626,7 @@ static coda_hdf4_Vdata_field *Vdata_field_new(coda_hdf4_product *product, int32 
         return NULL;
     }
 
-    type->basic_type = coda_hdf4_basic_type_new(coda_format_hdf4, type->data_type, conversion);
+    type->basic_type = basic_type_new(type->data_type, conversion);
     if (type->basic_type == NULL)
     {
         coda_conversion_delete(conversion);

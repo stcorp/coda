@@ -23,6 +23,7 @@
 
 #include "coda-hdf5.h"
 #include "coda-type.h"
+#include "coda-mem-internal.h"
 
 /* HDF5 creates its own versions of uint32_t, int64_t, and uint64_t as typedefs */
 /* We therefore disable our #define entries for these types if we have them */
@@ -36,8 +37,6 @@ typedef enum hdf5_type_tag_enum
 {
     tag_hdf5_basic_datatype,    /* coda_integer_class, coda_real_class, coda_text_class */
     tag_hdf5_compound_datatype, /* coda_record_class */
-    tag_hdf5_attribute, /* coda_array_class */
-    tag_hdf5_attribute_record,  /* coda_record_class */
     tag_hdf5_group,     /* coda_record_class */
     tag_hdf5_dataset    /* coda_array_class */
 } hdf5_type_tag;
@@ -48,8 +47,6 @@ typedef enum hdf5_type_tag_enum
  *      \ -- coda_hdf5_data_type
  *           \ -- coda_hdf5_basic_data_type
  *            |-- coda_hdf5_compound_data_type
- *       |-- coda_hdf5_attribute
- *       |-- coda_hdf5_attribute_record
  *       |-- coda_hdf5_object
  *           \ -- coda_hdf5_group
  *            |-- coda_hdf5_dataset
@@ -98,27 +95,6 @@ typedef struct coda_hdf5_compound_data_type_struct
     hid_t *member_type;
 } coda_hdf5_compound_data_type;
 
-typedef struct coda_hdf5_attribute_struct
-{
-    coda_backend backend;
-    coda_type_array *definition;
-    hdf5_type_tag tag;
-    hid_t attribute_id;
-    hid_t dataspace_id;
-    int ndims;
-    hsize_t dims[CODA_MAX_NUM_DIMS];
-    coda_hdf5_data_type *base_type;
-} coda_hdf5_attribute;
-
-typedef struct coda_hdf5_attribute_record_struct
-{
-    coda_backend backend;
-    coda_type_record *definition;
-    hdf5_type_tag tag;
-    hid_t obj_id;       /* id of object to which the attributes are attached */
-    coda_hdf5_attribute **attribute;
-} coda_hdf5_attribute_record;
-
 typedef struct coda_hdf5_group_struct
 {
     coda_backend backend;
@@ -128,7 +104,7 @@ typedef struct coda_hdf5_group_struct
     unsigned long objno[2];
     hid_t group_id;
     coda_hdf5_object **object;
-    coda_hdf5_attribute_record *attributes;
+    coda_mem_record *attributes;
 } coda_hdf5_group;
 
 typedef struct coda_hdf5_dataset_struct
@@ -141,7 +117,7 @@ typedef struct coda_hdf5_dataset_struct
     hid_t dataset_id;
     hid_t dataspace_id;
     coda_hdf5_data_type *base_type;
-    coda_hdf5_attribute_record *attributes;
+    coda_mem_record *attributes;
 } coda_hdf5_dataset;
 
 struct coda_hdf5_product_struct

@@ -273,12 +273,6 @@ int coda_hdf4_cursor_goto_attributes(coda_cursor *cursor)
     cursor->n++;
     switch (type->tag)
     {
-        case tag_hdf4_basic_type:
-        case tag_hdf4_basic_type_array:
-        case tag_hdf4_attributes:
-        case tag_hdf4_file_attributes:
-            cursor->stack[cursor->n - 1].type = coda_mem_empty_record(coda_format_hdf4);
-            break;
         case tag_hdf4_GRImage:
             cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)((coda_hdf4_GRImage *)type)->attributes;
             break;
@@ -295,8 +289,8 @@ int coda_hdf4_cursor_goto_attributes(coda_cursor *cursor)
             cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)((coda_hdf4_Vgroup *)type)->attributes;
             break;
         default:
-            assert(0);
-            exit(1);
+            cursor->stack[cursor->n - 1].type = coda_mem_empty_record(coda_format_hdf4);
+            break;
     }
 
     /* we use the special index value '-1' to indicate that we are pointing to the attributes of the parent */
@@ -319,6 +313,9 @@ int coda_hdf4_cursor_get_num_elements(const coda_cursor *cursor, long *num_eleme
         case tag_hdf4_basic_type_array:
             *num_elements = ((coda_hdf4_basic_type_array *)type)->definition->num_elements;
             break;
+        case tag_hdf4_string:
+            *num_elements = 1;
+            break;
         case tag_hdf4_attributes:
             *num_elements = ((coda_hdf4_attributes *)type)->definition->num_fields;
             break;
@@ -340,9 +337,6 @@ int coda_hdf4_cursor_get_num_elements(const coda_cursor *cursor, long *num_eleme
         case tag_hdf4_Vgroup:
             *num_elements = ((coda_hdf4_Vgroup *)type)->definition->num_fields;
             break;
-        default:
-            assert(0);
-            exit(1);
     }
 
     return 0;
@@ -350,9 +344,16 @@ int coda_hdf4_cursor_get_num_elements(const coda_cursor *cursor, long *num_eleme
 
 int coda_hdf4_cursor_get_string_length(const coda_cursor *cursor, long *length)
 {
-    (void)cursor;       /* prevent unused warning */
-    /* HDF4 does not support strings as basic types, only char data. We will therefore always return a size of 1 */
+    coda_hdf4_type *type;
+
+    type = (coda_hdf4_type *)cursor->stack[cursor->n - 1].type;
+    if (type->tag == tag_hdf4_string)
+    {
+        return coda_type_get_string_length(type->definition, length);
+    }
+
     *length = 1;
+
     return 0;
 }
 
@@ -430,21 +431,9 @@ static int read_attribute_sub(int32 tag, int32 attr_id, int32 attr_index, int32 
             break;
         case DFTAG_DIL:        /* data label annotation */
         case DFTAG_FID:        /* file label annotation */
-            {
-                char *label;
-
-                /* labels receive a terminating zero from the HDF4 lib, so we need to read it using a larger buffer */
-                label = malloc(length + 1);
-                if (label == NULL)
-                {
-                    coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                                   (long)(length + 1), __FILE__, __LINE__);
-                    return -1;
-                }
-                result = ANreadann(attr_id, label, length + 1);
-                memcpy(buffer, label, length);
-                free(label);
-            }
+            /* labels receive a terminating zero from the HDF4 lib, so we need to read it using one byte extra */
+            /* the buffer should have already been made large enough for this by coda_hdf4_cursor_read_string */
+            result = ANreadann(attr_id, buffer, length + 1);
             break;
         case DFTAG_DIA:        /* data description annotation */
         case DFTAG_FD: /* file description annotation */
@@ -463,21 +452,11 @@ static int read_attribute_sub(int32 tag, int32 attr_id, int32 attr_index, int32 
     return 0;
 }
 
-static int read_attribute(const coda_cursor *cursor, void *dst)
+static int read_attribute(const coda_cursor *cursor, void *dst, long length)
 {
-    int32 count;
     long index;
 
     index = cursor->stack[cursor->n - 1].index;
-
-    if (((coda_hdf4_type *)cursor->stack[cursor->n - 1].type)->tag == tag_hdf4_basic_type_array)
-    {
-        count = ((coda_hdf4_basic_type_array *)cursor->stack[cursor->n - 1].type)->definition->dim[0];
-    }
-    else
-    {
-        count = 1;
-    }
 
     assert(cursor->n >= 2);
     switch (((coda_hdf4_type *)cursor->stack[cursor->n - 2].type)->tag)
@@ -510,7 +489,7 @@ static int read_attribute(const coda_cursor *cursor, void *dst)
                             assert(0);
                             exit(1);
                     }
-                    if (read_attribute_sub(tag, type->parent_id, index, type->field_index, count, dst) != 0)
+                    if (read_attribute_sub(tag, type->parent_id, index, type->field_index, length, dst) != 0)
                     {
                         return -1;
                     }
@@ -518,7 +497,7 @@ static int read_attribute(const coda_cursor *cursor, void *dst)
                 else if (cursor->stack[cursor->n - 1].index < type->num_obj_attributes + type->num_data_labels)
                 {
                     if (read_attribute_sub(DFTAG_DIL, type->ann_id[index - type->num_obj_attributes],
-                                           index - type->num_obj_attributes, type->field_index, count, dst) != 0)
+                                           index - type->num_obj_attributes, type->field_index, length, dst) != 0)
                     {
                         return -1;
                     }
@@ -527,7 +506,7 @@ static int read_attribute(const coda_cursor *cursor, void *dst)
                 {
                     if (read_attribute_sub(DFTAG_DIA, type->ann_id[index - type->num_obj_attributes],
                                            index - type->num_obj_attributes - type->num_data_labels,
-                                           type->field_index, count, dst) != 0)
+                                           type->field_index, length, dst) != 0)
                     {
                         return -1;
                     }
@@ -542,7 +521,7 @@ static int read_attribute(const coda_cursor *cursor, void *dst)
                 if (cursor->stack[cursor->n - 1].index < type->num_gr_attributes)
                 {
                     if (read_attribute_sub(DFTAG_RI, ((coda_hdf4_product *)cursor->product)->gr_id, index, -1,
-                                           count, dst) != 0)
+                                           length, dst) != 0)
                     {
                         return -1;
                     }
@@ -550,7 +529,7 @@ static int read_attribute(const coda_cursor *cursor, void *dst)
                 else if (cursor->stack[cursor->n - 1].index < type->num_gr_attributes + type->num_sd_attributes)
                 {
                     if (read_attribute_sub(DFTAG_SD, ((coda_hdf4_product *)cursor->product)->sd_id,
-                                           index - type->num_gr_attributes, -1, count, dst) != 0)
+                                           index - type->num_gr_attributes, -1, length, dst) != 0)
                     {
                         return -1;
                     }
@@ -568,7 +547,7 @@ static int read_attribute(const coda_cursor *cursor, void *dst)
                         return -1;
                     }
                     if (read_attribute_sub(DFTAG_FID, ann_id, index - type->num_gr_attributes -
-                                           type->num_sd_attributes, -1, count, dst) != 0)
+                                           type->num_sd_attributes, -1, length, dst) != 0)
                     {
                         return -1;
                     }
@@ -590,7 +569,7 @@ static int read_attribute(const coda_cursor *cursor, void *dst)
                         return -1;
                     }
                     if (read_attribute_sub(DFTAG_FD, ann_id, index - type->num_gr_attributes -
-                                           type->num_sd_attributes - type->num_file_labels, -1, count, dst) != 0)
+                                           type->num_sd_attributes - type->num_file_labels, -1, length, dst) != 0)
                     {
                         return -1;
                     }
@@ -631,7 +610,7 @@ static int read_array(const coda_cursor *cursor, void *dst)
     switch (((coda_hdf4_type *)cursor->stack[cursor->n - 1].type)->tag)
     {
         case tag_hdf4_basic_type_array:
-            if (read_attribute(cursor, dst) != 0)
+            if (read_attribute(cursor, dst, -1) != 0)
             {
                 return -1;
             }
@@ -712,6 +691,143 @@ static int read_array(const coda_cursor *cursor, void *dst)
     return 0;
 }
 
+static int read_partial_array(const coda_cursor *cursor, long offset, long length, void *dst)
+{
+    int32 start[MAX_HDF4_VAR_DIMS];
+    int32 stride[MAX_HDF4_VAR_DIMS];
+    int32 edge[MAX_HDF4_VAR_DIMS];
+    long i;
+
+    switch (((coda_hdf4_type *)cursor->stack[cursor->n - 1].type)->tag)
+    {
+        case tag_hdf4_basic_type_array:
+            coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "partial array reading is not supported for HDF4 attributes");
+            return -1;
+        case tag_hdf4_GRImage:
+            {
+                coda_hdf4_GRImage *type;
+
+                type = (coda_hdf4_GRImage *)cursor->stack[cursor->n - 1].type;
+                stride[0] = 1;
+                stride[1] = 1;
+                if (length < type->dim_sizes[1])
+                {
+                    start[0] = offset / type->dim_sizes[1];
+                    start[1] = offset % type->dim_sizes[1];
+                    edge[0] = 1;
+                    edge[1] = length;
+                    if (start[1] + edge[1] > type->dim_sizes[1])
+                    {
+                        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "partial array reading for HDF4 GRImage requires "
+                                       "offset (%ld) and length (%ld) to represent a hyperslab (range [%ld,%ld] "
+                                       "exceeds length of dimension #1 (%ld)))", offset, length, (long)start[1],
+                                       (long)start[1] + edge[1] - 1, type->dim_sizes[1]);
+                        return -1;
+                    }
+                }
+                else
+                {
+                    if (length % type->dim_sizes[1] != 0)
+                    {
+                        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "partial array reading for HDF4 GRImage requires "
+                                       "length (%ld) to be a multiple of the subdimension size (%ld)", length,
+                                       type->dim_sizes[1]);
+                        return -1;
+                    }
+                    if (offset % type->dim_sizes[1] != 0)
+                    {
+                        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "partial array reading for HDF4 GRImage requires "
+                                       " offset (%ld) to be a multiple of the subdimension size (%ld)", offset,
+                                       type->dim_sizes[1]);
+                        return -1;
+                    }
+                    start[0] = offset / type->dim_sizes[1];
+                    start[1] = 0;
+                    edge[0] = length / type->dim_sizes[1];
+                    edge[1] = type->dim_sizes[1];
+                    if (start[0] + edge[0] > type->dim_sizes[0])
+                    {
+                        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "partial array reading for HDF4 GRImage requires "
+                                       "offset (%ld) and length (%ld) to represent a hyperslab (range [%ld,%ld] "
+                                       "exceeds length of dimension #0 (%ld)))", offset, length, (long)start[0],
+                                       (long)start[0] + edge[0] - 1, type->dim_sizes[0]);
+                        return -1;
+                    }
+                }
+                if (GRreadimage(type->ri_id, start, stride, edge, dst) != 0)
+                {
+                    coda_set_error(CODA_ERROR_HDF4, NULL);
+                    return -1;
+                }
+            }
+            break;
+        case tag_hdf4_SDS:
+            {
+                coda_hdf4_SDS *type;
+                long block_size = 1;
+
+                type = (coda_hdf4_SDS *)cursor->stack[cursor->n - 1].type;
+
+                /* determine hyperslab start/edge */
+                for (i = type->rank - 1; i >= 0; i--)
+                {
+                    if (length <= block_size * type->dimsizes[i])
+                    {
+                        if (length % block_size != 0)
+                        {
+                            coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "partial array reading for HDF4 SDS requires "
+                                           "length (%ld) to be a multiple of the subdimension size (%ld)", length,
+                                           block_size);
+                            return -1;
+                        }
+                        start[i] = (offset / block_size) % type->dimsizes[i];
+                        edge[i] = length / block_size;
+                        break;
+                    }
+                    start[i] = 0;
+                    edge[i] = type->dimsizes[i];
+                    block_size *= type->dimsizes[i];
+                }
+                if (offset % block_size != 0)
+                {
+                    coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "partial array reading for HDF4 SDS requires offset "
+                                   "(%ld) to be a multiple of the subdimension size (%ld)", offset, block_size);
+                    return -1;
+                }
+                if (start[i] + edge[i] > type->dimsizes[i])
+                {
+                    coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "partial array reading for HDF4 SDS requires offset "
+                                   "(%ld) and length (%ld) to represent a hyperslab (range [%ld,%ld] exceeds length "
+                                   "of dimension #%d (%ld)))", offset, length, (long)start[i],
+                                   (long)start[i] + edge[i] - 1, i, type->dimsizes[i]);
+                    return -1;
+                }
+                while (i > 0)
+                {
+                    block_size *= type->dimsizes[i];
+                    i--;
+                    start[i] = (offset / block_size) % type->dimsizes[i];
+                    edge[i] = 1;
+                }
+
+                if (SDreaddata(type->sds_id, start, NULL, edge, dst) != 0)
+                {
+                    coda_set_error(CODA_ERROR_HDF4, NULL);
+                    return -1;
+                }
+            }
+            break;
+        case tag_hdf4_Vdata_field:
+            coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "partial array reading is not supported for HDF4 Vdata");
+            return -1;
+        default:
+            assert(0);
+            exit(1);
+    }
+
+    return 0;
+}
+
 static int read_basic_type(const coda_cursor *cursor, void *dst)
 {
     int32 start[MAX_HDF4_VAR_DIMS];
@@ -752,7 +868,7 @@ static int read_basic_type(const coda_cursor *cursor, void *dst)
                     return -1;
                 }
 
-                if (read_array(&array_cursor, buffer) != 0)
+                if (read_attribute(&array_cursor, buffer, -1) != 0)
                 {
                     free(buffer);
                     return -1;
@@ -764,7 +880,7 @@ static int read_basic_type(const coda_cursor *cursor, void *dst)
             break;
         case tag_hdf4_attributes:
         case tag_hdf4_file_attributes:
-            if (read_attribute(cursor, dst) != 0)
+            if (read_attribute(cursor, dst, -1) != 0)
             {
                 return -1;
             }
@@ -977,18 +1093,63 @@ int coda_hdf4_cursor_read_char(const coda_cursor *cursor, char *dst)
 
 int coda_hdf4_cursor_read_string(const coda_cursor *cursor, char *dst, long dst_size)
 {
-    /* HDF4 only supports single characters as basic type, so the string length is always 1 */
-    if (dst_size > 1)
+    if (((coda_hdf4_type *)cursor->stack[cursor->n - 1].type)->tag == tag_hdf4_string)
     {
-        if (coda_hdf4_cursor_read_char(cursor, dst) != 0)
+        long length;
+
+        if (coda_hdf4_cursor_get_string_length(cursor, &length) != 0)
         {
             return -1;
         }
-        dst[1] = '\0';
+        if (dst_size >= length + 1)
+        {
+            /* we can directly read into the destination buffer */
+            if (read_attribute(cursor, dst, length) != 0)
+            {
+                return -1;
+            }
+            dst[length] = '\0';
+        }
+        else
+        {
+            char *buffer;
+
+            /* we first read the whole string and then return only the requested part */
+
+            buffer = malloc(length + 1);        /* add 1, because the AN interface depend on this additional byte */
+            if (buffer == NULL)
+            {
+                coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                               length + 1, __FILE__, __LINE__);
+                return -1;
+            }
+
+            if (read_attribute(cursor, buffer, length) != 0)
+            {
+                free(buffer);
+                return -1;
+            }
+
+            memcpy(dst, buffer, dst_size - 1);
+            free(buffer);
+            dst[dst_size - 1] = '\0';
+        }
     }
-    else if (dst_size == 1)
+    else
     {
-        dst[0] = '\0';
+        /* basic type should be a single character, so the string length is always 1 */
+        if (dst_size > 1)
+        {
+            if (coda_hdf4_cursor_read_char(cursor, dst) != 0)
+            {
+                return -1;
+            }
+            dst[1] = '\0';
+        }
+        else if (dst_size == 1)
+        {
+            dst[0] = '\0';
+        }
     }
 
     return 0;
@@ -1047,4 +1208,59 @@ int coda_hdf4_cursor_read_double_array(const coda_cursor *cursor, double *dst)
 int coda_hdf4_cursor_read_char_array(const coda_cursor *cursor, char *dst)
 {
     return read_array(cursor, dst);
+}
+
+int coda_hdf4_cursor_read_int8_partial_array(const coda_cursor *cursor, long offset, long length, int8_t *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
+}
+
+int coda_hdf4_cursor_read_uint8_partial_array(const coda_cursor *cursor, long offset, long length, uint8_t *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
+}
+
+int coda_hdf4_cursor_read_int16_partial_array(const coda_cursor *cursor, long offset, long length, int16_t *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
+}
+
+int coda_hdf4_cursor_read_uint16_partial_array(const coda_cursor *cursor, long offset, long length, uint16_t *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
+}
+
+int coda_hdf4_cursor_read_int32_partial_array(const coda_cursor *cursor, long offset, long length, int32_t *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
+}
+
+int coda_hdf4_cursor_read_uint32_partial_array(const coda_cursor *cursor, long offset, long length, uint32_t *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
+}
+
+int coda_hdf4_cursor_read_int64_partial_array(const coda_cursor *cursor, long offset, long length, int64_t *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
+}
+
+int coda_hdf4_cursor_read_uint64_partial_array(const coda_cursor *cursor, long offset, long length, uint64_t *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
+}
+
+int coda_hdf4_cursor_read_float_partial_array(const coda_cursor *cursor, long offset, long length, float *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
+}
+
+int coda_hdf4_cursor_read_double_partial_array(const coda_cursor *cursor, long offset, long length, double *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
+}
+
+int coda_hdf4_cursor_read_char_partial_array(const coda_cursor *cursor, long offset, long length, char *dst)
+{
+    return read_partial_array(cursor, offset, length, dst);
 }

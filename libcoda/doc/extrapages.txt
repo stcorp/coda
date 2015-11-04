@@ -8,7 +8,7 @@
  * 
  * \section codadef CODA definition path
  *
- * Note that in order to access products whose formats are defined using .codadef files, you should let CODA now
+ * Note that in order to access products whose formats are defined using .codadef files, you should let CODA know
  * where these .codadef files are stored. You can do this by using the coda_set_definition_path() or
  * coda_set_definition_path_conditional() functions, or you can set the CODA_DEFINITION environment variable.
  * This environment variable should be a ':' separated (';' on Windows) list of absolute paths to directories containing
@@ -29,7 +29,8 @@
  * The following are some things to try that may help to improve the performance of reading data with CODA
  * - Disable boundary checks with coda_set_option_perform_boundary_checks().
  *   This can be a huge speed improvement, but only disable this once you have fully tested your program
- *   and are sure that all coda function calls return succesfully (i.e. return value equals 0).
+ *   and are sure that all coda cursor navigation and reading function calls return succesfully
+ *   (i.e. return value equals 0).
  * - Disable special types with coda_set_option_bypass_special_types() and use the base type of the data.
  *   This can particularly increase performance for variable scale factor integers (::coda_special_vsf_integer).
  *   Note that this option can be enabled/disabled at will, so you might disable it when reading one field,

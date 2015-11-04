@@ -147,6 +147,10 @@ public class codac implements codacConstants {
     return codacJNI.cursor_read_char_array(SWIGTYPE_p_coda_cursor_struct.getCPtr(cursor), dst, array_ordering.swigValue());
   }
 
+  public static int cursor_read_char_partial_array(SWIGTYPE_p_coda_cursor_struct cursor, int offset, int length, byte[] dst) throws nl.stcorp.coda.CodaException {
+    return codacJNI.cursor_read_char_partial_array(SWIGTYPE_p_coda_cursor_struct.getCPtr(cursor), offset, length, dst);
+  }
+
   public static int init() throws nl.stcorp.coda.CodaException {
     return codacJNI.init();
   }
@@ -601,6 +605,46 @@ public class codac implements codacConstants {
 
   public static int cursor_read_double_array(SWIGTYPE_p_coda_cursor_struct cursor, double[] dst, ArrayOrderingEnum array_ordering) throws nl.stcorp.coda.CodaException {
     return codacJNI.cursor_read_double_array(SWIGTYPE_p_coda_cursor_struct.getCPtr(cursor), dst, array_ordering.swigValue());
+  }
+
+  public static int cursor_read_int8_partial_array(SWIGTYPE_p_coda_cursor_struct cursor, int offset, int length, byte[] dst) throws nl.stcorp.coda.CodaException {
+    return codacJNI.cursor_read_int8_partial_array(SWIGTYPE_p_coda_cursor_struct.getCPtr(cursor), offset, length, dst);
+  }
+
+  public static int cursor_read_uint8_partial_array(SWIGTYPE_p_coda_cursor_struct cursor, int offset, int length, byte[] dst) throws nl.stcorp.coda.CodaException {
+    return codacJNI.cursor_read_uint8_partial_array(SWIGTYPE_p_coda_cursor_struct.getCPtr(cursor), offset, length, dst);
+  }
+
+  public static int cursor_read_int16_partial_array(SWIGTYPE_p_coda_cursor_struct cursor, int offset, int length, short[] dst) throws nl.stcorp.coda.CodaException {
+    return codacJNI.cursor_read_int16_partial_array(SWIGTYPE_p_coda_cursor_struct.getCPtr(cursor), offset, length, dst);
+  }
+
+  public static int cursor_read_uint16_partial_array(SWIGTYPE_p_coda_cursor_struct cursor, int offset, int length, short[] dst) throws nl.stcorp.coda.CodaException {
+    return codacJNI.cursor_read_uint16_partial_array(SWIGTYPE_p_coda_cursor_struct.getCPtr(cursor), offset, length, dst);
+  }
+
+  public static int cursor_read_int32_partial_array(SWIGTYPE_p_coda_cursor_struct cursor, int offset, int length, int[] dst) throws nl.stcorp.coda.CodaException {
+    return codacJNI.cursor_read_int32_partial_array(SWIGTYPE_p_coda_cursor_struct.getCPtr(cursor), offset, length, dst);
+  }
+
+  public static int cursor_read_uint32_partial_array(SWIGTYPE_p_coda_cursor_struct cursor, int offset, int length, int[] dst) throws nl.stcorp.coda.CodaException {
+    return codacJNI.cursor_read_uint32_partial_array(SWIGTYPE_p_coda_cursor_struct.getCPtr(cursor), offset, length, dst);
+  }
+
+  public static int cursor_read_int64_partial_array(SWIGTYPE_p_coda_cursor_struct cursor, int offset, int length, long[] dst) throws nl.stcorp.coda.CodaException {
+    return codacJNI.cursor_read_int64_partial_array(SWIGTYPE_p_coda_cursor_struct.getCPtr(cursor), offset, length, dst);
+  }
+
+  public static int cursor_read_uint64_partial_array(SWIGTYPE_p_coda_cursor_struct cursor, int offset, int length, long[] dst) throws nl.stcorp.coda.CodaException {
+    return codacJNI.cursor_read_uint64_partial_array(SWIGTYPE_p_coda_cursor_struct.getCPtr(cursor), offset, length, dst);
+  }
+
+  public static int cursor_read_float_partial_array(SWIGTYPE_p_coda_cursor_struct cursor, int offset, int length, float[] dst) throws nl.stcorp.coda.CodaException {
+    return codacJNI.cursor_read_float_partial_array(SWIGTYPE_p_coda_cursor_struct.getCPtr(cursor), offset, length, dst);
+  }
+
+  public static int cursor_read_double_partial_array(SWIGTYPE_p_coda_cursor_struct cursor, int offset, int length, double[] dst) throws nl.stcorp.coda.CodaException {
+    return codacJNI.cursor_read_double_partial_array(SWIGTYPE_p_coda_cursor_struct.getCPtr(cursor), offset, length, dst);
   }
 
   public static int cursor_read_complex_double_pair(SWIGTYPE_p_coda_cursor_struct cursor, double[] dst) throws nl.stcorp.coda.CodaException {

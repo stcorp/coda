@@ -1125,7 +1125,7 @@ int coda_data_dictionary_add_product_class(coda_product_class *product_class)
         coda_global_data_dictionary->product_class = new_product_class;
     }
     /* add sorted */
-    for (i = 0; i < coda_global_data_dictionary->num_product_classes - 1; i++)
+    for (i = 0; i < coda_global_data_dictionary->num_product_classes; i++)
     {
         if (strcmp(product_class->name, coda_global_data_dictionary->product_class[i]->name) < 0)
         {

@@ -117,6 +117,43 @@ static void print_help()
     printf("                    base type\n");
     printf("\n");
 #endif
+    printf("    codadump [-D definitionpath] json [<json options>] <product file>\n");
+    printf("        Write the contents of a product file to a JSON file\n");
+    printf("        JSON options:\n");
+    printf("            -a, --attributes\n");
+    printf("                    include attributes - items with attributes will be\n");
+    printf("                    encapsulated in a {'attr':<attr>,'data':<data>} object\n");
+    printf("            -d, --disable_conversions\n");
+    printf("                    do not perform unit/value conversions\n");
+    printf("            -o, --output <filename>\n");
+    printf("                    write output to specified file\n");
+    printf("            -p, --path <path>\n");
+    printf("                    path (in the form of a CODA node expression) to the\n");
+    printf("                    location in the product where the operation should begin\n");
+    printf("            --no_special_types\n");
+    printf("                    bypass special data types from the CODA format definition -\n");
+    printf("                    data with a special type is treated using its non-special\n");
+    printf("                    base type\n");
+    printf("\n");
+    printf("    codadump [-D definitionpath] yaml [<json options>] <product file>\n");
+    printf("        Write the contents of a product file to a YAML file\n");
+    printf("        YAML options:\n");
+    printf("            -a, --attributes\n");
+    printf("                    include attributes - items with attributes will be\n");
+    printf("                    encapsulated in a an associative array with keys 'attr'\n");
+    printf("                    and 'data'\n");
+    printf("            -d, --disable_conversions\n");
+    printf("                    do not perform unit/value conversions\n");
+    printf("            -o, --output <filename>\n");
+    printf("                    write output to specified file\n");
+    printf("            -p, --path <path>\n");
+    printf("                    path (in the form of a CODA node expression) to the\n");
+    printf("                    location in the product where the operation should begin\n");
+    printf("            --no_special_types\n");
+    printf("                    bypass special data types from the CODA format definition -\n");
+    printf("                    data with a special type is treated using its non-special\n");
+    printf("                    base type\n");
+    printf("\n");
     printf("    codadump [-D definitionpath] debug [<debug options>] <product file>\n");
     printf("        Show the contents of a product file in sequential order for debug\n");
     printf("        purposes. No conversions are applied and (if applicable) for each\n");
@@ -486,6 +523,180 @@ static void handle_hdf4_run_mode(int argc, char *argv[])
 }
 #endif
 
+static void handle_json_run_mode(int argc, char *argv[])
+{
+    int use_special_types;
+    int perform_conversions;
+    int include_attributes;
+    int i;
+
+    traverse_info.file_name = NULL;
+    output_file_name = NULL;
+    starting_path = NULL;
+    ascii_output = stdout;
+    use_special_types = 1;
+    perform_conversions = 1;
+    include_attributes = 0;
+
+    for (i = 0; i < argc; i++)
+    {
+        if (strcmp(argv[i], "-a") == 0 || strcmp(argv[i], "--attributes") == 0)
+        {
+            include_attributes = 1;
+        }
+        else if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--disable_conversions") == 0)
+        {
+            perform_conversions = 0;
+        }
+        else if ((strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "--output") == 0) && i + 1 < argc &&
+                 argv[i + 1][0] != '-')
+        {
+            output_file_name = argv[i + 1];
+            i++;
+        }
+        else if ((strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "--path") == 0) && i + 1 < argc &&
+                 argv[i + 1][0] != '-')
+        {
+            starting_path = argv[i + 1];
+            i++;
+        }
+        else if (strcmp(argv[i], "--no_special_types") == 0)
+        {
+            use_special_types = 0;
+        }
+        else if (i == argc - 1 && argv[i][0] != '-')
+        {
+            traverse_info.file_name = argv[i];
+        }
+        else
+        {
+            fprintf(stderr, "ERROR: invalid arguments\n");
+            print_help();
+            exit(1);
+        }
+    }
+
+    if (traverse_info.file_name == NULL || traverse_info.file_name[0] == '\0')
+    {
+        fprintf(stderr, "ERROR: invalid arguments\n");
+        print_help();
+        exit(1);
+    }
+
+    if (coda_init() != 0)
+    {
+        fprintf(stderr, "ERROR: %s\n", coda_errno_to_string(coda_errno));
+        exit(1);
+    }
+    coda_set_option_bypass_special_types(!use_special_types);
+    coda_set_option_perform_boundary_checks(0);
+    coda_set_option_perform_conversions(perform_conversions);
+    if (output_file_name != NULL)
+    {
+        ascii_output = fopen(output_file_name, "w");
+        if (ascii_output == NULL)
+        {
+            fprintf(stderr, "ERROR: could not create output file \"%s\"\n", output_file_name);
+            exit(1);
+        }
+    }
+
+    print_json_data(include_attributes);
+
+    if (output_file_name != NULL)
+    {
+        fclose(ascii_output);
+    }
+    coda_done();
+}
+
+static void handle_yaml_run_mode(int argc, char *argv[])
+{
+    int use_special_types;
+    int perform_conversions;
+    int include_attributes;
+    int i;
+
+    traverse_info.file_name = NULL;
+    output_file_name = NULL;
+    starting_path = NULL;
+    ascii_output = stdout;
+    use_special_types = 1;
+    perform_conversions = 1;
+    include_attributes = 0;
+
+    for (i = 0; i < argc; i++)
+    {
+        if (strcmp(argv[i], "-a") == 0 || strcmp(argv[i], "--attributes") == 0)
+        {
+            include_attributes = 1;
+        }
+        else if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--disable_conversions") == 0)
+        {
+            perform_conversions = 0;
+        }
+        else if ((strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "--output") == 0) && i + 1 < argc &&
+                 argv[i + 1][0] != '-')
+        {
+            output_file_name = argv[i + 1];
+            i++;
+        }
+        else if ((strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "--path") == 0) && i + 1 < argc &&
+                 argv[i + 1][0] != '-')
+        {
+            starting_path = argv[i + 1];
+            i++;
+        }
+        else if (strcmp(argv[i], "--no_special_types") == 0)
+        {
+            use_special_types = 0;
+        }
+        else if (i == argc - 1 && argv[i][0] != '-')
+        {
+            traverse_info.file_name = argv[i];
+        }
+        else
+        {
+            fprintf(stderr, "ERROR: invalid arguments\n");
+            print_help();
+            exit(1);
+        }
+    }
+
+    if (traverse_info.file_name == NULL || traverse_info.file_name[0] == '\0')
+    {
+        fprintf(stderr, "ERROR: invalid arguments\n");
+        print_help();
+        exit(1);
+    }
+
+    if (coda_init() != 0)
+    {
+        fprintf(stderr, "ERROR: %s\n", coda_errno_to_string(coda_errno));
+        exit(1);
+    }
+    coda_set_option_bypass_special_types(!use_special_types);
+    coda_set_option_perform_boundary_checks(0);
+    coda_set_option_perform_conversions(perform_conversions);
+    if (output_file_name != NULL)
+    {
+        ascii_output = fopen(output_file_name, "w");
+        if (ascii_output == NULL)
+        {
+            fprintf(stderr, "ERROR: could not create output file \"%s\"\n", output_file_name);
+            exit(1);
+        }
+    }
+
+    print_yaml_data(include_attributes);
+
+    if (output_file_name != NULL)
+    {
+        fclose(ascii_output);
+    }
+    coda_done();
+}
+
 static void handle_debug_run_mode(int argc, char *argv[])
 {
     const char *product_class = NULL;
@@ -628,6 +839,18 @@ int main(int argc, char *argv[])
         handle_hdf4_run_mode(argc - i, &argv[i]);
     }
 #endif
+    else if (strcmp(argv[i], "json") == 0)
+    {
+        run_mode = RUN_MODE_JSON;
+        i++;
+        handle_json_run_mode(argc - i, &argv[i]);
+    }
+    else if (strcmp(argv[i], "yaml") == 0)
+    {
+        run_mode = RUN_MODE_YAML;
+        i++;
+        handle_yaml_run_mode(argc - i, &argv[i]);
+    }
     else if (strcmp(argv[i], "debug") == 0)
     {
         run_mode = RUN_MODE_DEBUG;

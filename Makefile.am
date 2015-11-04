@@ -67,8 +67,7 @@ idldlmexec_LTLIBRARIES = coda-idl.la
 endif
 
 if BUILD_MATLAB
-ALL_LOCAL_TARGETS += coda_matlab.@MEXEXT@
-nodist_matlabmexexec_DATA = coda_matlab.@MEXEXT@
+matlabmexexec_LTLIBRARIES = coda_matlab.la
 endif
 
 if BUILD_PYTHON
@@ -258,6 +257,7 @@ libcoda_la_SOURCES = \
 	libcoda/coda-read-bits.h \
 	libcoda/coda-read-bytes.h \
 	libcoda/coda-read-bytes-in-bounds.h \
+	libcoda/coda-read-partial-array.h \
 	libcoda/coda-rinex.c \
 	libcoda/coda-rinex.h \
 	libcoda/coda-sp3.c \
@@ -364,6 +364,7 @@ libcoda_internal_la_SOURCES = \
 	libcoda/coda-read-bits.h \
 	libcoda/coda-read-bytes.h \
 	libcoda/coda-read-bytes-in-bounds.h \
+	libcoda/coda-read-partial-array.h \
 	libcoda/coda-rinex.c \
 	libcoda/coda-rinex.h \
 	libcoda/coda-sp3.c \
@@ -432,7 +433,9 @@ codadump_SOURCES = \
 	tools/codadump/codadump-debug.c \
 	tools/codadump/codadump-dim.c \
 	tools/codadump/codadump-filter.c \
+	tools/codadump/codadump-json.c \
 	tools/codadump/codadump-traverse.c \
+	tools/codadump/codadump-yaml.c \
 	tools/codadump/codadump.c \
 	tools/codadump/codadump-filter.h \
 	tools/codadump/codadump.h
@@ -496,47 +499,31 @@ CLEANFILES += fortran/coda.inc
 
 # idl
 
+CODA_IDL_SOURCE_FILES = idl/coda-idl.c
+INDENTFILES += $(CODA_IDL_SOURCE_FILES)
+
 if BUILD_IDL
-coda_idl_la_SOURCES = idl/coda-idl.c
+coda_idl_la_SOURCES = $(CODA_IDL_SOURCE_FILES)
 coda_idl_la_LDFLAGS = -module -shared -avoid-version
 coda_idl_la_LIBADD = libcoda_internal.la
 coda_idl_la_DEPENDENCIES = libcoda_internal.la
-INDENTFILES += $(coda_idl_la_SOURCES)
 endif
 
 # matlab
 
 CODA_MATLAB_SOURCE_FILES = \
-	$(srcdir)/matlab/coda-matlab.h \
-	$(srcdir)/matlab/coda-matlab-getdata.c \
-	$(srcdir)/matlab/coda-matlab-traverse.c \
-	$(srcdir)/matlab/coda_matlab.c \
-	$(srcdir)/matlab/mxCreateDoubleScalar.c \
-	$(srcdir)/matlab/mxCreateNumericMatrix.c
-EXTRA_DIST += $(CODA_MATLAB_SOURCE_FILES)
+	matlab/coda-matlab.h \
+	matlab/coda-matlab-getdata.c \
+	matlab/coda-matlab-traverse.c \
+	matlab/coda_matlab.c
 INDENTFILES += $(CODA_MATLAB_SOURCE_FILES)
 
 if BUILD_MATLAB
-MEXCOMPILE = $(MEX) $(DEFS) $(DEFAULT_INCLUDES) $(AM_CPPFLAGS) $(MEXFLAGS)
-
-CODA_MATLAB_OBJECTS = coda-matlab-getdata.o coda-matlab-traverse.o @MATLAB_LIBOBJS@
-
-CLEANFILES += coda_matlab.@MEXEXT@ $(CODA_MATLAB_OBJECTS)
-
-coda-matlab-getdata.o: $(srcdir)/matlab/coda-matlab-getdata.c $(srcdir)/matlab/coda-matlab.h coda.h config.h
-	$(MEXCOMPILE) -c $(srcdir)/matlab/coda-matlab-getdata.c
-
-coda-matlab-traverse.o: $(srcdir)/matlab/coda-matlab-traverse.c $(srcdir)/matlab/coda-matlab.h coda.h config.h
-	$(MEXCOMPILE) -c $(srcdir)/matlab/coda-matlab-traverse.c
-
-mxCreateDoubleScalar.o: $(srcdir)/matlab/mxCreateDoubleScalar.c
-	$(MEXCOMPILE) -c $(srcdir)/matlab/mxCreateDoubleScalar.c
-
-mxCreateNumericMatrix.o: $(srcdir)/matlab/mxCreateNumericMatrix.c
-	$(MEXCOMPILE) -c $(srcdir)/matlab/mxCreateNumericMatrix.c
-
-coda_matlab.@MEXEXT@: $(srcdir)/matlab/coda_matlab.c $(CODA_MATLAB_OBJECTS) libcoda_internal.la $(srcdir)/matlab/coda-matlab.h coda.h config.h
-	$(MEXCOMPILE) $(LDFLAGS) $(srcdir)/matlab/coda_matlab.c $(CODA_MATLAB_OBJECTS) .libs/libcoda_internal.a $(HDF4LIBS) $(HDF5LIBS) $(LIBS)
+coda_matlab_la_SOURCES = $(CODA_MATLAB_SOURCE_FILES)
+coda_matlab_la_CPPFLAGS = -DMATLAB_MEX_FILE
+coda_matlab_la_LDFLAGS = -module -shared -avoid-version -export-symbols-regex mexFunction -shrext @MEXEXT@
+coda_matlab_la_LIBADD = libcoda_internal.la
+coda_matlab_la_DEPENDENCIES = libcoda_internal.la
 endif
 
 # python
@@ -909,7 +896,6 @@ indent:
 
 EXTRA_DIST += \
 	CMakeLists.txt \
-	CMakeModules/CheckTypeExists.cmake \
 	CMakeModules/FindNumPy.cmake \
 	CMakeModules/FindHDF4.cmake \
 	CMakeModules/FindHDF5.cmake \

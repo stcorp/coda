@@ -173,6 +173,7 @@
 		<File RelativePath="..\libcoda\coda-read-bits.h"/>
 		<File RelativePath="..\libcoda\coda-read-bytes.h"/>
 		<File RelativePath="..\libcoda\coda-read-bytes-in-bounds.h"/>
+		<File RelativePath="..\libcoda\coda-read-partial-array.h"/>
 		<File RelativePath="..\libcoda\coda-rinex.c"/>
 		<File RelativePath="..\libcoda\coda-rinex.h"/>
 		<File RelativePath="..\libcoda\coda-sp3.c"/>

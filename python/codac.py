@@ -144,6 +144,50 @@ def cursor_read_char_array(*args):
   return _codac.cursor_read_char_array(*args)
 cursor_read_char_array = _codac.cursor_read_char_array
 
+def cursor_read_int8_partial_array(*args):
+  return _codac.cursor_read_int8_partial_array(*args)
+cursor_read_int8_partial_array = _codac.cursor_read_int8_partial_array
+
+def cursor_read_uint8_partial_array(*args):
+  return _codac.cursor_read_uint8_partial_array(*args)
+cursor_read_uint8_partial_array = _codac.cursor_read_uint8_partial_array
+
+def cursor_read_int16_partial_array(*args):
+  return _codac.cursor_read_int16_partial_array(*args)
+cursor_read_int16_partial_array = _codac.cursor_read_int16_partial_array
+
+def cursor_read_uint16_partial_array(*args):
+  return _codac.cursor_read_uint16_partial_array(*args)
+cursor_read_uint16_partial_array = _codac.cursor_read_uint16_partial_array
+
+def cursor_read_int32_partial_array(*args):
+  return _codac.cursor_read_int32_partial_array(*args)
+cursor_read_int32_partial_array = _codac.cursor_read_int32_partial_array
+
+def cursor_read_uint32_partial_array(*args):
+  return _codac.cursor_read_uint32_partial_array(*args)
+cursor_read_uint32_partial_array = _codac.cursor_read_uint32_partial_array
+
+def cursor_read_int64_partial_array(*args):
+  return _codac.cursor_read_int64_partial_array(*args)
+cursor_read_int64_partial_array = _codac.cursor_read_int64_partial_array
+
+def cursor_read_uint64_partial_array(*args):
+  return _codac.cursor_read_uint64_partial_array(*args)
+cursor_read_uint64_partial_array = _codac.cursor_read_uint64_partial_array
+
+def cursor_read_float_partial_array(*args):
+  return _codac.cursor_read_float_partial_array(*args)
+cursor_read_float_partial_array = _codac.cursor_read_float_partial_array
+
+def cursor_read_double_partial_array(*args):
+  return _codac.cursor_read_double_partial_array(*args)
+cursor_read_double_partial_array = _codac.cursor_read_double_partial_array
+
+def cursor_read_char_partial_array(*args):
+  return _codac.cursor_read_char_partial_array(*args)
+cursor_read_char_partial_array = _codac.cursor_read_char_partial_array
+
 def cursor_read_complex_double_pair(*args):
   return _codac.cursor_read_complex_double_pair(*args)
 cursor_read_complex_double_pair = _codac.cursor_read_complex_double_pair

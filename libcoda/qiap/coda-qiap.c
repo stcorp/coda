@@ -1182,6 +1182,95 @@ static int perform_actions_for_array(const coda_cursor *cursor, coda_native_type
     return 0;
 }
 
+static int perform_actions_for_partial_array(const coda_cursor *cursor, long offset, long length,
+                                             coda_native_type native_type, void *dst)
+{
+    tree_node *qiap_info;
+    int result;
+
+    if (coda_cursor_get_qiap_info(cursor, &qiap_info) != 0)
+    {
+        return -1;
+    }
+    if (!enable_qiap || qiap_info == NULL)
+    {
+        return 0;
+    }
+    result = tree_node_has_items_for_array_cursor(qiap_info, 0, cursor);
+    if (result < 0)
+    {
+        return -1;
+    }
+    if (result == 1)
+    {
+        if (length > 0)
+        {
+            coda_cursor local_cursor = *cursor;
+            long i;
+
+            if (coda_cursor_goto_array_element_by_index(&local_cursor, offset) != 0)
+            {
+                return -1;
+            }
+            for (i = 0; i < length; i++)
+            {
+                switch (native_type)
+                {
+                    case coda_native_type_int8:
+                        result = coda_cursor_read_int8(&local_cursor, &(((int8_t *)dst)[i]));
+                        break;
+                    case coda_native_type_uint8:
+                        result = coda_cursor_read_uint8(&local_cursor, &(((uint8_t *)dst)[i]));
+                        break;
+                    case coda_native_type_int16:
+                        result = coda_cursor_read_int16(&local_cursor, &(((int16_t *)dst)[i]));
+                        break;
+                    case coda_native_type_uint16:
+                        result = coda_cursor_read_uint16(&local_cursor, &(((uint16_t *)dst)[i]));
+                        break;
+                    case coda_native_type_int32:
+                        result = coda_cursor_read_int32(&local_cursor, &(((int32_t *)dst)[i]));
+                        break;
+                    case coda_native_type_uint32:
+                        result = coda_cursor_read_uint32(&local_cursor, &(((uint32_t *)dst)[i]));
+                        break;
+                    case coda_native_type_int64:
+                        result = coda_cursor_read_int64(&local_cursor, &(((int64_t *)dst)[i]));
+                        break;
+                    case coda_native_type_uint64:
+                        result = coda_cursor_read_uint64(&local_cursor, &(((uint64_t *)dst)[i]));
+                        break;
+                    case coda_native_type_float:
+                        result = coda_cursor_read_float(&local_cursor, &(((float *)dst)[i]));
+                        break;
+                    case coda_native_type_double:
+                        result = coda_cursor_read_double(&local_cursor, &(((double *)dst)[i]));
+                        break;
+                    case coda_native_type_char:
+                        result = coda_cursor_read_char(&local_cursor, &(((char *)dst)[i]));
+                        break;
+                    default:
+                        assert(0);
+                        exit(1);
+                }
+                if (result < 0)
+                {
+                    return -1;
+                }
+                if (i < length - 1)
+                {
+                    if (coda_cursor_goto_next_array_element(&local_cursor) != 0)
+                    {
+                        return -1;
+                    }
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
 int coda_qiap_perform_actions_for_int8_array(const coda_cursor *cursor, int8_t *dst)
 {
     return perform_actions_for_array(cursor, coda_native_type_int8, dst);
@@ -1237,6 +1326,64 @@ int coda_qiap_perform_actions_for_char_array(const coda_cursor *cursor, char *ds
     return perform_actions_for_array(cursor, coda_native_type_char, dst);
 }
 
+int coda_qiap_perform_actions_for_int8_partial_array(const coda_cursor *cursor, long offset, long length, int8_t *dst)
+{
+    return perform_actions_for_partial_array(cursor, offset, length, coda_native_type_int8, dst);
+}
+
+int coda_qiap_perform_actions_for_uint8_partial_array(const coda_cursor *cursor, long offset, long length, uint8_t *dst)
+{
+    return perform_actions_for_partial_array(cursor, offset, length, coda_native_type_uint8, dst);
+}
+
+int coda_qiap_perform_actions_for_int16_partial_array(const coda_cursor *cursor, long offset, long length, int16_t *dst)
+{
+    return perform_actions_for_partial_array(cursor, offset, length, coda_native_type_int16, dst);
+}
+
+int coda_qiap_perform_actions_for_uint16_partial_array(const coda_cursor *cursor, long offset, long length,
+                                                       uint16_t *dst)
+{
+    return perform_actions_for_partial_array(cursor, offset, length, coda_native_type_uint16, dst);
+}
+
+int coda_qiap_perform_actions_for_int32_partial_array(const coda_cursor *cursor, long offset, long length, int32_t *dst)
+{
+    return perform_actions_for_partial_array(cursor, offset, length, coda_native_type_int32, dst);
+}
+
+int coda_qiap_perform_actions_for_uint32_partial_array(const coda_cursor *cursor, long offset, long length,
+                                                       uint32_t *dst)
+{
+    return perform_actions_for_partial_array(cursor, offset, length, coda_native_type_uint32, dst);
+}
+
+int coda_qiap_perform_actions_for_int64_partial_array(const coda_cursor *cursor, long offset, long length, int64_t *dst)
+{
+    return perform_actions_for_partial_array(cursor, offset, length, coda_native_type_int64, dst);
+}
+
+int coda_qiap_perform_actions_for_uint64_partial_array(const coda_cursor *cursor, long offset, long length,
+                                                       uint64_t *dst)
+{
+    return perform_actions_for_partial_array(cursor, offset, length, coda_native_type_uint64, dst);
+}
+
+int coda_qiap_perform_actions_for_float_partial_array(const coda_cursor *cursor, long offset, long length, float *dst)
+{
+    return perform_actions_for_partial_array(cursor, offset, length, coda_native_type_float, dst);
+}
+
+int coda_qiap_perform_actions_for_double_partial_array(const coda_cursor *cursor, long offset, long length, double *dst)
+{
+    return perform_actions_for_partial_array(cursor, offset, length, coda_native_type_double, dst);
+}
+
+int coda_qiap_perform_actions_for_char_partial_array(const coda_cursor *cursor, long offset, long length, char *dst)
+{
+    return perform_actions_for_partial_array(cursor, offset, length, coda_native_type_char, dst);
+}
+
 /** Set the location of the QIAP Issue Report that should be used.
  * This function should be called before coda_init() is called.
  *
@@ -1245,7 +1392,7 @@ int coda_qiap_perform_actions_for_char_array(const coda_cursor *cursor, char *ds
  * Specifying a path using this function will prevent CODA from using the CODA_QIAP_REPORT environment variable.
  * If you still want CODA to acknowledge the CODA_QIAP_REPORT environment variable then use something like this in your
  * code:
- * \code
+ * \code{.c}
  * if (getenv("CODA_QIAP_REPORT") == NULL)
  * {
  *     coda_qiap_set_report("<path to QIAP Issue Report>");
@@ -1289,7 +1436,7 @@ LIBCODA_API int coda_qiap_set_report(const char *path)
  * Specifying a log location using this function will prevent CODA from using the CODA_QIAP_LOG environment variable.
  * If you still want CODA to acknowledge the CODA_QIAP_LOG environment variable then use something like this in your
  * code:
- * \code
+ * \code{.c}
  * if (getenv("CODA_QIAP_LOG") == NULL)
  * {
  *     coda_qiap_set_action_log("<QIAP action log file>");

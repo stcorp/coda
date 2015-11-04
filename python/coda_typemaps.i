@@ -386,6 +386,38 @@
 %ignore __function_name ## ;
 %enddef
 
+/*
+    'generic' helper function to read partial C arrays of a specific type
+    (e.g. int8) into a numpy object of equivalent type.
+*/
+%define PARTIAL_NUMPY_OUTPUT_HELPER(__helper_name, __function_name, __native_type, __numpy_type)
+%inline
+%{
+    PyObject * ## __helper_name ## (const coda_cursor *cursor, long offset, long length)
+    {
+        int tmp_result;
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
+        PyObject *tmp;
+
+		tmp_dims_int[0] = length;
+        tmp = PyArray_SimpleNew(1, tmp_dims_int, __numpy_type);
+        if (tmp == NULL)
+        {
+            return PyErr_NoMemory();
+        }
+
+        tmp_result = __function_name(cursor, offset, length, (__native_type*)PyArray_DATA((PyArrayObject *)tmp));
+        if (tmp_result < 0)
+        {
+            Py_DECREF(tmp);
+            return PyErr_Format(codacError, #__function_name"(): %s", coda_errno_to_string(coda_errno));
+        }
+
+        return tmp;
+    }        
+%}
+%ignore __function_name ## ;
+%enddef
 
 /*
     'generic' helper function to read C arrays of special types

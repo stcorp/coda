@@ -66,28 +66,6 @@ void coda_hdf5_type_delete(coda_dynamic_type *type)
                 H5Tclose(compound_type->datatype_id);
             }
             break;
-        case tag_hdf5_attribute:
-            if (((coda_hdf5_attribute *)type)->base_type != NULL)
-            {
-                coda_dynamic_type_delete((coda_dynamic_type *)((coda_hdf5_attribute *)type)->base_type);
-            }
-            H5Sclose(((coda_hdf5_attribute *)type)->dataspace_id);
-            H5Aclose(((coda_hdf5_attribute *)type)->attribute_id);
-            break;
-        case tag_hdf5_attribute_record:
-            if (((coda_hdf5_attribute_record *)type)->attribute != NULL)
-            {
-                for (i = 0; i < ((coda_hdf5_attribute_record *)type)->definition->num_fields; i++)
-                {
-                    if (((coda_hdf5_attribute_record *)type)->attribute[i] != NULL)
-                    {
-                        coda_dynamic_type_delete((coda_dynamic_type *)
-                                                 ((coda_hdf5_attribute_record *)type)->attribute[i]);
-                    }
-                }
-                free(((coda_hdf5_attribute_record *)type)->attribute);
-            }
-            break;
         case tag_hdf5_group:
             if (((coda_hdf5_group *)type)->attributes != NULL)
             {
@@ -284,9 +262,7 @@ static int new_hdf5BasicDataType(hid_t datatype_id, coda_hdf5_data_type **type, 
                 else
                 {
                     /* unsupported floating point type */
-                    coda_hdf5_type_delete((coda_dynamic_type *)basic_type);
-                    H5Tclose(native_type);
-                    return 1;
+                    result = 1;
                 }
                 H5Tclose(native_type);
                 if (result != 0)
@@ -480,6 +456,7 @@ static int new_hdf5DataType(hid_t datatype_id, coda_hdf5_data_type **type, int a
         case H5T_VLEN:
         case H5T_NO_CLASS:
         case H5T_NCLASSES:
+            H5Tclose(datatype_id);
             /* we do not support these data types */
             break;
     }
@@ -487,149 +464,460 @@ static int new_hdf5DataType(hid_t datatype_id, coda_hdf5_data_type **type, int a
     return 1;
 }
 
-static int new_hdf5Attribute(hid_t attr_id, coda_hdf5_attribute **type)
+static int new_hdf5AttributeDefinition(hid_t attr_id, coda_type **type)
 {
-    coda_hdf5_attribute *attr;
+    coda_type *definition = NULL;
+    hid_t dataspace_id;
+    hid_t datatype_id;
+    hid_t enum_datatype_id = -1;
     hsize_t dim[CODA_MAX_NUM_DIMS];
     int num_dims;
-    int result;
     int i;
 
-    attr = malloc(sizeof(coda_hdf5_attribute));
-    if (attr == NULL)
-    {
-        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_hdf5_attribute), __FILE__, __LINE__);
-        H5Aclose(attr_id);
-        return -1;
-    }
-    attr->backend = coda_backend_hdf5;
-    attr->definition = NULL;
-    attr->tag = tag_hdf5_attribute;
-    attr->base_type = NULL;
-    attr->attribute_id = attr_id;
-    attr->dataspace_id = H5Aget_space(attr_id);
-    if (attr->dataspace_id < 0)
+    dataspace_id = H5Aget_space(attr_id);
+    if (dataspace_id < 0)
     {
         coda_set_error(CODA_ERROR_HDF5, NULL);
-        H5Aclose(attr_id);
-        free(attr);
         return -1;
     }
-    if (!H5Sis_simple(attr->dataspace_id))
+    if (!H5Sis_simple(dataspace_id))
     {
         /* we don't support complex dataspaces */
-        coda_hdf5_type_delete((coda_dynamic_type *)attr);
+        H5Sclose(dataspace_id);
         return 1;
     }
-    attr->definition = coda_type_array_new(coda_format_hdf5);
-    if (attr->definition == NULL)
-    {
-        coda_hdf5_type_delete((coda_dynamic_type *)attr);
-        return -1;
-    }
-    num_dims = H5Sget_simple_extent_ndims(attr->dataspace_id);
+    num_dims = H5Sget_simple_extent_ndims(dataspace_id);
     if (num_dims < 0)
     {
         coda_set_error(CODA_ERROR_HDF5, NULL);
-        coda_hdf5_type_delete((coda_dynamic_type *)attr);
+        H5Sclose(dataspace_id);
         return -1;
     }
     if (num_dims > CODA_MAX_NUM_DIMS)
     {
         /* we don't support arrays with more dimensions than CODA can handle */
-        coda_hdf5_type_delete((coda_dynamic_type *)attr);
+        H5Sclose(dataspace_id);
         return 1;
     }
-    if (H5Sget_simple_extent_dims(attr->dataspace_id, dim, NULL) < 0)
+    if (num_dims > 0)
     {
-        coda_set_error(CODA_ERROR_HDF5, NULL);
-        coda_hdf5_type_delete((coda_dynamic_type *)attr);
-        return -1;
-    }
-    for (i = 0; i < num_dims; i++)
-    {
-        if (coda_type_array_add_fixed_dimension(attr->definition, (long)dim[i]) != 0)
+        if (H5Sget_simple_extent_dims(dataspace_id, dim, NULL) < 0)
         {
-            coda_hdf5_type_delete((coda_dynamic_type *)attr);
+            coda_set_error(CODA_ERROR_HDF5, NULL);
+            H5Sclose(dataspace_id);
             return -1;
         }
     }
+    H5Sclose(dataspace_id);
 
-    result = new_hdf5DataType(H5Aget_type(attr->attribute_id), &attr->base_type, 0);
-    if (result < 0)
+    datatype_id = H5Aget_type(attr_id);
+    switch (H5Tget_class(datatype_id))
     {
-        coda_hdf5_type_delete((coda_dynamic_type *)attr);
-        return -1;
-    }
-    if (result == 1)
-    {
-        /* unsupported basic type -> ignore this dataset */
-        coda_hdf5_type_delete((coda_dynamic_type *)attr);
-        return 1;
-    }
-    if (coda_type_array_set_base_type(attr->definition, attr->base_type->definition) != 0)
-    {
-        coda_hdf5_type_delete((coda_dynamic_type *)attr);
-        return -1;
+        case H5T_ENUM:
+            enum_datatype_id = datatype_id;
+            datatype_id = H5Tget_super(enum_datatype_id);
+            H5Tclose(enum_datatype_id);
+            if (datatype_id < 0)
+            {
+                coda_set_error(CODA_ERROR_HDF5, NULL);
+                return -1;
+            }
+            /* pass through and determine native type from super type of enumeration */
+        case H5T_INTEGER:
+            {
+                int sign = 0;
+                int result = 0;
+
+                definition = (coda_type *)coda_type_number_new(coda_format_hdf5, coda_integer_class);
+                if (definition == NULL)
+                {
+                    H5Tclose(datatype_id);
+                    return -1;
+                }
+                switch (H5Tget_sign(datatype_id))
+                {
+                    case H5T_SGN_NONE:
+                        /* unsigned type */
+                        sign = 0;
+                        break;
+                    case H5T_SGN_ERROR:
+                        coda_set_error(CODA_ERROR_HDF5, NULL);
+                        coda_type_release(definition);
+                        H5Tclose(datatype_id);
+                        return -1;
+                    default:
+                        /* signed type */
+                        sign = 1;
+                        break;
+                }
+                switch (H5Tget_size(datatype_id))
+                {
+                    case 1:
+                        if (sign)
+                        {
+                            result = coda_type_set_read_type(definition, coda_native_type_int8);
+                        }
+                        else
+                        {
+                            result = coda_type_set_read_type(definition, coda_native_type_uint8);
+                        }
+                        if (result == 0)
+                        {
+                            result = coda_type_set_byte_size(definition, 1);
+                        }
+                        break;
+                    case 2:
+                        if (sign)
+                        {
+                            result = coda_type_set_read_type(definition, coda_native_type_int16);
+                        }
+                        else
+                        {
+                            result = coda_type_set_read_type(definition, coda_native_type_uint16);
+                        }
+                        if (result == 0)
+                        {
+                            result = coda_type_set_byte_size(definition, 2);
+                        }
+                        break;
+                    case 3:
+                    case 4:
+                        if (sign)
+                        {
+                            result = coda_type_set_read_type(definition, coda_native_type_int32);
+                        }
+                        else
+                        {
+                            result = coda_type_set_read_type(definition, coda_native_type_uint32);
+                        }
+                        if (result == 0)
+                        {
+                            result = coda_type_set_byte_size(definition, 4);
+                        }
+                        break;
+                    case 5:
+                    case 6:
+                    case 7:
+                    case 8:
+                        if (sign)
+                        {
+                            result = coda_type_set_read_type(definition, coda_native_type_int64);
+                        }
+                        else
+                        {
+                            result = coda_type_set_read_type(definition, coda_native_type_uint64);
+                        }
+                        if (result == 0)
+                        {
+                            result = coda_type_set_byte_size(definition, 8);
+                        }
+                        break;
+                    default:
+                        /* the integer type is larger than what CODA can support */
+                        coda_type_release(definition);
+                        H5Tclose(datatype_id);
+                        return 1;
+                }
+                H5Tclose(datatype_id);
+                if (result != 0)
+                {
+                    coda_type_release(definition);
+                    return -1;
+                }
+#ifndef WORDS_BIGENDIAN
+                if (coda_type_number_set_endianness((coda_type_number *)definition, coda_little_endian) != 0)
+                {
+                    coda_type_release(definition);
+                    return -1;
+                }
+#endif
+            }
+            break;
+        case H5T_FLOAT:
+            {
+                hid_t native_type;
+                int result = 0;
+
+                definition = (coda_type *)coda_type_number_new(coda_format_hdf5, coda_real_class);
+                if (definition == NULL)
+                {
+                    H5Tclose(datatype_id);
+                    return -1;
+                }
+                native_type = H5Tget_native_type(datatype_id, H5T_DIR_ASCEND);
+                if (native_type < 0)
+                {
+                    coda_type_release(definition);
+                    H5Tclose(datatype_id);
+                    return -1;
+                }
+                if (H5Tequal(native_type, H5T_NATIVE_FLOAT))
+                {
+                    result = coda_type_set_read_type(definition, coda_native_type_float);
+                    if (result == 0)
+                    {
+                        result = coda_type_set_byte_size(definition, 4);
+                    }
+                }
+                else if (H5Tequal(native_type, H5T_NATIVE_DOUBLE))
+                {
+                    result = coda_type_set_read_type(definition, coda_native_type_double);
+                    if (result == 0)
+                    {
+                        result = coda_type_set_byte_size(definition, 8);
+                    }
+                }
+                else
+                {
+                    /* unsupported floating point type */
+                    result = 1;
+                }
+                H5Tclose(native_type);
+                H5Tclose(datatype_id);
+                if (result != 0)
+                {
+                    coda_type_release(definition);
+                    return result;
+                }
+#ifndef WORDS_BIGENDIAN
+                if (coda_type_number_set_endianness((coda_type_number *)definition, coda_little_endian) != 0)
+                {
+                    coda_type_release(definition);
+                    return -1;
+                }
+#endif
+            }
+            break;
+        case H5T_STRING:
+            definition = (coda_type *)coda_type_text_new(coda_format_hdf5);
+            if (definition == NULL)
+            {
+                H5Tclose(datatype_id);
+                return -1;
+            }
+            break;
+        default:
+            /* unsupported basic data type */
+            H5Tclose(datatype_id);
+            return 1;
     }
 
-    *type = attr;
+    if (num_dims > 0)
+    {
+        coda_type_array *array = NULL;
+
+        array = coda_type_array_new(coda_format_hdf5);
+        if (array == NULL)
+        {
+            coda_type_release(definition);
+            return -1;
+        }
+
+        if (coda_type_array_set_base_type(array, definition) != 0)
+        {
+            coda_type_release(definition);
+            coda_type_release((coda_type *)array);
+            return -1;
+        }
+        for (i = 0; i < num_dims; i++)
+        {
+            if (coda_type_array_add_fixed_dimension(array, (long)dim[i]) != 0)
+            {
+                coda_type_release((coda_type *)array);
+                return -1;
+            }
+        }
+        definition = (coda_type *)array;
+    }
+
+    *type = definition;
 
     return 0;
 }
 
-static coda_hdf5_attribute_record *new_hdf5AttributeRecord(hid_t obj_id)
+static int new_hdf5Attribute(coda_product *product, hid_t attr_id, coda_dynamic_type **type)
 {
-    coda_hdf5_attribute_record *attrs;
+    coda_type *definition;
+    hid_t datatype_id;
+    uint8_t *buffer = NULL;
+    int is_variable_string;
+    long num_elements;
+    long size = -1;
+    int result;
+    int k;
+
+    result = new_hdf5AttributeDefinition(attr_id, &definition);
+    if (result != 0)
+    {
+        return result;
+    }
+
+    datatype_id = H5Aget_type(attr_id);
+    size = H5Tget_size(datatype_id);
+    is_variable_string = H5Tis_variable_str(datatype_id);
+
+    num_elements = 1;
+    if (definition->type_class == coda_array_class)
+    {
+        num_elements = ((coda_type_array *)definition)->num_elements;
+    }
+
+    buffer = malloc((size_t)num_elements * size);
+    if (buffer == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                       (long)num_elements * size, __FILE__, __LINE__);
+        coda_type_release(definition);
+        H5Tclose(datatype_id);
+        return -1;
+    }
+
+    if (H5Aread(attr_id, datatype_id, buffer) < 0)
+    {
+        coda_set_error(CODA_ERROR_HDF5, NULL);
+        coda_type_release(definition);
+        H5Tclose(datatype_id);
+        free(buffer);
+        return -1;
+    }
+    H5Tclose(datatype_id);
+
+    if (definition->type_class == coda_array_class)
+    {
+        coda_mem_array *array;
+        coda_type *base_type = ((coda_type_array *)definition)->base_type;
+        long i;
+
+        array = coda_mem_array_new((coda_type_array *)definition, NULL);
+        if (array == NULL)
+        {
+            coda_type_release(definition);
+            if (is_variable_string)
+            {
+                for (k = 0; k < num_elements; k++)
+                {
+                    free(((char **)buffer)[k]);
+                }
+            }
+            free(buffer);
+            return -1;
+        }
+
+        for (i = 0; i < num_elements; i++)
+        {
+            coda_mem_data *element;
+
+            if (base_type->read_type == coda_native_type_string && is_variable_string)
+            {
+                element = coda_mem_string_new((coda_type_text *)base_type, NULL, product, ((char **)buffer)[i]);
+            }
+            else
+            {
+                element = coda_mem_data_new(base_type, NULL, product, size, &(((uint8_t *)buffer)[i * size]));
+            }
+            if (element == NULL)
+            {
+                coda_dynamic_type_delete((coda_dynamic_type *)array);
+                if (is_variable_string)
+                {
+                    for (k = 0; k < num_elements; k++)
+                    {
+                        free(((char **)buffer)[k]);
+                    }
+                }
+                free(buffer);
+                return -1;
+            }
+            if (coda_mem_array_set_element(array, i, (coda_dynamic_type *)element) != 0)
+            {
+                coda_dynamic_type_delete((coda_dynamic_type *)element);
+                coda_dynamic_type_delete((coda_dynamic_type *)array);
+                if (is_variable_string)
+                {
+                    for (k = 0; k < num_elements; k++)
+                    {
+                        free(((char **)buffer)[k]);
+                    }
+                }
+                free(buffer);
+                return -1;
+            }
+        }
+
+        *type = (coda_dynamic_type *)array;
+    }
+    else
+    {
+        coda_mem_data *element;
+
+        if (definition->read_type == coda_native_type_string && is_variable_string)
+        {
+            element = coda_mem_string_new((coda_type_text *)definition, NULL, product, *((char **)buffer));
+        }
+        else
+        {
+            element = coda_mem_data_new(definition, NULL, product, size, buffer);
+        }
+        if (element == NULL)
+        {
+            if (is_variable_string)
+            {
+                for (k = 0; k < num_elements; k++)
+                {
+                    free(((char **)buffer)[k]);
+                }
+            }
+            free(buffer);
+            return -1;
+        }
+
+        *type = (coda_dynamic_type *)element;
+    }
+
+    if (is_variable_string)
+    {
+        for (k = 0; k < num_elements; k++)
+        {
+            free(((char **)buffer)[k]);
+        }
+    }
+    free(buffer);
+
+    return 0;
+}
+
+static coda_mem_record *new_hdf5AttributeRecord(coda_product *product, hid_t obj_id)
+{
+    coda_type_record *definition;
+    coda_mem_record *attrs;
     long num_attributes;
-    long index;
     long i;
     int result;
 
-    attrs = malloc(sizeof(coda_hdf5_attribute_record));
+    definition = coda_type_record_new(coda_format_hdf5);
+    if (definition == NULL)
+    {
+        return NULL;
+    }
+    attrs = coda_mem_record_new(definition, NULL);
     if (attrs == NULL)
     {
-        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_hdf5_attribute_record), __FILE__, __LINE__);
+        coda_type_release((coda_type *)definition);
         return NULL;
     }
-    attrs->backend = coda_backend_hdf5;
-    attrs->definition = NULL;
-    attrs->tag = tag_hdf5_attribute_record;
-    attrs->obj_id = obj_id;
-    attrs->attribute = NULL;
 
-    attrs->definition = coda_type_record_new(coda_format_hdf5);
-    if (attrs->definition == NULL)
-    {
-        coda_hdf5_type_delete((coda_dynamic_type *)attrs);
-        return NULL;
-    }
     num_attributes = H5Aget_num_attrs(obj_id);
     if (num_attributes < 0)
     {
         coda_set_error(CODA_ERROR_HDF5, NULL);
-        coda_hdf5_type_delete((coda_dynamic_type *)attrs);
+        coda_dynamic_type_delete((coda_dynamic_type *)attrs);
         return NULL;
-    }
-    attrs->attribute = malloc(num_attributes * sizeof(coda_hdf5_attribute *));
-    if (attrs->attribute == NULL)
-    {
-        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       num_attributes * sizeof(coda_hdf5_attribute *), __FILE__, __LINE__);
-        coda_hdf5_type_delete((coda_dynamic_type *)attrs);
-        return NULL;
-    }
-    for (i = 0; i < num_attributes; i++)
-    {
-        attrs->attribute[i] = NULL;
     }
 
     /* initialize attributes */
-    index = 0;
     for (i = 0; i < num_attributes; i++)
     {
+        coda_dynamic_type *attribute;
         hid_t attr_id;
         char *name;
         int length;
@@ -638,63 +926,67 @@ static coda_hdf5_attribute_record *new_hdf5AttributeRecord(hid_t obj_id)
         if (attr_id < 0)
         {
             coda_set_error(CODA_ERROR_HDF5, NULL);
-            coda_hdf5_type_delete((coda_dynamic_type *)attrs);
+            coda_dynamic_type_delete((coda_dynamic_type *)attrs);
             return NULL;
         }
 
-        result = new_hdf5Attribute(attr_id, &attrs->attribute[index]);
-        if (result < 0)
-        {
-            /* attr_id is closed by new_hdf5Attributes() */
-            coda_hdf5_type_delete((coda_dynamic_type *)attrs);
-            return NULL;
-        }
-        if (result == 1)
-        {
-            /* unsupported basic type -> ignore this attribute */
-            continue;
-        }
         length = H5Aget_name(attr_id, 0, NULL);
         if (length < 0)
         {
             coda_set_error(CODA_ERROR_HDF5, NULL);
-            coda_hdf5_type_delete((coda_dynamic_type *)attrs);
+            coda_dynamic_type_delete((coda_dynamic_type *)attrs);
+            H5Aclose(attr_id);
             return NULL;
         }
         if (length == 0)
         {
             /* we ignore attributes that have no name */
-            coda_hdf5_type_delete((coda_dynamic_type *)attrs->attribute[index]);
-            attrs->attribute[index] = NULL;
+            H5Aclose(attr_id);
             continue;
         }
-
         name = malloc(length + 1);
         if (name == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
                            (long)length + 1, __FILE__, __LINE__);
-            coda_hdf5_type_delete((coda_dynamic_type *)attrs);
+            coda_dynamic_type_delete((coda_dynamic_type *)attrs);
+            H5Aclose(attr_id);
             return NULL;
         }
         if (H5Aget_name(attr_id, length + 1, name) < 0)
         {
             coda_set_error(CODA_ERROR_HDF5, NULL);
-            coda_hdf5_type_delete((coda_dynamic_type *)attrs);
+            coda_dynamic_type_delete((coda_dynamic_type *)attrs);
             free(name);
+            H5Aclose(attr_id);
             return NULL;
         }
-        if (coda_type_record_create_field(attrs->definition, name, (coda_type *)attrs->attribute[index]->definition) !=
-            0)
-        {
-            coda_hdf5_type_delete((coda_dynamic_type *)attrs);
-            free(name);
-            return NULL;
-        }
-        free(name);
 
-        /* increase number of unignored attributes */
-        index++;
+        result = new_hdf5Attribute(product, attr_id, &attribute);
+        H5Aclose(attr_id);
+        if (result < 0)
+        {
+            /* attr_id is closed by new_hdf5Attributes() */
+            coda_dynamic_type_delete((coda_dynamic_type *)attrs);
+            free(name);
+            return NULL;
+        }
+        if (result == 1)
+        {
+            /* unsupported basic type -> ignore this attribute */
+            free(name);
+            continue;
+        }
+
+        if (coda_mem_record_add_field(attrs, name, attribute, 1) != 0)
+        {
+            coda_dynamic_type_delete((coda_dynamic_type *)attribute);
+            coda_dynamic_type_delete((coda_dynamic_type *)attrs);
+            free(name);
+            return NULL;
+        }
+
+        free(name);
     }
 
     return attrs;
@@ -781,7 +1073,7 @@ int coda_hdf5_create_tree(coda_hdf5_product *product, hid_t loc_id, const char *
                     group->object[i] = NULL;
                 }
 
-                group->attributes = new_hdf5AttributeRecord(group->group_id);
+                group->attributes = new_hdf5AttributeRecord((coda_product *)product, group->group_id);
                 if (group->attributes == NULL)
                 {
                     coda_hdf5_type_delete((coda_dynamic_type *)group);
@@ -889,7 +1181,7 @@ int coda_hdf5_create_tree(coda_hdf5_product *product, hid_t loc_id, const char *
                     return -1;
                 }
 
-                dataset->attributes = new_hdf5AttributeRecord(dataset->dataset_id);
+                dataset->attributes = new_hdf5AttributeRecord((coda_product *)product, dataset->dataset_id);
                 if (dataset->attributes == NULL)
                 {
                     coda_hdf5_type_delete((coda_dynamic_type *)dataset);
@@ -955,7 +1247,6 @@ int coda_hdf5_create_tree(coda_hdf5_product *product, hid_t loc_id, const char *
             if (length < 0)
             {
                 coda_set_error(CODA_ERROR_HDF5, NULL);
-                coda_hdf5_type_delete((coda_dynamic_type *)group);
                 return -1;
             }
             if (length == 0)
@@ -969,13 +1260,11 @@ int coda_hdf5_create_tree(coda_hdf5_product *product, hid_t loc_id, const char *
             {
                 coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
                                (long)length + 1, __FILE__, __LINE__);
-                coda_hdf5_type_delete((coda_dynamic_type *)group);
                 return -1;
             }
             if (H5Gget_objname_by_idx(group->group_id, i, name, length + 1) < 0)
             {
                 coda_set_error(CODA_ERROR_HDF5, NULL);
-                coda_hdf5_type_delete((coda_dynamic_type *)group);
                 free(name);
                 return -1;
             }
@@ -983,7 +1272,6 @@ int coda_hdf5_create_tree(coda_hdf5_product *product, hid_t loc_id, const char *
             result = coda_hdf5_create_tree(product, group->group_id, name, &group->object[index]);
             if (result == -1)
             {
-                coda_hdf5_type_delete((coda_dynamic_type *)group);
                 free(name);
                 return -1;
             }
@@ -995,7 +1283,6 @@ int coda_hdf5_create_tree(coda_hdf5_product *product, hid_t loc_id, const char *
             }
             if (coda_type_record_create_field(group->definition, name, group->object[index]->definition) != 0)
             {
-                coda_hdf5_type_delete((coda_dynamic_type *)group);
                 free(name);
                 return -1;
             }

@@ -1,5 +1,5 @@
 # autoconf file for CODA
-AC_INIT([CODA],[2.13])
+AC_INIT([CODA],[2.14])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE(foreign subdir-objects 1.10 -Wall)
 
@@ -99,8 +99,8 @@ AC_CONFIG_FILES([windows/codawin32.iss windows/codawin64.iss windows/setup.py])
 #    increment age.
 # 6. If any interfaces have been removed or changed since the last public
 #    release, then set age to 0.
-LIBCODA_CURRENT=11
-LIBCODA_REVISION=4
+LIBCODA_CURRENT=12
+LIBCODA_REVISION=0
 LIBCODA_AGE=5
 AC_SUBST(LIBCODA_CURRENT)
 AC_SUBST(LIBCODA_REVISION)
@@ -247,14 +247,12 @@ AC_SUBST(pkgdatadir)
 # The directories for optional components start empty and will be set later
 
 idldlmexecdir=
-codaidlexamplesdir=
 matlabmexexecdir=
 codapythondir=
 codapyexecdir=
 javadir=
 
 AC_SUBST(idldlmexecdir)
-AC_SUBST(codaidlexamplesdir)
 AC_SUBST(matlabmexexecdir)
 AC_SUBST(codapythondir)
 AC_SUBST(codapyexecdir)
@@ -278,10 +276,7 @@ if test $ac_cv_enable_idl = yes ; then
 Try setting the IDL environment variable to the root of your IDL installation
 if you have IDL installed.]))
   fi
-  ST_CHECK_IDL_SYSFUN_DEF2
-  ST_CHECK_IDL_SYSRTN_UNION
   idldlmexecdir="\${pkglibdir}/idl"
-  codaidlexamplesdir="\${examplesdir}/coda_idl"
 fi
 
 AM_CONDITIONAL(BUILD_IDL, test $ac_cv_enable_idl = yes)
@@ -304,11 +299,8 @@ if test $ac_cv_enable_matlab = yes ; then
 Try setting the MATLAB environment variable to the root of your MATLAB
 installation if you have MATLAB installed.]))
   fi
-  ST_CHECK_MATLAB_R13_FUNCS
   matlabmexexecdir="\${pkglibdir}/matlab"
 fi
-
-AC_SUBST(MEXFLAGS)
 
 AM_CONDITIONAL(BUILD_MATLAB, test $ac_cv_enable_matlab = yes)
 

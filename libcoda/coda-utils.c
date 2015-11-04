@@ -296,7 +296,7 @@ char *coda_short_identifier_from_name(const char *name, hashtable *hash_data, in
  * In order for a user to fill a multidimensional array in Fortran-style with data from a multi-dimensional array
  * from a product using CODA (which uses C-style indexing), the user can use this function to provide the index
  * conversions. A small example showing how this would be done with a multi-dimensional array of doubles:
- * \code
+ * \code{.c}
  * coda_cursor_get_num_elements(cursor, &num_elements);
  * if (num_elements > 0)
  * {

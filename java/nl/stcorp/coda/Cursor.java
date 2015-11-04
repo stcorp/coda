@@ -963,28 +963,6 @@ public class Cursor
     }
 
 
-    // public BigInteger[] readBigIntegerArray(ArrayOrderingEnum array_ordering)
-    // throws CodaException
-    // {
-    // NativeTypeEnum nativeType = this.getReadType();
-    // BigInteger dst[] = new BigInteger[this.getNumElements()];
-
-    // switch(nativeType)
-    // {
-    // case coda_native_type_uint64:
-    // //
-    // codac.helper_cursor_use_read_uint64_array_to_fill_BigInteger_Array(this.cursor,
-    // dst, array_ordering);
-    // break;
-
-    // default:
-    // //
-    // codac.helper_cursor_use_read_int64_array_to_fill_BigInteger_Array(this.cursor,
-    // dst, array_ordering);
-    // }
-    // return dst;
-    // }
-
     /**
      * Retrieve a data array as type \c float from the product file.
      * 
@@ -1031,6 +1009,197 @@ public class Cursor
         codac.cursor_read_char_array(this.cursor, dst, array_ordering);
         char chardst[] = new char[dst.length];
         for (int i = 0; i < dst.length; i++)
+            chardst[i] = (char) dst[i];
+        
+        return chardst;
+    }
+
+
+    /**
+     * Retrieve a partial data array as type \c int8 from the product file.
+     * 
+     * @param offset
+     * @param length
+     * @return The values read from the product.
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public byte[] readInt8PartialArray(int offset, int length) throws CodaException
+    {
+        byte dst[] = new byte[length];
+        codac.cursor_read_int8_partial_array(this.cursor, offset, length, dst);
+        return dst;
+    }
+
+
+    /**
+     * Retrieve a partial data array as type \c uint8 from the product file.
+     * 
+     * @param offset
+     * @param length
+     * @return The values read from the product.
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public byte[] readUint8PartialArray(int offset, int length) throws CodaException
+    {
+        byte dst[] = new byte[length];
+        codac.cursor_read_uint8_partial_array(this.cursor, offset, length, dst);
+        return dst;
+    }
+
+
+    /**
+     * Retrieve a partial data array as type \c int16 from the product file.
+     * 
+     * @param offset
+     * @param length
+     * @return The values read from the product.
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public short[] readInt16PartialArray(int offset, int length) throws CodaException
+    {
+        short dst[] = new short[length];
+        codac.cursor_read_int16_partial_array(this.cursor, offset, length, dst);
+        return dst;
+    }
+
+
+    /**
+     * Retrieve a partial data array as type \c uint16 from the product file.
+     * 
+     * @param offset
+     * @param length
+     * @return The values read from the product.
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public short[] readUint16PartialArray(int offset, int length) throws CodaException
+    {
+        short dst[] = new short[length];
+        codac.cursor_read_uint16_partial_array(this.cursor, offset, length, dst);
+        return dst;
+    }
+
+
+    /**
+     * Retrieve a partial data array as type \c int32 from the product file.
+     * 
+     * @param offset
+     * @param length
+     * @return The values read from the product.
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public int[] readInt32PartialArray(int offset, int length) throws CodaException
+    {
+        int dst[] = new int[length];
+        codac.cursor_read_int32_partial_array(this.cursor, offset, length, dst);
+        return dst;
+    }
+
+
+    /**
+     * Retrieve a partial data array as type \c uint32 from the product file.
+     * 
+     * @param offset
+     * @param length
+     * @return The values read from the product.
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public int[] readUint32PartialArray(int offset, int length) throws CodaException
+    {
+        int dst[] = new int[length];
+        codac.cursor_read_uint32_partial_array(this.cursor, offset, length, dst);
+        return dst;
+    }
+
+
+    /**
+     * Retrieve a partial data array as type \c int64 from the product file.
+     * 
+     * @param offset
+     * @param length
+     * @return The values read from the product.
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public long[] readInt64PartialArray(int offset, int length) throws CodaException
+    {
+        long dst[] = new long[this.getNumElements()];
+        codac.cursor_read_int64_partial_array(this.cursor, offset, length, dst);
+        return dst;
+    }
+
+
+    /**
+     * Retrieve a partial data array as type \c uint64 from the product file.
+     * 
+     * @param offset
+     * @param length
+     * @return The values read from the product.
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public long[] readUint64PartialArray(int offset, int length) throws CodaException
+    {
+        long dst[] = new long[length];
+        codac.cursor_read_uint64_partial_array(this.cursor, offset, length, dst);
+        return dst;
+    }
+
+
+    /**
+     * Retrieve a partial data array as type \c float from the product file.
+     * 
+     * @param offset
+     * @param length
+     * @return The values read from the product.
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public float[] readFloatPartialArray(int offset, int length) throws CodaException
+    {
+        float dst[] = new float[length];
+        codac.cursor_read_float_partial_array(this.cursor, offset, length, dst);
+        return dst;
+    }
+
+
+    /**
+     * Retrieve a partial data array as type \c double from the product file.
+     * 
+     * @param offset
+     * @param length
+     * @return The values read from the product.
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public double[] readDoublePartialArray(int offset, int length) throws CodaException
+    {
+        double dst[] = new double[length];
+        codac.cursor_read_double_partial_array(this.cursor, offset, length, dst);
+        return dst;
+    }
+
+
+    /**
+     * Retrieve a partial data array as type \c char from the product file.
+     * 
+     * @param offset
+     * @param length
+     * @return The values read from the product.
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public char[] readCharPartialArray(int offset, int length) throws CodaException
+    {
+        byte dst[] = new byte[length];
+        codac.cursor_read_char_partial_array(this.cursor, offset, length, dst);
+        char chardst[] = new char[length];
+        for (int i = 0; i < length; i++)
             chardst[i] = (char) dst[i];
         
         return chardst;

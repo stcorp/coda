@@ -27,6 +27,7 @@
 #include <string.h>
 
 #include "coda-read-array.h"
+#include "coda-read-partial-array.h"
 #include "coda-transpose-array.h"
 
 #include "coda-ascbin.h"
@@ -800,17 +801,11 @@ static int read_char(const coda_cursor *cursor, char *dst)
             coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
             return -1;
 #endif
-        case coda_backend_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_cursor_read_char(cursor, dst);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
         case coda_backend_cdf:
             return coda_cdf_cursor_read_char(cursor, dst);
         case coda_backend_netcdf:
             return coda_netcdf_cursor_read_char(cursor, dst);
+        case coda_backend_hdf5:
         case coda_backend_grib:
             break;
     }
@@ -1612,17 +1607,6 @@ static int read_char_array(const coda_cursor *cursor, char *dst, coda_array_orde
             coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
             return -1;
 #endif
-        case coda_backend_hdf5:
-#ifdef HAVE_HDF5
-            if (coda_hdf5_cursor_read_char_array(cursor, dst) != 0)
-            {
-                return -1;
-            }
-            break;
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
         case coda_backend_cdf:
             if (coda_cdf_cursor_read_char_array(cursor, dst) != 0)
             {
@@ -1635,6 +1619,7 @@ static int read_char_array(const coda_cursor *cursor, char *dst, coda_array_orde
                 return -1;
             }
             break;
+        case coda_backend_hdf5:
         case coda_backend_grib:
             assert(0);
             exit(1);
@@ -1646,6 +1631,497 @@ static int read_char_array(const coda_cursor *cursor, char *dst, coda_array_orde
     }
 
     return 0;
+}
+
+static int read_int8_partial_array(const coda_cursor *cursor, long offset, long length, int8_t *dst)
+{
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_int8_partial_array(cursor, offset, length, dst);
+    if (result != 0)
+    {
+        return (result == 1 ? 0 : -1);
+    }
+#endif
+    switch (cursor->stack[cursor->n - 1].type->backend)
+    {
+        case coda_backend_ascii:
+            return coda_ascii_cursor_read_int8_partial_array(cursor, offset, length, dst);
+        case coda_backend_binary:
+            return coda_bin_cursor_read_int8_partial_array(cursor, offset, length, dst);
+        case coda_backend_memory:
+            return coda_mem_cursor_read_int8_partial_array(cursor, offset, length, dst);
+        case coda_backend_hdf4:
+#ifdef HAVE_HDF4
+            return coda_hdf4_cursor_read_int8_partial_array(cursor, offset, length, dst);
+#else
+            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
+            return -1;
+#endif
+        case coda_backend_hdf5:
+#ifdef HAVE_HDF5
+            return coda_hdf5_cursor_read_int8_partial_array(cursor, offset, length, dst);
+#else
+            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
+            return -1;
+#endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_read_int8_partial_array(cursor, offset, length, dst);
+        case coda_backend_netcdf:
+            return coda_netcdf_cursor_read_int8_partial_array(cursor, offset, length, dst);
+        case coda_backend_grib:
+            break;
+    }
+
+    assert(0);
+    exit(1);
+}
+
+static int read_uint8_partial_array(const coda_cursor *cursor, long offset, long length, uint8_t *dst)
+{
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_uint8_partial_array(cursor, offset, length, dst);
+    if (result != 0)
+    {
+        return (result == 1 ? 0 : -1);
+    }
+#endif
+    switch (cursor->stack[cursor->n - 1].type->backend)
+    {
+        case coda_backend_ascii:
+            return coda_ascii_cursor_read_uint8_partial_array(cursor, offset, length, dst);
+        case coda_backend_binary:
+            return coda_bin_cursor_read_uint8_partial_array(cursor, offset, length, dst);
+        case coda_backend_memory:
+            return coda_mem_cursor_read_uint8_partial_array(cursor, offset, length, dst);
+        case coda_backend_hdf4:
+#ifdef HAVE_HDF4
+            return coda_hdf4_cursor_read_uint8_partial_array(cursor, offset, length, dst);
+#else
+            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
+            return -1;
+#endif
+        case coda_backend_hdf5:
+#ifdef HAVE_HDF5
+            return coda_hdf5_cursor_read_uint8_partial_array(cursor, offset, length, dst);
+#else
+            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
+            return -1;
+#endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_read_uint8_partial_array(cursor, offset, length, dst);
+        case coda_backend_netcdf:
+        case coda_backend_grib:
+            break;
+    }
+
+    assert(0);
+    exit(1);
+}
+
+static int read_int16_partial_array(const coda_cursor *cursor, long offset, long length, int16_t *dst)
+{
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_int16_partial_array(cursor, offset, length, dst);
+    if (result != 0)
+    {
+        return (result == 1 ? 0 : -1);
+    }
+#endif
+    switch (cursor->stack[cursor->n - 1].type->backend)
+    {
+        case coda_backend_ascii:
+            return coda_ascii_cursor_read_int16_partial_array(cursor, offset, length, dst);
+        case coda_backend_binary:
+            return coda_bin_cursor_read_int16_partial_array(cursor, offset, length, dst);
+        case coda_backend_memory:
+            return coda_mem_cursor_read_int16_partial_array(cursor, offset, length, dst);
+        case coda_backend_hdf4:
+#ifdef HAVE_HDF4
+            return coda_hdf4_cursor_read_int16_partial_array(cursor, offset, length, dst);
+#else
+            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
+            return -1;
+#endif
+        case coda_backend_hdf5:
+#ifdef HAVE_HDF5
+            return coda_hdf5_cursor_read_int16_partial_array(cursor, offset, length, dst);
+#else
+            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
+            return -1;
+#endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_read_int16_partial_array(cursor, offset, length, dst);
+        case coda_backend_netcdf:
+            return coda_netcdf_cursor_read_int16_partial_array(cursor, offset, length, dst);
+        case coda_backend_grib:
+            break;
+    }
+
+    assert(0);
+    exit(1);
+}
+
+static int read_uint16_partial_array(const coda_cursor *cursor, long offset, long length, uint16_t *dst)
+{
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_uint16_partial_array(cursor, offset, length, dst);
+    if (result != 0)
+    {
+        return (result == 1 ? 0 : -1);
+    }
+#endif
+    switch (cursor->stack[cursor->n - 1].type->backend)
+    {
+        case coda_backend_ascii:
+            return coda_ascii_cursor_read_uint16_partial_array(cursor, offset, length, dst);
+        case coda_backend_binary:
+            return coda_bin_cursor_read_uint16_partial_array(cursor, offset, length, dst);
+        case coda_backend_memory:
+            return coda_mem_cursor_read_uint16_partial_array(cursor, offset, length, dst);
+        case coda_backend_hdf4:
+#ifdef HAVE_HDF4
+            return coda_hdf4_cursor_read_uint16_partial_array(cursor, offset, length, dst);
+#else
+            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
+            return -1;
+#endif
+        case coda_backend_hdf5:
+#ifdef HAVE_HDF5
+            return coda_hdf5_cursor_read_uint16_partial_array(cursor, offset, length, dst);
+#else
+            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
+            return -1;
+#endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_read_uint16_partial_array(cursor, offset, length, dst);
+        case coda_backend_netcdf:
+        case coda_backend_grib:
+            break;
+    }
+
+    assert(0);
+    exit(1);
+}
+
+static int read_int32_partial_array(const coda_cursor *cursor, long offset, long length, int32_t *dst)
+{
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_int32_partial_array(cursor, offset, length, dst);
+    if (result != 0)
+    {
+        return (result == 1 ? 0 : -1);
+    }
+#endif
+    switch (cursor->stack[cursor->n - 1].type->backend)
+    {
+        case coda_backend_ascii:
+            return coda_ascii_cursor_read_int32_partial_array(cursor, offset, length, dst);
+        case coda_backend_binary:
+            return coda_bin_cursor_read_int32_partial_array(cursor, offset, length, dst);
+        case coda_backend_memory:
+            return coda_mem_cursor_read_int32_partial_array(cursor, offset, length, dst);
+        case coda_backend_hdf4:
+#ifdef HAVE_HDF4
+            return coda_hdf4_cursor_read_int32_partial_array(cursor, offset, length, dst);
+#else
+            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
+            return -1;
+#endif
+        case coda_backend_hdf5:
+#ifdef HAVE_HDF5
+            return coda_hdf5_cursor_read_int32_partial_array(cursor, offset, length, dst);
+#else
+            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
+            return -1;
+#endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_read_int32_partial_array(cursor, offset, length, dst);
+        case coda_backend_netcdf:
+            return coda_netcdf_cursor_read_int32_partial_array(cursor, offset, length, dst);
+        case coda_backend_grib:
+            break;
+    }
+
+    assert(0);
+    exit(1);
+}
+
+static int read_uint32_partial_array(const coda_cursor *cursor, long offset, long length, uint32_t *dst)
+{
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_uint32_partial_array(cursor, offset, length, dst);
+    if (result != 0)
+    {
+        return (result == 1 ? 0 : -1);
+    }
+#endif
+    switch (cursor->stack[cursor->n - 1].type->backend)
+    {
+        case coda_backend_ascii:
+            return coda_ascii_cursor_read_uint32_partial_array(cursor, offset, length, dst);
+        case coda_backend_binary:
+            return coda_bin_cursor_read_uint32_partial_array(cursor, offset, length, dst);
+        case coda_backend_memory:
+            return coda_mem_cursor_read_uint32_partial_array(cursor, offset, length, dst);
+        case coda_backend_hdf4:
+#ifdef HAVE_HDF4
+            return coda_hdf4_cursor_read_uint32_partial_array(cursor, offset, length, dst);
+#else
+            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
+            return -1;
+#endif
+        case coda_backend_hdf5:
+#ifdef HAVE_HDF5
+            return coda_hdf5_cursor_read_uint32_partial_array(cursor, offset, length, dst);
+#else
+            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
+            return -1;
+#endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_read_uint32_partial_array(cursor, offset, length, dst);
+        case coda_backend_netcdf:
+        case coda_backend_grib:
+            break;
+    }
+
+    assert(0);
+    exit(1);
+}
+
+static int read_int64_partial_array(const coda_cursor *cursor, long offset, long length, int64_t *dst)
+{
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_int64_partial_array(cursor, offset, length, dst);
+    if (result != 0)
+    {
+        return (result == 1 ? 0 : -1);
+    }
+#endif
+    switch (cursor->stack[cursor->n - 1].type->backend)
+    {
+        case coda_backend_ascii:
+            return coda_ascii_cursor_read_int64_partial_array(cursor, offset, length, dst);
+        case coda_backend_binary:
+            return coda_bin_cursor_read_int64_partial_array(cursor, offset, length, dst);
+        case coda_backend_memory:
+            return coda_mem_cursor_read_int64_partial_array(cursor, offset, length, dst);
+        case coda_backend_hdf4:
+#ifdef HAVE_HDF4
+            return coda_hdf4_cursor_read_int64_partial_array(cursor, offset, length, dst);
+#else
+            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
+            return -1;
+#endif
+        case coda_backend_hdf5:
+#ifdef HAVE_HDF5
+            return coda_hdf5_cursor_read_int64_partial_array(cursor, offset, length, dst);
+#else
+            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
+            return -1;
+#endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_read_int64_partial_array(cursor, offset, length, dst);
+        case coda_backend_netcdf:
+        case coda_backend_grib:
+            break;
+    }
+
+    assert(0);
+    exit(1);
+}
+
+static int read_uint64_partial_array(const coda_cursor *cursor, long offset, long length, uint64_t *dst)
+{
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_uint64_partial_array(cursor, offset, length, dst);
+    if (result != 0)
+    {
+        return (result == 1 ? 0 : -1);
+    }
+#endif
+    switch (cursor->stack[cursor->n - 1].type->backend)
+    {
+        case coda_backend_ascii:
+            return coda_ascii_cursor_read_uint64_partial_array(cursor, offset, length, dst);
+        case coda_backend_binary:
+            return coda_bin_cursor_read_uint64_partial_array(cursor, offset, length, dst);
+        case coda_backend_memory:
+            return coda_mem_cursor_read_uint64_partial_array(cursor, offset, length, dst);
+        case coda_backend_hdf4:
+#ifdef HAVE_HDF4
+            return coda_hdf4_cursor_read_uint64_partial_array(cursor, offset, length, dst);
+#else
+            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
+            return -1;
+#endif
+        case coda_backend_hdf5:
+#ifdef HAVE_HDF5
+            return coda_hdf5_cursor_read_uint64_partial_array(cursor, offset, length, dst);
+#else
+            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
+            return -1;
+#endif
+        case coda_backend_cdf:
+        case coda_backend_netcdf:
+        case coda_backend_grib:
+            break;
+    }
+
+    assert(0);
+    exit(1);
+}
+
+static int read_float_partial_array(const coda_cursor *cursor, long offset, long length, float *dst)
+{
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_float_partial_array(cursor, offset, length, dst);
+    if (result != 0)
+    {
+        return (result == 1 ? 0 : -1);
+    }
+#endif
+    switch (cursor->stack[cursor->n - 1].type->backend)
+    {
+        case coda_backend_ascii:
+            return coda_ascii_cursor_read_float_partial_array(cursor, offset, length, dst);
+        case coda_backend_binary:
+            return coda_bin_cursor_read_float_partial_array(cursor, offset, length, dst);
+        case coda_backend_memory:
+            return coda_mem_cursor_read_float_partial_array(cursor, offset, length, dst);
+        case coda_backend_hdf4:
+#ifdef HAVE_HDF4
+            return coda_hdf4_cursor_read_float_partial_array(cursor, offset, length, dst);
+#else
+            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
+            return -1;
+#endif
+        case coda_backend_hdf5:
+#ifdef HAVE_HDF5
+            return coda_hdf5_cursor_read_float_partial_array(cursor, offset, length, dst);
+#else
+            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
+            return -1;
+#endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_read_float_partial_array(cursor, offset, length, dst);
+        case coda_backend_netcdf:
+            return coda_netcdf_cursor_read_float_partial_array(cursor, offset, length, dst);
+        case coda_backend_grib:
+            return coda_grib_cursor_read_float_partial_array(cursor, offset, length, dst);
+    }
+
+    assert(0);
+    exit(1);
+}
+
+static int read_double_partial_array(const coda_cursor *cursor, long offset, long length, double *dst)
+{
+    coda_type_array *type;
+
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_double_partial_array(cursor, offset, length, dst);
+    if (result != 0)
+    {
+        return (result == 1 ? 0 : -1);
+    }
+#endif
+    type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    if (type->base_type->type_class == coda_special_class)
+    {
+        /* arrays of special types should be explicitly iterated */
+        return read_partial_array(cursor, (read_function)&read_double, offset, length, (uint8_t *)dst, sizeof(double));
+    }
+    switch (cursor->stack[cursor->n - 1].type->backend)
+    {
+        case coda_backend_ascii:
+            return coda_ascii_cursor_read_double_partial_array(cursor, offset, length, dst);
+        case coda_backend_binary:
+            return coda_bin_cursor_read_double_partial_array(cursor, offset, length, dst);
+        case coda_backend_memory:
+            return coda_mem_cursor_read_double_partial_array(cursor, offset, length, dst);
+        case coda_backend_hdf4:
+#ifdef HAVE_HDF4
+            return coda_hdf4_cursor_read_double_partial_array(cursor, offset, length, dst);
+#else
+            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
+            return -1;
+#endif
+        case coda_backend_hdf5:
+#ifdef HAVE_HDF5
+            return coda_hdf5_cursor_read_double_partial_array(cursor, offset, length, dst);
+#else
+            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
+            return -1;
+#endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_read_double_partial_array(cursor, offset, length, dst);
+        case coda_backend_netcdf:
+            return coda_netcdf_cursor_read_double_partial_array(cursor, offset, length, dst);
+        case coda_backend_grib:
+            break;
+    }
+
+    assert(0);
+    exit(1);
+}
+
+static int read_char_partial_array(const coda_cursor *cursor, long offset, long length, char *dst)
+{
+#if CODA_USE_QIAP
+    int result;
+
+    result = coda_qiap_perform_actions_for_char_partial_array(cursor, offset, length, dst);
+    if (result != 0)
+    {
+        return (result == 1 ? 0 : -1);
+    }
+#endif
+    switch (cursor->stack[cursor->n - 1].type->backend)
+    {
+        case coda_backend_ascii:
+            return coda_ascii_cursor_read_char_partial_array(cursor, offset, length, dst);
+        case coda_backend_binary:
+            return coda_bin_cursor_read_char_partial_array(cursor, offset, length, dst);
+        case coda_backend_memory:
+            return coda_mem_cursor_read_char_partial_array(cursor, offset, length, dst);
+        case coda_backend_hdf4:
+#ifdef HAVE_HDF4
+            return coda_hdf4_cursor_read_char_partial_array(cursor, offset, length, dst);
+#else
+            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
+            return -1;
+#endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_read_char_partial_array(cursor, offset, length, dst);
+        case coda_backend_netcdf:
+            return coda_netcdf_cursor_read_char_partial_array(cursor, offset, length, dst);
+        case coda_backend_hdf5:
+        case coda_backend_grib:
+            break;
+    }
+
+    assert(0);
+    exit(1);
 }
 
 /** \addtogroup coda_cursor
@@ -4057,6 +4533,1435 @@ LIBCODA_API int coda_cursor_read_char_array(const coda_cursor *cursor, char *dst
     {
         case coda_native_type_char:
             if (read_char_array(cursor, dst, array_ordering) != 0)
+            {
+                return -1;
+            }
+            break;
+        default:
+            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a char data type",
+                           coda_type_get_native_type_name(read_type));
+            return -1;
+    }
+
+    return 0;
+}
+
+/** Retrieve a partial data array as type \c int8 from the product file. The values are stored in \a dst.
+ * The cursor must point to an array with a base type that has one of the following read types to succeed:
+ * - \c int8
+ *
+ * For all other data types the function will return an error.
+ * Values are both read and returned using C array ordering convention.
+ * \note Partial array reading is not supported for HDF5 and HDF4 attributes and HDF4 Vdata.
+ * For HDF5 Datasets, HDF4 SDS, and HDF4 GRImage, partial array reading is only allowed when reading a full hyperslab
+ * (i.e. the range defined by 'offset' and 'length' should be translatable into a multidimensional start[]/count[],
+ * defining a hyperslab)
+ * \param cursor Pointer to a CODA cursor.
+ * \param offset Index (as used in #coda_cursor_goto_array_element_by_index) at which to start reading.
+ * \param length Number of items to read.
+ * \param dst Pointer to the variable where the values read from the product will be stored.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_cursor_read_int8_partial_array(const coda_cursor *cursor, long offset, long length, int8_t *dst)
+{
+    coda_native_type read_type;
+    coda_type *type;
+
+    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (dst == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    if (type->type_class != coda_array_class)
+    {
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
+                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        return -1;
+    }
+
+    /* check the range for offset and length */
+    if (coda_option_perform_boundary_checks)
+    {
+        long num_elements;
+
+        if (coda_cursor_get_num_elements(cursor, &num_elements) != 0)
+        {
+            return -1;
+        }
+        if (offset < 0 || offset >= num_elements)
+        {
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld) (%s:%u)",
+                           offset, num_elements, __FILE__, __LINE__);
+            return -1;
+        }
+        if (offset + length > num_elements)
+        {
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) + length (%ld) exceeds array range "
+                           "[0:%ld) (%s:%u)", offset, length, num_elements, __FILE__, __LINE__);
+            return -1;
+        }
+    }
+
+    if (get_array_element_read_type(type, &read_type) != 0)
+    {
+        return -1;
+    }
+    switch (read_type)
+    {
+        case coda_native_type_int8:
+            if (read_int8_partial_array(cursor, offset, length, dst) != 0)
+            {
+                return -1;
+            }
+            break;
+        default:
+            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a int8 data type",
+                           coda_type_get_native_type_name(read_type));
+            return -1;
+    }
+
+    return 0;
+}
+
+/** Retrieve a partial data array as type \c uint8 from the product file. The values are stored in \a dst.
+ * The cursor must point to an array with a base type that has one of the following read types to succeed:
+ * - \c uint8
+ *
+ * For all other data types the function will return an error.
+ * Values are both read and returned using C array ordering convention.
+ * \note Partial array reading is not supported for HDF5 and HDF4 attributes and HDF4 Vdata.
+ * For HDF5 Datasets, HDF4 SDS, and HDF4 GRImage, partial array reading is only allowed when reading a full hyperslab
+ * (i.e. the range defined by 'offset' and 'length' should be translatable into a multidimensional start[]/count[],
+ * defining a hyperslab)
+ * \param cursor Pointer to a CODA cursor.
+ * \param offset Index (as used in #coda_cursor_goto_array_element_by_index) at which to start reading.
+ * \param length Number of items to read.
+ * \param dst Pointer to the variable where the values read from the product will be stored.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_cursor_read_uint8_partial_array(const coda_cursor *cursor, long offset, long length, uint8_t *dst)
+{
+    coda_native_type read_type;
+    coda_type *type;
+
+    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (dst == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    if (type->type_class != coda_array_class)
+    {
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
+                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        return -1;
+    }
+
+    /* check the range for offset and length */
+    if (coda_option_perform_boundary_checks)
+    {
+        long num_elements;
+
+        if (coda_cursor_get_num_elements(cursor, &num_elements) != 0)
+        {
+            return -1;
+        }
+        if (offset < 0 || offset >= num_elements)
+        {
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld) (%s:%u)",
+                           offset, num_elements, __FILE__, __LINE__);
+            return -1;
+        }
+        if (offset + length > num_elements)
+        {
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) + length (%ld) exceeds array range "
+                           "[0:%ld) (%s:%u)", offset, length, num_elements, __FILE__, __LINE__);
+            return -1;
+        }
+    }
+
+    if (get_array_element_read_type(type, &read_type) != 0)
+    {
+        return -1;
+    }
+    switch (read_type)
+    {
+        case coda_native_type_uint8:
+            if (read_uint8_partial_array(cursor, offset, length, dst) != 0)
+            {
+                return -1;
+            }
+            break;
+        default:
+            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a uint8 data type",
+                           coda_type_get_native_type_name(read_type));
+            return -1;
+    }
+
+    return 0;
+}
+
+/** Retrieve a partial data array as type \c int16 from the product file. The values are stored in \a dst.
+ * The cursor must point to an array with a base type that has one of the following read types to succeed:
+ * - \c int8
+ * - \c uint8
+ * - \c int16
+ *
+ * For all other data types the function will return an error.
+ * Values are both read and returned using C array ordering convention.
+ * \note Partial array reading is not supported for HDF5 and HDF4 attributes and HDF4 Vdata.
+ * For HDF5 Datasets, HDF4 SDS, and HDF4 GRImage, partial array reading is only allowed when reading a full hyperslab
+ * (i.e. the range defined by 'offset' and 'length' should be translatable into a multidimensional start[]/count[],
+ * defining a hyperslab)
+ * \param cursor Pointer to a CODA cursor.
+ * \param offset Index (as used in #coda_cursor_goto_array_element_by_index) at which to start reading.
+ * \param length Number of items to read.
+ * \param dst Pointer to the variable where the values read from the product will be stored.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_cursor_read_int16_partial_array(const coda_cursor *cursor, long offset, long length, int16_t *dst)
+{
+    coda_native_type read_type;
+    coda_type *type;
+    long i;
+
+    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (dst == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    if (type->type_class != coda_array_class)
+    {
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
+                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        return -1;
+    }
+
+    /* check the range for offset and length */
+    if (coda_option_perform_boundary_checks)
+    {
+        long num_elements;
+
+        if (coda_cursor_get_num_elements(cursor, &num_elements) != 0)
+        {
+            return -1;
+        }
+        if (offset < 0 || offset >= num_elements)
+        {
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld) (%s:%u)",
+                           offset, num_elements, __FILE__, __LINE__);
+            return -1;
+        }
+        if (offset + length > num_elements)
+        {
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) + length (%ld) exceeds array range "
+                           "[0:%ld) (%s:%u)", offset, length, num_elements, __FILE__, __LINE__);
+            return -1;
+        }
+    }
+
+    if (get_array_element_read_type(type, &read_type) != 0)
+    {
+        return -1;
+    }
+    switch (read_type)
+    {
+        case coda_native_type_int8:
+            if (read_int8_partial_array(cursor, offset, length, (int8_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (int16_t)((int8_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_uint8:
+            if (read_uint8_partial_array(cursor, offset, length, (uint8_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (int16_t)((uint8_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_int16:
+            if (read_int16_partial_array(cursor, offset, length, dst) != 0)
+            {
+                return -1;
+            }
+            break;
+        default:
+            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a int16 data type",
+                           coda_type_get_native_type_name(read_type));
+            return -1;
+    }
+
+    return 0;
+}
+
+/** Retrieve a partial data array as type \c uint16 from the product file. The values are stored in \a dst.
+ * The cursor must point to an array with a base type that has one of the following read types to succeed:
+ * - \c uint8
+ * - \c uint16
+ *
+ * For all other data types the function will return an error.
+ * Values are both read and returned using C array ordering convention.
+ * \note Partial array reading is not supported for HDF5 and HDF4 attributes and HDF4 Vdata.
+ * For HDF5 Datasets, HDF4 SDS, and HDF4 GRImage, partial array reading is only allowed when reading a full hyperslab
+ * (i.e. the range defined by 'offset' and 'length' should be translatable into a multidimensional start[]/count[],
+ * defining a hyperslab)
+ * \param cursor Pointer to a CODA cursor.
+ * \param offset Index (as used in #coda_cursor_goto_array_element_by_index) at which to start reading.
+ * \param length Number of items to read.
+ * \param dst Pointer to the variable where the values read from the product will be stored.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_cursor_read_uint16_partial_array(const coda_cursor *cursor, long offset, long length,
+                                                      uint16_t *dst)
+{
+    coda_native_type read_type;
+    coda_type *type;
+    long i;
+
+    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (dst == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    if (type->type_class != coda_array_class)
+    {
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
+                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        return -1;
+    }
+
+    /* check the range for offset and length */
+    if (coda_option_perform_boundary_checks)
+    {
+        long num_elements;
+
+        if (coda_cursor_get_num_elements(cursor, &num_elements) != 0)
+        {
+            return -1;
+        }
+        if (offset < 0 || offset >= num_elements)
+        {
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld) (%s:%u)",
+                           offset, num_elements, __FILE__, __LINE__);
+            return -1;
+        }
+        if (offset + length > num_elements)
+        {
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) + length (%ld) exceeds array range "
+                           "[0:%ld) (%s:%u)", offset, length, num_elements, __FILE__, __LINE__);
+            return -1;
+        }
+    }
+
+    if (get_array_element_read_type(type, &read_type) != 0)
+    {
+        return -1;
+    }
+    switch (read_type)
+    {
+        case coda_native_type_uint8:
+            if (read_uint8_partial_array(cursor, offset, length, (uint8_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (uint16_t)((uint8_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_uint16:
+            if (read_uint16_partial_array(cursor, offset, length, dst) != 0)
+            {
+                return -1;
+            }
+            break;
+        default:
+            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a uint16 data type",
+                           coda_type_get_native_type_name(read_type));
+            return -1;
+    }
+
+    return 0;
+}
+
+/** Retrieve a partial data array as type \c int32 from the product file. The values are stored in \a dst.
+ * The cursor must point to an array with a base type that has one of the following read types to succeed:
+ * - \c int8
+ * - \c uint8
+ * - \c int16
+ * - \c uint16
+ * - \c int32
+ *
+ * For all other data types the function will return an error.
+ * Values are both read and returned using C array ordering convention.
+  * \note Partial array reading is not supported for HDF5 and HDF4 attributes and HDF4 Vdata.
+ * For HDF5 Datasets, HDF4 SDS, and HDF4 GRImage, partial array reading is only allowed when reading a full hyperslab
+ * (i.e. the range defined by 'offset' and 'length' should be translatable into a multidimensional start[]/count[],
+ * defining a hyperslab)
+* \param cursor Pointer to a CODA cursor.
+ * \param offset Index (as used in #coda_cursor_goto_array_element_by_index) at which to start reading.
+ * \param length Number of items to read.
+ * \param dst Pointer to the variable where the values read from the product will be stored.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_cursor_read_int32_partial_array(const coda_cursor *cursor, long offset, long length, int32_t *dst)
+{
+    coda_native_type read_type;
+    coda_type *type;
+    long i;
+
+    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (dst == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    if (type->type_class != coda_array_class)
+    {
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
+                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        return -1;
+    }
+
+    /* check the range for offset and length */
+    if (coda_option_perform_boundary_checks)
+    {
+        long num_elements;
+
+        if (coda_cursor_get_num_elements(cursor, &num_elements) != 0)
+        {
+            return -1;
+        }
+        if (offset < 0 || offset >= num_elements)
+        {
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld) (%s:%u)",
+                           offset, num_elements, __FILE__, __LINE__);
+            return -1;
+        }
+        if (offset + length > num_elements)
+        {
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) + length (%ld) exceeds array range "
+                           "[0:%ld) (%s:%u)", offset, length, num_elements, __FILE__, __LINE__);
+            return -1;
+        }
+    }
+
+    if (get_array_element_read_type(type, &read_type) != 0)
+    {
+        return -1;
+    }
+    switch (read_type)
+    {
+        case coda_native_type_int8:
+            if (read_int8_partial_array(cursor, offset, length, (int8_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (int32_t)((int8_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_uint8:
+            if (read_uint8_partial_array(cursor, offset, length, (uint8_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (int32_t)((uint8_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_int16:
+            if (read_int16_partial_array(cursor, offset, length, (int16_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (int32_t)((int16_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_uint16:
+            if (read_uint16_partial_array(cursor, offset, length, (uint16_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (int32_t)((uint16_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_int32:
+            if (read_int32_partial_array(cursor, offset, length, dst) != 0)
+            {
+                return -1;
+            }
+            break;
+        default:
+            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a int32 data type",
+                           coda_type_get_native_type_name(read_type));
+            return -1;
+    }
+
+    return 0;
+}
+
+/** Retrieve a partial data array as type \c uint32 from the product file. The values are stored in \a dst.
+ * The cursor must point to an array with a base type that has one of the following read types to succeed:
+ * - \c uint8
+ * - \c uint16
+ * - \c uint32
+ *
+ * For all other data types the function will return an error.
+ * Values are both read and returned using C array ordering convention.
+ * \note Partial array reading is not supported for HDF5 and HDF4 attributes and HDF4 Vdata.
+ * For HDF5 Datasets, HDF4 SDS, and HDF4 GRImage, partial array reading is only allowed when reading a full hyperslab
+ * (i.e. the range defined by 'offset' and 'length' should be translatable into a multidimensional start[]/count[],
+ * defining a hyperslab)
+ * \param cursor Pointer to a CODA cursor.
+ * \param offset Index (as used in #coda_cursor_goto_array_element_by_index) at which to start reading.
+ * \param length Number of items to read.
+ * \param dst Pointer to the variable where the values read from the product will be stored.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_cursor_read_uint32_partial_array(const coda_cursor *cursor, long offset, long length,
+                                                      uint32_t *dst)
+{
+    coda_native_type read_type;
+    coda_type *type;
+    long i;
+
+    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (dst == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    if (type->type_class != coda_array_class)
+    {
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
+                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        return -1;
+    }
+
+    /* check the range for offset and length */
+    if (coda_option_perform_boundary_checks)
+    {
+        long num_elements;
+
+        if (coda_cursor_get_num_elements(cursor, &num_elements) != 0)
+        {
+            return -1;
+        }
+        if (offset < 0 || offset >= num_elements)
+        {
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld) (%s:%u)",
+                           offset, num_elements, __FILE__, __LINE__);
+            return -1;
+        }
+        if (offset + length > num_elements)
+        {
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) + length (%ld) exceeds array range "
+                           "[0:%ld) (%s:%u)", offset, length, num_elements, __FILE__, __LINE__);
+            return -1;
+        }
+    }
+
+    if (get_array_element_read_type(type, &read_type) != 0)
+    {
+        return -1;
+    }
+    switch (read_type)
+    {
+        case coda_native_type_uint8:
+            if (read_uint8_partial_array(cursor, offset, length, (uint8_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (uint32_t)((uint8_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_uint16:
+            if (read_uint16_partial_array(cursor, offset, length, (uint16_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (uint32_t)((uint16_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_uint32:
+            if (read_uint32_partial_array(cursor, offset, length, dst) != 0)
+            {
+                return -1;
+            }
+            break;
+        default:
+            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a uint32 data type",
+                           coda_type_get_native_type_name(read_type));
+            return -1;
+    }
+
+    return 0;
+}
+
+/** Retrieve a partial data array as type \c int64 from the product file. The values are stored in \a dst.
+ * The cursor must point to an array with a base type that has one of the following read types to succeed:
+ * - \c int8
+ * - \c uint8
+ * - \c int16
+ * - \c uint16
+ * - \c int32
+ * - \c uint32
+ * - \c int64
+ *
+ * For all other data types the function will return an error.
+ * Values are both read and returned using C array ordering convention.
+ * \note Partial array reading is not supported for HDF5 and HDF4 attributes and HDF4 Vdata.
+ * For HDF5 Datasets, HDF4 SDS, and HDF4 GRImage, partial array reading is only allowed when reading a full hyperslab
+ * (i.e. the range defined by 'offset' and 'length' should be translatable into a multidimensional start[]/count[],
+ * defining a hyperslab)
+ * \param cursor Pointer to a CODA cursor.
+ * \param offset Index (as used in #coda_cursor_goto_array_element_by_index) at which to start reading.
+ * \param length Number of items to read.
+ * \param dst Pointer to the variable where the values read from the product will be stored.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_cursor_read_int64_partial_array(const coda_cursor *cursor, long offset, long length, int64_t *dst)
+{
+    coda_native_type read_type;
+    coda_type *type;
+    long i;
+
+    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (dst == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    if (type->type_class != coda_array_class)
+    {
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
+                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        return -1;
+    }
+
+    /* check the range for offset and length */
+    if (coda_option_perform_boundary_checks)
+    {
+        long num_elements;
+
+        if (coda_cursor_get_num_elements(cursor, &num_elements) != 0)
+        {
+            return -1;
+        }
+        if (offset < 0 || offset >= num_elements)
+        {
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld) (%s:%u)",
+                           offset, num_elements, __FILE__, __LINE__);
+            return -1;
+        }
+        if (offset + length > num_elements)
+        {
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) + length (%ld) exceeds array range "
+                           "[0:%ld) (%s:%u)", offset, length, num_elements, __FILE__, __LINE__);
+            return -1;
+        }
+    }
+
+    if (get_array_element_read_type(type, &read_type) != 0)
+    {
+        return -1;
+    }
+    switch (read_type)
+    {
+        case coda_native_type_int8:
+            if (read_int8_partial_array(cursor, offset, length, (int8_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (int64_t)((int8_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_uint8:
+            if (read_uint8_partial_array(cursor, offset, length, (uint8_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (int64_t)((uint8_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_int16:
+            if (read_int16_partial_array(cursor, offset, length, (int16_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (int64_t)((int16_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_uint16:
+            if (read_uint16_partial_array(cursor, offset, length, (uint16_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (int64_t)((uint16_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_int32:
+            if (read_int32_partial_array(cursor, offset, length, (int32_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (int64_t)((int32_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_uint32:
+            if (read_uint32_partial_array(cursor, offset, length, (uint32_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (int64_t)((uint32_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_int64:
+            if (read_int64_partial_array(cursor, offset, length, dst) != 0)
+            {
+                return -1;
+            }
+            break;
+        default:
+            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a int64 data type",
+                           coda_type_get_native_type_name(read_type));
+            return -1;
+    }
+
+    return 0;
+}
+
+/** Retrieve a partial data array as type \c uint64 from the product file. The values are stored in \a dst.
+ * The cursor must point to an array with a base type that has one of the following read types to succeed:
+ * - \c uint8
+ * - \c uint16
+ * - \c uint32
+ * - \c uint64
+ *
+ * For all other data types the function will return an error.
+ * Values are both read and returned using C array ordering convention.
+ * \note Partial array reading is not supported for HDF5 and HDF4 attributes and HDF4 Vdata.
+ * For HDF5 Datasets, HDF4 SDS, and HDF4 GRImage, partial array reading is only allowed when reading a full hyperslab
+ * (i.e. the range defined by 'offset' and 'length' should be translatable into a multidimensional start[]/count[],
+ * defining a hyperslab)
+ * \param cursor Pointer to a CODA cursor.
+ * \param offset Index (as used in #coda_cursor_goto_array_element_by_index) at which to start reading.
+ * \param length Number of items to read.
+ * \param dst Pointer to the variable where the values read from the product will be stored.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_cursor_read_uint64_partial_array(const coda_cursor *cursor, long offset, long length,
+                                                      uint64_t *dst)
+{
+    coda_native_type read_type;
+    coda_type *type;
+    long i;
+
+    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (dst == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    if (type->type_class != coda_array_class)
+    {
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
+                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        return -1;
+    }
+
+    /* check the range for offset and length */
+    if (coda_option_perform_boundary_checks)
+    {
+        long num_elements;
+
+        if (coda_cursor_get_num_elements(cursor, &num_elements) != 0)
+        {
+            return -1;
+        }
+        if (offset < 0 || offset >= num_elements)
+        {
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld) (%s:%u)",
+                           offset, num_elements, __FILE__, __LINE__);
+            return -1;
+        }
+        if (offset + length > num_elements)
+        {
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) + length (%ld) exceeds array range "
+                           "[0:%ld) (%s:%u)", offset, length, num_elements, __FILE__, __LINE__);
+            return -1;
+        }
+    }
+
+    if (get_array_element_read_type(type, &read_type) != 0)
+    {
+        return -1;
+    }
+    switch (read_type)
+    {
+        case coda_native_type_uint8:
+            if (read_uint8_partial_array(cursor, offset, length, (uint8_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (uint64_t)((uint8_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_uint16:
+            if (read_uint16_partial_array(cursor, offset, length, (uint16_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (uint64_t)((uint16_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_uint32:
+            if (read_uint32_partial_array(cursor, offset, length, (uint32_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (uint64_t)((uint32_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_uint64:
+            if (read_uint64_partial_array(cursor, offset, length, dst) != 0)
+            {
+                return -1;
+            }
+            break;
+        default:
+            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a uint64 data type",
+                           coda_type_get_native_type_name(read_type));
+            return -1;
+    }
+
+    return 0;
+}
+
+/** Retrieve a partial data array as type \c float from the product file. The values are stored in \a dst.
+ * The cursor must point to an array with a base type that has one of the following read types to succeed:
+ * - \c int8
+ * - \c uint8
+ * - \c int16
+ * - \c uint16
+ * - \c int32
+ * - \c uint32
+ * - \c int64
+ * - \c uint64
+ * - \c float
+ * - \c double
+ *
+ * For all other data types the function will return an error.
+ * Values are both read and returned using C array ordering convention.
+ * \note Partial array reading is not supported for HDF5 and HDF4 attributes and HDF4 Vdata.
+ * For HDF5 Datasets, HDF4 SDS, and HDF4 GRImage, partial array reading is only allowed when reading a full hyperslab
+ * (i.e. the range defined by 'offset' and 'length' should be translatable into a multidimensional start[]/count[],
+ * defining a hyperslab)
+ * \param cursor Pointer to a CODA cursor.
+ * \param offset Index (as used in #coda_cursor_goto_array_element_by_index) at which to start reading.
+ * \param length Number of items to read.
+ * \param dst Pointer to the variable where the values read from the product will be stored.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_cursor_read_float_partial_array(const coda_cursor *cursor, long offset, long length, float *dst)
+{
+    coda_native_type read_type;
+    coda_conversion *conversion;
+    coda_type *type;
+    long i;
+
+    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (dst == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    if (type->type_class != coda_array_class)
+    {
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
+                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        return -1;
+    }
+
+    /* check the range for offset and length */
+    if (coda_option_perform_boundary_checks)
+    {
+        long num_elements;
+
+        if (coda_cursor_get_num_elements(cursor, &num_elements) != 0)
+        {
+            return -1;
+        }
+        if (offset < 0 || offset >= num_elements)
+        {
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld) (%s:%u)",
+                           offset, num_elements, __FILE__, __LINE__);
+            return -1;
+        }
+        if (offset + length > num_elements)
+        {
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) + length (%ld) exceeds array range "
+                           "[0:%ld) (%s:%u)", offset, length, num_elements, __FILE__, __LINE__);
+            return -1;
+        }
+    }
+
+    if (get_array_element_unconverted_read_type(type, &read_type, &conversion) != 0)
+    {
+        return -1;
+    }
+    if (conversion != NULL)
+    {
+        double *array;
+
+        /* let the conversion be performed by coda_cursor_read_double_array() and cast the result */
+        array = malloc(length * sizeof(double));
+        if (array == NULL)
+        {
+            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                           length * sizeof(double), __FILE__, __LINE__);
+            return -1;
+        }
+        if (coda_cursor_read_double_partial_array(cursor, offset, length, array) != 0)
+        {
+            free(array);
+            return -1;
+        }
+        for (i = length - 1; i >= 0; i--)
+        {
+            dst[i] = (float)array[i];
+        }
+        free(array);
+        return 0;
+    }
+    switch (read_type)
+    {
+        case coda_native_type_int8:
+            if (read_int8_partial_array(cursor, offset, length, (int8_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (float)((int8_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_uint8:
+            if (read_uint8_partial_array(cursor, offset, length, (uint8_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (float)((uint8_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_int16:
+            if (read_int16_partial_array(cursor, offset, length, (int16_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (float)((int16_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_uint16:
+            if (read_uint16_partial_array(cursor, offset, length, (uint16_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (float)((uint16_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_int32:
+            if (read_int32_partial_array(cursor, offset, length, (int32_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (float)((int32_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_uint32:
+            if (read_uint32_partial_array(cursor, offset, length, (uint32_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (float)((uint32_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_int64:
+            {
+                int64_t *array;
+
+                array = malloc(length * sizeof(int64_t));
+                if (array == NULL)
+                {
+                    coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                                   length * sizeof(int64_t), __FILE__, __LINE__);
+                    return -1;
+                }
+                if (read_int64_partial_array(cursor, offset, length, array) != 0)
+                {
+                    free(array);
+                    return -1;
+                }
+                for (i = length - 1; i >= 0; i--)
+                {
+                    dst[i] = (float)array[i];
+                }
+                free(array);
+            }
+            break;
+        case coda_native_type_uint64:
+            {
+                uint64_t *array;
+
+                array = malloc(length * sizeof(uint64_t));
+                if (array == NULL)
+                {
+                    coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                                   length * sizeof(int64_t), __FILE__, __LINE__);
+                    return -1;
+                }
+                if (read_uint64_partial_array(cursor, offset, length, array) != 0)
+                {
+                    free(array);
+                    return -1;
+                }
+                for (i = length - 1; i >= 0; i--)
+                {
+                    dst[i] = (float)array[i];
+                }
+                free(array);
+            }
+            break;
+        case coda_native_type_float:
+            if (read_float_partial_array(cursor, offset, length, dst) != 0)
+            {
+                return -1;
+            }
+            break;
+        case coda_native_type_double:
+            {
+                double *array;
+
+                array = malloc(length * sizeof(double));
+                if (array == NULL)
+                {
+                    coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                                   length * sizeof(double), __FILE__, __LINE__);
+                    return -1;
+                }
+                if (read_double_partial_array(cursor, offset, length, array) != 0)
+                {
+                    free(array);
+                    return -1;
+                }
+                for (i = length - 1; i >= 0; i--)
+                {
+                    dst[i] = (float)array[i];
+                }
+                free(array);
+            }
+            break;
+        default:
+            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a float data type",
+                           coda_type_get_native_type_name(read_type));
+            return -1;
+    }
+
+    return 0;
+}
+
+/** Retrieve a partial data array as type \c double from the product file. The values are stored in \a dst.
+ * The cursor must point to an array with a base type that has one of the following read types to succeed:
+ * - \c int8
+ * - \c uint8
+ * - \c int16
+ * - \c uint16
+ * - \c int32
+ * - \c uint32
+ * - \c int64
+ * - \c uint64
+ * - \c float
+ * - \c double
+ *
+ * For all other data types the function will return an error.
+ * Values are both read and returned using C array ordering convention.
+ * \note Partial array reading is not supported for HDF5 and HDF4 attributes and HDF4 Vdata.
+ * For HDF5 Datasets, HDF4 SDS, and HDF4 GRImage, partial array reading is only allowed when reading a full hyperslab
+ * (i.e. the range defined by 'offset' and 'length' should be translatable into a multidimensional start[]/count[],
+ * defining a hyperslab)
+ * \param cursor Pointer to a CODA cursor.
+ * \param offset Index (as used in #coda_cursor_goto_array_element_by_index) at which to start reading.
+ * \param length Number of items to read.
+ * \param dst Pointer to the variable where the values read from the product will be stored.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_cursor_read_double_partial_array(const coda_cursor *cursor, long offset, long length, double *dst)
+{
+    coda_native_type read_type;
+    coda_conversion *conversion;
+    coda_type *type;
+    long i;
+
+    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (dst == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    if (type->type_class != coda_array_class)
+    {
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
+                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        return -1;
+    }
+
+    /* check the range for offset and length */
+    if (coda_option_perform_boundary_checks)
+    {
+        long num_elements;
+
+        if (coda_cursor_get_num_elements(cursor, &num_elements) != 0)
+        {
+            return -1;
+        }
+        if (offset < 0 || offset >= num_elements)
+        {
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld) (%s:%u)",
+                           offset, num_elements, __FILE__, __LINE__);
+            return -1;
+        }
+        if (offset + length > num_elements)
+        {
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) + length (%ld) exceeds array range "
+                           "[0:%ld) (%s:%u)", offset, length, num_elements, __FILE__, __LINE__);
+            return -1;
+        }
+    }
+
+    if (get_array_element_unconverted_read_type(type, &read_type, &conversion) != 0)
+    {
+        return -1;
+    }
+    switch (read_type)
+    {
+        case coda_native_type_int8:
+            if (read_int8_partial_array(cursor, offset, length, (int8_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (double)((int8_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_uint8:
+            if (read_uint8_partial_array(cursor, offset, length, (uint8_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (double)((uint8_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_int16:
+            if (read_int16_partial_array(cursor, offset, length, (int16_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (double)((int16_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_uint16:
+            if (read_uint16_partial_array(cursor, offset, length, (uint16_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (double)((uint16_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_int32:
+            if (read_int32_partial_array(cursor, offset, length, (int32_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (double)((int32_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_uint32:
+            if (read_uint32_partial_array(cursor, offset, length, (uint32_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (double)((uint32_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_int64:
+            if (read_int64_partial_array(cursor, offset, length, (int64_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (double)((int64_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_uint64:
+            if (read_uint64_partial_array(cursor, offset, length, (uint64_t *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (double)((uint64_t *)dst)[i];
+            }
+            break;
+        case coda_native_type_float:
+            if (read_float_partial_array(cursor, offset, length, (float *)dst) != 0)
+            {
+                return -1;
+            }
+            for (i = length - 1; i >= 0; i--)
+            {
+                dst[i] = (double)((float *)dst)[i];
+            }
+            break;
+        case coda_native_type_double:
+            if (read_double_partial_array(cursor, offset, length, dst) != 0)
+            {
+                return -1;
+            }
+            break;
+        default:
+            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a double data type",
+                           coda_type_get_native_type_name(read_type));
+            return -1;
+    }
+    if (conversion != NULL)
+    {
+        for (i = 0; i < length; i++)
+        {
+            if (dst[i] == conversion->invalid_value)
+            {
+                dst[i] = coda_NaN();
+            }
+            else
+            {
+                dst[i] = (dst[i] * conversion->numerator) / conversion->denominator + conversion->add_offset;
+            }
+        }
+    }
+    return 0;
+}
+
+/** Retrieve a partial data array as type \c char from the product file. The values are stored in \a dst.
+ * The cursor must point to an array with a base type that has read type \c char to succeed.
+ * For all other data types the function will return an error.
+ * Values are both read and returned using C array ordering convention.
+ * \note Partial array reading is not supported for HDF5 and HDF4 attributes and HDF4 Vdata.
+ * For HDF5 Datasets, HDF4 SDS, and HDF4 GRImage, partial array reading is only allowed when reading a full hyperslab
+ * (i.e. the range defined by 'offset' and 'length' should be translatable into a multidimensional start[]/count[],
+ * defining a hyperslab)
+ * \param cursor Pointer to a CODA cursor.
+ * \param offset Index (as used in #coda_cursor_goto_array_element_by_index) at which to start reading.
+ * \param length Number of items to read.
+ * \param dst Pointer to the variable where the values read from the product will be stored.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_cursor_read_char_partial_array(const coda_cursor *cursor, long offset, long length, char *dst)
+{
+    coda_native_type read_type;
+    coda_type *type;
+
+    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (dst == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    if (type->type_class != coda_array_class)
+    {
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
+                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        return -1;
+    }
+
+    /* check the range for offset and length */
+    if (coda_option_perform_boundary_checks)
+    {
+        long num_elements;
+
+        if (coda_cursor_get_num_elements(cursor, &num_elements) != 0)
+        {
+            return -1;
+        }
+        if (offset < 0 || offset >= num_elements)
+        {
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld) (%s:%u)",
+                           offset, num_elements, __FILE__, __LINE__);
+            return -1;
+        }
+        if (offset + length > num_elements)
+        {
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) + length (%ld) exceeds array range "
+                           "[0:%ld) (%s:%u)", offset, length, num_elements, __FILE__, __LINE__);
+            return -1;
+        }
+    }
+
+    if (get_array_element_read_type(type, &read_type) != 0)
+    {
+        return -1;
+    }
+    switch (read_type)
+    {
+        case coda_native_type_char:
+            if (read_char_partial_array(cursor, offset, length, dst) != 0)
             {
                 return -1;
             }

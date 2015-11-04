@@ -81,8 +81,8 @@ static coda_expression *parsed_expression;
 
 /* tokenizer declarations */
 int coda_expression_lex(void);
-void *coda_expression__scan_string(const char *yy_str);
-void coda_expression__delete_buffer(void *);
+void *coda_expression_scan_string(const char *yy_str);
+void coda_expression_delete_buffer(void *);
 
 static void coda_expression_error(const char *error)
 {
@@ -1005,17 +1005,17 @@ LIBCODA_API int coda_expression_from_string(const char *exprstring, coda_express
 
     coda_errno = 0;
     parsed_expression = NULL;
-    bufstate = (void *)coda_expression__scan_string(exprstring);
+    bufstate = (void *)coda_expression_scan_string(exprstring);
     if (coda_expression_parse() != 0)
     {
         if (coda_errno == 0)
         {
             coda_set_error(CODA_ERROR_EXPRESSION, NULL);
         }
-        coda_expression__delete_buffer(bufstate);
+        coda_expression_delete_buffer(bufstate);
         return -1;
     }
-    coda_expression__delete_buffer(bufstate);
+    coda_expression_delete_buffer(bufstate);
     *expr = parsed_expression;
 
     return 0;

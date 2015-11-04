@@ -47,6 +47,8 @@ typedef enum run_mode
     RUN_MODE_LIST,
     RUN_MODE_ASCII,
     RUN_MODE_HDF4,
+    RUN_MODE_JSON,
+    RUN_MODE_YAML,
     RUN_MODE_DEBUG
 } run_mode_t;
 
@@ -175,6 +177,12 @@ void hdf4_enter_array();
 void hdf4_leave_array();
 void export_data_element_to_hdf4();
 #endif
+
+/* codadump-json.c functions */
+void print_json_data(int include_attributes);
+
+/* codadump-yaml.c functions */
+void print_yaml_data(int include_attributes);
 
 /* codadump-debug.c functions */
 void print_debug_data(const char *product_class, const char *product_type, int format_version);

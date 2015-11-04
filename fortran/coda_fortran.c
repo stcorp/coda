@@ -955,8 +955,7 @@ int UFNAME(CODA_CURSOR_READ_STRING,coda_cursor_read_string)(void *cursor, char *
     return result;
 }
 
-int UFNAME(CODA_CURSOR_READ_BITS,coda_cursor_read_bits)(void *cursor, int8_t *dst, int64_t *bit_offset,
-                                                        int64_t *bit_length)
+int UFNAME(CODA_CURSOR_READ_BITS,coda_cursor_read_bits)(void *cursor, int8_t *dst, int64_t *bit_offset, int64_t *bit_length)
 {
     return coda_cursor_read_bits(*(coda_cursor **)cursor, (uint8_t *)dst, *bit_offset, *bit_length);
 }
@@ -1019,6 +1018,61 @@ int UFNAME(CODA_CURSOR_READ_DOUBLE_ARRAY,coda_cursor_read_double_array)(void *cu
 int UFNAME(CODA_CURSOR_READ_CHAR_ARRAY,coda_cursor_read_char_array)(void *cursor, char *dst, int *array_ordering)
 {
     return coda_cursor_read_char_array(*(coda_cursor **)cursor, dst, (coda_array_ordering)*array_ordering);
+}
+
+int UFNAME(CODA_CURSOR_READ_INT8_PARTIAL_ARRAY,coda_cursor_read_int8_partial_array)(void *cursor, long *offset, long *length, int8_t *dst)
+{
+    return coda_cursor_read_int8_partial_array(*(coda_cursor **)cursor, *offset, *length, dst);
+}
+
+int UFNAME(CODA_CURSOR_READ_UINT8_PARTIAL_ARRAY,coda_cursor_read_uint8_partial_array)(void *cursor, long *offset, long *length, uint8_t *dst)
+{
+    return coda_cursor_read_uint8_partial_array(*(coda_cursor **)cursor, *offset, *length, dst);
+}
+
+int UFNAME(CODA_CURSOR_READ_INT16_PARTIAL_ARRAY,coda_cursor_read_int16_partial_array)(void *cursor, long *offset, long *length, int16_t *dst)
+{
+    return coda_cursor_read_int16_partial_array(*(coda_cursor **)cursor, *offset, *length, dst);
+}
+
+int UFNAME(CODA_CURSOR_READ_UINT16_PARTIAL_ARRAY,coda_cursor_read_uint16_partial_array)(void *cursor, long *offset, long *length, uint16_t *dst)
+{
+    return coda_cursor_read_uint16_partial_array(*(coda_cursor **)cursor, *offset, *length, dst);
+}
+
+int UFNAME(CODA_CURSOR_READ_INT32_PARTIAL_ARRAY,coda_cursor_read_int32_partial_array)(void *cursor, long *offset, long *length, int32_t *dst)
+{
+    return coda_cursor_read_int32_partial_array(*(coda_cursor **)cursor, *offset, *length, dst);
+}
+
+int UFNAME(CODA_CURSOR_READ_UINT32_PARTIAL_ARRAY,coda_cursor_read_uint32_partial_array)(void *cursor, long *offset, long *length, uint32_t *dst)
+{
+    return coda_cursor_read_uint32_partial_array(*(coda_cursor **)cursor, *offset, *length, dst);
+}
+
+int UFNAME(CODA_CURSOR_READ_INT64_PARTIAL_ARRAY,coda_cursor_read_int64_partial_array)(void *cursor, long *offset, long *length, int64_t *dst)
+{
+    return coda_cursor_read_int64_partial_array(*(coda_cursor **)cursor, *offset, *length, dst);
+}
+
+int UFNAME(CODA_CURSOR_READ_UINT64_PARTIAL_ARRAY,coda_cursor_read_uint64_partial_array)(void *cursor, long *offset, long *length, uint64_t *dst)
+{
+    return coda_cursor_read_uint64_partial_array(*(coda_cursor **)cursor, *offset, *length, dst);
+}
+
+int UFNAME(CODA_CURSOR_READ_FLOAT_PARTIAL_ARRAY,coda_cursor_read_float_partial_array)(void *cursor, long *offset, long *length, float *dst)
+{
+    return coda_cursor_read_float_partial_array(*(coda_cursor **)cursor, *offset, *length, dst);
+}
+
+int UFNAME(CODA_CURSOR_READ_DOUBLE_PARTIAL_ARRAY,coda_cursor_read_double_partial_array)(void *cursor, long *offset, long *length, double *dst)
+{
+    return coda_cursor_read_double_partial_array(*(coda_cursor **)cursor, *offset, *length, dst);
+}
+
+int UFNAME(CODA_CURSOR_READ_CHAR_PARTIAL_ARRAY,coda_cursor_read_char_partial_array)(void *cursor, long *offset, long *length, char *dst)
+{
+    return coda_cursor_read_char_partial_array(*(coda_cursor **)cursor, *offset, *length, dst);
 }
 
 int UFNAME(CODA_CURSOR_READ_COMPLEX_DOUBLE_PAIR,coda_cursor_read_complex_double_pair)(void *cursor, double *dst)

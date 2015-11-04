@@ -347,7 +347,7 @@ static char *coda_definition_path = NULL;
  * Specifying a path using this function will prevent CODA from using the CODA_DEFINITION environment variable.
  * If you still want CODA to acknowledge the CODA_DEFINITION environment variable then use something like this in your
  * code:
- * \code
+ * \code{.c}
  * if (getenv("CODA_DEFINITION") == NULL)
  * {
  *     coda_set_definition_path("<your path>");

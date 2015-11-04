@@ -578,6 +578,8 @@ int coda_cursor_read_char(const coda_cursor *cursor, char *dst);
 %apply int8_t[] { char *dst };
 int coda_cursor_read_char_array(const coda_cursor *cursor, char *dst, coda_array_ordering array_ordering);
 %ignore coda_cursor_read_char_array;
+int coda_cursor_read_char_partial_array(const coda_cursor *cursor, long offset, long length, char *dst);
+%ignore coda_cursor_read_char_partial_array;
 
 
  /*
