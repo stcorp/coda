@@ -155,6 +155,11 @@ static void generate_ascbin_detection_tree(coda_ascbin_detection_node *node, int
 {
     int i;
 
+    if (node == NULL)
+    {
+        return;
+    }
+
     if (node->entry != NULL)
     {
         num_compares++;
@@ -217,52 +222,66 @@ static void print_xml_name(const char *xml_name)
     }
 }
 
-static void generate_xml_detection_tree(coda_xml_detection_node *node)
+static void generate_xml_detection_tree(coda_xml_detection_node *node, int is_attribute)
 {
     int i;
+
+    if (node == NULL)
+    {
+        return;
+    }
 
     if (node->xml_name != NULL)
     {
         indent();
-        printf("/");
+        printf(is_attribute ? "@" : "/");
         print_xml_name(node->xml_name);
-        for (i = 0; i < node->num_detection_rules; i++)
-        {
-            coda_detection_rule *detection_rule = node->detection_rule[i];
-
-            assert(detection_rule->num_entries == 1);
-            if (detection_rule->entry[0]->value_length == 0)
-            {
-                coda_product_definition *product_definition = detection_rule->product_definition;
-
-                printf(" --> %s %s %d", product_definition->product_type->product_class->name,
-                       product_definition->product_type->name, product_definition->version);
-            }
-        }
         printf("\n");
         INDENT++;
+    }
+
+    if (!is_attribute)
+    {
+        for (i = 0; i < node->num_attribute_subnodes; i++)
+        {
+            generate_xml_detection_tree(node->attribute_subnode[i], 1);
+        }
+
+        for (i = 0; i < node->num_subnodes; i++)
+        {
+            generate_xml_detection_tree(node->subnode[i], 0);
+        }
     }
 
     for (i = 0; i < node->num_detection_rules; i++)
     {
         coda_detection_rule *detection_rule = node->detection_rule[i];
+        coda_product_definition *product_definition = detection_rule->product_definition;
+        int j;
 
-        assert(detection_rule->num_entries == 1);
+        indent();
         if (detection_rule->entry[0]->value_length > 0)
         {
-            coda_product_definition *product_definition = detection_rule->product_definition;
-
-            indent();
             generate_detection_rule_entry(detection_rule->entry[0]);
-            printf(" --> %s %s %d", product_definition->product_type->product_class->name,
-                   product_definition->product_type->name, product_definition->version);
-            printf("\n");
         }
-    }
-
-    for (i = 0; i < node->num_subnodes; i++)
-    {
-        generate_xml_detection_tree(node->subnode[i]);
+        else
+        {
+            printf("exists");
+        }
+        for (j = 1; j < detection_rule->num_entries; j++)
+        {
+            printf("\n");
+            INDENT++;
+            indent();
+            generate_detection_rule_entry(detection_rule->entry[j]);
+        }
+        printf(" --> %s %s %d", product_definition->product_type->product_class->name,
+               product_definition->product_type->name, product_definition->version);
+        printf("\n");
+        for (j = 1; j < detection_rule->num_entries; j++)
+        {
+            INDENT--;
+        }
     }
 
     if (node->xml_name != NULL)
@@ -280,7 +299,7 @@ void generate_detection_tree(coda_format format)
             generate_ascbin_detection_tree(coda_ascbin_get_detection_tree(), 0);
             break;
         case coda_format_xml:
-            generate_xml_detection_tree(coda_xml_get_detection_tree());
+            generate_xml_detection_tree(coda_xml_get_detection_tree(), 0);
             break;
         default:
             break;

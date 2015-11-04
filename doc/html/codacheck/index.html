@@ -24,6 +24,10 @@
     codacheck [&lt;options&gt;] &lt;files&gt;
         Provide a basic sanity check on product files supported by CODA
         Options:
+            -d, --definition
+                    require products to have a definition in a codadef file,
+                    return an error and abort verification otherwise
+                    (affects products using formats such as xml/netcdf/hdf)
             -q, --quick
                     only perform a quick check of the product
                     (do not traverse the full product)

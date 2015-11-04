@@ -176,32 +176,32 @@ void generate_xmlschema(const char *output_file_name, const char *product_class_
     product_class = coda_data_dictionary_get_product_class(product_class_name);
     if (product_class == NULL)
     {
-        printf("  ERROR: %s\n", coda_errno_to_string(coda_errno));
+        fprintf(stderr, "ERROR: %s\n", coda_errno_to_string(coda_errno));
         exit(1);
     }
 
     product_type = coda_product_class_get_product_type(product_class, product_type_name);
     if (product_type == NULL)
     {
-        printf("  ERROR: %s\n", coda_errno_to_string(coda_errno));
+        fprintf(stderr, "ERROR: %s\n", coda_errno_to_string(coda_errno));
         exit(1);
     }
 
     product_definition = coda_product_type_get_product_definition_by_version(product_type, version);
     if (product_definition == NULL)
     {
-        printf("  ERROR: %s\n", coda_errno_to_string(coda_errno));
+        fprintf(stderr, "ERROR: %s\n", coda_errno_to_string(coda_errno));
         exit(1);
     }
 
     if (product_definition->format != coda_format_xml)
     {
-        printf("  ERROR: product is not in XML format\n");
+        fprintf(stderr, "ERROR: product is not in XML format\n");
         exit(1);
     }
     if (product_definition->root_type == NULL)
     {
-        printf("  ERROR: product does not have a format definition\n");
+        fprintf(stderr, "ERROR: product does not have a format definition\n");
         exit(1);
     }
 

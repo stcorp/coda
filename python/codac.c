@@ -10905,7 +10905,6 @@ SWIG_init(void) {
   PyModule_AddObject(m,"CodacError", codacError);
   
   SWIG_Python_SetConstant(d, "CODA_MAX_NUM_DIMS",SWIG_From_int((int)(8)));
-  SWIG_Python_SetConstant(d, "CODA_ERROR_QIAP",SWIG_From_int((int)((-302))));
   SWIG_Python_SetConstant(d, "coda_array_ordering_c",SWIG_From_int((int)(coda_array_ordering_c)));
   SWIG_Python_SetConstant(d, "coda_array_ordering_fortran",SWIG_From_int((int)(coda_array_ordering_fortran)));
   SWIG_Python_SetConstant(d, "coda_ffs_error",SWIG_From_int((int)(coda_ffs_error)));

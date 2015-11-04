@@ -419,9 +419,8 @@ int main(int argc, char *argv[])
         }
         if (!coda_expression_is_constant(eval_expr))
         {
-            fprintf(stderr,
-                    "ERROR: invalid arguments (file/directory list needs to be provided if expression is not a "
-                    "constant expression)\n");
+            fprintf(stderr, "ERROR: invalid arguments (file/directory list needs to be provided if expression is not "
+                    "a constant expression)\n");
             exit(1);
         }
         if (eval_expression(NULL) != 0)

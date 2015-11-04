@@ -114,7 +114,7 @@ static void print_escaped(const char *data, long length)
 static void print_error_with_cursor(coda_cursor *cursor, int file_id)
 {
     coda_cursor_add_to_error_message(cursor);
-    printf("%sERROR: %s\n", pre[file_id - 1], coda_errno_to_string(coda_errno));
+    fprintf(stderr, "%sERROR: %s\n", pre[file_id - 1], coda_errno_to_string(coda_errno));
 }
 
 static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
@@ -608,7 +608,7 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
                         return -1;
                     }
                 }
-                else if (memcmp(str1, str2, length1) != 0)
+                else if (length1 != length2 || memcmp(str1, str2, length1) != 0)
                 {
                     printf("string value differs at ");
                     coda_cursor_print_path(cursor1, printf);
@@ -824,7 +824,7 @@ static int compare_files(char *filename1, char *filename2)
     }
     if (result != 0)
     {
-        printf("%sERROR: %s\n", pre[0], coda_errno_to_string(coda_errno));
+        fprintf(stderr, "%sERROR: %s\n", pre[0], coda_errno_to_string(coda_errno));
         return -1;
     }
 
@@ -837,7 +837,7 @@ static int compare_files(char *filename1, char *filename2)
     }
     if (result != 0)
     {
-        printf("%sERROR: %s\n", pre[1], coda_errno_to_string(coda_errno));
+        fprintf(stderr, "%sERROR: %s\n", pre[1], coda_errno_to_string(coda_errno));
         coda_close(pf1);
         return -1;
     }

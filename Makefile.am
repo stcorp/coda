@@ -873,7 +873,6 @@ indent:
 EXTRA_DIST += \
 	CMakeLists.txt \
 	CMakeModules/CheckTypeExists.cmake \
-	CMakeModules/FindPython.cmake \
 	CMakeModules/FindNumPy.cmake \
 	CMakeModules/FindHDF4.cmake \
 	CMakeModules/FindHDF5.cmake \

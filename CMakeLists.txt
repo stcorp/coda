@@ -2,7 +2,7 @@
 #
 project(CODA)
 
-set(VERSION 2.5)
+set(VERSION 2.6)
 set(CODA_VERSION \"${VERSION}\")
 
 # General setup
@@ -31,8 +31,7 @@ option(CODA_WITH_HDF5 "use HDF5" OFF)
 cmake_dependent_option(
   CODA_DISABLE_HDF4_VDATA_ATTRIBUTES "enable HDF4 Vdata attributes" OFF
   CODA_WITH_HDF4 ON)
-#Python is not yet supported in this release of CODA.
-#option(CODA_BUILD_PYTHON "build Python interface" OFF)
+option(CODA_BUILD_PYTHON "build Python interface" OFF)
 option(CODA_BUILD_QIAP "include QIAP support" ON)
 set(QIAP_VERSION \"${VERSION}-coda\" CACHE INTERNAL "QIAP version number")
 
@@ -593,32 +592,49 @@ if(CODA_BUILD_MATLAB)
 endif(CODA_BUILD_MATLAB)
 
 
-# python -- not yet supported for CMake in this release of CODA.
-#
-#set(CODA_PYTHON_SOURCE_FILES
-#  python/codac.c
-#)
-#
-#if(CODA_BUILD_PYTHON)
-#  find_package(Python)
-#
-#  if(NOT PYTHON)
-#    message(FATAL_ERROR "PYTHON interpreter and/or header files are not found. Try setting the PYTHON and/or PYTHON_INCLUDE environment variables to the location of your PYTHON interpreter and include files.")
-#  else(NOT PYTHON)
-#    include_directories(${PYTHON_INCLUDE})
-# endif(NOT PYTHON)
-#
-#  find_package(NumPy)
-#
-#  if(NOT NUMPY_FOUND)
-#    message(FATAL_ERROR "Python numpy package is needed for the Python interface. Please install 'numpy' or, if you have already installed this package, set the NUMPY_INCLUDE environment variable and make sure that the file $NUMPY_INCLUDE/numpy/ndarrayobject.h exists.")
-#  else(NOT NUMPY_FOUND)
-#    include_directories(${NUMPY_INCLUDE_DIR})
-#  endif(NOT NUMPY_FOUND)
-#
-#  set(LIBCODA_SOURCES ${LIBCODA_SOURCES} ${CODA_PYTHON_SOURCE_FILES})
-#
-#endif(CODA_BUILD_PYTHON)
+# python
+
+if(CODA_BUILD_PYTHON)
+
+  find_package(PythonInterp)
+  if(NOT PYTHONINTERP_FOUND)
+    message(FATAL_ERROR "PYTHON interpreter not found.")
+  endif(NOT PYTHON)
+
+  find_package(PythonLibs)
+  if(NOT PYTHONLIBS_FOUND)
+    message(FATAL_ERROR "PYTHON libraries or include files not found.")
+  endif(NOT PYTHON)
+  include_directories(${PYTHON_INCLUDE_DIRS})
+
+  find_package(NumPy)
+  if(NOT NUMPY_FOUND)
+    message(FATAL_ERROR "Python numpy package is needed for the Python interface. Please install 'numpy' or, if you have already installed this package, set the NUMPY_INCLUDE environment variable and make sure that the file $NUMPY_INCLUDE/numpy/ndarrayobject.h exists.")
+  endif(NOT NUMPY_FOUND)
+  include_directories(${NUMPY_INCLUDE_DIR})
+
+  if(WIN32)
+    set(PYTHON_INSTALL_DIR python)
+  else()
+    set(PYTHON_INSTALL_DIR lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages/coda)
+  endif()
+
+  add_library(coda_python MODULE python/codac.c)
+  target_link_libraries(coda_python coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${PYTHON_LIBRARIES})
+  set_target_properties(coda_python
+    PROPERTIES OUTPUT_NAME "_codac"
+    PREFIX ""
+  )
+
+  install(TARGETS coda_python DESTINATION ${PYTHON_INSTALL_DIR})
+  install(FILES
+    python/__init__.py
+    python/codac.py
+    python/codapython.py
+    DESTINATION ${PYTHON_INSTALL_DIR}
+  )
+
+endif(CODA_BUILD_PYTHON)
 
 
 # Custom CODA expat library
@@ -724,7 +740,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/coda.h DESTINATION include)
 # Set dynamic library version
 #
 set(LIBCODA_CURRENT 9)
-set(LIBCODA_REVISION 2)
+set(LIBCODA_REVISION 3)
 set(LIBCODA_AGE 3)
 math(EXPR LIBCODA_MAJOR "${LIBCODA_CURRENT} - ${LIBCODA_AGE}")
 set(LIBCODA_MINOR ${LIBCODA_AGE})

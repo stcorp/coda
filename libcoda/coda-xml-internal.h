@@ -81,6 +81,11 @@ struct coda_xml_detection_node_struct
     int num_detection_rules;
     coda_detection_rule **detection_rule;
 
+    /* attribute sub nodes of this node */
+    int num_attribute_subnodes;
+    struct coda_xml_detection_node_struct **attribute_subnode;
+    hashtable *attribute_hash_data;
+
     /* sub nodes of this node */
     int num_subnodes;
     struct coda_xml_detection_node_struct **subnode;
@@ -91,6 +96,8 @@ struct coda_xml_detection_node_struct
 typedef struct coda_xml_detection_node_struct coda_xml_detection_node;
 
 coda_xml_detection_node *coda_xml_get_detection_tree(void);
+coda_xml_detection_node *coda_xml_detection_node_get_attribute_subnode(coda_xml_detection_node *node,
+                                                                       const char *xml_name);
 coda_xml_detection_node *coda_xml_detection_node_get_subnode(coda_xml_detection_node *node, const char *xml_name);
 
 struct coda_xml_product_struct

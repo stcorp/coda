@@ -2,8 +2,7 @@
 #
 # This module defines:
 #
-# - NUMPY_FOUND - if the numpy module was found The location of the Python interpreter (identical to
-# PYTHONINTERP).
+# - NUMPY_FOUND - if the numpy module was found
 # - NUMPY_INCLUDE_DIR - where to find numpy/ndarrayobject.h etc.
 #
 

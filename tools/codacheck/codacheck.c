@@ -37,6 +37,7 @@ int coda_product_check(coda_product *product, int full_read_check,
 
 int option_verbose;
 int option_quick;
+int option_require_definition;
 int found_errors;
 
 static void print_version()
@@ -52,6 +53,10 @@ static void print_help()
     printf("    codacheck [<options>] <files>\n");
     printf("        Provide a basic sanity check on product files supported by CODA\n");
     printf("        Options:\n");
+    printf("            -d, --definition\n");
+    printf("                    require products to have a definition in a codadef file,\n");
+    printf("                    return an error and abort verification otherwise\n");
+    printf("                    (affects products using formats such as xml/netcdf/hdf)\n");
     printf("            -q, --quick\n");
     printf("                    only perform a quick check of the product\n");
     printf("                    (do not traverse the full product)\n");
@@ -99,6 +104,13 @@ static void check_file(char *filename)
     {
         printf("  ERROR: %s\n\n", coda_errno_to_string(coda_errno));
         coda_set_error(CODA_SUCCESS, NULL);
+        found_errors = 1;
+        return;
+    }
+
+    if (option_require_definition && (product_class == NULL || product_class == NULL))
+    {
+        printf("  ERROR: could not determine product type\n\n");
         found_errors = 1;
         return;
     }
@@ -161,6 +173,7 @@ int main(int argc, char *argv[])
     option_stdin = 0;
     option_verbose = 0;
     option_quick = 0;
+    option_require_definition = 0;
 
     if (argc == 1 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)
     {
@@ -183,6 +196,10 @@ int main(int argc, char *argv[])
         else if (strcmp(argv[i], "-q") == 0 || strcmp(argv[i], "--quick") == 0)
         {
             option_quick = 1;
+        }
+        else if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--definition") == 0)
+        {
+            option_require_definition = 1;
         }
         else if (strcmp(argv[i], "-") == 0 && i == argc - 1)
         {

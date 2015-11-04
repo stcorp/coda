@@ -1,3 +1,21 @@
+2.6 2012-07-07
+~~~~~~~~~~~~~~
+
+* Fixed issue in codacmp where strings of unequal length were not indicated
+  as a change.
+
+* Added support for detection of xml files (as defined in the codedef files)
+  based on xml attribute value and optionally additionally on filename.
+  Detection order for xml has been changed, it is now performed 'depth first'.
+
+* Added -d option to codacheck: produces an error if no codadef entry for a
+  product was found.
+
+* Enabled building of the CODA Python interface using the CMake build.
+
+* Fixed cases where command line tools could send error messages to stdout
+  instead of to stderr.
+
 2.5 2012-05-14
 ~~~~~~~~~~~~~~
 

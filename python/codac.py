@@ -264,7 +264,6 @@ def utcstring_to_time(*args):
   return _codac.utcstring_to_time(*args)
 utcstring_to_time = _codac.utcstring_to_time
 CODA_MAX_NUM_DIMS = _codac.CODA_MAX_NUM_DIMS
-CODA_ERROR_QIAP = _codac.CODA_ERROR_QIAP
 coda_array_ordering_c = _codac.coda_array_ordering_c
 coda_array_ordering_fortran = _codac.coda_array_ordering_fortran
 coda_ffs_error = _codac.coda_ffs_error

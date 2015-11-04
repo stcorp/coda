@@ -430,6 +430,7 @@ struct detection_parser_info_struct
 {
     XML_Parser parser;
     int abort_parser;
+    const char *filename;
     int is_root_element;        /* do we have the xml root element? */
     int unparsed_depth; /* keep track of how deep we are in the XML hierarchy after leaving the detection tree */
     char *matchvalue;
@@ -443,6 +444,29 @@ static void abort_detection_parser(detection_parser_info *info, int code)
     XML_StopParser(info->parser, 0);
     /* we use code=1 for abnormal termination and code=2 for normal termination (i.e. further parsing is not needed) */
     info->abort_parser = code;
+}
+
+static int detection_match_rule(detection_parser_info *info, coda_detection_rule *detection_rule)
+{
+    int i;
+
+    for (i = 1; i < detection_rule->num_entries; i++)
+    {
+        coda_detection_rule_entry *entry = detection_rule->entry[i];
+
+        /* match value on filename */
+        if (entry->offset + entry->value_length > (int64_t)strlen(info->filename))
+        {
+            /* filename is not long enough for a match */
+            return 0;
+        }
+        if (memcmp(&info->filename[entry->offset], entry->value, entry->value_length) != 0)
+        {
+            /* no match */
+            return 0;
+        }
+    }
+    return 1;
 }
 
 static void XMLCALL detection_string_handler(void *data, const char *s, int len)
@@ -505,15 +529,29 @@ static void XMLCALL detection_start_element_handler(void *data, const char *el, 
             info->detection_tree = subnode;
             info->is_root_element = 0;
 
-            /* check if a product type matches */
-            for (i = 0; i < info->detection_tree->num_detection_rules; i++)
+            if (info->detection_tree->num_attribute_subnodes > 0 && attr[0] != NULL)
             {
-                if (info->detection_tree->detection_rule[i]->entry[0]->value == NULL)
+                for (i = 0; attr[2 * i] != NULL; i++)
                 {
-                    /* we don't have to match the value, only the path matters -> product type found */
-                    info->product_definition = info->detection_tree->detection_rule[i]->product_definition;
-                    abort_detection_parser(info, 1);
-                    return;
+                    subnode = coda_xml_detection_node_get_attribute_subnode(info->detection_tree, attr[2 * i]);
+                    if (subnode != NULL)
+                    {
+                        int j;
+
+                        /* check if a product type matches */
+                        for (j = 0; j < subnode->num_detection_rules; j++)
+                        {
+                            if ((subnode->detection_rule[j]->entry[0]->value == NULL ||
+                                 strcmp(subnode->detection_rule[j]->entry[0]->value, attr[2 * i + 1]) == 0) &&
+                                detection_match_rule(info, subnode->detection_rule[j]))
+                            {
+                                /* product type found */
+                                info->product_definition = subnode->detection_rule[j]->product_definition;
+                                abort_detection_parser(info, 1);
+                                return;
+                            }
+                        }
+                    }
                 }
             }
 
@@ -563,15 +601,14 @@ static void XMLCALL detection_end_element_handler(void *data, const char *el)
             /* check if a product type matches */
             for (i = 0; i < info->detection_tree->num_detection_rules; i++)
             {
-                if (info->detection_tree->detection_rule[i]->entry[0]->value != NULL)
+                if ((info->detection_tree->detection_rule[i]->entry[0]->value == NULL ||
+                     strcmp(info->detection_tree->detection_rule[i]->entry[0]->value, info->matchvalue) == 0) &&
+                    detection_match_rule(info, info->detection_tree->detection_rule[i]))
                 {
-                    if (strcmp(info->detection_tree->detection_rule[i]->entry[0]->value, info->matchvalue) == 0)
-                    {
-                        /* we have a match -> product type found */
-                        info->product_definition = info->detection_tree->detection_rule[i]->product_definition;
-                        abort_detection_parser(info, 1);
-                        return;
-                    }
+                    /* we have a match -> product type found */
+                    info->product_definition = info->detection_tree->detection_rule[i]->product_definition;
+                    abort_detection_parser(info, 1);
+                    return;
                 }
             }
             free(info->matchvalue);
@@ -607,8 +644,21 @@ int coda_xml_parse_for_detection(int fd, const char *filename, coda_product_defi
     info.is_root_element = 1;   /* first element that gets parsed is the root element */
     info.unparsed_depth = 0;
     info.matchvalue = NULL;
-    info.detection_tree = coda_xml_get_detection_tree();
     info.product_definition = NULL;
+
+    info.filename = strrchr(filename, '/');
+    if (info.filename == NULL)
+    {
+        info.filename = strrchr(filename, '\\');
+    }
+    if (info.filename == NULL)
+    {
+        info.filename = filename;
+    }
+    else
+    {
+        info.filename = &info.filename[1];
+    }
 
     XML_SetUserData(info.parser, &info);
     XML_SetParamEntityParsing(info.parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
