@@ -24,8 +24,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define bit_size_to_byte_size(x) (((x) >> 3) + ((((uint8_t)(x)) & 0x7) != 0))
-
 void coda_grib_type_delete(coda_dynamic_type *type)
 {
     assert(type != NULL);

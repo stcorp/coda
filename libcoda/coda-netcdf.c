@@ -20,6 +20,13 @@
 
 #include "coda-netcdf-internal.h"
 #include "coda-mem-internal.h"
+#include "coda-bin-internal.h"
+#include "coda-read-bytes.h"
+#ifndef WORDS_BIGENDIAN
+#include "coda-swap2.h"
+#include "coda-swap4.h"
+#include "coda-swap8.h"
+#endif
 
 #ifdef HAVE_SYS_MMAN_H
 #include <sys/mman.h>
@@ -33,117 +40,29 @@
 #include <unistd.h>
 #endif
 
-#ifndef WORDS_BIGENDIAN
-static void swap_int16(int16_t *value)
-{
-    union
-    {
-        uint8_t as_bytes[2];
-        int16_t as_int16;
-    } v;
-
-    v.as_bytes[0] = ((uint8_t *)value)[1];
-    v.as_bytes[1] = ((uint8_t *)value)[0];
-
-    *value = v.as_int16;
-}
-
-static void swap_int32(int32_t *value)
-{
-    union
-    {
-        uint8_t as_bytes[4];
-        int32_t as_int32;
-    } v;
-
-    v.as_bytes[0] = ((uint8_t *)value)[3];
-    v.as_bytes[1] = ((uint8_t *)value)[2];
-    v.as_bytes[2] = ((uint8_t *)value)[1];
-    v.as_bytes[3] = ((uint8_t *)value)[0];
-
-    *value = v.as_int32;
-}
-
-static void swap_int64(int64_t *value)
-{
-    union
-    {
-        uint8_t as_bytes[8];
-        int64_t as_int64;
-    } v;
-
-    v.as_bytes[0] = ((uint8_t *)value)[7];
-    v.as_bytes[1] = ((uint8_t *)value)[6];
-    v.as_bytes[2] = ((uint8_t *)value)[5];
-    v.as_bytes[3] = ((uint8_t *)value)[4];
-    v.as_bytes[4] = ((uint8_t *)value)[3];
-    v.as_bytes[5] = ((uint8_t *)value)[2];
-    v.as_bytes[6] = ((uint8_t *)value)[1];
-    v.as_bytes[7] = ((uint8_t *)value)[0];
-
-    *value = v.as_int64;
-}
-
-static void swap_float(float *value)
-{
-    union
-    {
-        uint8_t as_bytes[4];
-        float as_float;
-    } v;
-
-    v.as_bytes[0] = ((uint8_t *)value)[3];
-    v.as_bytes[1] = ((uint8_t *)value)[2];
-    v.as_bytes[2] = ((uint8_t *)value)[1];
-    v.as_bytes[3] = ((uint8_t *)value)[0];
-
-    *value = v.as_float;
-}
-
-static void swap_double(double *value)
-{
-    union
-    {
-        uint8_t as_bytes[8];
-        double as_double;
-    } v;
-
-    v.as_bytes[0] = ((uint8_t *)value)[7];
-    v.as_bytes[1] = ((uint8_t *)value)[6];
-    v.as_bytes[2] = ((uint8_t *)value)[5];
-    v.as_bytes[3] = ((uint8_t *)value)[4];
-    v.as_bytes[4] = ((uint8_t *)value)[3];
-    v.as_bytes[5] = ((uint8_t *)value)[2];
-    v.as_bytes[6] = ((uint8_t *)value)[1];
-    v.as_bytes[7] = ((uint8_t *)value)[0];
-
-    *value = v.as_double;
-}
-#endif
-
-static int read_dim_array(coda_netcdf_product *product, int32_t num_records, int32_t *num_dims, int32_t **dim_length,
-                          int *appendable_dim)
+static int read_dim_array(coda_netcdf_product *product, int64_t *offset, int32_t num_records, int32_t *num_dims,
+                          int32_t **dim_length, int *appendable_dim)
 {
     int32_t tag;
     long i;
 
-    if (read(product->fd, &tag, 4) < 0)
+    if (read_bytes((coda_product *)product, *offset, 4, &tag) < 0)
     {
-        coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename, strerror(errno));
         return -1;
     }
 #ifndef WORDS_BIGENDIAN
     swap_int32(&tag);
 #endif
+    *offset += 4;
 
-    if (read(product->fd, num_dims, 4) < 0)
+    if (read_bytes((coda_product *)product, *offset, 4, num_dims) < 0)
     {
-        coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename, strerror(errno));
         return -1;
     }
 #ifndef WORDS_BIGENDIAN
     swap_int32(num_dims);
 #endif
+    *offset += 4;
 
     if (tag == 0)
     {
@@ -176,38 +95,30 @@ static int read_dim_array(coda_netcdf_product *product, int32_t num_records, int
         int32_t string_length;
 
         /* nelems */
-        if (read(product->fd, &string_length, 4) < 0)
+        if (read_bytes((coda_product *)product, *offset, 4, &string_length) < 0)
         {
             free(*dim_length);
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                           strerror(errno));
             return -1;
         }
 #ifndef WORDS_BIGENDIAN
         swap_int32(&string_length);
 #endif
+        *offset += 4;
         /* skip chars + padding */
+        *offset += string_length;
         if ((string_length & 3) != 0)
         {
-            string_length += 4 - (string_length & 3);
-        }
-        if (lseek(product->fd, string_length, SEEK_CUR) < 0)
-        {
-            free(*dim_length);
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                           strerror(errno));
-            return -1;
+            *offset += 4 - (string_length & 3);
         }
         /* dim_length */
-        if (read(product->fd, &(*dim_length)[i], 4) < 0)
+        if (read_bytes((coda_product *)product, *offset, 4, &(*dim_length)[i]) < 0)
         {
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                           strerror(errno));
             return -1;
         }
 #ifndef WORDS_BIGENDIAN
         swap_int32(&(*dim_length)[i]);
 #endif
+        *offset += 4;
         if ((*dim_length)[i] == 0)
         {
             /* appendable dimension */
@@ -219,30 +130,31 @@ static int read_dim_array(coda_netcdf_product *product, int32_t num_records, int
     return 0;
 }
 
-static int read_att_array(coda_netcdf_product *product, coda_mem_record **attributes, coda_conversion *conversion)
+static int read_att_array(coda_netcdf_product *product, int64_t *offset, coda_mem_record **attributes,
+                          coda_conversion *conversion)
 {
     coda_type_record *attributes_definition;
     int32_t tag;
     int32_t num_att;
     long i;
 
-    if (read(product->fd, &tag, 4) < 0)
+    if (read_bytes((coda_product *)product, *offset, 4, &tag) < 0)
     {
-        coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename, strerror(errno));
         return -1;
     }
 #ifndef WORDS_BIGENDIAN
     swap_int32(&tag);
 #endif
+    *offset += 4;
 
-    if (read(product->fd, &num_att, 4) < 0)
+    if (read_bytes((coda_product *)product, *offset, 4, &num_att) < 0)
     {
-        coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename, strerror(errno));
         return -1;
     }
 #ifndef WORDS_BIGENDIAN
     swap_int32(&num_att);
 #endif
+    *offset += 4;
 
     if (tag == 0)
     {
@@ -279,23 +191,21 @@ static int read_att_array(coda_netcdf_product *product, coda_mem_record **attrib
     {
         coda_netcdf_basic_type *basic_type;
         int32_t string_length;
-        int64_t offset;
         int32_t nc_type;
         int32_t nelems;
         long value_length;
         char *name;
 
         /* nelems */
-        if (read(product->fd, &string_length, 4) < 0)
+        if (read_bytes((coda_product *)product, *offset, 4, &string_length) < 0)
         {
             coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                           strerror(errno));
             return -1;
         }
 #ifndef WORDS_BIGENDIAN
         swap_int32(&string_length);
 #endif
+        *offset += 4;
         /* chars */
         name = malloc(string_length + 1);
         if (name == NULL)
@@ -306,50 +216,40 @@ static int read_att_array(coda_netcdf_product *product, coda_mem_record **attrib
             return -1;
         }
         name[string_length] = '\0';
-        if (read(product->fd, name, string_length) < 0)
+        if (read_bytes((coda_product *)product, *offset, string_length, name) < 0)
         {
             free(name);
             coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                           strerror(errno));
             return -1;
         }
+        *offset += string_length;
         /* chars padding */
         if ((string_length & 3) != 0)
         {
-            if (lseek(product->fd, 4 - (string_length & 3), SEEK_CUR) < 0)
-            {
-                free(name);
-                coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
-                coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                               strerror(errno));
-                return -1;
-            }
+            *offset += 4 - (string_length & 3);
         }
         /* nc_type */
-        if (read(product->fd, &nc_type, 4) < 0)
+        if (read_bytes((coda_product *)product, *offset, 4, &nc_type) < 0)
         {
             free(name);
             coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                           strerror(errno));
             return -1;
         }
 #ifndef WORDS_BIGENDIAN
         swap_int32(&nc_type);
 #endif
+        *offset += 4;
         /* nelems */
-        if (read(product->fd, &nelems, 4) < 0)
+        if (read_bytes((coda_product *)product, *offset, 4, &nelems) < 0)
         {
             free(name);
             coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                           strerror(errno));
             return -1;
         }
 #ifndef WORDS_BIGENDIAN
         swap_int32(&nelems);
 #endif
+        *offset += 4;
         value_length = nelems;
         switch (nc_type)
         {
@@ -373,20 +273,6 @@ static int read_att_array(coda_netcdf_product *product, coda_mem_record **attrib
                                (int)nc_type, product->filename);
                 return -1;
         }
-        if ((value_length & 3) != 0)
-        {
-            value_length += 4 - (value_length & 3);
-        }
-        offset = lseek(product->fd, value_length, SEEK_CUR);
-        if (offset < 0)
-        {
-            free(name);
-            coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                           strerror(errno));
-            return -1;
-        }
-        offset -= value_length;
 
         if (conversion != NULL)
         {
@@ -396,20 +282,10 @@ static int read_att_array(coda_netcdf_product *product, coda_mem_record **attrib
                 {
                     float value;
 
-                    if (lseek(product->fd, offset, SEEK_SET) < 0)
+                    if (read_bytes((coda_product *)product, *offset, 4, &value) < 0)
                     {
                         free(name);
                         coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
-                        coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                                       strerror(errno));
-                        return -1;
-                    }
-                    if (read(product->fd, &value, 4) < 0)
-                    {
-                        free(name);
-                        coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
-                        coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                                       strerror(errno));
                         return -1;
                     }
 #ifndef WORDS_BIGENDIAN
@@ -428,20 +304,10 @@ static int read_att_array(coda_netcdf_product *product, coda_mem_record **attrib
                 {
                     double value;
 
-                    if (lseek(product->fd, offset, SEEK_SET) < 0)
+                    if (read_bytes((coda_product *)product, *offset, 8, &value) < 0)
                     {
                         free(name);
                         coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
-                        coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                                       strerror(errno));
-                        return -1;
-                    }
-                    if (read(product->fd, &value, 8) < 0)
-                    {
-                        free(name);
-                        coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
-                        coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                                       strerror(errno));
                         return -1;
                     }
 #ifndef WORDS_BIGENDIAN
@@ -473,20 +339,10 @@ static int read_att_array(coda_netcdf_product *product, coda_mem_record **attrib
                     double as_double[1];
                 } value;
 
-                if (lseek(product->fd, offset, SEEK_SET) < 0)
+                if (read_bytes((coda_product *)product, *offset, value_length, value.as_int8) < 0)
                 {
                     free(name);
                     coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
-                    coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                                   strerror(errno));
-                    return -1;
-                }
-                if (read(product->fd, value.as_int8, value_length) < 0)
-                {
-                    free(name);
-                    coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
-                    coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                                   strerror(errno));
                     return -1;
                 }
                 switch (nc_type)
@@ -527,17 +383,22 @@ static int read_att_array(coda_netcdf_product *product, coda_mem_record **attrib
 
         if (nc_type == 2)       /* treat char arrays as strings */
         {
-            basic_type = coda_netcdf_basic_type_new(nc_type, offset, 0, nelems);
+            basic_type = coda_netcdf_basic_type_new(nc_type, *offset, 0, nelems);
         }
         else
         {
-            basic_type = coda_netcdf_basic_type_new(nc_type, offset, 0, 1);
+            basic_type = coda_netcdf_basic_type_new(nc_type, *offset, 0, 1);
         }
         if (basic_type == NULL)
         {
             free(name);
             coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
             return -1;
+        }
+        *offset += value_length;
+        if ((value_length & 3) != 0)
+        {
+            *offset += 4 - (value_length & 3);
         }
 
         if (nc_type == 2 || nelems == 1)
@@ -577,14 +438,14 @@ static int read_att_array(coda_netcdf_product *product, coda_mem_record **attrib
     return 0;
 }
 
-static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths, int32_t *dim_length,
+static int read_var_array(coda_netcdf_product *product, int64_t *offset, int32_t num_dim_lengths, int32_t *dim_length,
                           int appendable_dim, coda_mem_record *root)
 {
     int32_t tag;
     int32_t num_var;
     long i;
 
-    if (read(product->fd, &tag, 4) < 0)
+    if (read_bytes((coda_product *)product, *offset, 4, &tag) < 0)
     {
         coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename, strerror(errno));
         return -1;
@@ -592,8 +453,9 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
 #ifndef WORDS_BIGENDIAN
     swap_int32(&tag);
 #endif
+    *offset += 4;
 
-    if (read(product->fd, &num_var, 4) < 0)
+    if (read_bytes((coda_product *)product, *offset, 4, &num_var) < 0)
     {
         coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename, strerror(errno));
         return -1;
@@ -601,6 +463,7 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
 #ifndef WORDS_BIGENDIAN
     swap_int32(&num_var);
 #endif
+    *offset += 4;
 
     if (tag == 0)
     {
@@ -626,8 +489,8 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
         coda_mem_record *attributes = NULL;
         coda_conversion *conversion;
         long dim[CODA_MAX_NUM_DIMS];
+        int64_t var_offset;
         int32_t string_length;
-        int64_t offset;
         int32_t nc_type;
         int32_t nelems;
         int32_t vsize;
@@ -640,15 +503,14 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
         long j;
 
         /* nelems */
-        if (read(product->fd, &string_length, 4) < 0)
+        if (read_bytes((coda_product *)product, *offset, 4, &string_length) < 0)
         {
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                           strerror(errno));
             return -1;
         }
 #ifndef WORDS_BIGENDIAN
         swap_int32(&string_length);
 #endif
+        *offset += 4;
         /* chars */
         name = malloc(string_length + 1);
         if (name == NULL)
@@ -658,49 +520,40 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
             return -1;
         }
         name[string_length] = '\0';
-        if (read(product->fd, name, string_length) < 0)
+        if (read_bytes((coda_product *)product, *offset, string_length, name) < 0)
         {
             free(name);
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                           strerror(errno));
             return -1;
         }
+        *offset += string_length;
         /* chars padding */
         if ((string_length & 3) != 0)
         {
-            if (lseek(product->fd, 4 - (string_length & 3), SEEK_CUR) < 0)
-            {
-                free(name);
-                coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                               strerror(errno));
-                return -1;
-            }
+            *offset += 4 - (string_length & 3);
         }
         /* nelems */
-        if (read(product->fd, &nelems, 4) < 0)
+        if (read_bytes((coda_product *)product, *offset, 4, &nelems) < 0)
         {
             free(name);
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                           strerror(errno));
             return -1;
         }
 #ifndef WORDS_BIGENDIAN
         swap_int32(&nelems);
 #endif
+        *offset += 4;
         num_dims = 0;
         for (j = 0; j < nelems; j++)
         {
             /* dimid */
-            if (read(product->fd, &dim_id, 4) < 0)
+            if (read_bytes((coda_product *)product, *offset, 4, &dim_id) < 0)
             {
                 free(name);
-                coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                               strerror(errno));
                 return -1;
             }
 #ifndef WORDS_BIGENDIAN
             swap_int32(&dim_id);
 #endif
+            *offset += 4;
             if (dim_id < 0 || dim_id >= num_dim_lengths)
             {
                 free(name);
@@ -738,7 +591,7 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
             return -1;
         }
         /* vatt_array */
-        if (read_att_array(product, &attributes, conversion) != 0)
+        if (read_att_array(product, offset, &attributes, conversion) != 0)
         {
             coda_conversion_delete(conversion);
             free(name);
@@ -746,18 +599,17 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
         }
 
         /* nc_type */
-        if (read(product->fd, &nc_type, 4) < 0)
+        if (read_bytes((coda_product *)product, *offset, 4, &nc_type) < 0)
         {
             coda_dynamic_type_delete((coda_dynamic_type *)attributes);
             coda_conversion_delete(conversion);
             free(name);
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                           strerror(errno));
             return -1;
         }
 #ifndef WORDS_BIGENDIAN
         swap_int32(&nc_type);
 #endif
+        *offset += 4;
 
         /* check if we need to use a conversion */
         if (conversion->numerator == 1.0 && conversion->add_offset == 0.0)
@@ -771,18 +623,17 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
         }
 
         /* vsize */
-        if (read(product->fd, &vsize, 4) < 0)
+        if (read_bytes((coda_product *)product, *offset, 4, &vsize) < 0)
         {
             coda_dynamic_type_delete((coda_dynamic_type *)attributes);
             coda_conversion_delete(conversion);
             free(name);
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                           strerror(errno));
             return -1;
         }
 #ifndef WORDS_BIGENDIAN
         swap_int32(&vsize);
 #endif
+        *offset += 4;
         if (record_var)
         {
             product->record_size += vsize;
@@ -793,34 +644,32 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
         {
             int32_t offset32;
 
-            if (read(product->fd, &offset32, 4) < 0)
+            if (read_bytes((coda_product *)product, *offset, 4, &offset32) < 0)
             {
                 coda_dynamic_type_delete((coda_dynamic_type *)attributes);
                 coda_conversion_delete(conversion);
                 free(name);
-                coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                               strerror(errno));
                 return -1;
             }
 #ifndef WORDS_BIGENDIAN
             swap_int32(&offset32);
 #endif
-            offset = (int64_t)offset32;
+            var_offset = (int64_t)offset32;
+            *offset += 4;
         }
         else
         {
-            if (read(product->fd, &offset, 8) < 0)
+            if (read_bytes((coda_product *)product, *offset, 8, &var_offset) < 0)
             {
                 coda_dynamic_type_delete((coda_dynamic_type *)attributes);
                 coda_conversion_delete(conversion);
                 free(name);
-                coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                               strerror(errno));
                 return -1;
             }
 #ifndef WORDS_BIGENDIAN
-            swap_int64(&offset);
+            swap_int64(&var_offset);
 #endif
+            *offset += 8;
         }
         if (last_dim_set)
         {
@@ -828,11 +677,11 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
             {
                 /* we treat the last dimension of a char array as a string */
                 /* except if it is a one dimensional char array were the first dimension is the appendable dimension */
-                basic_type = coda_netcdf_basic_type_new(nc_type, offset, record_var, last_dim_length);
+                basic_type = coda_netcdf_basic_type_new(nc_type, var_offset, record_var, last_dim_length);
             }
             else
             {
-                basic_type = coda_netcdf_basic_type_new(nc_type, offset, record_var, 1);
+                basic_type = coda_netcdf_basic_type_new(nc_type, var_offset, record_var, 1);
                 if (num_dims < CODA_MAX_NUM_DIMS)
                 {
                     dim[num_dims] = last_dim_length;
@@ -847,7 +696,7 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
         else
         {
             /* we only get here if the variable is a real scalar (num_dims == 0) */
-            basic_type = coda_netcdf_basic_type_new(nc_type, offset, 0, 1);
+            basic_type = coda_netcdf_basic_type_new(nc_type, var_offset, 0, 1);
         }
         if (basic_type == NULL)
         {
@@ -928,10 +777,10 @@ int coda_netcdf_open(const char *filename, int64_t file_size, const coda_product
     coda_mem_record *attributes;
     coda_mem_record *root;
     char magic[4];
-    int open_flags;
     int32_t num_records;
     int32_t num_dims;
     int32_t *dim_length = NULL;
+    int64_t offset = 0;
     int appendable_dim = -1;
 
     product_file = (coda_netcdf_product *)malloc(sizeof(coda_netcdf_product));
@@ -953,11 +802,7 @@ int coda_netcdf_open(const char *filename, int64_t file_size, const coda_product
 #endif
     product_file->use_mmap = 0;
     product_file->fd = -1;
-    product_file->mmap_ptr = NULL;
-#ifdef WIN32
-    product_file->file_mapping = INVALID_HANDLE_VALUE;
-    product_file->file = INVALID_HANDLE_VALUE;
-#endif
+
     product_file->netcdf_version = 1;
     product_file->record_size = 0;
 
@@ -970,14 +815,8 @@ int coda_netcdf_open(const char *filename, int64_t file_size, const coda_product
         return -1;
     }
 
-    open_flags = O_RDONLY;
-#ifdef WIN32
-    open_flags |= _O_BINARY;
-#endif
-    product_file->fd = open(filename, open_flags);
-    if (product_file->fd < 0)
+    if (coda_bin_product_open((coda_bin_product *)product_file) != 0)
     {
-        coda_set_error(CODA_ERROR_FILE_OPEN, "could not open file %s (%s)", filename, strerror(errno));
         coda_netcdf_close((coda_product *)product_file);
         return -1;
     }
@@ -999,7 +838,7 @@ int coda_netcdf_open(const char *filename, int64_t file_size, const coda_product
     product_file->root_type = (coda_dynamic_type *)root;
 
     /* magic */
-    if (read(product_file->fd, magic, 4) < 0)
+    if (read_bytes((coda_product *)product_file, offset, 4, magic) < 0)
     {
         coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product_file->filename,
                        strerror(errno));
@@ -1015,9 +854,10 @@ int coda_netcdf_open(const char *filename, int64_t file_size, const coda_product
         coda_netcdf_close((coda_product *)product_file);
         return -1;
     }
+    offset += 4;
 
     /* numrecs */
-    if (read(product_file->fd, &num_records, 4) < 0)
+    if (read_bytes((coda_product *)product_file, offset, 4, &num_records) < 0)
     {
         coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product_file->filename,
                        strerror(errno));
@@ -1027,16 +867,17 @@ int coda_netcdf_open(const char *filename, int64_t file_size, const coda_product
 #ifndef WORDS_BIGENDIAN
     swap_int32(&num_records);
 #endif
+    offset += 4;
 
     /* dim_array */
-    if (read_dim_array(product_file, num_records, &num_dims, &dim_length, &appendable_dim) != 0)
+    if (read_dim_array(product_file, &offset, num_records, &num_dims, &dim_length, &appendable_dim) != 0)
     {
         coda_netcdf_close((coda_product *)product_file);
         return -1;
     }
 
     /* gatt_array */
-    if (read_att_array(product_file, &attributes, NULL) != 0)
+    if (read_att_array(product_file, &offset, &attributes, NULL) != 0)
     {
         if (dim_length != NULL)
         {
@@ -1059,7 +900,7 @@ int coda_netcdf_open(const char *filename, int64_t file_size, const coda_product
     }
 
     /* var_array */
-    if (read_var_array(product_file, num_dims, dim_length, appendable_dim, root) != 0)
+    if (read_var_array(product_file, &offset, num_dims, dim_length, appendable_dim, root) != 0)
     {
         if (dim_length != NULL)
         {
@@ -1074,110 +915,6 @@ int coda_netcdf_open(const char *filename, int64_t file_size, const coda_product
         free(dim_length);
     }
 
-    if (coda_option_use_mmap)
-    {
-        /* Perform an mmap() of the file, filling the following fields:
-         *   product->use_mmap = 1
-         *   product->file         (windows only )
-         *   product->file_mapping (windows only )
-         *   product->mmap_ptr     (windows, *nix)
-         */
-        product_file->use_mmap = 1;
-#ifdef WIN32
-        close(product_file->fd);
-        product_file->file = CreateFile(product_file->filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
-                                        FILE_ATTRIBUTE_NORMAL, NULL);
-        if (product_file->file == INVALID_HANDLE_VALUE)
-        {
-            if (GetLastError() == ERROR_FILE_NOT_FOUND)
-            {
-                coda_set_error(CODA_ERROR_FILE_NOT_FOUND, "could not find %s", product_file->filename);
-            }
-            else
-            {
-                LPVOID lpMsgBuf;
-
-                if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-                                  FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(),
-                                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&lpMsgBuf, 0, NULL) == 0)
-                {
-                    /* Set error without additional information */
-                    coda_set_error(CODA_ERROR_FILE_OPEN, "could not open file %s", product_file->filename);
-                }
-                else
-                {
-                    coda_set_error(CODA_ERROR_FILE_OPEN, "could not open file %s (%s)", product_file->filename,
-                                   (LPCTSTR) lpMsgBuf);
-                    LocalFree(lpMsgBuf);
-                }
-            }
-            coda_netcdf_close((coda_product *)product_file);
-            return -1;  /* indicate failure */
-        }
-
-        /* Try to do file mapping */
-        product_file->file_mapping = CreateFileMapping(product_file->file, NULL, PAGE_READONLY, 0,
-                                                       (int32_t)product_file->file_size, 0);
-        if (product_file->file_mapping == NULL)
-        {
-            LPVOID lpMsgBuf;
-
-            if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-                              FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(),
-                              MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&lpMsgBuf, 0, NULL) == 0)
-            {
-                /* Set error without additional information */
-                coda_set_error(CODA_ERROR_FILE_OPEN, "could not map file %s into memory", product_file->filename);
-            }
-            else
-            {
-                coda_set_error(CODA_ERROR_FILE_OPEN, "could not map file %s into memory (%s)", product_file->filename,
-                               (LPCTSTR) lpMsgBuf);
-                LocalFree(lpMsgBuf);
-            }
-            coda_netcdf_close((coda_product *)product_file);
-            return -1;
-        }
-
-        product_file->mmap_ptr = (uint8_t *)MapViewOfFile(product_file->file_mapping, FILE_MAP_READ, 0, 0, 0);
-        if (product_file->mmap_ptr == NULL)
-        {
-            LPVOID lpMsgBuf;
-
-            if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-                              FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(),
-                              MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&lpMsgBuf, 0, NULL) == 0)
-            {
-                /* Set error without additional information */
-                coda_set_error(CODA_ERROR_FILE_OPEN, "could not map file %s into memory", product_file->filename);
-            }
-            else
-            {
-                coda_set_error(CODA_ERROR_FILE_OPEN, "could not map file %s into memory (%s)", product_file->filename,
-                               (LPCTSTR) lpMsgBuf);
-                LocalFree(lpMsgBuf);
-            }
-            coda_netcdf_close((coda_product *)product_file);
-            return -1;
-        }
-#else
-        product_file->mmap_ptr = (uint8_t *)mmap(0, product_file->file_size, PROT_READ, MAP_SHARED, product_file->fd,
-                                                 0);
-        if (product_file->mmap_ptr == (uint8_t *)MAP_FAILED)
-        {
-            coda_set_error(CODA_ERROR_FILE_OPEN, "could not map file %s into memory (%s)", product_file->filename,
-                           strerror(errno));
-            product_file->mmap_ptr = NULL;
-            close(product_file->fd);
-            coda_netcdf_close((coda_product *)product_file);
-            return -1;
-        }
-
-        /* close file descriptor (the file handle is not needed anymore) */
-        close(product_file->fd);
-#endif
-    }
-
     *product = (coda_product *)product_file;
 
     return 0;
@@ -1187,34 +924,9 @@ int coda_netcdf_close(coda_product *product)
 {
     coda_netcdf_product *product_file = (coda_netcdf_product *)product;
 
-    if (product_file->use_mmap)
+    if (coda_bin_product_close((coda_bin_product *)product) != 0)
     {
-#ifdef WIN32
-        if (product_file->mmap_ptr != NULL)
-        {
-            UnmapViewOfFile(product_file->mmap_ptr);
-        }
-        if (product_file->file_mapping != INVALID_HANDLE_VALUE)
-        {
-            CloseHandle(product_file->file_mapping);
-        }
-        if (product_file->file != INVALID_HANDLE_VALUE)
-        {
-            CloseHandle(product_file->file);
-        }
-#else
-        if (product_file->mmap_ptr != NULL)
-        {
-            munmap((void *)product_file->mmap_ptr, product_file->file_size);
-        }
-#endif
-    }
-    else
-    {
-        if (product_file->fd >= 0)
-        {
-            close(product_file->fd);
-        }
+        return -1;
     }
 
     if (product_file->root_type != NULL)

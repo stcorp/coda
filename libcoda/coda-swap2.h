@@ -18,25 +18,20 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef CODA_ASCBIN_INTERNAL_H
-#define CODA_ASCBIN_INTERNAL_H
+#ifndef CODA_SWAP2_H
+#define CODA_SWAP2_H
 
-#include "coda-ascbin.h"
-#include "coda-definition.h"
-
-struct coda_ascbin_detection_node_struct
+static void swap2(void *value)
 {
-    /* detection rule entry at this node; will be NULL for root node */
-    coda_detection_rule_entry *entry;
+    unsigned char *v = (unsigned char *)value;
 
-    coda_detection_rule *rule;  /* the matching rule when 'entry' matches and none of the subnodes match */
+    /* use XOR swap algorithm to swap bytes 0/1 */
+    v[0] = v[0] ^ v[1];
+    v[1] = v[0] ^ v[1];
+    v[0] = v[0] ^ v[1];
+}
 
-    /* sub nodes of this node */
-    int num_subnodes;
-    struct coda_ascbin_detection_node_struct **subnode;
-};
-typedef struct coda_ascbin_detection_node_struct coda_ascbin_detection_node;
-
-coda_ascbin_detection_node *coda_ascbin_get_detection_tree(void);
+#define swap_int16 swap2
+#define swap_uint16 swap2
 
 #endif

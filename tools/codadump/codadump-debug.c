@@ -582,12 +582,14 @@ static void print_data(coda_cursor *cursor)
                 }
                 if (special_type != coda_special_no_data)
                 {
-                    if (coda_cursor_use_base_type_of_special_type(cursor) != 0)
+                    coda_cursor base_cursor = *cursor;
+
+                    if (coda_cursor_use_base_type_of_special_type(&base_cursor) != 0)
                     {
                         handle_coda_error();
                     }
                     INDENT++;
-                    print_data(cursor);
+                    print_data(&base_cursor);
                     INDENT--;
                 }
             }

@@ -549,7 +549,7 @@ static int new_hdf5Attribute(hid_t attr_id, coda_hdf5_attribute **type)
     }
     for (i = 0; i < num_dims; i++)
     {
-        if (coda_type_array_add_fixed_dimension(attr->definition, dim[i]) != 0)
+        if (coda_type_array_add_fixed_dimension(attr->definition, (long)dim[i]) != 0)
         {
             coda_hdf5_type_delete((coda_dynamic_type *)attr);
             return -1;
@@ -859,7 +859,7 @@ int coda_hdf5_create_tree(coda_hdf5_product *product, hid_t loc_id, const char *
                 }
                 for (i = 0; i < num_dims; i++)
                 {
-                    if (coda_type_array_add_fixed_dimension(dataset->definition, dim[i]) != 0)
+                    if (coda_type_array_add_fixed_dimension(dataset->definition, (long)dim[i]) != 0)
                     {
                         coda_hdf5_type_delete((coda_dynamic_type *)dataset);
                         return -1;
@@ -919,7 +919,7 @@ int coda_hdf5_create_tree(coda_hdf5_product *product, hid_t loc_id, const char *
             return -1;
         }
         product->object = objects;
-        for (i = product->num_objects; i < (long)product->num_objects + BLOCK_SIZE; i++)
+        for (i = (long)product->num_objects; i < (long)product->num_objects + BLOCK_SIZE; i++)
         {
             product->object[i] = NULL;
         }

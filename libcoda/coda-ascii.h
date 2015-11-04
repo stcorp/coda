@@ -27,7 +27,8 @@ long coda_ascii_parse_int64(const char *buffer, long buffer_length, int64_t *dst
 long coda_ascii_parse_uint64(const char *buffer, long buffer_length, uint64_t *dst, int ignore_trailing_bytes);
 long coda_ascii_parse_double(const char *buffer, long buffer_length, double *dst, int ignore_trailing_bytes);
 
-int coda_ascii_recognize_file(const char *filename, int64_t size, coda_product_definition **definition);
+int coda_ascii_open(const char *filename, int64_t file_size, const coda_product_definition *definition,
+                    coda_product **product);
 int coda_ascii_close(coda_product *product);
 
 int coda_ascii_cursor_use_base_type_of_special_type(coda_cursor *cursor);

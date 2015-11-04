@@ -493,7 +493,7 @@ int coda_xml_cursor_read_string(const coda_cursor *cursor, char *dst, long dst_s
 
     /* TODO: replace call to coda_ascii_cursor_read_bytes() with direct call to read_bytes() */
 
-    read_size = ((coda_xml_element *)type)->inner_bit_size >> 3;
+    read_size = (long)(((coda_xml_element *)type)->inner_bit_size >> 3);
     if (read_size + 1 > dst_size)
     {
         read_size = dst_size - 1;

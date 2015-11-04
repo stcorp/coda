@@ -29,6 +29,7 @@
 #include "coda-ascbin.h"
 #include "coda-ascii.h"
 #include "coda-bin.h"
+#include "coda-cdf.h"
 #include "coda-mem.h"
 #include "coda-xml.h"
 #include "coda-netcdf.h"
@@ -158,6 +159,7 @@ int coda_dynamic_type_update(coda_dynamic_type **type, coda_type **definition)
             break;
         case coda_backend_hdf4:
         case coda_backend_hdf5:
+        case coda_backend_cdf:
         case coda_backend_netcdf:
         case coda_backend_grib:
             /* for these backends coda_dynamic_type_update() will never be called */
@@ -196,6 +198,9 @@ void coda_dynamic_type_delete(coda_dynamic_type *type)
 #ifdef HAVE_HDF5
             coda_hdf5_type_delete(type);
 #endif
+            break;
+        case coda_backend_cdf:
+            coda_cdf_type_delete(type);
             break;
         case coda_backend_netcdf:
             coda_netcdf_type_delete(type);
@@ -321,6 +326,8 @@ LIBCODA_API int coda_cursor_set_product(coda_cursor *cursor, coda_product *produ
             return coda_ascbin_cursor_set_product(cursor, product);
         case coda_format_xml:
             return coda_xml_cursor_set_product(cursor, product);
+        case coda_format_cdf:
+            return coda_cdf_cursor_set_product(cursor, product);
         case coda_format_netcdf:
             return coda_netcdf_cursor_set_product(cursor, product);
         case coda_format_grib1:
@@ -344,9 +351,6 @@ LIBCODA_API int coda_cursor_set_product(coda_cursor *cursor, coda_product *produ
             return coda_rinex_cursor_set_product(cursor, product);
         case coda_format_sp3:
             return coda_sp3_cursor_set_product(cursor, product);
-        case coda_format_cdf:
-            /* unsupported */
-            break;
     }
 
     assert(0);
@@ -593,6 +597,7 @@ LIBCODA_API int coda_cursor_goto_record_field_by_index(coda_cursor *cursor, long
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
         case coda_backend_netcdf:
         case coda_backend_grib:
             break;
@@ -704,6 +709,7 @@ LIBCODA_API int coda_cursor_goto_next_record_field(coda_cursor *cursor)
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
         case coda_backend_netcdf:
         case coda_backend_grib:
             break;
@@ -751,6 +757,7 @@ LIBCODA_API int coda_cursor_goto_available_union_field(coda_cursor *cursor)
         case coda_backend_memory:
         case coda_backend_hdf4:
         case coda_backend_hdf5:
+        case coda_backend_cdf:
         case coda_backend_netcdf:
         case coda_backend_grib:
             break;
@@ -836,6 +843,8 @@ LIBCODA_API int coda_cursor_goto_array_element(coda_cursor *cursor, int num_subs
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_goto_array_element(cursor, num_subs, subs);
         case coda_backend_netcdf:
             return coda_netcdf_cursor_goto_array_element(cursor, num_subs, subs);
         case coda_backend_grib:
@@ -913,6 +922,8 @@ LIBCODA_API int coda_cursor_goto_array_element_by_index(coda_cursor *cursor, lon
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_goto_array_element_by_index(cursor, index);
         case coda_backend_netcdf:
             return coda_netcdf_cursor_goto_array_element_by_index(cursor, index);
         case coda_backend_grib:
@@ -1001,6 +1012,8 @@ LIBCODA_API int coda_cursor_goto_next_array_element(coda_cursor *cursor)
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_goto_next_array_element(cursor);
         case coda_backend_netcdf:
             return coda_netcdf_cursor_goto_next_array_element(cursor);
         case coda_backend_grib:
@@ -1061,6 +1074,8 @@ LIBCODA_API int coda_cursor_goto_attributes(coda_cursor *cursor)
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_goto_attributes(cursor);
         case coda_backend_netcdf:
             return coda_netcdf_cursor_goto_attributes(cursor);
         case coda_backend_grib:
@@ -1163,6 +1178,8 @@ LIBCODA_API int coda_cursor_use_base_type_of_special_type(coda_cursor *cursor)
             return coda_mem_cursor_use_base_type_of_special_type(cursor);
         case coda_backend_xml:
             return coda_xml_cursor_use_base_type_of_special_type(cursor);
+        case coda_backend_cdf:
+            return coda_cdf_cursor_use_base_type_of_special_type(cursor);
         case coda_backend_hdf4:
         case coda_backend_hdf5:
         case coda_backend_netcdf:
@@ -1307,6 +1324,8 @@ LIBCODA_API int coda_cursor_get_string_length(const coda_cursor *cursor, long *l
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_get_string_length(cursor, length);
         case coda_backend_netcdf:
             return coda_netcdf_cursor_get_string_length(cursor, length);
         case coda_backend_grib:
@@ -1351,6 +1370,7 @@ LIBCODA_API int coda_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit
             return coda_xml_cursor_get_bit_size(cursor, bit_size);
         case coda_backend_hdf4:
         case coda_backend_hdf5:
+        case coda_backend_cdf:
         case coda_backend_netcdf:
         case coda_backend_grib:
             *bit_size = -1;
@@ -1438,6 +1458,8 @@ LIBCODA_API int coda_cursor_get_num_elements(const coda_cursor *cursor, long *nu
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_get_num_elements(cursor, num_elements);
         case coda_backend_netcdf:
             return coda_netcdf_cursor_get_num_elements(cursor, num_elements);
         case coda_backend_grib:
@@ -1560,6 +1582,7 @@ int coda_cursor_get_file_bit_offset(const coda_cursor *cursor, int64_t *bit_offs
         case coda_backend_memory:
         case coda_backend_hdf4:
         case coda_backend_hdf5:
+        case coda_backend_cdf:
         case coda_backend_netcdf:
         case coda_backend_grib:
             *bit_offset = -1;
@@ -1618,6 +1641,7 @@ int coda_cursor_get_file_byte_offset(const coda_cursor *cursor, int64_t *byte_of
         case coda_backend_memory:
         case coda_backend_hdf4:
         case coda_backend_hdf5:
+        case coda_backend_cdf:
         case coda_backend_netcdf:
         case coda_backend_grib:
             *byte_offset = -1;
@@ -1830,6 +1854,7 @@ LIBCODA_API int coda_cursor_get_record_field_available_status(const coda_cursor 
             return coda_xml_cursor_get_record_field_available_status(cursor, index, available);
         case coda_backend_hdf4:
         case coda_backend_hdf5:
+        case coda_backend_cdf:
         case coda_backend_netcdf:
             /* fields are always available */
             *available = 1;
@@ -1884,6 +1909,7 @@ LIBCODA_API int coda_cursor_get_available_union_field_index(const coda_cursor *c
         case coda_backend_memory:
         case coda_backend_hdf4:
         case coda_backend_hdf5:
+        case coda_backend_cdf:
         case coda_backend_netcdf:
         case coda_backend_grib:
             break;
@@ -1954,6 +1980,8 @@ LIBCODA_API int coda_cursor_get_array_dim(const coda_cursor *cursor, int *num_di
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_get_array_dim(cursor, num_dims, dim);
         case coda_backend_netcdf:
             return coda_netcdf_cursor_get_array_dim(cursor, num_dims, dim);
         case coda_backend_grib:

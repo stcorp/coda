@@ -1,5 +1,5 @@
 # autoconf file for CODA
-AC_INIT([CODA],[2.6])
+AC_INIT([CODA],[2.7])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE(foreign 1.10 -Wall)
 
@@ -100,7 +100,7 @@ AC_CONFIG_FILES([windows/coda.iss windows/setup.py])
 # 6. If any interfaces have been removed or changed since the last public
 #    release, then set age to 0.
 LIBCODA_CURRENT=9
-LIBCODA_REVISION=3
+LIBCODA_REVISION=4
 LIBCODA_AGE=3
 AC_SUBST(LIBCODA_CURRENT)
 AC_SUBST(LIBCODA_REVISION)
@@ -111,7 +111,7 @@ AC_SUBST(LIBCODA_AGE)
 AC_PROG_CC
 AC_PROG_F77
 
-# AM_PROG_AR is only available since automake 1.11.1
+# AM_PROG_AR is only available since automake 1.11.2
 m4_define_default([AM_PROG_AR])
 AM_PROG_AR
 AM_PROG_CC_C_O
@@ -338,16 +338,13 @@ Try setting the PYTHON environment variable to the full path to your python exec
     AC_MSG_ERROR(BOXED_TEXT([ERROR: Python include files are needed to build the Python interface.
 Try setting the PYTHON_INCLUDE environment variable to the directory that contains Python.h.]))
   fi
+  ST_PATH_NUMPY_INCLUDE
   AC_ARG_VAR(NUMPY_INCLUDE, [The Python include directory where the 'numpy' package is installed ($NUMPY_INCLUDE/numpy/ndarrayobject.h should exist). By default NUMPY_INCLUDE is set to the value of PYTHON_INCLUDE])
   if test -z "$NUMPY_INCLUDE" ; then
-    NUMPY_INCLUDE=$PYTHON_INCLUDE
-  else
-    CPPFLAGS="-I$NUMPY_INCLUDE $CPPFLAGS"
+    AC_MSG_ERROR([BOXED_TEXT([ERROR: Python numpy package is needed for the Python interface.
+Please install 'numpy' or, if you have already installed this package, set the NUMPY_INCLUDE environment variable and make sure that the file $NUMPY_INCLUDE/numpy/ndarrayobject.h exists.])])
   fi
-  AC_CHECK_FILE($NUMPY_INCLUDE/numpy/ndarrayobject.h, ,
-    [AC_MSG_ERROR([BOXED_TEXT([ERROR: Python numpy package is needed for the Python interface. Please install 'numpy' or, if you have already installed this package, set the NUMPY_INCLUDE environment variable and make sure that the file $NUMPY_INCLUDE/numpy/ndarrayobject.h exists.])])])
-  codapythondir="$pythondir/coda"
-  codapyexecdir="$pyexecdir/coda"
+  codapythondir="$pyexecdir/coda"
 fi
 
 AM_CONDITIONAL(BUILD_PYTHON, test $ac_cv_enable_python = yes)

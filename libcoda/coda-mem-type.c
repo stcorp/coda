@@ -273,7 +273,7 @@ int coda_mem_type_add_attribute(coda_mem_type *type, const char *real_name, coda
     index = hashtable_get_index_from_name(attributes->definition->real_name_hash_data, real_name);
     if (update_definition)
     {
-        if (index < 0)
+        if (index < 0 || (index < attributes->num_fields && attributes->field_type[index] != NULL))
         {
             if (coda_type_record_create_field(attributes->definition, real_name, attribute_type->definition) != 0)
             {
@@ -756,7 +756,7 @@ coda_mem_text *coda_mem_text_new(coda_type_text *definition, const char *text)
     {
         long length;
 
-        length = (definition->bit_size >> 3) + (definition->bit_size & 0x7 ? 1 : 0);
+        length = (long)(definition->bit_size >> 3) + (definition->bit_size & 0x7 ? 1 : 0);
         if (length != (long)strlen(text))
         {
             coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "length of text (%ld) does not match that of definition (%ld) "
@@ -817,7 +817,7 @@ coda_mem_raw *coda_mem_raw_new(coda_type_raw *definition, long length, const uin
     {
         long definition_length;
 
-        definition_length = (definition->bit_size >> 3) + (definition->bit_size & 0x7 ? 1 : 0);
+        definition_length = (long)(definition->bit_size >> 3) + (definition->bit_size & 0x7 ? 1 : 0);
         if (definition_length != length)
         {
             coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "length of raw data (%ld) does not match that of definition "

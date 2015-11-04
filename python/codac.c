@@ -2988,10 +2988,6 @@ static swig_module_info swig_module = {swig_types, 28, 0, 0, 0, 0};
 #define SWIG_as_voidptrptr(a) ((void)SWIG_as_voidptr(*a),(void**)(a)) 
 
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "numpy/arrayobject.h"
 #include "coda.h"
 

@@ -6,7 +6,7 @@ AC_DEFUN([ST_PATH_PYTHON_INCLUDE],
 AC_ARG_VAR(PYTHON_INCLUDE,[The Python include directory])
 AC_MSG_CHECKING([for python include directory])
 if test "$PYTHON_INCLUDE" = "" ; then 
-  PYTHON_INCLUDE=`($PYTHON -c "import sys; print sys.prefix") 2>/dev/null`/include/python$PYTHON_VERSION
+  PYTHON_INCLUDE=`($PYTHON -c "import sys; from distutils import sysconfig; sys.stdout.write(sysconfig.get_python_inc())") 2>/dev/null`
   if test ! -r "$PYTHON_INCLUDE/Python.h" ; then
     PYTHON_INCLUDE=
   fi

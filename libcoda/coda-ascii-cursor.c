@@ -18,9 +18,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "coda-ascbin-internal.h"
+#include "coda-ascii-internal.h"
 #include "coda-definition.h"
-#include "coda-ascii.h"
+#include "coda-read-bytes.h"
+#include "coda-ascbin.h"
 
 #include <sys/types.h>
 #include <assert.h>
@@ -810,55 +811,6 @@ static int parse_ccsds_datetime_utc2(char *buffer, long buffer_length, double *d
     return coda_datetime_to_double(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC, dst);
 }
 
-static int read_bytes_in_bounds(coda_product *product, int64_t byte_offset, int64_t length, void *dst)
-{
-    coda_ascbin_product *product_file = (coda_ascbin_product *)product;
-
-    if (product_file->use_mmap)
-    {
-        memcpy(dst, product_file->mmap_ptr + byte_offset, (size_t)length);
-    }
-    else
-    {
-#if HAVE_PREAD
-        if (pread(product_file->fd, dst, (size_t)length, (off_t)byte_offset) < 0)
-        {
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product_file->filename,
-                           strerror(errno));
-            return -1;
-        }
-#else
-        if (lseek(product_file->fd, (off_t)byte_offset, SEEK_SET) < 0)
-        {
-            char byte_offset_str[21];
-
-            coda_str64(byte_offset, byte_offset_str);
-            coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %s in file %s (%s)",
-                           byte_offset_str, product_file->filename, strerror(errno));
-            return -1;
-        }
-        if (read(product_file->fd, dst, (size_t)length) < 0)
-        {
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product_file->filename,
-                           strerror(errno));
-            return -1;
-        }
-#endif
-    }
-
-    return 0;
-}
-
-static int read_bytes(coda_product *product, int64_t byte_offset, int64_t length, void *dst)
-{
-    if (((uint64_t)byte_offset + length) > ((uint64_t)product->file_size))
-    {
-        coda_set_error(CODA_ERROR_OUT_OF_BOUNDS_READ, "trying to read beyond the end of the file");
-        return -1;
-    }
-    return read_bytes_in_bounds(product, byte_offset, length, dst);
-}
-
 static long get_buffer_size(int64_t bit_size, int64_t size_boundary, int64_t remaining_bits, int *dynamic_size)
 {
     if (bit_size >= 0)
@@ -897,7 +849,7 @@ static long get_buffer_size(int64_t bit_size, int64_t size_boundary, int64_t rem
 
 int coda_ascii_cursor_set_asciilines(coda_cursor *cursor, coda_product *product)
 {
-    coda_ascbin_product *product_file = (coda_ascbin_product *)product;
+    coda_ascii_product *product_file = (coda_ascii_product *)product;
 
     if (product_file->asciiline_end_offset == NULL)
     {
@@ -1122,7 +1074,7 @@ int coda_ascii_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size,
     switch (((coda_type_text *)type)->special_text_type)
     {
         case ascii_text_line_separator:
-            switch (((coda_ascbin_product *)cursor->product)->end_of_line)
+            switch (((coda_ascii_product *)cursor->product)->end_of_line)
             {
                 case eol_lf:
                 case eol_cr:
@@ -1153,7 +1105,7 @@ int coda_ascii_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size,
                             case '\n': /* linefeed */
                                 /* just a linefeed -> unix platform convention */
                                 *bit_size = 8;
-                                ((coda_ascbin_product *)cursor->product)->end_of_line = eol_lf;
+                                ((coda_ascii_product *)cursor->product)->end_of_line = eol_lf;
                                 break;
                             case '\r': /* carriage return */
                                 if (cursor->product->file_size - (cursor->stack[cursor->n - 1].bit_offset >> 3) >= 2)
@@ -1166,13 +1118,13 @@ int coda_ascii_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size,
                                     {
                                         /* carriage return followed by linefeed -> dos platform convention */
                                         *bit_size = 16;
-                                        ((coda_ascbin_product *)cursor->product)->end_of_line = eol_crlf;
+                                        ((coda_ascii_product *)cursor->product)->end_of_line = eol_crlf;
                                         break;
                                     }
                                 }
                                 /* just a carriage return -> mac platform convention */
                                 *bit_size = 8;
-                                ((coda_ascbin_product *)cursor->product)->end_of_line = eol_cr;
+                                ((coda_ascii_product *)cursor->product)->end_of_line = eol_cr;
                                 break;
                             default:
                                 {
@@ -1204,22 +1156,22 @@ int coda_ascii_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size,
                     return -1;
                 }
 
-                if (((coda_ascbin_product *)cursor->product)->asciiline_end_offset == NULL)
+                if (((coda_ascii_product *)cursor->product)->asciiline_end_offset == NULL)
                 {
                     if (coda_ascii_init_asciilines(cursor->product) != 0)
                     {
                         return -1;
                     }
                 }
-                if (((coda_ascbin_product *)cursor->product)->num_asciilines == 0)
+                if (((coda_ascii_product *)cursor->product)->num_asciilines == 0)
                 {
                     coda_set_error(CODA_ERROR_OUT_OF_BOUNDS_READ, "trying to read from an empty file");
                     return -1;
                 }
 
                 bottom_index = 0;
-                top_index = ((coda_ascbin_product *)cursor->product)->num_asciilines - 1;
-                asciiline_end_offset = ((coda_ascbin_product *)cursor->product)->asciiline_end_offset;
+                top_index = ((coda_ascii_product *)cursor->product)->num_asciilines - 1;
+                asciiline_end_offset = ((coda_ascii_product *)cursor->product)->asciiline_end_offset;
                 byte_offset = cursor->stack[cursor->n - 1].bit_offset >> 3;
 
                 while (top_index != bottom_index)
@@ -1242,11 +1194,11 @@ int coda_ascii_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size,
                 /* and if the line does not end with eof */
                 if (((coda_type_text *)type)->special_text_type == ascii_text_line_without_eol)
                 {
-                    if (!(top_index == ((coda_ascbin_product *)cursor->product)->num_asciilines - 1 &&
-                          ((coda_ascbin_product *)cursor->product)->lastline_ending == eol_unknown))
+                    if (!(top_index == ((coda_ascii_product *)cursor->product)->num_asciilines - 1 &&
+                          ((coda_ascii_product *)cursor->product)->lastline_ending == eol_unknown))
                     {
                         *bit_size -= 8;
-                        if (((coda_ascbin_product *)cursor->product)->end_of_line == eol_crlf)
+                        if (((coda_ascii_product *)cursor->product)->end_of_line == eol_crlf)
                         {
                             *bit_size -= 8;
                         }
@@ -1715,7 +1667,7 @@ int coda_ascii_cursor_read_string(const coda_cursor *cursor, char *dst, long dst
 
     if ((bit_offset & 0x7) != 0)
     {
-        coda_set_error(CODA_ERROR_PRODUCT, "product error detected (ascii text does not start at byte boundary)");
+        coda_set_error(CODA_ERROR_PRODUCT, "product error detected (text does not start at byte boundary)");
         return -1;
     }
     if (type->bit_size < 0)
@@ -1728,7 +1680,7 @@ int coda_ascii_cursor_read_string(const coda_cursor *cursor, char *dst, long dst
         }
         if ((bit_size & 0x7) != 0)
         {
-            coda_set_error(CODA_ERROR_PRODUCT, "product error detected (ascii text does not have a rounded byte size)");
+            coda_set_error(CODA_ERROR_PRODUCT, "product error detected (text does not have a rounded byte size)");
             return -1;
         }
         read_size = bit_size >> 3;

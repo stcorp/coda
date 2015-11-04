@@ -40,6 +40,7 @@
 #include "coda-ascbin.h"
 #include "coda-ascii.h"
 #include "coda-bin.h"
+#include "coda-cdf.h"
 #include "coda-xml.h"
 #include "coda-netcdf.h"
 #include "coda-grib.h"
@@ -229,8 +230,10 @@ static int get_format(const char *filename, int64_t file_size, coda_format *form
         return 0;
     }
 
-    /* (NASA) CDF */
+    /* CDF */
     if (file_size >= 8 && (memcmp(buffer, "\000\000\377\377\000\000\377\377", 8) == 0 ||        /* 0x0000FFFF 0x0000FFFF */
+                           memcmp(buffer, "\315\362\140\002\000\000\377\377", 8) == 0 ||        /* 0xCDF26002 0x0000FFFF */
+                           memcmp(buffer, "\315\362\140\002\314\314\000\001", 8) == 0 ||        /* 0xCDF26002 0xCCCC0001 */
                            memcmp(buffer, "\315\363\000\001\000\000\377\377", 8) == 0 ||        /* 0xCDF30001 0x0000FFFF */
                            memcmp(buffer, "\315\363\000\001\314\314\000\001", 8) == 0)) /* 0xCDF30001 0xCCCC0001 */
     {
@@ -433,8 +436,13 @@ static int open_file(const char *filename, coda_format format, int64_t file_size
     switch (format)
     {
         case coda_format_ascii:
+            if (coda_ascii_open(filename, file_size, definition, product_file) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_format_binary:
-            if (coda_ascbin_open(filename, file_size, definition, product_file) != 0)
+            if (coda_bin_open(filename, file_size, definition, product_file) != 0)
             {
                 return -1;
             }
@@ -467,6 +475,12 @@ static int open_file(const char *filename, coda_format format, int64_t file_size
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_format_cdf:
+            if (coda_cdf_open(filename, file_size, NULL, product_file) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_format_netcdf:
             if (coda_netcdf_open(filename, file_size, NULL, product_file) != 0)
             {
@@ -492,9 +506,6 @@ static int open_file(const char *filename, coda_format format, int64_t file_size
                 return -1;
             }
             break;
-        case coda_format_cdf:
-            coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, "CDF is not supported");
-            return -1;
     }
 
     /* initialize product variables */
@@ -683,17 +694,19 @@ LIBCODA_API int coda_close(coda_product *product)
     switch (product->format)
     {
         case coda_format_ascii:
+            return coda_ascii_close(product);
         case coda_format_binary:
-            return coda_ascbin_close(product);
+            return coda_bin_close(product);
         case coda_format_xml:
             return coda_xml_close(product);
+        case coda_format_cdf:
+            return coda_cdf_close(product);
         case coda_format_netcdf:
             return coda_netcdf_close(product);
         case coda_format_grib1:
         case coda_format_grib2:
             return coda_grib_close(product);
         case coda_format_hdf4:
-        case coda_format_cdf:
 #ifdef HAVE_HDF4
             return coda_hdf4_close(product);
 #else

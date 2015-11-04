@@ -19,6 +19,12 @@
  */
 
 #include "coda-internal.h"
+#include "coda-read-bytes.h"
+#ifndef WORDS_BIGENDIAN
+#include "coda-swap2.h"
+#include "coda-swap4.h"
+#include "coda-swap8.h"
+#endif
 
 #include <assert.h>
 #include <errno.h>
@@ -29,105 +35,6 @@
 #endif
 
 #include "coda-netcdf-internal.h"
-
-#ifndef WORDS_BIGENDIAN
-static void swap2(void *value)
-{
-    union
-    {
-        uint8_t as_bytes[2];
-        int16_t as_int16;
-    } v1, v2;
-
-    v1.as_int16 = *(int16_t *)value;
-
-    v2.as_bytes[0] = v1.as_bytes[1];
-    v2.as_bytes[1] = v1.as_bytes[0];
-
-    *(int16_t *)value = v2.as_int16;
-}
-
-static void swap4(void *value)
-{
-    union
-    {
-        uint8_t as_bytes[4];
-        int32_t as_int32;
-    } v1, v2;
-
-    v1.as_int32 = *(int32_t *)value;
-
-    v2.as_bytes[0] = v1.as_bytes[3];
-    v2.as_bytes[1] = v1.as_bytes[2];
-    v2.as_bytes[2] = v1.as_bytes[1];
-    v2.as_bytes[3] = v1.as_bytes[0];
-
-    *(int32_t *)value = v2.as_int32;
-}
-
-static void swap8(void *value)
-{
-    union
-    {
-        uint8_t as_bytes[8];
-        int64_t as_int64;
-    } v1, v2;
-
-    v1.as_int64 = *(int64_t *)value;
-
-    v2.as_bytes[0] = v1.as_bytes[7];
-    v2.as_bytes[1] = v1.as_bytes[6];
-    v2.as_bytes[2] = v1.as_bytes[5];
-    v2.as_bytes[3] = v1.as_bytes[4];
-    v2.as_bytes[4] = v1.as_bytes[3];
-    v2.as_bytes[5] = v1.as_bytes[2];
-    v2.as_bytes[6] = v1.as_bytes[1];
-    v2.as_bytes[7] = v1.as_bytes[0];
-
-    *(int64_t *)value = v2.as_int64;
-}
-#endif
-
-static int read_bytes(coda_netcdf_product *product_file, int64_t byte_offset, int64_t length, void *dst)
-{
-    if (((uint64_t)byte_offset + length) > ((uint64_t)product_file->file_size))
-    {
-        coda_set_error(CODA_ERROR_OUT_OF_BOUNDS_READ, "trying to read beyond the end of the file");
-        return -1;
-    }
-    if (product_file->use_mmap)
-    {
-        memcpy(dst, product_file->mmap_ptr + byte_offset, (size_t)length);
-    }
-    else
-    {
-#if HAVE_PREAD
-        if (pread(product_file->fd, dst, (size_t)length, (off_t)byte_offset) < 0)
-        {
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product_file->filename,
-                           strerror(errno));
-            return -1;
-        }
-#else
-        if (lseek(product_file->fd, (off_t)byte_offset, SEEK_SET) < 0)
-        {
-            char byte_offset_str[21];
-
-            coda_str64(byte_offset, byte_offset_str);
-            coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %s in file %s (%s)",
-                           byte_offset_str, product_file->filename, strerror(errno));
-        }
-        if (read(product_file->fd, dst, (size_t)length) < 0)
-        {
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product_file->filename,
-                           strerror(errno));
-            return -1;
-        }
-#endif
-    }
-
-    return 0;
-}
 
 int coda_netcdf_cursor_set_product(coda_cursor *cursor, coda_product *product)
 {
@@ -295,7 +202,7 @@ static int read_array(const coda_cursor *cursor, void *dst)
     type = (coda_netcdf_array *)cursor->stack[cursor->n - 1].type;
     product = (coda_netcdf_product *)cursor->product;
 
-    block_size = type->definition->num_elements * (type->base_type->definition->bit_size >> 3);
+    block_size = (long)type->definition->num_elements * (type->base_type->definition->bit_size >> 3);
     num_blocks = 1;
     if (type->base_type->record_var)
     {
@@ -305,7 +212,7 @@ static int read_array(const coda_cursor *cursor, void *dst)
 
     for (i = 0; i < num_blocks; i++)
     {
-        if (read_bytes(product, type->base_type->offset + i * product->record_size, block_size,
+        if (read_bytes(cursor->product, type->base_type->offset + i * product->record_size, block_size,
                        &((uint8_t *)dst)[i * block_size]) != 0)
         {
             return -1;
@@ -381,14 +288,14 @@ static int read_basic_type(const coda_cursor *cursor, void *dst, long size_bound
 
     if (size_boundary >= 0 && byte_size > size_boundary)
     {
-        if (read_bytes(product, offset, size_boundary, dst) != 0)
+        if (read_bytes(cursor->product, offset, size_boundary, dst) != 0)
         {
             return -1;
         }
     }
     else
     {
-        if (read_bytes(product, offset, byte_size, dst) != 0)
+        if (read_bytes(cursor->product, offset, byte_size, dst) != 0)
         {
             return -1;
         }

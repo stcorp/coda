@@ -2,7 +2,7 @@
 #
 project(CODA)
 
-set(VERSION 2.6)
+set(VERSION 2.7)
 set(CODA_VERSION \"${VERSION}\")
 
 # General setup
@@ -11,8 +11,7 @@ cmake_minimum_required(VERSION 2.6.0)
 set(CMAKE_MODULE_PATH
   ${CODA_SOURCE_DIR}/CMakeModules
   ${CMAKE_MODULE_PATH}
-  CACHE INTERNAL "Local CMake modules"
-  )
+  CACHE INTERNAL "Local CMake modules")
 include(CheckFunctionExists)
 include(CheckLibraryExists)
 include(CheckIncludeFile)
@@ -65,7 +64,7 @@ if(CMAKE_COMPILER_IS_GNUCC)
   set(GNU_WARNING_FLAGS "-W -Wall -Wextra")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${GNU_WARNING_FLAGS}")
   if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC"  )
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
   endif("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
 endif(CMAKE_COMPILER_IS_GNUCC)
 # CMake adds -DNDEBUG by default in the Release targets. We want
@@ -130,8 +129,7 @@ if(YACC_EXECUTABLE)
     OUTPUT coda-expr-parser.c coda-expr-parser.h
     DEPENDS libcoda/coda-expr-parser.y
     COMMAND
-    ${YACC_EXECUTABLE} --defines=coda-expr-parser.h -ocoda-expr-parser.c ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/coda-expr-parser.y
-    )
+    ${YACC_EXECUTABLE} --defines=coda-expr-parser.h -ocoda-expr-parser.c ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/coda-expr-parser.y)
   add_custom_target(RerunYacc DEPENDS coda-expr-parser.c)
 endif(YACC_EXECUTABLE)
 
@@ -139,13 +137,10 @@ if(FLEX_EXECUTABLE)
   add_custom_command(
     OUTPUT coda-expr-tokenizer.c
     DEPENDS libcoda/coda-expr-tokenizer.l
-    COMMAND
-    ${FLEX_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/coda-expr-tokenizer.l
-# Leo: copy lex.yy.c manually -- --outfile option to flex does not work,
+    COMMAND ${FLEX_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/coda-expr-tokenizer.l
+# copy lex.yy.c manually -- --outfile option to flex does not work,
 # because it gets explicitly overriden in the .l file.
-    COMMAND
-    ${CMAKE_COMMAND} -E copy lex.yy.c coda-expr-tokenizer.c
-    )
+    COMMAND ${CMAKE_COMMAND} -E copy lex.yy.c coda-expr-tokenizer.c)
   add_custom_target(RerunLex DEPENDS code-expr-tokenizer.c)
 endif(FLEX_EXECUTABLE)
 
@@ -161,22 +156,22 @@ macro(find_include FILE VARIABLE)
   endif(${VARIABLE})
 endmacro(find_include)
 
-find_include(dirent.h		HAVE_DIRENT_H)
-find_include(dlfcn.h		HAVE_DLFCN_H)
-find_include(export.h		HAVE_EXPORT_H)
-find_include(inttypes.h		HAVE_INTTYPES_H)
-find_include(memory.h		HAVE_MEMORY_H)
-find_include(stdint.h		HAVE_STDINT_H)
-find_include(stdlib.h		HAVE_STDLIB_H)
-find_include(strings.h		HAVE_STRINGS_H)
-find_include(string.h		HAVE_STRING_H)
-find_include(sys/mman.h		HAVE_SYS_MMAN_H)
-find_include(sys/socket.h	HAVE_SYS_SOCKET_H)
-find_include(sys/stat.h		HAVE_SYS_STAT_H)
-find_include(sys/types.h	HAVE_SYS_TYPES_H)
-find_include(unistd.h		HAVE_UNISTD_H)
+find_include(dirent.h HAVE_DIRENT_H)
+find_include(dlfcn.h HAVE_DLFCN_H)
+find_include(export.h HAVE_EXPORT_H)
+find_include(inttypes.h HAVE_INTTYPES_H)
+find_include(memory.h HAVE_MEMORY_H)
+find_include(stdint.h HAVE_STDINT_H)
+find_include(stdlib.h HAVE_STDLIB_H)
+find_include(strings.h HAVE_STRINGS_H)
+find_include(string.h HAVE_STRING_H)
+find_include(sys/mman.h HAVE_SYS_MMAN_H)
+find_include(sys/socket.h HAVE_SYS_SOCKET_H)
+find_include(sys/stat.h HAVE_SYS_STAT_H)
+find_include(sys/types.h HAVE_SYS_TYPES_H)
+find_include(unistd.h HAVE_UNISTD_H)
 if(CODA_BUILD_QIAP)
-  find_include(netdb.h		HAVE_NETDB_H)
+  find_include(netdb.h HAVE_NETDB_H)
 endif(CODA_BUILD_QIAP)
 
 set(CMAKE_EXTRA_INCLUDE_FILES ${INCLUDES})
@@ -198,7 +193,7 @@ check_function_exists(strncasecmp HAVE_STRNCASECMP)
 check_function_exists(vsnprintf HAVE_VSNPRINTF)
 
 if(WIN32)
-  # Hack for Windows
+  # Hardcode settings for Windows
   set(HAVE_STRDUP 1)
   set(HAVE_STRCASECMP 1)
   set(HAVE_STRNCASECMP 1)
@@ -240,9 +235,7 @@ set(CODA_INCLUDE_DIRS
   ${CMAKE_CURRENT_BINARY_DIR}
   CACHE INTERNAL "Include directories for the CODA library")
 
-include_directories(
-  ${CODA_INCLUDE_DIRS}
-)
+include_directories(${CODA_INCLUDE_DIRS})
 
 # Required libraries
 #
@@ -280,9 +273,18 @@ set(LIBCODA_SOURCES
   libcoda/coda-ascbin.c
   libcoda/coda-ascbin.h
   libcoda/coda-ascii-cursor.c
+  libcoda/coda-ascii-internal.h
+  libcoda/coda-ascii.c
   libcoda/coda-ascii.h
   libcoda/coda-bin-cursor.c
+  libcoda/coda-bin-internal.h
+  libcoda/coda-bin.c
   libcoda/coda-bin.h
+  libcoda/coda-cdf-cursor.c
+  libcoda/coda-cdf-internal.h 
+  libcoda/coda-cdf-type.c
+  libcoda/coda-cdf.c
+  libcoda/coda-cdf.h
   libcoda/coda-check.c
   libcoda/coda-cursor-read.c
   libcoda/coda-cursor.c
@@ -315,10 +317,15 @@ set(LIBCODA_SOURCES
   libcoda/coda-netcdf.h
   libcoda/coda-path.h
   libcoda/coda-product.c
+  libcoda/coda-read-bits.h
+  libcoda/coda-read-bytes.h
   libcoda/coda-rinex.c
   libcoda/coda-rinex.h
   libcoda/coda-sp3.c
   libcoda/coda-sp3.h
+  libcoda/coda-swap2.h
+  libcoda/coda-swap4.h
+  libcoda/coda-swap8.h
   libcoda/coda-time.c
   libcoda/coda-type.c
   libcoda/coda-type.h
@@ -333,16 +340,14 @@ set(LIBCODA_SOURCES
   libcoda/hashtable.c
   libcoda/hashtable.h
   libcoda/ziparchive.c
-  libcoda/ziparchive.h
-)
+  libcoda/ziparchive.h)
 
 set(LIBCODA_HDF4_FILES
   libcoda/coda-hdf4-cursor.c
   libcoda/coda-hdf4-internal.h
   libcoda/coda-hdf4-type.c
   libcoda/coda-hdf4.c
-  libcoda/coda-hdf4.h
-)
+  libcoda/coda-hdf4.h)
 
 if(CODA_WITH_HDF4)
   set(LIBCODA_SOURCES ${LIBCODA_SOURCES} ${LIBCODA_HDF4_FILES})
@@ -354,8 +359,7 @@ set(LIBCODA_HDF5_FILES
   libcoda/coda-hdf5-internal.h
   libcoda/coda-hdf5-type.c
   libcoda/coda-hdf5.c
-  libcoda/coda-hdf5.h
-  )
+  libcoda/coda-hdf5.h)
 
 if(CODA_WITH_HDF5)
   set(LIBCODA_SOURCES ${LIBCODA_SOURCES} ${LIBCODA_HDF5_FILES})
@@ -368,26 +372,21 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
 
   set(fortran_DATA
     fortran/Makefile
-	fortran/coda_fortran.c
-	fortran/example.f
-    )
+    fortran/coda_fortran.c
+    fortran/example.f)
 
-  set(fortran_SCRIPTS
-	fortran/checkf77.sh
-    )
+  set(fortran_SCRIPTS fortran/checkf77.sh)
+
 endif(NOT CODA_BUILD_SUBPACKAGE_MODE)
 
-set(generate_finc_SOURCES
-  fortran/generate-finc.c
-  )
+set(generate_finc_SOURCES fortran/generate-finc.c)
 
 add_executable(generate-finc ${generate_finc_SOURCES})
 target_link_libraries(generate-finc)
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/fortran/coda.inc
   MAIN_DEPENDENCY generate-finc
-  COMMAND ${CMAKE_CURRENT_BINARY_DIR}/generate-finc${EXEEXT} > ${CMAKE_CURRENT_BINARY_DIR}/fortran/coda/.inc
-  )
+  COMMAND ${CMAKE_CURRENT_BINARY_DIR}/generate-finc${EXEEXT} > ${CMAKE_CURRENT_BINARY_DIR}/fortran/coda/.inc)
 
 # idl
 
@@ -424,23 +423,17 @@ if(CODA_BUILD_IDL)
     set(IDL_INCLUDE_DIR "${IDL_DIR}/external")
     include_directories(${IDL_INCLUDE_DIR})
 
-    set(CODA_IDL_SOURCES
-      idl/coda-idl.c
-      )
+    set(CODA_IDL_SOURCES idl/coda-idl.c)
     set_source_files_properties(${CODA_IDL_SOURCES}
-      PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS} ${IDL_COMPILE_FLAGS}"
-      )
+      PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS} ${IDL_COMPILE_FLAGS}")
     # Visual Studio does not like targets with a dash in the
     # name, hence coda_idl rather than coda-idl.
-    add_library(coda_idl MODULE
-      ${CODA_IDL_SOURCES}
-      )
+    add_library(coda_idl MODULE ${CODA_IDL_SOURCES})
     target_link_libraries(coda_idl coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${IDL_LIB})
     set_target_properties(coda_idl
       PROPERTIES LINK_FLAGS "${IDL_LINK_FLAGS}"
       OUTPUT_NAME "coda-idl"
-      PREFIX ""
-      )
+      PREFIX "")
     
     install(TARGETS coda_idl DESTINATION ${IDL_INSTALL_DIR})
 
@@ -450,8 +443,7 @@ if(CODA_BUILD_IDL)
     
     install(
       FILES ${CMAKE_CURRENT_BINARY_DIR}/idl/coda-idl.dlm 
-      DESTINATION ${IDL_INSTALL_DIR}
-      )
+      DESTINATION ${IDL_INSTALL_DIR})
 
   else(IDL_DIR)
     message(FATAL_ERROR "IDL not found. Try setting the IDL_DIR environment or CMake variable to the root directory of an IDL installation.")
@@ -476,14 +468,14 @@ if(CODA_BUILD_MATLAB)
     file(TO_CMAKE_PATH ${MATLAB_DIR} MATLAB_DIR)
 
     if(NOT EXISTS "${MATLAB_DIR}")
-	    message(FATAL_ERROR "Specified MATLAB directory '${MATLAB_DIR}' does not exist")
+      message(FATAL_ERROR "Specified MATLAB directory '${MATLAB_DIR}' does not exist")
     endif(NOT EXISTS "${MATLAB_DIR}")
 
     if(NOT IS_DIRECTORY "${MATLAB_DIR}")
-	    message(FATAL_ERROR "Specified MATLAB directory '${MATLAB_DIR}' exists, but is not a directory")
+      message(FATAL_ERROR "Specified MATLAB directory '${MATLAB_DIR}' exists, but is not a directory")
     endif(NOT IS_DIRECTORY "${MATLAB_DIR}")
 
-    set(MATLAB_DIR ${MATLAB_DIR} CACHE STRING "Root directory of MATLAB installation" FORCE)
+    set(MATLAB_DIR ${MATLAB_DIR} CACHE PATH "Root directory of MATLAB installation" FORCE)
     if(WIN32)
       set(MATLAB_INSTALL_DIR matlab)
     else()
@@ -496,31 +488,27 @@ if(CODA_BUILD_MATLAB)
     set(CODA_MATLAB_SOURCE_FILES
       ${CODA_SOURCE_DIR}/matlab/coda-matlab-getdata.c
       ${CODA_SOURCE_DIR}/matlab/coda-matlab-traverse.c
-      ${CODA_SOURCE_DIR}/matlab/coda_matlab.c
-      )
+      ${CODA_SOURCE_DIR}/matlab/coda_matlab.c)
 
     # Configure the mex compiler
-	set(MEXFLAGS -I"${MATLAB_INCLUDE_DIR}" -I. -I"${CODA_BINARY_DIR}" -I"${CODA_SOURCE_DIR}/libcoda" -DHAVE_CONFIG_H)
-	# Note: The explicit mex.bat assignment is necessary because
-	# only with the .bat attached will nmake invoke the command
-	# using 'call' -- and only that works if the path name
-	# contains spaces (as in 'Program Files', the default for
-	# MATLAB 2007 and beyond). So relying (as we did before) on
-	# the fact that on Windows you can theoretically also invoke
-	# a batchfile without the extension will fail in that case.
+    set(MEXFLAGS -I"${MATLAB_INCLUDE_DIR}" -I. -I"${CODA_BINARY_DIR}" -I"${CODA_SOURCE_DIR}/libcoda" -DHAVE_CONFIG_H)
+    # Note: The explicit mex.bat assignment is necessary because
+    # only with the .bat attached will nmake invoke the command
+    # using 'call' -- and only that works if the path name
+    # contains spaces (as in 'Program Files', the default for
+    # MATLAB 2007 and beyond). So relying (as we did before) on
+    # the fact that on Windows you can theoretically also invoke
+    # a batchfile without the extension will fail in that case.
     if(WIN32)
-	  set(MEX "${MATLAB_DIR}/bin/mex.bat")
+      set(MEX "${MATLAB_DIR}/bin/mex.bat")
       set(MEXEXT "mexw32")
       set(MEXFLAGS ${MEXFLAGS} -DWIN32_LEAN_AND_MEAN -DWIN32 -DHAVE_CONFIG_H -v)
     else(WIN32)
-	  set(MEX "${MATLAB_DIR}/bin/mex")
+      set(MEX "${MATLAB_DIR}/bin/mex")
       set(MEXEXT_PROG "mexext")
       set(MEXFLAGS ${MEXFLAGS} -g -O)
       file(TO_NATIVE_PATH "${MATLAB_DIR}/bin/${MEXEXT_PROG}" MEXEXT_CMD)
-      execute_process(
-        COMMAND "${MEXEXT_CMD}"
-        OUTPUT_VARIABLE MEXEXT
-        )
+      execute_process(COMMAND "${MEXEXT_CMD}" OUTPUT_VARIABLE MEXEXT)
       string(STRIP ${MEXEXT} MEXEXT)
     endif(WIN32)
 
@@ -544,12 +532,9 @@ if(CODA_BUILD_MATLAB)
       COMMENT "Compiling the CODA MATLAB interface..."
       DEPENDS ${CODA_MATLAB_SOURCE_FILES}
       OUTPUT ${MEX_OUTPUT}
-      COMMAND ${MEX_CMD}
-      )
+      COMMAND ${MEX_CMD})
  
-    add_custom_target(coda_matlab ALL DEPENDS
-      ${MEX_OUTPUT}
-      )
+    add_custom_target(coda_matlab ALL DEPENDS ${MEX_OUTPUT})
 
     add_dependencies(coda_matlab coda_static)
     install(FILES ${MEX_OUTPUT} DESTINATION ${MATLAB_INSTALL_DIR})
@@ -558,28 +543,27 @@ if(CODA_BUILD_MATLAB)
 
     set(CODA_MATLAB_MFILES
       matlab/coda_attributes.m
-	  matlab/coda_class.m
-	  matlab/coda_clearall.m
-	  matlab/coda_close.m
-	  matlab/coda_description.m
-	  matlab/coda_fetch.m
-	  matlab/coda_fieldavailable.m
-	  matlab/coda_fieldcount.m
-	  matlab/coda_fieldnames.m
-	  matlab/coda_getopt.m
-	  matlab/coda_open.m
-	  matlab/coda_open_as.m
-	  matlab/coda_options.m
-	  matlab/coda_param.m
-	  matlab/coda_product_class.m
-	  matlab/coda_product_type.m
-	  matlab/coda_product_version.m
-	  matlab/coda_setopt.m
-	  matlab/coda_size.m
-	  matlab/coda_time_to_string.m
-	  matlab/coda_unit.m
-	  matlab/coda_version.m
-      )
+      matlab/coda_class.m
+      matlab/coda_clearall.m
+      matlab/coda_close.m
+      matlab/coda_description.m
+      matlab/coda_fetch.m
+      matlab/coda_fieldavailable.m
+      matlab/coda_fieldcount.m
+      matlab/coda_fieldnames.m
+      matlab/coda_getopt.m
+      matlab/coda_open.m
+      matlab/coda_open_as.m
+      matlab/coda_options.m
+      matlab/coda_param.m
+      matlab/coda_product_class.m
+      matlab/coda_product_type.m
+      matlab/coda_product_version.m
+      matlab/coda_setopt.m
+      matlab/coda_size.m
+      matlab/coda_time_to_string.m
+      matlab/coda_unit.m
+      matlab/coda_version.m)
     
     install(FILES ${CODA_MATLAB_MFILES} DESTINATION ${MATLAB_INSTALL_DIR})
     
@@ -599,12 +583,12 @@ if(CODA_BUILD_PYTHON)
   find_package(PythonInterp)
   if(NOT PYTHONINTERP_FOUND)
     message(FATAL_ERROR "PYTHON interpreter not found.")
-  endif(NOT PYTHON)
+  endif(NOT PYTHONINTERP_FOUND)
 
   find_package(PythonLibs)
   if(NOT PYTHONLIBS_FOUND)
     message(FATAL_ERROR "PYTHON libraries or include files not found.")
-  endif(NOT PYTHON)
+  endif(NOT PYTHONLIBS_FOUND)
   include_directories(${PYTHON_INCLUDE_DIRS})
 
   find_package(NumPy)
@@ -616,23 +600,22 @@ if(CODA_BUILD_PYTHON)
   if(WIN32)
     set(PYTHON_INSTALL_DIR python)
   else()
-    set(PYTHON_INSTALL_DIR lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages/coda)
+    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys; from distutils import sysconfig; sys.stdout.write(sysconfig.get_python_lib(1,0,prefix=''))" OUTPUT_VARIABLE PYTHON_INSTALL_DIR)
   endif()
+  set(CODA_PYTHON_INSTALL_DIR "${PYTHON_INSTALL_DIR}" CACHE PATH "Install location for CODA Python package")
 
   add_library(coda_python MODULE python/codac.c)
   target_link_libraries(coda_python coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${PYTHON_LIBRARIES})
   set_target_properties(coda_python
     PROPERTIES OUTPUT_NAME "_codac"
-    PREFIX ""
-  )
+    PREFIX "")
 
-  install(TARGETS coda_python DESTINATION ${PYTHON_INSTALL_DIR})
+  install(TARGETS coda_python DESTINATION ${CODA_PYTHON_INSTALL_DIR}/coda)
   install(FILES
     python/__init__.py
     python/codac.py
     python/codapython.py
-    DESTINATION ${PYTHON_INSTALL_DIR}
-  )
+    DESTINATION ${CODA_PYTHON_INSTALL_DIR}/coda)
 
 endif(CODA_BUILD_PYTHON)
 
@@ -655,8 +638,7 @@ set(LIBEXPAT_SOURCES
   libcoda/expat/xmlrole.h
   libcoda/expat/xmltok.c
   libcoda/expat/xmltok.h
-  libcoda/expat/xmltok_impl.h
-)
+  libcoda/expat/xmltok_impl.h)
 
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/expat)
 
@@ -689,8 +671,7 @@ set(LIBPCRE_SOURCES
   libcoda/pcre/pcre_valid_utf8.c
   libcoda/pcre/pcre_version.c
   libcoda/pcre/pcre_xclass.c
-  libcoda/pcre/ucp.h
-)
+  libcoda/pcre/ucp.h)
 
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/pcre)
 
@@ -711,26 +692,24 @@ set(LIBZLIB_SOURCES
   libcoda/zlib/zconf.h
   libcoda/zlib/zlib.h
   libcoda/zlib/zutil.c
-  libcoda/zlib/zutil.h
-)
+  libcoda/zlib/zutil.h)
 
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/zlib)
 
 # QIAP sources
 #
 if(CODA_BUILD_QIAP)
-set(LIBQIAP_SOURCES
-  libcoda/qiap/coda-qiap.c
-  libcoda/qiap/coda-qiap.h
-  libcoda/qiap/qiap-query.c
-  libcoda/qiap/qiap-report-read.c
-  libcoda/qiap/qiap-report-write.c
-  libcoda/qiap/qiap-soap-read.c
-  libcoda/qiap/qiap.c
-  libcoda/qiap/qiap.h
-)
-
-include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/qiap)
+  set(LIBQIAP_SOURCES
+    libcoda/qiap/coda-qiap.c
+    libcoda/qiap/coda-qiap.h
+    libcoda/qiap/qiap-query.c
+    libcoda/qiap/qiap-report-read.c
+    libcoda/qiap/qiap-report-write.c
+    libcoda/qiap/qiap-soap-read.c
+    libcoda/qiap/qiap.c
+    libcoda/qiap/qiap.h)
+  
+  include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/qiap)
 endif(CODA_BUILD_QIAP)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/coda.h DESTINATION include)
@@ -740,7 +719,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/coda.h DESTINATION include)
 # Set dynamic library version
 #
 set(LIBCODA_CURRENT 9)
-set(LIBCODA_REVISION 3)
+set(LIBCODA_REVISION 4)
 set(LIBCODA_AGE 3)
 math(EXPR LIBCODA_MAJOR "${LIBCODA_CURRENT} - ${LIBCODA_AGE}")
 set(LIBCODA_MINOR ${LIBCODA_AGE})
@@ -749,8 +728,7 @@ add_library(coda SHARED ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBPCRE_SOURCES
 target_link_libraries(coda ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
 set_target_properties(coda PROPERTIES
   VERSION ${LIBCODA_MAJOR}.${LIBCODA_MINOR}.${LIBCODA_REVISION}
-  SOVERSION ${LIBCODA_MAJOR}
-)
+  SOVERSION ${LIBCODA_MAJOR})
 install(TARGETS coda DESTINATION lib)
 
 add_library(coda_static STATIC ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBPCRE_SOURCES} ${LIBZLIB_SOURCES} ${LIBQIAP_SOURCES})
@@ -758,43 +736,33 @@ add_library(coda_static STATIC ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBPCRE_
 # On Windows, we want libcoda.lib for static, coda.dll & coda.lib for shared.
 # On Unix, we want libcoda.a and libcoda.so
 if(WIN32)
-  set_target_properties(coda_static PROPERTIES
-    OUTPUT_NAME "libcoda"
-    )
+  set_target_properties(coda_static PROPERTIES OUTPUT_NAME "libcoda")
 else(WIN32)
-  set_target_properties(coda_static PROPERTIES
-    OUTPUT_NAME "coda"
-    )
+  set_target_properties(coda_static PROPERTIES OUTPUT_NAME "coda")
 endif(WIN32)
 install(TARGETS coda_static DESTINATION lib)
 
 if(MSVC)
   set_source_files_properties(coda-expr-tokenizer.c PROPERTIES
-    COMPILE_FLAGS "/D YY_NO_UNISTD_H"
-    )
+    COMPILE_FLAGS "/D YY_NO_UNISTD_H")
 endif(MSVC)
 
 
 # tools codacheck
 
-set(codacheck_SOURCES
-  tools/codacheck/codacheck.c
-  )
+set(codacheck_SOURCES tools/codacheck/codacheck.c)
 add_executable(codacheck ${codacheck_SOURCES})
 target_link_libraries(codacheck coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${LIBM_LIBRARY})
 install(TARGETS codacheck DESTINATION bin)
 
 if(MSVC)
   set_target_properties(codacheck PROPERTIES
-    COMPILE_FLAGS "/nologo /GX /D_CONSOLE /D_MBCS /YX /FD"
-    )
+    COMPILE_FLAGS "/nologo /GX /D_CONSOLE /D_MBCS /YX /FD")
 endif(MSVC)
 
 # tools codacmp
 
-set(codacmp_SOURCES
-  tools/codacmp/codacmp.c
-  )
+set(codacmp_SOURCES tools/codacmp/codacmp.c)
 add_executable(codacmp ${codacmp_SOURCES})
 target_link_libraries(codacmp coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${LIBM_LIBRARY})
 install(TARGETS codacmp DESTINATION bin)
@@ -802,18 +770,15 @@ install(TARGETS codacmp DESTINATION bin)
 # tools/codadump
 
 set(codadump_SOURCES
-	tools/codadump/codadump-ascii.c
-	tools/codadump/codadump-debug.c
-	tools/codadump/codadump-dim.c
-	tools/codadump/codadump-filter.c
-	tools/codadump/codadump-traverse.c
-	tools/codadump/codadump.c
-	tools/codadump/codadump-filter.h
-	tools/codadump/codadump.h
-  )
-set(codadump_hdf4_files
-  tools/codadump/codadump-hdf4.c
-  )
+    tools/codadump/codadump-ascii.c
+    tools/codadump/codadump-debug.c
+    tools/codadump/codadump-dim.c
+    tools/codadump/codadump-filter.c
+    tools/codadump/codadump-traverse.c
+    tools/codadump/codadump.c
+    tools/codadump/codadump-filter.h
+    tools/codadump/codadump.h)
+set(codadump_hdf4_files tools/codadump/codadump-hdf4.c)
 if(CODA_WITH_HDF4)
   set(codadump_SOURCES ${codadump_SOURCES} ${codadump_hdf4_files})
 endif(CODA_WITH_HDF4)
@@ -823,18 +788,14 @@ install(TARGETS codadump DESTINATION bin)
 
 # tools codaeval
 
-set(codaeval_SOURCES
-  tools/codaeval/codaeval.c
-  )
+set(codaeval_SOURCES tools/codaeval/codaeval.c)
 add_executable(codaeval ${codaeval_SOURCES})
 target_link_libraries(codaeval coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${LIBM_LIBRARY})
 install(TARGETS codaeval DESTINATION bin)
 
 # tools codafind
 
-set(codafind_SOURCES
-  tools/codafind/codafind.c
-  )
+set(codafind_SOURCES tools/codafind/codafind.c)
 add_executable(codafind ${codafind_SOURCES})
 target_link_libraries(codafind coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${LIBM_LIBRARY})
 install(TARGETS codafind DESTINATION bin)
@@ -847,8 +808,7 @@ set(codadd_SOURCES
   tools/codadd/codadd-detect.c
   tools/codadd/codadd-doc.c
   tools/codadd/codadd-list.c
-  tools/codadd/codadd-xmlschema.c
-  )
+  tools/codadd/codadd-xmlschema.c)
 add_executable(codadd ${codadd_SOURCES})
 target_link_libraries(codadd coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${LIBM_LIBRARY})
 install(TARGETS codadd DESTINATION bin)
@@ -866,7 +826,7 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/coda.h)
 
 
-# Windows stuff
+# Windows specific build rules
 
 # Notice that doing this on Linux does not copy the
 # DOS line endings (CMake bug 0008506)

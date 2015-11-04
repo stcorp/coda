@@ -23,6 +23,8 @@
 
 #include "coda-internal.h"
 
+int coda_bin_open(const char *filename, int64_t file_size, const coda_product_definition *definition,
+                  coda_product **product);
 int coda_bin_close(coda_product *product);
 
 int coda_bin_cursor_use_base_type_of_special_type(coda_cursor *cursor);
@@ -40,6 +42,8 @@ int coda_bin_cursor_read_int64(const coda_cursor *cursor, int64_t *dst);
 int coda_bin_cursor_read_uint64(const coda_cursor *cursor, uint64_t *dst);
 int coda_bin_cursor_read_float(const coda_cursor *cursor, float *dst);
 int coda_bin_cursor_read_double(const coda_cursor *cursor, double *dst);
+int coda_bin_cursor_read_char(const coda_cursor *cursor, char *dst);
+int coda_bin_cursor_read_string(const coda_cursor *cursor, char *dst, long dst_size);
 int coda_bin_cursor_read_bits(const coda_cursor *cursor, uint8_t *dst, int64_t bit_offset, int64_t bit_length);
 int coda_bin_cursor_read_bytes(const coda_cursor *cursor, uint8_t *dst, int64_t offset, int64_t length);
 int coda_bin_cursor_read_double_pair(const coda_cursor *cursor, double *dst);

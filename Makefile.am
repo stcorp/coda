@@ -76,7 +76,7 @@ codapython_PYTHON = \
 	$(srcdir)/python/__init__.py \
 	$(srcdir)/python/codapython.py \
 	python/codac.py
-codapyexec_LTLIBRARIES = _codac.la
+codapython_LTLIBRARIES = _codac.la
 endif
 
 if BUILD_JAVA
@@ -211,9 +211,18 @@ libcoda_la_SOURCES = \
 	libcoda/coda-ascbin.c \
 	libcoda/coda-ascbin.h \
 	libcoda/coda-ascii-cursor.c \
+	libcoda/coda-ascii-internal.h \
+	libcoda/coda-ascii.c \
 	libcoda/coda-ascii.h \
 	libcoda/coda-bin-cursor.c \
+	libcoda/coda-bin-internal.h \
+	libcoda/coda-bin.c \
 	libcoda/coda-bin.h \
+	libcoda/coda-cdf-cursor.c \
+	libcoda/coda-cdf-internal.h \
+	libcoda/coda-cdf-type.c \
+	libcoda/coda-cdf.c \
+	libcoda/coda-cdf.h \
 	libcoda/coda-check.c \
 	libcoda/coda-cursor-read.c \
 	libcoda/coda-cursor.c \
@@ -245,10 +254,15 @@ libcoda_la_SOURCES = \
 	libcoda/coda-netcdf.h \
 	libcoda/coda-path.h \
 	libcoda/coda-product.c \
+	libcoda/coda-read-bits.h \
+	libcoda/coda-read-bytes.h \
 	libcoda/coda-rinex.c \
 	libcoda/coda-rinex.h \
 	libcoda/coda-sp3.c \
 	libcoda/coda-sp3.h \
+	libcoda/coda-swap2.h \
+	libcoda/coda-swap4.h \
+	libcoda/coda-swap8.h \
 	libcoda/coda-time.c \
 	libcoda/coda-type.c \
 	libcoda/coda-type.h \
@@ -298,9 +312,18 @@ libcoda_internal_la_SOURCES = \
 	libcoda/coda-ascbin.c \
 	libcoda/coda-ascbin.h \
 	libcoda/coda-ascii-cursor.c \
+	libcoda/coda-ascii-internal.h \
+	libcoda/coda-ascii.c \
 	libcoda/coda-ascii.h \
 	libcoda/coda-bin-cursor.c \
+	libcoda/coda-bin-internal.h \
+	libcoda/coda-bin.c \
 	libcoda/coda-bin.h \
+	libcoda/coda-cdf-cursor.c \
+	libcoda/coda-cdf-internal.h \
+	libcoda/coda-cdf-type.c \
+	libcoda/coda-cdf.c \
+	libcoda/coda-cdf.h \
 	libcoda/coda-check.c \
 	libcoda/coda-cursor-read.c \
 	libcoda/coda-cursor.c \
@@ -333,10 +356,15 @@ libcoda_internal_la_SOURCES = \
 	libcoda/coda-netcdf.h \
 	libcoda/coda-path.h \
 	libcoda/coda-product.c \
+	libcoda/coda-read-bits.h \
+	libcoda/coda-read-bytes.h \
 	libcoda/coda-rinex.c \
 	libcoda/coda-rinex.h \
 	libcoda/coda-sp3.c \
 	libcoda/coda-sp3.h \
+	libcoda/coda-swap2.h \
+	libcoda/coda-swap4.h \
+	libcoda/coda-swap8.h \
 	libcoda/coda-time.c \
 	libcoda/coda-type.c \
 	libcoda/coda-type.h \
@@ -696,6 +724,7 @@ DOCFILES = \
 	doc/html/images/coda-large.png \
 	$(LIBCODA_DOCFILES) \
 	$(JAVA_DOCFILES) \
+	doc/html/codadef/codadef-cdf.html \
 	doc/html/codadef/codadef-expressions.html \
 	doc/html/codadef/codadef-format.html \
 	doc/html/codadef/codadef-grib.html \
@@ -951,7 +980,7 @@ windows/build.xml: $(srcdir)/java/build.xml.in
 # *** development install targets to avoid long installs ***
 
 install-python:
-	$(MAKE) install-codapyexecLTLIBRARIES install-codapythonPYTHON
+	$(MAKE) install-codapythonLTLIBRARIES install-codapythonPYTHON
 
 install-matlab:
 	$(MAKE) install-nodist_matlabmexexecDATA

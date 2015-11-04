@@ -1,10 +1,35 @@
+2.7 2012-08-31
+~~~~~~~~~~~~~~
+
+* Added support for reading of CDF data (using direct access to the CDF files,
+  so the CDF library is not needed). Note that not all features and versions
+  of CDF are supported. See the CODA documentation for details.
+
+* Fixed issue in codadump debug mode where arrays of time values only showed
+  the time value for the first array element (and only the base type value for
+  the rest).
+
+* Fixed issue where QIAP correction actions were not properly applied when
+  calling coda_cursor_read_*_array() functions.
+
+* Several improvements to build system of CODA Python interface:
+  - fixed building of CODA Python interface with CMake.
+  - all CODA Python interface files are now installed in the platform specific
+    python library directory. On 64-bit Linux systems this means that the full
+    CODA python package ends up in <prefix>/lib64/site-packages/coda.
+  - improved autoconf and CMake based detection of default numpy include
+    directory.
+
+* The binary backend now also supports data of type text (= char or string).
+  Previously such data always had to use the 'ascii' format.
+
 2.6 2012-07-07
 ~~~~~~~~~~~~~~
 
 * Fixed issue in codacmp where strings of unequal length were not indicated
   as a change.
 
-* Added support for detection of xml files (as defined in the codedef files)
+* Added support for detection of xml files (as defined in the codadef files)
   based on xml attribute value and optionally additionally on filename.
   Detection order for xml has been changed, it is now performed 'depth first'.
 

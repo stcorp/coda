@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html>
+
+  <head>
+    <title>CODA CDF Mapping Description</title>
+    <link rel="stylesheet" href="../css/codadoc.css" type="text/css" />
+  </head>
+
+  <body>
+
+    <div class="main">
+
+      <h1>CODA CDF Mapping Description</h1>
+
+      <p>CODA provides access to NASA CDF by creating a view on the CDF files using the CODA <a href="codadef-format.html">data types</a>. Below we will describe how CODA maps the CDF product structure to one that is based on the CODA data types.</p>
+      
+      <p>CDF products are self describing products. This means that when a CDF file is opened one can retrieve the product structure from the file itself. For this reason, CODA will not require fixed product format descriptions for CDF files. What CODA will do is use the builtin CODA CDF backend to retrieve the product format dynamically once a CDF file is opened. Based on this format CODA will create, on the fly, a mapping of the CDF product structure to one that is based on the CODA data types. Because of this approach CODA is able to provide you access to nearly <i>all</i> CDF files (see limitations below). In order to read data from CDF files you can use the same CODA reading routines as you would have used for all other products.</p>
+
+      <p>CDF files consist of Variables and Attributes. CDF files can contain rVariables and zVariables. Both are supported by CODA. The root of a CDF product is mapped to a record, with each CDF variable being a field in this record.</p>
+
+      <p>The dimensions of a variable are the combination of the record dimension and the dimension of the variable itself. For instance, if a variable has 10 records and each variable has dimension [4,5], CODA will give the variable dimensions [10,4,5]. However, any dimension that does not vary (i.e. the 'record varys' or 'dim varys' properties) will be omitted. So, if a variable would have 'record varys' set to False and for the [4,5] dimension the 'dim varys' is TF (i.e. only the first dimension varies), then the overal dimensions of the variable in CODA will be [4].</p>
+
+      <p>If the array ordering of dimensions for a variable is column-major (i.e. fortran array ordering) the ordering of the dimensions will be swapped to arrive at a row-major array ordering. For instance, if the dimensions were [6,4], they will be shown in CODA as [4,6]. Note that the record dimension will not be swapped, so if the number of records would be 10, then the CODA dimension for the variable will become [10,4,6].</p>
+
+      <p>Attributes can be gAttributes, rAttributes, or zAttributes. rAttributes and zAttributes are attached to the CODA types of the respective rVariables and zVariables. gAttributes are global attributes and will be attached to the root record of the product. Because global attributes containing more than one entry may have different type definitions per entry, the different entries for a single global attribute are not combined in a single array in CODA, each entry for a global attribute will be treated as a separate global attribute. The first entry will use the same name as the global attribute, but additional entries will use an attribute name equal to the global attribute name + _ + 'sequence number' (note that the sequence number can be different from the entry number). For instance, for a global attribute named 'TITLE' with two entries, the first entry will be available as 'TITLE' and the second entry will be available as 'TITLE_1'.</p>
+
+      <p>Note that CDF support in CODA comes with a few limitations. These are:</p>
+      <ul>
+      <li>CDF format versions older than version 3 or are not supported</li>
+      <li>Multi-file CDF is not supported</li>
+      <li>CDF files using full file compression are not supported</li>
+      <li>Compressed variables are only supported when using gzip compression (RLE and Huffman are not supported)</li>
+      <li>Sparse records are not supported</li>
+      <li>Only encodings that use the IEEE 754 floating point format are supported (VAX, ALPHAVMSd, and ALPHAVMSg encodings are not supported)</li>
+      <li>The EPOCH16 data type is not supported</li>
+      </ul>
+
+      <p>For variables having an EPOCH or TIME_TT2000 data type, CODA will wrap the variable data type within a special 'time' type. This means that time values are automatically converted to double values representing 'seconds since 2000-01-01T00:00:00'. The 'raw' time values (milliseconds since 0000-01-01T00:00:00 as a double for EPOCH and nanoseconds since 2000-01-01T12:00:00 as an int64 for TIME_TT2000) can still be accessed by enabling the global CODA option to bypass special types. Note that this wrapping only happens for variable data, for attribute data you will only be able to access the raw EPOCH and TIME_TT2000 data.</p>
+
+      <div class="footer">
+        <hr />
+        <p>Copyright &copy; 2007-2012 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+      </div>
+
+    </div>
+
+  </body>
+
+</html>

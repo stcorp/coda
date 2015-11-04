@@ -20,7 +20,7 @@
 
 #include "coda-internal.h"
 #include "coda-type.h"
-#include "coda-ascbin-internal.h"
+#include "coda-ascii-internal.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -237,7 +237,7 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size,
                 }
                 if (((coda_type_text *)type)->special_text_type == ascii_text_line_separator)
                 {
-                    switch (((coda_ascbin_product *)cursor->product)->end_of_line)
+                    switch (((coda_ascii_product *)cursor->product)->end_of_line)
                     {
                         case eol_lf:
                             if (string_length != 1 || data[0] != '\n')

@@ -24,6 +24,10 @@
 
 #include "ziparchive.h"
 #include "hashtable.h"
+#ifdef WORDS_BIGENDIAN
+#include "coda-swap2.h"
+#include "coda-swap4.h"
+#endif
 
 #include <sys/stat.h>
 #include <assert.h>
@@ -86,42 +90,6 @@ struct za_file_struct
     hashtable *hash_data;
     void (*handle_error) (const char *, ...);
 };
-
-#ifdef WORDS_BIGENDIAN
-static void swap_uint16(uint16_t *value)
-{
-    union
-    {
-        uint8_t as_bytes[2];
-        uint16_t as_uint16;
-    } v1, v2;
-
-    v1.as_uint16 = *value;
-
-    v2.as_bytes[0] = v1.as_bytes[1];
-    v2.as_bytes[1] = v1.as_bytes[0];
-
-    *value = v2.as_uint16;
-}
-
-static void swap_uint32(uint32_t *value)
-{
-    union
-    {
-        uint8_t as_bytes[4];
-        uint32_t as_uint32;
-    } v1, v2;
-
-    v1.as_uint32 = *value;
-
-    v2.as_bytes[0] = v1.as_bytes[3];
-    v2.as_bytes[1] = v1.as_bytes[2];
-    v2.as_bytes[2] = v1.as_bytes[1];
-    v2.as_bytes[3] = v1.as_bytes[0];
-
-    *value = v2.as_uint32;
-}
-#endif
 
 static int get_entries(za_file *zf)
 {
@@ -670,7 +638,7 @@ int za_read_entry(za_entry *entry, char *out_buffer)
 
         zs.next_in = in_buffer;
         zs.avail_in = entry->compressed_size;
-        zs.next_out = (Bytef *) out_buffer;
+        zs.next_out = (Bytef *)out_buffer;
         zs.avail_out = entry->uncompressed_size;
         result = inflate(&zs, Z_FINISH);
         assert(result != Z_STREAM_ERROR);

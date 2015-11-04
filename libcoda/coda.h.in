@@ -209,7 +209,7 @@ enum coda_format_enum
     coda_format_xml,                        /**< Data stored in XML format */
     coda_format_hdf4,                       /**< Data stored in HDF4 format */
     coda_format_hdf5,                       /**< Data stored in HDF5 format */
-    coda_format_cdf,                        /**< Data stored in (NASA) CDF format */
+    coda_format_cdf,                        /**< Data stored in CDF format */
     coda_format_netcdf,                     /**< Data stored in NetCDF format */
     coda_format_grib1,                      /**< Data stored in GRIB1 format */
     coda_format_grib2,                      /**< Data stored in GRIB2 format */

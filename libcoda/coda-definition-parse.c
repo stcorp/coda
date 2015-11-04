@@ -442,6 +442,10 @@ static int format_from_string(const char *str, coda_format *format)
     {
         *format = coda_format_hdf5;
     }
+    else if (strcmp(str, "cdf") == 0)
+    {
+        *format = coda_format_cdf;
+    }
     else if (strcmp(str, "netcdf") == 0)
     {
         *format = coda_format_netcdf;

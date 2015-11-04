@@ -331,7 +331,7 @@ int coda_mem_cursor_read_bytes(const coda_cursor *cursor, uint8_t *dst, int64_t 
         coda_set_error(CODA_ERROR_OUT_OF_BOUNDS_READ, "trying to read beyond the size of the raw type");
         return -1;
     }
-    memcpy(dst, &type->data[offset], length);
+    memcpy(dst, &type->data[offset], (size_t)length);
     return 0;
 }
 

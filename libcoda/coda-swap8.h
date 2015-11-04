@@ -18,25 +18,30 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef CODA_ASCBIN_INTERNAL_H
-#define CODA_ASCBIN_INTERNAL_H
+#ifndef CODA_SWAP8_H
+#define CODA_SWAP8_H
 
-#include "coda-ascbin.h"
-#include "coda-definition.h"
-
-struct coda_ascbin_detection_node_struct
+static void swap8(void *value)
 {
-    /* detection rule entry at this node; will be NULL for root node */
-    coda_detection_rule_entry *entry;
+    unsigned char *v = (unsigned char *)value;
 
-    coda_detection_rule *rule;  /* the matching rule when 'entry' matches and none of the subnodes match */
+    /* use XOR swap algorithm to swap bytes 0/7, 1/6, 2/5, and 3/4 */
+    v[0] = v[0] ^ v[7];
+    v[7] = v[0] ^ v[7];
+    v[0] = v[0] ^ v[7];
+    v[1] = v[1] ^ v[6];
+    v[6] = v[1] ^ v[6];
+    v[1] = v[1] ^ v[6];
+    v[2] = v[2] ^ v[5];
+    v[5] = v[2] ^ v[5];
+    v[2] = v[2] ^ v[5];
+    v[3] = v[3] ^ v[4];
+    v[4] = v[3] ^ v[4];
+    v[3] = v[3] ^ v[4];
+}
 
-    /* sub nodes of this node */
-    int num_subnodes;
-    struct coda_ascbin_detection_node_struct **subnode;
-};
-typedef struct coda_ascbin_detection_node_struct coda_ascbin_detection_node;
-
-coda_ascbin_detection_node *coda_ascbin_get_detection_tree(void);
+#define swap_int64 swap8
+#define swap_uint64 swap8
+#define swap_double swap8
 
 #endif

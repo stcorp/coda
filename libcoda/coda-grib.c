@@ -19,24 +19,23 @@
  */
 
 #include "coda-internal.h"
-
-#ifdef HAVE_SYS_MMAN_H
-#include <sys/mman.h>
+#include "coda-grib-internal.h"
+#include "coda-definition.h"
+#include "coda-mem-internal.h"
+#include "coda-read-bytes.h"
+#ifndef WORDS_BIGENDIAN
+#include "coda-swap4.h"
+#include "coda-swap8.h"
 #endif
+
 #include <assert.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 
-#include "coda-grib-internal.h"
-#include "coda-definition.h"
-#include "coda-mem-internal.h"
-
-#define bit_size_to_byte_size(x) (((x) >> 3) + ((((uint8_t)(x)) & 0x7) != 0))
 
 enum
 {
@@ -1152,44 +1151,6 @@ void coda_grib_done(void)
     grib_type = NULL;
 }
 
-#ifndef WORDS_BIGENDIAN
-static void swap_float(float *value)
-{
-    union
-    {
-        uint8_t as_bytes[4];
-        float as_float;
-    } v;
-
-    v.as_bytes[0] = ((uint8_t *)value)[3];
-    v.as_bytes[1] = ((uint8_t *)value)[2];
-    v.as_bytes[2] = ((uint8_t *)value)[1];
-    v.as_bytes[3] = ((uint8_t *)value)[0];
-
-    *value = v.as_float;
-}
-
-static void swap_int64(int64_t *value)
-{
-    union
-    {
-        uint8_t as_bytes[8];
-        int64_t as_int64;
-    } v;
-
-    v.as_bytes[0] = ((uint8_t *)value)[7];
-    v.as_bytes[1] = ((uint8_t *)value)[6];
-    v.as_bytes[2] = ((uint8_t *)value)[5];
-    v.as_bytes[3] = ((uint8_t *)value)[4];
-    v.as_bytes[4] = ((uint8_t *)value)[3];
-    v.as_bytes[5] = ((uint8_t *)value)[2];
-    v.as_bytes[6] = ((uint8_t *)value)[1];
-    v.as_bytes[7] = ((uint8_t *)value)[0];
-
-    *value = v.as_int64;
-}
-#endif
-
 /* asumes input is big endian */
 static float ibmfloat_to_iee754(uint8_t bytes[4])
 {
@@ -1225,7 +1186,7 @@ static float ibmfloat_to_iee754(uint8_t bytes[4])
     if (exponent >= 255)
     {
         /* overflow */
-        return coda_PlusInf();
+        return (float)coda_PlusInf();
     }
     if (exponent <= 0)
     {
@@ -1262,9 +1223,8 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
     int64_t intvalue;
 
     /* Section 1: Product Definition Section (PDS) */
-    if (read(product->fd, buffer, 28) < 0)
+    if (read_bytes((coda_product *)product, file_offset, 28, buffer) < 0)
     {
-        coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename, strerror(errno));
         return -1;
     }
 
@@ -1357,17 +1317,6 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
         {
             uint8_t *raw_data;
 
-            /* skip bytes 29-40 which are reserved */
-            file_offset += 12;
-            if (lseek(product->fd, 12, SEEK_CUR) < 0)
-            {
-                char file_offset_str[21];
-
-                coda_str64(file_offset, file_offset_str);
-                coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %s in file %s (%s)",
-                               file_offset_str, product->filename, strerror(errno));
-                return -1;
-            }
             raw_data = malloc((section_size - 40) * sizeof(uint8_t));
             if (raw_data == NULL)
             {
@@ -1375,32 +1324,18 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
                                (long)((section_size - 40) * sizeof(uint8_t)), __FILE__, __LINE__);
                 return -1;
             }
-            if (read(product->fd, raw_data, section_size - 40) < 0)
+            /* skip bytes 29-40 which are reserved */
+            if (read_bytes((coda_product *)product, file_offset + 12, section_size - 40, raw_data) < 0)
             {
                 free(raw_data);
-                coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                               strerror(errno));
                 return -1;
             }
             type = (coda_dynamic_type *)coda_mem_raw_new((coda_type_raw *)grib_type[grib1_local], section_size - 40,
                                                          raw_data);
             free(raw_data);
             coda_mem_record_add_field(message, "local", type, 0);
-            file_offset += section_size - 40;
         }
-        else
-        {
-            file_offset += section_size - 28;
-            if (lseek(product->fd, (off_t)(section_size - 28), SEEK_CUR) < 0)
-            {
-                char file_offset_str[21];
-
-                coda_str64(file_offset + section_size - 28, file_offset_str);
-                coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %s in file %s (%s)",
-                               file_offset_str, product->filename, strerror(errno));
-                return -1;
-            }
-        }
+        file_offset += section_size - 28;
     }
 
     if (has_gds)
@@ -1408,10 +1343,8 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
         coda_mem_record *gds;
 
         /* Section 2: Grid Description Section (GDS) */
-        if (read(product->fd, buffer, 6) < 0)
+        if (read_bytes((coda_product *)product, file_offset, 6, buffer) < 0)
         {
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                           strerror(errno));
             return -1;
         }
 
@@ -1442,11 +1375,9 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
                                                           buffer[5]);
             coda_mem_record_add_field(gds, "dataRepresentationType", type, 0);
 
-            if (read(product->fd, buffer, 26) < 0)
+            if (read_bytes((coda_product *)product, file_offset, 26, buffer) < 0)
             {
                 coda_grib_type_delete((coda_dynamic_type *)gds);
-                coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                               strerror(errno));
                 return -1;
             }
 
@@ -1527,16 +1458,6 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
             {
                 PVL--;  /* make offset zero based */
                 file_offset += PVL - 32;
-                if (lseek(product->fd, (off_t)(PVL - 32), SEEK_CUR) < 0)
-                {
-                    char file_offset_str[21];
-
-                    coda_dynamic_type_delete((coda_dynamic_type *)gds);
-                    coda_str64(file_offset, file_offset_str);
-                    coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %s in file %s (%s)",
-                                   file_offset_str, product->filename, strerror(errno));
-                    return -1;
-                }
                 if (NV > 0)
                 {
                     coda_mem_array *pvArray;
@@ -1545,12 +1466,10 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
                     pvArray = coda_mem_array_new((coda_type_array *)grib_type[grib1_pv_array]);
                     for (i = 0; i < NV; i++)
                     {
-                        if (read(product->fd, buffer, 4) < 0)
+                        if (read_bytes((coda_product *)product, file_offset, 4, buffer) < 0)
                         {
                             coda_dynamic_type_delete((coda_dynamic_type *)pvArray);
                             coda_dynamic_type_delete((coda_dynamic_type *)gds);
-                            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                                           strerror(errno));
                             return -1;
                         }
                         type = (coda_dynamic_type *)coda_mem_real_new((coda_type_number *)grib_type[grib1_pv],
@@ -1564,31 +1483,11 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
                 if (section_size > PVL + NV * 4)
                 {
                     file_offset += section_size - (PVL + NV * 4);
-                    if (lseek(product->fd, (off_t)(section_size - (PVL + 4 * NV)), SEEK_CUR) < 0)
-                    {
-                        char file_offset_str[21];
-
-                        coda_dynamic_type_delete((coda_dynamic_type *)gds);
-                        coda_str64(file_offset, file_offset_str);
-                        coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %s in file %s (%s)",
-                                       file_offset_str, product->filename, strerror(errno));
-                        return -1;
-                    }
                 }
             }
             else if (section_size > 32)
             {
                 file_offset += section_size - 32;
-                if (lseek(product->fd, (off_t)(section_size - 32), SEEK_CUR) < 0)
-                {
-                    char file_offset_str[21];
-
-                    coda_dynamic_type_delete((coda_dynamic_type *)gds);
-                    coda_str64(file_offset, file_offset_str);
-                    coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %s in file %s (%s)",
-                                   file_offset_str, product->filename, strerror(errno));
-                    return -1;
-                }
             }
 
             coda_mem_record_add_field(message, "grid", (coda_dynamic_type *)gds, 0);
@@ -1727,10 +1626,8 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
     if (has_bms)
     {
         /* Section 3: Bit Map Section (BMS) */
-        if (read(product->fd, buffer, 6) < 0)
+        if (read_bytes((coda_product *)product, file_offset, 6, buffer) < 0)
         {
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                           strerror(errno));
             return -1;
         }
 
@@ -1755,24 +1652,21 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
                            (long)((section_size - 6) * sizeof(uint8_t)), __FILE__, __LINE__);
             return -1;
         }
-        if (read(product->fd, bitmask, section_size - 6) < 0)
+        if (read_bytes((coda_product *)product, file_offset + 6, section_size - 6, bitmask) < 0)
         {
             free(bitmask);
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                           strerror(errno));
             return -1;
         }
         file_offset += section_size;
     }
 
     /* Section 4: Binary Data Section (BDS) */
-    if (read(product->fd, buffer, 11) < 0)
+    if (read_bytes((coda_product *)product, file_offset, 11, buffer) < 0)
     {
         if (bitmask != NULL)
         {
             free(bitmask);
         }
-        coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename, strerror(errno));
         return -1;
     }
 
@@ -1840,20 +1734,10 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
     coda_mem_record_add_field(message, "data", (coda_dynamic_type *)bds, 0);
 
     file_offset += section_size - 11;
-    if (lseek(product->fd, (off_t)(section_size - 11), SEEK_CUR) < 0)
-    {
-        char file_offset_str[21];
-
-        coda_str64(file_offset, file_offset_str);
-        coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %s in file %s (%s)",
-                       file_offset_str, product->filename, strerror(errno));
-        return -1;
-    }
 
     /* Section 5: '7777' (ASCII Characters) */
-    if (read(product->fd, buffer, 4) < 0)
+    if (read_bytes((coda_product *)product, file_offset, 4, buffer) < 0)
     {
-        coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename, strerror(errno));
         return -1;
     }
     if (memcmp(buffer, "7777", 4) != 0)
@@ -1904,9 +1788,8 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
     uint8_t prev_section;
 
     /* Section 1: Identification Section */
-    if (read(product->fd, buffer, 21) < 0)
+    if (read_bytes((coda_product *)product, file_offset, 21, buffer) < 0)
     {
-        coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename, strerror(errno));
         return -1;
     }
 
@@ -1985,21 +1868,11 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
     if (section_size > 21)
     {
         file_offset += section_size - 21;
-        if (lseek(product->fd, (off_t)(section_size - 21), SEEK_CUR) < 0)
-        {
-            char file_offset_str[21];
-
-            coda_str64(file_offset, file_offset_str);
-            coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %s in file %s (%s)",
-                           file_offset_str, product->filename, strerror(errno));
-            return -1;
-        }
     }
 
     /* keep looping over message sections until we find section 8 or until we encounter an error */
-    if (read(product->fd, buffer, 4) < 0)
+    if (read_bytes((coda_product *)product, file_offset, 4, buffer) < 0)
     {
-        coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename, strerror(errno));
         return -1;
     }
     file_offset += 4;
@@ -2008,10 +1881,8 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
         section_size = ((buffer[0] * 256 + buffer[1]) * 256 + buffer[2]) * 256 + buffer[3];
 
         /* read section number */
-        if (read(product->fd, buffer, 1) < 0)
+        if (read_bytes((coda_product *)product, file_offset, 1, buffer) < 0)
         {
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                           strerror(errno));
             return -1;
         }
         file_offset += 1;
@@ -2037,11 +1908,9 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                                    (long)((section_size - 5) * sizeof(uint8_t)), __FILE__, __LINE__);
                     return -1;
                 }
-                if (read(product->fd, raw_data, section_size - 5) < 0)
+                if (read_bytes((coda_product *)product, file_offset, section_size - 5, raw_data) < 0)
                 {
                     free(raw_data);
-                    coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                                   strerror(errno));
                     return -1;
                 }
                 type = (coda_dynamic_type *)coda_mem_raw_new((coda_type_raw *)grib_type[grib1_local],
@@ -2066,10 +1935,8 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                 return -1;
             }
 
-            if (read(product->fd, buffer, 9) < 0)
+            if (read_bytes((coda_product *)product, file_offset, 9, buffer) < 0)
             {
-                coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                               strerror(errno));
                 return -1;
             }
 
@@ -2102,11 +1969,9 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
             {
                 uint32_t intvalue;
 
-                if (read(product->fd, buffer, 58) < 0)
+                if (read_bytes((coda_product *)product, file_offset, 58, buffer) < 0)
                 {
                     coda_dynamic_type_delete((coda_dynamic_type *)grid);
-                    coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                                   strerror(errno));
                     return -1;
                 }
 
@@ -2173,14 +2038,14 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                 type =
                     (coda_dynamic_type *)
                     coda_mem_integer_new((coda_type_number *)grib_type[grib2_latitudeOfFirstGridPoint],
-                                         (buffer[32] & 0x80 ? -(intvalue - (1 << 31)) : intvalue));
+                                         (buffer[32] & 0x80 ? -((int64_t)intvalue - (1 << 31)) : intvalue));
                 coda_mem_record_add_field(grid, "latitudeOfFirstGridPoint", type, 0);
 
                 intvalue = ((buffer[36] * 256 + buffer[37]) * 256 + buffer[38]) * 256 + buffer[39];
                 type =
                     (coda_dynamic_type *)
                     coda_mem_integer_new((coda_type_number *)grib_type[grib2_longitudeOfFirstGridPoint],
-                                         (buffer[36] & 0x80 ? -(intvalue - (1 << 31)) : intvalue));
+                                         (buffer[36] & 0x80 ? -((int64_t)intvalue - (1 << 31)) : intvalue));
                 coda_mem_record_add_field(grid, "longitudeOfFirstGridPoint", type, 0);
 
                 type =
@@ -2192,14 +2057,14 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                 type =
                     (coda_dynamic_type *)
                     coda_mem_integer_new((coda_type_number *)grib_type[grib2_latitudeOfLastGridPoint],
-                                         (buffer[41] & 0x80 ? -(intvalue - (1 << 31)) : intvalue));
+                                         (buffer[41] & 0x80 ? -((int64_t)intvalue - (1 << 31)) : intvalue));
                 coda_mem_record_add_field(grid, "latitudeOfLastGridPoint", type, 0);
 
                 intvalue = ((buffer[45] * 256 + buffer[46]) * 256 + buffer[47]) * 256 + buffer[48];
                 type =
                     (coda_dynamic_type *)
                     coda_mem_integer_new((coda_type_number *)grib_type[grib2_longitudeOfLastGridPoint],
-                                         (buffer[45] & 0x80 ? -(intvalue - (1 << 31)) : intvalue));
+                                         (buffer[45] & 0x80 ? -((int64_t)intvalue - (1 << 31)) : intvalue));
                 coda_mem_record_add_field(grid, "longitudeOfLastGridPoint", type, 0);
 
                 intvalue = ((buffer[49] * 256 + buffer[50]) * 256 + buffer[51]) * 256 + buffer[52];
@@ -2231,23 +2096,13 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                 if (section_size > 72)
                 {
                     file_offset += section_size - 72;
-                    if (lseek(product->fd, (off_t)(section_size - 72), SEEK_CUR) < 0)
-                    {
-                        char file_offset_str[21];
-
-                        coda_dynamic_type_delete((coda_dynamic_type *)grid);
-                        coda_str64(file_offset, file_offset_str);
-                        coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %s in file %s (%s)",
-                                       file_offset_str, product->filename, strerror(errno));
-                        return -1;
-                    }
                 }
             }
             else
             {
-                coda_dynamic_type_delete((coda_dynamic_type *)grid);
                 coda_set_error(CODA_ERROR_PRODUCT, "unsupported grid source/template (%d/%d)", buffer[0],
                                template_number);
+                coda_dynamic_type_delete((coda_dynamic_type *)grid);
                 return -1;
             }
 
@@ -2269,10 +2124,8 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                 return -1;
             }
 
-            if (read(product->fd, buffer, 4) < 0)
+            if (read_bytes((coda_product *)product, file_offset, 4, buffer) < 0)
             {
-                coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                               strerror(errno));
                 return -1;
             }
             num_coordinate_values = (buffer[0] * 256 + buffer[1]);
@@ -2282,10 +2135,8 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
             /* we could possibly add support for 40, 41, 44, 45 and 48 in the future as well */
             if (productDefinitionTemplate <= 6 || productDefinitionTemplate == 15 || productDefinitionTemplate == 51)
             {
-                if (read(product->fd, buffer, 25) < 0)
+                if (read_bytes((coda_product *)product, file_offset, 25, buffer) < 0)
                 {
-                    coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                                   strerror(errno));
                     return -1;
                 }
                 parameterCategory = buffer[0];
@@ -2351,15 +2202,6 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
             if (section_size > 34)
             {
                 file_offset += section_size - 34;
-                if (lseek(product->fd, (off_t)(section_size - 34), SEEK_CUR) < 0)
-                {
-                    char file_offset_str[21];
-
-                    coda_str64(file_offset, file_offset_str);
-                    coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %s in file %s (%s)",
-                                   file_offset_str, product->filename, strerror(errno));
-                    return -1;
-                }
             }
 
             prev_section = 4;
@@ -2376,10 +2218,8 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                 return -1;
             }
 
-            if (read(product->fd, buffer, 6) < 0)
+            if (read_bytes((coda_product *)product, file_offset, 6, buffer) < 0)
             {
-                coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                               strerror(errno));
                 return -1;
             }
             num_elements = ((buffer[0] * 256 + buffer[1]) * 256 + buffer[2]) * 256 + buffer[3];
@@ -2388,19 +2228,15 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
 
             if (dataRepresentationTemplate == 0 || dataRepresentationTemplate == 1)
             {
-                if (read(product->fd, &referenceValue, 4) < 0)
+                if (read_bytes((coda_product *)product, file_offset, 4, &referenceValue) < 0)
                 {
-                    coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                                   strerror(errno));
                     return -1;
                 }
 #ifndef WORDS_BIGENDIAN
                 swap_float(&referenceValue);
 #endif
-                if (read(product->fd, buffer, 5) < 0)
+                if (read_bytes((coda_product *)product, file_offset + 4, 5, buffer) < 0)
                 {
-                    coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                                   strerror(errno));
                     return -1;
                 }
 
@@ -2424,15 +2260,6 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
             if (section_size > 20)
             {
                 file_offset += section_size - 20;
-                if (lseek(product->fd, (off_t)(section_size - 20), SEEK_CUR) < 0)
-                {
-                    char file_offset_str[21];
-
-                    coda_str64(file_offset, file_offset_str);
-                    coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %s in file %s (%s)",
-                                   file_offset_str, product->filename, strerror(errno));
-                    return -1;
-                }
             }
 
             prev_section = 5;
@@ -2447,10 +2274,8 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                 return -1;
             }
 
-            if (read(product->fd, buffer, 1) < 0)
+            if (read_bytes((coda_product *)product, file_offset, 1, buffer) < 0)
             {
-                coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                               strerror(errno));
                 return -1;
             }
             if (*buffer == 0)
@@ -2482,15 +2307,6 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
             if (section_size > 6)
             {
                 file_offset += section_size - 6;
-                if (lseek(product->fd, (off_t)(section_size - 6), SEEK_CUR) < 0)
-                {
-                    char file_offset_str[21];
-
-                    coda_str64(file_offset, file_offset_str);
-                    coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %s in file %s (%s)",
-                                   file_offset_str, product->filename, strerror(errno));
-                    return -1;
-                }
             }
 
             prev_section = 6;
@@ -2593,38 +2409,16 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
             if (has_bitmask)
             {
                 /* read bitmask array */
-                bitmask = malloc(bitmask_length * sizeof(uint8_t));
+                bitmask = malloc((size_t)bitmask_length * sizeof(uint8_t));
                 if (bitmask == NULL)
                 {
                     coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
                                    (long)(bitmask_length * sizeof(uint8_t)), __FILE__, __LINE__);
                     return -1;
                 }
-                if (lseek(product->fd, (off_t)bitmask_offset, SEEK_SET) < 0)
-                {
-                    char file_offset_str[21];
-
-                    free(bitmask);
-                    coda_str64(bitmask_offset, file_offset_str);
-                    coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %s in file %s (%s)",
-                                   file_offset_str, product->filename, strerror(errno));
-                    return -1;
-                }
-                if (read(product->fd, bitmask, bitmask_length) < 0)
+                if (read_bytes((coda_product *)product, bitmask_offset, bitmask_length, bitmask) < 0)
                 {
                     free(bitmask);
-                    coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                                   strerror(errno));
-                    return -1;
-                }
-                if (lseek(product->fd, (off_t)file_offset, SEEK_SET) < 0)
-                {
-                    char file_offset_str[21];
-
-                    free(bitmask);
-                    coda_str64(file_offset, file_offset_str);
-                    coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %s in file %s (%s)",
-                                   file_offset_str, product->filename, strerror(errno));
                     return -1;
                 }
             }
@@ -2643,15 +2437,6 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
             if (section_size > 5)
             {
                 file_offset += section_size - 5;
-                if (lseek(product->fd, (off_t)(section_size - 5), SEEK_CUR) < 0)
-                {
-                    char file_offset_str[21];
-
-                    coda_str64(file_offset, file_offset_str);
-                    coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %s in file %s (%s)",
-                                   file_offset_str, product->filename, strerror(errno));
-                    return -1;
-                }
             }
 
             prev_section = 7;
@@ -2667,10 +2452,8 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
         }
 
         /* read first four bytes of next section */
-        if (read(product->fd, buffer, 4) < 0)
+        if (read_bytes((coda_product *)product, file_offset, 4, buffer) < 0)
         {
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                           strerror(errno));
             return -1;
         }
         file_offset += 4;
@@ -2694,7 +2477,6 @@ int coda_grib_open(const char *filename, int64_t file_size, const coda_product_d
     coda_dynamic_type *type;
     coda_grib_product *grib_product;
     long message_number;
-    int open_flags;
     uint8_t buffer[28];
     int64_t message_size;
     int64_t file_offset = 0;
@@ -2723,32 +2505,22 @@ int coda_grib_open(const char *filename, int64_t file_size, const coda_product_d
 #endif
     grib_product->use_mmap = 0;
     grib_product->fd = -1;
-    grib_product->mmap_ptr = NULL;
-#ifdef WIN32
-    grib_product->file_mapping = INVALID_HANDLE_VALUE;
-    grib_product->file = INVALID_HANDLE_VALUE;
-#endif
+
     grib_product->grib_version = -1;
     grib_product->record_size = 0;
 
     grib_product->filename = strdup(filename);
     if (grib_product->filename == NULL)
     {
-        coda_grib_close((coda_product *)product);
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate filename string) (%s:%u)",
                        __FILE__, __LINE__);
+        coda_grib_close((coda_product *)product);
         return -1;
     }
 
-    open_flags = O_RDONLY;
-#ifdef WIN32
-    open_flags |= _O_BINARY;
-#endif
-    grib_product->fd = open(filename, open_flags);
-    if (grib_product->fd < 0)
+    if (coda_bin_product_open((coda_bin_product *)grib_product) != 0)
     {
-        coda_grib_close((coda_product *)grib_product);
-        coda_set_error(CODA_ERROR_FILE_OPEN, "could not open file %s (%s)", filename, strerror(errno));
+        coda_grib_close((coda_product *)product);
         return -1;
     }
 
@@ -2761,11 +2533,9 @@ int coda_grib_open(const char *filename, int64_t file_size, const coda_product_d
         buffer[0] = '\0';
         while (file_offset < file_size - 1 && buffer[0] != 'G')
         {
-            if (read(grib_product->fd, buffer, 1) < 0)
+            if (read_bytes_in_bounds((coda_product *)grib_product, file_offset, 1, buffer) < 0)
             {
                 coda_grib_close((coda_product *)grib_product);
-                coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", grib_product->filename,
-                               strerror(errno));
                 return -1;
             }
             file_offset++;
@@ -2778,24 +2548,22 @@ int coda_grib_open(const char *filename, int64_t file_size, const coda_product_d
         file_offset--;
 
         /* Section 0: Indicator Section */
-        /* we already read the 'G' character, now read the rest of the section */
-        if (read(grib_product->fd, &buffer[1], 7) < 0)
+        if (read_bytes((coda_product *)grib_product, file_offset, 8, buffer) < 0)
         {
             coda_grib_close((coda_product *)grib_product);
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", filename, strerror(errno));
             return -1;
         }
         if (buffer[0] != 'G' || buffer[1] != 'R' || buffer[2] != 'I' || buffer[3] != 'B')
         {
-            coda_grib_close((coda_product *)grib_product);
             coda_set_error(CODA_ERROR_PRODUCT, "invalid indicator for message %ld in %s", message_number, filename);
+            coda_grib_close((coda_product *)grib_product);
             return -1;
         }
         if (buffer[7] != 1 && buffer[7] != 2)
         {
-            coda_grib_close((coda_product *)grib_product);
             coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, "unsupported GRIB format version (%d) for message %ld for "
                            "file %s", (int)buffer[7], message_number, filename);
+            coda_grib_close((coda_product *)grib_product);
             return -1;
         }
         if (grib_product->grib_version < 0)
@@ -2804,9 +2572,9 @@ int coda_grib_open(const char *filename, int64_t file_size, const coda_product_d
         }
         else if (grib_product->grib_version != buffer[7])
         {
-            coda_grib_close((coda_product *)grib_product);
             coda_set_error(CODA_ERROR_PRODUCT, "mixed GRIB versions within a single file not supported for file %s",
                            filename);
+            coda_grib_close((coda_product *)grib_product);
             return -1;
         }
 
@@ -2840,10 +2608,9 @@ int coda_grib_open(const char *filename, int64_t file_size, const coda_product_d
                     (coda_dynamic_type *)coda_mem_array_new((coda_type_array *)grib_type[grib2_root]);
             }
 
-            if (read(grib_product->fd, &message_size, 8) < 0)
+            if (read_bytes((coda_product *)grib_product, file_offset + 8, 8, &message_size) < 0)
             {
                 coda_grib_close((coda_product *)grib_product);
-                coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", filename, strerror(errno));
                 return -1;
             }
 #ifndef WORDS_BIGENDIAN
@@ -2873,123 +2640,7 @@ int coda_grib_open(const char *filename, int64_t file_size, const coda_product_d
         }
 
         file_offset += message_size;
-        if (lseek(grib_product->fd, (off_t)file_offset, SEEK_SET) < 0)
-        {
-            char file_offset_str[21];
-
-            coda_grib_close((coda_product *)grib_product);
-            coda_str64(file_offset, file_offset_str);
-            coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %s in file %s (%s)", file_offset_str,
-                           filename, strerror(errno));
-            return -1;
-        }
-
         message_number++;
-    }
-
-
-    if (coda_option_use_mmap)
-    {
-        /* Perform an mmap() of the file, filling the following fields:
-         *   product->use_mmap = 1
-         *   product->file         (windows only )
-         *   product->file_mapping (windows only )
-         *   product->mmap_ptr     (windows, *nix)
-         */
-        grib_product->use_mmap = 1;
-#ifdef WIN32
-        close(grib_product->fd);
-        grib_product->file = CreateFile(grib_product->filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
-                                        FILE_ATTRIBUTE_NORMAL, NULL);
-        if (grib_product->file == INVALID_HANDLE_VALUE)
-        {
-            if (GetLastError() == ERROR_FILE_NOT_FOUND)
-            {
-                coda_set_error(CODA_ERROR_FILE_NOT_FOUND, "could not find %s", grib_product->filename);
-            }
-            else
-            {
-                LPVOID lpMsgBuf;
-
-                if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-                                  FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(),
-                                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&lpMsgBuf, 0, NULL) == 0)
-                {
-                    /* Set error without additional information */
-                    coda_set_error(CODA_ERROR_FILE_OPEN, "could not open file %s", grib_product->filename);
-                }
-                else
-                {
-                    coda_set_error(CODA_ERROR_FILE_OPEN, "could not open file %s (%s)", grib_product->filename,
-                                   (LPCTSTR) lpMsgBuf);
-                    LocalFree(lpMsgBuf);
-                }
-            }
-            coda_grib_close((coda_product *)grib_product);
-            return -1;  /* indicate failure */
-        }
-
-        /* Try to do file mapping */
-        grib_product->file_mapping = CreateFileMapping(grib_product->file, NULL, PAGE_READONLY, 0,
-                                                       (int32_t)grib_product->file_size, 0);
-        if (grib_product->file_mapping == NULL)
-        {
-            LPVOID lpMsgBuf;
-
-            if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-                              FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(),
-                              MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&lpMsgBuf, 0, NULL) == 0)
-            {
-                /* Set error without additional information */
-                coda_set_error(CODA_ERROR_FILE_OPEN, "could not map file %s into memory", grib_product->filename);
-            }
-            else
-            {
-                coda_set_error(CODA_ERROR_FILE_OPEN, "could not map file %s into memory (%s)", grib_product->filename,
-                               (LPCTSTR) lpMsgBuf);
-                LocalFree(lpMsgBuf);
-            }
-            coda_grib_close((coda_product *)grib_product);
-            return -1;
-        }
-
-        grib_product->mmap_ptr = (uint8_t *)MapViewOfFile(grib_product->file_mapping, FILE_MAP_READ, 0, 0, 0);
-        if (grib_product->mmap_ptr == NULL)
-        {
-            LPVOID lpMsgBuf;
-
-            if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-                              FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(),
-                              MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&lpMsgBuf, 0, NULL) == 0)
-            {
-                /* Set error without additional information */
-                coda_set_error(CODA_ERROR_FILE_OPEN, "could not map file %s into memory", grib_product->filename);
-            }
-            else
-            {
-                coda_set_error(CODA_ERROR_FILE_OPEN, "could not map file %s into memory (%s)", grib_product->filename,
-                               (LPCTSTR) lpMsgBuf);
-                LocalFree(lpMsgBuf);
-            }
-            coda_grib_close((coda_product *)grib_product);
-            return -1;
-        }
-#else
-        grib_product->mmap_ptr = (uint8_t *)mmap(0, grib_product->file_size, PROT_READ, MAP_SHARED, grib_product->fd,
-                                                 0);
-        if (grib_product->mmap_ptr == (uint8_t *)MAP_FAILED)
-        {
-            coda_set_error(CODA_ERROR_FILE_OPEN, "could not map file %s into memory (%s)", grib_product->filename,
-                           strerror(errno));
-            grib_product->mmap_ptr = NULL;
-            close(grib_product->fd);
-            coda_grib_close((coda_product *)grib_product);
-            return -1;
-        }
-
-        /* close file descriptor (the file handle is not needed anymore) */
-        close(grib_product->fd);
-#endif
     }
 
     *product = (coda_product *)grib_product;
@@ -3005,34 +2656,9 @@ int coda_grib_close(coda_product *product)
         coda_dynamic_type_delete(grib_product->root_type);
     }
 
-    if (grib_product->use_mmap)
+    if (coda_bin_product_close((coda_bin_product *)grib_product) != 0)
     {
-#ifdef WIN32
-        if (grib_product->mmap_ptr != NULL)
-        {
-            UnmapViewOfFile(grib_product->mmap_ptr);
-        }
-        if (grib_product->file_mapping != INVALID_HANDLE_VALUE)
-        {
-            CloseHandle(grib_product->file_mapping);
-        }
-        if (grib_product->file != INVALID_HANDLE_VALUE)
-        {
-            CloseHandle(grib_product->file);
-        }
-#else
-        if (grib_product->mmap_ptr != NULL)
-        {
-            munmap((void *)grib_product->mmap_ptr, grib_product->file_size);
-        }
-#endif
-    }
-    else
-    {
-        if (grib_product->fd >= 0)
-        {
-            close(grib_product->fd);
-        }
+        return -1;
     }
 
     if (grib_product->filename != NULL)

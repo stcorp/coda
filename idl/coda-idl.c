@@ -1853,7 +1853,7 @@ static int idl_coda_fetch_datahandle_to_VPTR(struct IDL_CodaDataHandle *datahand
                     IDL_MEMINT dims;
                     char *fill;
 
-                    dims = size;
+                    dims = (long)size;
                     fill = IDL_MakeTempArray(IDL_TYP_BYTE, 1, &dims, FALSE, &tmpval);
                     if (coda_cursor_read_bytes(&datahandle->cursor, (uint8_t *)fill, 0, dims) != 0)
                     {

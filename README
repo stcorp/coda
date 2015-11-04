@@ -1,19 +1,19 @@
 Copyright (C) 2007-2012 S[&]T, The Netherlands
 
-                CODA 2.6 Release Notes
+                CODA 2.7 Release Notes
 
 
 CODA is the Common Data Access framework that allows reading of scientific data
 from various data formats, including structured ascii, structured binary, XML,
-netCDF, GRIB, HDF4, and HDF5. It provides a single consistent hierarchical view
-on data independent of the underlying storage format.
+netCDF, CDF, HDF4, HDF5, GRIB, RINEX and SP3. It provides a single consistent
+hierarchical view on data independent of the underlying storage format.
 
 CODA is used as a core component in various ESA software among which the
 Basic Envisat Atmospheric Toolbox (BEAT) and the Basic Radar Altimetry Toolbox
 (BRAT).
 
 The CODA software package comes with interfaces for C, Fortran, IDL, MATLAB,
-and Python and several useful command-line tools.
+Python, and Java and several useful command-line tools.
 
 In order to make use of the data acces facilities of CODA, you will need to
 have the CODA product format definition files (.codadef files) for the data
@@ -22,9 +22,10 @@ software package does not come with any product format definition files itself!
 The get access to .codadef files have a look at the software packages that make
 use of CODA.
 
-Since netCDF, HDF4, and HDF5 files are selfdescribing (i.e. their format can be
-determined from the file itself), you can still use CODA without any .codadef
-files to access netCDF, GRIB, HDF4, and HDF5 data.
+For files in netCDF, CDF, HDF4, HDF5, RINEX or SP3 format you can use CODA
+without any .codadef files, since for these formats CODA either comes with a
+build in definition of the format or CODA determines the format from the file
+itself.
 
 
 Changes

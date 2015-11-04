@@ -31,6 +31,7 @@
 #include "coda-bin.h"
 #include "coda-mem.h"
 #include "coda-xml.h"
+#include "coda-cdf.h"
 #include "coda-netcdf.h"
 #include "coda-grib.h"
 #ifdef HAVE_HDF4
@@ -518,6 +519,8 @@ static int read_int8(const coda_cursor *cursor, int8_t *dst)
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_read_int8(cursor, dst);
         case coda_backend_netcdf:
             return coda_netcdf_cursor_read_int8(cursor, dst);
         case coda_backend_grib:
@@ -563,6 +566,8 @@ static int read_uint8(const coda_cursor *cursor, uint8_t *dst)
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_read_uint8(cursor, dst);
         case coda_backend_netcdf:
         case coda_backend_grib:
             break;
@@ -607,6 +612,8 @@ static int read_int16(const coda_cursor *cursor, int16_t *dst)
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_read_int16(cursor, dst);
         case coda_backend_netcdf:
             return coda_netcdf_cursor_read_int16(cursor, dst);
         case coda_backend_grib:
@@ -652,6 +659,8 @@ static int read_uint16(const coda_cursor *cursor, uint16_t *dst)
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_read_uint16(cursor, dst);
         case coda_backend_netcdf:
         case coda_backend_grib:
             break;
@@ -697,6 +706,8 @@ static int read_int32(const coda_cursor *cursor, int32_t *dst)
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_read_int32(cursor, dst);
         case coda_backend_netcdf:
             return coda_netcdf_cursor_read_int32(cursor, dst);
         case coda_backend_grib:
@@ -742,6 +753,8 @@ static int read_uint32(const coda_cursor *cursor, uint32_t *dst)
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_read_uint32(cursor, dst);
         case coda_backend_netcdf:
         case coda_backend_grib:
             break;
@@ -786,6 +799,8 @@ static int read_int64(const coda_cursor *cursor, int64_t *dst)
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_read_int64(cursor, dst);
         case coda_backend_netcdf:
         case coda_backend_grib:
             break;
@@ -830,6 +845,7 @@ static int read_uint64(const coda_cursor *cursor, uint64_t *dst)
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
         case coda_backend_netcdf:
         case coda_backend_grib:
             break;
@@ -874,6 +890,8 @@ static int read_float(const coda_cursor *cursor, float *dst)
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_read_float(cursor, dst);
         case coda_backend_netcdf:
             return coda_netcdf_cursor_read_float(cursor, dst);
         case coda_backend_grib:
@@ -919,6 +937,8 @@ static int read_double(const coda_cursor *cursor, double *dst)
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_read_double(cursor, dst);
         case coda_backend_netcdf:
             return coda_netcdf_cursor_read_double(cursor, dst);
         case coda_backend_grib:
@@ -945,8 +965,7 @@ static int read_char(const coda_cursor *cursor, char *dst)
         case coda_backend_ascii:
             return coda_ascii_cursor_read_char(cursor, dst, -1);
         case coda_backend_binary:
-            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a char data type");
-            return -1;
+            return coda_bin_cursor_read_char(cursor, dst);
         case coda_backend_memory:
             return coda_mem_cursor_read_char(cursor, dst);
         case coda_backend_xml:
@@ -965,6 +984,8 @@ static int read_char(const coda_cursor *cursor, char *dst)
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_read_char(cursor, dst);
         case coda_backend_netcdf:
             return coda_netcdf_cursor_read_char(cursor, dst);
         case coda_backend_grib:
@@ -991,7 +1012,7 @@ static int read_string(const coda_cursor *cursor, char *dst, long dst_size)
         case coda_backend_ascii:
             return coda_ascii_cursor_read_string(cursor, dst, dst_size, -1);
         case coda_backend_binary:
-            break;
+            return coda_bin_cursor_read_string(cursor, dst, dst_size);
         case coda_backend_memory:
             return coda_mem_cursor_read_string(cursor, dst, dst_size);
         case coda_backend_xml:
@@ -1010,6 +1031,8 @@ static int read_string(const coda_cursor *cursor, char *dst, long dst_size)
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            return coda_cdf_cursor_read_string(cursor, dst, dst_size);
         case coda_backend_netcdf:
             return coda_netcdf_cursor_read_string(cursor, dst, dst_size);
         case coda_backend_grib:
@@ -1027,7 +1050,7 @@ static int read_int8_array(const coda_cursor *cursor, int8_t *dst, coda_array_or
     int result;
 
     result = coda_qiap_perform_actions_for_int8_array(cursor, dst);
-    if (result < 0)
+    if (result != 0)
     {
         if (result == 1 && array_ordering != coda_array_ordering_c)
         {
@@ -1083,6 +1106,12 @@ static int read_int8_array(const coda_cursor *cursor, int8_t *dst, coda_array_or
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            if (coda_cdf_cursor_read_int8_array(cursor, dst) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_netcdf:
             if (coda_netcdf_cursor_read_int8_array(cursor, dst) != 0)
             {
@@ -1108,7 +1137,7 @@ static int read_uint8_array(const coda_cursor *cursor, uint8_t *dst, coda_array_
     int result;
 
     result = coda_qiap_perform_actions_for_uint8_array(cursor, dst);
-    if (result < 0)
+    if (result != 0)
     {
         if (result == 1 && array_ordering != coda_array_ordering_c)
         {
@@ -1164,6 +1193,12 @@ static int read_uint8_array(const coda_cursor *cursor, uint8_t *dst, coda_array_
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            if (coda_cdf_cursor_read_uint8_array(cursor, dst) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_netcdf:
         case coda_backend_grib:
             assert(0);
@@ -1184,7 +1219,7 @@ static int read_int16_array(const coda_cursor *cursor, int16_t *dst, coda_array_
     int result;
 
     result = coda_qiap_perform_actions_for_int16_array(cursor, dst);
-    if (result < 0)
+    if (result != 0)
     {
         if (result == 1 && array_ordering != coda_array_ordering_c)
         {
@@ -1240,6 +1275,12 @@ static int read_int16_array(const coda_cursor *cursor, int16_t *dst, coda_array_
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            if (coda_cdf_cursor_read_int16_array(cursor, dst) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_netcdf:
             if (coda_netcdf_cursor_read_int16_array(cursor, dst) != 0)
             {
@@ -1265,7 +1306,7 @@ static int read_uint16_array(const coda_cursor *cursor, uint16_t *dst, coda_arra
     int result;
 
     result = coda_qiap_perform_actions_for_uint16_array(cursor, dst);
-    if (result < 0)
+    if (result != 0)
     {
         if (result == 1 && array_ordering != coda_array_ordering_c)
         {
@@ -1321,6 +1362,12 @@ static int read_uint16_array(const coda_cursor *cursor, uint16_t *dst, coda_arra
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            if (coda_cdf_cursor_read_uint16_array(cursor, dst) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_netcdf:
         case coda_backend_grib:
             assert(0);
@@ -1341,7 +1388,7 @@ static int read_int32_array(const coda_cursor *cursor, int32_t *dst, coda_array_
     int result;
 
     result = coda_qiap_perform_actions_for_int32_array(cursor, dst);
-    if (result < 0)
+    if (result != 0)
     {
         if (result == 1 && array_ordering != coda_array_ordering_c)
         {
@@ -1397,6 +1444,12 @@ static int read_int32_array(const coda_cursor *cursor, int32_t *dst, coda_array_
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            if (coda_cdf_cursor_read_int32_array(cursor, dst) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_netcdf:
             if (coda_netcdf_cursor_read_int32_array(cursor, dst) != 0)
             {
@@ -1422,7 +1475,7 @@ static int read_uint32_array(const coda_cursor *cursor, uint32_t *dst, coda_arra
     int result;
 
     result = coda_qiap_perform_actions_for_uint32_array(cursor, dst);
-    if (result < 0)
+    if (result != 0)
     {
         if (result == 1 && array_ordering != coda_array_ordering_c)
         {
@@ -1478,6 +1531,12 @@ static int read_uint32_array(const coda_cursor *cursor, uint32_t *dst, coda_arra
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            if (coda_cdf_cursor_read_uint32_array(cursor, dst) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_netcdf:
         case coda_backend_grib:
             assert(0);
@@ -1498,7 +1557,7 @@ static int read_int64_array(const coda_cursor *cursor, int64_t *dst, coda_array_
     int result;
 
     result = coda_qiap_perform_actions_for_int64_array(cursor, dst);
-    if (result < 0)
+    if (result != 0)
     {
         if (result == 1 && array_ordering != coda_array_ordering_c)
         {
@@ -1554,6 +1613,12 @@ static int read_int64_array(const coda_cursor *cursor, int64_t *dst, coda_array_
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            if (coda_cdf_cursor_read_int64_array(cursor, dst) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_netcdf:
         case coda_backend_grib:
             assert(0);
@@ -1574,7 +1639,7 @@ static int read_uint64_array(const coda_cursor *cursor, uint64_t *dst, coda_arra
     int result;
 
     result = coda_qiap_perform_actions_for_uint64_array(cursor, dst);
-    if (result < 0)
+    if (result != 0)
     {
         if (result == 1 && array_ordering != coda_array_ordering_c)
         {
@@ -1630,6 +1695,7 @@ static int read_uint64_array(const coda_cursor *cursor, uint64_t *dst, coda_arra
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
         case coda_backend_netcdf:
         case coda_backend_grib:
             assert(0);
@@ -1650,7 +1716,7 @@ static int read_float_array(const coda_cursor *cursor, float *dst, coda_array_or
     int result;
 
     result = coda_qiap_perform_actions_for_float_array(cursor, dst);
-    if (result < 0)
+    if (result != 0)
     {
         if (result == 1 && array_ordering != coda_array_ordering_c)
         {
@@ -1706,6 +1772,12 @@ static int read_float_array(const coda_cursor *cursor, float *dst, coda_array_or
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            if (coda_cdf_cursor_read_float_array(cursor, dst) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_netcdf:
             if (coda_netcdf_cursor_read_float_array(cursor, dst) != 0)
             {
@@ -1734,7 +1806,7 @@ static int read_double_array(const coda_cursor *cursor, double *dst, coda_array_
     int result;
 
     result = coda_qiap_perform_actions_for_double_array(cursor, dst);
-    if (result < 0)
+    if (result != 0)
     {
         if (result == 1 && array_ordering != coda_array_ordering_c)
         {
@@ -1790,6 +1862,12 @@ static int read_double_array(const coda_cursor *cursor, double *dst, coda_array_
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            if (coda_cdf_cursor_read_double_array(cursor, dst) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_netcdf:
             if (coda_netcdf_cursor_read_double_array(cursor, dst) != 0)
             {
@@ -1815,7 +1893,7 @@ static int read_char_array(const coda_cursor *cursor, char *dst, coda_array_orde
     int result;
 
     result = coda_qiap_perform_actions_for_char_array(cursor, dst);
-    if (result < 0)
+    if (result != 0)
     {
         if (result == 1 && array_ordering != coda_array_ordering_c)
         {
@@ -1871,6 +1949,12 @@ static int read_char_array(const coda_cursor *cursor, char *dst, coda_array_orde
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_cdf:
+            if (coda_cdf_cursor_read_char_array(cursor, dst) != 0)
+            {
+                return -1;
+            }
+            break;
         case coda_backend_netcdf:
             if (coda_netcdf_cursor_read_char_array(cursor, dst) != 0)
             {
@@ -2957,6 +3041,7 @@ LIBCODA_API int coda_cursor_read_bits(const coda_cursor *cursor, uint8_t *dst, i
             return coda_xml_cursor_read_bits(cursor, dst, bit_offset, bit_length);
         case coda_backend_hdf4:
         case coda_backend_hdf5:
+        case coda_backend_cdf:
         case coda_backend_netcdf:
         case coda_backend_grib:
             break;
@@ -3017,10 +3102,11 @@ LIBCODA_API int coda_cursor_read_bytes(const coda_cursor *cursor, uint8_t *dst, 
             return coda_mem_cursor_read_bytes(cursor, dst, offset, length);
         case coda_backend_xml:
             return coda_xml_cursor_read_bytes(cursor, dst, offset, length);
-        case coda_backend_grib:
         case coda_backend_hdf4:
         case coda_backend_hdf5:
+        case coda_backend_cdf:
         case coda_backend_netcdf:
+        case coda_backend_grib:
             break;
     }
 

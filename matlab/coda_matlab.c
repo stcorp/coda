@@ -143,7 +143,7 @@ static coda_product *coda_matlab_get_product_file(const mxArray *mx_handle)
     return NULL;
 }
 
-static void coda_matlab_cleanup()
+static void coda_matlab_cleanup(void)
 {
     /* close all open files */
     while (coda_env.handle != NULL)
@@ -743,7 +743,7 @@ static void coda_matlab_eval(int nlhs, mxArray *plhs[], int nrhs, const mxArray 
                 }
                 if (coda_env.option_convert_numbers_to_double || !coda_env.option_use_64bit_integer)
                 {
-                    plhs[0] = mxCreateDoubleScalar(value);
+                    plhs[0] = mxCreateDoubleScalar((double)value);
                 }
                 else
                 {

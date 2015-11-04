@@ -35,6 +35,8 @@
 /* This defines the amount of items that will be allocated per block for an auto-growing array (using realloc) */
 #define BLOCK_SIZE 16
 
+#define bit_size_to_byte_size(x) (((x) >> 3) + ((((uint8_t)(x)) & 0x7) != 0))
+
 enum coda_endianness_enum
 {
     coda_big_endian,    /**< Most significant byte comes first. */
@@ -54,6 +56,7 @@ enum coda_backend_enum
     coda_backend_xml,   /**< Backend that reads data from an XML file */
     coda_backend_hdf4,  /**< Backend that reads data via the HDF4 library */
     coda_backend_hdf5,  /**< Backend that reads data via the HDF5 library */
+    coda_backend_cdf,   /**< Backend that reads data from CDF files */
     coda_backend_netcdf,      /**< Backend that reads data from netCDF 3.x files */
     coda_backend_grib   /**< Backend that reads data from GRIB files */
 };

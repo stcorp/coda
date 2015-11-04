@@ -1702,14 +1702,14 @@ static int handle_observation_definition(ingest_info *info, char *line)
     coda_mem_record_add_field(sys, "num_obs_types", value, 0);
     descriptor_array = coda_mem_array_new((coda_type_array *)rinex_type[rinex_sys_descriptor_array]);
 
-    sat_info->observable = malloc(num_types * sizeof(char *));
+    sat_info->observable = malloc((size_t)num_types * sizeof(char *));
     if (sat_info->observable == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
                        (long)num_types * sizeof(char *), __FILE__, __LINE__);
         return -1;
     }
-    sat_info->num_observables = num_types;
+    sat_info->num_observables = (int)num_types;
     for (i = 0; i < num_types; i++)
     {
         sat_info->observable[i] = NULL;
@@ -2037,7 +2037,7 @@ static int read_observation_header(ingest_info *info)
                 return -1;
             }
             second = (int)second_double;
-            if (coda_datetime_to_double(year, month, day, hour, minute, second, (second_double - second) * 1e6,
+            if (coda_datetime_to_double(year, month, day, hour, minute, second, (int)((second_double - second) * 1e6),
                                         &double_value) != 0)
             {
                 coda_set_error(CODA_ERROR_FILE_READ, "invalid time value (line: %ld, byte offset: %ld)",
@@ -2087,7 +2087,7 @@ static int read_observation_header(ingest_info *info)
                 return -1;
             }
             second = (int)second_double;
-            if (coda_datetime_to_double(year, month, day, hour, minute, second, (second_double - second) * 1e6,
+            if (coda_datetime_to_double(year, month, day, hour, minute, second, (int)((second_double - second) * 1e6),
                                         &double_value) != 0)
             {
                 coda_set_error(CODA_ERROR_FILE_READ, "invalid time value (line: %ld, byte offset: %ld)",
@@ -2366,7 +2366,7 @@ static int read_observation_records(ingest_info *info)
                 return -1;
             }
             second = (int)second_double;
-            if (coda_datetime_to_double(year, month, day, hour, minute, second, (second_double - second) * 1e6,
+            if (coda_datetime_to_double(year, month, day, hour, minute, second, (int)((second_double - second) * 1e6),
                                         &double_value) != 0)
             {
                 coda_set_error(CODA_ERROR_FILE_READ, "invalid time value (line: %ld, byte offset: %ld)",
@@ -3396,7 +3396,7 @@ static int read_clock_records(ingest_info *info)
                 return -1;
             }
             second = (int)second_double;
-            if (coda_datetime_to_double(year, month, day, hour, minute, second, (second_double - second) * 1e6,
+            if (coda_datetime_to_double(year, month, day, hour, minute, second, (int)((second_double - second) * 1e6),
                                         &double_value) != 0)
             {
                 coda_set_error(CODA_ERROR_FILE_READ, "invalid time value (line: %ld, byte offset: %ld)",
