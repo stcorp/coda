@@ -1,3 +1,14 @@
+2.4.1 2012-04-18
+~~~~~~~~~~~~~~~~
+
+* Fixed handling of nan and inf time values in the IDL interface when
+  the TimeUnitDays option was enabled.
+
+* Filenames of product definition html documentation files from 'codadd doc'
+  are now based on product definition name instead of product type + version.
+
+* Fixed problem with compilation of Fortran interface.
+
 2.4 2012-02-23
 ~~~~~~~~~~~~~~
 
@@ -15,6 +26,8 @@
 * Added missing utc datetime functions to Fortran interface.
 
 * Fixed issue in printing of attributes for 'codadd list'.
+
+* Fixed memory issues with MATLAB interface on 64-bit systems.
 
 2.3.1 2012-01-21
 ~~~~~~~~~~~~~~~~

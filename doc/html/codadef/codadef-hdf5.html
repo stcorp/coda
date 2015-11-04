@@ -26,7 +26,7 @@
 
       <p>A Data Set is a multi-dimensional array of some underlying data type. In HDF5 it is possible to define your own data types for this, however this is only supported in a very limited way by CODA. CODA supports Data Sets that use either one of the predefined basic data types or use a compound data type that consists of only basic data types. The data types and their mapping to the CODA basic data types are summarized in the table below.</p>
 
-      <table class="fancy" border="1" cellspacing="0">
+      <table class="fancy">
       <tr><th>HDF5&nbsp;type&nbsp;class</th><th>CODA&nbsp;type&nbsp;class</th><th>CODA&nbsp;read&nbsp;type</th></tr>
       <tr><td>H5T_INTEGER</td><td>integer</td><td>The read type depends on the sign and byte size attributes of the HDF5 data type. int8 and uint8 is used if the byte size is 1, int16 and uint16 if it is 2, int32 and uint32 if it is 3 or 4, and int64 and uint64 if it is 5, 6, 7, or 8 bytes in size. Larger integer data types are not supported by CODA.</td></tr>
       <tr><td>H5T_FLOAT</td><td>real</td><td>CODA uses a float for H5T_NATIVE_FLOAT and a double for H5T_NATIVE_DOUBLE. Other HDF5 floating point types are not supported.</td></tr>

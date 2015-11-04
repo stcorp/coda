@@ -83,9 +83,11 @@ if BUILD_JAVA
 java_LTLIBRARIES = libcoda_jni.la
 endif
 
-# empty dir for .codadef definition files
+# empty directory for .codadef definition files
 
-definitions_DATA =
+install_codadefdir:
+	test -z "$(DESTDIR)$(definitionsdir)" || $(MKDIR_P) "$(DESTDIR)$(definitionsdir)"
+INSTALL_DATA_HOOK_TARGETS += install_codadefdir
 
 # headers
 
@@ -505,7 +507,7 @@ python/codac.c: libcoda/coda.h.in $(srcdir)/python/codac.i \
     $(srcdir)/python/coda_typemaps.i \
     $(srcdir)/python/coda_ignore.i \
     $(srcdir)/python/coda_rename.i 
-	@$(mkinstalldirs) python
+	@$(MKDIR_P) python
 @AMDEP_TRUE@	source='$(srcdir)/python/codac.i' object='python/codac.c' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@	depfile='$(DEPDIR)/codac.Pc' tmpdepfile='$(DEPDIR)/codac.TPc' @AMDEPBACKSLASH@
 @AMDEP_TRUE@	depmode='none' $(depcomp) @AMDEPBACKSLASH@
@@ -532,7 +534,7 @@ endif
 java/coda_jni.c: libcoda/coda.h.in $(srcdir)/java/codac.i \
     $(srcdir)/java/coda_ignore.i \
     $(srcdir)/java/coda_rename.i 
-	@$(mkinstalldirs) java/nl/stcorp/coda
+	@$(MKDIR_P) java/nl/stcorp/coda
 @AMDEP_TRUE@	source='$(srcdir)/java/codac.i' object='java/coda_jni.c' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@	depfile='$(DEPDIR)/coda_jni.Pc' tmpdepfile='$(DEPDIR)/coda_jni.TPc' @AMDEPBACKSLASH@
 @AMDEP_TRUE@	depmode='none' $(depcomp) @AMDEPBACKSLASH@
@@ -753,7 +755,7 @@ libcoda_doc: coda.h libcoda/doc/Doxyfile
 	else \
 	  $(MAKE) libcoda_docclean ; \
 	  echo "creating libcoda documentation" ; \
-	  test -d doc/html || $(mkinstalldirs) doc/html ; \
+	  test -d doc/html || $(MKDIR_P) doc/html ; \
 	  cd libcoda/doc ; \
 	  $(DOXYGEN) Doxyfile ; \
 	  cd ../.. ; \
@@ -783,7 +785,7 @@ libqiap_doc: libcoda/qiap/doc/Doxyfile
 	else \
 	  $(MAKE) libqiap_docclean ; \
 	  echo "creating libqiap documentation" ; \
-	  test -d doc/html || $(mkinstalldirs) doc/html ; \
+	  test -d doc/html || $(MKDIR_P) doc/html ; \
 	  cd libcoda/qiap/doc ; \
 	  $(DOXYGEN) Doxyfile ; \
 	  cd ../../.. ; \
@@ -813,7 +815,7 @@ java_doc: $(java_files) java/doc/Doxyfile
 	else \
 	  $(MAKE) java_docclean ; \
 	  echo "creating coda java documentation" ; \
-	  test -d doc/html || $(mkinstalldirs) doc/html ; \
+	  test -d doc/html || $(MKDIR_P) doc/html ; \
 	  cd java/doc ; \
 	  $(DOXYGEN) Doxyfile ; \
 	  cd ../.. ; \
@@ -955,3 +957,8 @@ install-matlab:
 
 install-idl:
 	@$(MAKE) install-idldlmexecLTLIBRARIES install-idldlmexecDATA
+
+# *** cppcheck ***
+cppcheck:
+	cppcheck -q $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcoda_la_CPPFLAGS) $(CPPFLAGS) libcoda/*.c libcoda/*.h
+

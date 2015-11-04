@@ -119,18 +119,12 @@ static void idl_coda_done()
 
 static double day2sec(double day)
 {
-    int64_t usec;
-
-    usec = (int64_t)floor(day * 86400000000.0 + 0.5);
-    return usec / 1000000.0;
+    return floor(day * 86400000000.0 + 0.5) / 1000000.0;
 }
 
 static double sec2day(double sec)
 {
-    int64_t usec;
-
-    usec = (int64_t)floor(sec * 1000000.0 + 0.5);
-    return usec / 86400000000.0;
+    return floor(sec * 1000000.0 + 0.5) / 86400000000.0;
 }
 
 #define CODA_IDL_ERR_EXPECTED_SCALAR                                (-901)

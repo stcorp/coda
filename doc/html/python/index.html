@@ -214,11 +214,11 @@ import coda
       
       <p>When reading data from a product file, CODA will use the following mapping to translate the ingested data into Python data structures:</p>
 
-      <table class="fancy" border="1" cellspacing="0">
+      <table class="fancy">
         <tr><th>CODA&nbsp;class</th><th>CODA&nbsp;read&nbsp;type / CODA&nbsp;special&nbsp;type</th><th>Python data type</th></tr>
         <tr><td>record</td><td>&nbsp;</td><td><code>coda.Record</code></td></tr>
         <tr><td>array</td><td>&nbsp;</td><td>This will be a numpy array (<code>numpy.array</code>) object. The following table relates the CODA array base type to the numpy base type:
-           <table class="fancy" border="1" cellspacing="0">
+           <table class="fancy">
              <tr><th>CODA&nbsp;class</th><th>CODA&nbsp;read&nbsp;type / CODA&nbsp;special&nbsp;type</th><th>numpy base type</th></tr>
              <tr><td>record</td><td>&nbsp;</td><td>Python object (<code>coda.Record</code>)</td></tr>
              <tr><td>array</td><td>&nbsp;</td><td>Python object (a <code>numpy.array</code> object)</td></tr>
@@ -444,7 +444,7 @@ except coda.CodacError, e:
 
       <h5 id="coda_init"><code>coda.init()</code></h5>
       <p>You do not have to call this function yourself to initialize CODA. When CODA is imported in Python the <code>init</code> function will already be called for you. If, however, you call <code>coda.done</code> at any time, you can use this function to re-initialize CODA again.</p>
-      <p>Note that the <code>coda_set_definition_path</code> function is not provided in the CODA Python interface. You should use the CODA_DEFINITION environment variable to set the definition path as explained in the <a href="#initialisation">Initialisation of CODA</a> section.</p>
+      <p>Note that the <code>coda_set_definition_path</code> function is not provided in the CODA Python interface. You should use the CODA_DEFINITION environment variable to set the definition path as explained in the <a href="#codadef">CODA Definition Path</a> section.</p>
       <h5 id="coda_done"><code>coda.done()</code></h5>
       <p>If, for some reason, you want to unload the CODA package, you should first clean up CODA by calling this function. However, unloading a Python package is not a common activity, so you should rarely have to call <code>coda.done()</code>.</p>
       <h5 id="coda_set_option_bypass_special_types"><code>coda.set_option_bypass_special_types(enable)</code></h5>

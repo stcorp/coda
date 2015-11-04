@@ -8,7 +8,9 @@
       character*32 product_class
       character*32 product_type
       character*32 root_type
+C use 'integer*8 pf' for 64-bit
       integer pf
+C use 'integer*8 cursor' for 64-bit
       integer cursor
       integer type_class
       integer result

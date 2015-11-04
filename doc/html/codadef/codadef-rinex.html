@@ -24,7 +24,7 @@
       
       <p>The following table gives the mapping of header sections to CODA parameters</p>
       
-      <table class="fancy" border="1" cellspacing="0">
+      <table class="fancy">
       <tr><th>CODA path to variable</th><th>type class</th><th>read type</th><th>rinex header</th></tr>
       <tr><td>/header/format_version</td><td>real</td><td>float</td><td>RINEX VERSION / TYPE</td></tr>
       <tr><td>/header/file_type</td><td>text</td><td>char</td><td>RINEX VERSION / TYPE</td></tr>
@@ -76,7 +76,7 @@
 
       <p>The following table gives the mapping of the epoch records structure to CODA parameters. A RINEX observation file can contain multiple epoch records. Each epoch record contains the epoch (time of observation) and observations for one or more satellites. Since per satellite system the list of observation types is fixed (as defined by the 'SYS / # / OBS TYPES' header content) the observations are grouped per satellite system. Within the epoch record you will thus, if the system is applicable to the overall file, find fields for each of the type of satellite systems (<i>system</i> can be 'gps', 'glonass', 'galileo', and/or 'sbas'). The field per satellite system will then contain an array of records with the observations of the satellites of that system. Each such record contains the 2-digit number of the satellite and fields (<i>observation_type</i>) for each of the observation types (based on the names as defined by the 'SYS / # / OBS TYPES' header content). Examples of paths that you may encounter to observations are thus e.g. /record[]/gps[]/C1C/observation and /record[]/galileo[]/L1B/observation. If the LLI and/or signal strength values are not explicitly provided in the file, they will be set to 0.</p>
       
-      <table class="fancy" border="1" cellspacing="0">
+      <table class="fancy">
       <tr><th>CODA path to variable</th><th>type class</th><th>read type</th></tr>
       <tr><td>/record[]/epoch</td><td>time</td><td>double</td></tr>
       <tr><td>/record[]/flag</td><td>text</td><td>char</td></tr>
@@ -91,7 +91,7 @@
       
       <p>The following table gives the mapping of header sections to CODA parameters</p>
       
-      <table class="fancy" border="1" cellspacing="0">
+      <table class="fancy">
       <tr><th>CODA path to variable</th><th>type class</th><th>read type</th><th>rinex header</th></tr>
       <tr><td>/header/format_version</td><td>real</td><td>float</td><td>RINEX VERSION / TYPE</td></tr>
       <tr><td>/header/file_type</td><td>text</td><td>char</td><td>RINEX VERSION / TYPE</td></tr>
@@ -117,7 +117,7 @@
       
       <h3>RINEX Navigation record for GPS</h3>
 
-      <table class="fancy" border="1" cellspacing="0">
+      <table class="fancy">
       <tr><th>CODA path to variable</th><th>type class</th><th>read type</th></tr>
       <tr><td>/gps[]/number</td><td>integer</td><td>uint8</td></tr>
       <tr><td>/gps[]/epoch</td><td>time</td><td>double</td></tr>
@@ -154,7 +154,7 @@
 
       <h3>RINEX Navigation record for GLONASS</h3>
 
-      <table class="fancy" border="1" cellspacing="0">
+      <table class="fancy">
       <tr><th>CODA path to variable</th><th>type class</th><th>read type</th></tr>
       <tr><td>/glonass[]/number</td><td>integer</td><td>uint8</td></tr>
       <tr><td>/glonass[]/epoch</td><td>time</td><td>double</td></tr>
@@ -177,7 +177,7 @@
 
       <h3>RINEX Navigation record for Galileo</h3>
 
-      <table class="fancy" border="1" cellspacing="0">
+      <table class="fancy">
       <tr><th>CODA path to variable</th><th>type class</th><th>read type</th></tr>
       <tr><td>/galileo[]/number</td><td>integer</td><td>uint8</td></tr>
       <tr><td>/galileo[]/epoch</td><td>time</td><td>double</td></tr>
@@ -212,7 +212,7 @@
 
       <h3>RINEX Navigation record for SBAS</h3>
 
-      <table class="fancy" border="1" cellspacing="0">
+      <table class="fancy">
       <tr><th>CODA path to variable</th><th>type class</th><th>read type</th></tr>
       <tr><td>/sbas[]/number</td><td>integer</td><td>uint8</td></tr>
       <tr><td>/sbas[]/epoch</td><td>time</td><td>double</td></tr>
@@ -237,7 +237,7 @@
       
       <p>The following table gives the mapping of header sections to CODA parameters</p>
       
-      <table class="fancy" border="1" cellspacing="0">
+      <table class="fancy">
       <tr><th>CODA path to variable</th><th>type class</th><th>read type</th><th>rinex header v2.0</th><th>rinex header v3.0</th></tr>
       <tr><td>/header/format_version</td><td>real</td><td>float</td><td>RINEX VERSION / TYPE</td><td>RINEX VERSION / TYPE</td></tr>
       <tr><td>/header/file_type</td><td>text</td><td>char</td><td>RINEX VERSION / TYPE</td><td>RINEX VERSION / TYPE</td></tr>
@@ -276,7 +276,7 @@
 
       <p>The following table gives the mapping of the clock records structure to CODA parameters.</p>
       
-      <table class="fancy" border="1" cellspacing="0">
+      <table class="fancy">
       <tr><th>CODA path to variable</th><th>type class</th><th>read type</th></tr>
       <tr><td>/record[]/type</td><td>text</td><td>string</td></tr>
       <tr><td>/record[]/name</td><td>text</td><td>string</td></tr>

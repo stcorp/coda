@@ -248,7 +248,7 @@ int UFNAME(CODA_UTCDATETIME_TO_DOUBLE,coda_utcdatetime_to_double)(int *YEAR, int
     return coda_utcdatetime_to_double(*YEAR, *MONTH, *DAY, *HOUR, *MINUTE, *SECOND, *MUSEC, datetime);
 }
 
-int UFNAME(CODA_DOUBLE_TO_UTCDATETIME,coda_double_to_datetime)(double *datetime, int *YEAR, int *MONTH, int *DAY, int *HOUR, int *MINUTE, int *SECOND, int *MUSEC)
+int UFNAME(CODA_DOUBLE_TO_UTCDATETIME,coda_double_to_utcdatetime)(double *datetime, int *YEAR, int *MONTH, int *DAY, int *HOUR, int *MINUTE, int *SECOND, int *MUSEC)
 {
     return coda_double_to_utcdatetime(*datetime, YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC);
 }

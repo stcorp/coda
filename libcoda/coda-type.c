@@ -3342,7 +3342,7 @@ LIBCODA_API int coda_type_get_record_field_index_from_name(const coda_type *type
     return 0;
 }
 
-/* Get the field index from a field name for a record type where the field name may not be zero terminated
+/* Get the field index from a field name for a record type where the field name may not be zero terminated.
  * If the type is not a record class the function will return an error.
  * \param type CODA type.
  * \param name Name of the record field.

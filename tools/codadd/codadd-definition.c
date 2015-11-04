@@ -87,6 +87,27 @@ static int fi_printf(const char *fmt, ...)
     return result;
 }
 
+static int fic_printf(int *compound_element, const char *fmt, ...)
+{
+    int result;
+    va_list ap;
+
+    if (!(*compound_element))
+    {
+        ff_printf(">\n");
+        *compound_element = 1;
+        INDENT++;
+    }
+
+    indent();
+
+    va_start(ap, fmt);
+    result = vfprintf(FFILE, fmt, ap);
+    va_end(ap);
+
+    return result;
+}
+
 static void generate_escaped_string(const char *str, int length)
 {
     if (length == 0 || str == NULL)
@@ -816,7 +837,9 @@ static void generate_type(const coda_type *type, const char *xmlname, coda_forma
     const char *type_name = "";
     const char *description;
     coda_type *attributes;
+    int is_compound = 0;
     int is_union = 0;
+    int wrapped_type = 0;
     long i;
 
     coda_type_get_class(type, &type_class);
@@ -824,6 +847,38 @@ static void generate_type(const coda_type *type, const char *xmlname, coda_forma
     coda_type_get_description(type, &description);
     coda_type_get_attributes(type, &attributes);
 
+    if (parent_format == coda_format_xml && format != coda_format_xml)
+    {
+        fi_printf("<cd:Type");
+        wrapped_type = 1;
+        if (xmlname != NULL)
+        {
+            ff_printf(" namexml=\"%s\"", xmlname);
+        }
+        ff_printf(">\n");
+        INDENT++;
+        if (type->attributes != NULL)
+        {
+            for (i = 0; i < type->attributes->num_fields; i++)
+            {
+                coda_type_record_field *field = type->attributes->field[i];
+
+                fi_printf("<cd:Attribute name=\"%s\"", field->real_name == NULL ? field->name : field->real_name);
+                if (field->optional)
+                {
+                    ff_printf(">\n");
+                    INDENT++;
+                    fi_printf("<cd:Optional/>\n");
+                    INDENT--;
+                    fi_printf("</cd:Attribute>\n");
+                }
+                else
+                {
+                    ff_printf("/>\n");
+                }
+            }
+        }
+    }
     switch (type_class)
     {
         case coda_record_class:
@@ -871,19 +926,16 @@ static void generate_type(const coda_type *type, const char *xmlname, coda_forma
     {
         ff_printf(" format=\"%s\"", coda_type_get_format_name(format));
     }
-    if (parent_format == coda_format_xml)
+    if (parent_format == coda_format_xml && xmlname != NULL && !wrapped_type)
     {
         if (type_class == coda_record_class || type_class == coda_text_class)
         {
             ff_printf(" namexml=\"%s\"", xmlname);
         }
     }
-    ff_printf(">\n");
-    INDENT++;
-    /* TODO: add 'Type' element when format changes from xml to ascii */
     if (description != NULL)
     {
-        fi_printf("<cd:Description>");
+        fic_printf(&is_compound, "<cd:Description>");
         generate_xml_string(description, -1);
         ff_printf("</cd:Description>\n");
     }
@@ -892,21 +944,22 @@ static void generate_type(const coda_type *type, const char *xmlname, coda_forma
         char s[21];
 
         coda_str64(type->bit_size, s);
-        fi_printf("<cd:BitSize>%s</cd:BitSize>\n", s);
+        fic_printf(&is_compound, "<cd:BitSize>%s</cd:BitSize>\n", s);
     }
     else if (type->size_expr != NULL)
     {
-        fi_printf("<cd:%s>", (type->bit_size == -8 ? "ByteSize" : "BitSize"));
+        fic_printf(&is_compound, "<cd:%s>", (type->bit_size == -8 ? "ByteSize" : "BitSize"));
         generate_expr(type->size_expr, 15);
         ff_printf("</cd:%s>\n", (type->bit_size == -8 ? "ByteSize" : "BitSize"));
     }
-    if (type->attributes != NULL)
+    if (type->attributes != NULL && !wrapped_type)
     {
         for (i = 0; i < type->attributes->num_fields; i++)
         {
             coda_type_record_field *field = type->attributes->field[i];
 
-            fi_printf("<cd:Attribute name=\"%s\"", field->real_name == NULL ? field->name : field->real_name);
+            fic_printf(&is_compound, "<cd:Attribute name=\"%s\"",
+                       field->real_name == NULL ? field->name : field->real_name);
             if (field->optional)
             {
                 ff_printf(">\n");
@@ -930,7 +983,7 @@ static void generate_type(const coda_type *type, const char *xmlname, coda_forma
 
                 if (is_union)
                 {
-                    fi_printf("<cd:FieldExpression>");
+                    fic_printf(&is_compound, "<cd:FieldExpression>");
                     generate_expr(((coda_type_record *)type)->union_field_expr, 15);
                     ff_printf("</cd:FieldExpression>\n");
                 }
@@ -940,8 +993,9 @@ static void generate_type(const coda_type *type, const char *xmlname, coda_forma
                 {
                     coda_type_record_field *field = ((coda_type_record *)type)->field[i];
 
-                    fi_printf("<cd:Field name=\"%s\">\n", field->name);
+                    fic_printf(&is_compound, "<cd:Field name=\"%s\">\n", field->name);
                     INDENT++;
+                    generate_type(field->type, field->real_name == NULL ? field->name : field->real_name, format);
                     if (field->hidden)
                     {
                         fi_printf("<cd:Hidden/>\n");
@@ -972,7 +1026,6 @@ static void generate_type(const coda_type *type, const char *xmlname, coda_forma
                         generate_expr(field->bit_offset_expr, 15);
                         ff_printf("</cd:BitOffset>\n");
                     }
-                    generate_type(field->type, field->real_name == NULL ? field->name : field->real_name, format);
                     INDENT--;
                     fi_printf("</cd:Field>\n");
                 }
@@ -989,17 +1042,17 @@ static void generate_type(const coda_type *type, const char *xmlname, coda_forma
                         char s[21];
 
                         coda_str64(array_type->dim[i], s);
-                        fi_printf("<cd:Dimension>%s</cd:Dimension>\n", s);
+                        fic_printf(&is_compound, "<cd:Dimension>%s</cd:Dimension>\n", s);
                     }
                     else if (array_type->dim_expr[i] != NULL)
                     {
-                        fi_printf("<cd:Dimension>");
+                        fic_printf(&is_compound, "<cd:Dimension>");
                         generate_expr(array_type->dim_expr[i], 15);
                         ff_printf("</cd:Dimension>\n");
                     }
                     else
                     {
-                        fi_printf("<cd:Dimension/>\n");
+                        fic_printf(&is_compound, "<cd:Dimension/>\n");
                     }
                 }
                 generate_type(array_type->base_type, xmlname, format);
@@ -1010,7 +1063,8 @@ static void generate_type(const coda_type *type, const char *xmlname, coda_forma
             {
                 coda_type_number *number_type = (coda_type_number *)type;
 
-                fi_printf("<cd:NativeType>%s</cd:NativeType>\n", coda_type_get_native_type_name(type->read_type));
+                fic_printf(&is_compound, "<cd:NativeType>%s</cd:NativeType>\n",
+                           coda_type_get_native_type_name(type->read_type));
                 if (number_type->unit != NULL)
                 {
                     fi_printf("<cd:Unit>");
@@ -1049,11 +1103,12 @@ static void generate_type(const coda_type *type, const char *xmlname, coda_forma
 
                 if (type->read_type != coda_native_type_string)
                 {
-                    fi_printf("<cd:NativeType>%s</cd:NativeType>\n", coda_type_get_native_type_name(type->read_type));
+                    fic_printf(&is_compound, "<cd:NativeType>%s</cd:NativeType>\n",
+                               coda_type_get_native_type_name(type->read_type));
                 }
                 if (text_type->fixed_value != NULL)
                 {
-                    fi_printf("<cd:FixedValue>");
+                    fic_printf(&is_compound, "<cd:FixedValue>");
                     generate_escaped_string(text_type->fixed_value, -1);
                     ff_printf("</cd:FixedValue>\n");
                 }
@@ -1067,7 +1122,7 @@ static void generate_type(const coda_type *type, const char *xmlname, coda_forma
 
                 if (raw_type->fixed_value != NULL)
                 {
-                    fi_printf("<cd:FixedValue>");
+                    fic_printf(&is_compound, "<cd:FixedValue>");
                     generate_escaped_string(raw_type->fixed_value, raw_type->fixed_value_length);
                     ff_printf("</cd:NativeType>\n");
                 }
@@ -1085,8 +1140,20 @@ static void generate_type(const coda_type *type, const char *xmlname, coda_forma
             }
             break;
     }
-    INDENT--;
-    fi_printf("</cd:%s>\n", type_name);
+    if (is_compound)
+    {
+        INDENT--;
+        fi_printf("</cd:%s>\n", type_name);
+    }
+    else
+    {
+        ff_printf("/>\n");
+    }
+    if (wrapped_type)
+    {
+        INDENT--;
+        fi_printf("</cd:Type>\n");
+    }
 }
 
 static void generate_product_variable(const coda_product_variable *variable)
@@ -1179,7 +1246,7 @@ void generate_definition(const char *output_file_name, const char *file_name)
         exit(1);
     }
 
-    fi_printf("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+    fi_printf("<?xml version=\"1.0\"?>\n");
     generate_product_definition(pf);
 
     coda_close(pf);

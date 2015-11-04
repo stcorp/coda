@@ -342,11 +342,9 @@ static int detect_definition(const char *filename, coda_format *format, int64_t 
         case coda_format_netcdf:
         case coda_format_grib1:
         case coda_format_grib2:
-            *definition = NULL;
-            break;
         case coda_format_rinex:
         case coda_format_sp3:
-            /* We currently use the ascii detection tree to assign product class/type to RINEX and SP3 files */
+            /* We currently use the ascii detection tree to assign product class/type for these formats */
             if (coda_ascbin_recognize_file(filename, *file_size, definition) != 0)
             {
                 return -1;
@@ -495,7 +493,7 @@ static int open_file(const char *filename, coda_format format, int64_t file_size
             }
             break;
         case coda_format_cdf:
-            coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, NULL);
+            coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, "CDF is not supported");
             return -1;
     }
 

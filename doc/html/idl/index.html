@@ -78,7 +78,7 @@
 
       <p>The CODA IDL interface defines three 'named structures'. This section discusses them in detail. For reference, the three types are shown in the table below.</p>
 
-      <table border="1">
+      <table class="fancy">
         <tr><th>name</th><th>fields</th><th>type</th><th>usage</th></tr>
         <tr><td><code>CODA_DATAHANDLE</code></td><td><code>PF_ID</code><br /><code>OPAQUE</code></td><td><code>ULONG64</code><br />not user-accessible</td><td>represents a data-item in a product-file</td></tr>
         <tr><td><code>CODA_ERROR</code></td><td><code>ERRNO</code><br /><code>MESSAGE</code></td><td><code>INT</code><br /><code>STRING</code></td><td>CODA call return status (can also indicate success)</td></tr>
@@ -132,7 +132,7 @@
 
       <p>The <code>CODA_GETOPT</code> function returns the numerical value of a CODA IDL interface option. The following options are supported:</p>
 
-      <table border="1">
+      <table class="fancy">
         <tr><th>option name</th><th>possible values</th><th>default value</th><th>meaning</th></tr>
         <tr>
           <td>FilterRecordFields</td>
@@ -226,7 +226,7 @@
 
       <p>Several forms of <code>CODA_FETCH</code> exist that are distinguished by the first argument argument. Depending on the form of the call, <code>CODA_FETCH</code> will try to read data from different header-parts or datasets in the product files. This is summarized below.</p>
 
-      <table border="1">
+      <table class="fancy">
         <tr><th>call</th><th>Fetch-root</th></tr>
         <tr><td><code>CODA_FETCH(pf_id)</code></td><td>Entire product</td></tr>
         <tr><td><code>CODA_FETCH(pf_id, [, <i>what</i>, ...])</code></td><td>Data (from product root)</td></tr>
@@ -277,7 +277,7 @@
 
       <p>If the data item has a basic type the return type is determined according to the following table.</p>
 
-      <table border="1">
+      <table class="fancy">
         <tr><th>CODA read type</th><th>IDL Type</th><th>remark</th></tr>
         <tr><td>int8</td><td>INT</td><td>&nbsp;</td></tr>
         <tr><td>uint8</td><td>BYTE</td><td><i>a BYTE is unsigned in IDL</i></td></tr>

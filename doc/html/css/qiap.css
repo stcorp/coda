@@ -70,6 +70,7 @@ table.fancy {
   border-color : #cccccc;
   border-style : solid;
   border-width : 1px;
+  border-spacing : 0px; 
 }
 table.fancy tr th, table.fancy tr td {
   border-color : #bbbbbb;

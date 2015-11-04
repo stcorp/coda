@@ -133,8 +133,6 @@ int coda_bin_cursor_get_num_elements(const coda_cursor *cursor, long *num_elemen
 
 #define bit_size_to_byte_size(x) (((x) >> 3) + ((((uint8_t)(x)) & 0x7) != 0))
 
-typedef int (*read_function) (const coda_cursor *, void *);
-
 /* calculates a * 10 ^ b, with a of type double and b of type long */
 static double a_pow10_b(double a, long b)
 {

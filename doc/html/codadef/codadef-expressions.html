@@ -16,7 +16,7 @@
       
       <p>CODA comes with an advanced expression language that is able to perform calculations on product data. The expression language is primarilay used in the definitions of the product formats to formally describe how variable sizes, offsets, etc. are calculated. However, the expression language is also used within e.g. the codafind and codaeval tools to formulate queries on data products. The expression language provides a means to specify locations in a file, read values from a file and apply calculations on these values.</p>
 
-      <p>The expression language is a basic language in ASCII format. In this document we will describe the language and provide a formal definition using the ISO/IEC 14977 EBNF (Extended Backus-Naur Form) format.</p>
+      <p>The expression language is a basic language in ASCII format. In this document we will describe the language and provide a <a href="#bnf">formal definition</a> using the ISO/IEC 14977 EBNF (Extended Backus-Naur Form) format.</p>
       
       <p>The expression language knows 5 different types: <i>integer</i>, <i>float</i>, <i>string</i>, <i>boolean</i>, and <i>node</i>. <i>integer</i> and <i>float</i> represent integer and floating point values, <i>string</i> represents text data, <i>boolean</i> represents logical values (true/false), and <i>node</i> represents locations in a data file.</p>
       
@@ -29,17 +29,17 @@
       <p>The CODA expressions can thus be categorized in the following six groups:</p>
 
       <ul>
-      <li>void expressions: statements</li>
-      <li>boolean expressions: expressions that return either True or False</li>
-      <li>integer expressions: expressions that return a numerical value</li>
-      <li>float expressions: expressions that return a floating point value</li>
-      <li>string expressions: expressions that return a character string</li>
-      <li>node expressions: expressions that refer to data in the product file</li>
+      <li><a href="#void">void expressions</a>: statements</li>
+      <li><a href="#boolean">boolean expressions</a>: expressions that return either True or False</li>
+      <li><a href="#integer">integer expressions</a>: expressions that return a numerical value</li>
+      <li><a href="#float">float expressions</a>: expressions that return a floating point value</li>
+      <li><a href="#string">string expressions</a>: expressions that return a character string</li>
+      <li><a href="#node">node expressions</a>: expressions that refer to data in the product file</li>
       </ul>
 
       <p>It should be noted that the expression language allows arbitrary whitespace (in the form of space characters) between the components of an expression.</p>
 
-      <h2>void expressions</h2>
+      <h2 id="void">void expressions</h2>
       
       <p>void expressions are statements. They won't return a value and can only be used at the topmost level of an expression.</p>
       
@@ -63,7 +63,7 @@
       <div class="fragment"><code><b>for</b> <i>i</i> = 0 <b>to</b> 2 <b>do</b> <i>$count</i>[<i>i</i>] = 100 * <i>i</i></code></div>
       <p>This expression has the same effect as the example provided in the previous section.</p>
 
-      <h2>boolean expressions</h2>
+      <h2 id="boolean">boolean expressions</h2>
       
       <p>A boolean expression is an expression that results in a true or false value.</p>
       
@@ -146,7 +146,7 @@
 
       <p>This will be faster than using '<code><b>int</b>(/data/intvalue) &gt; 10 || <b>int</b>(/data/intvalue) &lt; 0</code>'.</p>
 
-      <h2>integer expressions</h2>
+      <h2 id="integer">integer expressions</h2>
 
       <p>An integer expression is an expression that results in an integer value.</p>
 
@@ -306,7 +306,7 @@
 
       <p>This will be faster than using '<code><b>if</b>(<b>int</b>(/data/intvalue) &gt; 10, <b>int</b>(/data/intvalue) + 10, <b>int</b>(/data/intvalue) - 5)</code>'.</p>
 
-      <h2>float expressions</h2>
+      <h2 id="float">float expressions</h2>
 
       <p>A float expression is an expression that results in a floating point value.</p>
 
@@ -405,7 +405,7 @@ inf
 
       <p>This will be faster than using '<code><b>if</b>(<b>int</b>(/data/intvalue) &lt;= 0, 0.0, <b>if</b>(<b>int</b>(/data/intvalue) &gt;= 100, 1.0, <b>int</b>(/data/intvalue) / 100.0))</code>'.</p>
 
-      <h2>string expressions</h2>
+      <h2 id="string">string expressions</h2>
 
       <p>A string expression is an expression that results in a character string.</p>
 
@@ -415,7 +415,7 @@ inf
       
       <p>A string constant is provided by a sequence of printable ASCII characters between double quote characters. The double quote character itself or any characters that are not ASCII printable characters can be included in string constants by using an escape sequence. An escape sequence is a '\' followed by either a character or by a 3 digit octal number of the byte value (for instance, '\060' is equal to 'A'). The following table lists the possible escape sequences that are allowed:</p>
       
-      <table class="fancy" width="60%" cellspacing="0" cellpadding="0">
+      <table class="fancy" width="60%">
         <tr><th>Escape sequence</th><th>ASCII Character</th><th>Decimal code</th></tr>
         <tr><td align="center">\a</td><td>Bell</td><td align="right">7</td></tr>
         <tr><td align="center">\b</td><td>Backspace</td><td align="right">8</td></tr>
@@ -545,7 +545,7 @@ inf
 
       <p>This will be faster than using '<code><b>substr</b>(<b>length</b>(/some/data) / 2, <b>length</b>(/some/data) - (<b>length</b>(/some/data) / 2), <b>str</b>(/some/data))</code>'.</p>
 
-      <h2>node expressions</h2>
+      <h2 id="node">node expressions</h2>
       
       <p>A node describes a path into a product file similar to XPath for XML.</p>
 
@@ -559,7 +559,7 @@ inf
 
       <p>There is a special node expression '<code>asciiline</code>' that can only be used in expressions for product format definitions for ASCII products. The '<code>asciiline</code>' expression can only be used as start point of a node expression and will map the view of a file to an array of strings where each string corresponds with a single line (including end of line character(s)) of the ascii file. For example the expression <code><b>bitoffset</b>(<b>asciiline</b>[<b>index</b>(<b>asciiline</b>, <b>str</b>(., 1) != "#")])</code> will give the bitoffset in the file of the first line that does not start with a '#' character.</p>
 
-      <h2>formal definition</h2>
+      <h2 id="bnf">formal definition</h2>
       
       <p><pre>
 alpha =
