@@ -87,7 +87,6 @@
             <li><a href="#coda_type_get_class_name"><code>coda.type_get_class_name</code></a></li>
             <li><a href="#coda_type_get_native_type_name"><code>coda.type_get_native_type_name</code></a></li>
             <li><a href="#coda_type_get_special_type_name"><code>coda.type_get_special_type_name</code></a></li>
-            <li><a href="#coda_type_has_ascii_content"><code>coda.type_has_ascii_content</code></a></li>
             <li><a href="#coda_type_get_format"><code>coda.type_get_format</code></a></li>
             <li><a href="#coda_type_get_class"><code>coda.type_get_class</code></a></li>
             <li><a href="#coda_type_get_read_type"><code>coda.type_get_read_type</code></a></li>
@@ -99,6 +98,7 @@
             <li><a href="#coda_type_get_fixed_value"><code>coda.type_get_fixed_value</code></a></li>
             <li><a href="#coda_type_get_num_record_fields"><code>coda.type_get_num_record_fields</code></a></li>
             <li><a href="#coda_type_get_record_field_index_from_name"><code>coda.type_get_record_field_index_from_name</code></a></li>
+            <li><a href="#coda_type_get_record_field_index_from_real_name"><code>coda.type_get_record_field_index_from_real_name</code></a></li>
             <li><a href="#coda_type_get_record_field_type"><code>coda.type_get_record_field_type</code></a></li>
             <li><a href="#coda_type_get_record_field_name"><code>coda.type_get_record_field_name</code></a></li>
             <li><a href="#coda_type_get_record_field_real_name"><code>coda.type_get_record_field_real_name</code></a></li>
@@ -484,7 +484,6 @@ except coda.CodacError, e:
       <h5 id="coda_type_get_class_name"><code>coda.type_get_class_name(type_class)</code></h5>
       <h5 id="coda_type_get_native_type_name"><code>coda.type_get_native_type_name(native_type)</code></h5>
       <h5 id="coda_type_get_special_type_name"><code>coda.type_get_special_type_name(special_type)</code></h5>
-      <h5 id="coda_type_has_ascii_content"><code>has_ascii_content = coda.type_has_ascii_content(type)</code></h5>
       <h5 id="coda_type_get_format"><code>format = coda.type_get_format(type)</code></h5>
       <h5 id="coda_type_get_class"><code>type_class = coda.type_get_class(type)</code></h5>
       <h5 id="coda_type_get_read_type"><code>read_type = coda.type_get_read_type(type)</code></h5>
@@ -496,6 +495,7 @@ except coda.CodacError, e:
       <h5 id="coda_type_get_fixed_value"><code>fixed_value = coda.type_get_fixed_value(pf)</code></h5>
       <h5 id="coda_type_get_num_record_fields"><code>num_fields = coda.type_get_num_record_fields(type)</code></h5>
       <h5 id="coda_type_get_record_field_index_from_name"><code>index = coda.type_get_record_field_index_from_name(type, name)</code></h5>
+      <h5 id="coda_type_get_record_field_index_from_real_name"><code>index = coda.type_get_record_field_index_from_real_name(type, real_name)</code></h5>
       <h5 id="coda_type_get_record_field_type"><code>field_type = coda.type_get_record_field_type(type, index)</code></h5>
       <h5 id="coda_type_get_record_field_name"><code>name = coda.type_get_record_field_name(type, index)</code></h5>
       <h5 id="coda_type_get_record_field_real_name"><code>name = coda.type_get_record_field_real_name(type, index)</code></h5>
@@ -591,14 +591,14 @@ except coda.CodacError, e:
       <h5 id="coda_expression_get_type"><code>result_type = coda.expression_get_type(expr)</code></h5>
       <h5 id="coda_expression_is_constant"><code>is_constant = coda.expression_is_constant(expr)</code></h5>
       <h5 id="coda_expression_eval_bool"><code>boolvalue = coda.expression_eval_bool(expr, cursor=None)</code></h5>
-      <h5 id="coda_expression_eval_integer"><code>integervalue = coda.expression_eval_bool(expr, cursor=None)</code></h5>
+      <h5 id="coda_expression_eval_integer"><code>integervalue = coda.expression_eval_integer(expr, cursor=None)</code></h5>
       <h5 id="coda_expression_eval_float"><code>doublevalue = coda.expression_eval_float(expr, cursor=None)</code></h5>
       <h5 id="coda_expression_eval_string"><code>stringvalue = coda.expression_eval_string(expr, cursor=None)</code></h5>
       <h5 id="coda_expression_eval_node"><code>coda.expression_eval_node(expr, cursor)</code></h5>
 
       <div class="footer">
         <hr />
-        <p>Copyright &copy; 2007-2010 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+        <p>Copyright &copy; 2007-2011 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
       </div>
 
     </div>

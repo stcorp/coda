@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -24,17 +24,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "coda-ascii.h"
-#include "coda-bin.h"
-#include "coda-xml.h"
-#include "coda-netcdf.h"
-#ifdef HAVE_HDF4
-#include "coda-hdf4.h"
-#endif
+#include "coda-type.h"
+#include "coda-mem.h"
 #ifdef HAVE_HDF5
 #include "coda-hdf5.h"
 #endif
 #include "coda-grib.h"
+#include "coda-rinex.h"
 #include "coda-path.h"
 
 /** \file */
@@ -512,6 +508,7 @@ LIBCODA_API int coda_init(void)
             if (coda_read_definitions(coda_definition_path) != 0)
             {
                 coda_data_dictionary_done();
+                free(coda_definition_path);
                 coda_leap_second_table_done();
                 return -1;
             }
@@ -533,6 +530,25 @@ LIBCODA_API int coda_init(void)
 #endif
         if (coda_grib_init() != 0)
         {
+            coda_data_dictionary_done();
+            if (coda_definition_path != NULL)
+            {
+                free(coda_definition_path);
+                coda_definition_path = NULL;
+            }
+            coda_leap_second_table_done();
+            return -1;
+        }
+        if (coda_rinex_init() != 0)
+        {
+            coda_grib_done();
+            coda_data_dictionary_done();
+            if (coda_definition_path != NULL)
+            {
+                free(coda_definition_path);
+                coda_definition_path = NULL;
+            }
+            coda_leap_second_table_done();
             return -1;
         }
     }
@@ -563,23 +579,16 @@ LIBCODA_API void coda_done(void)
         coda_init_counter--;
         if (coda_init_counter == 0)
         {
+            coda_rinex_done();
             coda_grib_done();
-#ifdef HAVE_HDF5
-            coda_hdf5_done();
-#endif
-#ifdef HAVE_HDF4
-            coda_hdf4_done();
-#endif
-            coda_netcdf_done();
-            coda_xml_done();
-            coda_bin_done();
-            coda_ascii_done();
             coda_data_dictionary_done();
             if (coda_definition_path != NULL)
             {
                 free(coda_definition_path);
                 coda_definition_path = NULL;
             }
+            coda_mem_done();
+            coda_type_done();
             coda_leap_second_table_done();
         }
     }
@@ -598,38 +607,3 @@ void coda_free(void *ptr)
 }
 
 /** @} */
-
-int coda_get_type_for_dynamic_type(coda_dynamic_type *dynamic_type, coda_type **type)
-{
-    switch (dynamic_type->format)
-    {
-        case coda_format_ascii:
-        case coda_format_binary:
-            return coda_bin_get_type_for_dynamic_type(dynamic_type, type);
-        case coda_format_xml:
-            return coda_xml_get_type_for_dynamic_type(dynamic_type, type);
-        case coda_format_netcdf:
-            return coda_netcdf_get_type_for_dynamic_type(dynamic_type, type);
-        case coda_format_hdf4:
-        case coda_format_cdf:
-#ifdef HAVE_HDF4
-            return coda_hdf4_get_type_for_dynamic_type(dynamic_type, type);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_get_type_for_dynamic_type(dynamic_type, type);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_get_type_for_dynamic_type(dynamic_type, type);
-    }
-
-    assert(0);
-    exit(1);
-}

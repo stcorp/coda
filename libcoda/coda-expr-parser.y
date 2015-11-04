@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -153,6 +153,7 @@ static void coda_expression_error(const char *error)
 %token                FUNC_MAX
 %token                FUNC_MIN
 %token                FUNC_PRODUCTCLASS
+%token                FUNC_PRODUCTFORMAT
 %token                FUNC_PRODUCTTYPE
 %token                FUNC_PRODUCTVERSION
 %token                FUNC_REGEX
@@ -232,6 +233,7 @@ reserved_identifier:
     | FUNC_MAX { $$ = "max"; }
     | FUNC_MIN { $$ = "min"; }
     | FUNC_PRODUCTCLASS { $$ = "productclass"; }
+    | FUNC_PRODUCTFORMAT { $$ = "productformat"; }
     | FUNC_PRODUCTTYPE { $$ = "producttype"; }
     | FUNC_PRODUCTVERSION { $$ = "productversion"; }
     | FUNC_REGEX { $$ = "regex"; }
@@ -837,6 +839,10 @@ stringexpr:
         }
     | FUNC_PRODUCTCLASS '(' ')' {
             $$ = coda_expression_new(expr_product_class, NULL, NULL, NULL, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_PRODUCTFORMAT '(' ')' {
+            $$ = coda_expression_new(expr_product_format, NULL, NULL, NULL, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
     | FUNC_PRODUCTTYPE '(' ')' {

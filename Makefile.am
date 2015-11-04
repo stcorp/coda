@@ -175,26 +175,14 @@ EXTRA_DIST += libcoda/zlib/COPYING libcoda/zlib/README
 
 libcoda_la_SOURCES = \
 	libcoda/coda-ascbin-cursor.c \
-	libcoda/coda-ascbin-definition.c \
-	libcoda/coda-ascbin-definition.h \
 	libcoda/coda-ascbin-internal.h \
-	libcoda/coda-ascbin-type.c \
 	libcoda/coda-ascbin.c \
 	libcoda/coda-ascbin.h \
 	libcoda/coda-ascii-cursor.c \
-	libcoda/coda-ascii-definition.c \
-	libcoda/coda-ascii-definition.h \
-	libcoda/coda-ascii-internal.h \
-	libcoda/coda-ascii-type.c \
-	libcoda/coda-ascii.c \
 	libcoda/coda-ascii.h \
 	libcoda/coda-bin-cursor.c \
-	libcoda/coda-bin-definition.c \
-	libcoda/coda-bin-definition.h \
-	libcoda/coda-bin-internal.h \
-	libcoda/coda-bin-type.c \
-	libcoda/coda-bin.c \
 	libcoda/coda-bin.h \
+	libcoda/coda-cursor-read.c \
 	libcoda/coda-cursor.c \
 	libcoda/coda-definition-parse.c \
 	libcoda/coda-definition.c \
@@ -207,28 +195,32 @@ libcoda_la_SOURCES = \
 	libcoda/coda-filefilter.c \
 	libcoda/coda-filefilter.h \
 	libcoda/coda-grib-cursor.c \
-	libcoda/coda-grib-dynamic.c \
 	libcoda/coda-grib-internal.h \
 	libcoda/coda-grib-type.c \
 	libcoda/coda-grib.c \
 	libcoda/coda-grib.h \
 	libcoda/coda-internal.h \
+	libcoda/coda-mem-cursor.c \
+	libcoda/coda-mem-internal.h \
+	libcoda/coda-mem-type.c \
+	libcoda/coda-mem.c \
+	libcoda/coda-mem.h \
 	libcoda/coda-netcdf-cursor.c \
-	libcoda/coda-netcdf-dynamic.c \
 	libcoda/coda-netcdf-internal.h \
 	libcoda/coda-netcdf-type.c \
 	libcoda/coda-netcdf.c \
 	libcoda/coda-netcdf.h \
 	libcoda/coda-path.h \
 	libcoda/coda-product.c \
+	libcoda/coda-rinex.c \
+	libcoda/coda-rinex.h \
+	libcoda/coda-sp3c.c \
+	libcoda/coda-sp3c.h \
 	libcoda/coda-time.c \
 	libcoda/coda-type.c \
+	libcoda/coda-type.h \
 	libcoda/coda-utils.c \
 	libcoda/coda-xml-cursor.c \
-	libcoda/coda-xml-definition.c \
-	libcoda/coda-xml-definition.h \
-	libcoda/coda-xml-dynamic.c \
-	libcoda/coda-xml-dynamic.h \
 	libcoda/coda-xml-internal.h \
 	libcoda/coda-xml-parser.c \
 	libcoda/coda-xml-type.c \
@@ -241,15 +233,15 @@ libcoda_la_SOURCES = \
 	libcoda/ziparchive.h
 libcoda_hdf4_files = \
 	libcoda/coda-hdf4-cursor.c \
-	libcoda/coda-hdf4-definition.c \
 	libcoda/coda-hdf4-internal.h \
 	libcoda/coda-hdf4-type.c \
+	libcoda/coda-hdf4.c \
 	libcoda/coda-hdf4.h
 libcoda_hdf5_files = \
 	libcoda/coda-hdf5-cursor.c \
-	libcoda/coda-hdf5-definition.c \
 	libcoda/coda-hdf5-internal.h \
 	libcoda/coda-hdf5-type.c \
+	libcoda/coda-hdf5.c \
 	libcoda/coda-hdf5.h
 if WITH_HDF4
 libcoda_la_SOURCES += $(libcoda_hdf4_files)
@@ -269,26 +261,14 @@ BUILT_SOURCES += coda-expr-parser.h
 
 libcoda_internal_la_SOURCES = \
 	libcoda/coda-ascbin-cursor.c \
-	libcoda/coda-ascbin-definition.c \
-	libcoda/coda-ascbin-definition.h \
 	libcoda/coda-ascbin-internal.h \
-	libcoda/coda-ascbin-type.c \
 	libcoda/coda-ascbin.c \
 	libcoda/coda-ascbin.h \
 	libcoda/coda-ascii-cursor.c \
-	libcoda/coda-ascii-definition.c \
-	libcoda/coda-ascii-definition.h \
-	libcoda/coda-ascii-internal.h \
-	libcoda/coda-ascii-type.c \
-	libcoda/coda-ascii.c \
 	libcoda/coda-ascii.h \
 	libcoda/coda-bin-cursor.c \
-	libcoda/coda-bin-definition.c \
-	libcoda/coda-bin-definition.h \
-	libcoda/coda-bin-internal.h \
-	libcoda/coda-bin-type.c \
-	libcoda/coda-bin.c \
 	libcoda/coda-bin.h \
+	libcoda/coda-cursor-read.c \
 	libcoda/coda-cursor.c \
 	libcoda/coda-definition-parse.c \
 	libcoda/coda-definition.c \
@@ -302,28 +282,32 @@ libcoda_internal_la_SOURCES = \
 	libcoda/coda-filefilter.c \
 	libcoda/coda-filefilter.h \
 	libcoda/coda-grib-cursor.c \
-	libcoda/coda-grib-dynamic.c \
 	libcoda/coda-grib-internal.h \
 	libcoda/coda-grib-type.c \
 	libcoda/coda-grib.c \
 	libcoda/coda-grib.h \
 	libcoda/coda-internal.h \
+	libcoda/coda-mem-cursor.c \
+	libcoda/coda-mem-internal.h \
+	libcoda/coda-mem-type.c \
+	libcoda/coda-mem.c \
+	libcoda/coda-mem.h \
 	libcoda/coda-netcdf-cursor.c \
-	libcoda/coda-netcdf-dynamic.c \
 	libcoda/coda-netcdf-internal.h \
 	libcoda/coda-netcdf-type.c \
 	libcoda/coda-netcdf.c \
 	libcoda/coda-netcdf.h \
 	libcoda/coda-path.h \
 	libcoda/coda-product.c \
+	libcoda/coda-rinex.c \
+	libcoda/coda-rinex.h \
+	libcoda/coda-sp3c.c \
+	libcoda/coda-sp3c.h \
 	libcoda/coda-time.c \
 	libcoda/coda-type.c \
+	libcoda/coda-type.h \
 	libcoda/coda-utils.c \
 	libcoda/coda-xml-cursor.c \
-	libcoda/coda-xml-definition.c \
-	libcoda/coda-xml-definition.h \
-	libcoda/coda-xml-dynamic.c \
-	libcoda/coda-xml-dynamic.h \
 	libcoda/coda-xml-internal.h \
 	libcoda/coda-xml-parser.c \
 	libcoda/coda-xml-type.c \
@@ -365,6 +349,7 @@ codadd_SOURCES = \
 	tools/codadd/codadd-doc.c \
 	tools/codadd/codadd-list.c
 codadd_LDFLAGS = -static
+# keep this linked to libcoda_internal.la because of SUBPACKAGE_MODE
 codadd_LDADD = libcoda_internal.la
 INDENTFILES += $(codadd_SOURCES)
 
@@ -637,6 +622,7 @@ CODA_MATLAB_MFILES = \
 	matlab/coda_clearall.m \
 	matlab/coda_close.m \
 	matlab/coda_description.m \
+	matlab/coda_eval.m \
 	matlab/coda_fetch.m \
 	matlab/coda_fieldavailable.m \
 	matlab/coda_fieldcount.m \
@@ -677,6 +663,7 @@ DOCFILES = \
 	doc/html/codadef/codadef-hdf4.html \
 	doc/html/codadef/codadef-hdf5.html \
 	doc/html/codadef/codadef-netcdf.html \
+	doc/html/codadef/codadef-rinex.html \
 	doc/html/codadef/codadef-xml.html \
 	doc/html/codacheck/index.html \
 	doc/html/codacmp/index.html \
@@ -720,7 +707,7 @@ libcoda_doc: coda.h libcoda/doc/Doxyfile
 	  cd libcoda/doc ; \
 	  $(DOXYGEN) Doxyfile ; \
 	  cd ../.. ; \
-	  rm -rf doc/html/libcoda/doxygen.* doc/html/libcoda/pages.html doc/html/libcoda/*.png doc/html/libcoda/*.gif doc/html/libcoda/tabs.css ; \
+	  rm -rf doc/html/libcoda/doxygen.* doc/html/libcoda/pages.html doc/html/libcoda/*.png doc/html/libcoda/*.gif doc/html/libcoda/*.js doc/html/libcoda/tabs.css ; \
 	  echo "creating doclibcoda.mk" ; \
 	  $(MAKE) doclibcoda_include ; \
 	fi
@@ -750,7 +737,7 @@ java_doc: $(java_files) java/doc/Doxyfile
 	  cd java/doc ; \
 	  $(DOXYGEN) Doxyfile ; \
 	  cd ../.. ; \
-	  rm -rf doc/html/java/doxygen.* doc/html/java/pages.html doc/html/java/*.png doc/html/java/*.gif doc/html/java/tabs.css ; \
+	  rm -rf doc/html/java/doxygen.* doc/html/java/pages.html doc/html/java/*.png doc/html/java/*.gif doc/html/java/*.js doc/html/java/tabs.css ; \
 	  echo "creating docjava.mk" ; \
 	  $(MAKE) docjava_include ; \
 	fi

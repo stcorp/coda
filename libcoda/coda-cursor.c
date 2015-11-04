@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -29,6 +29,7 @@
 #include "coda-ascbin.h"
 #include "coda-ascii.h"
 #include "coda-bin.h"
+#include "coda-mem.h"
 #include "coda-xml.h"
 #include "coda-netcdf.h"
 #include "coda-grib.h"
@@ -38,6 +39,9 @@
 #ifdef HAVE_HDF5
 #include "coda-hdf5.h"
 #endif
+#include "coda-rinex.h"
+#include "coda-sp3c.h"
+#include "coda-type.h"
 
 /** \file */
 
@@ -136,6 +140,84 @@
  * \ingroup coda_cursor
  */
 
+/* run on product root type after setting up dynamic type tree (without having used definition from data dictionary!) */
+int coda_dynamic_type_update(coda_dynamic_type **type, coda_type **definition)
+{
+    assert(type != NULL && (*type) != NULL);
+    assert(definition != NULL && (*definition) != NULL);
+
+    switch ((*type)->backend)
+    {
+        case coda_backend_ascii:
+        case coda_backend_binary:
+            /* backends that only use static definitions can never have their types updated */
+            break;
+        case coda_backend_memory:
+            return coda_mem_type_update(type, definition);
+            break;
+        case coda_backend_xml:
+            return coda_xml_type_update(type, definition);
+            break;
+        case coda_backend_hdf4:
+        case coda_backend_hdf5:
+        case coda_backend_netcdf:
+        case coda_backend_grib:
+            /* for these backends coda_dynamic_type_update() will never be called */
+            assert(0);
+            exit(1);
+    }
+
+    return 0;
+}
+
+void coda_dynamic_type_delete(coda_dynamic_type *type)
+{
+    if (type == NULL)
+    {
+        return;
+    }
+
+    switch (type->backend)
+    {
+        case coda_backend_ascii:
+        case coda_backend_binary:
+            coda_type_release((coda_type *)type);
+            break;
+        case coda_backend_memory:
+            coda_mem_type_delete(type);
+            break;
+        case coda_backend_xml:
+            coda_xml_type_delete(type);
+            break;
+        case coda_backend_hdf4:
+#ifdef HAVE_HDF4
+            coda_hdf4_type_delete(type);
+#endif
+            break;
+        case coda_backend_hdf5:
+#ifdef HAVE_HDF5
+            coda_hdf5_type_delete(type);
+#endif
+            break;
+        case coda_backend_netcdf:
+            coda_netcdf_type_delete(type);
+            break;
+        case coda_backend_grib:
+            coda_grib_type_delete(type);
+            break;
+    }
+}
+
+coda_type *coda_get_type_for_dynamic_type(coda_dynamic_type *dynamic_type)
+{
+    if (dynamic_type->backend < first_dynamic_backend_id)
+    {
+        return (coda_type *)dynamic_type;
+    }
+    return dynamic_type->definition;
+}
+
+
 /** \addtogroup coda_cursor
  * @{
  */
@@ -173,7 +255,6 @@ LIBCODA_API int coda_cursor_set_product(coda_cursor *cursor, coda_product *produ
         case coda_format_grib1:
         case coda_format_grib2:
             return coda_grib_cursor_set_product(cursor, product);
-        case coda_format_cdf:
         case coda_format_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_set_product(cursor, product);
@@ -188,6 +269,13 @@ LIBCODA_API int coda_cursor_set_product(coda_cursor *cursor, coda_product *produ
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_format_rinex:
+            return coda_rinex_cursor_set_product(cursor, product);
+        case coda_format_sp3c:
+            return coda_sp3c_cursor_set_product(cursor, product);
+        case coda_format_cdf:
+            /* unsupported */
+            break;
     }
 
     assert(0);
@@ -220,16 +308,19 @@ LIBCODA_API int coda_cursor_goto_first_record_field(coda_cursor *cursor)
  */
 LIBCODA_API int coda_cursor_goto_record_field_by_index(coda_cursor *cursor, long index)
 {
+    coda_type *type;
+
     if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
 
-    if (cursor->stack[cursor->n - 1].type->type_class != coda_record_class)
+    type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    if (type->type_class != coda_record_class)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to a record (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(cursor->stack[cursor->n - 1].type->type_class), __FILE__, __LINE__);
+                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
         return -1;
     }
 
@@ -240,33 +331,33 @@ LIBCODA_API int coda_cursor_goto_record_field_by_index(coda_cursor *cursor, long
         return -1;
     }
 
-    switch (cursor->stack[cursor->n - 1].type->format)
+    switch (cursor->stack[cursor->n - 1].type->backend)
     {
-        case coda_format_ascii:
-        case coda_format_binary:
+        case coda_backend_ascii:
+        case coda_backend_binary:
             return coda_ascbin_cursor_goto_record_field_by_index(cursor, index);
-        case coda_format_xml:
+        case coda_backend_memory:
+            return coda_mem_cursor_goto_record_field_by_index(cursor, index);
+            break;
+        case coda_backend_xml:
             return coda_xml_cursor_goto_record_field_by_index(cursor, index);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_goto_record_field_by_index(cursor, index);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_goto_record_field_by_index(cursor, index);
-        case coda_format_cdf:
-        case coda_format_hdf4:
+        case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_goto_record_field_by_index(cursor, index);
 #else
             coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
             return -1;
 #endif
-        case coda_format_hdf5:
+        case coda_backend_hdf5:
 #ifdef HAVE_HDF5
             return coda_hdf5_cursor_goto_record_field_by_index(cursor, index);
 #else
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_netcdf:
+        case coda_backend_grib:
+            break;
     }
 
     assert(0);
@@ -324,57 +415,58 @@ LIBCODA_API int coda_cursor_goto_record_field_by_name(coda_cursor *cursor, const
  */
 LIBCODA_API int coda_cursor_goto_next_record_field(coda_cursor *cursor)
 {
+    coda_type *type;
+
     if (cursor == NULL || cursor->n <= 1 || cursor->stack[cursor->n - 1].type == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
 
-    if (cursor->stack[cursor->n - 2].type->type_class != coda_record_class)
+    type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 2].type);
+    if (type->type_class != coda_record_class)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE,
-                       "parent of cursor does not refer to a record (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(cursor->stack[cursor->n - 2].type->type_class), __FILE__, __LINE__);
+                       "parent of cursor does not refer to a record (parent type is %s) (%s:%u)",
+                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
         return -1;
     }
 
     /* check whether we are perhaps pointing to the attributes of the record */
     if (cursor->stack[cursor->n - 1].index == -1)
     {
-        assert(cursor->stack[cursor->n - 1].type->type_class == coda_record_class);
         coda_set_error(CODA_ERROR_INVALID_TYPE,
                        "cursor does not refer to a record field (currently pointing to the record attributes) (%s:%u)",
                        __FILE__, __LINE__);
         return -1;
     }
 
-    switch (cursor->stack[cursor->n - 2].type->format)
+    switch (cursor->stack[cursor->n - 2].type->backend)
     {
-        case coda_format_ascii:
-        case coda_format_binary:
+        case coda_backend_ascii:
+        case coda_backend_binary:
             return coda_ascbin_cursor_goto_next_record_field(cursor);
-        case coda_format_xml:
+        case coda_backend_memory:
+            return coda_mem_cursor_goto_next_record_field(cursor);
+        case coda_backend_xml:
             return coda_xml_cursor_goto_next_record_field(cursor);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_goto_next_record_field(cursor);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_goto_next_record_field(cursor);
-        case coda_format_cdf:
-        case coda_format_hdf4:
+        case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_goto_next_record_field(cursor);
 #else
             coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
             return -1;
 #endif
-        case coda_format_hdf5:
+        case coda_backend_hdf5:
 #ifdef HAVE_HDF5
             return coda_hdf5_cursor_goto_next_record_field(cursor);
 #else
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_netcdf:
+        case coda_backend_grib:
+            break;
     }
 
     assert(0);
@@ -393,34 +485,35 @@ LIBCODA_API int coda_cursor_goto_next_record_field(coda_cursor *cursor)
  */
 LIBCODA_API int coda_cursor_goto_available_union_field(coda_cursor *cursor)
 {
+    coda_type *type;
+
     if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
 
-    if (cursor->stack[cursor->n - 1].type->type_class != coda_record_class)
+    type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    if (type->type_class != coda_record_class)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to a record (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(cursor->stack[cursor->n - 1].type->type_class), __FILE__, __LINE__);
+                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
         return -1;
     }
 
-    switch (cursor->stack[cursor->n - 1].type->format)
+    switch (cursor->stack[cursor->n - 1].type->backend)
     {
-        case coda_format_ascii:
-        case coda_format_binary:
+        case coda_backend_ascii:
+        case coda_backend_binary:
             return coda_ascbin_cursor_goto_available_union_field(cursor);
-        case coda_format_xml:
+        case coda_backend_xml:
             return coda_xml_cursor_goto_available_union_field(cursor);
-        case coda_format_netcdf:
-        case coda_format_grib1:
-        case coda_format_grib2:
-        case coda_format_cdf:
-        case coda_format_hdf4:
-        case coda_format_hdf5:
-            coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to a union");
-            return -1;
+        case coda_backend_memory:
+        case coda_backend_hdf4:
+        case coda_backend_hdf5:
+        case coda_backend_netcdf:
+        case coda_backend_grib:
+            break;
     }
 
     assert(0);
@@ -457,16 +550,19 @@ LIBCODA_API int coda_cursor_goto_first_array_element(coda_cursor *cursor)
  */
 LIBCODA_API int coda_cursor_goto_array_element(coda_cursor *cursor, int num_subs, const long subs[])
 {
+    coda_type *type;
+
     if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
 
-    if (cursor->stack[cursor->n - 1].type->type_class != coda_array_class)
+    type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    if (type->type_class != coda_array_class)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(cursor->stack[cursor->n - 1].type->type_class), __FILE__, __LINE__);
+                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
         return -1;
     }
 
@@ -477,33 +573,33 @@ LIBCODA_API int coda_cursor_goto_array_element(coda_cursor *cursor, int num_subs
         return -1;
     }
 
-    switch (cursor->stack[cursor->n - 1].type->format)
+    switch (cursor->stack[cursor->n - 1].type->backend)
     {
-        case coda_format_ascii:
-        case coda_format_binary:
+        case coda_backend_ascii:
+        case coda_backend_binary:
             return coda_ascbin_cursor_goto_array_element(cursor, num_subs, subs);
-        case coda_format_xml:
+        case coda_backend_memory:
+            return coda_mem_cursor_goto_array_element(cursor, num_subs, subs);
+        case coda_backend_xml:
             return coda_xml_cursor_goto_array_element(cursor, num_subs, subs);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_goto_array_element(cursor, num_subs, subs);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_goto_array_element(cursor, num_subs, subs);
-        case coda_format_cdf:
-        case coda_format_hdf4:
+        case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_goto_array_element(cursor, num_subs, subs);
 #else
             coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
             return -1;
 #endif
-        case coda_format_hdf5:
+        case coda_backend_hdf5:
 #ifdef HAVE_HDF5
             return coda_hdf5_cursor_goto_array_element(cursor, num_subs, subs);
 #else
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_netcdf:
+            return coda_netcdf_cursor_goto_array_element(cursor, num_subs, subs);
+        case coda_backend_grib:
+            return coda_grib_cursor_goto_array_element(cursor, num_subs, subs);
     }
 
     assert(0);
@@ -531,16 +627,19 @@ LIBCODA_API int coda_cursor_goto_array_element(coda_cursor *cursor, int num_subs
  */
 LIBCODA_API int coda_cursor_goto_array_element_by_index(coda_cursor *cursor, long index)
 {
+    coda_type *type;
+
     if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
 
-    if (cursor->stack[cursor->n - 1].type->type_class != coda_array_class)
+    type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    if (type->type_class != coda_array_class)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(cursor->stack[cursor->n - 1].type->type_class), __FILE__, __LINE__);
+                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
         return -1;
     }
 
@@ -551,33 +650,33 @@ LIBCODA_API int coda_cursor_goto_array_element_by_index(coda_cursor *cursor, lon
         return -1;
     }
 
-    switch (cursor->stack[cursor->n - 1].type->format)
+    switch (cursor->stack[cursor->n - 1].type->backend)
     {
-        case coda_format_ascii:
-        case coda_format_binary:
+        case coda_backend_ascii:
+        case coda_backend_binary:
             return coda_ascbin_cursor_goto_array_element_by_index(cursor, index);
-        case coda_format_xml:
+        case coda_backend_memory:
+            return coda_mem_cursor_goto_array_element_by_index(cursor, index);
+        case coda_backend_xml:
             return coda_xml_cursor_goto_array_element_by_index(cursor, index);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_goto_array_element_by_index(cursor, index);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_goto_array_element_by_index(cursor, index);
-        case coda_format_cdf:
-        case coda_format_hdf4:
+        case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_goto_array_element_by_index(cursor, index);
 #else
             coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
             return -1;
 #endif
-        case coda_format_hdf5:
+        case coda_backend_hdf5:
 #ifdef HAVE_HDF5
             return coda_hdf5_cursor_goto_array_element_by_index(cursor, index);
 #else
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_netcdf:
+            return coda_netcdf_cursor_goto_array_element_by_index(cursor, index);
+        case coda_backend_grib:
+            return coda_grib_cursor_goto_array_element_by_index(cursor, index);
     }
 
     assert(0);
@@ -613,57 +712,59 @@ LIBCODA_API int coda_cursor_goto_array_element_by_index(coda_cursor *cursor, lon
  */
 LIBCODA_API int coda_cursor_goto_next_array_element(coda_cursor *cursor)
 {
+    coda_type *type;
+
     if (cursor == NULL || cursor->n <= 1 || cursor->stack[cursor->n - 1].type == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
 
-    if (cursor->stack[cursor->n - 2].type->type_class != coda_array_class)
+    type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 2].type);
+    if (type->type_class != coda_array_class)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE,
                        "parent of cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(cursor->stack[cursor->n - 2].type->type_class), __FILE__, __LINE__);
+                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
         return -1;
     }
 
     /* check whether we are perhaps pointing to the attributes of the array */
     if (cursor->stack[cursor->n - 1].index == -1)
     {
-        assert(cursor->stack[cursor->n - 1].type->type_class == coda_record_class);
         coda_set_error(CODA_ERROR_INVALID_TYPE,
                        "cursor does not refer to an array element (currently pointing to the array attributes) (%s:%u)",
                        __FILE__, __LINE__);
         return -1;
     }
 
-    switch (cursor->stack[cursor->n - 2].type->format)
+    switch (cursor->stack[cursor->n - 2].type->backend)
     {
-        case coda_format_ascii:
-        case coda_format_binary:
+        case coda_backend_ascii:
+        case coda_backend_binary:
             return coda_ascbin_cursor_goto_next_array_element(cursor);
-        case coda_format_xml:
+        case coda_backend_memory:
+            return coda_mem_cursor_goto_next_array_element(cursor);
+        case coda_backend_xml:
             return coda_xml_cursor_goto_next_array_element(cursor);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_goto_next_array_element(cursor);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_goto_next_array_element(cursor);
-        case coda_format_cdf:
-        case coda_format_hdf4:
+        case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_goto_next_array_element(cursor);
 #else
             coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
             return -1;
 #endif
-        case coda_format_hdf5:
+        case coda_backend_hdf5:
 #ifdef HAVE_HDF5
             return coda_hdf5_cursor_goto_next_array_element(cursor);
 #else
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_netcdf:
+            return coda_netcdf_cursor_goto_next_array_element(cursor);
+        case coda_backend_grib:
+            return coda_grib_cursor_goto_next_array_element(cursor);
     }
 
     assert(0);
@@ -697,33 +798,33 @@ LIBCODA_API int coda_cursor_goto_attributes(coda_cursor *cursor)
         return -1;
     }
 
-    switch (cursor->stack[cursor->n - 1].type->format)
+    switch (cursor->stack[cursor->n - 1].type->backend)
     {
-        case coda_format_ascii:
-        case coda_format_binary:
+        case coda_backend_ascii:
+        case coda_backend_binary:
             return coda_ascbin_cursor_goto_attributes(cursor);
-        case coda_format_xml:
+        case coda_backend_memory:
+            return coda_mem_cursor_goto_attributes(cursor);
+        case coda_backend_xml:
             return coda_xml_cursor_goto_attributes(cursor);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_goto_attributes(cursor);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_goto_attributes(cursor);
-        case coda_format_cdf:
-        case coda_format_hdf4:
+        case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_goto_attributes(cursor);
 #else
             coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
             return -1;
 #endif
-        case coda_format_hdf5:
+        case coda_backend_hdf5:
 #ifdef HAVE_HDF5
             return coda_hdf5_cursor_goto_attributes(cursor);
 #else
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_netcdf:
+            return coda_netcdf_cursor_goto_attributes(cursor);
+        case coda_backend_grib:
+            return coda_grib_cursor_goto_attributes(cursor);
     }
 
     assert(0);
@@ -795,34 +896,37 @@ LIBCODA_API int coda_cursor_goto_root(coda_cursor *cursor)
  */
 LIBCODA_API int coda_cursor_use_base_type_of_special_type(coda_cursor *cursor)
 {
+    coda_type *type;
+
     if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
 
-    if (cursor->stack[cursor->n - 1].type->type_class != coda_special_class)
+    type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    if (type->type_class != coda_special_class)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE,
                        "cursor does not refer to a special type (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(cursor->stack[cursor->n - 1].type->type_class), __FILE__, __LINE__);
+                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
         return -1;
     }
 
-    switch (cursor->stack[cursor->n - 1].type->format)
+    switch (cursor->stack[cursor->n - 1].type->backend)
     {
-        case coda_format_ascii:
+        case coda_backend_ascii:
             return coda_ascii_cursor_use_base_type_of_special_type(cursor);
-        case coda_format_binary:
+        case coda_backend_binary:
             return coda_bin_cursor_use_base_type_of_special_type(cursor);
-        case coda_format_xml:
+        case coda_backend_memory:
+            return coda_mem_cursor_use_base_type_of_special_type(cursor);
+        case coda_backend_xml:
             return coda_xml_cursor_use_base_type_of_special_type(cursor);
-        case coda_format_netcdf:
-        case coda_format_grib1:
-        case coda_format_grib2:
-        case coda_format_cdf:
-        case coda_format_hdf4:
-        case coda_format_hdf5:
+        case coda_backend_hdf4:
+        case coda_backend_hdf5:
+        case coda_backend_netcdf:
+        case coda_backend_grib:
             break;
     }
 
@@ -844,20 +948,28 @@ LIBCODA_API int coda_cursor_use_base_type_of_special_type(coda_cursor *cursor)
  */
 LIBCODA_API int coda_cursor_has_ascii_content(const coda_cursor *cursor, int *has_ascii_content)
 {
-    coda_type *type;
-
     if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
 
-    if (coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type, &type) != 0)
+    switch (cursor->stack[cursor->n - 1].type->backend)
     {
-        return -1;
-    }
+        case coda_backend_ascii:
+            *has_ascii_content = 1;
+            break;
+        case coda_backend_xml:
+            return coda_xml_cursor_has_ascii_content(cursor, has_ascii_content);
+        default:
+            {
+                coda_type *definition = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
 
-    return coda_type_has_ascii_content(type, has_ascii_content);
+                *has_ascii_content = (definition->type_class == coda_text_class);
+            }
+            break;
+    }
+    return 0;
 }
 
 /** Get the length in bytes of a string data type.
@@ -873,30 +985,12 @@ LIBCODA_API int coda_cursor_has_ascii_content(const coda_cursor *cursor, int *ha
  */
 LIBCODA_API int coda_cursor_get_string_length(const coda_cursor *cursor, long *length)
 {
+    int has_ascii_content;
+
     if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
         return -1;
-    }
-    if (cursor->stack[cursor->n - 1].type->type_class != coda_text_class)
-    {
-        coda_type *type;
-        int has_ascii_content;
-
-        if (coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type, &type) != 0)
-        {
-            return -1;
-        }
-        if (coda_type_has_ascii_content(type, &has_ascii_content) != 0)
-        {
-            return -1;
-        }
-        if (!has_ascii_content)
-        {
-            coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to text (current type is %s) (%s:%u)",
-                           coda_type_get_class_name(cursor->stack[cursor->n - 1].type->type_class), __FILE__, __LINE__);
-            return -1;
-        }
     }
     if (length == NULL)
     {
@@ -904,35 +998,44 @@ LIBCODA_API int coda_cursor_get_string_length(const coda_cursor *cursor, long *l
         return -1;
     }
 
-    switch (cursor->stack[cursor->n - 1].type->format)
+    if (coda_cursor_has_ascii_content(cursor, &has_ascii_content) != 0)
     {
-        case coda_format_ascii:
+        return -1;
+    }
+    if (!has_ascii_content)
+    {
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to text data (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    switch (cursor->stack[cursor->n - 1].type->backend)
+    {
+        case coda_backend_ascii:
             return coda_ascii_cursor_get_string_length(cursor, length, -1);
-        case coda_format_binary:
-            assert(0);
-            exit(1);
-        case coda_format_xml:
+        case coda_backend_binary:
+            return coda_bin_cursor_get_string_length(cursor, length);
+        case coda_backend_memory:
+            return coda_mem_cursor_get_string_length(cursor, length);
+        case coda_backend_xml:
             return coda_xml_cursor_get_string_length(cursor, length);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_get_string_length(cursor, length);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_get_string_length(cursor, length);
-        case coda_format_cdf:
-        case coda_format_hdf4:
+        case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_get_string_length(cursor, length);
 #else
             coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
             return -1;
 #endif
-        case coda_format_hdf5:
+        case coda_backend_hdf5:
 #ifdef HAVE_HDF5
             return coda_hdf5_cursor_get_string_length(cursor, length);
 #else
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_netcdf:
+            return coda_netcdf_cursor_get_string_length(cursor, length);
+        case coda_backend_grib:
+            break;
     }
 
     assert(0);
@@ -961,21 +1064,20 @@ LIBCODA_API int coda_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit
         return -1;
     }
 
-    switch (cursor->stack[cursor->n - 1].type->format)
+    switch (cursor->stack[cursor->n - 1].type->backend)
     {
-        case coda_format_ascii:
+        case coda_backend_ascii:
             return coda_ascii_cursor_get_bit_size(cursor, bit_size, -1);
-        case coda_format_binary:
+        case coda_backend_binary:
             return coda_bin_cursor_get_bit_size(cursor, bit_size);
-        case coda_format_xml:
+        case coda_backend_memory:
+            return coda_mem_cursor_get_bit_size(cursor, bit_size);
+        case coda_backend_xml:
             return coda_xml_cursor_get_bit_size(cursor, bit_size);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_get_bit_size(cursor, bit_size);
-        case coda_format_netcdf:
-        case coda_format_cdf:
-        case coda_format_hdf4:
-        case coda_format_hdf5:
+        case coda_backend_hdf4:
+        case coda_backend_hdf5:
+        case coda_backend_netcdf:
+        case coda_backend_grib:
             *bit_size = -1;
             break;
     }
@@ -1007,7 +1109,7 @@ LIBCODA_API int coda_cursor_get_byte_size(const coda_cursor *cursor, int64_t *by
     {
         return -1;
     }
-    if (bit_size == -1)
+    if (bit_size < 0)
     {
         *byte_size = -1;
         return 0;
@@ -1037,34 +1139,34 @@ LIBCODA_API int coda_cursor_get_num_elements(const coda_cursor *cursor, long *nu
         return -1;
     }
 
-    switch (cursor->stack[cursor->n - 1].type->format)
+    switch (cursor->stack[cursor->n - 1].type->backend)
     {
-        case coda_format_ascii:
+        case coda_backend_ascii:
             return coda_ascii_cursor_get_num_elements(cursor, num_elements);
-        case coda_format_binary:
+        case coda_backend_binary:
             return coda_bin_cursor_get_num_elements(cursor, num_elements);
-        case coda_format_xml:
+        case coda_backend_memory:
+            return coda_mem_cursor_get_num_elements(cursor, num_elements);
+        case coda_backend_xml:
             return coda_xml_cursor_get_num_elements(cursor, num_elements);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_get_num_elements(cursor, num_elements);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_get_num_elements(cursor, num_elements);
-        case coda_format_cdf:
-        case coda_format_hdf4:
+        case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_get_num_elements(cursor, num_elements);
 #else
             coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
             return -1;
 #endif
-        case coda_format_hdf5:
+        case coda_backend_hdf5:
 #ifdef HAVE_HDF5
             return coda_hdf5_cursor_get_num_elements(cursor, num_elements);
 #else
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_netcdf:
+            return coda_netcdf_cursor_get_num_elements(cursor, num_elements);
+        case coda_backend_grib:
+            return coda_grib_cursor_get_num_elements(cursor, num_elements);
     }
 
     assert(0);
@@ -1172,19 +1274,19 @@ int coda_cursor_get_file_bit_offset(const coda_cursor *cursor, int64_t *bit_offs
         return -1;
     }
 
-    switch (cursor->stack[cursor->n - 1].type->format)
+    switch (cursor->stack[cursor->n - 1].type->backend)
     {
-        case coda_format_ascii:
-        case coda_format_binary:
-        case coda_format_xml:
+        case coda_backend_ascii:
+        case coda_backend_binary:
             *bit_offset = cursor->stack[cursor->n - 1].bit_offset;
             break;
-        case coda_format_netcdf:
-        case coda_format_grib1:
-        case coda_format_grib2:
-        case coda_format_cdf:
-        case coda_format_hdf4:
-        case coda_format_hdf5:
+        case coda_backend_xml:
+            return coda_xml_cursor_get_file_bit_offset(cursor, bit_offset);
+        case coda_backend_memory:
+        case coda_backend_hdf4:
+        case coda_backend_hdf5:
+        case coda_backend_netcdf:
+        case coda_backend_grib:
             *bit_offset = -1;
             break;
     }
@@ -1215,11 +1317,10 @@ int coda_cursor_get_file_byte_offset(const coda_cursor *cursor, int64_t *byte_of
         return -1;
     }
 
-    switch (cursor->stack[cursor->n - 1].type->format)
+    switch (cursor->stack[cursor->n - 1].type->backend)
     {
-        case coda_format_ascii:
-        case coda_format_binary:
-        case coda_format_xml:
+        case coda_backend_ascii:
+        case coda_backend_binary:
             if (cursor->stack[cursor->n - 1].bit_offset == -1)
             {
                 *byte_offset = -1;
@@ -1229,12 +1330,21 @@ int coda_cursor_get_file_byte_offset(const coda_cursor *cursor, int64_t *byte_of
                 *byte_offset = (cursor->stack[cursor->n - 1].bit_offset >> 3);
             }
             break;
-        case coda_format_netcdf:
-        case coda_format_grib1:
-        case coda_format_grib2:
-        case coda_format_cdf:
-        case coda_format_hdf4:
-        case coda_format_hdf5:
+        case coda_backend_xml:
+            if (coda_xml_cursor_get_file_bit_offset(cursor, byte_offset) != 0)
+            {
+                return -1;
+            }
+            if (*byte_offset != -1)
+            {
+                *byte_offset >>= 3;
+            }
+            break;
+        case coda_backend_memory:
+        case coda_backend_hdf4:
+        case coda_backend_hdf5:
+        case coda_backend_netcdf:
+        case coda_backend_grib:
             *byte_offset = -1;
             return -1;
     }
@@ -1252,6 +1362,8 @@ int coda_cursor_get_file_byte_offset(const coda_cursor *cursor, int64_t *byte_of
  */
 LIBCODA_API int coda_cursor_get_format(const coda_cursor *cursor, coda_format *format)
 {
+    coda_type *type;
+
     if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
@@ -1263,7 +1375,8 @@ LIBCODA_API int coda_cursor_get_format(const coda_cursor *cursor, coda_format *f
         return -1;
     }
 
-    *format = cursor->stack[cursor->n - 1].type->format;
+    type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    *format = type->format;
 
     return 0;
 }
@@ -1278,6 +1391,8 @@ LIBCODA_API int coda_cursor_get_format(const coda_cursor *cursor, coda_format *f
  */
 LIBCODA_API int coda_cursor_get_type_class(const coda_cursor *cursor, coda_type_class *type_class)
 {
+    coda_type *type;
+
     if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
@@ -1289,7 +1404,8 @@ LIBCODA_API int coda_cursor_get_type_class(const coda_cursor *cursor, coda_type_
         return -1;
     }
 
-    *type_class = cursor->stack[cursor->n - 1].type->type_class;
+    type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    *type_class = type->type_class;
 
     return 0;
 }
@@ -1305,20 +1421,13 @@ LIBCODA_API int coda_cursor_get_type_class(const coda_cursor *cursor, coda_type_
  */
 LIBCODA_API int coda_cursor_get_read_type(const coda_cursor *cursor, coda_native_type *read_type)
 {
-    coda_type *type;
-
     if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
 
-    if (coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type, &type) != 0)
-    {
-        return -1;
-    }
-
-    return coda_type_get_read_type(type, read_type);
+    return coda_type_get_read_type(coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type), read_type);
 }
 
 /** Retrieve the special type of the data element that the cursor points to.
@@ -1333,8 +1442,6 @@ LIBCODA_API int coda_cursor_get_read_type(const coda_cursor *cursor, coda_native
  */
 LIBCODA_API int coda_cursor_get_special_type(const coda_cursor *cursor, coda_special_type *special_type)
 {
-    coda_type *type;
-
     if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
@@ -1346,12 +1453,7 @@ LIBCODA_API int coda_cursor_get_special_type(const coda_cursor *cursor, coda_spe
         return -1;
     }
 
-    if (coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type, &type) != 0)
-    {
-        return -1;
-    }
-
-    return coda_type_get_special_type(type, special_type);
+    return coda_type_get_special_type(coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type), special_type);
 }
 
 /** Retrieve the CODA type of the data element that the cursor points to.
@@ -1376,7 +1478,9 @@ LIBCODA_API int coda_cursor_get_type(const coda_cursor *cursor, coda_type **type
         return -1;
     }
 
-    return coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type, type);
+    *type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    return 0;
 }
 
 /** Get the field index from a field name for the record at the current cursor position.
@@ -1398,11 +1502,7 @@ LIBCODA_API int coda_cursor_get_record_field_index_from_name(const coda_cursor *
         return -1;
     }
 
-    if (coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type, &type) != 0)
-    {
-        return -1;
-    }
-
+    type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     return coda_type_get_record_field_index_from_name(type, name, index);
 }
 
@@ -1423,6 +1523,8 @@ LIBCODA_API int coda_cursor_get_record_field_index_from_name(const coda_cursor *
  */
 LIBCODA_API int coda_cursor_get_record_field_available_status(const coda_cursor *cursor, long index, int *available)
 {
+    coda_type *type;
+
     if (cursor == NULL || cursor->n <= 0 || cursor->product == NULL || cursor->stack[cursor->n - 1].type == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
@@ -1433,29 +1535,31 @@ LIBCODA_API int coda_cursor_get_record_field_available_status(const coda_cursor 
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "available argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
-    if (cursor->stack[cursor->n - 1].type->type_class != coda_record_class)
+
+    type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    if (type->type_class != coda_record_class)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to a record (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(cursor->stack[cursor->n - 1].type->type_class), __FILE__, __LINE__);
+                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
         return -1;
     }
 
-    switch (cursor->stack[cursor->n - 1].type->format)
+    switch (cursor->stack[cursor->n - 1].type->backend)
     {
-        case coda_format_ascii:
-        case coda_format_binary:
+        case coda_backend_ascii:
+        case coda_backend_binary:
             return coda_ascbin_cursor_get_record_field_available_status(cursor, index, available);
-        case coda_format_xml:
+        case coda_backend_memory:
+            return coda_mem_cursor_get_record_field_available_status(cursor, index, available);
+        case coda_backend_xml:
             return coda_xml_cursor_get_record_field_available_status(cursor, index, available);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_get_record_field_available_status(cursor, index, available);
-        case coda_format_netcdf:
-        case coda_format_cdf:
-        case coda_format_hdf4:
-        case coda_format_hdf5:
-            /* fields are always available in HDF */
+        case coda_backend_hdf4:
+        case coda_backend_hdf5:
+        case coda_backend_netcdf:
+            /* fields are always available */
             *available = 1;
+            break;
+        case coda_backend_grib:
             break;
     }
 
@@ -1474,6 +1578,8 @@ LIBCODA_API int coda_cursor_get_record_field_available_status(const coda_cursor 
  */
 LIBCODA_API int coda_cursor_get_available_union_field_index(const coda_cursor *cursor, long *index)
 {
+    coda_type *type;
+
     if (cursor == NULL || cursor->n <= 0 || cursor->product == NULL || cursor->stack[cursor->n - 1].type == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
@@ -1484,26 +1590,27 @@ LIBCODA_API int coda_cursor_get_available_union_field_index(const coda_cursor *c
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "index argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
-    if (cursor->stack[cursor->n - 1].type->type_class != coda_record_class)
+
+    type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    if (type->type_class != coda_record_class)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to a record (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(cursor->stack[cursor->n - 1].type->type_class), __FILE__, __LINE__);
+                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
         return -1;
     }
 
-    switch (cursor->stack[cursor->n - 1].type->format)
+    switch (cursor->stack[cursor->n - 1].type->backend)
     {
-        case coda_format_ascii:
-        case coda_format_binary:
+        case coda_backend_ascii:
+        case coda_backend_binary:
             return coda_ascbin_cursor_get_available_union_field_index(cursor, index);
-        case coda_format_xml:
+        case coda_backend_xml:
             return coda_xml_cursor_get_available_union_field_index(cursor, index);
-        case coda_format_netcdf:
-        case coda_format_grib1:
-        case coda_format_grib2:
-        case coda_format_cdf:
-        case coda_format_hdf4:
-        case coda_format_hdf5:
+        case coda_backend_memory:
+        case coda_backend_hdf4:
+        case coda_backend_hdf5:
+        case coda_backend_netcdf:
+        case coda_backend_grib:
             break;
     }
 
@@ -1528,15 +1635,11 @@ LIBCODA_API int coda_cursor_get_available_union_field_index(const coda_cursor *c
  */
 LIBCODA_API int coda_cursor_get_array_dim(const coda_cursor *cursor, int *num_dims, long dim[])
 {
+    coda_type *type;
+
     if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (cursor->stack[cursor->n - 1].type->type_class != coda_array_class)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
-                       coda_type_get_class_name(cursor->stack[cursor->n - 1].type->type_class));
         return -1;
     }
     if (num_dims == NULL || dim == NULL)
@@ -1545,1878 +1648,45 @@ LIBCODA_API int coda_cursor_get_array_dim(const coda_cursor *cursor, int *num_di
         return -1;
     }
 
-    switch (cursor->stack[cursor->n - 1].type->format)
+    type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    if (type->type_class != coda_array_class)
     {
-        case coda_format_ascii:
-        case coda_format_binary:
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
+        return -1;
+    }
+
+    switch (cursor->stack[cursor->n - 1].type->backend)
+    {
+        case coda_backend_ascii:
+        case coda_backend_binary:
             return coda_ascbin_cursor_get_array_dim(cursor, num_dims, dim);
-        case coda_format_xml:
+        case coda_backend_memory:
+            return coda_mem_cursor_get_array_dim(cursor, num_dims, dim);
+        case coda_backend_xml:
             return coda_xml_cursor_get_array_dim(cursor, num_dims, dim);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_get_array_dim(cursor, num_dims, dim);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_get_array_dim(cursor, num_dims, dim);
-        case coda_format_cdf:
-        case coda_format_hdf4:
+        case coda_backend_hdf4:
 #ifdef HAVE_HDF4
             return coda_hdf4_cursor_get_array_dim(cursor, num_dims, dim);
 #else
             coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
             return -1;
 #endif
-        case coda_format_hdf5:
+        case coda_backend_hdf5:
 #ifdef HAVE_HDF5
             return coda_hdf5_cursor_get_array_dim(cursor, num_dims, dim);
 #else
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_backend_netcdf:
+            return coda_netcdf_cursor_get_array_dim(cursor, num_dims, dim);
+        case coda_backend_grib:
+            return coda_grib_cursor_get_array_dim(cursor, num_dims, dim);
     }
 
     assert(0);
     exit(1);
-}
-
-/** Retrieve data as type \c int8 from the product file. The value is stored in \a dst.
- * The cursor must point to data with one of the following read types to succeed:
- * - \c int8
- *
- * For all other data types the function will return an error.
- * \param cursor Pointer to a CODA cursor.
- * \param dst Pointer to the variable where the value that was read from the product will be stored.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_int8(const coda_cursor *cursor, int8_t *dst)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_cursor_read_int8(cursor, dst, -1);
-        case coda_format_binary:
-            return coda_bin_cursor_read_int8(cursor, dst);
-        case coda_format_xml:
-            return coda_xml_cursor_read_int8(cursor, dst);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_read_int8(cursor, dst);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_read_int8(cursor, dst);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_cursor_read_int8(cursor, dst);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_cursor_read_int8(cursor, dst);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-    }
-
-    assert(0);
-    exit(1);
-}
-
-/** Retrieve data as type \c uint8 from the product file. The value is stored in \a dst.
- * The cursor must point to data with one of the following read types to succeed:
- * - \c uint8
- *
- * For all other data types the function will return an error.
- * \param cursor Pointer to a CODA cursor.
- * \param dst Pointer to the variable where the value that was read from the product will be stored.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_uint8(const coda_cursor *cursor, uint8_t *dst)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_cursor_read_uint8(cursor, dst, -1);
-        case coda_format_binary:
-            return coda_bin_cursor_read_uint8(cursor, dst);
-        case coda_format_xml:
-            return coda_xml_cursor_read_uint8(cursor, dst);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_read_uint8(cursor, dst);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_read_uint8(cursor, dst);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_cursor_read_uint8(cursor, dst);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_cursor_read_uint8(cursor, dst);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-    }
-
-    assert(0);
-    exit(1);
-}
-
-/** Retrieve data as type \c int16 from the product file. The value is stored in \a dst.
- * The cursor must point to data with one of the following read types to succeed:
- * - \c int8
- * - \c uint8
- * - \c int16
- *
- * For all other data types the function will return an error.
- * \param cursor Pointer to a CODA cursor.
- * \param dst Pointer to the variable where the value that was read from the product will be stored.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_int16(const coda_cursor *cursor, int16_t *dst)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_cursor_read_int16(cursor, dst, -1);
-        case coda_format_binary:
-            return coda_bin_cursor_read_int16(cursor, dst);
-        case coda_format_xml:
-            return coda_xml_cursor_read_int16(cursor, dst);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_read_int16(cursor, dst);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_read_int16(cursor, dst);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_cursor_read_int16(cursor, dst);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_cursor_read_int16(cursor, dst);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-    }
-
-    assert(0);
-    exit(1);
-}
-
-/** Retrieve data as type \c uint16 from the product file. The value is stored in \a dst.
- * The cursor must point to data with one of the following read types to succeed:
- * - \c uint8
- * - \c uint16
- *
- * For all other data types the function will return an error.
- * \param cursor Pointer to a CODA cursor.
- * \param dst Pointer to the variable where the value that was read from the product will be stored.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_uint16(const coda_cursor *cursor, uint16_t *dst)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_cursor_read_uint16(cursor, dst, -1);
-        case coda_format_binary:
-            return coda_bin_cursor_read_uint16(cursor, dst);
-        case coda_format_xml:
-            return coda_xml_cursor_read_uint16(cursor, dst);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_read_uint16(cursor, dst);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_read_uint16(cursor, dst);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_cursor_read_uint16(cursor, dst);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_cursor_read_uint16(cursor, dst);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-    }
-
-    assert(0);
-    exit(1);
-}
-
-/** Retrieve data as type \c int32 from the product file. The value is stored in \a dst.
- * The cursor must point to data with one of the following read types to succeed:
- * - \c int8
- * - \c uint8
- * - \c int16
- * - \c uint16
- * - \c int32
- *
- * For all other data types the function will return an error.
- * \param cursor Pointer to a CODA cursor.
- * \param dst Pointer to the variable where the value that was read from the product will be stored.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_int32(const coda_cursor *cursor, int32_t *dst)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_cursor_read_int32(cursor, dst, -1);
-        case coda_format_binary:
-            return coda_bin_cursor_read_int32(cursor, dst);
-        case coda_format_xml:
-            return coda_xml_cursor_read_int32(cursor, dst);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_read_int32(cursor, dst);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_read_int32(cursor, dst);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_cursor_read_int32(cursor, dst);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_cursor_read_int32(cursor, dst);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-    }
-
-    assert(0);
-    exit(1);
-}
-
-/** Retrieve data as type \c uint32 from the product file. The value is stored in \a dst.
- * The cursor must point to data with one of the following read types to succeed:
- * - \c uint8
- * - \c uint16
- * - \c uint32
- *
- * For all other data types the function will return an error.
- * \param cursor Pointer to a CODA cursor.
- * \param dst Pointer to the variable where the value that was read from the product will be stored.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_uint32(const coda_cursor *cursor, uint32_t *dst)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_cursor_read_uint32(cursor, dst, -1);
-        case coda_format_binary:
-            return coda_bin_cursor_read_uint32(cursor, dst);
-        case coda_format_xml:
-            return coda_xml_cursor_read_uint32(cursor, dst);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_read_uint32(cursor, dst);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_read_uint32(cursor, dst);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_cursor_read_uint32(cursor, dst);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_cursor_read_uint32(cursor, dst);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-    }
-
-    assert(0);
-    exit(1);
-}
-
-/** Retrieve data as type \c int64 from the product file. The value is stored in \a dst.
- * The cursor must point to data with one of the following read types to succeed:
- * - \c int8
- * - \c uint8
- * - \c int16
- * - \c uint16
- * - \c int32
- * - \c uint32
- * - \c int64
- *
- * For all other data types the function will return an error.
- * \param cursor Pointer to a CODA cursor.
- * \param dst Pointer to the variable where the value that was read from the product will be stored.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_int64(const coda_cursor *cursor, int64_t *dst)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_cursor_read_int64(cursor, dst, -1);
-        case coda_format_binary:
-            return coda_bin_cursor_read_int64(cursor, dst);
-        case coda_format_xml:
-            return coda_xml_cursor_read_int64(cursor, dst);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_read_int64(cursor, dst);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_read_int64(cursor, dst);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_cursor_read_int64(cursor, dst);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_cursor_read_int64(cursor, dst);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-    }
-
-    assert(0);
-    exit(1);
-}
-
-/** Retrieve data as type \c uint64 from the product file. The value is stored in \a dst.
- * The cursor must point to data with one of the following read types to succeed:
- * - \c uint8
- * - \c uint16
- * - \c uint32
- * - \c uint64
- *
- * For all other data types the function will return an error.
- * \param cursor Pointer to a CODA cursor.
- * \param dst Pointer to the variable where the value that was read from the product will be stored.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_uint64(const coda_cursor *cursor, uint64_t *dst)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_cursor_read_uint64(cursor, dst, -1);
-        case coda_format_binary:
-            return coda_bin_cursor_read_uint64(cursor, dst);
-        case coda_format_xml:
-            return coda_xml_cursor_read_uint64(cursor, dst);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_read_uint64(cursor, dst);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_read_uint64(cursor, dst);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_cursor_read_uint64(cursor, dst);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_cursor_read_uint64(cursor, dst);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-    }
-
-    assert(0);
-    exit(1);
-}
-
-/** Retrieve data as type \c float from the product file. The value is stored in \a dst.
- * The cursor must point to data with one of the following read types to succeed:
- * - \c int8
- * - \c uint8
- * - \c int16
- * - \c uint16
- * - \c int32
- * - \c uint32
- * - \c int64
- * - \c uint64
- * - \c float
- * - \c double
- *
- * For all other data types the function will return an error.
- * \param cursor Pointer to a CODA cursor.
- * \param dst Pointer to the variable where the value that was read from the product will be stored.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_float(const coda_cursor *cursor, float *dst)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_cursor_read_float(cursor, dst, -1);
-        case coda_format_binary:
-            return coda_bin_cursor_read_float(cursor, dst);
-        case coda_format_xml:
-            return coda_xml_cursor_read_float(cursor, dst);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_read_float(cursor, dst);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_read_float(cursor, dst);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_cursor_read_float(cursor, dst);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_cursor_read_float(cursor, dst);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-    }
-
-    assert(0);
-    exit(1);
-}
-
-/** Retrieve data as type \c double from the product file. The value is stored in \a dst.
- * The cursor must point to data with one of the following read types to succeed:
- * - \c int8
- * - \c uint8
- * - \c int16
- * - \c uint16
- * - \c int32
- * - \c uint32
- * - \c int64
- * - \c uint64
- * - \c float
- * - \c double
- *
- * For all other data types the function will return an error.
- * \param cursor Pointer to a CODA cursor.
- * \param dst Pointer to the variable where the value that was read from the product will be stored.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_double(const coda_cursor *cursor, double *dst)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_cursor_read_double(cursor, dst, -1);
-        case coda_format_binary:
-            return coda_bin_cursor_read_double(cursor, dst);
-        case coda_format_xml:
-            return coda_xml_cursor_read_double(cursor, dst);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_read_double(cursor, dst);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_read_double(cursor, dst);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_cursor_read_double(cursor, dst);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_cursor_read_double(cursor, dst);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-    }
-
-    assert(0);
-    exit(1);
-}
-
-/** Retrieve data as type \c char from the product file. The value is stored in \a dst.
- * The cursor must point to data with read type \c char to succeed.
- * For all other data types the function will return an error.
- * \param cursor Pointer to a CODA cursor.
- * \param dst Pointer to the variable where the value that was read from the product will be stored.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_char(const coda_cursor *cursor, char *dst)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_cursor_read_char(cursor, dst, -1);
-        case coda_format_binary:
-            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a char data type");
-            return -1;
-        case coda_format_xml:
-            return coda_xml_cursor_read_char(cursor, dst);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_read_char(cursor, dst);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_read_char(cursor, dst);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_cursor_read_char(cursor, dst);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_cursor_read_char(cursor, dst);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-    }
-
-    assert(0);
-    exit(1);
-}
-
-/** Retrieve text data as a 0 terminated string. The value is stored in \a dst.
- * You will be able to read data as a string if the cursor points to data with type class #coda_text_class or if
- * it points to ASCII data (see coda_cursor_has_ascii_content()). For other cases the function will return an error.
- * The function will fill at most \a dst_size bytes in the dst memory space. The last character that is put in \a dst
- * will always be a zero termination character, which means that at most \a dst_size - 1 characters of text data will
- * be read.
- * \param cursor Pointer to a CODA cursor.
- * \param dst Pointer to the variable where the value that was read from the product will be stored.
- * \param dst_size The maximum number of bytes to write in \a dst.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_string(const coda_cursor *cursor, char *dst, long dst_size)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst_size <= 0)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst_size (%ld) argument is <= 0 (%s:%u)", dst_size, __FILE__,
-                       __LINE__);
-        return -1;
-    }
-    if (cursor->stack[cursor->n - 1].type->type_class != coda_text_class)
-    {
-        coda_type *type;
-        int has_ascii_content;
-
-        if (coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type, &type) != 0)
-        {
-            return -1;
-        }
-        if (coda_type_has_ascii_content(type, &has_ascii_content) != 0)
-        {
-            return -1;
-        }
-        if (!has_ascii_content)
-        {
-            coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to text (current type is %s) (%s:%u)",
-                           coda_type_get_class_name(cursor->stack[cursor->n - 1].type->type_class), __FILE__, __LINE__);
-            return -1;
-        }
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_cursor_read_string(cursor, dst, dst_size, -1);
-        case coda_format_binary:
-            assert(0);
-            exit(1);
-        case coda_format_xml:
-            return coda_xml_cursor_read_string(cursor, dst, dst_size);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_read_string(cursor, dst, dst_size);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_read_string(cursor, dst, dst_size);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_cursor_read_string(cursor, dst, dst_size);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_cursor_read_string(cursor, dst, dst_size);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-    }
-
-    assert(0);
-    exit(1);
-}
-
-/** Read a specified amount of bits. The data is stored in \a dst.
- * This function will work independent of the type of data at the current cursor position, but it will not work on
- * ASCII, XML, HDF4, and HDF5 data.
- * The function will read a \a bit_length amount of bits starting from the sum of the cursor offset position and the
- * amount of bits given by the \a bit_offset parameter. If \a bit_length is not a rounded amount of bytes the data will
- * be put in the first \a bit_length/8 + 1 bytes and will be right adjusted (i.e. padding bits with value 0 will be put
- * in the most significant bits of the first byte of \a dst).
- * \param cursor Pointer to a CODA cursor.
- * \param dst Pointer to the variable where the value that was read from the product will be stored.
- * \param bit_offset The offset relative to the current cursor position from where the bits should be read.
- * \param bit_length The number of bits to read.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_bits(const coda_cursor *cursor, uint8_t *dst, int64_t bit_offset, int64_t bit_length)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (bit_length < 0)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "bit_length argument is negative (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (bit_length == 0)
-    {
-        return 0;
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_cursor_read_bits(cursor, dst, bit_offset, bit_length);
-        case coda_format_binary:
-            return coda_bin_cursor_read_bits(cursor, dst, bit_offset, bit_length);
-        case coda_format_xml:
-        case coda_format_netcdf:
-        case coda_format_grib1:
-        case coda_format_grib2:
-        case coda_format_cdf:
-        case coda_format_hdf4:
-        case coda_format_hdf5:
-            break;
-    }
-
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a raw bits data type");
-    return -1;
-}
-
-/** Read a specified amount of bytes. The data is stored in \a dst.
- * This function will work independent of the type of data at the current cursor position, but it will not work on HDF4
- * and HDF5 files. For XML files it will only work if the cursor points to a single element (i.e. you will get an error
- * when the cursor points to an XML element array or an attribute record).
- * The function will read a \a length amount of bytes starting from the sum of the cursor offset position and the
- * amount of bytes given by the \a offset parameter.
- * \param cursor Pointer to a CODA cursor.
- * \param dst Pointer to the variable where the value that was read from the product will be stored.
- * \param offset The offset relative to the current cursor position from where the bytes should be read.
- * \param length The number of bytes to read.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_bytes(const coda_cursor *cursor, uint8_t *dst, int64_t offset, int64_t length)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (offset < 0)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "offset argument is negative (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (length < 0)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "length argument is negative (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (length == 0)
-    {
-        return 0;
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_cursor_read_bytes(cursor, dst, offset, length);
-        case coda_format_binary:
-            return coda_bin_cursor_read_bytes(cursor, dst, offset, length);
-        case coda_format_xml:
-            return coda_xml_cursor_read_bytes(cursor, dst, offset, length);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_read_bytes(cursor, dst, offset, length);
-        case coda_format_netcdf:
-        case coda_format_cdf:
-        case coda_format_hdf4:
-        case coda_format_hdf5:
-            break;
-    }
-
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a raw bytes data type");
-    return -1;
-}
-
-/** Retrieve a data array as type \c int8 from the product file. The values are stored in \a dst.
- * The cursor must point to an array with a basic type that has one of the following read types to succeed:
- * - \c int8
- *
- * For all other data types the function will return an error.
- * \param cursor Pointer to a CODA cursor.
- * \param dst Pointer to the variable where the values read from the product will be stored.
- * \param array_ordering Specifies array storage ordering for \a dst: must be #coda_array_ordering_c or
- * #coda_array_ordering_fortran.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_int8_array(const coda_cursor *cursor, int8_t *dst, coda_array_ordering array_ordering)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    if (cursor->stack[cursor->n - 1].type->type_class != coda_array_class)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(cursor->stack[cursor->n - 1].type->type_class), __FILE__, __LINE__);
-        return -1;
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_cursor_read_int8_array(cursor, dst, array_ordering, -1);
-        case coda_format_binary:
-            return coda_bin_cursor_read_int8_array(cursor, dst, array_ordering);
-        case coda_format_xml:
-            return coda_xml_cursor_read_int8_array(cursor, dst, array_ordering);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_read_int8_array(cursor, dst, array_ordering);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_read_int8_array(cursor, dst, array_ordering);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_cursor_read_int8_array(cursor, dst, array_ordering);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_cursor_read_int8_array(cursor, dst, array_ordering);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-    }
-
-    assert(0);
-    exit(1);
-}
-
-/** Retrieve a data array as type \c uint8 from the product file. The values are stored in \a dst.
- * The cursor must point to an array with a basic type that has one of the following read types to succeed:
- * - \c uint8
- *
- * For all other data types the function will return an error.
- * \param cursor Pointer to a CODA cursor.
- * \param dst Pointer to the variable where the values read from the product will be stored.
- * \param array_ordering Specifies array storage ordering for \a dst: must be #coda_array_ordering_c or
- * #coda_array_ordering_fortran.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_uint8_array(const coda_cursor *cursor, uint8_t *dst,
-                                             coda_array_ordering array_ordering)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    if (cursor->stack[cursor->n - 1].type->type_class != coda_array_class)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(cursor->stack[cursor->n - 1].type->type_class), __FILE__, __LINE__);
-        return -1;
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_cursor_read_uint8_array(cursor, dst, array_ordering, -1);
-        case coda_format_binary:
-            return coda_bin_cursor_read_uint8_array(cursor, dst, array_ordering);
-        case coda_format_xml:
-            return coda_xml_cursor_read_uint8_array(cursor, dst, array_ordering);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_read_uint8_array(cursor, dst, array_ordering);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_read_uint8_array(cursor, dst, array_ordering);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_cursor_read_uint8_array(cursor, dst, array_ordering);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_cursor_read_uint8_array(cursor, dst, array_ordering);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-    }
-
-    assert(0);
-    exit(1);
-}
-
-/** Retrieve a data array as type \c int16 from the product file. The values are stored in \a dst.
- * The cursor must point to an array with a basic type that has one of the following read types to succeed:
- * - \c int8
- * - \c uint8
- * - \c int16
- *
- * For all other data types the function will return an error.
- * \param cursor Pointer to a CODA cursor.
- * \param dst Pointer to the variable where the values read from the product will be stored.
- * \param array_ordering Specifies array storage ordering for \a dst: must be #coda_array_ordering_c or
- * #coda_array_ordering_fortran.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_int16_array(const coda_cursor *cursor, int16_t *dst,
-                                             coda_array_ordering array_ordering)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    if (cursor->stack[cursor->n - 1].type->type_class != coda_array_class)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(cursor->stack[cursor->n - 1].type->type_class), __FILE__, __LINE__);
-        return -1;
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_cursor_read_int16_array(cursor, dst, array_ordering, -1);
-        case coda_format_binary:
-            return coda_bin_cursor_read_int16_array(cursor, dst, array_ordering);
-        case coda_format_xml:
-            return coda_xml_cursor_read_int16_array(cursor, dst, array_ordering);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_read_int16_array(cursor, dst, array_ordering);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_read_int16_array(cursor, dst, array_ordering);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_cursor_read_int16_array(cursor, dst, array_ordering);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_cursor_read_int16_array(cursor, dst, array_ordering);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-    }
-
-    assert(0);
-    exit(1);
-}
-
-/** Retrieve a data array as type \c uint16 from the product file. The values are stored in \a dst.
- * The cursor must point to an array with a basic type that has one of the following read types to succeed:
- * - \c uint8
- * - \c uint16
- *
- * For all other data types the function will return an error.
- * \param cursor Pointer to a CODA cursor.
- * \param dst Pointer to the variable where the values read from the product will be stored.
- * \param array_ordering Specifies array storage ordering for \a dst: must be #coda_array_ordering_c or
- * #coda_array_ordering_fortran.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_uint16_array(const coda_cursor *cursor, uint16_t *dst,
-                                              coda_array_ordering array_ordering)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    if (cursor->stack[cursor->n - 1].type->type_class != coda_array_class)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(cursor->stack[cursor->n - 1].type->type_class), __FILE__, __LINE__);
-        return -1;
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_cursor_read_uint16_array(cursor, dst, array_ordering, -1);
-        case coda_format_binary:
-            return coda_bin_cursor_read_uint16_array(cursor, dst, array_ordering);
-        case coda_format_xml:
-            return coda_xml_cursor_read_uint16_array(cursor, dst, array_ordering);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_read_uint16_array(cursor, dst, array_ordering);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_read_uint16_array(cursor, dst, array_ordering);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_cursor_read_uint16_array(cursor, dst, array_ordering);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_cursor_read_uint16_array(cursor, dst, array_ordering);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-    }
-
-    assert(0);
-    exit(1);
-}
-
-/** Retrieve a data array as type \c int32 from the product file. The values are stored in \a dst.
- * The cursor must point to an array with a basic type that has one of the following read types to succeed:
- * - \c int8
- * - \c uint8
- * - \c int16
- * - \c uint16
- * - \c int32
- *
- * For all other data types the function will return an error.
- * \param cursor Pointer to a CODA cursor.
- * \param dst Pointer to the variable where the values read from the product will be stored.
- * \param array_ordering Specifies array storage ordering for \a dst: must be #coda_array_ordering_c or
- * #coda_array_ordering_fortran.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_int32_array(const coda_cursor *cursor, int32_t *dst,
-                                             coda_array_ordering array_ordering)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    if (cursor->stack[cursor->n - 1].type->type_class != coda_array_class)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(cursor->stack[cursor->n - 1].type->type_class), __FILE__, __LINE__);
-        return -1;
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_cursor_read_int32_array(cursor, dst, array_ordering, -1);
-        case coda_format_binary:
-            return coda_bin_cursor_read_int32_array(cursor, dst, array_ordering);
-        case coda_format_xml:
-            return coda_xml_cursor_read_int32_array(cursor, dst, array_ordering);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_read_int32_array(cursor, dst, array_ordering);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_read_int32_array(cursor, dst, array_ordering);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_cursor_read_int32_array(cursor, dst, array_ordering);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_cursor_read_int32_array(cursor, dst, array_ordering);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-    }
-
-    assert(0);
-    exit(1);
-}
-
-/** Retrieve a data array as type \c uint32 from the product file. The values are stored in \a dst.
- * The cursor must point to an array with a basic type that has one of the following read types to succeed:
- * - \c uint8
- * - \c uint16
- * - \c uint32
- *
- * For all other data types the function will return an error.
- * \param cursor Pointer to a CODA cursor.
- * \param dst Pointer to the variable where the values read from the product will be stored.
- * \param array_ordering Specifies array storage ordering for \a dst: must be #coda_array_ordering_c or
- * #coda_array_ordering_fortran.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_uint32_array(const coda_cursor *cursor, uint32_t *dst,
-                                              coda_array_ordering array_ordering)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    if (cursor->stack[cursor->n - 1].type->type_class != coda_array_class)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(cursor->stack[cursor->n - 1].type->type_class), __FILE__, __LINE__);
-        return -1;
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_cursor_read_uint32_array(cursor, dst, array_ordering, -1);
-        case coda_format_binary:
-            return coda_bin_cursor_read_uint32_array(cursor, dst, array_ordering);
-        case coda_format_xml:
-            return coda_xml_cursor_read_uint32_array(cursor, dst, array_ordering);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_read_uint32_array(cursor, dst, array_ordering);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_read_uint32_array(cursor, dst, array_ordering);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_cursor_read_uint32_array(cursor, dst, array_ordering);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_cursor_read_uint32_array(cursor, dst, array_ordering);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-    }
-
-    assert(0);
-    exit(1);
-}
-
-/** Retrieve a data array as type \c int64 from the product file. The values are stored in \a dst.
- * The cursor must point to an array with a basic type that has one of the following read types to succeed:
- * - \c int8
- * - \c uint8
- * - \c int16
- * - \c uint16
- * - \c int32
- * - \c uint32
- * - \c int64
- *
- * For all other data types the function will return an error.
- * \param cursor Pointer to a CODA cursor.
- * \param dst Pointer to the variable where the values read from the product will be stored.
- * \param array_ordering Specifies array storage ordering for \a dst: must be #coda_array_ordering_c or
- * #coda_array_ordering_fortran.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_int64_array(const coda_cursor *cursor, int64_t *dst,
-                                             coda_array_ordering array_ordering)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    if (cursor->stack[cursor->n - 1].type->type_class != coda_array_class)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(cursor->stack[cursor->n - 1].type->type_class), __FILE__, __LINE__);
-        return -1;
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_cursor_read_int64_array(cursor, dst, array_ordering, -1);
-        case coda_format_binary:
-            return coda_bin_cursor_read_int64_array(cursor, dst, array_ordering);
-        case coda_format_xml:
-            return coda_xml_cursor_read_int64_array(cursor, dst, array_ordering);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_read_int64_array(cursor, dst, array_ordering);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_read_int64_array(cursor, dst, array_ordering);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_cursor_read_int64_array(cursor, dst, array_ordering);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_cursor_read_int64_array(cursor, dst, array_ordering);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-    }
-
-    assert(0);
-    exit(1);
-}
-
-/** Retrieve a data array as type \c uint64 from the product file. The values are stored in \a dst.
- * The cursor must point to an array with a basic type that has one of the following read types to succeed:
- * - \c uint8
- * - \c uint16
- * - \c uint32
- * - \c uint64
- *
- * For all other data types the function will return an error.
- * \param cursor Pointer to a CODA cursor.
- * \param dst Pointer to the variable where the values read from the product will be stored.
- * \param array_ordering Specifies array storage ordering for \a dst: must be #coda_array_ordering_c or
- * #coda_array_ordering_fortran.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_uint64_array(const coda_cursor *cursor, uint64_t *dst,
-                                              coda_array_ordering array_ordering)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    if (cursor->stack[cursor->n - 1].type->type_class != coda_array_class)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(cursor->stack[cursor->n - 1].type->type_class), __FILE__, __LINE__);
-        return -1;
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_cursor_read_uint64_array(cursor, dst, array_ordering, -1);
-        case coda_format_binary:
-            return coda_bin_cursor_read_uint64_array(cursor, dst, array_ordering);
-        case coda_format_xml:
-            return coda_xml_cursor_read_uint64_array(cursor, dst, array_ordering);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_read_uint64_array(cursor, dst, array_ordering);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_read_uint64_array(cursor, dst, array_ordering);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_cursor_read_uint64_array(cursor, dst, array_ordering);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_cursor_read_uint64_array(cursor, dst, array_ordering);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-    }
-
-    assert(0);
-    exit(1);
-}
-
-/** Retrieve a data array as type \c float from the product file. The values are stored in \a dst.
- * The cursor must point to an array with a basic type that has one of the following read types to succeed:
- * - \c int8
- * - \c uint8
- * - \c int16
- * - \c uint16
- * - \c int32
- * - \c uint32
- * - \c int64
- * - \c uint64
- * - \c float
- * - \c double
- *
- * For all other data types the function will return an error.
- * \param cursor Pointer to a CODA cursor.
- * \param dst Pointer to the variable where the values read from the product will be stored.
- * \param array_ordering Specifies array storage ordering for \a dst: must be #coda_array_ordering_c or
- * #coda_array_ordering_fortran.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_float_array(const coda_cursor *cursor, float *dst, coda_array_ordering array_ordering)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    if (cursor->stack[cursor->n - 1].type->type_class != coda_array_class)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(cursor->stack[cursor->n - 1].type->type_class), __FILE__, __LINE__);
-        return -1;
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_cursor_read_float_array(cursor, dst, array_ordering, -1);
-        case coda_format_binary:
-            return coda_bin_cursor_read_float_array(cursor, dst, array_ordering);
-        case coda_format_xml:
-            return coda_xml_cursor_read_float_array(cursor, dst, array_ordering);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_read_float_array(cursor, dst, array_ordering);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_read_float_array(cursor, dst, array_ordering);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_cursor_read_float_array(cursor, dst, array_ordering);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_cursor_read_float_array(cursor, dst, array_ordering);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-    }
-
-    assert(0);
-    exit(1);
-}
-
-/** Retrieve a data array as type \c double from the product file. The values are stored in \a dst.
- * The cursor must point to an array with a basic type that has one of the following read types to succeed:
- * - \c int8
- * - \c uint8
- * - \c int16
- * - \c uint16
- * - \c int32
- * - \c uint32
- * - \c int64
- * - \c uint64
- * - \c float
- * - \c double
- *
- * For all other data types the function will return an error.
- * \param cursor Pointer to a CODA cursor.
- * \param dst Pointer to the variable where the values read from the product will be stored.
- * \param array_ordering Specifies array storage ordering for \a dst: must be #coda_array_ordering_c or
- * #coda_array_ordering_fortran.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_double_array(const coda_cursor *cursor, double *dst,
-                                              coda_array_ordering array_ordering)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    if (cursor->stack[cursor->n - 1].type->type_class != coda_array_class)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(cursor->stack[cursor->n - 1].type->type_class), __FILE__, __LINE__);
-        return -1;
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_cursor_read_double_array(cursor, dst, array_ordering, -1);
-        case coda_format_binary:
-            return coda_bin_cursor_read_double_array(cursor, dst, array_ordering);
-        case coda_format_xml:
-            return coda_xml_cursor_read_double_array(cursor, dst, array_ordering);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_read_double_array(cursor, dst, array_ordering);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_read_double_array(cursor, dst, array_ordering);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_cursor_read_double_array(cursor, dst, array_ordering);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_cursor_read_double_array(cursor, dst, array_ordering);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-    }
-
-    assert(0);
-    exit(1);
-}
-
-/** Retrieve a data array as type \c char from the product file. The values are stored in \a dst.
- * The cursor must point to an array with a basic type that has read type \c char to succeed.
- * For all other data types the function will return an error.
- * \param cursor Pointer to a CODA cursor.
- * \param dst Pointer to the variable where the values read from the product will be stored.
- * \param array_ordering Specifies array storage ordering for \a dst: must be #coda_array_ordering_c or
- * #coda_array_ordering_fortran.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_char_array(const coda_cursor *cursor, char *dst, coda_array_ordering array_ordering)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    if (cursor->stack[cursor->n - 1].type->type_class != coda_array_class)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(cursor->stack[cursor->n - 1].type->type_class), __FILE__, __LINE__);
-        return -1;
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_cursor_read_char_array(cursor, dst, array_ordering, -1);
-        case coda_format_binary:
-            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a char data type");
-            return -1;
-        case coda_format_xml:
-            return coda_xml_cursor_read_char_array(cursor, dst, array_ordering);
-        case coda_format_netcdf:
-            return coda_netcdf_cursor_read_char_array(cursor, dst, array_ordering);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_cursor_read_char_array(cursor, dst, array_ordering);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_cursor_read_char_array(cursor, dst, array_ordering);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_cursor_read_char_array(cursor, dst, array_ordering);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-    }
-
-    assert(0);
-    exit(1);
-}
-
-/** Retrieve complex data as type \c double from the product file.
- * The real and imaginary values are stored consecutively in \a dst.
- * The cursor must point to data with special type #coda_special_complex to succeed.
- * For all other data types the function will return an error.
- * \param cursor Pointer to a CODA cursor.
- * \param dst Pointer to the variable where the value that was read from the product will be stored.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_complex_double_pair(const coda_cursor *cursor, double *dst)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            break;
-        case coda_format_binary:
-            return coda_bin_cursor_read_double_pair(cursor, dst);
-        case coda_format_xml:
-        case coda_format_netcdf:
-        case coda_format_grib1:
-        case coda_format_grib2:
-        case coda_format_cdf:
-        case coda_format_hdf4:
-        case coda_format_hdf5:
-            break;
-    }
-
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a complex double data type");
-    return -1;
-}
-
-/** Retrieve an array of complex data as type \c double from the product file.
- * All complex array elements are stored consecutively in \a dst (for each element the real and imaginary values are 
- * stored next to each other).
- * The cursor must point to data with a base type that has special type #coda_special_complex to succeed.
- * For all other data types the function will return an error.
- * \param cursor Pointer to a CODA cursor.
- * \param dst Pointer to the variable where the values read from the product will be stored.
- * \param array_ordering Specifies array storage ordering for \a dst: must be #coda_array_ordering_c or
- * #coda_array_ordering_fortran.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_complex_double_pairs_array(const coda_cursor *cursor, double *dst,
-                                                            coda_array_ordering array_ordering)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    if (cursor->stack[cursor->n - 1].type->type_class != coda_array_class)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(cursor->stack[cursor->n - 1].type->type_class), __FILE__, __LINE__);
-        return -1;
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            break;
-        case coda_format_binary:
-            return coda_bin_cursor_read_double_pairs_array(cursor, dst, array_ordering);
-        case coda_format_xml:
-        case coda_format_netcdf:
-        case coda_format_grib1:
-        case coda_format_grib2:
-        case coda_format_cdf:
-        case coda_format_hdf4:
-        case coda_format_hdf5:
-            break;
-    }
-
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a complex double data type");
-    return -1;
-}
-
-/** Retrieve complex data as type \c double from the product file.
- * The real and imaginary values are stored in \a dst_re and \a dst_im.
- * The cursor must point to data with special type #coda_special_complex to succeed.
- * For all other data types the function will return an error.
- * \param cursor Pointer to a CODA cursor.
- * \param dst_re Pointer to the variable where the real value that was read from the product will be stored.
- * \param dst_im Pointer to the variable where the imaginary value that was read from the product will be stored.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_complex_double_split(const coda_cursor *cursor, double *dst_re, double *dst_im)
-{
-    double dst[2];
-
-    if (coda_cursor_read_complex_double_pair(cursor, dst) != 0)
-    {
-        return -1;
-    }
-    *dst_re = dst[0];
-    *dst_im = dst[1];
-
-    return 0;
-}
-
-/** Retrieve an array of complex data as type \c double from the product file.
- * All real array elements are stored in \a dst_re and all imaginary array elements in \a dsr_im.
- * The cursor must point to data with a base type that has special type #coda_special_complex to succeed.
- * For all other data types the function will return an error.
- * \param cursor Pointer to a CODA cursor.
- * \param dst_re Pointer to the variable where the real values read from the product will be stored.
- * \param dst_im Pointer to the variable where the imaginary values read from the product will be stored.
- * \param array_ordering Specifies array storage ordering for \a dst_im and \a dst_re: must be #coda_array_ordering_c or
- * #coda_array_ordering_fortran.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_cursor_read_complex_double_split_array(const coda_cursor *cursor, double *dst_re, double *dst_im,
-                                                            coda_array_ordering array_ordering)
-{
-    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst_re == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst_re argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-    if (dst_im == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst_im argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    if (cursor->stack[cursor->n - 1].type->type_class != coda_array_class)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(cursor->stack[cursor->n - 1].type->type_class), __FILE__, __LINE__);
-        return -1;
-    }
-
-    switch (cursor->stack[cursor->n - 1].type->format)
-    {
-        case coda_format_ascii:
-            break;
-        case coda_format_binary:
-            return coda_bin_cursor_read_double_split_array(cursor, dst_re, dst_im, array_ordering);
-        case coda_format_xml:
-        case coda_format_netcdf:
-        case coda_format_grib1:
-        case coda_format_grib2:
-        case coda_format_cdf:
-        case coda_format_hdf4:
-        case coda_format_hdf5:
-            break;
-    }
-
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a complex double data type");
-    return -1;
 }
 
 /** @} */

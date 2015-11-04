@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -114,7 +114,7 @@ static void generate_detection_rule_entry(coda_detection_rule_entry *entry)
     {
         printf("filename[%ld:%ld] == \"", (long)entry->offset, (long)(entry->offset + entry->value_length - 1));
         generate_escaped_string(entry->value, entry->value_length);
-        printf("\")");
+        printf("\"");
     }
     else if (entry->path != NULL)
     {
@@ -142,7 +142,7 @@ static void generate_detection_rule_entry(coda_detection_rule_entry *entry)
         {
             printf("data contains \"");
             generate_escaped_string(entry->value, entry->value_length);
-            printf("\")");
+            printf("\"");
         }
     }
     else if (entry->offset >= 0)

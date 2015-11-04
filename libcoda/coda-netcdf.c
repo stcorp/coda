@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -18,7 +18,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "coda-internal.h"
+#include "coda-netcdf-internal.h"
+#include "coda-mem-internal.h"
 
 #ifdef HAVE_SYS_MMAN_H
 #include <sys/mman.h>
@@ -31,8 +32,6 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-
-#include "coda-netcdf-internal.h"
 
 #ifndef WORDS_BIGENDIAN
 static void swap2(void *value)
@@ -91,29 +90,6 @@ static void swap8(void *value)
     *(int64_t *)value = v2.as_int64;
 }
 #endif
-
-static coda_netcdf_attribute_record *empty_attributes_singleton = NULL;
-
-coda_netcdf_attribute_record *coda_netcdf_empty_attribute_record()
-{
-    if (empty_attributes_singleton == NULL)
-    {
-        empty_attributes_singleton = coda_netcdf_attribute_record_new();
-    }
-
-    return empty_attributes_singleton;
-}
-
-void coda_netcdf_release_type(coda_netcdf_type *T);
-
-void coda_netcdf_done()
-{
-    if (empty_attributes_singleton != NULL)
-    {
-        coda_netcdf_release_type((coda_netcdf_type *)empty_attributes_singleton);
-        empty_attributes_singleton = NULL;
-    }
-}
 
 static int read_dim_array(coda_netcdf_product *product, int32_t num_records, int32_t *num_dims, int32_t **dim_length,
                           int *appendable_dim)
@@ -213,9 +189,9 @@ static int read_dim_array(coda_netcdf_product *product, int32_t num_records, int
     return 0;
 }
 
-static int read_att_array(coda_netcdf_product *product, coda_netcdf_attribute_record **attributes, double *scale_factor,
-                          double *add_offset, double *fill_value)
+static int read_att_array(coda_netcdf_product *product, coda_mem_record **attributes, coda_conversion *conversion)
 {
+    coda_type_record *attributes_definition;
     int32_t tag;
     int32_t num_att;
     long i;
@@ -257,7 +233,13 @@ static int read_att_array(coda_netcdf_product *product, coda_netcdf_attribute_re
         return -1;
     }
 
-    *attributes = coda_netcdf_attribute_record_new();
+    attributes_definition = coda_type_record_new(coda_format_netcdf);
+    if (attributes_definition == NULL)
+    {
+        return -1;
+    }
+    *attributes = coda_mem_record_new(attributes_definition);
+    coda_type_release((coda_type *)attributes_definition);
     if (*attributes == NULL)
     {
         return -1;
@@ -276,7 +258,7 @@ static int read_att_array(coda_netcdf_product *product, coda_netcdf_attribute_re
         /* nelems */
         if (read(product->fd, &string_length, 4) < 0)
         {
-            coda_netcdf_release_type((coda_netcdf_type *)*attributes);
+            coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
             coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
                            strerror(errno));
             return -1;
@@ -288,6 +270,7 @@ static int read_att_array(coda_netcdf_product *product, coda_netcdf_attribute_re
         name = malloc(string_length + 1);
         if (name == NULL)
         {
+            coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
                            (long)(string_length + 1), __FILE__, __LINE__);
             return -1;
@@ -296,7 +279,7 @@ static int read_att_array(coda_netcdf_product *product, coda_netcdf_attribute_re
         if (read(product->fd, name, string_length) < 0)
         {
             free(name);
-            coda_netcdf_release_type((coda_netcdf_type *)*attributes);
+            coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
             coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
                            strerror(errno));
             return -1;
@@ -307,7 +290,7 @@ static int read_att_array(coda_netcdf_product *product, coda_netcdf_attribute_re
             if (lseek(product->fd, 4 - (string_length & 3), SEEK_CUR) < 0)
             {
                 free(name);
-                coda_netcdf_release_type((coda_netcdf_type *)attributes);
+                coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
                 coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
                                strerror(errno));
                 return -1;
@@ -317,7 +300,7 @@ static int read_att_array(coda_netcdf_product *product, coda_netcdf_attribute_re
         if (read(product->fd, &nc_type, 4) < 0)
         {
             free(name);
-            coda_netcdf_release_type((coda_netcdf_type *)*attributes);
+            coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
             coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
                            strerror(errno));
             return -1;
@@ -329,7 +312,7 @@ static int read_att_array(coda_netcdf_product *product, coda_netcdf_attribute_re
         if (read(product->fd, &nelems, 4) < 0)
         {
             free(name);
-            coda_netcdf_release_type((coda_netcdf_type *)*attributes);
+            coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
             coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
                            strerror(errno));
             return -1;
@@ -355,7 +338,7 @@ static int read_att_array(coda_netcdf_product *product, coda_netcdf_attribute_re
                 break;
             default:
                 free(name);
-                coda_netcdf_release_type((coda_netcdf_type *)*attributes);
+                coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
                 coda_set_error(CODA_ERROR_PRODUCT, "invalid netCDF file (invalid netcdf type (%d)) for file %s",
                                (int)nc_type, product->filename);
                 return -1;
@@ -368,136 +351,139 @@ static int read_att_array(coda_netcdf_product *product, coda_netcdf_attribute_re
         if (offset < 0)
         {
             free(name);
-            coda_netcdf_release_type((coda_netcdf_type *)*attributes);
+            coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
             coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
                            strerror(errno));
             return -1;
         }
         offset -= value_length;
 
-        if (nelems == 1 && ((strcmp(name, "scale_factor") == 0 && scale_factor != NULL) ||
-                            (strcmp(name, "add_offset") == 0 && add_offset != NULL)))
+        if (conversion != NULL)
         {
-            if (nc_type == 5)
+            if (nelems == 1 && (strcmp(name, "scale_factor") == 0 || strcmp(name, "add_offset") == 0))
             {
-                float value;
+                if (nc_type == 5)
+                {
+                    float value;
+
+                    if (lseek(product->fd, offset, SEEK_SET) < 0)
+                    {
+                        free(name);
+                        coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
+                        coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
+                                       strerror(errno));
+                        return -1;
+                    }
+                    if (read(product->fd, &value, 4) < 0)
+                    {
+                        free(name);
+                        coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
+                        coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
+                                       strerror(errno));
+                        return -1;
+                    }
+#ifndef WORDS_BIGENDIAN
+                    swap4(&value);
+#endif
+                    if (name[0] == 's')
+                    {
+                        conversion->numerator = value;
+                    }
+                    else
+                    {
+                        conversion->add_offset = value;
+                    }
+                }
+                else if (nc_type == 6)
+                {
+                    double value;
+
+                    if (lseek(product->fd, offset, SEEK_SET) < 0)
+                    {
+                        free(name);
+                        coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
+                        coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
+                                       strerror(errno));
+                        return -1;
+                    }
+                    if (read(product->fd, &value, 8) < 0)
+                    {
+                        free(name);
+                        coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
+                        coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
+                                       strerror(errno));
+                        return -1;
+                    }
+#ifndef WORDS_BIGENDIAN
+                    swap8(&value);
+#endif
+                    if (name[0] == 's')
+                    {
+                        conversion->numerator = value;
+                    }
+                    else
+                    {
+                        conversion->add_offset = value;
+                    }
+                }
+            }
+            /* note that missing_value has preference over _FillValue */
+            /* We therefore don't modify fill_value for _FillValue if fill_value was already set */
+            if (nelems == 1 && nc_type != 2 && (strcmp(name, "missing_value") == 0 ||
+                                                (strcmp(name, "_FillValue") == 0 &&
+                                                 coda_isNaN(conversion->invalid_value))))
+            {
+                uint8_t value[8];
 
                 if (lseek(product->fd, offset, SEEK_SET) < 0)
                 {
                     free(name);
-                    coda_netcdf_release_type((coda_netcdf_type *)*attributes);
+                    coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
                     coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
                                    strerror(errno));
                     return -1;
                 }
-                if (read(product->fd, &value, 4) < 0)
+                if (read(product->fd, value, value_length) < 0)
                 {
                     free(name);
-                    coda_netcdf_release_type((coda_netcdf_type *)*attributes);
+                    coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
                     coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
                                    strerror(errno));
                     return -1;
                 }
-#ifndef WORDS_BIGENDIAN
-                swap4(&value);
-#endif
-                if (name[0] == 's')
+                switch (nc_type)
                 {
-                    *scale_factor = value;
-                }
-                else
-                {
-                    *add_offset = value;
-                }
-            }
-            else if (nc_type == 6)
-            {
-                double value;
-
-                if (lseek(product->fd, offset, SEEK_SET) < 0)
-                {
-                    free(name);
-                    coda_netcdf_release_type((coda_netcdf_type *)*attributes);
-                    coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                                   strerror(errno));
-                    return -1;
-                }
-                if (read(product->fd, &value, 8) < 0)
-                {
-                    free(name);
-                    coda_netcdf_release_type((coda_netcdf_type *)*attributes);
-                    coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                                   strerror(errno));
-                    return -1;
-                }
+                    case 1:
+                        conversion->invalid_value = (double)(*(int8_t *)value);
+                        break;
+                    case 3:
 #ifndef WORDS_BIGENDIAN
-                swap8(&value);
+                        swap2(value);
 #endif
-                if (name[0] == 's')
-                {
-                    *scale_factor = value;
+                        conversion->invalid_value = (double)(*(int16_t *)value);
+                        break;
+                    case 4:
+#ifndef WORDS_BIGENDIAN
+                        swap4(value);
+#endif
+                        conversion->invalid_value = (double)(*(int32_t *)value);
+                        break;
+                    case 5:
+#ifndef WORDS_BIGENDIAN
+                        swap4(value);
+#endif
+                        conversion->invalid_value = (double)(*(float *)value);
+                        break;
+                    case 6:
+#ifndef WORDS_BIGENDIAN
+                        swap8(value);
+#endif
+                        conversion->invalid_value = *(double *)value;
+                        break;
+                    default:
+                        assert(0);
+                        exit(1);
                 }
-                else
-                {
-                    *add_offset = value;
-                }
-            }
-        }
-        /* note that missing_value has preference over _FillValue */
-        /* We therefore don't modify fill_value for _FillValue if fill_value was already set */
-        if (nelems == 1 && nc_type != 2 && fill_value != NULL &&
-            (strcmp(name, "missing_value") == 0 || (strcmp(name, "_FillValue") == 0 && coda_isNaN(*fill_value))))
-        {
-            uint8_t value[8];
-
-            if (lseek(product->fd, offset, SEEK_SET) < 0)
-            {
-                free(name);
-                coda_netcdf_release_type((coda_netcdf_type *)*attributes);
-                coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                               strerror(errno));
-                return -1;
-            }
-            if (read(product->fd, value, value_length) < 0)
-            {
-                free(name);
-                coda_netcdf_release_type((coda_netcdf_type *)*attributes);
-                coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                               strerror(errno));
-                return -1;
-            }
-            switch (nc_type)
-            {
-                case 1:
-                    *fill_value = (double)value[0];
-                    break;
-                case 3:
-#ifndef WORDS_BIGENDIAN
-                    swap2(value);
-#endif
-                    *fill_value = (double)(*(int16_t *)value);
-                    break;
-                case 4:
-#ifndef WORDS_BIGENDIAN
-                    swap4(value);
-#endif
-                    *fill_value = (double)(*(int32_t *)value);
-                    break;
-                case 5:
-#ifndef WORDS_BIGENDIAN
-                    swap4(value);
-#endif
-                    *fill_value = (double)(*(float *)value);
-                    break;
-                case 6:
-#ifndef WORDS_BIGENDIAN
-                    swap8(value);
-#endif
-                    *fill_value = *(double *)value;
-                    break;
-                default:
-                    assert(0);
-                    exit(1);
             }
         }
 
@@ -512,17 +498,17 @@ static int read_att_array(coda_netcdf_product *product, coda_netcdf_attribute_re
         if (basic_type == NULL)
         {
             free(name);
-            coda_netcdf_release_type((coda_netcdf_type *)attributes);
+            coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
             return -1;
         }
 
         if (nc_type == 2 || nelems == 1)
         {
-            if (coda_netcdf_attribute_record_add_attribute(*attributes, name, (coda_netcdf_type *)basic_type) != 0)
+            if (coda_mem_record_add_field(*attributes, name, (coda_dynamic_type *)basic_type, 1) != 0)
             {
-                coda_netcdf_release_type((coda_netcdf_type *)basic_type);
+                coda_dynamic_type_delete((coda_dynamic_type *)basic_type);
                 free(name);
-                coda_netcdf_release_type((coda_netcdf_type *)*attributes);
+                coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
                 return -1;
             }
         }
@@ -534,20 +520,19 @@ static int read_att_array(coda_netcdf_product *product, coda_netcdf_attribute_re
             array = coda_netcdf_array_new(1, &size, basic_type);
             if (array == NULL)
             {
-                coda_netcdf_release_type((coda_netcdf_type *)basic_type);
+                coda_dynamic_type_delete((coda_dynamic_type *)basic_type);
                 free(name);
-                coda_netcdf_release_type((coda_netcdf_type *)*attributes);
+                coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
                 return -1;
             }
-            if (coda_netcdf_attribute_record_add_attribute(*attributes, name, (coda_netcdf_type *)array) != 0)
+            if (coda_mem_record_add_field(*attributes, name, (coda_dynamic_type *)array, 1) != 0)
             {
-                coda_netcdf_release_type((coda_netcdf_type *)array);
+                coda_dynamic_type_delete((coda_dynamic_type *)array);
                 free(name);
-                coda_netcdf_release_type((coda_netcdf_type *)*attributes);
+                coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
                 return -1;
             }
         }
-
         free(name);
     }
 
@@ -555,7 +540,7 @@ static int read_att_array(coda_netcdf_product *product, coda_netcdf_attribute_re
 }
 
 static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths, int32_t *dim_length,
-                          int appendable_dim, coda_netcdf_root *root)
+                          int appendable_dim, coda_mem_record *root)
 {
     int32_t tag;
     int32_t num_var;
@@ -600,11 +585,9 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
     for (i = 0; i < num_var; i++)
     {
         coda_netcdf_basic_type *basic_type;
-        coda_netcdf_attribute_record *attributes;
+        coda_mem_record *attributes = NULL;
+        coda_conversion *conversion;
         long dim[CODA_MAX_NUM_DIMS];
-        double scale_factor = 1.0;
-        double add_offset = 0.0;
-        double fill_value = coda_NaN();
         int32_t string_length;
         int64_t offset;
         int32_t nc_type;
@@ -710,17 +693,30 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
             }
         }
 
-        /* vatt_array */
-        if (read_att_array(product, &attributes, &scale_factor, &add_offset, &fill_value) != 0)
+        conversion = coda_conversion_new(1.0, 1.0, 0.0, coda_NaN());
+        if (conversion == NULL)
         {
             free(name);
             return -1;
+        }
+        /* vatt_array */
+        if (read_att_array(product, &attributes, conversion) != 0)
+        {
+            coda_conversion_delete(conversion);
+            free(name);
+            return -1;
+        }
+        if (conversion->numerator == 1.0 && conversion->add_offset == 0.0 && coda_isNaN(conversion->invalid_value))
+        {
+            coda_conversion_delete(conversion);
+            conversion = NULL;
         }
 
         /* nc_type */
         if (read(product->fd, &nc_type, 4) < 0)
         {
-            coda_netcdf_release_type((coda_netcdf_type *)attributes);
+            coda_dynamic_type_delete((coda_dynamic_type *)attributes);
+            coda_conversion_delete(conversion);
             free(name);
             coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
                            strerror(errno));
@@ -732,7 +728,8 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
         /* vsize */
         if (read(product->fd, &vsize, 4) < 0)
         {
-            coda_netcdf_release_type((coda_netcdf_type *)attributes);
+            coda_dynamic_type_delete((coda_dynamic_type *)attributes);
+            coda_conversion_delete(conversion);
             free(name);
             coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
                            strerror(errno));
@@ -753,7 +750,8 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
 
             if (read(product->fd, &offset32, 4) < 0)
             {
-                coda_netcdf_release_type((coda_netcdf_type *)attributes);
+                coda_dynamic_type_delete((coda_dynamic_type *)attributes);
+                coda_conversion_delete(conversion);
                 free(name);
                 coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
                                strerror(errno));
@@ -768,7 +766,8 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
         {
             if (read(product->fd, &offset, 8) < 0)
             {
-                coda_netcdf_release_type((coda_netcdf_type *)attributes);
+                coda_dynamic_type_delete((coda_dynamic_type *)attributes);
+                coda_conversion_delete(conversion);
                 free(name);
                 coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
                                strerror(errno));
@@ -807,36 +806,36 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
         }
         if (basic_type == NULL)
         {
-            coda_netcdf_release_type((coda_netcdf_type *)attributes);
+            coda_dynamic_type_delete((coda_dynamic_type *)attributes);
+            coda_conversion_delete(conversion);
             free(name);
             return -1;
         }
-        if (scale_factor != 1.0 || add_offset != 0.0)
+        if (conversion != NULL)
         {
-            basic_type->has_conversion = 1;
-            basic_type->scale_factor = scale_factor;
-            basic_type->add_offset = add_offset;
-        }
-        if (!coda_isNaN(fill_value))
-        {
-            basic_type->has_fill_value = 1;
-            basic_type->fill_value = fill_value;
+            if (coda_netcdf_basic_type_set_conversion(basic_type, conversion) != 0)
+            {
+                coda_dynamic_type_delete((coda_dynamic_type *)attributes);
+                coda_conversion_delete(conversion);
+                free(name);
+                return -1;
+            }
         }
         if (num_dims == 0)
         {
             if (attributes != NULL)
             {
-                if (coda_netcdf_basic_type_add_attributes(basic_type, attributes) != 0)
+                if (coda_netcdf_basic_type_set_attributes(basic_type, attributes) != 0)
                 {
-                    coda_netcdf_release_type((coda_netcdf_type *)basic_type);
-                    coda_netcdf_release_type((coda_netcdf_type *)attributes);
+                    coda_dynamic_type_delete((coda_dynamic_type *)basic_type);
+                    coda_dynamic_type_delete((coda_dynamic_type *)attributes);
                     free(name);
                     return -1;
                 }
             }
-            if (coda_netcdf_root_add_variable(root, name, (coda_netcdf_type *)basic_type) != 0)
+            if (coda_mem_record_add_field(root, name, (coda_dynamic_type *)basic_type, 1) != 0)
             {
-                coda_netcdf_release_type((coda_netcdf_type *)basic_type);
+                coda_dynamic_type_delete((coda_dynamic_type *)basic_type);
                 free(name);
                 return -1;
             }
@@ -848,29 +847,28 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
             array = coda_netcdf_array_new(num_dims, dim, basic_type);
             if (array == NULL)
             {
-                coda_netcdf_release_type((coda_netcdf_type *)basic_type);
-                coda_netcdf_release_type((coda_netcdf_type *)attributes);
+                coda_dynamic_type_delete((coda_dynamic_type *)basic_type);
+                coda_dynamic_type_delete((coda_dynamic_type *)attributes);
                 free(name);
                 return -1;
             }
             if (attributes != NULL)
             {
-                if (coda_netcdf_array_add_attributes(array, attributes) != 0)
+                if (coda_netcdf_array_set_attributes(array, attributes) != 0)
                 {
-                    coda_netcdf_release_type((coda_netcdf_type *)array);
-                    coda_netcdf_release_type((coda_netcdf_type *)attributes);
+                    coda_dynamic_type_delete((coda_dynamic_type *)array);
+                    coda_dynamic_type_delete((coda_dynamic_type *)attributes);
                     free(name);
                     return -1;
                 }
             }
-            if (coda_netcdf_root_add_variable(root, name, (coda_netcdf_type *)array) != 0)
+            if (coda_mem_record_add_field(root, name, (coda_dynamic_type *)array, 1) != 0)
             {
-                coda_netcdf_release_type((coda_netcdf_type *)array);
+                coda_dynamic_type_delete((coda_dynamic_type *)array);
                 free(name);
                 return -1;
             }
         }
-
         free(name);
     }
 
@@ -880,8 +878,9 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
 int coda_netcdf_open(const char *filename, int64_t file_size, coda_product **product)
 {
     coda_netcdf_product *product_file;
-    coda_netcdf_attribute_record *attributes;
-    coda_netcdf_root *root;
+    coda_type_record *root_definition;
+    coda_mem_record *attributes;
+    coda_mem_record *root;
     char magic[4];
     int open_flags;
     int32_t num_records;
@@ -935,7 +934,14 @@ int coda_netcdf_open(const char *filename, int64_t file_size, coda_product **pro
     }
 
     /* create root type */
-    root = coda_netcdf_root_new();
+    root_definition = coda_type_record_new(coda_format_netcdf);
+    if (root_definition == NULL)
+    {
+        coda_netcdf_close((coda_product *)product_file);
+        return -1;
+    }
+    root = coda_mem_record_new(root_definition);
+    coda_type_release((coda_type *)root_definition);
     if (root == NULL)
     {
         coda_netcdf_close((coda_product *)product_file);
@@ -981,7 +987,7 @@ int coda_netcdf_open(const char *filename, int64_t file_size, coda_product **pro
     }
 
     /* gatt_array */
-    if (read_att_array(product_file, &attributes, NULL, NULL, NULL) != 0)
+    if (read_att_array(product_file, &attributes, NULL) != 0)
     {
         if (dim_length != NULL)
         {
@@ -990,15 +996,17 @@ int coda_netcdf_open(const char *filename, int64_t file_size, coda_product **pro
         coda_netcdf_close((coda_product *)product_file);
         return -1;
     }
-
-    if (coda_netcdf_root_add_attributes(root, attributes) != 0)
+    if (attributes != NULL)
     {
-        if (dim_length != NULL)
+        if (coda_mem_type_set_attributes((coda_mem_type *)root, (coda_dynamic_type *)attributes, 1) != 0)
         {
-            free(dim_length);
+            if (dim_length != NULL)
+            {
+                free(dim_length);
+            }
+            coda_netcdf_close((coda_product *)product_file);
+            return -1;
         }
-        coda_netcdf_close((coda_product *)product_file);
-        return -1;
     }
 
     /* var_array */
@@ -1160,6 +1168,11 @@ int coda_netcdf_close(coda_product *product)
         }
     }
 
+    if (product_file->root_type != NULL)
+    {
+        coda_dynamic_type_delete(product_file->root_type);
+    }
+
     if (product_file->filename != NULL)
     {
         free(product_file->filename);
@@ -1167,11 +1180,5 @@ int coda_netcdf_close(coda_product *product)
 
     free(product_file);
 
-    return 0;
-}
-
-int coda_netcdf_get_type_for_dynamic_type(coda_dynamic_type *dynamic_type, coda_type **type)
-{
-    *type = (coda_type *)dynamic_type;
     return 0;
 }

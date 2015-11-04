@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -18,13 +18,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "coda-internal.h"
-
-#include <assert.h>
-
 #include "coda-hdf4-internal.h"
 
-static int read_array_without_conversion(const coda_cursor *cursor, void *dst);
+#include <assert.h>
 
 static int get_native_type_size(coda_native_type type)
 {
@@ -51,6 +47,30 @@ static int get_native_type_size(coda_native_type type)
     }
 }
 
+static int get_array_base_type(const coda_hdf4_type *type, coda_hdf4_type **base_type)
+{
+    switch (type->tag)
+    {
+        case tag_hdf4_basic_type_array:
+            *base_type = ((coda_hdf4_basic_type_array *)type)->basic_type;
+            break;
+        case tag_hdf4_GRImage:
+            *base_type = ((coda_hdf4_GRImage *)type)->basic_type;
+            break;
+        case tag_hdf4_SDS:
+            *base_type = ((coda_hdf4_SDS *)type)->basic_type;
+            break;
+        case tag_hdf4_Vdata_field:
+            *base_type = ((coda_hdf4_Vdata_field *)type)->basic_type;
+            break;
+        default:
+            assert(0);
+            exit(1);
+    }
+
+    return 0;
+}
+
 int coda_hdf4_cursor_set_product(coda_cursor *cursor, coda_product *product)
 {
     cursor->product = product;
@@ -63,11 +83,51 @@ int coda_hdf4_cursor_set_product(coda_cursor *cursor, coda_product *product)
 
 int coda_hdf4_cursor_goto_record_field_by_index(coda_cursor *cursor, long index)
 {
-    coda_type *field_type;
+    coda_hdf4_type *record_type;
+    coda_hdf4_type *field_type;
 
-    if (coda_hdf4_type_get_record_field_type((coda_type *)cursor->stack[cursor->n - 1].type, index, &field_type) != 0)
+    record_type = (coda_hdf4_type *)cursor->stack[cursor->n - 1].type;
+    switch (record_type->tag)
     {
-        return -1;
+        case tag_hdf4_attributes:
+            if (index < 0 || index >= ((coda_hdf4_attributes *)record_type)->definition->num_fields)
+            {
+                coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
+                               ((coda_hdf4_attributes *)record_type)->definition->num_fields, __FILE__, __LINE__);
+                return -1;
+            }
+            field_type = ((coda_hdf4_attributes *)record_type)->attribute[index];
+            break;
+        case tag_hdf4_file_attributes:
+            if (index < 0 || index >= ((coda_hdf4_file_attributes *)record_type)->definition->num_fields)
+            {
+                coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
+                               ((coda_hdf4_file_attributes *)record_type)->definition->num_fields, __FILE__, __LINE__);
+                return -1;
+            }
+            field_type = ((coda_hdf4_file_attributes *)record_type)->attribute[index];
+            break;
+        case tag_hdf4_Vdata:
+            if (index < 0 || index >= ((coda_hdf4_Vdata *)record_type)->definition->num_fields)
+            {
+                coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
+                               ((coda_hdf4_Vdata *)record_type)->definition->num_fields, __FILE__, __LINE__);
+                return -1;
+            }
+            field_type = (coda_hdf4_type *)((coda_hdf4_Vdata *)record_type)->field[index];
+            break;
+        case tag_hdf4_Vgroup:
+            if (index < 0 || index >= ((coda_hdf4_Vgroup *)record_type)->definition->num_fields)
+            {
+                coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
+                               ((coda_hdf4_Vgroup *)record_type)->definition->num_fields, __FILE__, __LINE__);
+                return -1;
+            }
+            field_type = ((coda_hdf4_Vgroup *)record_type)->entry[index];
+            break;
+        default:
+            assert(0);
+            exit(1);
     }
 
     cursor->n++;
@@ -91,13 +151,13 @@ int coda_hdf4_cursor_goto_next_record_field(coda_cursor *cursor)
 
 int coda_hdf4_cursor_goto_array_element(coda_cursor *cursor, int num_subs, const long subs[])
 {
-    coda_type *base_type;
-    long offset_elements;
+    coda_hdf4_type *base_type;
+    long index;
     int num_dims;
     long dim[MAX_HDF4_VAR_DIMS];
     int i;
 
-    if (coda_hdf4_type_get_array_dim((coda_type *)cursor->stack[cursor->n - 1].type, &num_dims, dim) != 0)
+    if (coda_hdf4_cursor_get_array_dim(cursor, &num_dims, dim) != 0)
     {
         return -1;
     }
@@ -112,7 +172,7 @@ int coda_hdf4_cursor_goto_array_element(coda_cursor *cursor, int num_subs, const
     }
 
     /* check the dimensions... */
-    offset_elements = 0;
+    index = 0;
     for (i = 0; i < num_dims; i++)
     {
         if (subs[i] < 0 || subs[i] >= dim[i])
@@ -123,19 +183,19 @@ int coda_hdf4_cursor_goto_array_element(coda_cursor *cursor, int num_subs, const
         }
         if (i > 0)
         {
-            offset_elements *= dim[i];
+            index *= dim[i];
         }
-        offset_elements += subs[i];
+        index += subs[i];
     }
 
-    if (coda_hdf4_type_get_array_base_type((coda_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
+    if (get_array_base_type((coda_hdf4_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
     {
         return -1;
     }
 
     cursor->n++;
     cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)base_type;
-    cursor->stack[cursor->n - 1].index = offset_elements;
+    cursor->stack[cursor->n - 1].index = index;
     cursor->stack[cursor->n - 1].bit_offset = -1;       /* not applicable for HDF4 backend */
 
     return 0;
@@ -143,7 +203,7 @@ int coda_hdf4_cursor_goto_array_element(coda_cursor *cursor, int num_subs, const
 
 int coda_hdf4_cursor_goto_array_element_by_index(coda_cursor *cursor, long index)
 {
-    coda_type *base_type;
+    coda_hdf4_type *base_type;
 
     /* check the range for index */
     if (coda_option_perform_boundary_checks)
@@ -162,7 +222,7 @@ int coda_hdf4_cursor_goto_array_element_by_index(coda_cursor *cursor, long index
         }
     }
 
-    if (coda_hdf4_type_get_array_base_type((coda_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
+    if (get_array_base_type((coda_hdf4_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
     {
         return -1;
     }
@@ -213,14 +273,11 @@ int coda_hdf4_cursor_goto_attributes(coda_cursor *cursor)
     cursor->n++;
     switch (type->tag)
     {
-        case tag_hdf4_root:
-            cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)((coda_hdf4_root *)type)->attributes;
-            break;
         case tag_hdf4_basic_type:
         case tag_hdf4_basic_type_array:
         case tag_hdf4_attributes:
         case tag_hdf4_file_attributes:
-            cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)coda_hdf4_empty_attributes();
+            cursor->stack[cursor->n - 1].type = coda_mem_empty_record(coda_format_hdf4);
             break;
         case tag_hdf4_GRImage:
             cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)((coda_hdf4_GRImage *)type)->attributes;
@@ -256,35 +313,32 @@ int coda_hdf4_cursor_get_num_elements(const coda_cursor *cursor, long *num_eleme
     type = (coda_hdf4_type *)cursor->stack[cursor->n - 1].type;
     switch (type->tag)
     {
-        case tag_hdf4_root:
-            *num_elements = ((coda_hdf4_root *)type)->num_entries;
-            break;
         case tag_hdf4_basic_type:
             *num_elements = 1;
             break;
         case tag_hdf4_basic_type_array:
-            *num_elements = ((coda_hdf4_basic_type_array *)type)->count;
+            *num_elements = ((coda_hdf4_basic_type_array *)type)->definition->num_elements;
             break;
         case tag_hdf4_attributes:
-            *num_elements = ((coda_hdf4_attributes *)type)->num_attributes;
+            *num_elements = ((coda_hdf4_attributes *)type)->definition->num_fields;
             break;
         case tag_hdf4_file_attributes:
-            *num_elements = ((coda_hdf4_file_attributes *)type)->num_attributes;
+            *num_elements = ((coda_hdf4_file_attributes *)type)->definition->num_fields;
             break;
         case tag_hdf4_GRImage:
-            *num_elements = ((coda_hdf4_GRImage *)type)->num_elements;
+            *num_elements = ((coda_hdf4_GRImage *)type)->definition->num_elements;
             break;
         case tag_hdf4_SDS:
-            *num_elements = ((coda_hdf4_SDS *)type)->num_elements;
+            *num_elements = ((coda_hdf4_SDS *)type)->definition->num_elements;
             break;
         case tag_hdf4_Vdata:
-            *num_elements = ((coda_hdf4_Vdata *)type)->num_fields;
+            *num_elements = ((coda_hdf4_Vdata *)type)->definition->num_fields;
             break;
         case tag_hdf4_Vdata_field:
-            *num_elements = ((coda_hdf4_Vdata_field *)type)->num_elements;
+            *num_elements = ((coda_hdf4_Vdata_field *)type)->definition->num_elements;
             break;
         case tag_hdf4_Vgroup:
-            *num_elements = ((coda_hdf4_Vgroup *)type)->num_entries;
+            *num_elements = ((coda_hdf4_Vgroup *)type)->definition->num_fields;
             break;
         default:
             assert(0);
@@ -296,16 +350,66 @@ int coda_hdf4_cursor_get_num_elements(const coda_cursor *cursor, long *num_eleme
 
 int coda_hdf4_cursor_get_string_length(const coda_cursor *cursor, long *length)
 {
-    return coda_hdf4_type_get_string_length((coda_type *)cursor->stack[cursor->n - 1].type, length);
+    cursor = cursor;    /* prevent unused warning */
+    /* HDF4 does not support strings as basic types, only char data. We will therefore always return a size of 1 */
+    *length = 1;
+    return 0;
 }
 
 int coda_hdf4_cursor_get_array_dim(const coda_cursor *cursor, int *num_dims, long dim[])
 {
-    return coda_hdf4_type_get_array_dim((coda_type *)cursor->stack[cursor->n - 1].type, num_dims, dim);
+    coda_hdf4_type *type;
+    int i;
+
+    type = (coda_hdf4_type *)cursor->stack[cursor->n - 1].type;
+    switch (((coda_hdf4_type *)type)->tag)
+    {
+        case tag_hdf4_basic_type_array:
+            *num_dims = 1;
+            dim[0] = ((coda_hdf4_basic_type_array *)type)->definition->num_elements;
+            break;
+        case tag_hdf4_GRImage:
+            /* The C interface to GRImage data uses fortran array ordering, so we swap the dimensions */
+            dim[0] = ((coda_hdf4_GRImage *)type)->dim_sizes[1];
+            dim[1] = ((coda_hdf4_GRImage *)type)->dim_sizes[0];
+            if (((coda_hdf4_GRImage *)type)->ncomp != 1)
+            {
+                *num_dims = 3;
+                dim[2] = ((coda_hdf4_GRImage *)type)->ncomp;
+            }
+            else
+            {
+                *num_dims = 2;
+            }
+            break;
+        case tag_hdf4_SDS:
+            *num_dims = ((coda_hdf4_SDS *)type)->rank;
+            for (i = 0; i < ((coda_hdf4_SDS *)type)->rank; i++)
+            {
+                dim[i] = ((coda_hdf4_SDS *)type)->dimsizes[i];
+            }
+            break;
+        case tag_hdf4_Vdata_field:
+            if (((coda_hdf4_Vdata_field *)type)->order > 1)
+            {
+                *num_dims = 2;
+                dim[1] = ((coda_hdf4_Vdata_field *)type)->order;
+            }
+            else
+            {
+                *num_dims = 1;
+            }
+            dim[0] = ((coda_hdf4_Vdata_field *)type)->num_records;
+            break;
+        default:
+            assert(0);
+            exit(1);
+    }
+
+    return 0;
 }
 
-static int coda_hdf4_read_attribute_sub(int32 tag, int32 attr_id, int32 attr_index, int32 field_index, int32 length,
-                                        void *buffer)
+static int read_attribute_sub(int32 tag, int32 attr_id, int32 attr_index, int32 field_index, int32 length, void *buffer)
 {
     int result;
 
@@ -359,7 +463,7 @@ static int coda_hdf4_read_attribute_sub(int32 tag, int32 attr_id, int32 attr_ind
     return 0;
 }
 
-static int coda_hdf4_read_attribute(const coda_cursor *cursor, void *dst)
+static int read_attribute(const coda_cursor *cursor, void *dst)
 {
     int32 count;
     long index;
@@ -368,7 +472,7 @@ static int coda_hdf4_read_attribute(const coda_cursor *cursor, void *dst)
 
     if (((coda_hdf4_type *)cursor->stack[cursor->n - 1].type)->tag == tag_hdf4_basic_type_array)
     {
-        count = ((coda_hdf4_basic_type_array *)cursor->stack[cursor->n - 1].type)->count;
+        count = ((coda_hdf4_basic_type_array *)cursor->stack[cursor->n - 1].type)->definition->dim[0];
     }
     else
     {
@@ -406,24 +510,24 @@ static int coda_hdf4_read_attribute(const coda_cursor *cursor, void *dst)
                             assert(0);
                             exit(1);
                     }
-                    if (coda_hdf4_read_attribute_sub(tag, type->parent_id, index, type->field_index, count, dst) != 0)
+                    if (read_attribute_sub(tag, type->parent_id, index, type->field_index, count, dst) != 0)
                     {
                         return -1;
                     }
                 }
                 else if (cursor->stack[cursor->n - 1].index < type->num_obj_attributes + type->num_data_labels)
                 {
-                    if (coda_hdf4_read_attribute_sub(DFTAG_DIL, type->ann_id[index - type->num_obj_attributes], index -
-                                                     type->num_obj_attributes, type->field_index, count, dst) != 0)
+                    if (read_attribute_sub(DFTAG_DIL, type->ann_id[index - type->num_obj_attributes],
+                                           index - type->num_obj_attributes, type->field_index, count, dst) != 0)
                     {
                         return -1;
                     }
                 }
                 else
                 {
-                    if (coda_hdf4_read_attribute_sub(DFTAG_DIA, type->ann_id[index - type->num_obj_attributes],
-                                                     index - type->num_obj_attributes - type->num_data_labels,
-                                                     type->field_index, count, dst) != 0)
+                    if (read_attribute_sub(DFTAG_DIA, type->ann_id[index - type->num_obj_attributes],
+                                           index - type->num_obj_attributes - type->num_data_labels,
+                                           type->field_index, count, dst) != 0)
                     {
                         return -1;
                     }
@@ -437,16 +541,16 @@ static int coda_hdf4_read_attribute(const coda_cursor *cursor, void *dst)
                 type = (coda_hdf4_file_attributes *)cursor->stack[cursor->n - 2].type;
                 if (cursor->stack[cursor->n - 1].index < type->num_gr_attributes)
                 {
-                    if (coda_hdf4_read_attribute_sub(DFTAG_RI, ((coda_hdf4_product *)cursor->product)->gr_id, index, -1,
-                                                     count, dst) != 0)
+                    if (read_attribute_sub(DFTAG_RI, ((coda_hdf4_product *)cursor->product)->gr_id, index, -1,
+                                           count, dst) != 0)
                     {
                         return -1;
                     }
                 }
                 else if (cursor->stack[cursor->n - 1].index < type->num_gr_attributes + type->num_sd_attributes)
                 {
-                    if (coda_hdf4_read_attribute_sub(DFTAG_SD, ((coda_hdf4_product *)cursor->product)->sd_id,
-                                                     index - type->num_gr_attributes, -1, count, dst) != 0)
+                    if (read_attribute_sub(DFTAG_SD, ((coda_hdf4_product *)cursor->product)->sd_id,
+                                           index - type->num_gr_attributes, -1, count, dst) != 0)
                     {
                         return -1;
                     }
@@ -463,8 +567,8 @@ static int coda_hdf4_read_attribute(const coda_cursor *cursor, void *dst)
                         coda_set_error(CODA_ERROR_HDF4, NULL);
                         return -1;
                     }
-                    if (coda_hdf4_read_attribute_sub(DFTAG_FID, ann_id, index - type->num_gr_attributes -
-                                                     type->num_sd_attributes, -1, count, dst) != 0)
+                    if (read_attribute_sub(DFTAG_FID, ann_id, index - type->num_gr_attributes -
+                                           type->num_sd_attributes, -1, count, dst) != 0)
                     {
                         return -1;
                     }
@@ -485,9 +589,8 @@ static int coda_hdf4_read_attribute(const coda_cursor *cursor, void *dst)
                         coda_set_error(CODA_ERROR_HDF4, NULL);
                         return -1;
                     }
-                    if (coda_hdf4_read_attribute_sub(DFTAG_FD, ann_id, index - type->num_gr_attributes -
-                                                     type->num_sd_attributes - type->num_file_labels, -1, count,
-                                                     dst) != 0)
+                    if (read_attribute_sub(DFTAG_FD, ann_id, index - type->num_gr_attributes -
+                                           type->num_sd_attributes - type->num_file_labels, -1, count, dst) != 0)
                     {
                         return -1;
                     }
@@ -496,6 +599,108 @@ static int coda_hdf4_read_attribute(const coda_cursor *cursor, void *dst)
                         coda_set_error(CODA_ERROR_HDF4, NULL);
                         return -1;
                     }
+                }
+            }
+            break;
+        default:
+            assert(0);
+            exit(1);
+    }
+
+    return 0;
+}
+
+static int read_array(const coda_cursor *cursor, void *dst)
+{
+    int32 start[MAX_HDF4_VAR_DIMS];
+    int32 stride[MAX_HDF4_VAR_DIMS];
+    int32 edge[MAX_HDF4_VAR_DIMS];
+    long num_elements;
+    long i;
+
+    if (coda_hdf4_cursor_get_num_elements(cursor, &num_elements) != 0)
+    {
+        return -1;
+    }
+    if (num_elements <= 0)
+    {
+        /* no data to be read */
+        return 0;
+    }
+
+    switch (((coda_hdf4_type *)cursor->stack[cursor->n - 1].type)->tag)
+    {
+        case tag_hdf4_basic_type_array:
+            if (read_attribute(cursor, dst) != 0)
+            {
+                return -1;
+            }
+            break;
+        case tag_hdf4_GRImage:
+            {
+                coda_hdf4_GRImage *type;
+
+                type = (coda_hdf4_GRImage *)cursor->stack[cursor->n - 1].type;
+                start[0] = 0;
+                start[1] = 0;
+                stride[0] = 1;
+                stride[1] = 1;
+                edge[0] = type->dim_sizes[0];
+                edge[1] = type->dim_sizes[1];
+                if (GRreadimage(type->ri_id, start, stride, edge, dst) != 0)
+                {
+                    coda_set_error(CODA_ERROR_HDF4, NULL);
+                    return -1;
+                }
+            }
+            break;
+        case tag_hdf4_SDS:
+            {
+                coda_hdf4_SDS *type;
+
+                type = (coda_hdf4_SDS *)cursor->stack[cursor->n - 1].type;
+                if (type->rank == 0)
+                {
+                    start[0] = 0;
+                    edge[0] = 1;
+                }
+                else
+                {
+                    for (i = 0; i < type->rank; i++)
+                    {
+                        start[i] = 0;
+                        edge[i] = type->dimsizes[i];
+                    }
+                }
+                if (SDreaddata(type->sds_id, start, NULL, edge, dst) != 0)
+                {
+                    coda_set_error(CODA_ERROR_HDF4, NULL);
+                    return -1;
+                }
+            }
+            break;
+        case tag_hdf4_Vdata_field:
+            {
+                coda_hdf4_Vdata *type;
+                coda_hdf4_Vdata_field *field_type;
+
+                assert(cursor->n > 1);
+                type = (coda_hdf4_Vdata *)cursor->stack[cursor->n - 2].type;
+                field_type = (coda_hdf4_Vdata_field *)cursor->stack[cursor->n - 1].type;
+                if (VSseek(type->vdata_id, 0) < 0)
+                {
+                    coda_set_error(CODA_ERROR_HDF4, NULL);
+                    return -1;
+                }
+                if (VSsetfields(type->vdata_id, field_type->field_name) != 0)
+                {
+                    coda_set_error(CODA_ERROR_HDF4, NULL);
+                    return -1;
+                }
+                if (VSread(type->vdata_id, (uint8 *)dst, field_type->num_records, FULL_INTERLACE) < 0)
+                {
+                    coda_set_error(CODA_ERROR_HDF4, NULL);
+                    return -1;
                 }
             }
             break;
@@ -538,7 +743,7 @@ static int read_basic_type(const coda_cursor *cursor, void *dst)
                 }
                 assert(index < num_elements);
                 native_type_size =
-                    get_native_type_size(((coda_hdf4_basic_type *)cursor->stack[cursor->n - 1].type)->read_type);
+                    get_native_type_size(((coda_hdf4_type *)cursor->stack[cursor->n - 1].type)->definition->read_type);
                 buffer = malloc(num_elements * native_type_size);
                 if (buffer == NULL)
                 {
@@ -547,7 +752,7 @@ static int read_basic_type(const coda_cursor *cursor, void *dst)
                     return -1;
                 }
 
-                if (read_array_without_conversion(&array_cursor, buffer) != 0)
+                if (read_array(&array_cursor, buffer) != 0)
                 {
                     free(buffer);
                     return -1;
@@ -559,7 +764,7 @@ static int read_basic_type(const coda_cursor *cursor, void *dst)
             break;
         case tag_hdf4_attributes:
         case tag_hdf4_file_attributes:
-            if (coda_hdf4_read_attribute(cursor, dst) != 0)
+            if (read_attribute(cursor, dst) != 0)
             {
                 return -1;
             }
@@ -579,7 +784,7 @@ static int read_basic_type(const coda_cursor *cursor, void *dst)
                     int component_size;
                     int component_index;
 
-                    component_size = get_native_type_size(type->basic_type->read_type);
+                    component_size = get_native_type_size(type->basic_type->definition->read_type);
 
                     /* HDF4 does not allow reading a single component of a GRImage, so we have to first read all
                      * components and then return only the data item that was requested */
@@ -715,1407 +920,58 @@ static int read_basic_type(const coda_cursor *cursor, void *dst)
     return 0;
 }
 
-static int read_array_without_conversion(const coda_cursor *cursor, void *dst)
-{
-    int32 start[MAX_HDF4_VAR_DIMS];
-    int32 stride[MAX_HDF4_VAR_DIMS];
-    int32 edge[MAX_HDF4_VAR_DIMS];
-    long i;
-
-    switch (((coda_hdf4_type *)cursor->stack[cursor->n - 1].type)->tag)
-    {
-        case tag_hdf4_basic_type_array:
-            if (coda_hdf4_read_attribute(cursor, dst) != 0)
-            {
-                return -1;
-            }
-            break;
-        case tag_hdf4_GRImage:
-            {
-                coda_hdf4_GRImage *type;
-
-                type = (coda_hdf4_GRImage *)cursor->stack[cursor->n - 1].type;
-                start[0] = 0;
-                start[1] = 0;
-                stride[0] = 1;
-                stride[1] = 1;
-                edge[0] = type->dim_sizes[0];
-                edge[1] = type->dim_sizes[1];
-                if (GRreadimage(type->ri_id, start, stride, edge, dst) != 0)
-                {
-                    coda_set_error(CODA_ERROR_HDF4, NULL);
-                    return -1;
-                }
-            }
-            break;
-        case tag_hdf4_SDS:
-            {
-                coda_hdf4_SDS *type;
-
-                type = (coda_hdf4_SDS *)cursor->stack[cursor->n - 1].type;
-                if (type->rank == 0)
-                {
-                    start[0] = 0;
-                    edge[0] = 1;
-                }
-                else
-                {
-                    for (i = 0; i < type->rank; i++)
-                    {
-                        start[i] = 0;
-                        edge[i] = type->dimsizes[i];
-                    }
-                }
-                if (SDreaddata(type->sds_id, start, NULL, edge, dst) != 0)
-                {
-                    coda_set_error(CODA_ERROR_HDF4, NULL);
-                    return -1;
-                }
-            }
-            break;
-        case tag_hdf4_Vdata_field:
-            {
-                coda_hdf4_Vdata *type;
-                coda_hdf4_Vdata_field *field_type;
-
-                assert(cursor->n > 1);
-                type = (coda_hdf4_Vdata *)cursor->stack[cursor->n - 2].type;
-                field_type = (coda_hdf4_Vdata_field *)cursor->stack[cursor->n - 1].type;
-                if (VSseek(type->vdata_id, 0) < 0)
-                {
-                    coda_set_error(CODA_ERROR_HDF4, NULL);
-                    return -1;
-                }
-                if (VSsetfields(type->vdata_id, field_type->field_name) != 0)
-                {
-                    coda_set_error(CODA_ERROR_HDF4, NULL);
-                    return -1;
-                }
-                if (VSread(type->vdata_id, (uint8 *)dst, type->num_records, FULL_INTERLACE) < 0)
-                {
-                    coda_set_error(CODA_ERROR_HDF4, NULL);
-                    return -1;
-                }
-            }
-            break;
-        default:
-            assert(0);
-            exit(1);
-    }
-
-    return 0;
-}
-
-static int read_array(const coda_cursor *cursor, void *dst, coda_native_type from_type, coda_native_type to_type,
-                      coda_array_ordering array_ordering)
-{
-    char *buffer;
-    long num_elements;
-    int element_to_size = 0;
-    long to_size;
-    int num_dims;
-    long dim[CODA_MAX_NUM_DIMS];
-    long i;
-
-    if (coda_hdf4_cursor_get_num_elements(cursor, &num_elements) != 0)
-    {
-        return -1;
-    }
-    if (num_elements <= 0)
-    {
-        /* no data to be read */
-        return 0;
-    }
-    if (coda_hdf4_type_get_array_dim((coda_type *)cursor->stack[cursor->n - 1].type, &num_dims, dim) != 0)
-    {
-        return -1;
-    }
-
-    if (from_type == to_type && (num_dims <= 1 || array_ordering == coda_array_ordering_c))
-    {
-        /* no conversion needed */
-        return read_array_without_conversion(cursor, dst);
-    }
-
-    element_to_size = get_native_type_size(to_type);
-
-    to_size = element_to_size * num_elements;
-    buffer = malloc(to_size);
-    if (buffer == NULL)
-    {
-        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)", (long)to_size,
-                       __FILE__, __LINE__);
-        return -1;
-    }
-
-    if (read_array_without_conversion(cursor, buffer) != 0)
-    {
-        free(buffer);
-        return -1;
-    }
-
-    if (num_dims <= 1 || array_ordering == coda_array_ordering_c)
-    {
-        /* requested array ordering is the same as that of the source */
-
-        for (i = 0; i < num_elements; i++)
-        {
-            switch (to_type)
-            {
-                case coda_native_type_int16:
-                    switch (from_type)
-                    {
-                        case coda_native_type_int8:
-                            ((int16_t *)dst)[i] = ((int8_t *)buffer)[i];
-                            break;
-                        case coda_native_type_uint8:
-                            ((int16_t *)dst)[i] = ((uint8_t *)buffer)[i];
-                            break;
-                        default:
-                            assert(0);
-                            exit(1);
-                    }
-                    break;
-                case coda_native_type_uint16:
-                    switch (from_type)
-                    {
-                        case coda_native_type_uint8:
-                            ((uint16_t *)dst)[i] = ((uint8_t *)buffer)[i];
-                            break;
-                        default:
-                            assert(0);
-                            exit(1);
-                    }
-                    break;
-                case coda_native_type_int32:
-                    switch (from_type)
-                    {
-                        case coda_native_type_int8:
-                            ((int32_t *)dst)[i] = ((int8_t *)buffer)[i];
-                            break;
-                        case coda_native_type_uint8:
-                            ((int32_t *)dst)[i] = ((uint8_t *)buffer)[i];
-                            break;
-                        case coda_native_type_int16:
-                            ((int32_t *)dst)[i] = ((int16_t *)buffer)[i];
-                            break;
-                        case coda_native_type_uint16:
-                            ((int32_t *)dst)[i] = ((uint16_t *)buffer)[i];
-                            break;
-                        default:
-                            assert(0);
-                            exit(1);
-                    }
-                    break;
-                case coda_native_type_uint32:
-                    switch (from_type)
-                    {
-                        case coda_native_type_uint8:
-                            ((uint32_t *)dst)[i] = ((uint8_t *)buffer)[i];
-                            break;
-                        case coda_native_type_uint16:
-                            ((uint32_t *)dst)[i] = ((uint16_t *)buffer)[i];
-                            break;
-                        default:
-                            assert(0);
-                            exit(1);
-                    }
-                    break;
-                case coda_native_type_int64:
-                    switch (from_type)
-                    {
-                        case coda_native_type_int8:
-                            ((int64_t *)dst)[i] = ((int8_t *)buffer)[i];
-                            break;
-                        case coda_native_type_uint8:
-                            ((int64_t *)dst)[i] = ((uint8_t *)buffer)[i];
-                            break;
-                        case coda_native_type_int16:
-                            ((int64_t *)dst)[i] = ((int16_t *)buffer)[i];
-                            break;
-                        case coda_native_type_uint16:
-                            ((int64_t *)dst)[i] = ((uint16_t *)buffer)[i];
-                            break;
-                        case coda_native_type_int32:
-                            ((int64_t *)dst)[i] = ((int32_t *)buffer)[i];
-                            break;
-                        case coda_native_type_uint32:
-                            ((int64_t *)dst)[i] = ((uint32_t *)buffer)[i];
-                            break;
-                        default:
-                            assert(0);
-                            exit(1);
-                    }
-                    break;
-                case coda_native_type_uint64:
-                    switch (from_type)
-                    {
-                        case coda_native_type_uint8:
-                            ((uint64_t *)dst)[i] = ((uint8_t *)buffer)[i];
-                            break;
-                        case coda_native_type_uint16:
-                            ((uint64_t *)dst)[i] = ((uint16_t *)buffer)[i];
-                            break;
-                        case coda_native_type_uint32:
-                            ((uint64_t *)dst)[i] = ((uint32_t *)buffer)[i];
-                            break;
-                        default:
-                            assert(0);
-                            exit(1);
-                    }
-                    break;
-                case coda_native_type_float:
-                    switch (from_type)
-                    {
-                        case coda_native_type_int8:
-                            ((float *)dst)[i] = ((int8_t *)buffer)[i];
-                            break;
-                        case coda_native_type_uint8:
-                            ((float *)dst)[i] = ((uint8_t *)buffer)[i];
-                            break;
-                        case coda_native_type_int16:
-                            ((float *)dst)[i] = ((int16_t *)buffer)[i];
-                            break;
-                        case coda_native_type_uint16:
-                            ((float *)dst)[i] = ((uint16_t *)buffer)[i];
-                            break;
-                        case coda_native_type_int32:
-                            ((float *)dst)[i] = (float)((int32_t *)buffer)[i];
-                            break;
-                        case coda_native_type_uint32:
-                            ((float *)dst)[i] = (float)((uint32_t *)buffer)[i];
-                            break;
-                        case coda_native_type_int64:
-                            ((float *)dst)[i] = (float)((int64_t *)buffer)[i];
-                            break;
-                        case coda_native_type_uint64:
-                            ((float *)dst)[i] = (float)(int64_t)((uint64_t *)buffer)[i];
-                            break;
-                        case coda_native_type_double:
-                            ((float *)dst)[i] = (float)((double *)buffer)[i];
-                            break;
-                        default:
-                            assert(0);
-                            exit(1);
-                    }
-                    break;
-                case coda_native_type_double:
-                    switch (from_type)
-                    {
-                        case coda_native_type_int8:
-                            ((double *)dst)[i] = ((int8_t *)buffer)[i];
-                            break;
-                        case coda_native_type_uint8:
-                            ((double *)dst)[i] = ((uint8_t *)buffer)[i];
-                            break;
-                        case coda_native_type_int16:
-                            ((double *)dst)[i] = ((int16_t *)buffer)[i];
-                            break;
-                        case coda_native_type_uint16:
-                            ((double *)dst)[i] = ((uint16_t *)buffer)[i];
-                            break;
-                        case coda_native_type_int32:
-                            ((double *)dst)[i] = ((int32_t *)buffer)[i];
-                            break;
-                        case coda_native_type_uint32:
-                            ((double *)dst)[i] = ((uint32_t *)buffer)[i];
-                            break;
-                        case coda_native_type_int64:
-                            ((double *)dst)[i] = (double)((int64_t *)buffer)[i];
-                            break;
-                        case coda_native_type_uint64:
-                            ((double *)dst)[i] = (double)(int64_t)((uint64_t *)buffer)[i];
-                            break;
-                        case coda_native_type_float:
-                            ((double *)dst)[i] = ((float *)buffer)[i];
-                            break;
-                        default:
-                            assert(0);
-                            exit(1);
-                    }
-                    break;
-                default:
-                    assert(0);
-                    exit(1);
-            }
-        }
-    }
-    else
-    {
-        long incr[CODA_MAX_NUM_DIMS + 1];
-        long increment;
-        long c_index;
-        long fortran_index;
-
-        /* requested array ordering differs from that of the source */
-
-        incr[0] = 1;
-        for (i = 0; i < num_dims; i++)
-        {
-            incr[i + 1] = incr[i] * dim[i];
-        }
-
-        increment = incr[num_dims - 1];
-        assert(num_elements == incr[num_dims]);
-
-        c_index = 0;
-        fortran_index = 0;
-        for (;;)
-        {
-            do
-            {
-                switch (to_type)
-                {
-                    case coda_native_type_int8:
-                        switch (from_type)
-                        {
-                            case coda_native_type_int8:
-                                ((int8_t *)dst)[fortran_index] = ((int8_t *)buffer)[c_index];
-                                break;
-                            default:
-                                assert(0);
-                                exit(1);
-                        }
-                        break;
-                    case coda_native_type_uint8:
-                        switch (from_type)
-                        {
-                            case coda_native_type_uint8:
-                                ((uint8_t *)dst)[fortran_index] = ((uint8_t *)buffer)[c_index];
-                                break;
-                            default:
-                                assert(0);
-                                exit(1);
-                        }
-                        break;
-                    case coda_native_type_int16:
-                        switch (from_type)
-                        {
-                            case coda_native_type_int8:
-                                ((int16_t *)dst)[fortran_index] = ((int8_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_uint8:
-                                ((int16_t *)dst)[fortran_index] = ((uint8_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_int16:
-                                ((int16_t *)dst)[fortran_index] = ((int16_t *)buffer)[c_index];
-                                break;
-                            default:
-                                assert(0);
-                                exit(1);
-                        }
-                        break;
-                    case coda_native_type_uint16:
-                        switch (from_type)
-                        {
-                            case coda_native_type_uint8:
-                                ((uint16_t *)dst)[fortran_index] = ((uint8_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_uint16:
-                                ((uint16_t *)dst)[fortran_index] = ((uint16_t *)buffer)[c_index];
-                                break;
-                            default:
-                                assert(0);
-                                exit(1);
-                        }
-                        break;
-                    case coda_native_type_int32:
-                        switch (from_type)
-                        {
-                            case coda_native_type_int8:
-                                ((int32_t *)dst)[fortran_index] = ((int8_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_uint8:
-                                ((int32_t *)dst)[fortran_index] = ((uint8_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_int16:
-                                ((int32_t *)dst)[fortran_index] = ((int16_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_uint16:
-                                ((int32_t *)dst)[fortran_index] = ((uint16_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_int32:
-                                ((int32_t *)dst)[fortran_index] = ((int32_t *)buffer)[c_index];
-                                break;
-                            default:
-                                assert(0);
-                                exit(1);
-                        }
-                        break;
-                    case coda_native_type_uint32:
-                        switch (from_type)
-                        {
-                            case coda_native_type_uint8:
-                                ((uint32_t *)dst)[fortran_index] = ((uint8_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_uint16:
-                                ((uint32_t *)dst)[fortran_index] = ((uint16_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_uint32:
-                                ((uint32_t *)dst)[fortran_index] = ((uint32_t *)buffer)[c_index];
-                                break;
-                            default:
-                                assert(0);
-                                exit(1);
-                        }
-                        break;
-                    case coda_native_type_int64:
-                        switch (from_type)
-                        {
-                            case coda_native_type_int8:
-                                ((int64_t *)dst)[fortran_index] = ((int8_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_uint8:
-                                ((int64_t *)dst)[fortran_index] = ((uint8_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_int16:
-                                ((int64_t *)dst)[fortran_index] = ((int16_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_uint16:
-                                ((int64_t *)dst)[fortran_index] = ((uint16_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_int32:
-                                ((int64_t *)dst)[fortran_index] = ((int32_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_uint32:
-                                ((int64_t *)dst)[fortran_index] = ((uint32_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_int64:
-                                ((int64_t *)dst)[fortran_index] = ((int64_t *)buffer)[c_index];
-                                break;
-                            default:
-                                assert(0);
-                                exit(1);
-                        }
-                        break;
-                    case coda_native_type_uint64:
-                        switch (from_type)
-                        {
-                            case coda_native_type_uint8:
-                                ((uint64_t *)dst)[fortran_index] = ((uint8_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_uint16:
-                                ((uint64_t *)dst)[fortran_index] = ((uint16_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_uint32:
-                                ((uint64_t *)dst)[fortran_index] = ((uint32_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_uint64:
-                                ((uint64_t *)dst)[fortran_index] = ((uint64_t *)buffer)[c_index];
-                                break;
-                            default:
-                                assert(0);
-                                exit(1);
-                        }
-                        break;
-                    case coda_native_type_float:
-                        switch (from_type)
-                        {
-                            case coda_native_type_int8:
-                                ((float *)dst)[fortran_index] = ((int8_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_uint8:
-                                ((float *)dst)[fortran_index] = ((uint8_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_int16:
-                                ((float *)dst)[fortran_index] = ((int16_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_uint16:
-                                ((float *)dst)[fortran_index] = ((uint16_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_int32:
-                                ((float *)dst)[fortran_index] = (float)((int32_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_uint32:
-                                ((float *)dst)[fortran_index] = (float)((uint32_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_int64:
-                                ((float *)dst)[fortran_index] = (float)((int64_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_uint64:
-                                ((float *)dst)[fortran_index] = (float)(int64_t)((uint64_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_float:
-                                ((float *)dst)[fortran_index] = ((float *)buffer)[c_index];
-                                break;
-                            case coda_native_type_double:
-                                ((float *)dst)[fortran_index] = (float)((double *)buffer)[c_index];
-                                break;
-                            default:
-                                assert(0);
-                                exit(1);
-                        }
-                        break;
-                    case coda_native_type_double:
-                        switch (from_type)
-                        {
-                            case coda_native_type_int8:
-                                ((double *)dst)[fortran_index] = ((int8_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_uint8:
-                                ((double *)dst)[fortran_index] = ((uint8_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_int16:
-                                ((double *)dst)[fortran_index] = ((int16_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_uint16:
-                                ((double *)dst)[fortran_index] = ((uint16_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_int32:
-                                ((double *)dst)[fortran_index] = ((int32_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_uint32:
-                                ((double *)dst)[fortran_index] = ((uint32_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_int64:
-                                ((double *)dst)[fortran_index] = (double)((int64_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_uint64:
-                                ((double *)dst)[fortran_index] = (double)(int64_t)((uint64_t *)buffer)[c_index];
-                                break;
-                            case coda_native_type_float:
-                                ((double *)dst)[fortran_index] = ((float *)buffer)[c_index];
-                                break;
-                            case coda_native_type_double:
-                                ((double *)dst)[fortran_index] = ((double *)buffer)[c_index];
-                                break;
-                            default:
-                                assert(0);
-                                exit(1);
-                        }
-                        break;
-                    case coda_native_type_char:
-                        switch (from_type)
-                        {
-                            case coda_native_type_char:
-                                ((char *)dst)[fortran_index] = ((char *)buffer)[c_index];
-                                break;
-                            default:
-                                assert(0);
-                                exit(1);
-                        }
-                        break;
-                    default:
-                        assert(0);
-                        exit(1);
-                }
-
-                c_index++;
-                fortran_index += increment;
-
-            } while (fortran_index < num_elements);
-
-            if (c_index == num_elements)
-            {
-                break;
-            }
-
-            fortran_index += incr[num_dims - 2] - incr[num_dims];
-            i = num_dims - 3;
-            while (i >= 0 && fortran_index >= incr[i + 2])
-            {
-                fortran_index += incr[i] - incr[i + 2];
-                i--;
-            }
-        }
-    }
-
-    free(buffer);
-    return 0;
-}
-
 int coda_hdf4_cursor_read_int8(const coda_cursor *cursor, int8_t *dst)
 {
-    coda_hdf4_basic_type *type;
-
-    if (((coda_hdf4_type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf4_basic_type)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a int8 data type");
-        return -1;
-    }
-
-    type = (coda_hdf4_basic_type *)cursor->stack[cursor->n - 1].type;
-    if (coda_option_perform_conversions && type->has_conversion)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read converted data using a int8 data type");
-        return -1;
-    }
-    switch (type->read_type)
-    {
-        case coda_native_type_int8:
-            {
-                int8_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (int8_t)value;
-            }
-            break;
-        default:
-            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a int8 data type",
-                           coda_type_get_native_type_name(type->read_type));
-            return -1;
-    }
-
-    return 0;
+    return read_basic_type(cursor, dst);
 }
 
 int coda_hdf4_cursor_read_uint8(const coda_cursor *cursor, uint8_t *dst)
 {
-    coda_hdf4_basic_type *type;
-
-    if (((coda_hdf4_type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf4_basic_type)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a uint8 data type");
-        return -1;
-    }
-
-    type = (coda_hdf4_basic_type *)cursor->stack[cursor->n - 1].type;
-    if (coda_option_perform_conversions && type->has_conversion)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read converted data using a uint8 data type");
-        return -1;
-    }
-    switch (type->read_type)
-    {
-        case coda_native_type_uint8:
-            {
-                uint8_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (uint8_t)value;
-            }
-            break;
-        default:
-            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a uint8 data type",
-                           coda_type_get_native_type_name(type->read_type));
-            return -1;
-    }
-
-    return 0;
+    return read_basic_type(cursor, dst);
 }
 
 int coda_hdf4_cursor_read_int16(const coda_cursor *cursor, int16_t *dst)
 {
-    coda_hdf4_basic_type *type;
-
-    if (((coda_hdf4_type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf4_basic_type)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a int16 data type");
-        return -1;
-    }
-
-    type = (coda_hdf4_basic_type *)cursor->stack[cursor->n - 1].type;
-    if (coda_option_perform_conversions && type->has_conversion)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read converted data using a int16 data type");
-        return -1;
-    }
-    switch (type->read_type)
-    {
-        case coda_native_type_int8:
-            {
-                int8_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (int16_t)value;
-            }
-            break;
-        case coda_native_type_uint8:
-            {
-                uint8_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (int16_t)value;
-            }
-            break;
-        case coda_native_type_int16:
-            {
-                int16_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (int16_t)value;
-            }
-            break;
-        default:
-            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a int16 data type",
-                           coda_type_get_native_type_name(type->read_type));
-            return -1;
-    }
-
-    return 0;
+    return read_basic_type(cursor, dst);
 }
 
 int coda_hdf4_cursor_read_uint16(const coda_cursor *cursor, uint16_t *dst)
 {
-    coda_hdf4_basic_type *type;
-
-    if (((coda_hdf4_type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf4_basic_type)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a uint16 data type");
-        return -1;
-    }
-
-    type = (coda_hdf4_basic_type *)cursor->stack[cursor->n - 1].type;
-    if (coda_option_perform_conversions && type->has_conversion)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read converted data using a uint16 data type");
-        return -1;
-    }
-    switch (type->read_type)
-    {
-        case coda_native_type_uint8:
-            {
-                uint8_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (uint16_t)value;
-            }
-            break;
-        case coda_native_type_uint16:
-            {
-                uint16_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (uint16_t)value;
-            }
-            break;
-        default:
-            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a uint16 data type",
-                           coda_type_get_native_type_name(type->read_type));
-            return -1;
-    }
-
-    return 0;
+    return read_basic_type(cursor, dst);
 }
 
 int coda_hdf4_cursor_read_int32(const coda_cursor *cursor, int32_t *dst)
 {
-    coda_hdf4_basic_type *type;
-
-    if (((coda_hdf4_type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf4_basic_type)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a int32 data type");
-        return -1;
-    }
-
-    type = (coda_hdf4_basic_type *)cursor->stack[cursor->n - 1].type;
-    if (coda_option_perform_conversions && type->has_conversion)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read converted data using a int32 data type");
-        return -1;
-    }
-    switch (type->read_type)
-    {
-        case coda_native_type_int8:
-            {
-                int8_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (int32_t)value;
-            }
-            break;
-        case coda_native_type_uint8:
-            {
-                uint8_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (int32_t)value;
-            }
-            break;
-        case coda_native_type_int16:
-            {
-                int16_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (int32_t)value;
-            }
-            break;
-        case coda_native_type_uint16:
-            {
-                uint16_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (int32_t)value;
-            }
-            break;
-        case coda_native_type_int32:
-            {
-                int32_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (int32_t)value;
-            }
-            break;
-        default:
-            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a int32 data type",
-                           coda_type_get_native_type_name(type->read_type));
-            return -1;
-    }
-
-    return 0;
+    return read_basic_type(cursor, dst);
 }
 
 int coda_hdf4_cursor_read_uint32(const coda_cursor *cursor, uint32_t *dst)
 {
-    coda_hdf4_basic_type *type;
-
-    if (((coda_hdf4_type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf4_basic_type)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a uint32 data type");
-        return -1;
-    }
-
-    type = (coda_hdf4_basic_type *)cursor->stack[cursor->n - 1].type;
-    if (coda_option_perform_conversions && type->has_conversion)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read converted data using a uint32 data type");
-        return -1;
-    }
-    switch (type->read_type)
-    {
-        case coda_native_type_uint8:
-            {
-                uint8_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (uint32_t)value;
-            }
-            break;
-        case coda_native_type_uint16:
-            {
-                uint16_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (uint32_t)value;
-            }
-            break;
-        case coda_native_type_uint32:
-            {
-                uint32_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (uint32_t)value;
-            }
-            break;
-        default:
-            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a uint32 data type",
-                           coda_type_get_native_type_name(type->read_type));
-            return -1;
-    }
-
-    return 0;
+    return read_basic_type(cursor, dst);
 }
 
 int coda_hdf4_cursor_read_int64(const coda_cursor *cursor, int64_t *dst)
 {
-    coda_hdf4_basic_type *type;
-
-    if (((coda_hdf4_type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf4_basic_type)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a int64 data type");
-        return -1;
-    }
-
-    type = (coda_hdf4_basic_type *)cursor->stack[cursor->n - 1].type;
-    if (coda_option_perform_conversions && type->has_conversion)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read converted data using a int64 data type");
-        return -1;
-    }
-    switch (type->read_type)
-    {
-        case coda_native_type_int8:
-            {
-                int8_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (int64_t)value;
-            }
-            break;
-        case coda_native_type_uint8:
-            {
-                uint8_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (int64_t)value;
-            }
-            break;
-        case coda_native_type_int16:
-            {
-                int16_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (int64_t)value;
-            }
-            break;
-        case coda_native_type_uint16:
-            {
-                uint16_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (int64_t)value;
-            }
-            break;
-        case coda_native_type_int32:
-            {
-                int32_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (int64_t)value;
-            }
-            break;
-        case coda_native_type_uint32:
-            {
-                uint32_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (int64_t)value;
-            }
-            break;
-        case coda_native_type_int64:
-            {
-                int64_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (int64_t)value;
-            }
-            break;
-        default:
-            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a int64 data type",
-                           coda_type_get_native_type_name(type->read_type));
-            return -1;
-    }
-
-    return 0;
+    return read_basic_type(cursor, dst);
 }
 
 int coda_hdf4_cursor_read_uint64(const coda_cursor *cursor, uint64_t *dst)
 {
-    coda_hdf4_basic_type *type;
-
-    if (((coda_hdf4_type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf4_basic_type)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a uint64 data type");
-        return -1;
-    }
-
-    type = (coda_hdf4_basic_type *)cursor->stack[cursor->n - 1].type;
-    if (coda_option_perform_conversions && type->has_conversion)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read converted data using a uint64 data type");
-        return -1;
-    }
-    switch (type->read_type)
-    {
-        case coda_native_type_uint8:
-            {
-                uint8_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (uint64_t)value;
-            }
-            break;
-        case coda_native_type_uint16:
-            {
-                uint16_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (uint64_t)value;
-            }
-            break;
-        case coda_native_type_uint32:
-            {
-                uint32_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (uint64_t)value;
-            }
-            break;
-        case coda_native_type_uint64:
-            {
-                uint64_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (uint64_t)value;
-            }
-            break;
-        default:
-            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a uint64 data type",
-                           coda_type_get_native_type_name(type->read_type));
-            return -1;
-    }
-
-    return 0;
+    return read_basic_type(cursor, dst);
 }
 
 int coda_hdf4_cursor_read_float(const coda_cursor *cursor, float *dst)
 {
-    coda_hdf4_basic_type *type;
-
-    if (((coda_hdf4_type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf4_basic_type)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a float data type");
-        return -1;
-    }
-
-    type = (coda_hdf4_basic_type *)cursor->stack[cursor->n - 1].type;
-    switch (type->read_type)
-    {
-        case coda_native_type_int8:
-            {
-                int8_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (float)value;
-            }
-            break;
-        case coda_native_type_uint8:
-            {
-                uint8_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (float)value;
-            }
-            break;
-        case coda_native_type_int16:
-            {
-                int16_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (float)value;
-            }
-            break;
-        case coda_native_type_uint16:
-            {
-                uint16_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (float)value;
-            }
-            break;
-        case coda_native_type_int32:
-            {
-                int32_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (float)value;
-            }
-            break;
-        case coda_native_type_uint32:
-            {
-                uint32_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (float)value;
-            }
-            break;
-        case coda_native_type_int64:
-            {
-                int64_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (float)value;
-            }
-            break;
-        case coda_native_type_uint64:
-            {
-                uint64_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (float)(int64_t)value;
-            }
-            break;
-        case coda_native_type_float:
-            {
-                float value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (float)value;
-            }
-            break;
-        case coda_native_type_double:
-            {
-                double value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (float)value;
-            }
-            break;
-        default:
-            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a float data type",
-                           coda_type_get_native_type_name(type->read_type));
-            return -1;
-    }
-    if (coda_option_perform_conversions && type->has_conversion)
-    {
-        *dst = (float)(*dst * type->scale_factor + type->add_offset);
-    }
-
-    return 0;
+    return read_basic_type(cursor, dst);
 }
 
 int coda_hdf4_cursor_read_double(const coda_cursor *cursor, double *dst)
 {
-    coda_hdf4_basic_type *type;
-
-    if (((coda_hdf4_type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf4_basic_type)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a double data type");
-        return -1;
-    }
-
-    type = (coda_hdf4_basic_type *)cursor->stack[cursor->n - 1].type;
-    switch (type->read_type)
-    {
-        case coda_native_type_int8:
-            {
-                int8_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (double)value;
-            }
-            break;
-        case coda_native_type_uint8:
-            {
-                uint8_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (double)value;
-            }
-            break;
-        case coda_native_type_int16:
-            {
-                int16_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (double)value;
-            }
-            break;
-        case coda_native_type_uint16:
-            {
-                uint16_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (double)value;
-            }
-            break;
-        case coda_native_type_int32:
-            {
-                int32_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (double)value;
-            }
-            break;
-        case coda_native_type_uint32:
-            {
-                uint32_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (double)value;
-            }
-            break;
-        case coda_native_type_int64:
-            {
-                int64_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (double)value;
-            }
-            break;
-        case coda_native_type_uint64:
-            {
-                uint64_t value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (double)(int64_t)value;
-            }
-            break;
-        case coda_native_type_float:
-            {
-                float value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (double)value;
-            }
-            break;
-        case coda_native_type_double:
-            {
-                double value;
-
-                if (read_basic_type(cursor, &value) != 0)
-                {
-                    return -1;
-                }
-                *dst = (double)value;
-            }
-            break;
-        default:
-            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a double data type",
-                           coda_type_get_native_type_name(type->read_type));
-            return -1;
-    }
-    if (coda_option_perform_conversions && type->has_conversion)
-    {
-        *dst = *dst * type->scale_factor + type->add_offset;
-    }
-
-    return 0;
+    return read_basic_type(cursor, dst);
 }
 
 int coda_hdf4_cursor_read_char(const coda_cursor *cursor, char *dst)
 {
-    coda_hdf4_basic_type *type;
-
-    if (((coda_hdf4_type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf4_basic_type)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a char data type");
-        return -1;
-    }
-
-    type = (coda_hdf4_basic_type *)cursor->stack[cursor->n - 1].type;
-    if (type->read_type != coda_native_type_char)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a char data type",
-                       coda_type_get_native_type_name(type->read_type));
-        return -1;
-    }
-
     return read_basic_type(cursor, dst);
 }
 
@@ -2138,437 +994,57 @@ int coda_hdf4_cursor_read_string(const coda_cursor *cursor, char *dst, long dst_
     return 0;
 }
 
-int coda_hdf4_cursor_read_int8_array(const coda_cursor *cursor, int8_t *dst, coda_array_ordering array_ordering)
+int coda_hdf4_cursor_read_int8_array(const coda_cursor *cursor, int8_t *dst)
 {
-    coda_type *base_type;
-
-    if (coda_hdf4_type_get_array_base_type((coda_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
-    {
-        return -1;
-    }
-    assert(((coda_hdf4_type *)base_type)->tag == tag_hdf4_basic_type);
-
-    if (coda_option_perform_conversions && ((coda_hdf4_basic_type *)base_type)->has_conversion)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read converted data using a int8 data type");
-        return -1;
-    }
-    switch (((coda_hdf4_basic_type *)base_type)->read_type)
-    {
-        case coda_native_type_int8:
-            return read_array(cursor, dst, coda_native_type_int8, coda_native_type_int8, array_ordering);
-        default:
-            break;
-    }
-
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a int8 data type",
-                   coda_type_get_native_type_name(((coda_hdf4_basic_type *)base_type)->read_type));
-    return -1;
+    return read_array(cursor, dst);
 }
 
-int coda_hdf4_cursor_read_uint8_array(const coda_cursor *cursor, uint8_t *dst, coda_array_ordering array_ordering)
+int coda_hdf4_cursor_read_uint8_array(const coda_cursor *cursor, uint8_t *dst)
 {
-    coda_type *base_type;
-
-    if (coda_hdf4_type_get_array_base_type((coda_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
-    {
-        return -1;
-    }
-    assert(((coda_hdf4_type *)base_type)->tag == tag_hdf4_basic_type);
-
-    if (coda_option_perform_conversions && ((coda_hdf4_basic_type *)base_type)->has_conversion)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read converted data using a uint8 data type");
-        return -1;
-    }
-    switch (((coda_hdf4_basic_type *)base_type)->read_type)
-    {
-        case coda_native_type_uint8:
-            return read_array(cursor, dst, coda_native_type_uint8, coda_native_type_uint8, array_ordering);
-        default:
-            break;
-    }
-
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a uint8 data type",
-                   coda_type_get_native_type_name(((coda_hdf4_basic_type *)base_type)->read_type));
-    return -1;
+    return read_array(cursor, dst);
 }
 
-int coda_hdf4_cursor_read_int16_array(const coda_cursor *cursor, int16_t *dst, coda_array_ordering array_ordering)
+int coda_hdf4_cursor_read_int16_array(const coda_cursor *cursor, int16_t *dst)
 {
-    coda_type *base_type;
-
-    if (coda_hdf4_type_get_array_base_type((coda_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
-    {
-        return -1;
-    }
-    assert(((coda_hdf4_type *)base_type)->tag == tag_hdf4_basic_type);
-
-    if (coda_option_perform_conversions && ((coda_hdf4_basic_type *)base_type)->has_conversion)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read converted data using a int16 data type");
-        return -1;
-    }
-    switch (((coda_hdf4_basic_type *)base_type)->read_type)
-    {
-        case coda_native_type_int8:
-            return read_array(cursor, dst, coda_native_type_int8, coda_native_type_int16, array_ordering);
-        case coda_native_type_uint8:
-            return read_array(cursor, dst, coda_native_type_uint8, coda_native_type_int16, array_ordering);
-        case coda_native_type_int16:
-            return read_array(cursor, dst, coda_native_type_int16, coda_native_type_int16, array_ordering);
-        default:
-            break;
-    }
-
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a int16 data type",
-                   coda_type_get_native_type_name(((coda_hdf4_basic_type *)base_type)->read_type));
-    return -1;
+    return read_array(cursor, dst);
 }
 
-int coda_hdf4_cursor_read_uint16_array(const coda_cursor *cursor, uint16_t *dst, coda_array_ordering array_ordering)
+int coda_hdf4_cursor_read_uint16_array(const coda_cursor *cursor, uint16_t *dst)
 {
-    coda_type *base_type;
-
-    if (coda_hdf4_type_get_array_base_type((coda_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
-    {
-        return -1;
-    }
-    assert(((coda_hdf4_type *)base_type)->tag == tag_hdf4_basic_type);
-
-    if (coda_option_perform_conversions && ((coda_hdf4_basic_type *)base_type)->has_conversion)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read converted data using a uint16 data type");
-        return -1;
-    }
-    switch (((coda_hdf4_basic_type *)base_type)->read_type)
-    {
-        case coda_native_type_uint8:
-            return read_array(cursor, dst, coda_native_type_uint8, coda_native_type_uint16, array_ordering);
-        case coda_native_type_uint16:
-            return read_array(cursor, dst, coda_native_type_uint16, coda_native_type_uint16, array_ordering);
-        default:
-            break;
-    }
-
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a uint16 data type",
-                   coda_type_get_native_type_name(((coda_hdf4_basic_type *)base_type)->read_type));
-    return -1;
+    return read_array(cursor, dst);
 }
 
-int coda_hdf4_cursor_read_int32_array(const coda_cursor *cursor, int32_t *dst, coda_array_ordering array_ordering)
+int coda_hdf4_cursor_read_int32_array(const coda_cursor *cursor, int32_t *dst)
 {
-    coda_type *base_type;
-
-    if (coda_hdf4_type_get_array_base_type((coda_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
-    {
-        return -1;
-    }
-    assert(((coda_hdf4_type *)base_type)->tag == tag_hdf4_basic_type);
-
-    if (coda_option_perform_conversions && ((coda_hdf4_basic_type *)base_type)->has_conversion)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read converted data using a int32 data type");
-        return -1;
-    }
-    switch (((coda_hdf4_basic_type *)base_type)->read_type)
-    {
-        case coda_native_type_int8:
-            return read_array(cursor, dst, coda_native_type_int8, coda_native_type_int32, array_ordering);
-        case coda_native_type_uint8:
-            return read_array(cursor, dst, coda_native_type_uint8, coda_native_type_int32, array_ordering);
-        case coda_native_type_int16:
-            return read_array(cursor, dst, coda_native_type_int16, coda_native_type_int32, array_ordering);
-        case coda_native_type_uint16:
-            return read_array(cursor, dst, coda_native_type_uint16, coda_native_type_int32, array_ordering);
-        case coda_native_type_int32:
-            return read_array(cursor, dst, coda_native_type_int32, coda_native_type_int32, array_ordering);
-        default:
-            break;
-    }
-
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a int32 data type",
-                   coda_type_get_native_type_name(((coda_hdf4_basic_type *)base_type)->read_type));
-    return -1;
+    return read_array(cursor, dst);
 }
 
-int coda_hdf4_cursor_read_uint32_array(const coda_cursor *cursor, uint32_t *dst, coda_array_ordering array_ordering)
+int coda_hdf4_cursor_read_uint32_array(const coda_cursor *cursor, uint32_t *dst)
 {
-    coda_type *base_type;
-
-    if (coda_hdf4_type_get_array_base_type((coda_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
-    {
-        return -1;
-    }
-    assert(((coda_hdf4_type *)base_type)->tag == tag_hdf4_basic_type);
-
-    if (coda_option_perform_conversions && ((coda_hdf4_basic_type *)base_type)->has_conversion)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read converted data using a uint32 data type");
-        return -1;
-    }
-    switch (((coda_hdf4_basic_type *)base_type)->read_type)
-    {
-        case coda_native_type_uint8:
-            return read_array(cursor, dst, coda_native_type_uint8, coda_native_type_uint32, array_ordering);
-        case coda_native_type_uint16:
-            return read_array(cursor, dst, coda_native_type_uint16, coda_native_type_uint32, array_ordering);
-        case coda_native_type_uint32:
-            return read_array(cursor, dst, coda_native_type_uint32, coda_native_type_uint32, array_ordering);
-        default:
-            break;
-    }
-
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a uint32 data type",
-                   coda_type_get_native_type_name(((coda_hdf4_basic_type *)base_type)->read_type));
-    return -1;
+    return read_array(cursor, dst);
 }
 
-int coda_hdf4_cursor_read_int64_array(const coda_cursor *cursor, int64_t *dst, coda_array_ordering array_ordering)
+int coda_hdf4_cursor_read_int64_array(const coda_cursor *cursor, int64_t *dst)
 {
-    coda_type *base_type;
-
-    if (coda_hdf4_type_get_array_base_type((coda_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
-    {
-        return -1;
-    }
-    assert(((coda_hdf4_type *)base_type)->tag == tag_hdf4_basic_type);
-
-    if (coda_option_perform_conversions && ((coda_hdf4_basic_type *)base_type)->has_conversion)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read converted data using a int64 data type");
-        return -1;
-    }
-    switch (((coda_hdf4_basic_type *)base_type)->read_type)
-    {
-        case coda_native_type_int8:
-            return read_array(cursor, dst, coda_native_type_int8, coda_native_type_int64, array_ordering);
-        case coda_native_type_uint8:
-            return read_array(cursor, dst, coda_native_type_uint8, coda_native_type_int64, array_ordering);
-        case coda_native_type_int16:
-            return read_array(cursor, dst, coda_native_type_int16, coda_native_type_int64, array_ordering);
-        case coda_native_type_uint16:
-            return read_array(cursor, dst, coda_native_type_uint16, coda_native_type_int64, array_ordering);
-        case coda_native_type_int32:
-            return read_array(cursor, dst, coda_native_type_int32, coda_native_type_int64, array_ordering);
-        case coda_native_type_uint32:
-            return read_array(cursor, dst, coda_native_type_uint32, coda_native_type_int64, array_ordering);
-        case coda_native_type_int64:
-            return read_array(cursor, dst, coda_native_type_int64, coda_native_type_int64, array_ordering);
-        default:
-            break;
-    }
-
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a int64 data type",
-                   coda_type_get_native_type_name(((coda_hdf4_basic_type *)base_type)->read_type));
-    return -1;
+    return read_array(cursor, dst);
 }
 
-int coda_hdf4_cursor_read_uint64_array(const coda_cursor *cursor, uint64_t *dst, coda_array_ordering array_ordering)
+int coda_hdf4_cursor_read_uint64_array(const coda_cursor *cursor, uint64_t *dst)
 {
-    coda_type *base_type;
-
-    if (coda_hdf4_type_get_array_base_type((coda_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
-    {
-        return -1;
-    }
-    assert(((coda_hdf4_type *)base_type)->tag == tag_hdf4_basic_type);
-
-    if (coda_option_perform_conversions && ((coda_hdf4_basic_type *)base_type)->has_conversion)
-    {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read converted data using a uint64 data type");
-        return -1;
-    }
-    switch (((coda_hdf4_basic_type *)base_type)->read_type)
-    {
-        case coda_native_type_uint8:
-            return read_array(cursor, dst, coda_native_type_uint8, coda_native_type_uint64, array_ordering);
-        case coda_native_type_uint16:
-            return read_array(cursor, dst, coda_native_type_uint16, coda_native_type_uint64, array_ordering);
-        case coda_native_type_uint32:
-            return read_array(cursor, dst, coda_native_type_uint32, coda_native_type_uint64, array_ordering);
-        case coda_native_type_uint64:
-            return read_array(cursor, dst, coda_native_type_uint64, coda_native_type_uint64, array_ordering);
-        default:
-            break;
-    }
-
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a uint64 data type",
-                   coda_type_get_native_type_name(((coda_hdf4_basic_type *)base_type)->read_type));
-    return -1;
+    return read_array(cursor, dst);
 }
 
-int coda_hdf4_cursor_read_float_array(const coda_cursor *cursor, float *dst, coda_array_ordering array_ordering)
+int coda_hdf4_cursor_read_float_array(const coda_cursor *cursor, float *dst)
 {
-    coda_type *base_type;
-    int result;
-
-    if (coda_hdf4_type_get_array_base_type((coda_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
-    {
-        return -1;
-    }
-    assert(((coda_hdf4_type *)base_type)->tag == tag_hdf4_basic_type);
-
-    switch (((coda_hdf4_basic_type *)base_type)->read_type)
-    {
-        case coda_native_type_int8:
-            result = read_array(cursor, dst, coda_native_type_int8, coda_native_type_float, array_ordering);
-            break;
-        case coda_native_type_uint8:
-            result = read_array(cursor, dst, coda_native_type_uint8, coda_native_type_float, array_ordering);
-            break;
-        case coda_native_type_int16:
-            result = read_array(cursor, dst, coda_native_type_int16, coda_native_type_float, array_ordering);
-            break;
-        case coda_native_type_uint16:
-            result = read_array(cursor, dst, coda_native_type_uint16, coda_native_type_float, array_ordering);
-            break;
-        case coda_native_type_int32:
-            result = read_array(cursor, dst, coda_native_type_int32, coda_native_type_float, array_ordering);
-            break;
-        case coda_native_type_uint32:
-            result = read_array(cursor, dst, coda_native_type_uint32, coda_native_type_float, array_ordering);
-            break;
-        case coda_native_type_int64:
-            result = read_array(cursor, dst, coda_native_type_int64, coda_native_type_float, array_ordering);
-            break;
-        case coda_native_type_uint64:
-            result = read_array(cursor, dst, coda_native_type_uint64, coda_native_type_float, array_ordering);
-            break;
-        case coda_native_type_float:
-            result = read_array(cursor, dst, coda_native_type_float, coda_native_type_float, array_ordering);
-            break;
-        case coda_native_type_double:
-            result = read_array(cursor, dst, coda_native_type_double, coda_native_type_float, array_ordering);
-            break;
-        default:
-            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a float data type",
-                           coda_type_get_native_type_name(((coda_hdf4_basic_type *)base_type)->read_type));
-            return -1;
-    }
-    if (result != 0)
-    {
-        return -1;
-    }
-
-    if (coda_option_perform_conversions && ((coda_hdf4_basic_type *)base_type)->has_conversion)
-    {
-        double add_offset;
-        double scale_factor;
-        long num_elements;
-        long i;
-
-        add_offset = ((coda_hdf4_basic_type *)base_type)->add_offset;
-        scale_factor = ((coda_hdf4_basic_type *)base_type)->scale_factor;
-        if (coda_hdf4_cursor_get_num_elements(cursor, &num_elements) != 0)
-        {
-            return -1;
-        }
-
-        for (i = 0; i < num_elements; i++)
-        {
-            ((float *)dst)[i] = (float)(scale_factor * ((float *)dst)[i] + add_offset);
-        }
-    }
-
-    return 0;
+    return read_array(cursor, dst);
 }
 
-int coda_hdf4_cursor_read_double_array(const coda_cursor *cursor, double *dst, coda_array_ordering array_ordering)
+int coda_hdf4_cursor_read_double_array(const coda_cursor *cursor, double *dst)
 {
-    coda_type *base_type;
-    int result;
-
-    if (coda_hdf4_type_get_array_base_type((coda_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
-    {
-        return -1;
-    }
-    assert(((coda_hdf4_type *)base_type)->tag == tag_hdf4_basic_type);
-
-    switch (((coda_hdf4_basic_type *)base_type)->read_type)
-    {
-        case coda_native_type_int8:
-            result = read_array(cursor, dst, coda_native_type_int8, coda_native_type_double, array_ordering);
-            break;
-        case coda_native_type_uint8:
-            result = read_array(cursor, dst, coda_native_type_uint8, coda_native_type_double, array_ordering);
-            break;
-        case coda_native_type_int16:
-            result = read_array(cursor, dst, coda_native_type_int16, coda_native_type_double, array_ordering);
-            break;
-        case coda_native_type_uint16:
-            result = read_array(cursor, dst, coda_native_type_uint16, coda_native_type_double, array_ordering);
-            break;
-        case coda_native_type_int32:
-            result = read_array(cursor, dst, coda_native_type_int32, coda_native_type_double, array_ordering);
-            break;
-        case coda_native_type_uint32:
-            result = read_array(cursor, dst, coda_native_type_uint32, coda_native_type_double, array_ordering);
-            break;
-        case coda_native_type_int64:
-            result = read_array(cursor, dst, coda_native_type_int64, coda_native_type_double, array_ordering);
-            break;
-        case coda_native_type_uint64:
-            result = read_array(cursor, dst, coda_native_type_uint64, coda_native_type_double, array_ordering);
-            break;
-        case coda_native_type_float:
-            result = read_array(cursor, dst, coda_native_type_float, coda_native_type_double, array_ordering);
-            break;
-        case coda_native_type_double:
-            result = read_array(cursor, dst, coda_native_type_double, coda_native_type_double, array_ordering);
-            break;
-        default:
-            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a double data type",
-                           coda_type_get_native_type_name(((coda_hdf4_basic_type *)base_type)->read_type));
-            return -1;
-    }
-    if (result != 0)
-    {
-        return -1;
-    }
-
-    if (coda_option_perform_conversions && ((coda_hdf4_basic_type *)base_type)->has_conversion)
-    {
-        double add_offset;
-        double scale_factor;
-        long num_elements;
-        long i;
-
-        add_offset = ((coda_hdf4_basic_type *)base_type)->add_offset;
-        scale_factor = ((coda_hdf4_basic_type *)base_type)->scale_factor;
-        if (coda_hdf4_cursor_get_num_elements(cursor, &num_elements) != 0)
-        {
-            return -1;
-        }
-
-        for (i = 0; i < num_elements; i++)
-        {
-            ((double *)dst)[i] = scale_factor * ((double *)dst)[i] + add_offset;
-        }
-    }
-
-    return 0;
+    return read_array(cursor, dst);
 }
 
-int coda_hdf4_cursor_read_char_array(const coda_cursor *cursor, char *dst, coda_array_ordering array_ordering)
+int coda_hdf4_cursor_read_char_array(const coda_cursor *cursor, char *dst)
 {
-    coda_type *base_type;
-
-    if (coda_hdf4_type_get_array_base_type((coda_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
-    {
-        return -1;
-    }
-    assert(((coda_hdf4_type *)base_type)->tag == tag_hdf4_basic_type);
-
-    switch (((coda_hdf4_basic_type *)base_type)->read_type)
-    {
-        case coda_native_type_char:
-            return read_array(cursor, dst, coda_native_type_char, coda_native_type_char, array_ordering);
-        default:
-            break;
-    }
-
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a char data type",
-                   coda_type_get_native_type_name(((coda_hdf4_basic_type *)base_type)->read_type));
-    return -1;
+    return read_array(cursor, dst);
 }

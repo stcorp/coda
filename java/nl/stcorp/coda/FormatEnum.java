@@ -17,7 +17,9 @@ public enum FormatEnum {
   coda_format_cdf,
   coda_format_netcdf,
   coda_format_grib1,
-  coda_format_grib2;
+  coda_format_grib2,
+  coda_format_rinex,
+  coda_format_sp3c;
 
   public final int swigValue() {
     return swigValue;

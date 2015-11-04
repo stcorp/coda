@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -49,6 +49,8 @@
 #ifdef HAVE_HDF5
 #include "coda-hdf5.h"
 #endif
+#include "coda-rinex.h"
+#include "coda-sp3c.h"
 #include "coda-definition.h"
 
 /** \defgroup coda_product CODA Product
@@ -138,7 +140,7 @@
  * @{
  */
 
-#define DETECTION_BLOCK_SIZE 12
+#define DETECTION_BLOCK_SIZE 80
 
 static int get_format_and_size(const char *filename, coda_format *format, int64_t *file_size)
 {
@@ -264,6 +266,30 @@ static int get_format_and_size(const char *filename, coda_format *format, int64_
         }
     }
 
+    /* SP3-c */
+    if (*file_size >= 60)
+    {
+        if (buffer[0] == '#' && buffer[1] == 'c' && (buffer[2] == 'P' || buffer[2] == 'V') &&
+            buffer[3] >= '0' && buffer[3] <= '9' && buffer[4] >= '0' && buffer[4] <= '9' && buffer[5] >= '0' &&
+            buffer[5] <= '0' && buffer[6] >= '0' && buffer[6] <= '9' && buffer[7] == ' ' && buffer[10] == ' ' &&
+            buffer[13] == ' ' && buffer[16] == ' ' && buffer[19] == ' ' && buffer[31] == ' ' && buffer[39] == ' ')
+        {
+            *format = coda_format_sp3c;
+            return 0;
+        }
+    }
+
+    /* RINEX */
+    if (*file_size >= 80)
+    {
+        if (memcmp(&buffer[60], "RINEX VERSION / TYPE", 20) == 0)
+        {
+            *format = coda_format_rinex;
+            return 0;
+        }
+    }
+
+    /* default is binary */
     *format = coda_format_binary;
     return 0;
 }
@@ -314,11 +340,14 @@ LIBCODA_API int coda_recognize_file(const char *filename, int64_t *file_size, co
     }
     switch (format)
     {
-        case coda_format_ascii:
         case coda_format_binary:
             if (coda_ascbin_recognize_file(filename, size, &definition) != 0)
             {
                 return -1;
+            }
+            if (definition != NULL)
+            {
+                format = definition->format;
             }
             break;
         case coda_format_xml:
@@ -334,6 +363,18 @@ LIBCODA_API int coda_recognize_file(const char *filename, int64_t *file_size, co
         case coda_format_grib1:
         case coda_format_grib2:
             break;
+        case coda_format_rinex:
+        case coda_format_sp3c:
+            /* We currently use the ascii detection tree to assign product class/type to RINEX and SP3-c files */
+            if (coda_ascbin_recognize_file(filename, size, &definition) != 0)
+            {
+                return -1;
+            }
+            break;
+        case coda_format_ascii:
+            /* not a format that can be returned by get_format_and_size() */
+            assert(0);
+            exit(1);
     }
 
     if (file_size != NULL)
@@ -342,7 +383,7 @@ LIBCODA_API int coda_recognize_file(const char *filename, int64_t *file_size, co
     }
     if (file_format != NULL)
     {
-        *file_format = (definition != NULL ? definition->format : format);
+        *file_format = format;
     }
     if (product_class != NULL)
     {
@@ -406,21 +447,7 @@ LIBCODA_API int coda_open(const char *filename, coda_product **product)
                 return -1;
             }
             break;
-        case coda_format_netcdf:
-            if (coda_netcdf_open(filename, file_size, &product_file) != 0)
-            {
-                return -1;
-            }
-            break;
-        case coda_format_grib1:
-        case coda_format_grib2:
-            if (coda_grib_open(filename, file_size, &product_file) != 0)
-            {
-                return -1;
-            }
-            break;
         case coda_format_hdf4:
-        case coda_format_cdf:
 #ifdef HAVE_HDF4
             if (coda_hdf4_open(filename, file_size, format, &product_file) != 0)
             {
@@ -442,6 +469,33 @@ LIBCODA_API int coda_open(const char *filename, coda_product **product)
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_format_netcdf:
+            if (coda_netcdf_open(filename, file_size, &product_file) != 0)
+            {
+                return -1;
+            }
+            break;
+        case coda_format_grib1:
+        case coda_format_grib2:
+            if (coda_grib_open(filename, file_size, &product_file) != 0)
+            {
+                return -1;
+            }
+        case coda_format_rinex:
+            if (coda_rinex_open(filename, file_size, &product_file) != 0)
+            {
+                return -1;
+            }
+            break;
+        case coda_format_sp3c:
+            if (coda_sp3c_open(filename, file_size, &product_file) != 0)
+            {
+                return -1;
+            }
+            break;
+        case coda_format_cdf:
+            coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, NULL);
+            return -1;
     }
 
     /* initialize product variables */
@@ -519,9 +573,8 @@ LIBCODA_API int coda_close(coda_product *product)
     switch (product->format)
     {
         case coda_format_ascii:
-            return coda_ascii_close(product);
         case coda_format_binary:
-            return coda_bin_close(product);
+            return coda_ascbin_close(product);
         case coda_format_xml:
             return coda_xml_close(product);
         case coda_format_netcdf:
@@ -544,6 +597,10 @@ LIBCODA_API int coda_close(coda_product *product)
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_format_rinex:
+            return coda_rinex_close(product);
+        case coda_format_sp3c:
+            return coda_sp3c_close(product);
     }
 
     assert(0);
@@ -754,7 +811,9 @@ LIBCODA_API int coda_get_product_root_type(const coda_product *product, coda_typ
         return -1;
     }
 
-    return coda_get_type_for_dynamic_type(product->root_type, type);
+    *type = coda_get_type_for_dynamic_type(product->root_type);
+
+    return 0;
 }
 
 /** Get path to the coda definition file that describes the format for this product.
@@ -781,7 +840,7 @@ LIBCODA_API int coda_get_product_definition_file(const coda_product *product, co
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "definition_file argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
-    
+
     if (product->product_definition != NULL)
     {
         *definition_file = product->product_definition->product_type->product_class->definition_file;
@@ -790,7 +849,7 @@ LIBCODA_API int coda_get_product_definition_file(const coda_product *product, co
     {
         *definition_file = NULL;
     }
-    
+
     return 0;
 }
 

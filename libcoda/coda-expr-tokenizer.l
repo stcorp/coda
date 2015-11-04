@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -114,6 +114,7 @@ WHITESPACE   [[:space:]]+
 "max"                   return FUNC_MAX;
 "min"                   return FUNC_MIN;
 "productclass"          return FUNC_PRODUCTCLASS;
+"productformat"         return FUNC_PRODUCTFORMAT;
 "producttype"           return FUNC_PRODUCTTYPE;
 "productversion"        return FUNC_PRODUCTVERSION;
 "regex"                 return FUNC_REGEX;

@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2007-2010 S[&]T, The Netherlands.
+// Copyright (C) 2007-2011 S[&]T, The Netherlands.
 //
 // This file is part of CODA.
 //
@@ -105,21 +105,6 @@ public class Type
     public static String getSpecialTypeName(SpecialTypeEnum specialType)
     {
         return codac.type_get_special_type_name(specialType);
-    }
-
-
-    /**
-     * Determine whether data of this type is stored as ascii data.
-     * 
-     * @return The ascii content status.
-     * @throws CodaException
-     *             If an error occurred.
-     */
-    public boolean hasAsciiContent() throws CodaException
-    {
-        int has_ascii_content[] = new int[1];
-        codac.type_has_ascii_content(this.type, has_ascii_content);
-        return has_ascii_content[0] == 1;
     }
 
 

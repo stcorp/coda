@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -428,6 +428,7 @@ coda_expression *coda_expression_new(coda_expression_node_type tag, char *string
         case expr_filename:
         case expr_ltrim:
         case expr_product_class:
+        case expr_product_format:
         case expr_product_type:
         case expr_rtrim:
         case expr_string:
@@ -501,6 +502,7 @@ coda_expression *coda_expression_new(coda_expression_node_type tag, char *string
         case expr_file_size:
         case expr_filename:
         case expr_product_class:
+        case expr_product_format:
         case expr_product_type:
         case expr_product_version:
         case expr_variable_index:
@@ -1073,44 +1075,39 @@ static int eval_boolean(eval_info *info, const coda_expression *expr, int *value
                 {
                     return -1;
                 }
-                /* pattern needs to be a 0-terminated string and can not be NULL */
-                {
-                    char *new_pattern;
-
-                    new_pattern = malloc(pattern_length + 1);
-                    if (new_pattern == NULL)
-                    {
-                        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %ld bytes) (%s:%u)",
-                                       (pattern_length + 1), __FILE__, __LINE__);
-                        if (pattern != NULL)
-                        {
-                            free(pattern);
-                        }
-                        return -1;
-                    }
-                    if (pattern != NULL)
-                    {
-                        memcpy(new_pattern, &pattern[pattern_offset], pattern_length);
-                        free(pattern);
-                    }
-                    new_pattern[pattern_length] = '\0';
-                    pattern = new_pattern;
-                }
                 if (eval_string(info, opexpr->operand[1], &matchstring_offset, &matchstring_length, &matchstring) != 0)
                 {
-                    free(pattern);
+                    if (pattern != NULL)
+                    {
+                        free(pattern);
+                    }
                     return -1;
                 }
 
-                re = pcre_compile(pattern, PCRE_DOTALL | PCRE_DOLLAR_ENDONLY, &error, &erroffset, NULL);
+                if (pattern_length > 0)
+                {
+                    pattern[pattern_offset + pattern_length] = '\0';    /* add terminating zero */
+                    re = pcre_compile(&pattern[pattern_offset], PCRE_DOTALL | PCRE_DOLLAR_ENDONLY, &error, &erroffset,
+                                      NULL);
+                }
+                else
+                {
+                    re = pcre_compile("", PCRE_DOTALL | PCRE_DOLLAR_ENDONLY, &error, &erroffset, NULL);
+                }
+                if (pattern != NULL)
+                {
+                    free(pattern);
+                }
                 if (re == NULL)
                 {
                     coda_set_error(CODA_ERROR_EXPRESSION,
                                    "invalid format for regex pattern ('%s' at position %d)", error, erroffset);
-                    free(pattern);
+                    if (matchstring != NULL)
+                    {
+                        free(matchstring);
+                    }
                     return -1;
                 }
-                free(pattern);
 
                 if (matchstring == NULL)
                 {
@@ -2411,6 +2408,7 @@ static int eval_integer(eval_info *info, const coda_expression *expr, int64_t *v
     return 0;
 }
 
+/* string values (if not equal to NULL) are always one byte longer than 'length' to allow for a terminating zero */
 static int eval_string(eval_info *info, const coda_expression *expr, long *offset, long *length, char **value)
 {
     const coda_expression_operation *opexpr;
@@ -2469,7 +2467,7 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                 }
                 if (*length > 0)
                 {
-                    *value = malloc(*length + 1);
+                    *value = malloc(*length + 1);       /* add room for zero termination */
                     if (*value == NULL)
                     {
                         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %ld bytes) (%s:%u)",
@@ -2729,7 +2727,8 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                         {
                             char *new_value;
 
-                            new_value = realloc(*value, *length + el_length);
+                            /* add room for zero termination at a later time */
+                            new_value = realloc(*value, *length + el_length + 1);
                             if (new_value == NULL)
                             {
                                 coda_set_error(CODA_ERROR_OUT_OF_MEMORY,
@@ -2840,7 +2839,7 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
 
                 if (pattern_length > 0)
                 {
-                    pattern[pattern_offset + pattern_length] = '\0';
+                    pattern[pattern_offset + pattern_length] = '\0';    /* add terminating zero */
                     re = pcre_compile(&pattern[pattern_offset], PCRE_DOTALL | PCRE_DOLLAR_ENDONLY, &error, &erroffset,
                                       NULL);
                 }
@@ -2848,19 +2847,19 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                 {
                     re = pcre_compile("", PCRE_DOTALL | PCRE_DOLLAR_ENDONLY, &error, &erroffset, NULL);
                 }
+                if (pattern != NULL)
+                {
+                    free(pattern);
+                }
                 if (re == NULL)
                 {
                     coda_set_error(CODA_ERROR_EXPRESSION,
                                    "invalid format for regex pattern ('%s' at position %d)", error, erroffset);
-                    if (pattern != NULL)
+                    if (matchstring != NULL)
                     {
-                        free(pattern);
+                        free(matchstring);
                     }
                     return -1;
-                }
-                if (pattern != NULL)
-                {
-                    free(pattern);
                 }
 
                 /* determine substring index of substring that we need to return */
@@ -2977,6 +2976,33 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                         return -1;
                     }
                     memcpy(*value, product_class, *length);
+                }
+            }
+            break;
+        case expr_product_format:
+            {
+                coda_format format;
+                const char *product_format;
+
+                assert(info->orig_cursor != NULL);
+                if (coda_get_product_format(info->orig_cursor->product, &format) != 0)
+                {
+                    return -1;
+                }
+                product_format = coda_type_get_format_name(format);
+                *offset = 0;
+                *length = 0;
+                if (product_format != NULL)
+                {
+                    *length = strlen(product_format);
+                    *value = malloc(*length + 1);       /* add room for zero termination at the end */
+                    if (*value == NULL)
+                    {
+                        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %ld bytes) (%s:%u)",
+                                       *length, __FILE__, __LINE__);
+                        return -1;
+                    }
+                    memcpy(*value, product_format, *length);
                 }
             }
             break;
@@ -3270,6 +3296,12 @@ static int eval_cursor(eval_info *info, const coda_expression *expr)
             }
             break;
         case expr_asciiline:
+            if (info->orig_cursor->product->format != coda_format_ascii)
+            {
+                coda_set_error(CODA_ERROR_EXPRESSION, "'asciiline' not allowed for %s files",
+                               coda_type_get_format_name(info->orig_cursor->product->format));
+                return -1;
+            }
             if (coda_ascii_cursor_set_asciilines(&info->cursor, info->orig_cursor->product) != 0)
             {
                 return -1;

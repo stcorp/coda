@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -49,6 +49,7 @@ static void coda_matlab_class(int nlhs, mxArray *plhs[], int nrhs, const mxArray
 static void coda_matlab_clearall(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]);
 static void coda_matlab_close(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]);
 static void coda_matlab_description(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]);
+static void coda_matlab_eval(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]);
 static void coda_matlab_fetch(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]);
 static void coda_matlab_fieldavailable(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]);
 static void coda_matlab_fieldcount(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]);
@@ -247,6 +248,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else if (strcmp(funcname, "DESCRIPTION") == 0)
     {
         coda_matlab_description(nlhs, plhs, nrhs - 1, &(prhs[1]));
+    }
+    else if (strcmp(funcname, "EVAL") == 0)
+    {
+        coda_matlab_eval(nlhs, plhs, nrhs - 1, &(prhs[1]));
     }
     else if (strcmp(funcname, "FETCH") == 0)
     {
@@ -639,6 +644,142 @@ static void coda_matlab_description(int nlhs, mxArray *plhs[], int nrhs, const m
         description = "";
     }
     plhs[0] = mxCreateString(description);
+}
+
+static void coda_matlab_eval(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+{
+    coda_expression_type type;
+    coda_cursor cursor;
+    coda_cursor *expr_cursor = NULL;
+    coda_expression *expr;
+    char *exprstring;
+    int buflen;
+
+    /* check parameters */
+    if (nlhs > 1)
+    {
+        mexErrMsgTxt("Too many output arguments.");
+    }
+    if (nrhs < 1)
+    {
+        mexErrMsgTxt("Function needs at least one argument.");
+    }
+
+    if (!mxIsChar(prhs[0]))
+    {
+        mexErrMsgTxt("First argument should be a string.");
+    }
+    if (mxGetM(prhs[0]) != 1)
+    {
+        mexErrMsgTxt("First argument should be a row vector.");
+    }
+
+    buflen = mxGetN(prhs[0]) + 1;
+    exprstring = (char *)mxCalloc(buflen, sizeof(char));
+    if (mxGetString(prhs[0], exprstring, buflen) != 0)
+    {
+        mexErrMsgTxt("Unable to copy the expression string.");
+    }
+    if (coda_expression_from_string(exprstring, &expr) != 0)
+    {
+        coda_matlab_coda_error();
+    }
+    mxFree(exprstring);
+    if (coda_expression_get_type(expr, &type) != 0)
+    {
+        coda_expression_delete(expr);
+        coda_matlab_coda_error();
+    }
+
+    if (nrhs > 1)
+    {
+        coda_product *pf;
+
+        pf = coda_matlab_get_product_file(prhs[1]);
+        coda_matlab_traverse_product(pf, nrhs - 2, &prhs[2], &cursor, NULL);
+        expr_cursor = &cursor;
+    }
+    else if (!coda_expression_is_constant(expr))
+    {
+        coda_expression_delete(expr);
+        mexErrMsgTxt("Product location is required if expression is not a constant expression");
+    }
+
+    switch (type)
+    {
+        case coda_expression_boolean:
+            {
+                int value;
+
+                if (coda_expression_eval_bool(expr, expr_cursor, &value) != 0)
+                {
+                    coda_expression_delete(expr);
+                    coda_matlab_coda_error();
+                }
+                if (coda_env.option_convert_numbers_to_double)
+                {
+                    plhs[0] = mxCreateDoubleScalar(value);
+                }
+                else
+                {
+                    plhs[0] = mxCreateNumericMatrix(1, 1, mxINT32_CLASS, mxREAL);
+                    ((int32_t *)mxGetData(plhs[0]))[0] = value;
+                }
+            }
+            break;
+        case coda_expression_integer:
+            {
+                int64_t value;
+
+                if (coda_expression_eval_integer(expr, expr_cursor, &value) != 0)
+                {
+                    coda_expression_delete(expr);
+                    coda_matlab_coda_error();
+                }
+                if (coda_env.option_convert_numbers_to_double || !coda_env.option_use_64bit_integer)
+                {
+                    plhs[0] = mxCreateDoubleScalar(value);
+                }
+                else
+                {
+                    plhs[0] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+                    ((int64_t *)mxGetData(plhs[0]))[0] = value;
+                }
+            }
+            break;
+        case coda_expression_float:
+            {
+                double value;
+
+                if (coda_expression_eval_float(expr, expr_cursor, &value) != 0)
+                {
+                    coda_expression_delete(expr);
+                    coda_matlab_coda_error();
+                }
+                plhs[0] = mxCreateDoubleScalar(value);
+            }
+            break;
+        case coda_expression_string:
+            {
+                char *value;
+                long length;
+
+                if (coda_expression_eval_string(expr, expr_cursor, &value, &length) != 0)
+                {
+                    coda_expression_delete(expr);
+                    coda_matlab_coda_error();
+                }
+                plhs[0] = mxCreateString(value != NULL ? value : "");
+            }
+            break;
+        case coda_expression_node:
+            coda_expression_delete(expr);
+            mexErrMsgTxt("Evaluation of void expressions not supported");
+            break;
+        case coda_expression_void:
+            coda_expression_delete(expr);
+            mexErrMsgTxt("Evaluation of void expressions not supported");
+    }
 }
 
 static void coda_matlab_fetch(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])

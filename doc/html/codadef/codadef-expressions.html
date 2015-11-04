@@ -103,6 +103,8 @@
       
       <p>Matches a string against a regular expression pattern. The first parameter is the pattern and the second parameter is the string that it should match against.</p>
 
+      <p>The function will return true if the pattern matches (and false otherwise).</p>
+
       <p>Note that if you want to use '\' characters in your pattern you should either provide the pattern as a 'raw string' (using the 'r' prefix) or use double escaping. For example, if you want to match for a "word" character (\w) you should either use 'r"\w"' or '"\\w"'</p>
 
       <p>The regular expression engine that is used is <a href="http://www.pcre.org/">PCRE</a>. Please refer to the manual of this software package for an overview of the syntax and options for constructing a pattern. Note that the version of PCRE that ships with CODA has been build using default options. The pattern is <i>compiled</i> with the <code>PCRE_DOTALL</code> and <code>PCRE_DOLLAR_ENDONLY</code> options.</p>
@@ -486,6 +488,10 @@ inf
       
       <p>For example, <code>regex(r"a+(?'foo'\d+)", "aaa1234aaa", "foo")</code> will return <code>"1234"</code>.</p>
       
+      <h5>productformat()</h5>
+
+      <p>Returns the name of the underlying format (e.g. 'binary', 'xml', 'hdf5') of the file. A file that can be opened by CODA will always have an associated product format.</p>
+
       <h5>productclass()</h5>
 
       <p>Returns the name of the productclass of the file. If the file does not have a productclass an empty string will be returned.</p>
@@ -723,7 +729,7 @@ node =
 
       <div class="footer">
         <hr />
-        <p>Copyright &copy; 2007-2010 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+        <p>Copyright &copy; 2007-2011 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
       </div>
 
     </div>

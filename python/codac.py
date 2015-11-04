@@ -276,6 +276,8 @@ coda_format_cdf = _codac.coda_format_cdf
 coda_format_netcdf = _codac.coda_format_netcdf
 coda_format_grib1 = _codac.coda_format_grib1
 coda_format_grib2 = _codac.coda_format_grib2
+coda_format_rinex = _codac.coda_format_rinex
+coda_format_sp3c = _codac.coda_format_sp3c
 coda_record_class = _codac.coda_record_class
 coda_array_class = _codac.coda_array_class
 coda_integer_class = _codac.coda_integer_class
@@ -404,10 +406,6 @@ def get_product_variable_value(*args):
   return _codac.get_product_variable_value(*args)
 get_product_variable_value = _codac.get_product_variable_value
 
-def type_has_ascii_content(*args):
-  return _codac.type_has_ascii_content(*args)
-type_has_ascii_content = _codac.type_has_ascii_content
-
 def type_get_format(*args):
   return _codac.type_get_format(*args)
 type_get_format = _codac.type_get_format
@@ -451,6 +449,10 @@ type_get_num_record_fields = _codac.type_get_num_record_fields
 def type_get_record_field_index_from_name(*args):
   return _codac.type_get_record_field_index_from_name(*args)
 type_get_record_field_index_from_name = _codac.type_get_record_field_index_from_name
+
+def type_get_record_field_index_from_real_name(*args):
+  return _codac.type_get_record_field_index_from_real_name(*args)
+type_get_record_field_index_from_real_name = _codac.type_get_record_field_index_from_real_name
 
 def type_get_record_field_type(*args):
   return _codac.type_get_record_field_type(*args)

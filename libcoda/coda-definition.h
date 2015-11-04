@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -22,6 +22,7 @@
 #define CODA_DEFINITION_H
 
 #include "coda-internal.h"
+#include "coda-type.h"
 
 struct coda_product_variable_struct
 {
@@ -36,7 +37,7 @@ struct coda_detection_rule_entry_struct
     /* if 'use_filename' is set, it is a filename match and both 'offset' and 'value/length' should be provided */
     /* if only 'offset' is provided, it is a file size test (in bytes); ascii/binary only */
     /* if only 'path' is provided, it is an existence test; xml only */
-    /* if only 'value/length' is provided, it is a string match on the 4096 detection block; ascii only */
+    /* if only 'value/length' is provided, it is a string match on the 4096 bytes detection block; ascii only */
     /* if both 'offset' and 'value/length' are provided, it is a string match on the detection block; ascii/binary only */
     /* if both 'path' and 'value/length' are provided, it is a string match on the element pointed to by path; xml only */
     /* providing both 'path' and 'offset' is not allowed */
@@ -119,9 +120,6 @@ struct coda_data_dictionary_struct
 typedef struct coda_data_dictionary_struct coda_data_dictionary;
 
 extern coda_data_dictionary *coda_global_data_dictionary;
-
-int coda_type_set_name(coda_type *type, const char *name);
-int coda_type_set_description(coda_type *type, const char *description);
 
 coda_detection_rule_entry *coda_detection_rule_entry_with_offset_new(int64_t offset, int use_filename);
 coda_detection_rule_entry *coda_detection_rule_entry_with_path_new(const char *path);

@@ -23,61 +23,111 @@
 
       <h2>CODA Product Format Definitions</h2>
       <p>CODA uses a single view on data, independent of the underlying basic ascii/binary/xml/netcdf/hdf4/hdf5 file format.</p>
-      <p>A description of the common type system that CODA uses to provide a hierarchical view on data can be found in the <a href="codadef/codadef-format.html">CODA Product Format Definition Description Format</a> documentation.</p>
-      <p>Product format definitions in CODA can make use of a powerful expression language for e.g. determining array sizes, bit offsets, etc. This expression language is described in the <a href="codadef/codadef-expressions.html">CODA Expressions</a> documentation.</p>
-      <p>Data products that are in XML, netCDF, GRIB, HDF4, or HDF5 do not always need a CODA product format description, since they are self describing formats. The approach that CODA uses to map the XML/netCDF/GRIB/HDF4/HDF5 data types to CODA data types can be found in the <a href="codadef/codadef-xml.html">CODA XML Mapping Description</a>, <a href="codadef/codadef-netcdf.html">CODA netCDF Mapping Description</a>, <a href="codadef/codadef-grib.html">CODA GRIB Mapping Description</a>, <a href="codadef/codadef-hdf4.html">CODA HDF4 Mapping Description</a>, and <a href="codadef/codadef-hdf5.html">CODA HDF5 Mapping Description</a> documentation.</p>
+      <p>A description of the common type system that CODA uses to provide a hierarchical view on data can be found in the CODA Product Format Definition Description Format documentation:</p>
+      <ul>
+      <li><a href="codadef/codadef-format.html">CODA Product Format Definition Description Format</a></li>
+      </ul>
+      <p>Product format definitions in CODA can make use of a powerful expression language for e.g. determining array sizes, bit offsets, etc. This expression language is described in the CODA Expressions documentation:</p>
+      <ul>
+      <li><a href="codadef/codadef-expressions.html">CODA Expressions</a></li>
+      </ul>
+      <p>Data products that are in XML, netCDF, GRIB, HDF4, or HDF5 do not always need a CODA product format description, since they are self describing formats. For other formats, such as RINEX, the format is too complex to be captured by a CODA product format description, so a special backend was introduced to deal with the format. The approach that CODA uses to map the data from the native format to CODA data types can be found in the mapping descriptions for each format:</p>
+      <ul>
+      <li><a href="codadef/codadef-xml.html">CODA XML Mapping Description</a></li>
+      <li><a href="codadef/codadef-netcdf.html">CODA netCDF Mapping Description</a></li>
+      <li><a href="codadef/codadef-grib.html">CODA GRIB Mapping Description</a></li>
+      <li><a href="codadef/codadef-hdf4.html">CODA HDF4 Mapping Description</a></li>
+      <li><a href="codadef/codadef-hdf5.html">CODA HDF5 Mapping Description</a></li>
+      <li><a href="codadef/codadef-rinex.html">CODA RINEX Mapping Description</a></li>
+      </ul>
 
       <h2>C interface</h2>
       <p>The C interface is the foundation of CODA upon which all other CODA tools are build. As a developer you can also use this library and gain easy, high-performance access to all data in products that are supported by CODA.</p>
-      <p>A description of the C interface can be found in the <a href="libcoda/index.html">CODA C interface documentation</a>.</p>
+      <p>A description of the C interface can be found in the CODA C interface documentation:</p>
+      <ul>
+      <li><a href="libcoda/index.html">CODA C interface documentation</a></li>
+      </ul>
 
       <h2>Fortran interface</h2>
       <p>The Fortran interface provides a small wrapper for the C Library and allows you to call its functions from your Fortran 77/90 programs.</p>
-      <p>A description of the Fortran interface can be found in the <a href="fortran/index.html">CODA Fortran interface documentation</a>.</p>
+      <p>A description of the Fortran interface can be found in the CODA Fortran interface documentation:</p>
+      <ul>
+      <li><a href="fortran/index.html">CODA Fortran interface documentation</a></li>
+      </ul>
 
       <h2>IDL interface</h2>
       <p>The IDL interface provides a wrapper for the C Library through a small set of powerful functions (such as <code>coda_fetch</code>) which are available from within IDL.</p>
-      <p>A description of the IDL interface can be found in the <a href="idl/index.html">CODA IDL interface documentation</a>.</p>
+      <p>A description of the IDL interface can be found in the CODA IDL interface documentation:</p>
+      <ul>
+      <li><a href="idl/index.html">CODA IDL interface documentation</a></li>
+      </ul>
 
       <h2>MATLAB interface</h2>
       <p>The MATLAB interface provides a wrapper for the C Library through a small set of powerful functions (such as <code>coda_fetch</code>) which are available from within MATLAB.</p>
-      <p>A description of the MATLAB interface can be found in the <a href="matlab/index.html">CODA MATLAB interface documentation</a>.</p>
+      <p>A description of the MATLAB interface can be found in the CODA MATLAB interface documentation:</p>
+      <ul>
+      <li><a href="matlab/index.html">CODA MATLAB interface documentation</a></li>
+      </ul>
 
       <h2>Python interface</h2>
       <p>The Python interface provides a wrapper for the CODA C Library. The Python interface contains both direct wrappers for the C Library functions (so you can traverse a product using the so-called CODA cursors) as well as the more high level functions that can be found in the IDL and MATLAB interfaces (e.g. <code>coda_fetch</code>).</p>
-      <p>A description of the Python interface can be found in the <a href="python/index.html">CODA Python interface documentation</a>.</p>
+      <p>A description of the Python interface can be found in the CODA Python interface documentation:</p>
+      <ul>
+      <li><a href="python/index.html">CODA Python interface documentation</a></li>
+      </ul>
 
       <h2>Java interface</h2>
       <p>The Java interface provides a wrapper for the CODA C Library using JNI. The Java interface wraps the C Library functions behind classes for CODA Products, Types, and Cursors.</p>
-      <p>A description of the Java interface can be found in the <a href="java/index.html">CODA Java interface documentation</a>.</p>
+      <p>A description of the Java interface can be found in the CODA Java interface documentation:</p>
+      <ul>
+      <li><a href="java/index.html">CODA Java interface documentation</a></li>
+      </ul>
 
       <h2>codacheck</h2>
       <p>With codacheck it is possible to provide a basic sanity check on product files.</p>
-      <p>More information about this tool can be found in the <a href="codacheck/index.html">codacheck documentation</a>.</p>
+      <p>More information about this tool can be found in the codacheck documentation:</p>
+      <ul>
+      <li><a href="codacheck/index.html">codacheck documentation</a></li>
+      </ul>
 
       <h2>codacmp</h2>
       <p>With codacmp two product files can be compared. In other words, it is a 'diff' tool for product data. The tool is primarily intended for verification purposes.</p>
-      <p>More information about this tool can be found in the <a href="codacmp/index.html">codacmp documentation</a>.</p>
+      <p>More information about this tool can be found in the codacmp documentation:</p>
+      <ul>
+      <li><a href="codacmp/index.html">codacmp documentation</a></li>
+      </ul>
 
       <h2>codadd</h2>
       <p>The codadd tool allows for a quick validation of .codadef files and is able to generate HTML documentation for the product format definitions that are inside the .codadef files.</p>
-      <p>More information about this tool can be found in the <a href="codadd/index.html">codadd documentation</a>.</p>
+      <p>More information about this tool can be found in the codadd documentation:</p>
+      <ul>
+      <li><a href="codadd/index.html">codadd documentation</a></li>
+      </ul>
 
       <h2>codadump</h2>
       <p>With the codadump command line tool you can view data from any product file that is supported by CODA. The tool allows you to inspect the product structure (including array sizes), view and export data from the product in ASCII format, and export data into HDF4 format.</p>
-      <p>More information about this tool can be found in the <a href="codadump/index.html">codadump documentation</a>.</p>
+      <p>More information about this tool can be found in the codadump documentation:</p>
+      <ul>
+      <li><a href="codadump/index.html">codadump documentation</a></li>
+      </ul>
 
       <h2>codaeval</h2>
       <p>CODA comes with an <a href="codadef/codadef-expressions.html">expression language</a>. The codaeval tool allows you to run such an expression on one or more product files, or you can use it as a quick way to just syntactically and grammatically check an expression.</p>
-      <p>More information about this tool can be found in the <a href="codaeval/index.html">codaeval documentation</a>.</p>
+      <p>More information about this tool can be found in the codaeval documentation:</p>
+      <ul>
+      <li><a href="codaeval/index.html">codaeval documentation</a></li>
+      </ul>
 
       <h2>codafind</h2>
       <p>The codafind command line tool allows you to search files and directories for product files that are supported by CODA. The tool comes with a very powerful filtering mechanism that makes it possible to search for only those product files that match certain filter criteria.</p>
-      <p>More information about this tool can be found in the <a href="codafind/index.html">codafind documentation</a>.</p>
+      <p>More information about this tool can be found in the codafind documentation:</p>
+      <ul>
+      <li><a href="codafind/index.html">codafind documentation</a></li>
+      </ul>
 
       <div class="footer">
         <hr />
-        <p>Copyright &copy; 2007-2010 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>      
+        <p>Copyright &copy; 2007-2011 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>      
       </div>
 
     </div>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -524,14 +524,70 @@ static void print_data(coda_cursor *cursor)
                     handle_coda_error();
                 }
 
-                fi_printf("<%s>\n", coda_type_get_special_type_name(special_type));
-                if (coda_cursor_use_base_type_of_special_type(cursor) != 0)
+                fi_printf("<%s>", coda_type_get_special_type_name(special_type));
+                switch (special_type)
                 {
-                    handle_coda_error();
+                    case coda_special_no_data:
+                        ff_printf("\n");
+                        break;
+                    case coda_special_vsf_integer:
+                        {
+                            double data;
+
+                            if (coda_cursor_read_double(cursor, &data) != 0)
+                            {
+                                handle_coda_error();
+                            }
+
+                            ff_printf(" %g\n", data);
+                        }
+                        break;
+                    case coda_special_time:
+                        {
+                            double data;
+                            char str[27];
+
+                            if (coda_cursor_read_double(cursor, &data) != 0)
+                            {
+                                handle_coda_error();
+                            }
+                            if (coda_isNaN(data) || coda_isInf(data))
+                            {
+                                ff_printf(" %g\n", data);
+                            }
+                            else
+                            {
+                                if (coda_time_to_string(data, str) != 0)
+                                {
+                                    handle_coda_error();
+                                }
+                                ff_printf(" %s\n", str);
+                            }
+                        }
+                        break;
+                    case coda_special_complex:
+                        {
+                            double re, im;
+
+                            if (coda_cursor_read_complex_double_split(cursor, &re, &im) != 0)
+                            {
+                                handle_coda_error();
+                            }
+
+                            ff_printf(" %g + %gi\n", re, im);
+                        }
+                        break;
                 }
-                INDENT++;
-                print_data(cursor);
-                INDENT--;
+                if (special_type != coda_special_no_data)
+                {
+                    if (coda_cursor_use_base_type_of_special_type(cursor) != 0)
+                    {
+                        handle_coda_error();
+                    }
+                    INDENT++;
+                    print_data(cursor);
+                    INDENT--;
+                }
             }
             break;
     }

@@ -2,7 +2,7 @@
 #
 project(CODA)
 
-set(VERSION 1.5)
+set(VERSION 2.0)
 set(CODA_VERSION \"${VERSION}\")
 
 # General setup
@@ -252,26 +252,14 @@ configure_file(
 #
 set(LIBCODA_SOURCES
   libcoda/coda-ascbin-cursor.c
-  libcoda/coda-ascbin-definition.c
-  libcoda/coda-ascbin-definition.h
   libcoda/coda-ascbin-internal.h
-  libcoda/coda-ascbin-type.c
   libcoda/coda-ascbin.c
   libcoda/coda-ascbin.h
   libcoda/coda-ascii-cursor.c
-  libcoda/coda-ascii-definition.c
-  libcoda/coda-ascii-definition.h
-  libcoda/coda-ascii-internal.h
-  libcoda/coda-ascii-type.c
-  libcoda/coda-ascii.c
   libcoda/coda-ascii.h
   libcoda/coda-bin-cursor.c
-  libcoda/coda-bin-definition.c
-  libcoda/coda-bin-definition.h
-  libcoda/coda-bin-internal.h
-  libcoda/coda-bin-type.c
-  libcoda/coda-bin.c
   libcoda/coda-bin.h
+  libcoda/coda-cursor-read.c
   libcoda/coda-cursor.c
   libcoda/coda-definition-parse.c
   libcoda/coda-definition.c
@@ -285,28 +273,32 @@ set(LIBCODA_SOURCES
   libcoda/coda-filefilter.c
   libcoda/coda-filefilter.h
   libcoda/coda-grib-cursor.c
-  libcoda/coda-grib-dynamic.c
   libcoda/coda-grib-internal.h
   libcoda/coda-grib-type.c
   libcoda/coda-grib.c
   libcoda/coda-grib.h
   libcoda/coda-internal.h
+  libcoda/coda-mem-cursor.c
+  libcoda/coda-mem-internal.h
+  libcoda/coda-mem-type.c
+  libcoda/coda-mem.c
+  libcoda/coda-mem.h
   libcoda/coda-netcdf-cursor.c
-  libcoda/coda-netcdf-dynamic.c
   libcoda/coda-netcdf-internal.h
   libcoda/coda-netcdf-type.c
   libcoda/coda-netcdf.c
   libcoda/coda-netcdf.h
   libcoda/coda-path.h
   libcoda/coda-product.c
+  libcoda/coda-rinex.c
+  libcoda/coda-rinex.h
+  libcoda/coda-sp3c.c
+  libcoda/coda-sp3c.h
   libcoda/coda-time.c
   libcoda/coda-type.c
+  libcoda/coda-type.h
   libcoda/coda-utils.c
   libcoda/coda-xml-cursor.c
-  libcoda/coda-xml-definition.c
-  libcoda/coda-xml-definition.h
-  libcoda/coda-xml-dynamic.c
-  libcoda/coda-xml-dynamic.h
   libcoda/coda-xml-internal.h
   libcoda/coda-xml-parser.c
   libcoda/coda-xml-type.c
@@ -321,9 +313,9 @@ set(LIBCODA_SOURCES
 
 set(LIBCODA_HDF4_FILES
   libcoda/coda-hdf4-cursor.c
-  libcoda/coda-hdf4-definition.c
   libcoda/coda-hdf4-internal.h
   libcoda/coda-hdf4-type.c
+  libcoda/coda-hdf4.c
   libcoda/coda-hdf4.h
 )
 
@@ -334,9 +326,9 @@ endif(CODA_WITH_HDF4)
 
 set(LIBCODA_HDF5_FILES
   libcoda/coda-hdf5-cursor.c
-  libcoda/coda-hdf5-definition.c
   libcoda/coda-hdf5-internal.h
   libcoda/coda-hdf5-type.c
+  libcoda/coda-hdf5.c
   libcoda/coda-hdf5.h
   )
 

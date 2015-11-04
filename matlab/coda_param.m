@@ -30,5 +30,5 @@
 %   For example, with coda_fetch(pf,'datasetname',-1,'dsr_time') you can
 %   fetch all dsr_time values for all measurements into a single array.
 %
-%   See also CODA_CLASS, CODA_FETCH, CODA_FIELDNAMES, CODA_SIZE
+%   See also CODA_CLASS, CODA_EVAL, CODA_FETCH, CODA_FIELDNAMES, CODA_SIZE
 %

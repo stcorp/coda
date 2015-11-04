@@ -235,10 +235,6 @@ public class codac implements codacConstants {
     return codacJNI.get_product_variable_value(SWIGTYPE_p_coda_product_struct.getCPtr(product), variable, index, value);
   }
 
-  public static int type_has_ascii_content(SWIGTYPE_p_coda_type_struct type, int[] has_ascii_content) throws nl.stcorp.coda.CodaException {
-    return codacJNI.type_has_ascii_content(SWIGTYPE_p_coda_type_struct.getCPtr(type), has_ascii_content);
-  }
-
   public static int type_get_format(SWIGTYPE_p_coda_type_struct type, int[] format) throws nl.stcorp.coda.CodaException {
     return codacJNI.type_get_format(SWIGTYPE_p_coda_type_struct.getCPtr(type), format);
   }
@@ -281,6 +277,10 @@ public class codac implements codacConstants {
 
   public static int type_get_record_field_index_from_name(SWIGTYPE_p_coda_type_struct type, String name, int[] index) throws nl.stcorp.coda.CodaException {
     return codacJNI.type_get_record_field_index_from_name(SWIGTYPE_p_coda_type_struct.getCPtr(type), name, index);
+  }
+
+  public static int type_get_record_field_index_from_real_name(SWIGTYPE_p_coda_type_struct type, String real_name, int[] index) throws nl.stcorp.coda.CodaException {
+    return codacJNI.type_get_record_field_index_from_real_name(SWIGTYPE_p_coda_type_struct.getCPtr(type), real_name, index);
   }
 
   public static int type_get_record_field_type(SWIGTYPE_p_coda_type_struct type, int index, SWIGTYPE_p_coda_type_struct field_type) throws nl.stcorp.coda.CodaException {

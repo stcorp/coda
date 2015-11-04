@@ -22,11 +22,13 @@
       
       <p>CODA will try to provide as direct a mapping to the underlying data as possible. This means that code table indices will just be provided as indices and not be interpreted. You will have to consult the appropriate WMO code tables in order to interpret the data. The reason for this design choice was to eliminate as much as possible the dependency of CODA on the WMO tables. For certain structural information (such as the contents of the Grid Description Section) table information has been hard-coded in CODA.</p>
       
-      <p>One exception to the 'direct mapping' approach is that CODA will already perform the decoding of the parameter values. The bit-packed data is already converted back to floating point values using the scale factors and reference value as described by the GRIB standard. The scale factors and reference values are still made accessible as fields in the GRIB message record, but they have the <i>hidden</i> property, since you should not have to need them to interpret the values that CODA will give back.</p>
+      <p>There are a few exceptions to the 'direct mapping' approach. One is that CODA will already perform the decoding of the parameter values. The bit-packed data is already converted back to floating point values using the scale factors and reference value as described by the GRIB standard. The scale factors and reference values are still made accessible as fields in the GRIB message record, but they have the <i>hidden</i> property, since you should not have to need them to interpret the values that CODA will give back.</p>
+
+      <p>CODA will also perform the decoding of bitmap packed data (using the Bit Map Section). The data available in /[]/data/values[] will thus always contain the full grid, where <i>missing</i> grid points are given the 'referenceValue' as value.</p>
 
       <p>In addition, for GRIB1, any IBM floating point values will be converted to IEEE754 floating point values.</p>
       
-      <p>CODA currently only supports to most common storage mechanism of GRIB which is the simple package form. Data that is stored using complex packaging, jpeg/png images, or using a bitmap (from the Bit Map Section) are not supported. Also, CODA currently only supports grid definitions that use a lat/lon or Gaussian grid. Other grids, including Spherical Harmonic data, are currently not supported. If an unsupported feature is encountered, CODA will abort opening the product and return with an error.</p>
+      <p>CODA currently only supports to most common storage mechanism of GRIB which is the simple package form. Data that is stored using complex packaging or jpeg/png images. Also, CODA currently only supports grid definitions that use a lat/lon or Gaussian grid. Other grids, including Spherical Harmonic data, are currently not supported. If an unsupported feature is encountered, CODA will abort opening the product and return with an error.</p>
 
       <h2>GRIB1</h2>
       
@@ -156,7 +158,7 @@
       <tr><td>/[]/grid[]/jDirectionIncrement</td><td>integer</td><td>uint32</td><td></td></tr>
       <tr><td>/[]/grid[]/N</td><td>integer</td><td>uint32</td><td></td></tr>
       <tr><td>/[]/grid[]/scanningMode</td><td>integer</td><td>uint8</td><td></td></tr>
-      <tr><td>/[]/data[]/gridRecordIndex</td><td>integer</td><td>uint32</td><td>index into /[]/grid[] to find associated local use data</td></tr>
+      <tr><td>/[]/data[]/gridRecordIndex</td><td>integer</td><td>uint32</td><td>index into /[]/grid[] to find associated grid definition data</td></tr>
       <tr><td>/[]/data[]/bitsPerValue</td><td>integer</td><td>uint8</td><td>(hidden field)</td></tr>
       <tr><td>/[]/data[]/decimalScaleFactor</td><td>integer</td><td>int16</td><td>(hidden field)</td></tr>
       <tr><td>/[]/data[]/binaryScaleFactor</td><td>integer</td><td>int16</td><td>(hidden field)</td></tr>
@@ -166,7 +168,7 @@
 
       <div class="footer">
         <hr />
-        <p>Copyright &copy; 2007-2010 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+        <p>Copyright &copy; 2007-2011 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
       </div>
 
     </div>

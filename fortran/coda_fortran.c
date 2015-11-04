@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -376,11 +376,6 @@ void UFNAME(CODA_TYPE_GET_SPECIAL_TYPE_NAME,coda_type_get_special_type_name)(int
     OUTSTR_END(special_type_name)
 }
 
-int UFNAME(CODA_TYPE_HAS_ASCII_CONTENT,coda_type_has_ascii_content)(void *type, int *has_ascii_content)
-{
-    return coda_type_has_ascii_content(*(coda_type **)type, has_ascii_content);
-}
-
 int UFNAME(CODA_TYPE_GET_FORMAT,coda_type_get_format)(void *type, int *format)
 {
     return coda_type_get_format(*(coda_type **)type, (coda_format *)format);
@@ -454,6 +449,15 @@ int UFNAME(CODA_TYPE_GET_RECORD_FIELD_INDEX_FROM_NAME,coda_type_get_record_field
     INSTR_BEGIN(name)
     result = coda_type_get_record_field_index_from_name(*(coda_type **)type, name_s, index);
     INSTR_END(name)
+    return result;
+}
+
+int UFNAME(CODA_TYPE_GET_RECORD_FIELD_INDEX_FROM_REAL_NAME,coda_type_get_record_field_index_from_real_name)(void *type, char *real_name, long *index, int real_name_size)
+{
+    int result;
+    INSTR_BEGIN(real_name)
+    result = coda_type_get_record_field_index_from_real_name(*(coda_type **)type, real_name_s, index);
+    INSTR_END(real_name)
     return result;
 }
 

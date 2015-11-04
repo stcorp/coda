@@ -1,5 +1,41 @@
+2.0 2011-04-20
+~~~~~~~~~~~~~~
+
+* Major redesign of the backend architecture of CODA with the aim to:
+  - Easier add format-specific backends for which the data will be kept fully
+    in memory, such as for the RINEX and SP3c formats.
+  - Prepare for future support for specification of data formats through
+    .codadef files for self describing formats such as HDF5 and netCDF for
+    format verification purposes.
+
+* Added RINEX backend, currently only supporting Observation and Navigation
+  data for RINEX version 3.0.
+
+* Added skeleton for upcoming SP3-c backend. Although SP3-c files can currently
+  be opened, the product is mapped as an empty record. A full implementation of
+  the SP3-c backend will arrive in the next CODA version.
+
+* Removed coda_type_has_ascii_content() function.
+  It is now only possible to determine the 'ascii content' property
+  dynamically using coda_cursor_has_ascii_content().
+
+* Added coda_eval() function to IDL and MATLAB interfaces to allow evaluation
+  of CODA expressions.
+
+* coda_type_get_record_field_real_name() now gives the actual name for:
+  - XML element and attribute names
+  - HDF4 GRImage, SDS, Vdata, and Vgroup names
+  - netCDF variable and attribute names
+
+* Added coda_type_get_record_field_index_from_real_name()
+
+* Added productformat() to CODA expressions.
+
+* Improved performance of reading bitmasked GRIB data and fixed memory leak
+  in GRIB backend.
+
 1.5 2010-12-20
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~
 
 * Added coda_get_product_definition_file().
 

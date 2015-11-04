@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -23,7 +23,6 @@
 
 #include "coda-ascbin.h"
 #include "coda-definition.h"
-#include "coda-ascbin-definition.h"
 
 typedef enum eol_type_enum
 {
@@ -32,98 +31,6 @@ typedef enum eol_type_enum
     eol_cr,
     eol_crlf
 } eol_type;
-
-typedef enum ascbin_type_tag_enum
-{
-    tag_ascbin_record,  /* coda_record_class */
-    tag_ascbin_union,   /* coda_record_class */
-    tag_ascbin_array    /* coda_array_class */
-} ascbin_type_tag;
-
-struct coda_conversion_struct
-{
-    char *unit;
-    double numerator;
-    double denominator;
-};
-
-struct coda_ascbin_type_struct
-{
-    int retain_count;
-    coda_format format;
-    coda_type_class type_class;
-    char *name;
-    char *description;
-
-    ascbin_type_tag tag;
-    int64_t bit_size;   /* -1 means it's variable and needs to be calculated */
-};
-
-struct coda_ascbin_field_struct
-{
-    char *name;
-    char *real_name;
-    coda_ascbin_type *type;
-    int hidden;
-    coda_expression *available_expr;
-    int64_t bit_offset; /* relative bit offset from start of record (if -1, use bit_offset_expr or calculate) */
-    coda_expression *bit_offset_expr;   /* dynamic relative bit offset from the start of the record */
-};
-
-struct coda_ascbin_record_struct
-{
-    int retain_count;
-    coda_format format;
-    coda_type_class type_class;
-    char *name;
-    char *description;
-
-    ascbin_type_tag tag;
-    int64_t bit_size;
-    coda_expression *fast_size_expr;
-    hashtable *hash_data;
-    long num_fields;
-    coda_ascbin_field **field;
-    int has_hidden_fields;
-    int has_available_expr_fields;
-};
-
-struct coda_ascbin_union_struct
-{
-    int retain_count;
-    coda_format format;
-    coda_type_class type_class;
-    char *name;
-    char *description;
-
-    ascbin_type_tag tag;
-    int64_t bit_size;
-    coda_expression *fast_size_expr;
-    hashtable *hash_data;
-    long num_fields;
-    coda_ascbin_field **field;
-    int has_hidden_fields;
-    int has_available_expr_fields;
-    coda_expression *field_expr;        /* returns index in range [0..num_fields) */
-};
-
-struct coda_ascbin_array_struct
-{
-    int retain_count;
-    coda_format format;
-    coda_type_class type_class;
-    char *name;
-    char *description;
-
-    ascbin_type_tag tag;
-    int64_t bit_size;
-    coda_ascbin_type *base_type;
-    long num_elements;
-    int num_dims;
-    long *dim;  /* -1 means it's variable and the value needs to be retrieved from dim_expr */
-    coda_expression **dim_expr;
-};
-
 
 struct coda_ascbin_detection_node_struct
 {
@@ -163,7 +70,7 @@ struct coda_ascbin_product_struct
     long num_asciilines;
     long *asciiline_end_offset; /* byte offset of the termination of the line (eol or eof) */
     eol_type lastline_ending;
-    coda_dynamic_type *asciilines;
+    coda_type *asciilines;
 };
 typedef struct coda_ascbin_product_struct coda_ascbin_product;
 

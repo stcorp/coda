@@ -6232,45 +6232,6 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_type_has_ascii_content(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  coda_type *arg1 = (coda_type *) 0 ;
-  int *arg2 = (int *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  int temp2 ;
-  int res2 = SWIG_TMPOBJ ;
-  PyObject * obj0 = 0 ;
-  int result;
-  
-  arg2 = &temp2;
-  if (!PyArg_ParseTuple(args,(char *)"O:type_has_ascii_content",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_coda_type_struct, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "type_has_ascii_content" "', argument " "1"" of type '" "coda_type const *""'"); 
-  }
-  arg1 = (coda_type *)(argp1);
-  {
-    result = (int)coda_type_has_ascii_content((struct coda_type_struct const *)arg1,arg2);
-    
-    if (result < 0)
-    {
-      return PyErr_Format(codacError,"coda_type_has_ascii_content(): %s", coda_errno_to_string(coda_errno));
-    }
-  }
-  resultobj = SWIG_Py_Void();
-  if (SWIG_IsTmpObj(res2)) {
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg2)));
-  } else {
-    int new_flags = SWIG_IsNewObj(res2) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg2), SWIGTYPE_p_int, new_flags));
-  }
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
 SWIGINTERN PyObject *_wrap_type_get_format(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   coda_type *arg1 = (coda_type *) 0 ;
@@ -6750,6 +6711,59 @@ SWIGINTERN PyObject *_wrap_type_get_record_field_index_from_name(PyObject *SWIGU
       if (alloc2 == SWIG_NEWOBJ) free((char*)buf2);
       
       return PyErr_Format(codacError,"coda_type_get_record_field_index_from_name(): %s", coda_errno_to_string(coda_errno));
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  if (SWIG_IsTmpObj(res3)) {
+    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_long((*arg3)));
+  } else {
+    int new_flags = SWIG_IsNewObj(res3) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
+    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg3), SWIGTYPE_p_long, new_flags));
+  }
+  if (alloc2 == SWIG_NEWOBJ) free((char*)buf2);
+  return resultobj;
+fail:
+  if (alloc2 == SWIG_NEWOBJ) free((char*)buf2);
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_type_get_record_field_index_from_real_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  coda_type *arg1 = (coda_type *) 0 ;
+  char *arg2 = (char *) 0 ;
+  long *arg3 = (long *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int res2 ;
+  char *buf2 = 0 ;
+  int alloc2 = 0 ;
+  long temp3 ;
+  int res3 = SWIG_TMPOBJ ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  int result;
+  
+  arg3 = &temp3;
+  if (!PyArg_ParseTuple(args,(char *)"OO:type_get_record_field_index_from_real_name",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_coda_type_struct, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "type_get_record_field_index_from_real_name" "', argument " "1"" of type '" "coda_type const *""'"); 
+  }
+  arg1 = (coda_type *)(argp1);
+  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "type_get_record_field_index_from_real_name" "', argument " "2"" of type '" "char const *""'");
+  }
+  arg2 = (char *)(buf2);
+  {
+    result = (int)coda_type_get_record_field_index_from_real_name((struct coda_type_struct const *)arg1,(char const *)arg2,arg3);
+    
+    if (result < 0)
+    {
+      if (alloc2 == SWIG_NEWOBJ) free((char*)buf2);
+      
+      return PyErr_Format(codacError,"coda_type_get_record_field_index_from_real_name(): %s", coda_errno_to_string(coda_errno));
     }
   }
   resultobj = SWIG_Py_Void();
@@ -9499,7 +9513,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"get_product_definition_file", _wrap_get_product_definition_file, METH_VARARGS, NULL},
 	 { (char *)"get_product_root_type", _wrap_get_product_root_type, METH_VARARGS, NULL},
 	 { (char *)"get_product_variable_value", _wrap_get_product_variable_value, METH_VARARGS, NULL},
-	 { (char *)"type_has_ascii_content", _wrap_type_has_ascii_content, METH_VARARGS, NULL},
 	 { (char *)"type_get_format", _wrap_type_get_format, METH_VARARGS, NULL},
 	 { (char *)"type_get_class", _wrap_type_get_class, METH_VARARGS, NULL},
 	 { (char *)"type_get_read_type", _wrap_type_get_read_type, METH_VARARGS, NULL},
@@ -9511,6 +9524,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"type_get_fixed_value", _wrap_type_get_fixed_value, METH_VARARGS, NULL},
 	 { (char *)"type_get_num_record_fields", _wrap_type_get_num_record_fields, METH_VARARGS, NULL},
 	 { (char *)"type_get_record_field_index_from_name", _wrap_type_get_record_field_index_from_name, METH_VARARGS, NULL},
+	 { (char *)"type_get_record_field_index_from_real_name", _wrap_type_get_record_field_index_from_real_name, METH_VARARGS, NULL},
 	 { (char *)"type_get_record_field_type", _wrap_type_get_record_field_type, METH_VARARGS, NULL},
 	 { (char *)"type_get_record_field_name", _wrap_type_get_record_field_name, METH_VARARGS, NULL},
 	 { (char *)"type_get_record_field_real_name", _wrap_type_get_record_field_real_name, METH_VARARGS, NULL},
@@ -10321,6 +10335,8 @@ SWIG_init(void) {
   SWIG_Python_SetConstant(d, "coda_format_netcdf",SWIG_From_int((int)(coda_format_netcdf)));
   SWIG_Python_SetConstant(d, "coda_format_grib1",SWIG_From_int((int)(coda_format_grib1)));
   SWIG_Python_SetConstant(d, "coda_format_grib2",SWIG_From_int((int)(coda_format_grib2)));
+  SWIG_Python_SetConstant(d, "coda_format_rinex",SWIG_From_int((int)(coda_format_rinex)));
+  SWIG_Python_SetConstant(d, "coda_format_sp3c",SWIG_From_int((int)(coda_format_sp3c)));
   SWIG_Python_SetConstant(d, "coda_record_class",SWIG_From_int((int)(coda_record_class)));
   SWIG_Python_SetConstant(d, "coda_array_class",SWIG_From_int((int)(coda_array_class)));
   SWIG_Python_SetConstant(d, "coda_integer_class",SWIG_From_int((int)(coda_integer_class)));

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -23,22 +23,10 @@
 
 #include "coda-internal.h"
 
-coda_dynamic_type *coda_bin_no_data_singleton(void);
-
-void coda_bin_done(void);
-
 int coda_bin_close(coda_product *product);
 
-int coda_bin_get_type_for_dynamic_type(coda_dynamic_type *dynamic_type, coda_type **type);
-
-int coda_bin_type_get_read_type(const coda_type *type, coda_native_type *read_type);
-int coda_bin_type_get_bit_size(const coda_type *type, int64_t *bit_size);
-int coda_bin_type_get_unit(const coda_type *type, const char **unit);
-int coda_bin_type_get_fixed_value(const coda_type *type, const char **fixed_value, long *length);
-int coda_bin_type_get_special_type(const coda_type *type, coda_special_type *special_type);
-int coda_bin_type_get_special_base_type(const coda_type *type, coda_type **base_type);
-
 int coda_bin_cursor_use_base_type_of_special_type(coda_cursor *cursor);
+int coda_bin_cursor_get_string_length(const coda_cursor *cursor, long *length);
 int coda_bin_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size);
 int coda_bin_cursor_get_num_elements(const coda_cursor *cursor, long *num_elements);
 

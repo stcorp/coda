@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -23,24 +23,12 @@
 
 #include "coda-internal.h"
 
-void coda_ascii_done(void);
-
 long coda_ascii_parse_int64(const char *buffer, long buffer_length, int64_t *dst, int ignore_trailing_bytes);
 long coda_ascii_parse_uint64(const char *buffer, long buffer_length, uint64_t *dst, int ignore_trailing_bytes);
 long coda_ascii_parse_double(const char *buffer, long buffer_length, double *dst, int ignore_trailing_bytes);
 
 int coda_ascii_recognize_file(const char *filename, int64_t size, coda_product_definition **definition);
 int coda_ascii_close(coda_product *product);
-
-int coda_ascii_get_type_for_dynamic_type(coda_dynamic_type *dynamic_type, coda_type **type);
-
-int coda_ascii_type_get_read_type(const coda_type *type, coda_native_type *read_type);
-int coda_ascii_type_get_string_length(const coda_type *type, long *length);
-int coda_ascii_type_get_bit_size(const coda_type *type, int64_t *bit_size);
-int coda_ascii_type_get_unit(const coda_type *type, const char **unit);
-int coda_ascii_type_get_fixed_value(const coda_type *type, const char **fixed_value, long *length);
-int coda_ascii_type_get_special_type(const coda_type *type, coda_special_type *special_type);
-int coda_ascii_type_get_special_base_type(const coda_type *type, coda_type **base_type);
 
 int coda_ascii_cursor_use_base_type_of_special_type(coda_cursor *cursor);
 int coda_ascii_cursor_get_string_length(const coda_cursor *cursor, long *length, int64_t size_boundary);
@@ -62,29 +50,20 @@ int coda_ascii_cursor_read_string(const coda_cursor *cursor, char *dst, long dst
 int coda_ascii_cursor_read_bits(const coda_cursor *cursor, uint8_t *dst, int64_t bit_offset, int64_t bit_length);
 int coda_ascii_cursor_read_bytes(const coda_cursor *cursor, uint8_t *dst, int64_t offset, int64_t length);
 
-int coda_ascii_cursor_read_int8_array(const coda_cursor *cursor, int8_t *dst, coda_array_ordering array_ordering,
-                                      int64_t size_boundary);
-int coda_ascii_cursor_read_uint8_array(const coda_cursor *cursor, uint8_t *dst, coda_array_ordering array_ordering,
-                                       int64_t size_boundary);
-int coda_ascii_cursor_read_int16_array(const coda_cursor *cursor, int16_t *dst, coda_array_ordering array_ordering,
-                                       int64_t size_boundary);
-int coda_ascii_cursor_read_uint16_array(const coda_cursor *cursor, uint16_t *dst, coda_array_ordering array_ordering,
-                                        int64_t size_boundary);
-int coda_ascii_cursor_read_int32_array(const coda_cursor *cursor, int32_t *dst, coda_array_ordering array_ordering,
-                                       int64_t size_boundary);
-int coda_ascii_cursor_read_uint32_array(const coda_cursor *cursor, uint32_t *dst, coda_array_ordering array_ordering,
-                                        int64_t size_boundary);
-int coda_ascii_cursor_read_int64_array(const coda_cursor *cursor, int64_t *dst, coda_array_ordering array_ordering,
-                                       int64_t size_boundary);
-int coda_ascii_cursor_read_uint64_array(const coda_cursor *cursor, uint64_t *dst, coda_array_ordering array_ordering,
-                                        int64_t size_boundary);
-int coda_ascii_cursor_read_float_array(const coda_cursor *cursor, float *dst, coda_array_ordering array_ordering,
-                                       int64_t size_boundary);
-int coda_ascii_cursor_read_double_array(const coda_cursor *cursor, double *dst, coda_array_ordering array_ordering,
-                                        int64_t size_boundary);
-int coda_ascii_cursor_read_char_array(const coda_cursor *cursor, char *dst, coda_array_ordering array_ordering,
-                                      int64_t size_boundary);
+int coda_ascii_cursor_read_int8_array(const coda_cursor *cursor, int8_t *dst, int64_t size_boundary);
+int coda_ascii_cursor_read_uint8_array(const coda_cursor *cursor, uint8_t *dst, int64_t size_boundary);
+int coda_ascii_cursor_read_int16_array(const coda_cursor *cursor, int16_t *dst, int64_t size_boundary);
+int coda_ascii_cursor_read_uint16_array(const coda_cursor *cursor, uint16_t *dst, int64_t size_boundary);
+int coda_ascii_cursor_read_int32_array(const coda_cursor *cursor, int32_t *dst, int64_t size_boundary);
+int coda_ascii_cursor_read_uint32_array(const coda_cursor *cursor, uint32_t *dst, int64_t size_boundary);
+int coda_ascii_cursor_read_int64_array(const coda_cursor *cursor, int64_t *dst, int64_t size_boundary);
+int coda_ascii_cursor_read_uint64_array(const coda_cursor *cursor, uint64_t *dst, int64_t size_boundary);
+int coda_ascii_cursor_read_float_array(const coda_cursor *cursor, float *dst, int64_t size_boundary);
+int coda_ascii_cursor_read_double_array(const coda_cursor *cursor, double *dst, int64_t size_boundary);
+int coda_ascii_cursor_read_char_array(const coda_cursor *cursor, char *dst, int64_t size_boundary);
 
 int coda_ascii_cursor_set_asciilines(coda_cursor *cursor, coda_product *product);
+
+int coda_ascii_init_asciilines(coda_product *product);
 
 #endif

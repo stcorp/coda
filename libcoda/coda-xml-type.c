@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -24,468 +24,721 @@
 #include <stdlib.h>
 #include <string.h>
 
-int coda_xml_type_has_ascii_content(const coda_type *type, int *has_ascii_content)
+void coda_xml_type_delete(coda_dynamic_type *type)
 {
+    long i;
+
+    assert(type != NULL);
+    assert(type->backend == coda_backend_xml);
+
     switch (((coda_xml_type *)type)->tag)
     {
-        case tag_xml_ascii_type:
-            *has_ascii_content = 1;
-            break;
-        case tag_xml_record:
-        case tag_xml_text:
-            *has_ascii_content = 1;
-            break;
         case tag_xml_root:
-        case tag_xml_attribute:
-            *has_ascii_content = 1;
-            break;
-        case tag_xml_array:
-        case tag_xml_attribute_record:
-            *has_ascii_content = 0;
-            break;
-    }
-
-    return 0;
-}
-
-int coda_xml_type_get_read_type(const coda_type *type, coda_native_type *read_type)
-{
-    switch (((coda_xml_type *)type)->tag)
-    {
-        case tag_xml_ascii_type:
-            /* the content is defined using an ascii definition */
-            return coda_type_get_read_type((coda_type *)((coda_xml_element *)type)->ascii_type, read_type);
-        case tag_xml_text:
-        case tag_xml_attribute:
-            *read_type = coda_native_type_string;
-            break;
-        case tag_xml_root:
-        case tag_xml_record:
-        case tag_xml_array:
-        case tag_xml_attribute_record:
-            *read_type = coda_native_type_not_available;
-            break;
-    }
-
-    return 0;
-}
-
-int coda_xml_type_get_string_length(const coda_type *type, long *length)
-{
-    switch (((coda_xml_type *)type)->tag)
-    {
-        case tag_xml_ascii_type:
-            /* the content is defined using an ascii definition */
-            return coda_ascii_type_get_string_length((coda_type *)((coda_xml_element *)type)->ascii_type, length);
-        case tag_xml_root:
-        case tag_xml_record:
-        case tag_xml_text:
-        case tag_xml_array:
-        case tag_xml_attribute:
-        case tag_xml_attribute_record:
-            *length = -1;
-            break;
-    }
-
-    return 0;
-}
-
-int coda_xml_type_get_bit_size(const coda_type *type, int64_t *bit_size)
-{
-    switch (((coda_xml_type *)type)->tag)
-    {
-        case tag_xml_ascii_type:
-            /* the content is defined using an ascii definition */
-            return coda_ascii_type_get_bit_size((coda_type *)((coda_xml_element *)type)->ascii_type, bit_size);
-        default:
-            *bit_size = -1;
-            break;
-    }
-
-    return 0;
-}
-
-int coda_xml_type_get_unit(const coda_type *type, const char **unit)
-{
-    switch (((coda_xml_type *)type)->tag)
-    {
-        case tag_xml_ascii_type:
-            /* the content is defined using an ascii definition */
-            return coda_ascii_type_get_unit((coda_type *)((coda_xml_element *)type)->ascii_type, unit);
-        default:
-            *unit = NULL;
-            break;
-    }
-
-    return 0;
-}
-
-int coda_xml_type_get_fixed_value(const coda_type *type, const char **fixed_value, long *length)
-{
-    switch (((coda_xml_type *)type)->tag)
-    {
-        case tag_xml_ascii_type:
-            /* the content is defined using an ascii definition */
-            return coda_xml_type_get_fixed_value((coda_type *)((coda_xml_element *)type)->ascii_type, fixed_value,
-                                                 length);
-        case tag_xml_attribute:
-            *fixed_value = ((coda_xml_attribute *)type)->fixed_value;
-            if (*fixed_value != NULL)
+            if (((coda_xml_root *)type)->element != NULL)
             {
-                *length = strlen(*fixed_value);
+                coda_dynamic_type_delete((coda_dynamic_type *)((coda_xml_root *)type)->element);
             }
             break;
-        default:
-            *fixed_value = NULL;
-            break;
-    }
-
-    return 0;
-}
-
-int coda_xml_type_get_num_record_fields(const coda_type *type, long *num_fields)
-{
-    switch (((coda_xml_type *)type)->tag)
-    {
-        case tag_xml_root:
-            *num_fields = 1;
-            break;
-        case tag_xml_ascii_type:
-            /* the content is defined using an ascii definition */
-            return coda_ascbin_type_get_num_record_fields((coda_type *)((coda_xml_element *)type)->ascii_type,
-                                                          num_fields);
-        case tag_xml_record:
-            *num_fields = ((coda_xml_element *)type)->num_fields;
-            break;
-        case tag_xml_attribute_record:
-            *num_fields = ((coda_xml_attribute_record *)type)->num_attributes;
-            break;
-        default:
-            assert(0);
-            exit(1);
-    }
-
-    return 0;
-}
-
-int coda_xml_type_get_record_field_index_from_name(const coda_type *type, const char *name, long *index)
-{
-    hashtable *hash_data;
-
-    switch (((coda_xml_type *)type)->tag)
-    {
-        case tag_xml_root:
-            if (strcasecmp(name, ((coda_xml_root *)type)->field->name) == 0)
+        case tag_xml_element:
+            if (((coda_xml_element *)type)->xml_name != NULL)
             {
-                *index = 0;
-                return 0;
+                free(((coda_xml_element *)type)->xml_name);
+            }
+            if (((coda_xml_element *)type)->attributes != NULL)
+            {
+                coda_dynamic_type_delete((coda_dynamic_type *)((coda_xml_element *)type)->attributes);
+            }
+            if (((coda_xml_element *)type)->element != NULL)
+            {
+                assert(type->definition->type_class == coda_record_class);
+                for (i = 0; i < ((coda_xml_element *)type)->num_elements; i++)
+                {
+                    if (((coda_xml_element *)type)->element[i] != NULL)
+                    {
+                        coda_dynamic_type_delete((coda_dynamic_type *)((coda_xml_element *)type)->element[i]);
+                    }
+                }
+                free(((coda_xml_element *)type)->element);
+            }
+            break;
+    }
+    if (type->definition != NULL)
+    {
+        coda_type_release(type->definition);
+    }
+    free(type);
+}
+
+int coda_xml_type_update(coda_dynamic_type **type, coda_type **definition)
+{
+    long i;
+
+    assert((*type)->backend == coda_backend_xml);
+
+    if (((coda_xml_type *)*type)->tag == tag_xml_root)
+    {
+        coda_xml_root *root = (coda_xml_root *)*type;
+
+        assert(((coda_type *)root->definition) == *definition);
+        if (coda_dynamic_type_update((coda_dynamic_type **)&root->element,
+                                     (coda_type **)&root->definition->field[0]->type) != 0)
+        {
+            return -1;
+        }
+    }
+    else
+    {
+        coda_xml_element *element = (coda_xml_element *)*type;
+
+        if (element->definition != *definition)
+        {
+            if ((*definition)->type_class == coda_array_class && (*definition)->format == coda_format_xml &&
+                element->backend != coda_backend_memory)
+            {
+                /* convert the single element into an array of a single element */
+                coda_mem_array *array = coda_mem_array_new((coda_type_array *)*definition);
+
+                if (array == NULL)
+                {
+                    return -1;
+                }
+                /* first make sure that the array element is updated */
+                if (coda_dynamic_type_update((coda_dynamic_type **)&element,
+                                             &((coda_type_array *)*definition)->base_type) != 0)
+                {
+                    coda_dynamic_type_delete((coda_dynamic_type *)array);
+                    return -1;
+                }
+                if (coda_mem_array_add_element(array, (coda_dynamic_type *)element) != 0)
+                {
+                    coda_dynamic_type_delete((coda_dynamic_type *)array);
+                    return -1;
+                }
+                *type = (coda_dynamic_type *)array;
+                /* finally update the array itself (for e.g. attributes) */
+                return coda_dynamic_type_update(type, definition);
+            }
+
+            if ((*definition)->type_class == coda_text_class)
+            {
+                assert(element->definition->type_class == coda_record_class);
+                coda_type_release(element->definition);
+                element->definition = *definition;
+                element->definition->retain_count++;
             }
             else
             {
-                coda_set_error(CODA_ERROR_INVALID_NAME, NULL);
-                return -1;
+                assert(element->definition->type_class == coda_text_class);
+                /* this case handles updating the root xml element, where 'parent == NULL' */
+                coda_type_release(*definition);
+                *definition = element->definition;
+                (*definition)->retain_count++;
             }
-        case tag_xml_ascii_type:
-            /* the content is defined using an ascii definition */
-            return
-                coda_ascbin_type_get_record_field_index_from_name((coda_type *)((coda_xml_element *)type)->ascii_type,
-                                                                  name, index);
-        case tag_xml_record:
-            hash_data = ((coda_xml_element *)type)->name_hash_data;
-            break;
-        case tag_xml_attribute_record:
-            hash_data = ((coda_xml_attribute_record *)type)->name_hash_data;
-            break;
-        default:
-            assert(0);
-            exit(1);
-    }
+        }
 
-    *index = hashtable_get_index_from_name(hash_data, name);
-    if (*index >= 0)
-    {
-        return 0;
-    }
+        if (element->definition->type_class == coda_record_class && element->definition->format == coda_format_xml)
+        {
+            coda_type_record *record_definition;
 
-    coda_set_error(CODA_ERROR_INVALID_NAME, NULL);
-    return -1;
-}
+            record_definition = (coda_type_record *)element->definition;
+            if (element->num_elements < record_definition->num_fields)
+            {
+                coda_dynamic_type **new_element;
 
-int coda_xml_type_get_record_field_type(const coda_type *type, long index, coda_type **field_type)
-{
-    switch (((coda_xml_type *)type)->tag)
-    {
-        case tag_xml_root:
-            if (index != 0)
-            {
-                coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,1) (%s:%u)", index,
-                               __FILE__, __LINE__);
-                return -1;
+                /* increase the size for the child elements array until it matches the size in the definition */
+                new_element = realloc(element->element, record_definition->num_fields * sizeof(coda_dynamic_type *));
+                if (new_element == NULL)
+                {
+                    coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                                   record_definition->num_fields * sizeof(coda_dynamic_type *), __FILE__, __LINE__);
+                    return -1;
+                }
+                element->element = new_element;
+                for (i = element->num_elements; i < record_definition->num_fields; i++)
+                {
+                    element->element[i] = NULL;
+                }
+                element->num_elements = record_definition->num_fields;
             }
-            *field_type = (coda_type *)((coda_xml_root *)type)->field->type;
-            break;
-        case tag_xml_ascii_type:
-            /* the content is defined using an ascii definition */
-            return coda_ascbin_type_get_record_field_type((coda_type *)((coda_xml_element *)type)->ascii_type, index,
-                                                          field_type);
-        case tag_xml_record:
-            if (index < 0 || index >= ((coda_xml_element *)type)->num_fields)
-            {
-                coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%d) (%s:%u)", index,
-                               ((coda_xml_element *)type)->num_fields, __FILE__, __LINE__);
-                return -1;
-            }
-            *field_type = (coda_type *)((coda_xml_element *)type)->field[index]->type;
-            break;
-        case tag_xml_attribute_record:
-            if (index < 0 || index >= ((coda_xml_attribute_record *)type)->num_attributes)
-            {
-                coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%d) (%s:%u)", index,
-                               ((coda_xml_attribute_record *)type)->num_attributes, __FILE__, __LINE__);
-                return -1;
-            }
-            *field_type = (coda_type *)((coda_xml_attribute_record *)type)->attribute[index];
-            break;
-        default:
-            assert(0);
-            exit(1);
-    }
 
-    return 0;
-}
+            for (i = 0; i < element->num_elements; i++)
+            {
+                if (element->element[i] == NULL)
+                {
+                    /* update the optional flag for each child element */
+                    if (!record_definition->field[i]->optional)
+                    {
+                        record_definition->field[i]->optional = 1;
+                    }
+                }
+                else
+                {
+                    /* update child element */
+                    if (coda_dynamic_type_update(&element->element[i], &record_definition->field[i]->type) != 0)
+                    {
+                        return -1;
+                    }
+                }
+            }
+        }
+        else
+        {
+            /* we can remove all sub elements */
+            if (element->element != NULL)
+            {
+                for (i = 0; i < element->num_elements; i++)
+                {
+                    if (element->element[i] != NULL)
+                    {
+                        coda_dynamic_type_delete(element->element[i]);
+                    }
+                }
+                free(element->element);
+                element->element = NULL;
+            }
+            element->num_elements = 0;
+        }
 
-int coda_xml_type_get_record_field_name(const coda_type *type, long index, const char **name)
-{
-    switch (((coda_xml_type *)type)->tag)
-    {
-        case tag_xml_root:
-            if (index != 0)
+        if (element->attributes == NULL && element->definition->attributes != NULL)
+        {
+            element->attributes = coda_mem_record_new(element->definition->attributes);
+            if (element->attributes == NULL)
             {
-                coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,1) (%s:%u)", index,
-                               __FILE__, __LINE__);
                 return -1;
             }
-            *name = ((coda_xml_root *)type)->field->name;
-            break;
-        case tag_xml_ascii_type:
-            /* the content is defined using an ascii definition */
-            return coda_ascbin_type_get_record_field_name((coda_type *)((coda_xml_element *)type)->ascii_type, index,
-                                                          name);
-        case tag_xml_record:
-            if (index < 0 || index >= ((coda_xml_element *)type)->num_fields)
+        }
+        if (element->attributes != NULL)
+        {
+            if (coda_dynamic_type_update((coda_dynamic_type **)&element->attributes,
+                                         (coda_type **)&element->definition->attributes) != 0)
             {
-                coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%d) (%s:%u)", index,
-                               ((coda_xml_element *)type)->num_fields, __FILE__, __LINE__);
                 return -1;
             }
-            *name = ((coda_xml_element *)type)->field[index]->name;
-            break;
-        case tag_xml_attribute_record:
-            if (index < 0 || index >= ((coda_xml_attribute_record *)type)->num_attributes)
-            {
-                coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%d) (%s:%u)", index,
-                               ((coda_xml_attribute_record *)type)->num_attributes, __FILE__, __LINE__);
-                return -1;
-            }
-            *name = ((coda_xml_attribute_record *)type)->attribute[index]->attr_name;
-            break;
-        default:
-            assert(0);
-            exit(1);
+        }
     }
 
     return 0;
 }
 
-int coda_xml_type_get_record_field_hidden_status(const coda_type *type, long index, int *hidden)
+static coda_mem_record *attribute_record_new(coda_type_record *definition, const char **attr, int update_definition)
 {
-    switch (((coda_xml_type *)type)->tag)
+    coda_mem_record *attributes;
+    int attribute_index;
+    int i;
+
+    assert(definition != NULL);
+    attributes = coda_mem_record_new(definition);
+
+    /* add attributes to attribute list */
+    for (i = 0; attr[2 * i] != NULL; i++)
     {
-        case tag_xml_root:
-            if (index != 0)
+        coda_mem_text *attribute;
+
+        attribute_index = hashtable_get_index_from_name(definition->real_name_hash_data, attr[2 * i]);
+        if (update_definition)
+        {
+            if (attribute_index < 0)
             {
-                coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,1) (%s:%u)", index,
-                               __FILE__, __LINE__);
+                coda_type_text *attribute_definition;
+
+                attribute_definition = coda_type_text_new(coda_format_xml);
+                if (attribute_definition == NULL)
+                {
+                    coda_dynamic_type_delete((coda_dynamic_type *)attributes);
+                    return NULL;
+                }
+                attribute = coda_mem_text_new(attribute_definition, attr[2 * i + 1]);
+                coda_type_release((coda_type *)attribute_definition);
+            }
+            else if (attributes->field_type[attribute_index] != NULL)
+            {
+                /* we only add the first occurence when there are multiple attributes with the same attribute name */
+                continue;
+            }
+            else
+            {
+                attribute = coda_mem_text_new((coda_type_text *)definition->field[attribute_index]->type,
+                                              attr[2 * i + 1]);
+            }
+        }
+        else
+        {
+            if (attribute_index == -1)
+            {
+                coda_set_error(CODA_ERROR_PRODUCT, "xml attribute '%s' is not allowed", attr[2 * i]);
+                coda_dynamic_type_delete((coda_dynamic_type *)attributes);
+                return NULL;
+            }
+            attribute = coda_mem_text_new((coda_type_text *)definition->field[attribute_index]->type, attr[2 * i + 1]);
+        }
+        if (attribute == NULL)
+        {
+            coda_dynamic_type_delete((coda_dynamic_type *)attributes);
+            return NULL;
+        }
+
+        if (coda_mem_record_add_field(attributes, attr[2 * i], (coda_dynamic_type *)attribute, update_definition) != 0)
+        {
+            coda_dynamic_type_delete((coda_dynamic_type *)attribute);
+            coda_dynamic_type_delete((coda_dynamic_type *)attributes);
+            return NULL;
+        }
+    }
+
+    for (i = 0; i < definition->num_fields; i++)
+    {
+        if (!definition->field[i]->optional && attributes->field_type[i] == NULL)
+        {
+            if (update_definition)
+            {
+                definition->field[i]->optional = 1;
+            }
+            else
+            {
+                const char *real_name;
+
+                coda_type_get_record_field_real_name((coda_type *)definition, i, &real_name);
+                coda_set_error(CODA_ERROR_PRODUCT, "mandatory xml attribute '%s' is missing", real_name);
+                coda_dynamic_type_delete((coda_dynamic_type *)attributes);
+                return NULL;
+            }
+        }
+    }
+
+    return attributes;
+}
+
+coda_xml_root *coda_xml_root_new(coda_type_record *definition)
+{
+    coda_xml_root *root;
+
+    root = malloc(sizeof(coda_xml_root));
+    if (root == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                       sizeof(coda_xml_root), __FILE__, __LINE__);
+        return NULL;
+    }
+    root->backend = coda_backend_xml;
+    root->definition = definition;
+    definition->retain_count++;
+    root->tag = tag_xml_root;
+    root->element = NULL;
+
+    return root;
+}
+
+static coda_xml_element *xml_element_new(coda_type *definition, const char *xml_name, const char **attr,
+                                         int update_definition)
+{
+    coda_xml_element *element;
+
+    assert(definition != NULL);
+    assert(xml_name != NULL);
+    assert(attr != NULL);
+
+    element = malloc(sizeof(coda_xml_element));
+    if (element == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                       (long)sizeof(coda_xml_element), __FILE__, __LINE__);
+        return NULL;
+    }
+    element->backend = coda_backend_xml;
+    element->definition = definition;
+    definition->retain_count++;
+    element->tag = tag_xml_element;
+    element->xml_name = NULL;
+    element->inner_bit_offset = 0;
+    element->inner_bit_size = 0;
+    element->outer_bit_offset = 0;
+    element->outer_bit_size = 0;
+    element->cdata_delta_offset = 0;
+    element->cdata_delta_size = 0;
+    element->attributes = NULL;
+    element->num_elements = 0;
+    element->element = NULL;
+    element->parent = NULL;
+
+    element->xml_name = strdup(xml_name);
+    if (element->xml_name == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
+                       __LINE__);
+        coda_xml_type_delete((coda_dynamic_type *)element);
+        return NULL;
+    }
+
+    if (definition->type_class == coda_record_class && ((coda_type_record *)definition)->num_fields > 0)
+    {
+        long num_fields;
+        long i;
+
+        /* construct the sub element list from the definition */
+        num_fields = ((coda_type_record *)definition)->num_fields;
+        element->element = malloc(num_fields * sizeof(coda_xml_type *));
+        if (element->element == NULL)
+        {
+            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                           num_fields * sizeof(coda_xml_type *), __FILE__, __LINE__);
+            coda_xml_type_delete((coda_dynamic_type *)element);
+            return NULL;
+        }
+        for (i = 0; i < num_fields; i++)
+        {
+            element->element[i] = NULL;
+        }
+        element->num_elements = num_fields;
+
+        /* create empty arrays for array child elements */
+        for (i = 0; i < num_fields; i++)
+        {
+            if (((coda_type_record *)definition)->field[i]->type->type_class == coda_array_class &&
+                ((coda_type_record *)definition)->field[i]->type->format == coda_format_xml)
+            {
+                coda_type *array_definition = ((coda_type_record *)definition)->field[i]->type;
+
+                element->element[i] = (coda_dynamic_type *)coda_mem_array_new((coda_type_array *)array_definition);
+                if (element->element[i] == NULL)
+                {
+                    coda_xml_type_delete((coda_dynamic_type *)element);
+                    return NULL;
+                }
+            }
+        }
+    }
+
+    if (definition->attributes == NULL)
+    {
+        if (attr[0] != NULL)
+        {
+            if (update_definition)
+            {
+                definition->attributes = coda_type_record_new(coda_format_xml);
+                if (definition->attributes == NULL)
+                {
+                    coda_xml_type_delete((coda_dynamic_type *)element);
+                    return NULL;
+                }
+                element->attributes = attribute_record_new(definition->attributes, attr, update_definition);
+                if (element->attributes == NULL)
+                {
+                    coda_xml_type_delete((coda_dynamic_type *)element);
+                    return NULL;
+                }
+            }
+            else
+            {
+                coda_set_error(CODA_ERROR_PRODUCT, "xml attribute '%s' is not allowed", attr[0]);
+                coda_xml_type_delete((coda_dynamic_type *)element);
+                return NULL;
+            }
+        }
+    }
+    else
+    {
+        element->attributes = attribute_record_new(definition->attributes, attr, update_definition);
+        if (element->attributes == NULL)
+        {
+            coda_xml_type_delete((coda_dynamic_type *)element);
+            return NULL;
+        }
+    }
+
+    return element;
+}
+
+int coda_xml_root_add_element(coda_xml_root *root, const char *el, const char **attr, int64_t outer_bit_offset,
+                              int64_t inner_bit_offset, int update_definition)
+{
+    coda_xml_element *element;
+    coda_type *element_definition;
+    int index;
+
+    assert(root != NULL);
+    assert(el != NULL);
+
+    /* check if a definition for this element is available */
+    index = hashtable_get_index_from_name(root->definition->real_name_hash_data, el);
+    if (index < 0)
+    {
+        index = hashtable_get_index_from_name(root->definition->real_name_hash_data,
+                                              coda_element_name_from_xml_name(el));
+    }
+    if (index < 0)
+    {
+        if (update_definition)
+        {
+            /* all xml elements start out as empty records */
+            element_definition = (coda_type *)coda_type_record_new(coda_format_xml);
+            if (element_definition == NULL)
+            {
                 return -1;
             }
-            *hidden = 0;
-            break;
-        case tag_xml_ascii_type:
-            /* the content is defined using an ascii definition */
-            return coda_ascbin_type_get_record_field_hidden_status((coda_type *)((coda_xml_element *)type)->ascii_type,
-                                                                   index, hidden);
-        case tag_xml_record:
-            if (index < 0 || index >= ((coda_xml_element *)type)->num_fields)
+            if (coda_type_record_create_field(root->definition, el, element_definition) != 0)
             {
-                coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%d) (%s:%u)", index,
-                               ((coda_xml_element *)type)->num_fields, __FILE__, __LINE__);
+                coda_type_release(element_definition);
                 return -1;
             }
-            *hidden = ((coda_xml_element *)type)->field[index]->hidden;
-            break;
-        case tag_xml_attribute_record:
-            if (index < 0 || index >= ((coda_xml_attribute_record *)type)->num_attributes)
+            coda_type_release(element_definition);
+        }
+        else
+        {
+            coda_set_error(CODA_ERROR_PRODUCT, "incorrect root element '%s' for product", el);
+            return -1;
+        }
+    }
+    assert(root->definition->num_fields == 1);
+    element_definition = root->definition->field[0]->type;
+    /* the root element can not be an array of xml elements */
+    assert(element_definition->type_class != coda_array_class || element_definition->format != coda_format_xml);
+
+    /* create a new element */
+    element = xml_element_new(element_definition, el, attr, update_definition);
+    if (element == NULL)
+    {
+        return -1;
+    }
+    element->outer_bit_offset = outer_bit_offset;
+    element->inner_bit_offset = inner_bit_offset;
+    root->element = element;
+
+    return 0;
+}
+
+int coda_xml_element_add_element(coda_xml_element *parent, const char *el, const char **attr, int64_t outer_bit_offset,
+                                 int64_t inner_bit_offset, int update_definition, coda_xml_element **new_element)
+{
+    coda_xml_element *element;
+    coda_type *element_definition;
+    long index;
+
+    assert(parent != NULL);
+    assert(el != NULL);
+    assert(parent->definition->type_class == coda_record_class);
+    assert(parent->definition->format == coda_format_xml);
+
+    /* check if a definition for this element is available */
+    index = hashtable_get_index_from_name(((coda_type_record *)parent->definition)->real_name_hash_data, el);
+    if (index < 0)
+    {
+        index = hashtable_get_index_from_name(((coda_type_record *)parent->definition)->real_name_hash_data,
+                                              coda_element_name_from_xml_name(el));
+    }
+    if (index < 0)
+    {
+        if (update_definition)
+        {
+            coda_dynamic_type **new_element;
+            coda_type_record *record_definition = (coda_type_record *)parent->definition;
+            long i;
+
+            /* all xml elements start out as empty records */
+            element_definition = (coda_type *)coda_type_record_new(coda_format_xml);
+            if (element_definition == NULL)
             {
-                coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%d) (%s:%u)", index,
-                               ((coda_xml_attribute_record *)type)->num_attributes, __FILE__, __LINE__);
                 return -1;
             }
-            *hidden = 0;
-            break;
-        default:
-            assert(0);
-            exit(1);
-    }
-
-    return 0;
-}
-
-int coda_xml_type_get_record_field_available_status(const coda_type *type, long index, int *available)
-{
-    switch (((coda_xml_type *)type)->tag)
-    {
-        case tag_xml_root:
-            if (index != 0)
+            if (coda_type_record_create_field(record_definition, el, element_definition) != 0)
             {
-                coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,1) (%s:%u)", index,
-                               __FILE__, __LINE__);
+                coda_type_release(element_definition);
                 return -1;
             }
-            *available = 1;
-            break;
-        case tag_xml_ascii_type:
-            /* the content is defined using an ascii definition */
-            return coda_ascbin_type_get_record_field_available_status((coda_type *)
-                                                                      ((coda_xml_element *)type)->ascii_type, index,
-                                                                      available);
-        case tag_xml_record:
-            if (index < 0 || index >= ((coda_xml_element *)type)->num_fields)
+            coda_type_release(element_definition);
+            new_element = realloc(parent->element, record_definition->num_fields * sizeof(coda_dynamic_type *));
+            if (new_element == NULL)
             {
-                coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%d) (%s:%u)", index,
-                               ((coda_xml_element *)type)->num_fields, __FILE__, __LINE__);
+                coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                               record_definition->num_fields * sizeof(coda_dynamic_type *), __FILE__, __LINE__);
                 return -1;
             }
-            *available = ((coda_xml_element *)type)->field[index]->optional ? -1 : 1;
-            break;
-        case tag_xml_attribute_record:
-            if (index < 0 || index >= ((coda_xml_attribute_record *)type)->num_attributes)
+            parent->element = new_element;
+            for (i = parent->num_elements; i < record_definition->num_fields; i++)
             {
-                coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%d) (%s:%u)", index,
-                               ((coda_xml_attribute_record *)type)->num_attributes, __FILE__, __LINE__);
+                parent->element[i] = NULL;
+            }
+            parent->num_elements = record_definition->num_fields;
+            index = record_definition->num_fields - 1;
+        }
+        else
+        {
+            coda_set_error(CODA_ERROR_PRODUCT, "xml element '%s' is not allowed within element '%s'", el,
+                           parent->xml_name);
+            return -1;
+        }
+    }
+    element_definition = ((coda_type_record *)parent->definition)->field[index]->type;
+    if (element_definition->type_class == coda_array_class && element_definition->format == coda_format_xml)
+    {
+        /* take the array element definition */
+        element_definition = ((coda_type_array *)element_definition)->base_type;
+    }
+
+    /* create a new element */
+    element = xml_element_new(element_definition, el, attr, update_definition);
+    if (element == NULL)
+    {
+        return -1;
+    }
+    element->outer_bit_offset = outer_bit_offset;
+    element->inner_bit_offset = inner_bit_offset;
+
+    if (parent->element[index] != NULL)
+    {
+        if (parent->element[index]->definition->type_class == coda_array_class &&
+            parent->element[index]->definition->format == coda_format_xml)
+        {
+            /* add the child element to the array */
+            if (coda_mem_array_add_element((coda_mem_array *)parent->element[index], (coda_dynamic_type *)element) != 0)
+            {
+                coda_xml_type_delete((coda_dynamic_type *)element);
                 return -1;
             }
-            *available = ((coda_xml_attribute_record *)type)->attribute[index]->optional ? -1 : 1;
-            break;
-        default:
-            assert(0);
-            exit(1);
+        }
+        else
+        {
+            if (update_definition)
+            {
+                coda_mem_array *array;
+                coda_type_array *array_definition;
+
+                /* change scalar to array in definition */
+                array_definition = coda_type_array_new(coda_format_xml);
+                if (array_definition == NULL)
+                {
+                    coda_xml_type_delete((coda_dynamic_type *)element);
+                    return -1;
+                }
+                if (coda_type_array_set_base_type(array_definition, element->definition) != 0)
+                {
+                    coda_type_release((coda_type *)array_definition);
+                    coda_xml_type_delete((coda_dynamic_type *)element);
+                    return -1;
+                }
+                if (coda_type_array_add_variable_dimension(array_definition, NULL) != 0)
+                {
+                    coda_type_release((coda_type *)array_definition);
+                    coda_xml_type_delete((coda_dynamic_type *)element);
+                    return -1;
+                }
+                ((coda_type_record *)parent->definition)->field[index]->type = (coda_type *)array_definition;
+                coda_type_release(element->definition);
+                array = coda_mem_array_new(array_definition);
+                if (array == NULL)
+                {
+                    coda_xml_type_delete((coda_dynamic_type *)element);
+                    return -1;
+                }
+                if (coda_mem_array_add_element(array, parent->element[index]) != 0)
+                {
+                    coda_dynamic_type_delete((coda_dynamic_type *)array);
+                    coda_xml_type_delete((coda_dynamic_type *)element);
+                    return -1;
+                }
+                parent->element[index] = (coda_dynamic_type *)array;
+                /* add the child element to the array */
+                if (coda_mem_array_add_element(array, (coda_dynamic_type *)element) != 0)
+                {
+                    coda_xml_type_delete((coda_dynamic_type *)element);
+                    return -1;
+                }
+            }
+            else
+            {
+                coda_set_error(CODA_ERROR_PRODUCT, "xml element '%s' is not allowed more than once within element '%s'",
+                               element->xml_name, parent->xml_name);
+                coda_xml_type_delete((coda_dynamic_type *)element);
+                return -1;
+            }
+        }
     }
+    else
+    {
+        parent->element[index] = (coda_dynamic_type *)element;
+    }
+
+    /* couple the child to the parent */
+    element->parent = parent;
+
+    *new_element = element;
+    return 0;
+}
+
+int coda_xml_element_convert_to_text(coda_xml_element *element)
+{
+    coda_type *definition;
+
+    assert(element->definition->type_class == coda_record_class && element->definition->format == coda_format_xml);
+
+    definition = (coda_type *)coda_type_text_new(coda_format_xml);
+    if (definition == NULL)
+    {
+        return -1;
+    }
+    if (element->definition->attributes != NULL)
+    {
+        definition->attributes = element->definition->attributes;
+        element->definition->attributes->retain_count++;
+    }
+    coda_type_release(element->definition);
+    element->definition = definition;
+
+    if (element->parent != NULL)
+    {
+        coda_type **definition_handle;
+        long index;
+
+        index = hashtable_get_index_from_name(((coda_type_record *)element->parent->definition)->real_name_hash_data,
+                                              element->xml_name);
+        assert(index >= 0);
+        definition_handle = &((coda_type_record *)element->parent->definition)->field[index]->type;
+        if ((*definition_handle)->type_class == coda_array_class)
+        {
+            definition_handle = &((coda_type_array *)(*definition_handle))->base_type;
+        }
+        coda_type_release(*definition_handle);
+        *definition_handle = definition;
+        definition->retain_count++;
+    }
+
+    if (element->element != NULL)
+    {
+        long i;
+
+        for (i = 0; i < element->num_elements; i++)
+        {
+            coda_dynamic_type_delete(element->element[i]);
+        }
+        free(element->element);
+        element->element = NULL;
+    }
+    element->num_elements = 0;
 
     return 0;
 }
 
-int coda_xml_type_get_record_union_status(const coda_type *type, int *is_union)
+int coda_xml_element_validate(coda_xml_element *element)
 {
-    switch (((coda_xml_type *)type)->tag)
+    if (element->definition->type_class == coda_record_class)
     {
-        case tag_xml_ascii_type:
-            /* the content is defined using an ascii definition */
-            return coda_ascbin_type_get_record_union_status((coda_type *)((coda_xml_element *)type)->ascii_type,
-                                                            is_union);
-        case tag_xml_record:
-        case tag_xml_root:
-        case tag_xml_attribute_record:
-            *is_union = 0;
-            break;
-        default:
-            assert(0);
-            exit(1);
-    }
+        coda_type_record *definition = (coda_type_record *)element->definition;
+        int i;
 
-    return 0;
-}
+        /* verify occurence of mandatory elements */
+        for (i = 0; i < definition->num_fields; i++)
+        {
+            if (element->element[i] == NULL)
+            {
+                if (!definition->field[i]->optional)
+                {
+                    const char *real_name;
 
-int coda_xml_type_get_array_num_dims(const coda_type *type, int *num_dims)
-{
-    switch (((coda_xml_type *)type)->tag)
-    {
-        case tag_xml_array:
-            *num_dims = 1;
-            break;
-        case tag_xml_ascii_type:
-            /* the content is defined using an ascii definition */
-            return coda_ascbin_type_get_array_num_dims((coda_type *)((coda_xml_element *)type)->ascii_type, num_dims);
-        default:
-            assert(0);
-            exit(1);
-    }
-
-    return 0;
-}
-
-int coda_xml_type_get_array_dim(const coda_type *type, int *num_dims, long dim[])
-{
-    switch (((coda_xml_type *)type)->tag)
-    {
-        case tag_xml_array:
-            *num_dims = 1;
-            dim[0] = -1;
-            break;
-        case tag_xml_ascii_type:
-            /* the content is defined using an ascii definition */
-            return coda_ascbin_type_get_array_dim((coda_type *)((coda_xml_element *)type)->ascii_type, num_dims, dim);
-        default:
-            assert(0);
-            exit(1);
-    }
-
-    return 0;
-}
-
-int coda_xml_type_get_array_base_type(const coda_type *type, coda_type **base_type)
-{
-    switch (((coda_xml_type *)type)->tag)
-    {
-        case tag_xml_array:
-            *base_type = (coda_type *)((coda_xml_array *)type)->base_type;
-            break;
-        case tag_xml_ascii_type:
-            /* the content is defined using an ascii definition */
-            return coda_ascbin_type_get_array_base_type((coda_type *)((coda_xml_element *)type)->ascii_type, base_type);
-        default:
-            assert(0);
-            exit(1);
-    }
-
-    return 0;
-}
-
-int coda_xml_type_get_special_type(const coda_type *type, coda_special_type *special_type)
-{
-    switch (((coda_xml_type *)type)->tag)
-    {
-        case tag_xml_ascii_type:
-            /* the content is defined using an ascii definition */
-            return coda_ascii_type_get_special_type((coda_type *)((coda_xml_element *)type)->ascii_type, special_type);
-        default:
-            assert(0);
-            exit(1);
-    }
-
-    return 0;
-}
-
-int coda_xml_type_get_special_base_type(const coda_type *type, coda_type **base_type)
-{
-    switch (((coda_xml_type *)type)->tag)
-    {
-        case tag_xml_ascii_type:
-            /* the content is defined using an ascii definition */
-            return coda_ascii_type_get_special_base_type((coda_type *)((coda_xml_element *)type)->ascii_type,
-                                                         base_type);
-        default:
-            assert(0);
-            exit(1);
+                    coda_type_get_record_field_real_name((coda_type *)definition, i, &real_name);
+                    coda_set_error(CODA_ERROR_PRODUCT, "mandatory xml element '%s' is missing", real_name);
+                    return -1;
+                }
+            }
+        }
     }
 
     return 0;

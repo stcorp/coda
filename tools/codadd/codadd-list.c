@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -30,7 +30,7 @@
 
 #include "coda-definition.h"
 #include "coda-expr.h"
-#include "coda-ascbin-internal.h"
+#include "coda-type.h"
 
 coda_type *typestack[CODA_CURSOR_MAXDEPTH];
 long indexstack[CODA_CURSOR_MAXDEPTH + 1];
@@ -602,6 +602,9 @@ static void generate_expr(const coda_expression *expr, int precedence)
         case expr_product_class:
             printf("productclass()");
             break;
+        case expr_product_format:
+            printf("productformat()");
+            break;
         case expr_product_type:
             printf("producttype()");
             break;
@@ -757,10 +760,9 @@ static void print_path(int depth)
                             }
                             if (dim[j] < 0)
                             {
-                                if (show_expressions &&
-                                    (type->format == coda_format_ascii || type->format == coda_format_binary))
+                                if (show_expressions && ((coda_type_array *)type)->dim_expr[j] != NULL)
                                 {
-                                    generate_expr(((coda_ascbin_array *)type)->dim_expr[j], 15);
+                                    generate_expr(((coda_type_array *)type)->dim_expr[j], 15);
                                 }
                                 else
                                 {

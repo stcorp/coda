@@ -2639,52 +2639,6 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_get_1product_1variable_1val
 }
 
 
-SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1has_1ascii_1content(JNIEnv *jenv, jclass jcls, jlong jarg1, jintArray jarg2) {
-  jint jresult = 0 ;
-  coda_type *arg1 = (coda_type *) 0 ;
-  int *arg2 = (int *) 0 ;
-  int temp2 ;
-  int result;
-  
-  (void)jenv;
-  (void)jcls;
-  arg1 = *(coda_type **)&jarg1; 
-  {
-    if (!jarg2) {
-      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
-      return 0;
-    }
-    if ((*jenv)->GetArrayLength(jenv, jarg2) == 0) {
-      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
-      return 0;
-    }
-    arg2 = &temp2; 
-  }
-  {
-    result = (int)coda_type_has_ascii_content((struct coda_type_struct const *)arg1,arg2);
-    
-    if (result < 0)
-    {
-      int namelen = strlen("coda_type_has_ascii_content");
-      const char *codamsg = coda_errno_to_string(coda_errno);
-      char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
-      jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
-      
-      sprintf(fullMessage, "coda_type_has_ascii_content(): %s", codamsg);
-      (*jenv)->ThrowNew(jenv, clazz, fullMessage);
-      free(fullMessage);
-      return 0;
-    }
-  }
-  {
-    jint jvalue = (jint)temp2;
-    (*jenv)->SetIntArrayRegion(jenv, jarg2, 0, 1, &jvalue);
-  }
-  
-  return jresult;
-}
-
-
 SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1format(JNIEnv *jenv, jclass jcls, jlong jarg1, jintArray jarg2) {
   jint jresult = 0 ;
   coda_type *arg1 = (coda_type *) 0 ;
@@ -3209,6 +3163,59 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1record_1field_1i
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
       
       sprintf(fullMessage, "coda_type_get_record_field_index_from_name(): %s", codamsg);
+      (*jenv)->ThrowNew(jenv, clazz, fullMessage);
+      free(fullMessage);
+      return 0;
+    }
+  }
+  {
+    jint jvalue = (jint)temp3;
+    (*jenv)->SetIntArrayRegion(jenv, jarg3, 0, 1, &jvalue);
+  }
+  if (arg2) (*jenv)->ReleaseStringUTFChars(jenv, jarg2, (const char *)arg2);
+  
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1record_1field_1index_1from_1real_1name(JNIEnv *jenv, jclass jcls, jlong jarg1, jstring jarg2, jintArray jarg3) {
+  jint jresult = 0 ;
+  coda_type *arg1 = (coda_type *) 0 ;
+  char *arg2 = (char *) 0 ;
+  long *arg3 = (long *) 0 ;
+  long temp3 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(coda_type **)&jarg1; 
+  arg2 = 0;
+  if (jarg2) {
+    arg2 = (char *)(*jenv)->GetStringUTFChars(jenv, jarg2, 0);
+    if (!arg2) return 0;
+  }
+  {
+    if (!jarg3) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg3) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    arg3 = &temp3; 
+  }
+  {
+    result = (int)coda_type_get_record_field_index_from_real_name((struct coda_type_struct const *)arg1,(char const *)arg2,arg3);
+    
+    if (result < 0)
+    {
+      int namelen = strlen("coda_type_get_record_field_index_from_real_name");
+      const char *codamsg = coda_errno_to_string(coda_errno);
+      char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
+      jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
+      
+      sprintf(fullMessage, "coda_type_get_record_field_index_from_real_name(): %s", codamsg);
       (*jenv)->ThrowNew(jenv, clazz, fullMessage);
       free(fullMessage);
       return 0;

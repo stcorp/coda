@@ -1,4 +1,5 @@
 LIBCODA_DOCFILES = \
+	doc/html/libcoda/coda-cursor-read_8c.html \
 	doc/html/libcoda/coda-cursor_8c.html \
 	doc/html/libcoda/coda-errno_8c.html \
 	doc/html/libcoda/coda-expr_8c.html \
@@ -26,6 +27,8 @@ LIBCODA_DOCFILES = \
 	doc/html/libcoda/group__coda__types.html \
 	doc/html/libcoda/index.html \
 	doc/html/libcoda/modules.html
+doc/html/libcoda/coda-cursor-read_8c.html:
+	$(MAKE) libcoda_doc
 doc/html/libcoda/coda-cursor_8c.html:
 	$(MAKE) libcoda_doc
 doc/html/libcoda/coda-errno_8c.html:

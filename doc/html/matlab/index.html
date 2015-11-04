@@ -28,6 +28,7 @@
             <li><a href="#coda_clearall"><code>CODA_CLEARALL</code></a></li>
             <li><a href="#coda_close"><code>CODA_CLOSE</code></a></li>
             <li><a href="#coda_description"><code>CODA_DESCRIPTION</code></a></li>
+            <li><a href="#coda_eval"><code>CODA_EVAL</code></a></li>
             <li><a href="#coda_fetch"><code>CODA_FETCH</code></a></li>
             <li><a href="#coda_fieldavailable"><code>CODA_FIELDAVAILABLE</code></a></li>
             <li><a href="#coda_fieldcount"><code>CODA_FIELDCOUNT</code></a></li>
@@ -102,6 +103,18 @@
 
       <p>See also <a href="#coda_fetch"><code>CODA_FETCH</code></a>, <a href="#coda_open"><code>CODA_OPEN</code></a>, <a href="#coda_param"><code>DATA SPEC ARGS</code></a></p>
 
+
+      <h3 id="coda_eval"><code>CODA_EVAL</code></h3>
+
+      <p><code>CODA_EVAL</code>  Evaluate a CODA expression.</p>
+
+      <p><code>RESULT = CODA_EVAL(CODA_EXPRESSION, [CODA_FILE_ID, &lt;DATA SPEC ARGS&gt;])</code> returns the evaluated CODA expression at the given product location.<br/>The <code>coda_expression</code> parameter should be a string with a valid CODA expression. The syntax for the CODA expression language can be found in the <a href="../codadef/codadef-expressions.html">CODA Expressions</a> documentation.</p>
+
+      <p>If the CODA expression can be evaluated statically, then <code>coda_file_id</code> and <code>&lt;data spec args&gt;</code> are not required, otherwise these arguments are mandatory.<br /> The <code>coda_file_id</code> parameter must be a valid CODA file handle that was retrieved with <code>coda_open</code>. The format for the data specification argument list <code>&lt;data spec args&gt;</code> is described in a separate section.</p>
+
+      <p>Note that evaluation of 'void' expressions is not supported.</p>
+
+      <p>See also <a href="#coda_fetch"><code>CODA_FETCH</code></a>, <a href="#coda_open"><code>CODA_OPEN</code></a>, <a href="#coda_param"><code>DATA SPEC ARGS</code></a></p>
 
       <h3 id="coda_fetch"><code>CODA_FETCH</code></h3>
 
@@ -250,7 +263,7 @@
 
       <p>For the <code>coda_fetch</code> function there is an additional feature. If you provide a -1 for one or more of the dimensions of an array you will fetch all elements in the specified dimension(s). For example, with <code>coda_fetch(pf,'datasetname',-1,'dsr_time')</code> you can fetch all <code>dsr_time</code> values for all measurements into a single array.</p>
 
-      <p>See also <a href="#coda_class"><code>CODA_CLASS</code></a>, <a href="#coda_fetch"><code>CODA_FETCH</code></a>, <a href="#coda_fieldnames"><code>CODA_FIELDNAMES</code></a>, <a href="#coda_size"><code>CODA_SIZE</code></a></p>
+      <p>See also <a href="#coda_class"><code>CODA_CLASS</code></a>, <a href="#coda_eval"><code>CODA_EVAL</code></a>, <a href="#coda_fetch"><code>CODA_FETCH</code></a>, <a href="#coda_fieldnames"><code>CODA_FIELDNAMES</code></a>, <a href="#coda_size"><code>CODA_SIZE</code></a></p>
 
       <h2 id="coda_options">CODA MATLAB interface options</h2>
 
@@ -292,7 +305,7 @@
 
       <div class="footer">
         <hr />
-        <p>Copyright &copy; 2007-2010 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+        <p>Copyright &copy; 2007-2011 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
       </div>
 
     </div>

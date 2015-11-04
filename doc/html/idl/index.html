@@ -52,6 +52,7 @@
               </ul>
             </li>
             <li><a href="#coda_fetch_datahandle"><code>CODA_FETCH_DATAHANDLE</code></a></li>
+            <li><a href="#coda_eval"><code>CODA_EVAL</code></a></li>
             <li><a href="#coda_attributes"><code>CODA_ATTRIBUTES</code></a></li>
             <li><a href="#coda_fieldavailable"><code>CODA_FIELDAVAILABLE</code></a></li>
             <li><a href="#coda_fieldcount"><code>CODA_FIELDCOUNT</code></a></li>
@@ -305,6 +306,12 @@
 
       <p>This function takes the same kind of argument as <code>CODA_FETCH</code>; however, instead of returning the specified data from the product, it <em>always</em> returns a datahandle to the specified data (even if it would be easily representable in IDL).</p>
 
+      <h3 id="coda_eval">Function <code>CODA_EVAL(STRING expression, ...)</code></h3>
+
+      <p>This function takes a CODA expression in the form of a string and an optional product location. The product location is the same kind of argument (list) as used for <code>CODA_FETCH</code>. If the CODA expression can be evaluated statically, then the product location argument is not required, otherwise the product location argument is mandatory.</p>
+      
+      <p>The syntax for the CODA expression language can be found in the <a href="../codadef/codadef-expressions.html">CODA Expressions</a> documentation. Note that evaluation of 'void' expressions is not supported.</p>
+
       <h3 id="coda_attributes">Function <code>CODA_ATTRIBUTES(...)</code></h3>
 
       <p>This function takes the same kind of argument as <code>CODA_FETCH</code>; however, instead of returning the specified data from the product, it returns a record containing all attributes of the specified data item. The record can be empty if no attributes are available.</p>
@@ -377,7 +384,7 @@
 
       <div class="footer">
         <hr />
-        <p>Copyright &copy; 2007-2010 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+        <p>Copyright &copy; 2007-2011 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
       </div>
 
     </div>

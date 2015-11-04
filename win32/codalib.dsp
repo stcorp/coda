@@ -143,14 +143,6 @@ SOURCE="..\libcoda\coda-ascbin-cursor.c"
 # End Source File
 # Begin Source File
 
-SOURCE="..\libcoda\coda-ascbin-definition.c"
-# End Source File
-# Begin Source File
-
-SOURCE="..\libcoda\coda-ascbin-type.c"
-# End Source File
-# Begin Source File
-
 SOURCE="..\libcoda\coda-ascbin.c"
 # End Source File
 # Begin Source File
@@ -159,31 +151,11 @@ SOURCE="..\libcoda\coda-ascii-cursor.c"
 # End Source File
 # Begin Source File
 
-SOURCE="..\libcoda\coda-ascii-definition.c"
-# End Source File
-# Begin Source File
-
-SOURCE="..\libcoda\coda-ascii-type.c"
-# End Source File
-# Begin Source File
-
-SOURCE="..\libcoda\coda-ascii.c"
-# End Source File
-# Begin Source File
-
 SOURCE="..\libcoda\coda-bin-cursor.c"
 # End Source File
 # Begin Source File
 
-SOURCE="..\libcoda\coda-bin-definition.c"
-# End Source File
-# Begin Source File
-
-SOURCE="..\libcoda\coda-bin-type.c"
-# End Source File
-# Begin Source File
-
-SOURCE="..\libcoda\coda-bin.c"
+SOURCE="..\libcoda\coda-cursor-read.c"
 # End Source File
 # Begin Source File
 
@@ -215,10 +187,6 @@ SOURCE="..\libcoda\coda-grib-cursor.c"
 # End Source File
 # Begin Source File
 
-SOURCE="..\libcoda\coda-grib-dynamic.c"
-# End Source File
-# Begin Source File
-
 SOURCE="..\libcoda\coda-grib-type.c"
 # End Source File
 # Begin Source File
@@ -228,16 +196,6 @@ SOURCE="..\libcoda\coda-grib.c"
 # Begin Source File
 
 SOURCE="..\libcoda\coda-hdf4-cursor.c"
-
-!IF  "$(CFG)" == "codalib - Win32 Release"
-# PROP Exclude_From_Build 1
-!ELSEIF  "$(CFG)" == "codalib - Win32 Debug"
-# PROP Exclude_From_Build 1
-!ENDIF 
-# End Source File
-# Begin Source File
-
-SOURCE="..\libcoda\coda-hdf4-definition.c"
 
 !IF  "$(CFG)" == "codalib - Win32 Release"
 # PROP Exclude_From_Build 1
@@ -257,7 +215,7 @@ SOURCE="..\libcoda\coda-hdf4-type.c"
 # End Source File
 # Begin Source File
 
-SOURCE="..\libcoda\coda-hdf5-cursor.c"
+SOURCE="..\libcoda\coda-hdf4.c"
 
 !IF  "$(CFG)" == "codalib - Win32 Release"
 # PROP Exclude_From_Build 1
@@ -267,7 +225,7 @@ SOURCE="..\libcoda\coda-hdf5-cursor.c"
 # End Source File
 # Begin Source File
 
-SOURCE="..\libcoda\coda-hdf5-definition.c"
+SOURCE="..\libcoda\coda-hdf5-cursor.c"
 
 !IF  "$(CFG)" == "codalib - Win32 Release"
 # PROP Exclude_From_Build 1
@@ -287,11 +245,29 @@ SOURCE="..\libcoda\coda-hdf5-type.c"
 # End Source File
 # Begin Source File
 
-SOURCE="..\libcoda\coda-netcdf-cursor.c"
+SOURCE="..\libcoda\coda-hdf5.c"
+
+!IF  "$(CFG)" == "codalib - Win32 Release"
+# PROP Exclude_From_Build 1
+!ELSEIF  "$(CFG)" == "codalib - Win32 Debug"
+# PROP Exclude_From_Build 1
+!ENDIF 
 # End Source File
 # Begin Source File
 
-SOURCE="..\libcoda\coda-netcdf-dynamic.c"
+SOURCE="..\libcoda\coda-mem-cursor.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\coda-mem-type.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\coda-mem.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\coda-netcdf-cursor.c"
 # End Source File
 # Begin Source File
 
@@ -304,6 +280,14 @@ SOURCE="..\libcoda\coda-netcdf.c"
 # Begin Source File
 
 SOURCE="..\libcoda\coda-product.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\coda-rinex.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\coda-sp3c.c"
 # End Source File
 # Begin Source File
 
@@ -320,14 +304,6 @@ SOURCE="..\libcoda\coda-utils.c"
 # Begin Source File
 
 SOURCE="..\libcoda\coda-xml-cursor.c"
-# End Source File
-# Begin Source File
-
-SOURCE="..\libcoda\coda-xml-definition.c"
-# End Source File
-# Begin Source File
-
-SOURCE="..\libcoda\coda-xml-dynamic.c"
 # End Source File
 # Begin Source File
 
@@ -460,10 +436,6 @@ SOURCE="..\libcoda\pcre\pcre_xclass.c"
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE="..\libcoda\coda-ascbin-definition.h"
-# End Source File
-# Begin Source File
-
 SOURCE="..\libcoda\coda-ascbin-internal.h"
 # End Source File
 # Begin Source File
@@ -472,23 +444,7 @@ SOURCE="..\libcoda\coda-ascbin.h"
 # End Source File
 # Begin Source File
 
-SOURCE="..\libcoda\coda-ascii-definition.h"
-# End Source File
-# Begin Source File
-
-SOURCE="..\libcoda\coda-ascii-internal.h"
-# End Source File
-# Begin Source File
-
 SOURCE="..\libcoda\coda-ascii.h"
-# End Source File
-# Begin Source File
-
-SOURCE="..\libcoda\coda-bin-definition.h"
-# End Source File
-# Begin Source File
-
-SOURCE="..\libcoda\coda-bin-internal.h"
 # End Source File
 # Begin Source File
 
@@ -560,6 +516,14 @@ SOURCE="..\libcoda\coda-internal.h"
 # End Source File
 # Begin Source File
 
+SOURCE="..\libcoda\coda-mem-internal.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\coda-mem.h"
+# End Source File
+# Begin Source File
+
 SOURCE="..\libcoda\coda-netcdf-internal.h"
 # End Source File
 # Begin Source File
@@ -572,11 +536,11 @@ SOURCE="..\libcoda\coda-path.h"
 # End Source File
 # Begin Source File
 
-SOURCE="..\libcoda\coda-xml-definition.h"
+SOURCE="..\libcoda\coda-rinex.h"
 # End Source File
 # Begin Source File
 
-SOURCE="..\libcoda\coda-xml-dynamic.h"
+SOURCE="..\libcoda\coda-sp3c.h"
 # End Source File
 # Begin Source File
 

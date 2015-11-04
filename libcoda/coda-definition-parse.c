@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -39,11 +39,11 @@
 
 #include "coda-ascii.h"
 #include "coda-definition.h"
-#include "coda-ascii-definition.h"
-#include "coda-bin-definition.h"
-#include "coda-xml-definition.h"
+#include "coda-type.h"
 
 #define CODA_DEFINITION_NAMESPACE "http://www.stcorp.nl/coda/definition/2008/07"
+
+#define FORMAT_UNDEFINED 100
 
 typedef struct parser_info_struct parser_info;
 
@@ -157,11 +157,12 @@ typedef enum zip_entry_type_enum zip_entry_type;
 struct node_info_struct
 {
     xml_element_tag tag;
+    int empty;
     void *data;
     char *char_data;
     int64_t integer_data;
     double float_data;
-    int has_char_data;
+    int expect_char_data;
     finalise_handler finalise_element;
     free_data_handler free_data;
 
@@ -197,9 +198,9 @@ static int parse_entry(za_file *zf, zip_entry_type type, const char *name, coda_
 
 static int dummy_init(parser_info *info, const char **attr);
 static int bool_expression_init(parser_info *info, const char **attr);
-static int integer_constant_init(parser_info *info, const char **attr);
-static int integer_constant_or_expression_init(parser_info *info, const char **attr);
 static int integer_expression_init(parser_info *info, const char **attr);
+static int integer_constant_or_expression_init(parser_info *info, const char **attr);
+static int optional_integer_constant_or_expression_init(parser_info *info, const char **attr);
 static int string_data_init(parser_info *info, const char **attr);
 static int void_expression_init(parser_info *info, const char **attr);
 static int xml_root_init(parser_info *info, const char **attr);
@@ -433,6 +434,34 @@ static int format_from_string(const char *str, coda_format *format)
     {
         *format = coda_format_xml;
     }
+    else if (strcmp(str, "hdf4") == 0)
+    {
+        *format = coda_format_hdf4;
+    }
+    else if (strcmp(str, "hdf5") == 0)
+    {
+        *format = coda_format_hdf5;
+    }
+    else if (strcmp(str, "netcdf") == 0)
+    {
+        *format = coda_format_netcdf;
+    }
+    else if (strcmp(str, "grib1") == 0)
+    {
+        *format = coda_format_grib1;
+    }
+    else if (strcmp(str, "grib2") == 0)
+    {
+        *format = coda_format_grib2;
+    }
+    else if (strcmp(str, "rinex") == 0)
+    {
+        *format = coda_format_rinex;
+    }
+    else if (strcmp(str, "sp3c") == 0)
+    {
+        *format = coda_format_sp3c;
+    }
     else
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid 'format' attribute value '%s'", str);
@@ -507,45 +536,11 @@ static int handle_name_attribute_for_type(parser_info *info, const char **attr)
     return 0;
 }
 
-static int validate_format_for_type(parser_info *info)
-{
-    if (info->node->parent->format == 100)
-    {
-        return 0;
-    }
-
-    if (info->node->format != info->node->parent->format)
-    {
-        /* only two cases allowed:
-         * - parent=xml and child=ascii (parent xml type should be 'Type')
-         * - parent=bin and child=ascii (parent bin type should be 'Field')
-         */
-        if (info->node->format == coda_format_ascii)
-        {
-            if (info->node->parent->format == coda_format_xml && info->node->parent->tag == element_cd_type)
-            {
-                return 0;
-            }
-            if (info->node->parent->format == coda_format_binary && info->node->parent->tag == element_cd_field)
-            {
-                return 0;
-            }
-        }
-        coda_set_error(CODA_ERROR_DATA_DEFINITION, "cannot use %s with %s format within %s with %s format",
-                       xml_element_name(info->node->tag), coda_type_get_format_name(info->node->format),
-                       xml_element_name(info->node->parent->tag),
-                       coda_type_get_format_name(info->node->parent->format));
-        return -1;
-    }
-
-    return 0;
-}
-
 static int handle_format_attribute_for_type(parser_info *info, const char **attr)
 {
     const char *format_string;
 
-    if (info->node->parent->format == 100)
+    if (info->node->parent->format == FORMAT_UNDEFINED)
     {
         /* we can't inherit the format of the parent, so a format attribute is required */
         format_string = get_mandatory_attribute_value(attr, "format", info->node->tag);
@@ -572,13 +567,39 @@ static int handle_format_attribute_for_type(parser_info *info, const char **attr
             {
                 return -1;
             }
-            if (validate_format_for_type(info) != 0)
-            {
-                return -1;
-            }
         }
     }
 
+    return 0;
+}
+
+static int handle_xml_name(parser_info *info, const char **attr)
+{
+    const char *xmlname;
+    node_info *node;
+
+    if (info->node->format != coda_format_xml)
+    {
+        return 0;
+    }
+    xmlname = get_mandatory_attribute_value(attr, "namexml", info->node->tag);
+    if (xmlname == NULL)
+    {
+        return -1;
+    }
+    node = info->node->parent;
+    while (node->tag != element_cd_field)
+    {
+        if (node->tag == no_element)
+        {
+            return 0;
+        }
+        node = node->parent;
+    }
+    if (coda_type_record_field_set_real_name((coda_type_record_field *)node->data, xmlname) != 0)
+    {
+        return -1;
+    }
     return 0;
 }
 
@@ -697,38 +718,58 @@ static int bool_expression_init(parser_info *info, const char **attr)
 {
     attr = attr;
 
-    info->node->has_char_data = 1;
+    info->node->expect_char_data = 1;
     info->node->free_data = (free_data_handler)coda_expression_delete;
     info->node->finalise_element = bool_expression_finalise;
 
     return 0;
 }
 
-static int integer_constant_finalise(parser_info *info)
+static int integer_expression_finalise(parser_info *info)
 {
-    if (info->node->char_data == NULL)
-    {
-        coda_set_error(CODA_ERROR_DATA_DEFINITION, "empty integer constant");
-        return -1;
-    }
+    coda_expression_type result_type;
+    coda_expression *expr;
+
     if (info->node->char_data != NULL)
     {
-        if (coda_ascii_parse_int64(info->node->char_data, strlen(info->node->char_data), &info->node->integer_data, 0)
-            < 0)
+        if (is_whitespace(info->node->char_data, strlen(info->node->char_data)))
         {
-            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid value '%s'", info->node->char_data);
-            return -1;
+            free(info->node->char_data);
+            info->node->char_data = NULL;
         }
     }
+    if (info->node->char_data == NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "empty integer expression");
+        return -1;
+    }
+    if (coda_expression_from_string(info->node->char_data, &expr) != 0)
+    {
+        return -1;
+    }
+    free(info->node->char_data);
+    info->node->char_data = NULL;
+    info->node->data = expr;
+    if (coda_expression_get_type(expr, &result_type) != 0)
+    {
+        return -1;
+    }
+    if (result_type != coda_expression_integer)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "not an integer expression");
+        return -1;
+    }
+
     return 0;
 }
 
-static int integer_constant_init(parser_info *info, const char **attr)
+static int integer_expression_init(parser_info *info, const char **attr)
 {
     attr = attr;
 
-    info->node->has_char_data = 1;
-    info->node->finalise_element = integer_constant_finalise;
+    info->node->expect_char_data = 1;
+    info->node->free_data = (free_data_handler)coda_expression_delete;
+    info->node->finalise_element = integer_expression_finalise;
 
     return 0;
 }
@@ -786,14 +827,14 @@ static int integer_constant_or_expression_init(parser_info *info, const char **a
 {
     attr = attr;
 
-    info->node->has_char_data = 1;
+    info->node->expect_char_data = 1;
     info->node->free_data = (free_data_handler)coda_expression_delete;
     info->node->finalise_element = integer_constant_or_expression_finalise;
 
     return 0;
 }
 
-static int integer_expression_finalise(parser_info *info)
+static int optional_integer_constant_or_expression_finalise(parser_info *info)
 {
     coda_expression_type result_type;
     coda_expression *expr;
@@ -808,8 +849,9 @@ static int integer_expression_finalise(parser_info *info)
     }
     if (info->node->char_data == NULL)
     {
-        coda_set_error(CODA_ERROR_DATA_DEFINITION, "empty integer expression");
-        return -1;
+        /* no integer or expression provided */
+        info->node->empty = 1;
+        return 0;
     }
     if (coda_expression_from_string(info->node->char_data, &expr) != 0)
     {
@@ -820,6 +862,7 @@ static int integer_expression_finalise(parser_info *info)
     info->node->data = expr;
     if (coda_expression_get_type(expr, &result_type) != 0)
     {
+        coda_expression_delete(expr);
         return -1;
     }
     if (result_type != coda_expression_integer)
@@ -827,17 +870,27 @@ static int integer_expression_finalise(parser_info *info)
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "not an integer expression");
         return -1;
     }
+    if (coda_expression_is_constant(expr))
+    {
+        /* it is a constant value */
+        if (coda_expression_eval_integer(expr, NULL, &info->node->integer_data) != 0)
+        {
+            return -1;
+        }
+        info->node->data = NULL;
+        coda_expression_delete(expr);
+    }
 
     return 0;
 }
 
-static int integer_expression_init(parser_info *info, const char **attr)
+static int optional_integer_constant_or_expression_init(parser_info *info, const char **attr)
 {
     attr = attr;
 
-    info->node->has_char_data = 1;
+    info->node->expect_char_data = 1;
     info->node->free_data = (free_data_handler)coda_expression_delete;
-    info->node->finalise_element = integer_expression_finalise;
+    info->node->finalise_element = optional_integer_constant_or_expression_finalise;
 
     return 0;
 }
@@ -861,14 +914,60 @@ static int string_data_finalise(parser_info *info)
 static int string_data_init(parser_info *info, const char **attr)
 {
     attr = attr;
-    info->node->has_char_data = 1;
+    info->node->expect_char_data = 1;
     info->node->finalise_element = string_data_finalise;
     return 0;
 }
 
 static int type_set_description(parser_info *info)
 {
+    if (info->node->char_data == NULL)
+    {
+        return coda_type_set_description((coda_type *)info->node->parent->data, "");
+    }
     return coda_type_set_description((coda_type *)info->node->parent->data, info->node->char_data);
+}
+
+static int type_set_bit_size(parser_info *info)
+{
+    if (info->node->data != NULL)
+    {
+        if (coda_type_set_bit_size_expression((coda_type *)info->node->parent->data,
+                                              (coda_expression *)info->node->data) != 0)
+        {
+            return -1;
+        }
+        info->node->data = NULL;
+    }
+    else
+    {
+        if (coda_type_set_bit_size((coda_type *)info->node->parent->data, (long)info->node->integer_data) != 0)
+        {
+            return -1;
+        }
+    }
+    return 0;
+}
+
+static int type_set_byte_size(parser_info *info)
+{
+    if (info->node->data != NULL)
+    {
+        if (coda_type_set_byte_size_expression((coda_type *)info->node->parent->data,
+                                               (coda_expression *)info->node->data) != 0)
+        {
+            return -1;
+        }
+        info->node->data = NULL;
+    }
+    else
+    {
+        if (coda_type_set_byte_size((coda_type *)info->node->parent->data, (long)info->node->integer_data) != 0)
+        {
+            return -1;
+        }
+    }
+    return 0;
 }
 
 static int void_expression_finalise(parser_info *info)
@@ -913,22 +1012,27 @@ static int void_expression_init(parser_info *info, const char **attr)
 {
     attr = attr;
 
-    info->node->has_char_data = 1;
+    info->node->expect_char_data = 1;
     info->node->free_data = (free_data_handler)coda_expression_delete;
     info->node->finalise_element = void_expression_finalise;
 
     return 0;
 }
 
-static int xml_element_add_attribute(parser_info *info)
+static int type_add_attribute(parser_info *info)
 {
-    return coda_xml_element_add_attribute((coda_xml_element *)info->node->parent->data,
-                                          (coda_xml_attribute *)info->node->data);
+    if (coda_type_add_attribute((coda_type *)info->node->parent->data, (coda_type_record_field *)info->node->data) != 0)
+    {
+        return -1;
+    }
+    info->node->data = NULL;
+    return 0;
 }
 
 static int xml_root_set_field(parser_info *info)
 {
-    if (coda_xml_root_set_field((coda_xml_root *)info->node->parent->data, (coda_xml_field *)info->node->data) != 0)
+    if (coda_type_record_add_field((coda_type_record *)info->node->parent->data,
+                                   (coda_type_record_field *)info->node->data) != 0)
     {
         return -1;
     }
@@ -963,8 +1067,8 @@ static int xml_root_init(parser_info *info, const char **attr)
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "attribute 'namexml' not allowed for xml root record");
         return -1;
     }
-    info->node->free_data = (free_data_handler)coda_release_type;
-    info->node->data = coda_xml_root_new();
+    info->node->free_data = (free_data_handler)coda_type_release;
+    info->node->data = coda_type_record_new(coda_format_xml);
 
     if (handle_name_attribute_for_type(info, attr) != 0)
     {
@@ -977,18 +1081,17 @@ static int xml_root_init(parser_info *info, const char **attr)
     return 0;
 }
 
-static int cd_array_ascbin_set_type(parser_info *info)
+static int cd_array_set_type(parser_info *info)
 {
-    return coda_ascbin_array_set_base_type((coda_ascbin_array *)info->node->parent->data,
-                                           (coda_ascbin_type *)info->node->data);
+    return coda_type_array_set_base_type((coda_type_array *)info->node->parent->data, (coda_type *)info->node->data);
 }
 
-static int cd_array_ascbin_add_dimension(parser_info *info)
+static int cd_array_add_dimension(parser_info *info)
 {
-    if (info->node->data != NULL)
+    if (info->node->data != NULL || info->node->empty)
     {
-        if (coda_ascbin_array_add_variable_dimension((coda_ascbin_array *)info->node->parent->data,
-                                                     (coda_expression *)info->node->data) != 0)
+        if (coda_type_array_add_variable_dimension((coda_type_array *)info->node->parent->data,
+                                                   (coda_expression *)info->node->data) != 0)
         {
             return -1;
         }
@@ -996,8 +1099,8 @@ static int cd_array_ascbin_add_dimension(parser_info *info)
     }
     else
     {
-        if (coda_ascbin_array_add_fixed_dimension((coda_ascbin_array *)info->node->parent->data,
-                                                  (long)info->node->integer_data) != 0)
+        if (coda_type_array_add_fixed_dimension((coda_type_array *)info->node->parent->data,
+                                                (long)info->node->integer_data) != 0)
         {
             return -1;
         }
@@ -1005,25 +1108,9 @@ static int cd_array_ascbin_add_dimension(parser_info *info)
     return 0;
 }
 
-static int cd_array_ascbin_finalise(parser_info *info)
+static int cd_array_finalise(parser_info *info)
 {
-    return coda_ascbin_array_validate((coda_ascbin_array *)info->node->data);
-}
-
-static int cd_array_xml_set_type(parser_info *info)
-{
-    if (((coda_type *)info->node->data)->type_class == coda_array_class && info->node->tag != element_cd_type)
-    {
-        coda_set_error(CODA_ERROR_DATA_DEFINITION, "Arrays of arrays are not allowed for xml format");
-        return -1;
-    }
-    return coda_xml_array_set_base_type((coda_xml_array *)info->node->parent->data,
-                                        (coda_xml_element *)info->node->data);
-}
-
-static int cd_array_xml_finalise(parser_info *info)
-{
-    return coda_xml_array_validate((coda_xml_array *)info->node->data);
+    return coda_type_array_validate((coda_type_array *)info->node->data);
 }
 
 static int cd_array_init(parser_info *info, const char **attr)
@@ -1032,44 +1119,23 @@ static int cd_array_init(parser_info *info, const char **attr)
     {
         return -1;
     }
-    info->node->free_data = (free_data_handler)coda_release_type;
-    switch (info->node->format)
-    {
-        case coda_format_ascii:
-            info->node->data = coda_ascbin_array_new(coda_format_ascii);
-            register_type_elements(info->node, cd_array_ascbin_set_type);
-            register_sub_element(info->node, element_cd_dimension, integer_constant_or_expression_init,
-                                 cd_array_ascbin_add_dimension);
-            info->node->finalise_element = cd_array_ascbin_finalise;
-            break;
-        case coda_format_binary:
-            info->node->data = coda_ascbin_array_new(coda_format_binary);
-            register_type_elements(info->node, cd_array_ascbin_set_type);
-            register_sub_element(info->node, element_cd_dimension, integer_constant_or_expression_init,
-                                 cd_array_ascbin_add_dimension);
-            info->node->finalise_element = cd_array_ascbin_finalise;
-            break;
-        case coda_format_xml:
-            info->node->data = coda_xml_array_new();
-            register_type_elements(info->node, cd_array_xml_set_type);
-            register_sub_element(info->node, element_cd_dimension, dummy_init, NULL);
-            info->node->finalise_element = cd_array_xml_finalise;
-            break;
-        default:
-            assert(0);
-            exit(1);
-    }
+
+    info->node->free_data = (free_data_handler)coda_type_release;
+    info->node->data = coda_type_array_new(info->node->format);
     if (info->node->data == NULL)
     {
         return -1;
     }
-
-    register_sub_element(info->node, element_cd_description, string_data_init, type_set_description);
-
     if (handle_name_attribute_for_type(info, attr) != 0)
     {
         return -1;
     }
+
+    register_type_elements(info->node, cd_array_set_type);
+    register_sub_element(info->node, element_cd_dimension, optional_integer_constant_or_expression_init,
+                         cd_array_add_dimension);
+    register_sub_element(info->node, element_cd_description, string_data_init, type_set_description);
+    info->node->finalise_element = cd_array_finalise;
 
     return 0;
 }
@@ -1080,33 +1146,23 @@ static int cd_ascii_line_init(parser_info *info, const char **attr)
     {
         return -1;
     }
-    info->node->free_data = (free_data_handler)coda_release_type;
-    switch (info->node->format)
-    {
-        case coda_format_ascii:
-            info->node->data = coda_ascii_line_new(0);
-            break;
-        case coda_format_binary:
-            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid format 'binary' for AsciiLine");
-            return -1;
-        case coda_format_xml:
-            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid format 'xml' for AsciiLine");
-            return -1;
-        default:
-            assert(0);
-            exit(1);
-    }
+
+    info->node->free_data = (free_data_handler)coda_type_release;
+    info->node->data = coda_type_text_new(info->node->format);
     if (info->node->data == NULL)
+    {
+        return -1;
+    }
+    if (coda_type_text_set_special_text_type((coda_type_text *)info->node->data, ascii_text_line_without_eol) != 0)
+    {
+        return -1;
+    }
+    if (handle_name_attribute_for_type(info, attr) != 0)
     {
         return -1;
     }
 
     register_sub_element(info->node, element_cd_description, string_data_init, type_set_description);
-
-    if (handle_name_attribute_for_type(info, attr) != 0)
-    {
-        return -1;
-    }
 
     return 0;
 }
@@ -1117,33 +1173,23 @@ static int cd_ascii_line_separator_init(parser_info *info, const char **attr)
     {
         return -1;
     }
-    info->node->free_data = (free_data_handler)coda_release_type;
-    switch (info->node->format)
-    {
-        case coda_format_ascii:
-            info->node->data = coda_ascii_line_separator_new();
-            break;
-        case coda_format_binary:
-            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid format 'binary' for AsciiLineSeparator");
-            return -1;
-        case coda_format_xml:
-            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid format 'xml' for AsciiLineSeparator");
-            return -1;
-        default:
-            assert(0);
-            exit(1);
-    }
+
+    info->node->free_data = (free_data_handler)coda_type_release;
+    info->node->data = coda_type_text_new(info->node->format);
     if (info->node->data == NULL)
+    {
+        return -1;
+    }
+    if (coda_type_text_set_special_text_type((coda_type_text *)info->node->data, ascii_text_line_separator) != 0)
+    {
+        return -1;
+    }
+    if (handle_name_attribute_for_type(info, attr) != 0)
     {
         return -1;
     }
 
     register_sub_element(info->node, element_cd_description, string_data_init, type_set_description);
-
-    if (handle_name_attribute_for_type(info, attr) != 0)
-    {
-        return -1;
-    }
 
     return 0;
 }
@@ -1154,91 +1200,110 @@ static int cd_ascii_white_space_init(parser_info *info, const char **attr)
     {
         return -1;
     }
-    info->node->free_data = (free_data_handler)coda_release_type;
-    switch (info->node->format)
-    {
-        case coda_format_ascii:
-            info->node->data = coda_ascii_white_space_new();
-            break;
-        case coda_format_binary:
-            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid format 'binary' for AsciiWhiteSpace");
-            return -1;
-        case coda_format_xml:
-            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid format 'xml' for AsciiWhiteSpace");
-            return -1;
-        default:
-            assert(0);
-            exit(1);
-    }
+
+    info->node->free_data = (free_data_handler)coda_type_release;
+    info->node->data = coda_type_text_new(info->node->format);
     if (info->node->data == NULL)
+    {
+        return -1;
+    }
+    if (coda_type_text_set_special_text_type((coda_type_text *)info->node->data, ascii_text_whitespace) != 0)
+    {
+        return -1;
+    }
+    if (handle_name_attribute_for_type(info, attr) != 0)
     {
         return -1;
     }
 
     register_sub_element(info->node, element_cd_description, string_data_init, type_set_description);
 
-    if (handle_name_attribute_for_type(info, attr) != 0)
-    {
-        return -1;
-    }
-
     return 0;
 }
 
-static int cd_attribute_xml_set_optional(parser_info *info)
+static int cd_attribute_set_optional(parser_info *info)
 {
-    return coda_xml_attribute_set_optional((coda_xml_attribute *)info->node->parent->data);
+    return coda_type_record_field_set_optional((coda_type_record_field *)info->node->parent->data);
 }
 
-static int cd_attribute_xml_set_fixed_value(parser_info *info)
+static int cd_attribute_set_fixed_value(parser_info *info)
 {
+    coda_type *type;
+
     if (decode_escaped_string(info->node->char_data) < 0)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid escape sequence in string");
         return -1;
     }
-    return coda_xml_attribute_set_fixed_value((coda_xml_attribute *)info->node->parent->data, info->node->char_data);
+    if (coda_type_record_field_get_type((coda_type_record_field *)info->node->parent->data, &type) != 0)
+    {
+        return -1;
+    }
+    if (coda_type_text_set_fixed_value((coda_type_text *)type, info->node->char_data) != 0)
+    {
+        return -1;
+    }
+    if (coda_type_set_byte_size(type, strlen(info->node->char_data)) != 0)
+    {
+        return -1;
+    }
+    return 0;
 }
 
 static int cd_attribute_init(parser_info *info, const char **attr)
 {
-    const char *name = NULL;
+    char *name;
+    const char *xmlname;
+    coda_type *type;
 
     info->node->format = info->node->parent->format;
-    name = get_mandatory_attribute_value(attr, "name", info->node->tag);
+    xmlname = get_mandatory_attribute_value(attr, "name", info->node->tag);
+    if (xmlname == NULL)
+    {
+        return -1;
+    }
+    name = coda_identifier_from_name(coda_element_name_from_xml_name(xmlname), NULL);
     if (name == NULL)
     {
         return -1;
     }
-    switch (info->node->format)
-    {
-        case coda_format_xml:
-            info->node->free_data = (free_data_handler)coda_release_type;
-            info->node->data = coda_xml_attribute_new(name);
-            register_sub_element(info->node, element_cd_optional, dummy_init, cd_attribute_xml_set_optional);
-            register_sub_element(info->node, element_cd_fixed_value, string_data_init,
-                                 cd_attribute_xml_set_fixed_value);
-            break;
-        default:
-            assert(0);
-            exit(1);
-    }
+    info->node->free_data = (free_data_handler)coda_type_record_field_delete;
+    info->node->data = coda_type_record_field_new(name);
+    free(name);
     if (info->node->data == NULL)
     {
         return -1;
     }
+    if (coda_type_record_field_set_real_name((coda_type_record_field *)info->node->data, xmlname) != 0)
+    {
+        return -1;
+    }
+    type = (coda_type *)coda_type_text_new(info->node->format);
+    if (type == NULL)
+    {
+        return -1;
+    }
+    if (coda_type_record_field_set_type((coda_type_record_field *)info->node->data, type) != 0)
+    {
+        coda_type_release(type);
+        return -1;
+    }
+    coda_type_release(type);
+
+    register_sub_element(info->node, element_cd_optional, dummy_init, cd_attribute_set_optional);
+    register_sub_element(info->node, element_cd_fixed_value, string_data_init, cd_attribute_set_fixed_value);
 
     return 0;
 }
 
-static int cd_complex_binary_set_type(parser_info *info)
+static int cd_complex_set_type(parser_info *info)
 {
-    return coda_bin_complex_set_type((coda_bin_complex *)info->node->parent->data, (coda_bin_type *)info->node->data);
+    return coda_type_complex_set_type((coda_type_special *)info->node->parent->data, (coda_type *)info->node->data);
 }
 
-static int cd_complex_binary_finalise(parser_info *info)
+static int cd_complex_finalise(parser_info *info)
 {
-    return coda_bin_complex_validate((coda_bin_complex *)info->node->data);
+    return coda_type_complex_validate((coda_type_special *)info->node->data);
 }
 
 static int cd_complex_init(parser_info *info, const char **attr)
@@ -1247,42 +1312,31 @@ static int cd_complex_init(parser_info *info, const char **attr)
     {
         return -1;
     }
-    info->node->free_data = (free_data_handler)coda_release_type;
-    switch (info->node->format)
-    {
-        case coda_format_ascii:
-            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid format 'ascii' for Complex");
-            return -1;
-        case coda_format_binary:
-            info->node->data = coda_bin_complex_new();
-            register_sub_element(info->node, element_cd_float, cd_float_init, cd_complex_binary_set_type);
-            register_sub_element(info->node, element_cd_integer, cd_integer_init, cd_complex_binary_set_type);
-            info->node->finalise_element = cd_complex_binary_finalise;
-            break;
-        case coda_format_xml:
-            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid format 'xml' for Complex");
-            return -1;
-        default:
-            assert(0);
-            exit(1);
-    }
+    info->node->free_data = (free_data_handler)coda_type_release;
+    info->node->data = coda_type_complex_new(info->node->format);
     if (info->node->data == NULL)
+    {
+        return -1;
+    }
+    if (handle_name_attribute_for_type(info, attr) != 0)
     {
         return -1;
     }
 
     register_sub_element(info->node, element_cd_description, string_data_init, type_set_description);
-
-    if (handle_name_attribute_for_type(info, attr) != 0)
-    {
-        return -1;
-    }
+    register_sub_element(info->node, element_cd_float, cd_float_init, cd_complex_set_type);
+    register_sub_element(info->node, element_cd_integer, cd_integer_init, cd_complex_set_type);
+    info->node->finalise_element = cd_complex_finalise;
 
     return 0;
 }
 
 static int cd_conversion_set_unit(parser_info *info)
 {
+    if (info->node->char_data == NULL)
+    {
+        return coda_conversion_set_unit((coda_conversion *)info->node->parent->data, "");
+    }
     return coda_conversion_set_unit((coda_conversion *)info->node->parent->data, info->node->char_data);
 }
 
@@ -1315,7 +1369,7 @@ static int cd_conversion_init(parser_info *info, const char **attr)
     }
 
     info->node->free_data = (free_data_handler)coda_conversion_delete;
-    info->node->data = coda_conversion_new(numerator, denominator);
+    info->node->data = coda_conversion_new(numerator, denominator, 0, coda_NaN());
     register_sub_element(info->node, element_cd_unit, string_data_init, cd_conversion_set_unit);
 
     return 0;
@@ -1349,21 +1403,26 @@ static int cd_detection_rule_init(parser_info *info, const char **attr)
     return 0;
 }
 
-static int cd_field_ascbin_set_type(parser_info *info)
+static int cd_field_set_type(parser_info *info)
 {
-    return coda_ascbin_field_set_type((coda_ascbin_field *)info->node->parent->data,
-                                      (coda_ascbin_type *)info->node->data);
+    return coda_type_record_field_set_type((coda_type_record_field *)info->node->parent->data,
+                                           (coda_type *)info->node->data);
 }
 
-static int cd_field_ascbin_set_hidden(parser_info *info)
+static int cd_field_set_hidden(parser_info *info)
 {
-    return coda_ascbin_field_set_hidden((coda_ascbin_field *)info->node->parent->data);
+    return coda_type_record_field_set_hidden((coda_type_record_field *)info->node->parent->data);
 }
 
-static int cd_field_ascbin_set_available(parser_info *info)
+static int cd_field_set_optional(parser_info *info)
 {
-    if (coda_ascbin_field_set_available_expression((coda_ascbin_field *)info->node->parent->data,
-                                                   (coda_expression *)info->node->data) != 0)
+    return coda_type_record_field_set_optional((coda_type_record_field *)info->node->parent->data);
+}
+
+static int cd_field_set_available(parser_info *info)
+{
+    if (coda_type_record_field_set_available_expression((coda_type_record_field *)info->node->parent->data,
+                                                        (coda_expression *)info->node->data) != 0)
     {
         return -1;
     }
@@ -1371,10 +1430,10 @@ static int cd_field_ascbin_set_available(parser_info *info)
     return 0;
 }
 
-static int cd_field_ascbin_set_bit_offset(parser_info *info)
+static int cd_field_set_bit_offset(parser_info *info)
 {
-    if (coda_ascbin_field_set_bit_offset_expression((coda_ascbin_field *)info->node->parent->data,
-                                                    (coda_expression *)info->node->data) != 0)
+    if (coda_type_record_field_set_bit_offset_expression((coda_type_record_field *)info->node->parent->data,
+                                                         (coda_expression *)info->node->data) != 0)
     {
         return -1;
     }
@@ -1382,36 +1441,15 @@ static int cd_field_ascbin_set_bit_offset(parser_info *info)
     return 0;
 }
 
-static int cd_field_ascbin_finalise(parser_info *info)
+static int cd_field_finalise(parser_info *info)
 {
-    return coda_ascbin_field_validate((coda_ascbin_field *)info->node->data);
-}
-
-static int cd_field_xml_set_type(parser_info *info)
-{
-    return coda_xml_field_set_type((coda_xml_field *)info->node->parent->data, (coda_xml_type *)info->node->data);
-}
-
-static int cd_field_xml_set_hidden(parser_info *info)
-{
-    return coda_xml_field_set_hidden((coda_xml_field *)info->node->parent->data);
-}
-
-static int cd_field_xml_set_optional(parser_info *info)
-{
-    return coda_xml_field_set_optional((coda_xml_field *)info->node->parent->data);
-}
-
-static int cd_field_xml_finalise(parser_info *info)
-{
-    return coda_xml_field_validate((coda_xml_field *)info->node->data);
+    return coda_type_record_field_validate((coda_type_record_field *)info->node->data);
 }
 
 static int cd_field_init(parser_info *info, const char **attr)
 {
     const char *format = NULL;
     const char *name = NULL;
-    const char *xmlname = NULL;
 
     format = get_attribute_value(attr, "format");
     if (format != NULL)
@@ -1420,8 +1458,7 @@ static int cd_field_init(parser_info *info, const char **attr)
         return -1;
     }
     info->node->format = info->node->parent->format;
-    xmlname = get_attribute_value(attr, "namexml");
-    if (xmlname != NULL)
+    if (get_attribute_value(attr, "namexml") != NULL)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "attribute 'namexml' not allowed for Field");
         return -1;
@@ -1431,52 +1468,40 @@ static int cd_field_init(parser_info *info, const char **attr)
     {
         return -1;
     }
-    switch (info->node->format)
-    {
-        case coda_format_ascii:
-        case coda_format_binary:
-            info->node->free_data = (free_data_handler)coda_ascbin_field_delete;
-            info->node->data = coda_ascbin_field_new(name, NULL);
-            register_type_elements(info->node, cd_field_ascbin_set_type);
-            register_sub_element(info->node, element_cd_hidden, dummy_init, cd_field_ascbin_set_hidden);
-            register_sub_element(info->node, element_cd_available, bool_expression_init, cd_field_ascbin_set_available);
-            register_sub_element(info->node, element_cd_bit_offset, integer_expression_init,
-                                 cd_field_ascbin_set_bit_offset);
-            info->node->finalise_element = cd_field_ascbin_finalise;
-            break;
-        case coda_format_xml:
-            info->node->free_data = (free_data_handler)coda_xml_field_delete;
-            info->node->data = coda_xml_field_new(name);
-            register_type_elements(info->node, cd_field_xml_set_type);
-            register_sub_element(info->node, element_cd_hidden, dummy_init, cd_field_xml_set_hidden);
-            register_sub_element(info->node, element_cd_optional, dummy_init, cd_field_xml_set_optional);
-            info->node->finalise_element = cd_field_xml_finalise;
-            break;
-        default:
-            assert(0);
-            exit(1);
-    }
+    info->node->free_data = (free_data_handler)coda_type_record_field_delete;
+    info->node->data = coda_type_record_field_new(name);
     if (info->node->data == NULL)
     {
         return -1;
     }
 
+    register_type_elements(info->node, cd_field_set_type);
+    register_sub_element(info->node, element_cd_hidden, dummy_init, cd_field_set_hidden);
+    register_sub_element(info->node, element_cd_optional, dummy_init, cd_field_set_optional);
+    register_sub_element(info->node, element_cd_available, bool_expression_init, cd_field_set_available);
+    register_sub_element(info->node, element_cd_bit_offset, integer_expression_init, cd_field_set_bit_offset);
+    info->node->finalise_element = cd_field_finalise;
+
     return 0;
 }
 
-static int cd_float_ascii_set_unit(parser_info *info)
+static int cd_float_set_unit(parser_info *info)
 {
-    return coda_ascii_float_set_unit((coda_ascii_float *)info->node->parent->data, info->node->char_data);
+    if (info->node->char_data == NULL)
+    {
+        return coda_type_number_set_unit((coda_type_number *)info->node->parent->data, "");
+    }
+    return coda_type_number_set_unit((coda_type_number *)info->node->parent->data, info->node->char_data);
 }
 
-static int cd_float_ascii_set_read_type(parser_info *info)
+static int cd_float_set_read_type(parser_info *info)
 {
-    return coda_ascii_float_set_read_type((coda_ascii_float *)info->node->parent->data, (int)info->node->integer_data);
+    return coda_type_set_read_type((coda_type *)info->node->parent->data, (int)info->node->integer_data);
 }
 
-static int cd_float_ascii_set_conversion(parser_info *info)
+static int cd_float_set_conversion(parser_info *info)
 {
-    if (coda_ascii_float_set_conversion((coda_ascii_float *)info->node->parent->data,
+    if (coda_type_number_set_conversion((coda_type_number *)info->node->parent->data,
                                         (coda_conversion *)info->node->data) != 0)
     {
         return -1;
@@ -1485,15 +1510,15 @@ static int cd_float_ascii_set_conversion(parser_info *info)
     return 0;
 }
 
-static int cd_float_ascii_set_byte_size(parser_info *info)
+static int cd_float_set_little_endian(parser_info *info)
 {
-    return coda_ascii_float_set_byte_size((coda_ascii_float *)info->node->parent->data, (long)info->node->integer_data);
+    return coda_type_number_set_endianness((coda_type_number *)info->node->parent->data, coda_little_endian);
 }
 
-static int cd_float_ascii_add_mapping(parser_info *info)
+static int cd_float_add_mapping(parser_info *info)
 {
-    if (coda_ascii_float_add_mapping((coda_ascii_float *)info->node->parent->data,
-                                     (coda_ascii_float_mapping *)info->node->data) != 0)
+    if (coda_type_number_add_ascii_float_mapping((coda_type_number *)info->node->parent->data,
+                                                 (coda_ascii_float_mapping *)info->node->data) != 0)
     {
         return -1;
     }
@@ -1501,45 +1526,9 @@ static int cd_float_ascii_add_mapping(parser_info *info)
     return 0;
 }
 
-static int cd_float_ascii_finalise(parser_info *info)
+static int cd_float_finalise(parser_info *info)
 {
-    return coda_ascii_float_validate((coda_ascii_float *)info->node->data);
-}
-
-static int cd_float_binary_set_unit(parser_info *info)
-{
-    return coda_bin_float_set_unit((coda_bin_float *)info->node->parent->data, info->node->char_data);
-}
-
-static int cd_float_binary_set_bit_size(parser_info *info)
-{
-    return coda_bin_float_set_bit_size((coda_bin_float *)info->node->parent->data, (long)info->node->integer_data);
-}
-
-static int cd_float_binary_set_read_type(parser_info *info)
-{
-    return coda_bin_float_set_read_type((coda_bin_float *)info->node->parent->data, (int)info->node->integer_data);
-}
-
-static int cd_float_binary_set_conversion(parser_info *info)
-{
-    if (coda_bin_float_set_conversion((coda_bin_float *)info->node->parent->data, (coda_conversion *)info->node->data)
-        != 0)
-    {
-        return -1;
-    }
-    info->node->data = NULL;
-    return 0;
-}
-
-static int cd_float_binary_set_little_endian(parser_info *info)
-{
-    return coda_bin_float_set_endianness((coda_bin_float *)info->node->parent->data, coda_little_endian);
-}
-
-static int cd_float_binary_finalise(parser_info *info)
-{
-    return coda_bin_float_validate((coda_bin_float *)info->node->data);
+    return coda_type_number_validate((coda_type_number *)info->node->data);
 }
 
 static int cd_float_init(parser_info *info, const char **attr)
@@ -1548,129 +1537,47 @@ static int cd_float_init(parser_info *info, const char **attr)
     {
         return -1;
     }
-    info->node->free_data = (free_data_handler)coda_release_type;
-    switch (info->node->format)
-    {
-        case coda_format_ascii:
-            info->node->data = coda_ascii_float_new();
-            register_sub_element(info->node, element_cd_unit, string_data_init, cd_float_ascii_set_unit);
-            register_sub_element(info->node, element_cd_native_type, cd_native_type_init, cd_float_ascii_set_read_type);
-            register_sub_element(info->node, element_cd_conversion, cd_conversion_init, cd_float_ascii_set_conversion);
-            register_sub_element(info->node, element_cd_byte_size, integer_constant_init, cd_float_ascii_set_byte_size);
-            register_sub_element(info->node, element_cd_mapping, cd_mapping_init, cd_float_ascii_add_mapping);
-            info->node->finalise_element = cd_float_ascii_finalise;
-            break;
-        case coda_format_binary:
-            info->node->data = coda_bin_float_new();
-            register_sub_element(info->node, element_cd_unit, string_data_init, cd_float_binary_set_unit);
-            register_sub_element(info->node, element_cd_bit_size, integer_constant_init, cd_float_binary_set_bit_size);
-            register_sub_element(info->node, element_cd_native_type, cd_native_type_init,
-                                 cd_float_binary_set_read_type);
-            register_sub_element(info->node, element_cd_conversion, cd_conversion_init, cd_float_binary_set_conversion);
-            register_sub_element(info->node, element_cd_little_endian, dummy_init, cd_float_binary_set_little_endian);
-            info->node->finalise_element = cd_float_binary_finalise;
-            break;
-        case coda_format_xml:
-            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid format 'xml' for Float");
-            return -1;
-        default:
-            assert(0);
-            exit(1);
-    }
+    info->node->free_data = (free_data_handler)coda_type_release;
+    info->node->data = coda_type_number_new(info->node->format, coda_real_class);
     if (info->node->data == NULL)
     {
         return -1;
     }
-
-    register_sub_element(info->node, element_cd_description, string_data_init, type_set_description);
-
     if (handle_name_attribute_for_type(info, attr) != 0)
     {
         return -1;
     }
 
+    register_sub_element(info->node, element_cd_unit, string_data_init, cd_float_set_unit);
+    register_sub_element(info->node, element_cd_native_type, cd_native_type_init, cd_float_set_read_type);
+    register_sub_element(info->node, element_cd_conversion, cd_conversion_init, cd_float_set_conversion);
+    register_sub_element(info->node, element_cd_bit_size, integer_constant_or_expression_init, type_set_bit_size);
+    register_sub_element(info->node, element_cd_byte_size, integer_constant_or_expression_init, type_set_byte_size);
+    register_sub_element(info->node, element_cd_little_endian, dummy_init, cd_float_set_little_endian);
+    register_sub_element(info->node, element_cd_mapping, cd_mapping_init, cd_float_add_mapping);
+    register_sub_element(info->node, element_cd_description, string_data_init, type_set_description);
+    info->node->finalise_element = cd_float_finalise;
+
     return 0;
 }
 
-static int cd_integer_ascii_set_unit(parser_info *info)
+static int cd_integer_set_unit(parser_info *info)
 {
-    return coda_ascii_integer_set_unit((coda_ascii_integer *)info->node->parent->data, info->node->char_data);
-}
-
-static int cd_integer_ascii_set_read_type(parser_info *info)
-{
-    return coda_ascii_integer_set_read_type((coda_ascii_integer *)info->node->parent->data,
-                                            (int)info->node->integer_data);
-}
-
-static int cd_integer_ascii_set_conversion(parser_info *info)
-{
-    if (coda_ascii_integer_set_conversion((coda_ascii_integer *)info->node->parent->data,
-                                          (coda_conversion *)info->node->data) != 0)
+    if (info->node->char_data == NULL)
     {
-        return -1;
+        return coda_type_number_set_unit((coda_type_number *)info->node->parent->data, "");
     }
-    info->node->data = NULL;
-    return 0;
+    return coda_type_number_set_unit((coda_type_number *)info->node->parent->data, info->node->char_data);
 }
 
-static int cd_integer_ascii_set_byte_size(parser_info *info)
+static int cd_integer_set_read_type(parser_info *info)
 {
-    return coda_ascii_integer_set_byte_size((coda_ascii_integer *)info->node->parent->data,
-                                            (long)info->node->integer_data);
+    return coda_type_set_read_type((coda_type *)info->node->parent->data, (int)info->node->integer_data);
 }
 
-static int cd_integer_ascii_add_mapping(parser_info *info)
+static int cd_integer_set_conversion(parser_info *info)
 {
-    if (coda_ascii_integer_add_mapping((coda_ascii_integer *)info->node->parent->data,
-                                       (coda_ascii_integer_mapping *)info->node->data) != 0)
-    {
-        return -1;
-    }
-    info->node->data = NULL;
-    return 0;
-}
-
-static int cd_integer_ascii_finalise(parser_info *info)
-{
-    return coda_ascii_integer_validate((coda_ascii_integer *)info->node->data);
-}
-
-static int cd_integer_binary_set_unit(parser_info *info)
-{
-    return coda_bin_integer_set_unit((coda_bin_integer *)info->node->parent->data, info->node->char_data);
-}
-
-static int cd_integer_binary_set_bit_size(parser_info *info)
-{
-    if (info->node->data != NULL)
-    {
-        if (coda_bin_integer_set_bit_size_expression((coda_bin_integer *)info->node->parent->data,
-                                                     (coda_expression *)info->node->data) != 0)
-        {
-            return -1;
-        }
-        info->node->data = NULL;
-    }
-    else
-    {
-        if (coda_bin_integer_set_bit_size((coda_bin_integer *)info->node->parent->data, (int)info->node->integer_data)
-            != 0)
-        {
-            return -1;
-        }
-    }
-    return 0;
-}
-
-static int cd_integer_binary_set_read_type(parser_info *info)
-{
-    return coda_bin_integer_set_read_type((coda_bin_integer *)info->node->parent->data, (int)info->node->integer_data);
-}
-
-static int cd_integer_binary_set_conversion(parser_info *info)
-{
-    if (coda_bin_integer_set_conversion((coda_bin_integer *)info->node->parent->data,
+    if (coda_type_number_set_conversion((coda_type_number *)info->node->parent->data,
                                         (coda_conversion *)info->node->data) != 0)
     {
         return -1;
@@ -1679,14 +1586,25 @@ static int cd_integer_binary_set_conversion(parser_info *info)
     return 0;
 }
 
-static int cd_integer_binary_set_little_endian(parser_info *info)
+static int cd_integer_set_little_endian(parser_info *info)
 {
-    return coda_bin_integer_set_endianness((coda_bin_integer *)info->node->parent->data, coda_little_endian);
+    return coda_type_number_set_endianness((coda_type_number *)info->node->parent->data, coda_little_endian);
 }
 
-static int cd_integer_binary_finalise(parser_info *info)
+static int cd_integer_add_mapping(parser_info *info)
 {
-    return coda_bin_integer_validate((coda_bin_integer *)info->node->data);
+    if (coda_type_number_add_ascii_integer_mapping((coda_type_number *)info->node->parent->data,
+                                                   (coda_ascii_integer_mapping *)info->node->data) != 0)
+    {
+        return -1;
+    }
+    info->node->data = NULL;
+    return 0;
+}
+
+static int cd_integer_finalise(parser_info *info)
+{
+    return coda_type_number_validate((coda_type_number *)info->node->data);
 }
 
 static int cd_integer_init(parser_info *info, const char **attr)
@@ -1695,51 +1613,26 @@ static int cd_integer_init(parser_info *info, const char **attr)
     {
         return -1;
     }
-    info->node->free_data = (free_data_handler)coda_release_type;
-    switch (info->node->format)
-    {
-        case coda_format_ascii:
-            info->node->data = coda_ascii_integer_new();
-            register_sub_element(info->node, element_cd_unit, string_data_init, cd_integer_ascii_set_unit);
-            register_sub_element(info->node, element_cd_byte_size, integer_constant_init,
-                                 cd_integer_ascii_set_byte_size);
-            register_sub_element(info->node, element_cd_native_type, cd_native_type_init,
-                                 cd_integer_ascii_set_read_type);
-            register_sub_element(info->node, element_cd_conversion, cd_conversion_init,
-                                 cd_integer_ascii_set_conversion);
-            register_sub_element(info->node, element_cd_mapping, cd_mapping_init, cd_integer_ascii_add_mapping);
-            info->node->finalise_element = cd_integer_ascii_finalise;
-            break;
-        case coda_format_binary:
-            info->node->data = coda_bin_integer_new();
-            register_sub_element(info->node, element_cd_unit, string_data_init, cd_integer_binary_set_unit);
-            register_sub_element(info->node, element_cd_bit_size, integer_constant_or_expression_init,
-                                 cd_integer_binary_set_bit_size);
-            register_sub_element(info->node, element_cd_native_type, cd_native_type_init,
-                                 cd_integer_binary_set_read_type);
-            register_sub_element(info->node, element_cd_conversion, cd_conversion_init,
-                                 cd_integer_binary_set_conversion);
-            register_sub_element(info->node, element_cd_little_endian, dummy_init, cd_integer_binary_set_little_endian);
-            info->node->finalise_element = cd_integer_binary_finalise;
-            break;
-        case coda_format_xml:
-            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid format 'xml' for Integer");
-            return -1;
-        default:
-            assert(0);
-            exit(1);
-    }
+    info->node->free_data = (free_data_handler)coda_type_release;
+    info->node->data = coda_type_number_new(info->node->format, coda_integer_class);
     if (info->node->data == NULL)
+    {
+        return -1;
+    }
+    if (handle_name_attribute_for_type(info, attr) != 0)
     {
         return -1;
     }
 
     register_sub_element(info->node, element_cd_description, string_data_init, type_set_description);
-
-    if (handle_name_attribute_for_type(info, attr) != 0)
-    {
-        return -1;
-    }
+    register_sub_element(info->node, element_cd_unit, string_data_init, cd_integer_set_unit);
+    register_sub_element(info->node, element_cd_byte_size, integer_constant_or_expression_init, type_set_byte_size);
+    register_sub_element(info->node, element_cd_bit_size, integer_constant_or_expression_init, type_set_bit_size);
+    register_sub_element(info->node, element_cd_little_endian, dummy_init, cd_integer_set_little_endian);
+    register_sub_element(info->node, element_cd_native_type, cd_native_type_init, cd_integer_set_read_type);
+    register_sub_element(info->node, element_cd_conversion, cd_conversion_init, cd_integer_set_conversion);
+    register_sub_element(info->node, element_cd_mapping, cd_mapping_init, cd_integer_add_mapping);
+    info->node->finalise_element = cd_integer_finalise;
 
     return 0;
 }
@@ -1754,17 +1647,13 @@ static int cd_named_type_init(parser_info *info, const char **attr)
     {
         return -1;
     }
-    info->node->free_data = (free_data_handler)coda_release_type;
+    info->node->free_data = (free_data_handler)coda_type_release;
     assert(info->product_class != NULL);
     if (get_named_type(info, id, &type) != 0)
     {
         return -1;
     }
     info->node->format = type->format;
-    if (validate_format_for_type(info) != 0)
-    {
-        return -1;
-    }
     info->node->data = type;
 
     return 0;
@@ -1842,7 +1731,7 @@ static int cd_native_type_finalise(parser_info *info)
 static int cd_native_type_init(parser_info *info, const char **attr)
 {
     attr = attr;
-    info->node->has_char_data = 1;
+    info->node->expect_char_data = 1;
     info->node->finalise_element = cd_native_type_finalise;
     return 0;
 }
@@ -1967,7 +1856,7 @@ static int cd_match_data_init(parser_info *info, const char **attr)
         return -1;
     }
 
-    info->node->has_char_data = 1;
+    info->node->expect_char_data = 1;
     info->node->finalise_element = cd_match_data_finalise;
 
     return 0;
@@ -2017,7 +1906,7 @@ static int cd_match_filename_init(parser_info *info, const char **attr)
         return -1;
     }
 
-    info->node->has_char_data = 1;
+    info->node->expect_char_data = 1;
     info->node->finalise_element = cd_match_filename_finalise;
 
     return 0;
@@ -2050,6 +1939,10 @@ static int cd_match_size_init(parser_info *info, const char **attr)
 
 static int cd_product_class_set_description(parser_info *info)
 {
+    if (info->node->char_data == NULL)
+    {
+        return coda_product_class_set_description((coda_product_class *)info->node->parent->data, "");
+    }
     return coda_product_class_set_description((coda_product_class *)info->node->parent->data, info->node->char_data);
 }
 
@@ -2188,6 +2081,10 @@ static int cd_product_class_init(parser_info *info, const char **attr)
 
 static int cd_product_definition_set_description(parser_info *info)
 {
+    if (info->node->char_data == NULL)
+    {
+        return coda_product_definition_set_description((coda_product_definition *)info->node->parent->data, "");
+    }
     return coda_product_definition_set_description((coda_product_definition *)info->node->parent->data,
                                                    info->node->char_data);
 }
@@ -2339,6 +2236,10 @@ static int cd_product_definition_sub_init(parser_info *info, const char **attr)
 
 static int cd_product_type_set_description(parser_info *info)
 {
+    if (info->node->char_data == NULL)
+    {
+        return coda_product_type_set_description((coda_product_type *)info->node->parent->data, "");
+    }
     return coda_product_type_set_description((coda_product_type *)info->node->parent->data, info->node->char_data);
 }
 
@@ -2430,7 +2331,7 @@ static int cd_product_variable_init(parser_info *info, const char **attr)
     return 0;
 }
 
-static int cd_raw_binary_set_fixed_value(parser_info *info)
+static int cd_raw_set_fixed_value(parser_info *info)
 {
     long value_length;
 
@@ -2442,8 +2343,8 @@ static int cd_raw_binary_set_fixed_value(parser_info *info)
     }
     if (value_length > 0)
     {
-        if (coda_bin_raw_set_fixed_value((coda_bin_raw *)info->node->parent->data, value_length,
-                                         info->node->char_data) != 0)
+        if (coda_type_raw_set_fixed_value((coda_type_raw *)info->node->parent->data, value_length,
+                                          info->node->char_data) != 0)
         {
             return -1;
         }
@@ -2452,30 +2353,9 @@ static int cd_raw_binary_set_fixed_value(parser_info *info)
     return 0;
 }
 
-static int cd_raw_binary_set_bit_size(parser_info *info)
+static int cd_raw_finalise(parser_info *info)
 {
-    if (info->node->data != NULL)
-    {
-        if (coda_bin_raw_set_bit_size_expression((coda_bin_raw *)info->node->parent->data,
-                                                 (coda_expression *)info->node->data) != 0)
-        {
-            return -1;
-        }
-        info->node->data = NULL;
-    }
-    else
-    {
-        if (coda_bin_raw_set_bit_size((coda_bin_raw *)info->node->parent->data, info->node->integer_data) != 0)
-        {
-            return -1;
-        }
-    }
-    return 0;
-}
-
-static int cd_raw_binary_finalise(parser_info *info)
-{
-    return coda_bin_raw_validate((coda_bin_raw *)info->node->data);
+    return coda_type_raw_validate((coda_type_raw *)info->node->data);
 }
 
 static int cd_raw_init(parser_info *info, const char **attr)
@@ -2484,45 +2364,29 @@ static int cd_raw_init(parser_info *info, const char **attr)
     {
         return -1;
     }
-    info->node->free_data = (free_data_handler)coda_release_type;
-    switch (info->node->format)
-    {
-        case coda_format_ascii:
-            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid format 'ascii' for Raw");
-            return -1;
-        case coda_format_binary:
-            info->node->data = coda_bin_raw_new();
-            register_sub_element(info->node, element_cd_bit_size, integer_constant_or_expression_init,
-                                 cd_raw_binary_set_bit_size);
-            register_sub_element(info->node, element_cd_fixed_value, string_data_init, cd_raw_binary_set_fixed_value);
-            info->node->finalise_element = cd_raw_binary_finalise;
-            break;
-        case coda_format_xml:
-            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid format 'xml' for Raw");
-            return -1;
-        default:
-            assert(0);
-            exit(1);
-    }
+    info->node->free_data = (free_data_handler)coda_type_release;
+    info->node->data = coda_type_raw_new(info->node->format);
     if (info->node->data == NULL)
     {
         return -1;
     }
-
-    register_sub_element(info->node, element_cd_description, string_data_init, type_set_description);
-
     if (handle_name_attribute_for_type(info, attr) != 0)
     {
         return -1;
     }
 
+    register_sub_element(info->node, element_cd_description, string_data_init, type_set_description);
+    register_sub_element(info->node, element_cd_bit_size, integer_constant_or_expression_init, type_set_bit_size);
+    register_sub_element(info->node, element_cd_fixed_value, string_data_init, cd_raw_set_fixed_value);
+    info->node->finalise_element = cd_raw_finalise;
+
     return 0;
 }
 
-static int cd_record_ascbin_set_bit_size(parser_info *info)
+static int cd_record_add_field(parser_info *info)
 {
-    if (coda_ascbin_record_set_fast_size_expression((coda_ascbin_record *)info->node->parent->data,
-                                                    (coda_expression *)info->node->data) != 0)
+    if (coda_type_record_add_field((coda_type_record *)info->node->parent->data,
+                                   (coda_type_record_field *)info->node->data) != 0)
     {
         return -1;
     }
@@ -2530,73 +2394,35 @@ static int cd_record_ascbin_set_bit_size(parser_info *info)
     return 0;
 }
 
-static int cd_record_ascbin_add_field(parser_info *info)
+static int cd_record_finalise(parser_info *info)
 {
-    if (coda_ascbin_record_add_field((coda_ascbin_record *)info->node->parent->data,
-                                     (coda_ascbin_field *)info->node->data) != 0)
-    {
-        return -1;
-    }
-    info->node->data = NULL;
-    return 0;
-}
-
-static int cd_record_xml_add_field(parser_info *info)
-{
-    if (coda_xml_record_add_field((coda_xml_element *)info->node->parent->data, (coda_xml_field *)info->node->data) !=
-        0)
-    {
-        return -1;
-    }
-    info->node->data = NULL;
-    return 0;
+    return coda_type_record_validate((coda_type_record *)info->node->data);
 }
 
 static int cd_record_init(parser_info *info, const char **attr)
 {
-    const char *xmlname = NULL;
-
     if (handle_format_attribute_for_type(info, attr) != 0)
     {
         return -1;
     }
-    info->node->free_data = (free_data_handler)coda_release_type;
-    switch (info->node->format)
-    {
-        case coda_format_ascii:
-            info->node->data = coda_ascbin_record_new(coda_format_ascii);
-            register_sub_element(info->node, element_cd_bit_size, integer_expression_init,
-                                 cd_record_ascbin_set_bit_size);
-            register_sub_element(info->node, element_cd_field, cd_field_init, cd_record_ascbin_add_field);
-            break;
-        case coda_format_binary:
-            info->node->data = coda_ascbin_record_new(coda_format_binary);
-            register_sub_element(info->node, element_cd_bit_size, integer_expression_init,
-                                 cd_record_ascbin_set_bit_size);
-            register_sub_element(info->node, element_cd_field, cd_field_init, cd_record_ascbin_add_field);
-            break;
-        case coda_format_xml:
-            xmlname = get_mandatory_attribute_value(attr, "namexml", info->node->tag);
-            if (xmlname == NULL)
-            {
-                return -1;
-            }
-            info->node->data = coda_xml_record_new(xmlname);
-            register_sub_element(info->node, element_cd_field, cd_field_init, cd_record_xml_add_field);
-            register_sub_element(info->node, element_cd_attribute, cd_attribute_init, xml_element_add_attribute);
-            break;
-        default:
-            assert(0);
-            exit(1);
-    }
+    info->node->free_data = (free_data_handler)coda_type_release;
+    info->node->data = coda_type_record_new(info->node->format);
     if (info->node->data == NULL)
+    {
+        return -1;
+    }
+    if (handle_name_attribute_for_type(info, attr) != 0)
     {
         return -1;
     }
 
     register_sub_element(info->node, element_cd_description, string_data_init, type_set_description);
+    register_sub_element(info->node, element_cd_bit_size, integer_expression_init, type_set_bit_size);
+    register_sub_element(info->node, element_cd_field, cd_field_init, cd_record_add_field);
+    register_sub_element(info->node, element_cd_attribute, cd_attribute_init, type_add_attribute);
+    info->node->finalise_element = cd_record_finalise;
 
-    if (handle_name_attribute_for_type(info, attr) != 0)
+    if (handle_xml_name(info, attr) != 0)
     {
         return -1;
     }
@@ -2625,145 +2451,89 @@ static int cd_scale_factor_finalise(parser_info *info)
 
 static int cd_scale_factor_init(parser_info *info, const char **attr)
 {
-    const char *format = NULL;
-    const char *xmlname = NULL;
-
-    format = get_attribute_value(attr, "format");
-    if (format != NULL)
+    if (get_attribute_value(attr, "format") != NULL)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "attribute 'format' not allowed for ScaleFactor");
         return -1;
     }
     info->node->format = info->node->parent->format;
-    xmlname = get_attribute_value(attr, "namexml");
-    if (xmlname != NULL)
+    if (get_attribute_value(attr, "name") != NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "attribute 'name' not allowed for ScaleFactor");
+        return -1;
+    }
+    if (get_attribute_value(attr, "namexml") != NULL)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "attribute 'namexml' not allowed for ScaleFactor");
         return -1;
     }
-    info->node->free_data = (free_data_handler)coda_release_type;
-    switch (info->node->format)
-    {
-        case coda_format_ascii:
-            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid format 'ascii' for ScaleFactor");
-            return -1;
-        case coda_format_binary:
-            register_type_elements(info->node, cd_scale_factor_set_type);
-            info->node->finalise_element = cd_scale_factor_finalise;
-            break;
-        case coda_format_xml:
-            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid format 'xml' for ScaleFactor");
-            return -1;
-        default:
-            assert(0);
-            exit(1);
-    }
+    info->node->free_data = (free_data_handler)coda_type_release;
+
+    register_type_elements(info->node, cd_scale_factor_set_type);
+    info->node->finalise_element = cd_scale_factor_finalise;
 
     register_sub_element(info->node, element_cd_description, string_data_init, type_set_description);
 
-    if (handle_name_attribute_for_type(info, attr) != 0)
-    {
-        return -1;
-    }
 
     return 0;
 }
 
-static int cd_text_ascii_set_fixed_value(parser_info *info)
+static int cd_text_set_fixed_value(parser_info *info)
 {
     if (decode_escaped_string(info->node->char_data) < 0)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid escape sequence in string");
         return -1;
     }
-    return coda_ascii_text_set_fixed_value((coda_ascii_text *)info->node->parent->data, info->node->char_data);
+    return coda_type_text_set_fixed_value((coda_type_text *)info->node->parent->data, info->node->char_data);
 }
 
-static int cd_text_ascii_set_read_type(parser_info *info)
+static int cd_text_set_read_type(parser_info *info)
 {
-    return coda_ascii_text_set_read_type((coda_ascii_text *)info->node->parent->data, (int)info->node->integer_data);
+    return coda_type_set_read_type((coda_type *)info->node->parent->data, (int)info->node->integer_data);
 }
 
-static int cd_text_ascii_set_byte_size(parser_info *info)
+static int cd_text_finalise(parser_info *info)
 {
-    if (info->node->data != NULL)
-    {
-        if (coda_ascii_text_set_byte_size_expression((coda_ascii_text *)info->node->parent->data,
-                                                     (coda_expression *)info->node->data) != 0)
-        {
-            return -1;
-        }
-        info->node->data = NULL;
-    }
-    else
-    {
-        if (coda_ascii_text_set_byte_size((coda_ascii_text *)info->node->parent->data, info->node->integer_data) != 0)
-        {
-            return -1;
-        }
-    }
-    return 0;
-}
-
-static int cd_text_ascii_finalise(parser_info *info)
-{
-    return coda_ascii_text_validate((coda_ascii_text *)info->node->data);
+    return coda_type_text_validate((coda_type_text *)info->node->data);
 }
 
 static int cd_text_init(parser_info *info, const char **attr)
 {
-    const char *xmlname = NULL;
-
     if (handle_format_attribute_for_type(info, attr) != 0)
     {
         return -1;
     }
-    info->node->free_data = (free_data_handler)coda_release_type;
-    switch (info->node->format)
-    {
-        case coda_format_ascii:
-            info->node->data = coda_ascii_text_new();
-            register_sub_element(info->node, element_cd_byte_size, integer_constant_or_expression_init,
-                                 cd_text_ascii_set_byte_size);
-            register_sub_element(info->node, element_cd_fixed_value, string_data_init, cd_text_ascii_set_fixed_value);
-            register_sub_element(info->node, element_cd_native_type, cd_native_type_init, cd_text_ascii_set_read_type);
-            info->node->finalise_element = cd_text_ascii_finalise;
-            break;
-        case coda_format_binary:
-            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid format 'binary' for Text");
-            return -1;
-        case coda_format_xml:
-            xmlname = get_mandatory_attribute_value(attr, "namexml", info->node->tag);
-            if (xmlname == NULL)
-            {
-                return -1;
-            }
-            info->node->data = coda_xml_text_new(xmlname);
-            register_sub_element(info->node, element_cd_attribute, cd_attribute_init, xml_element_add_attribute);
-            break;
-        default:
-            assert(0);
-            exit(1);
-    }
+    info->node->free_data = (free_data_handler)coda_type_release;
+    info->node->data = coda_type_text_new(info->node->format);
     if (info->node->data == NULL)
     {
         return -1;
     }
-
-    register_sub_element(info->node, element_cd_description, string_data_init, type_set_description);
-
     if (handle_name_attribute_for_type(info, attr) != 0)
     {
         return -1;
     }
 
+    register_sub_element(info->node, element_cd_description, string_data_init, type_set_description);
+    register_sub_element(info->node, element_cd_byte_size, integer_constant_or_expression_init, type_set_byte_size);
+    register_sub_element(info->node, element_cd_fixed_value, string_data_init, cd_text_set_fixed_value);
+    register_sub_element(info->node, element_cd_native_type, cd_native_type_init, cd_text_set_read_type);
+    register_sub_element(info->node, element_cd_attribute, cd_attribute_init, type_add_attribute);
+    info->node->finalise_element = cd_text_finalise;
+
+    if (handle_xml_name(info, attr) != 0)
+    {
+        return -1;
+    }
+
     return 0;
 }
 
-static int cd_time_ascii_add_mapping(parser_info *info)
+static int cd_time_add_mapping(parser_info *info)
 {
-    if (coda_ascii_time_add_mapping((coda_ascii_time *)info->node->parent->data,
-                                    (coda_ascii_float_mapping *)info->node->data) != 0)
+    if (coda_type_time_add_ascii_float_mapping((coda_type_special *)info->node->parent->data,
+                                               (coda_ascii_float_mapping *)info->node->data) != 0)
     {
         return -1;
     }
@@ -2784,89 +2554,68 @@ static int cd_time_init(parser_info *info, const char **attr)
     {
         return -1;
     }
-    info->node->free_data = (free_data_handler)coda_release_type;
-    switch (info->node->format)
-    {
-        case coda_format_ascii:
-            info->node->data = coda_ascii_time_new(timeformat);
-            register_sub_element(info->node, element_cd_mapping, cd_mapping_init, cd_time_ascii_add_mapping);
-            break;
-        case coda_format_binary:
-            info->node->data = coda_bin_time_new(timeformat);
-            break;
-        case coda_format_xml:
-            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid format 'xml' for Time");
-            return -1;
-        default:
-            assert(0);
-            exit(1);
-    }
+    info->node->free_data = (free_data_handler)coda_type_release;
+    info->node->data = coda_type_time_new(info->node->format, timeformat);
     if (info->node->data == NULL)
     {
         return -1;
     }
-
-    register_sub_element(info->node, element_cd_description, string_data_init, type_set_description);
-
     if (handle_name_attribute_for_type(info, attr) != 0)
     {
         return -1;
     }
 
+    register_sub_element(info->node, element_cd_description, string_data_init, type_set_description);
+    register_sub_element(info->node, element_cd_mapping, cd_mapping_init, cd_time_add_mapping);
+
     return 0;
 }
 
-static int cd_type_xml_set_type(parser_info *info)
+static int cd_type_set_type(parser_info *info)
 {
-    return coda_xml_ascii_type_set_type((coda_xml_element *)info->node->parent->data,
-                                        (coda_ascii_type *)info->node->data);
-}
+    coda_type *type;
 
-static int cd_type_xml_finalise(parser_info *info)
-{
-    return coda_xml_ascii_type_validate((coda_xml_element *)info->node->data);
+    type = (coda_type *)info->node->parent->data;
+    if (type->description != NULL)
+    {
+        coda_type_set_description((coda_type *)info->node->data, type->description);
+    }
+    if (type->attributes != NULL)
+    {
+        assert(((coda_type *)info->node->data)->attributes == NULL);
+        ((coda_type *)info->node->data)->attributes = type->attributes;
+        type->attributes = NULL;
+    }
+    coda_type_release(type);
+    info->node->parent->data = info->node->data;
+    info->node->data = NULL;
+
+    return 0;
 }
 
 static int cd_type_init(parser_info *info, const char **attr)
 {
-    const char *xmlname = NULL;
-
+    if (get_attribute_value(attr, "name") != NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "attribute 'name' not allowed for Type");
+        return -1;
+    }
     if (handle_format_attribute_for_type(info, attr) != 0)
     {
         return -1;
     }
-    info->node->free_data = (free_data_handler)coda_release_type;
-    switch (info->node->format)
-    {
-        case coda_format_ascii:
-            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid format 'ascii' for Type");
-            return -1;
-        case coda_format_binary:
-            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid format 'binary' for Type");
-            return -1;
-        case coda_format_xml:
-            xmlname = get_mandatory_attribute_value(attr, "namexml", info->node->tag);
-            if (xmlname == NULL)
-            {
-                return -1;
-            }
-            info->node->data = coda_xml_ascii_type_new(xmlname);
-            register_type_elements(info->node, cd_type_xml_set_type);
-            register_sub_element(info->node, element_cd_attribute, cd_attribute_init, xml_element_add_attribute);
-            info->node->finalise_element = cd_type_xml_finalise;
-            break;
-        default:
-            assert(0);
-            exit(1);
-    }
+    info->node->free_data = (free_data_handler)coda_type_release;
+    /* create dummy type where a description and attributes can be stored */
+    info->node->data = coda_type_text_new(info->node->format);
     if (info->node->data == NULL)
     {
         return -1;
     }
-
+    register_type_elements(info->node, cd_type_set_type);
     register_sub_element(info->node, element_cd_description, string_data_init, type_set_description);
+    register_sub_element(info->node, element_cd_attribute, cd_attribute_init, type_add_attribute);
 
-    if (handle_name_attribute_for_type(info, attr) != 0)
+    if (handle_xml_name(info, attr) != 0)
     {
         return -1;
     }
@@ -2874,10 +2623,10 @@ static int cd_type_init(parser_info *info, const char **attr)
     return 0;
 }
 
-static int cd_union_ascbin_set_field_expression(parser_info *info)
+static int cd_union_set_field_expression(parser_info *info)
 {
-    if (coda_ascbin_union_set_field_expression((coda_ascbin_union *)info->node->parent->data,
-                                               (coda_expression *)info->node->data) != 0)
+    if (coda_type_record_set_union_field_expression((coda_type_record *)info->node->parent->data,
+                                                    (coda_expression *)info->node->data) != 0)
     {
         return -1;
     }
@@ -2885,10 +2634,10 @@ static int cd_union_ascbin_set_field_expression(parser_info *info)
     return 0;
 }
 
-static int cd_union_ascbin_set_bit_size(parser_info *info)
+static int cd_union_add_field(parser_info *info)
 {
-    if (coda_ascbin_union_set_fast_size_expression((coda_ascbin_union *)info->node->parent->data,
-                                                   (coda_expression *)info->node->data) != 0)
+    if (coda_type_record_add_field((coda_type_record *)info->node->parent->data,
+                                   (coda_type_record_field *)info->node->data) != 0)
     {
         return -1;
     }
@@ -2896,15 +2645,9 @@ static int cd_union_ascbin_set_bit_size(parser_info *info)
     return 0;
 }
 
-static int cd_union_ascbin_add_field(parser_info *info)
+static int cd_union_finalise(parser_info *info)
 {
-    if (coda_ascbin_union_add_field((coda_ascbin_union *)info->node->parent->data,
-                                    (coda_ascbin_field *)info->node->data) != 0)
-    {
-        return -1;
-    }
-    info->node->data = NULL;
-    return 0;
+    return coda_type_record_validate((coda_type_record *)info->node->data);
 }
 
 static int cd_union_init(parser_info *info, const char **attr)
@@ -2913,40 +2656,25 @@ static int cd_union_init(parser_info *info, const char **attr)
     {
         return -1;
     }
-    info->node->free_data = (free_data_handler)coda_release_type;
-    switch (info->node->format)
-    {
-        case coda_format_ascii:
-            info->node->data = coda_ascbin_union_new(coda_format_ascii);
-            register_sub_element(info->node, element_cd_bit_size, integer_expression_init,
-                                 cd_union_ascbin_set_bit_size);
-            register_sub_element(info->node, element_cd_field_expression, integer_expression_init,
-                                 cd_union_ascbin_set_field_expression);
-            register_sub_element(info->node, element_cd_field, cd_field_init, cd_union_ascbin_add_field);
-            break;
-        case coda_format_binary:
-            info->node->data = coda_ascbin_union_new(coda_format_binary);
-            register_sub_element(info->node, element_cd_bit_size, integer_expression_init,
-                                 cd_union_ascbin_set_bit_size);
-            register_sub_element(info->node, element_cd_field_expression, integer_expression_init,
-                                 cd_union_ascbin_set_field_expression);
-            register_sub_element(info->node, element_cd_field, cd_field_init, cd_union_ascbin_add_field);
-            break;
-        case coda_format_xml:
-            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid format 'xml' for Union");
-            return -1;
-        default:
-            assert(0);
-            exit(1);
-    }
+    info->node->free_data = (free_data_handler)coda_type_release;
+    info->node->data = coda_type_record_new(info->node->format);
     if (info->node->data == NULL)
+    {
+        return -1;
+    }
+    if (handle_name_attribute_for_type(info, attr) != 0)
     {
         return -1;
     }
 
     register_sub_element(info->node, element_cd_description, string_data_init, type_set_description);
+    register_sub_element(info->node, element_cd_bit_size, integer_expression_init, type_set_bit_size);
+    register_sub_element(info->node, element_cd_field_expression, integer_expression_init,
+                         cd_union_set_field_expression);
+    register_sub_element(info->node, element_cd_field, cd_field_init, cd_union_add_field);
+    info->node->finalise_element = cd_union_finalise;
 
-    if (handle_name_attribute_for_type(info, attr) != 0)
+    if (handle_xml_name(info, attr) != 0)
     {
         return -1;
     }
@@ -2954,26 +2682,29 @@ static int cd_union_init(parser_info *info, const char **attr)
     return 0;
 }
 
-static int cd_vsf_integer_binary_set_type(parser_info *info)
+static int cd_vsf_integer_set_type(parser_info *info)
 {
-    return coda_bin_vsf_integer_set_type((coda_bin_vsf_integer *)info->node->parent->data,
-                                         (coda_bin_type *)info->node->data);
+    return coda_type_vsf_integer_set_type((coda_type_special *)info->node->parent->data, (coda_type *)info->node->data);
 }
 
-static int cd_vsf_integer_binary_set_scale_factor(parser_info *info)
+static int cd_vsf_integer_set_scale_factor(parser_info *info)
 {
-    return coda_bin_vsf_integer_set_scale_factor((coda_bin_vsf_integer *)info->node->parent->data,
-                                                 (coda_bin_type *)info->node->data);
+    return coda_type_vsf_integer_set_scale_factor((coda_type_special *)info->node->parent->data,
+                                                  (coda_type *)info->node->data);
 }
 
-static int cd_vsf_integer_binary_set_unit(parser_info *info)
+static int cd_vsf_integer_set_unit(parser_info *info)
 {
-    return coda_bin_vsf_integer_set_unit((coda_bin_vsf_integer *)info->node->parent->data, info->node->char_data);
+    if (info->node->char_data == NULL)
+    {
+        return coda_type_vsf_integer_set_unit((coda_type_special *)info->node->parent->data, "");
+    }
+    return coda_type_vsf_integer_set_unit((coda_type_special *)info->node->parent->data, info->node->char_data);
 }
 
-static int cd_vsf_integer_binary_finalise(parser_info *info)
+static int cd_vsf_integer_finalise(parser_info *info)
 {
-    return coda_bin_vsf_integer_validate((coda_bin_vsf_integer *)info->node->data);
+    return coda_type_vsf_integer_validate((coda_type_special *)info->node->data);
 }
 
 static int cd_vsf_integer_init(parser_info *info, const char **attr)
@@ -2982,38 +2713,22 @@ static int cd_vsf_integer_init(parser_info *info, const char **attr)
     {
         return -1;
     }
-    info->node->free_data = (free_data_handler)coda_release_type;
-    switch (info->node->format)
-    {
-        case coda_format_ascii:
-            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid format 'ascii' for VSFInteger");
-            return -1;
-        case coda_format_binary:
-            info->node->data = coda_bin_vsf_integer_new();
-            register_type_elements(info->node, cd_vsf_integer_binary_set_type);
-            register_sub_element(info->node, element_cd_scale_factor, cd_scale_factor_init,
-                                 cd_vsf_integer_binary_set_scale_factor);
-            register_sub_element(info->node, element_cd_unit, string_data_init, cd_vsf_integer_binary_set_unit);
-            info->node->finalise_element = cd_vsf_integer_binary_finalise;
-            break;
-        case coda_format_xml:
-            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid format 'xml' for VSFInteger");
-            return -1;
-        default:
-            assert(0);
-            exit(1);
-    }
+    info->node->free_data = (free_data_handler)coda_type_release;
+    info->node->data = coda_type_vsf_integer_new(info->node->format);
     if (info->node->data == NULL)
+    {
+        return -1;
+    }
+    if (handle_name_attribute_for_type(info, attr) != 0)
     {
         return -1;
     }
 
     register_sub_element(info->node, element_cd_description, string_data_init, type_set_description);
-
-    if (handle_name_attribute_for_type(info, attr) != 0)
-    {
-        return -1;
-    }
+    register_type_elements(info->node, cd_vsf_integer_set_type);
+    register_sub_element(info->node, element_cd_scale_factor, cd_scale_factor_init, cd_vsf_integer_set_scale_factor);
+    register_sub_element(info->node, element_cd_unit, string_data_init, cd_vsf_integer_set_unit);
+    info->node->finalise_element = cd_vsf_integer_finalise;
 
     return 0;
 }
@@ -3088,14 +2803,15 @@ static int push_node(parser_info *info, xml_element_tag tag, const char **attr)
     node = malloc(sizeof(node_info));
     assert(node != NULL);
     node->tag = tag;
+    node->empty = 0;
     node->data = NULL;
     node->char_data = NULL;
     node->integer_data = -1;
     node->float_data = coda_NaN();
-    node->has_char_data = 0;
+    node->expect_char_data = 0;
     node->finalise_element = NULL;
     node->free_data = NULL;
-    node->format = 100;
+    node->format = FORMAT_UNDEFINED;
     memset(node->init_sub_element, 0, num_xml_elements * sizeof(init_handler));
     memset(node->add_element_to_parent, 0, num_xml_elements * sizeof(add_element_to_parent_handler));
     node->parent = info->node;
@@ -3109,7 +2825,7 @@ static int push_node(parser_info *info, xml_element_tag tag, const char **attr)
         }
     }
 
-    if (node->has_char_data)
+    if (node->expect_char_data)
     {
         XML_SetCharacterDataHandler(info->parser, string_handler);
     }
@@ -3155,7 +2871,7 @@ static int pop_node(parser_info *info)
     info->node = node->parent;
     free(node);
 
-    if (info->node != NULL && info->node->has_char_data)
+    if (info->node != NULL && info->node->expect_char_data)
     {
         XML_SetCharacterDataHandler(info->parser, string_handler);
     }
@@ -3193,7 +2909,7 @@ static void XMLCALL start_element_handler(void *data, const char *el, const char
             coda_set_error(CODA_ERROR_DATA_DEFINITION, "xml element '%s' is not allowed as root element",
                            coda_element_name_from_xml_name(el));
         }
-        else if (info->node->format != 100)
+        else if (info->node->format != FORMAT_UNDEFINED)
         {
             coda_set_error(CODA_ERROR_DATA_DEFINITION,
                            "xml element '%s' is not allowed within element '%s'{%s}",
@@ -3400,7 +3116,7 @@ static int parse_entry(za_file *zf, zip_entry_type type, const char *name, coda_
     XML_SetUserData(info.parser, &info);
     XML_SetElementHandler(info.parser, start_element_handler, end_element_handler);
     push_node(&info, no_element, NULL);
-    info.node->format = 100;
+    info.node->format = FORMAT_UNDEFINED;
     switch (type)
     {
         case ze_index:

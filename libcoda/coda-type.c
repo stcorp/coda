@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -23,6 +23,8 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "coda-type.h"
 
 #include "coda-ascbin.h"
 #include "coda-ascii.h"
@@ -169,6 +171,2627 @@
  * \ingroup coda_types
  */
 
+static coda_type_record *empty_record_singleton[] =
+    { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+
+#define num_empty_record_singletons ((int)(sizeof(empty_record_singleton)/sizeof(empty_record_singleton[0])))
+
+static coda_type_special *no_data_singleton[] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+
+#define num_no_data_singletons ((int)(sizeof(no_data_singleton)/sizeof(no_data_singleton[0])))
+
+coda_conversion *coda_conversion_new(double numerator, double denominator, double add_offset, double invalid_value)
+{
+    coda_conversion *conversion;
+
+    if (denominator == 0.0)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "denominator may not be 0 for conversion");
+        return NULL;
+    }
+    conversion = (coda_conversion *)malloc(sizeof(coda_conversion));
+    if (conversion == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                       (long)sizeof(coda_conversion), __FILE__, __LINE__);
+        return NULL;
+    }
+    conversion->numerator = numerator;
+    conversion->denominator = denominator;
+    conversion->add_offset = add_offset;
+    conversion->invalid_value = invalid_value;
+    conversion->unit = NULL;
+
+    return conversion;
+}
+
+int coda_conversion_set_unit(coda_conversion *conversion, const char *unit)
+{
+    char *new_unit = NULL;
+
+    if (conversion->unit != NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "conversion already has a unit");
+        return -1;
+    }
+    if (unit != NULL)
+    {
+        new_unit = strdup(unit);
+        if (new_unit == NULL)
+        {
+            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
+                           __LINE__);
+            return -1;
+        }
+    }
+    conversion->unit = new_unit;
+
+    return 0;
+}
+
+void coda_conversion_delete(coda_conversion *conversion)
+{
+    if (conversion == NULL)
+    {
+        return;
+    }
+    if (conversion->unit != NULL)
+    {
+        free(conversion->unit);
+    }
+    free(conversion);
+}
+
+static void mapping_delete(coda_ascii_mapping *mapping)
+{
+    if (mapping == NULL)
+    {
+        return;
+    }
+    if (mapping->str != NULL)
+    {
+        free(mapping->str);
+    }
+    free(mapping);
+}
+
+static void mappings_delete(coda_ascii_mappings *mappings)
+{
+    if (mappings == NULL)
+    {
+        return;
+    }
+    if (mappings->mapping != NULL)
+    {
+        int i;
+
+        for (i = 0; i < mappings->num_mappings; i++)
+        {
+            if (mappings->mapping[i] != NULL)
+            {
+                mapping_delete(mappings->mapping[i]);
+            }
+        }
+        free(mappings->mapping);
+    }
+    free(mappings);
+}
+
+coda_ascii_integer_mapping *coda_ascii_integer_mapping_new(const char *str, int64_t value)
+{
+    coda_ascii_integer_mapping *mapping;
+
+    if (str == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "empty string value (%s:%u)", __FILE__, __LINE__);
+        return NULL;
+    }
+    if (strlen(str) > MAX_ASCII_NUMBER_LENGTH)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "string too large (%ld) for ascii integer mapping",
+                       (long)strlen(str));
+        return NULL;
+    }
+
+    mapping = (coda_ascii_integer_mapping *)malloc(sizeof(coda_ascii_integer_mapping));
+    if (mapping == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                       (long)sizeof(coda_ascii_integer_mapping), __FILE__, __LINE__);
+        return NULL;
+    }
+    mapping->length = 0;
+    mapping->str = NULL;
+    mapping->value = value;
+
+    mapping->str = strdup(str);
+    if (mapping->str == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
+                       __LINE__);
+        free(mapping);
+        return NULL;
+    }
+    mapping->length = strlen(str);
+
+    return mapping;
+}
+
+void coda_ascii_integer_mapping_delete(coda_ascii_integer_mapping *mapping)
+{
+    mapping_delete((coda_ascii_mapping *)mapping);
+}
+
+coda_ascii_float_mapping *coda_ascii_float_mapping_new(const char *str, double value)
+{
+    coda_ascii_float_mapping *mapping;
+
+    if (str == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "empty string value (%s:%u)", __FILE__, __LINE__);
+        return NULL;
+    }
+    if (strlen(str) > MAX_ASCII_NUMBER_LENGTH)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "string too large (%ld) for ascii float mapping", (long)strlen(str));
+        return NULL;
+    }
+
+    mapping = (coda_ascii_float_mapping *)malloc(sizeof(coda_ascii_float_mapping));
+    if (mapping == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                       (long)sizeof(coda_ascii_float_mapping), __FILE__, __LINE__);
+        return NULL;
+    }
+    mapping->length = 0;
+    mapping->str = NULL;
+    mapping->value = value;
+
+    mapping->str = strdup(str);
+    if (mapping->str == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
+                       __LINE__);
+        free(mapping);
+        return NULL;
+    }
+    mapping->length = strlen(str);
+
+    return mapping;
+}
+
+void coda_ascii_float_mapping_delete(coda_ascii_float_mapping *mapping)
+{
+    mapping_delete((coda_ascii_mapping *)mapping);
+}
+
+static int mapping_type_add_mapping(coda_type *type, coda_ascii_mappings **mappings, coda_ascii_mapping *mapping)
+{
+    if (mapping == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "empty mapping (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (mappings == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "empty mappings (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    if (*mappings == NULL)
+    {
+        *mappings = malloc(sizeof(coda_ascii_mappings));
+        if (*mappings == NULL)
+        {
+            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                           sizeof(coda_ascii_mappings), __FILE__, __LINE__);
+            return -1;
+        }
+        (*mappings)->default_bit_size = (type->bit_size >= 0 ? type->bit_size : -1);
+        (*mappings)->num_mappings = 0;
+        (*mappings)->mapping = NULL;
+    }
+
+    if ((*mappings)->num_mappings % BLOCK_SIZE == 0)
+    {
+        coda_ascii_mapping **new_mapping;
+
+        new_mapping = realloc((*mappings)->mapping,
+                              ((*mappings)->num_mappings + BLOCK_SIZE) * sizeof(coda_ascii_mapping *));
+        if (new_mapping == NULL)
+        {
+            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                           ((*mappings)->num_mappings + BLOCK_SIZE) * sizeof(coda_ascii_mapping *), __FILE__, __LINE__);
+            return -1;
+        }
+        (*mappings)->mapping = new_mapping;
+    }
+    (*mappings)->mapping[(*mappings)->num_mappings] = mapping;
+    (*mappings)->num_mappings++;
+
+    if (type->bit_size >= 0 && (*mappings)->default_bit_size >= 0 &&
+        mapping->length != ((*mappings)->default_bit_size >> 3))
+    {
+        type->bit_size = -1;
+    }
+
+    return 0;
+}
+
+static int mapping_type_set_bit_size(coda_type *type, coda_ascii_mappings *mappings, int64_t bit_size)
+{
+    int i;
+
+    assert(mappings != NULL);
+    assert(bit_size >= 0);
+
+    if (mappings->default_bit_size >= 0)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "ascii type already has a size");
+        return -1;
+    }
+    mappings->default_bit_size = bit_size;
+    type->bit_size = bit_size;
+    for (i = 0; i < mappings->num_mappings; i++)
+    {
+        if (mappings->mapping[i]->length != (bit_size >> 3))
+        {
+            type->bit_size = -1;
+            break;
+        }
+    }
+
+    return 0;
+}
+
+void coda_type_record_field_delete(coda_type_record_field *field)
+{
+    if (field == NULL)
+    {
+        return;
+    }
+    if (field->name != NULL)
+    {
+        free(field->name);
+    }
+    if (field->real_name != NULL)
+    {
+        free(field->real_name);
+    }
+    if (field->type != NULL)
+    {
+        coda_type_release(field->type);
+    }
+    if (field->available_expr != NULL)
+    {
+        coda_expression_delete(field->available_expr);
+    }
+    if (field->bit_offset_expr != NULL)
+    {
+        coda_expression_delete(field->bit_offset_expr);
+    }
+    free(field);
+}
+
+static void record_delete(coda_type_record *type)
+{
+    if (type == NULL)
+    {
+        return;
+    }
+    if (type->name != NULL)
+    {
+        free(type->name);
+    }
+    if (type->description != NULL)
+    {
+        free(type->description);
+    }
+    if (type->size_expr != NULL)
+    {
+        coda_expression_delete(type->size_expr);
+    }
+    if (type->attributes != NULL)
+    {
+        coda_type_release((coda_type *)type->attributes);
+    }
+    if (type->hash_data != NULL)
+    {
+        hashtable_delete(type->hash_data);
+    }
+    if (type->real_name_hash_data != NULL)
+    {
+        hashtable_delete(type->real_name_hash_data);
+    }
+    if (type->num_fields > 0)
+    {
+        int i;
+
+        for (i = 0; i < type->num_fields; i++)
+        {
+            coda_type_record_field_delete(type->field[i]);
+        }
+        free(type->field);
+    }
+    if (type->union_field_expr != NULL)
+    {
+        coda_expression_delete(type->union_field_expr);
+    }
+    free(type);
+}
+
+static void array_delete(coda_type_array *type)
+{
+    if (type == NULL)
+    {
+        return;
+    }
+    if (type->name != NULL)
+    {
+        free(type->name);
+    }
+    if (type->description != NULL)
+    {
+        free(type->description);
+    }
+    if (type->size_expr != NULL)
+    {
+        coda_expression_delete(type->size_expr);
+    }
+    if (type->attributes != NULL)
+    {
+        coda_type_release((coda_type *)type->attributes);
+    }
+    if (type->base_type != NULL)
+    {
+        coda_type_release(type->base_type);
+    }
+    if (type->dim_expr != NULL)
+    {
+        int i;
+
+        for (i = 0; i < type->num_dims; i++)
+        {
+            if (type->dim_expr[i] != NULL)
+            {
+                coda_expression_delete(type->dim_expr[i]);
+            }
+        }
+    }
+    free(type);
+}
+
+static void number_delete(coda_type_number *type)
+{
+    if (type == NULL)
+    {
+        return;
+    }
+    if (type->name != NULL)
+    {
+        free(type->name);
+    }
+    if (type->description != NULL)
+    {
+        free(type->description);
+    }
+    if (type->size_expr != NULL)
+    {
+        coda_expression_delete(type->size_expr);
+    }
+    if (type->attributes != NULL)
+    {
+        coda_type_release((coda_type *)type->attributes);
+    }
+    if (type->unit != NULL)
+    {
+        free(type->unit);
+    }
+    if (type->conversion != NULL)
+    {
+        coda_conversion_delete(type->conversion);
+    }
+    if (type->mappings != NULL)
+    {
+        mappings_delete(type->mappings);
+    }
+    free(type);
+}
+
+static void text_delete(coda_type_text *type)
+{
+    if (type == NULL)
+    {
+        return;
+    }
+    if (type->name != NULL)
+    {
+        free(type->name);
+    }
+    if (type->description != NULL)
+    {
+        free(type->description);
+    }
+    if (type->size_expr != NULL)
+    {
+        coda_expression_delete(type->size_expr);
+    }
+    if (type->attributes != NULL)
+    {
+        coda_type_release((coda_type *)type->attributes);
+    }
+    if (type->fixed_value != NULL)
+    {
+        free(type->fixed_value);
+    }
+    if (type->mappings != NULL)
+    {
+        mappings_delete(type->mappings);
+    }
+    free(type);
+}
+
+static void raw_delete(coda_type_raw *type)
+{
+    if (type == NULL)
+    {
+        return;
+    }
+    if (type->name != NULL)
+    {
+        free(type->name);
+    }
+    if (type->description != NULL)
+    {
+        free(type->description);
+    }
+    if (type->size_expr != NULL)
+    {
+        coda_expression_delete(type->size_expr);
+    }
+    if (type->attributes != NULL)
+    {
+        coda_type_release((coda_type *)type->attributes);
+    }
+    if (type->fixed_value != NULL)
+    {
+        free(type->fixed_value);
+    }
+    free(type);
+}
+
+static void special_delete(coda_type_special *type)
+{
+    if (type == NULL)
+    {
+        return;
+    }
+    if (type->name != NULL)
+    {
+        free(type->name);
+    }
+    if (type->description != NULL)
+    {
+        free(type->description);
+    }
+    if (type->size_expr != NULL)
+    {
+        coda_expression_delete(type->size_expr);
+    }
+    if (type->attributes != NULL)
+    {
+        coda_type_release((coda_type *)type->attributes);
+    }
+    if (type->base_type != NULL)
+    {
+        coda_type_release(type->base_type);
+    }
+    if (type->unit != NULL)
+    {
+        free(type->unit);
+    }
+    free(type);
+}
+
+void coda_type_release(coda_type *type)
+{
+    if (type == NULL)
+    {
+        return;
+    }
+
+    if (type->retain_count > 0)
+    {
+        type->retain_count--;
+        return;
+    }
+
+    switch (type->type_class)
+    {
+        case coda_record_class:
+            record_delete((coda_type_record *)type);
+            break;
+        case coda_array_class:
+            array_delete((coda_type_array *)type);
+            break;
+        case coda_integer_class:
+        case coda_real_class:
+            number_delete((coda_type_number *)type);
+            break;
+        case coda_text_class:
+            text_delete((coda_type_text *)type);
+            break;
+        case coda_raw_class:
+            raw_delete((coda_type_raw *)type);
+            break;
+        case coda_special_class:
+            special_delete((coda_type_special *)type);
+            break;
+    }
+}
+
+int coda_type_set_read_type(coda_type *type, coda_native_type read_type)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    switch (type->type_class)
+    {
+        case coda_record_class:
+        case coda_array_class:
+        case coda_raw_class:
+        case coda_special_class:
+            coda_set_error(CODA_ERROR_DATA_DEFINITION, "read type cannot be set explicitly for %s type",
+                           coda_type_get_class_name(type->type_class));
+            return -1;
+        case coda_integer_class:
+            if (read_type == coda_native_type_int8 || read_type == coda_native_type_uint8 ||
+                read_type == coda_native_type_int16 || read_type == coda_native_type_uint16 ||
+                read_type == coda_native_type_int32 || read_type == coda_native_type_uint32 ||
+                read_type == coda_native_type_int64 || read_type == coda_native_type_uint64)
+            {
+                type->read_type = read_type;
+                return 0;
+            }
+            break;
+        case coda_real_class:
+            if (read_type == coda_native_type_float || read_type == coda_native_type_double)
+            {
+                type->read_type = read_type;
+                return 0;
+            }
+            break;
+        case coda_text_class:
+            if (read_type == coda_native_type_char || read_type == coda_native_type_string)
+            {
+                type->read_type = read_type;
+                return 0;
+            }
+            break;
+    }
+
+    coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid read type (%s) for %s type",
+                   coda_type_get_native_type_name(read_type), coda_type_get_class_name(type->type_class));
+    return -1;
+}
+
+int coda_type_set_name(coda_type *type, const char *name)
+{
+    char *new_name = NULL;
+
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (name == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "name argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->name != NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "type already has a name");
+        return -1;
+    }
+    if (!coda_is_identifier(name))
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "name '%s' is not a valid identifier", name);
+        return -1;
+    }
+    new_name = strdup(name);
+    if (new_name == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
+                       __LINE__);
+        return -1;
+    }
+    type->name = new_name;
+
+    return 0;
+}
+
+int coda_type_set_description(coda_type *type, const char *description)
+{
+    char *new_description = NULL;
+
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (description == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "description argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->description != NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "type already has a description");
+        return -1;
+    }
+    if (description != NULL)
+    {
+        new_description = strdup(description);
+        if (new_description == NULL)
+        {
+            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
+                           __LINE__);
+            return -1;
+        }
+    }
+    type->description = new_description;
+
+    return 0;
+}
+
+int coda_type_set_bit_size(coda_type *type, int64_t bit_size)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->bit_size >= 0)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "type already has a bit size");
+        return -1;
+    }
+    if (type->size_expr != NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "type already has a bit size expression");
+        return -1;
+    }
+    if (bit_size < 0)
+    {
+        char s[21];
+
+        coda_str64(bit_size, s);
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "bit size (%s) must be >= 0", s);
+        return -1;
+    }
+
+    if (type->format == coda_format_ascii)
+    {
+        if ((bit_size & 0x7) != 0)
+        {
+            char s[21];
+
+            coda_str64(bit_size, s);
+            coda_set_error(CODA_ERROR_DATA_DEFINITION,
+                           "bit size (%s) should be a rounded number of bytes for ascii type", s);
+            return -1;
+        }
+    }
+    switch (type->type_class)
+    {
+
+        case coda_integer_class:
+        case coda_real_class:
+            if (((coda_type_number *)type)->mappings != NULL)
+            {
+                return mapping_type_set_bit_size(type, ((coda_type_number *)type)->mappings, bit_size);
+            }
+            break;
+        case coda_special_class:
+            {
+                coda_type_special *special_type = (coda_type_special *)type;
+
+                if (special_type->base_type->type_class == coda_text_class &&
+                    ((coda_type_text *)special_type->base_type)->mappings != NULL)
+                {
+                    if (mapping_type_set_bit_size(special_type->base_type,
+                                                  ((coda_type_text *)special_type->base_type)->mappings, bit_size) != 0)
+                    {
+                        return -1;
+                    }
+                    /* update bit_size */
+                    type->bit_size = special_type->base_type->bit_size;
+                    return 0;
+                }
+            }
+            break;
+        case coda_record_class:
+        case coda_array_class:
+        case coda_text_class:
+        case coda_raw_class:
+            break;
+    }
+
+    type->bit_size = bit_size;
+    return 0;
+}
+
+int coda_type_set_byte_size(coda_type *type, int64_t byte_size)
+{
+    return coda_type_set_bit_size(type, 8 * byte_size);
+}
+
+int coda_type_set_bit_size_expression(coda_type *type, coda_expression *bit_size_expr)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (bit_size_expr == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "bit_size_expr argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->size_expr != NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "type already has a bit size expression");
+        return -1;
+    }
+    if (type->type_class == coda_record_class || type->type_class == coda_array_class)
+    {
+        /* for compound types we also allow setting a bit size expression if the bit_size is currently 0 */
+        if (type->bit_size > 0)
+        {
+            coda_set_error(CODA_ERROR_DATA_DEFINITION, "type already has a bit size");
+            return -1;
+        }
+    }
+    else
+    {
+        if (type->bit_size >= 0)
+        {
+            coda_set_error(CODA_ERROR_DATA_DEFINITION, "type already has a bit size");
+            return -1;
+        }
+    }
+    type->size_expr = bit_size_expr;
+    type->bit_size = -1;
+    return 0;
+}
+
+int coda_type_set_byte_size_expression(coda_type *type, coda_expression *byte_size_expr)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (byte_size_expr == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "byte_size_expr argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->size_expr != NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "type already has a byte size expression");
+        return -1;
+    }
+    if (type->type_class == coda_record_class || type->type_class == coda_array_class)
+    {
+        /* for compound types we also allow setting a byte size expression if the bit_size is currently 0 */
+        if (type->bit_size > 0)
+        {
+            coda_set_error(CODA_ERROR_DATA_DEFINITION, "type already has a byte size");
+            return -1;
+        }
+    }
+    else
+    {
+        if (type->bit_size >= 0)
+        {
+            coda_set_error(CODA_ERROR_DATA_DEFINITION, "type already has a byte size");
+            return -1;
+        }
+    }
+    type->size_expr = byte_size_expr;
+    type->bit_size = -8;
+    return 0;
+}
+
+int coda_type_add_attribute(coda_type *type, coda_type_record_field *attribute)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (attribute == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "attribute argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->attributes == NULL)
+    {
+        type->attributes = coda_type_record_new(type->format);
+        if (type->attributes == NULL)
+        {
+            return -1;
+        }
+    }
+    return coda_type_record_add_field(type->attributes, attribute);
+}
+
+int coda_type_set_attributes(coda_type *type, coda_type_record *attributes)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (attributes == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "attributes argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->attributes != NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "attributes are already set (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    type->attributes = attributes;
+    attributes->retain_count++;
+    return 0;
+}
+
+coda_type_record_field *coda_type_record_field_new(const char *name)
+{
+    coda_type_record_field *field;
+
+    if (name == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "name argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return NULL;
+    }
+    if (!coda_is_identifier(name))
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "field name '%s' is not a valid identifier for field definition",
+                       name);
+        return NULL;
+    }
+
+    field = (coda_type_record_field *)malloc(sizeof(coda_type_record_field));
+    if (field == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                       (long)sizeof(coda_type_record_field), __FILE__, __LINE__);
+        return NULL;
+    }
+    field->name = NULL;
+    field->real_name = NULL;
+    field->type = NULL;
+    field->hidden = 0;
+    field->optional = 0;
+    field->available_expr = NULL;
+    field->bit_offset = -1;
+    field->bit_offset_expr = NULL;
+
+    field->name = strdup(name);
+    if (field->name == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
+                       __LINE__);
+        coda_type_record_field_delete(field);
+        return NULL;
+    }
+
+    return field;
+}
+
+int coda_type_record_field_set_real_name(coda_type_record_field *field, const char *real_name)
+{
+    if (field == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "field argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (real_name == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "real_name argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (field->real_name != NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "field already has a real name");
+        return -1;
+    }
+    field->real_name = strdup(real_name);
+    if (field->real_name == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
+                       __LINE__);
+        return -1;
+    }
+
+    return 0;
+}
+
+int coda_type_record_field_set_type(coda_type_record_field *field, coda_type *type)
+{
+    if (field == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "field argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (field->type != NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "field already has a type");
+        return -1;
+    }
+    field->type = type;
+    type->retain_count++;
+    return 0;
+}
+
+int coda_type_record_field_set_hidden(coda_type_record_field *field)
+{
+    if (field == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "field argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    field->hidden = 1;
+    return 0;
+}
+
+int coda_type_record_field_set_optional(coda_type_record_field *field)
+{
+    if (field == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "field argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    field->optional = 1;
+    return 0;
+}
+
+int coda_type_record_field_set_available_expression(coda_type_record_field *field, coda_expression *available_expr)
+{
+    if (field == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "field argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (available_expr == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "available_expr argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (field->available_expr != NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "field already has an available expression");
+        return -1;
+    }
+    field->available_expr = available_expr;
+    field->optional = 1;
+    return 0;
+}
+
+int coda_type_record_field_set_bit_offset_expression(coda_type_record_field *field, coda_expression *bit_offset_expr)
+{
+    if (field == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "field argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (bit_offset_expr == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "bit_offset_expr argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (field->bit_offset_expr != NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "field already has a bit offset expression");
+        return -1;
+    }
+    if (field->type->format != coda_format_ascii && field->type->format != coda_format_binary)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "bit offset expression not allowed for record field with %s format",
+                       coda_type_get_format_name(field->type->format));
+        return -1;
+    }
+    field->bit_offset_expr = bit_offset_expr;
+    return 0;
+}
+
+int coda_type_record_field_validate(const coda_type_record_field *field)
+{
+    if (field == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "field argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (field->type == NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "missing type for field definition");
+        return -1;
+    }
+    return 0;
+}
+
+int coda_type_record_field_get_type(const coda_type_record_field *field, coda_type **type)
+{
+    *type = field->type;
+    return 0;
+}
+
+coda_type_record *coda_type_record_new(coda_format format)
+{
+    coda_type_record *type;
+
+    type = (coda_type_record *)malloc(sizeof(coda_type_record));
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                       (long)sizeof(coda_type_record), __FILE__, __LINE__);
+        return NULL;
+    }
+    type->format = format;
+    type->retain_count = 0;
+    type->type_class = coda_record_class;
+    type->read_type = coda_native_type_not_available;
+    type->name = NULL;
+    type->description = NULL;
+    type->bit_size = -1;
+    type->size_expr = NULL;
+    type->attributes = NULL;
+    type->hash_data = NULL;
+    type->real_name_hash_data = NULL;
+    type->num_fields = 0;
+    type->field = NULL;
+    type->has_hidden_fields = 0;
+    type->has_optional_fields = 0;
+    type->union_field_expr = NULL;
+
+    if (format == coda_format_ascii || format == coda_format_binary)
+    {
+        type->read_type = coda_native_type_bytes;
+        type->bit_size = 0;
+    }
+
+    type->hash_data = hashtable_new(0);
+    if (type->hash_data == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashtable) (%s:%u)", __FILE__,
+                       __LINE__);
+        record_delete(type);
+        return NULL;
+    }
+
+    type->real_name_hash_data = hashtable_new(1);
+    if (type->real_name_hash_data == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashtable) (%s:%u)", __FILE__,
+                       __LINE__);
+        record_delete(type);
+        return NULL;
+    }
+
+    return type;
+}
+
+coda_type_record *coda_type_empty_record(coda_format format)
+{
+    assert(format < num_empty_record_singletons);
+    if (empty_record_singleton[format] == NULL)
+    {
+        empty_record_singleton[format] = coda_type_record_new(format);
+        assert(empty_record_singleton[format] != NULL);
+    }
+
+    return empty_record_singleton[format];
+}
+
+int coda_type_record_add_field(coda_type_record *type, coda_type_record_field *field)
+{
+    const char *real_name;
+
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (field == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "field argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    if (type->format != field->type->format)
+    {
+        /* we only allow switching from binary or xml to ascii */
+        if (!(field->type->format == coda_format_ascii &&
+              (type->format == coda_format_binary || type->format == coda_format_xml)))
+        {
+            coda_set_error(CODA_ERROR_DATA_DEFINITION, "cannot add field with %s format to record with %s format",
+                           coda_type_get_format_name(field->type->format), coda_type_get_format_name(type->format));
+            return -1;
+        }
+    }
+
+    if (type->num_fields % BLOCK_SIZE == 0)
+    {
+        coda_type_record_field **new_field;
+
+        new_field = realloc(type->field, (type->num_fields + BLOCK_SIZE) * sizeof(coda_type_record_field *));
+        if (new_field == NULL)
+        {
+            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                           (type->num_fields + BLOCK_SIZE) * sizeof(coda_type_record_field *), __FILE__, __LINE__);
+            return -1;
+        }
+        type->field = new_field;
+    }
+    if (hashtable_add_name(type->hash_data, field->name) != 0)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "duplicate field with name %s for record definition", field->name);
+        return -1;
+    }
+    real_name = (field->real_name != NULL ? field->real_name : field->name);
+    if (hashtable_get_index_from_name(type->real_name_hash_data, real_name) < 0)
+    {
+        /* only add the 'real_name' to the hash table if it was not there yet */
+        hashtable_add_name(type->real_name_hash_data, real_name);
+    }
+    type->num_fields++;
+    type->field[type->num_fields - 1] = field;
+
+    if (type->format == coda_format_ascii || type->format == coda_format_binary)
+    {
+        if (type->union_field_expr != NULL)
+        {
+            /* set bit_offset */
+            if (field->bit_offset_expr != NULL)
+            {
+                coda_set_error(CODA_ERROR_DATA_DEFINITION, "bit offset expression not allowed for union field");
+                return -1;
+            }
+            field->bit_offset = 0;
+
+            /* update bit_size */
+            if (type->num_fields == 1)
+            {
+                type->bit_size = field->type->bit_size;
+            }
+            else if (type->bit_size != field->type->bit_size)
+            {
+                type->bit_size = -1;
+            }
+        }
+        else
+        {
+            /* set bit_offset */
+            if (field->bit_offset_expr == NULL)
+            {
+                if (type->num_fields == 1)
+                {
+                    field->bit_offset = 0;
+                }
+                else if (type->field[type->num_fields - 2]->bit_offset >= 0 &&
+                         type->field[type->num_fields - 2]->type->bit_size >= 0 &&
+                         !type->field[type->num_fields - 2]->optional)
+                {
+                    field->bit_offset = type->field[type->num_fields - 2]->bit_offset +
+                        type->field[type->num_fields - 2]->type->bit_size;
+                }
+            }
+
+            /* update bit_size */
+            if (type->bit_size >= 0)
+            {
+                if (field->type->bit_size >= 0 && !type->field[type->num_fields - 1]->optional)
+                {
+                    type->bit_size += field->type->bit_size;
+                }
+                else
+                {
+                    type->bit_size = -1;
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
+int coda_type_record_create_field(coda_type_record *type, const char *real_name, coda_type *field_type)
+{
+    coda_type_record_field *field;
+    char *field_name;
+
+    field_name = coda_type_record_get_unique_field_name(type, real_name);
+    if (field_name == NULL)
+    {
+        return -1;
+    }
+    field = coda_type_record_field_new(field_name);
+    if (field == NULL)
+    {
+        free(field_name);
+        return -1;
+    }
+    if (strcmp(field_name, real_name) != 0)
+    {
+        if (coda_type_record_field_set_real_name(field, real_name) != 0)
+        {
+            coda_type_record_field_delete(field);
+            free(field_name);
+            return -1;
+        }
+    }
+    free(field_name);
+    if (coda_type_record_field_set_type(field, field_type) != 0)
+    {
+        coda_type_record_field_delete(field);
+        return -1;
+    }
+    if (coda_type_record_add_field(type, field) != 0)
+    {
+        coda_type_record_field_delete(field);
+        return -1;
+    }
+
+    return 0;
+}
+
+int coda_type_record_set_union_field_expression(coda_type_record *type, coda_expression *field_expr)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (field_expr == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "field_expr argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->union_field_expr != NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "record type already has a union field expression");
+        return -1;
+    }
+    type->union_field_expr = field_expr;
+    if (type->num_fields > 0)
+    {
+        long i;
+
+        for (i = 0; i < type->num_fields; i++)
+        {
+            /* set bit_offset */
+            if (type->field[i]->bit_offset_expr != NULL)
+            {
+                coda_set_error(CODA_ERROR_DATA_DEFINITION, "bit offset expression not allowed for union field '%s'",
+                               type->field[i]->name);
+                return -1;
+            }
+            type->field[i]->bit_offset = 0;
+
+            /* update bit_size */
+            if (i == 0)
+            {
+                type->bit_size = type->field[i]->type->bit_size;
+            }
+            else if (type->bit_size != type->field[i]->type->bit_size)
+            {
+                type->bit_size = -1;
+            }
+        }
+    }
+    return 0;
+}
+
+int coda_type_record_validate(const coda_type_record *type)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->union_field_expr != NULL && type->num_fields == 0)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "number of fields should be >= 1 for union type");
+        return -1;
+    }
+    return 0;
+}
+
+char *coda_type_record_get_unique_field_name(const coda_type_record *type, const char *name)
+{
+    if (type->format == coda_format_xml)
+    {
+        name = coda_element_name_from_xml_name(name);
+    }
+    return coda_identifier_from_name(name, type->hash_data);
+}
+
+coda_type_array *coda_type_array_new(coda_format format)
+{
+    coda_type_array *type;
+
+    type = (coda_type_array *)malloc(sizeof(coda_type_array));
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                       (long)sizeof(coda_type_array), __FILE__, __LINE__);
+        return NULL;
+    }
+    type->format = format;
+    type->retain_count = 0;
+    type->type_class = coda_array_class;
+    if (format == coda_format_ascii || format == coda_format_binary)
+    {
+        type->read_type = coda_native_type_bytes;
+    }
+    else
+    {
+        type->read_type = coda_native_type_not_available;
+    }
+    type->name = NULL;
+    type->description = NULL;
+    type->bit_size = -1;
+    type->size_expr = NULL;
+    type->attributes = NULL;
+    type->base_type = NULL;
+    type->num_elements = 1;
+    type->num_dims = 0;
+
+    return type;
+}
+
+int coda_type_array_set_base_type(coda_type_array *type, coda_type *base_type)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->base_type != NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "array already has a base type");
+        return -1;
+    }
+    if (type->format != base_type->format)
+    {
+        /* we only allow switching from binary or xml to ascii */
+        if (!(base_type->format == coda_format_ascii &&
+              (type->format == coda_format_binary || type->format == coda_format_xml)))
+        {
+            coda_set_error(CODA_ERROR_DATA_DEFINITION, "cannot add element with %s format to array with %s format",
+                           coda_type_get_format_name(base_type->format), coda_type_get_format_name(type->format));
+            return -1;
+        }
+    }
+    if (type->format == coda_format_xml)
+    {
+        /* we don't allow arrays of arrays */
+        if (base_type->format == coda_format_xml && base_type->type_class == coda_array_class)
+        {
+            coda_set_error(CODA_ERROR_DATA_DEFINITION, "Arrays of arrays are not allowed for xml format");
+            return -1;
+        }
+    }
+    type->base_type = base_type;
+    base_type->retain_count++;
+
+    if (type->format == coda_format_ascii || type->format == coda_format_binary)
+    {
+        /* update bit_size */
+        if (type->num_elements >= 0 && base_type->bit_size >= 0)
+        {
+            type->bit_size = type->num_elements * base_type->bit_size;
+        }
+    }
+
+    return 0;
+}
+
+int coda_type_array_add_fixed_dimension(coda_type_array *type, long dim)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (dim < 0)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid dimension size (%ld) for array type", dim);
+        return -1;
+    }
+    if (type->num_dims == CODA_MAX_NUM_DIMS)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "maximum number of dimensions (%d) exceeded for array type",
+                       CODA_MAX_NUM_DIMS);
+        return -1;
+    }
+    type->dim[type->num_dims] = dim;
+    type->dim_expr[type->num_dims] = NULL;
+    type->num_dims++;
+
+    /* update num_elements */
+    if (type->num_elements != -1)
+    {
+        if (type->num_dims == 1)
+        {
+            type->num_elements = dim;
+        }
+        else
+        {
+            type->num_elements *= dim;
+        }
+
+        if (type->format == coda_format_ascii || type->format == coda_format_binary)
+        {
+            /* update bit_size */
+            if (type->base_type != NULL && type->base_type->bit_size >= 0)
+            {
+                type->bit_size = type->num_elements * type->base_type->bit_size;
+            }
+        }
+    }
+
+    return 0;
+}
+
+int coda_type_array_add_variable_dimension(coda_type_array *type, coda_expression *dim_expr)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->num_dims == CODA_MAX_NUM_DIMS)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "maximum number of dimensions (%d) exceeded for array definition",
+                       CODA_MAX_NUM_DIMS);
+        return -1;
+    }
+    if (type->format == coda_format_ascii || type->format == coda_format_binary)
+    {
+        if (dim_expr == NULL)
+        {
+            coda_set_error(CODA_ERROR_DATA_DEFINITION, "dimension without size specification not allowed for %s array",
+                           coda_type_get_format_name(type->format));
+            return -1;
+        }
+    }
+    type->dim[type->num_dims] = -1;
+    type->dim_expr[type->num_dims] = dim_expr;
+    type->num_dims++;
+
+    /* update num_elements */
+    type->num_elements = -1;
+    if ((type->format == coda_format_ascii || type->format == coda_format_binary) && type->bit_size >= 0)
+    {
+        /* update bit_size */
+        type->bit_size = -1;
+    }
+
+    return 0;
+}
+
+int coda_type_array_validate(const coda_type_array *type)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->num_dims == 0)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "number of dimensions is 0 for array definition");
+        return -1;
+    }
+    return 0;
+}
+
+
+coda_type_number *coda_type_number_new(coda_format format, coda_type_class type_class)
+{
+    coda_type_number *type;
+
+    if (type_class != coda_integer_class && type_class != coda_real_class)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid type class (%s) for number type",
+                       coda_type_get_class_name(type_class));
+        return NULL;
+    }
+
+    type = (coda_type_number *)malloc(sizeof(coda_type_number));
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                       (long)sizeof(coda_type_number), __FILE__, __LINE__);
+        return NULL;
+    }
+    type->format = format;
+    type->retain_count = 0;
+    type->type_class = type_class;
+    type->read_type = (type_class == coda_integer_class ? coda_native_type_int64 : coda_native_type_double);
+    type->name = NULL;
+    type->description = NULL;
+    type->bit_size = -1;
+    type->size_expr = NULL;
+    type->attributes = NULL;
+    type->unit = NULL;
+    type->endianness = coda_big_endian;
+    type->conversion = NULL;
+    type->mappings = NULL;
+
+    return type;
+}
+
+int coda_type_number_set_unit(coda_type_number *type, const char *unit)
+{
+    if (unit == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "unit argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->unit != NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "type already has a unit");
+        return -1;
+    }
+    type->unit = strdup(unit);
+    if (type->unit == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
+                       __LINE__);
+        return -1;
+    }
+
+    return 0;
+}
+
+int coda_type_number_set_endianness(coda_type_number *type, coda_endianness endianness)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    type->endianness = endianness;
+    return 0;
+}
+
+int coda_type_number_set_conversion(coda_type_number *type, coda_conversion *conversion)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->conversion != NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "type already has a conversion");
+        return -1;
+    }
+    type->conversion = conversion;
+    return 0;
+}
+
+int coda_type_number_add_ascii_float_mapping(coda_type_number *type, coda_ascii_float_mapping *mapping)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (mapping == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "mapping argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->type_class != coda_real_class)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "cannot add floating point ascii mapping to integer type");
+        return -1;
+    }
+    return mapping_type_add_mapping((coda_type *)type, &type->mappings, (coda_ascii_mapping *)mapping);
+}
+
+int coda_type_number_add_ascii_integer_mapping(coda_type_number *type, coda_ascii_integer_mapping *mapping)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (mapping == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "mapping argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->type_class != coda_integer_class)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "cannot add integer ascii mapping to floating point type");
+        return -1;
+    }
+    return mapping_type_add_mapping((coda_type *)type, &type->mappings, (coda_ascii_mapping *)mapping);
+}
+
+int coda_type_number_validate(const coda_type_number *type)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->format == coda_format_binary)
+    {
+        if (type->bit_size >= 0)
+        {
+            switch (type->read_type)
+            {
+                case coda_native_type_int8:
+                case coda_native_type_uint8:
+                    if (type->bit_size > 8)
+                    {
+                        coda_set_error(CODA_ERROR_DATA_DEFINITION, "incorrect bit size (%ld) for integer type - "
+                                       "it should be <= 8 when the read type is %s", (long)type->bit_size,
+                                       coda_type_get_native_type_name(type->read_type));
+                        return -1;
+                    }
+                    break;
+                case coda_native_type_int16:
+                case coda_native_type_uint16:
+                    if (type->bit_size > 16)
+                    {
+                        coda_set_error(CODA_ERROR_DATA_DEFINITION, "incorrect bit size (%ld) for integer type - "
+                                       "it should be <= 16 when the read type is %s", (long)type->bit_size,
+                                       coda_type_get_native_type_name(type->read_type));
+                        return -1;
+                    }
+                    break;
+                case coda_native_type_int32:
+                case coda_native_type_uint32:
+                    if (type->bit_size > 32)
+                    {
+                        coda_set_error(CODA_ERROR_DATA_DEFINITION, "incorrect bit size (%ld) for integer type - "
+                                       "it should be <= 32 when the read type is %s", (long)type->bit_size,
+                                       coda_type_get_native_type_name(type->read_type));
+                        return -1;
+                    }
+                    break;
+                case coda_native_type_int64:
+                case coda_native_type_uint64:
+                    if (type->bit_size > 64)
+                    {
+                        coda_set_error(CODA_ERROR_DATA_DEFINITION, "incorrect bit size (%ld) for integer type - "
+                                       "it should be <= 64 when the read type is %s", (long)type->bit_size,
+                                       coda_type_get_native_type_name(type->read_type));
+                        return -1;
+                    }
+                    break;
+                case coda_native_type_float:
+                    if (type->bit_size != 32)
+                    {
+                        coda_set_error(CODA_ERROR_DATA_DEFINITION, "incorrect bit size (%ld) for floating point type - "
+                                       "it should be 32 when the read type is %s", (long)type->bit_size,
+                                       coda_type_get_native_type_name(type->read_type));
+                        return -1;
+                    }
+                    break;
+                case coda_native_type_double:
+                    if (type->bit_size != 64)
+                    {
+                        coda_set_error(CODA_ERROR_DATA_DEFINITION, "incorrect bit size (%ld) for floating point type - "
+                                       "it should be 64 when the read type is %s", (long)type->bit_size,
+                                       coda_type_get_native_type_name(type->read_type));
+                        return -1;
+                    }
+                    break;
+                default:
+                    assert(0);
+                    break;
+            }
+        }
+        else if (type->size_expr == NULL)
+        {
+            coda_set_error(CODA_ERROR_DATA_DEFINITION,
+                           "missing bit size or bit size expression for binary integer type");
+            return -1;
+        }
+        if (type->endianness == coda_little_endian && type->bit_size >= 0 && type->bit_size % 8 != 0)
+        {
+            coda_set_error(CODA_ERROR_DATA_DEFINITION,
+                           "bit size (%ld) must be a multiple of 8 for little endian binary integer type",
+                           (long)type->bit_size);
+            return -1;
+        }
+    }
+    return 0;
+}
+
+coda_type_text *coda_type_text_new(coda_format format)
+{
+    coda_type_text *type;
+
+    type = (coda_type_text *)malloc(sizeof(coda_type_text));
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                       (long)sizeof(coda_type_text), __FILE__, __LINE__);
+        return NULL;
+    }
+    type->format = format;
+    type->retain_count = 0;
+    type->type_class = coda_text_class;
+    type->read_type = coda_native_type_string;
+    type->name = NULL;
+    type->description = NULL;
+    type->bit_size = -1;
+    type->size_expr = NULL;
+    type->attributes = NULL;
+    type->fixed_value = NULL;
+    type->special_text_type = ascii_text_default;
+    type->mappings = NULL;
+
+    return type;
+}
+
+int coda_type_text_set_fixed_value(coda_type_text *type, const char *fixed_value)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (fixed_value == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "fixed_value argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->fixed_value != NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "text type already has a fixed value");
+        return -1;
+    }
+    type->fixed_value = strdup(fixed_value);
+    if (type->fixed_value == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
+                       __LINE__);
+        return -1;
+    }
+
+    return 0;
+}
+
+int coda_type_text_set_special_text_type(coda_type_text *type, coda_ascii_special_text_type special_text_type)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->format != coda_format_ascii)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "special ascii text type not allowed for %s format",
+                       coda_type_get_format_name(type->format));
+        return -1;
+    }
+    if (type->special_text_type != ascii_text_default)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "text type already has a special text type set");
+        return -1;
+    }
+    type->special_text_type = special_text_type;
+    return 0;
+}
+
+int coda_type_text_validate(const coda_type_text *type)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->format == coda_format_ascii || type->format == coda_format_binary)
+    {
+        if (type->size_expr == NULL && type->bit_size < 0 &&
+            (type->mappings == NULL || type->mappings->default_bit_size < 0))
+        {
+            coda_set_error(CODA_ERROR_DATA_DEFINITION, "missing bit size or bit size expression for integer type");
+            return -1;
+        }
+        if (type->bit_size >= 0 && type->bit_size % 8 != 0)
+        {
+            coda_set_error(CODA_ERROR_DATA_DEFINITION, "bit size (%ld) must be a multiple of 8 for text type",
+                           (long)type->bit_size);
+            return -1;
+        }
+    }
+    if (type->read_type == coda_native_type_char && type->bit_size != 8)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "bit size (%ld) must be 8 for text type when read type is 'char'",
+                       (long)type->bit_size);
+        return -1;
+    }
+    if (type->fixed_value != NULL)
+    {
+        if (type->bit_size < 0)
+        {
+            coda_set_error(CODA_ERROR_DATA_DEFINITION,
+                           "bit size for text type should be fixed if a fixed value is provided");
+            return -1;
+        }
+        /* if there is a fixed_value its length should equal the byte size of the data element */
+        if ((type->bit_size >> 3) != (int64_t)strlen(type->fixed_value))
+        {
+            char s[21];
+
+            coda_str64(type->bit_size >> 3, s);
+            coda_set_error(CODA_ERROR_DATA_DEFINITION,
+                           "byte size of fixed value (%ld) should equal byte size (%s) for text type",
+                           strlen(type->fixed_value), s);
+            return -1;
+        }
+    }
+    return 0;
+}
+
+coda_type_raw *coda_type_raw_new(coda_format format)
+{
+    coda_type_raw *type;
+
+    type = (coda_type_raw *)malloc(sizeof(coda_type_raw));
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                       (long)sizeof(coda_type_raw), __FILE__, __LINE__);
+        return NULL;
+    }
+    type->format = format;
+    type->retain_count = 0;
+    type->type_class = coda_raw_class;
+    type->read_type = coda_native_type_bytes;
+    type->name = NULL;
+    type->description = NULL;
+    type->bit_size = -1;
+    type->size_expr = NULL;
+    type->attributes = NULL;
+    type->fixed_value_length = -1;
+    type->fixed_value = NULL;
+
+    return type;
+}
+
+int coda_type_raw_set_fixed_value(coda_type_raw *type, long length, const char *fixed_value)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (length > 0 && fixed_value == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "fixed_value argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->fixed_value != NULL || type->fixed_value_length >= 0)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "text type already has a fixed value");
+        return -1;
+    }
+    if (length > 0)
+    {
+        type->fixed_value = malloc(length);
+        if (type->fixed_value == NULL)
+        {
+            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
+                           __LINE__);
+            return -1;
+        }
+        memcpy(type->fixed_value, fixed_value, length);
+        type->fixed_value_length = length;
+    }
+    else
+    {
+        type->fixed_value_length = 0;
+    }
+
+    return 0;
+}
+
+int coda_type_raw_validate(const coda_type_raw *type)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->format == coda_format_ascii || type->format == coda_format_binary)
+    {
+        if (type->size_expr == NULL && type->bit_size < 0)
+        {
+            coda_set_error(CODA_ERROR_DATA_DEFINITION, "missing bit size or bit size expression for raw type");
+            return -1;
+        }
+    }
+
+    if (type->fixed_value != NULL)
+    {
+        int64_t byte_size;
+
+        if (type->bit_size < 0)
+        {
+            coda_set_error(CODA_ERROR_DATA_DEFINITION,
+                           "bit size for raw type should be fixed if a fixed value is provided");
+            return -1;
+        }
+
+        /* if there is a fixed_value its length should equal the byte size of the data element */
+        byte_size = (type->bit_size >> 3) + (type->bit_size & 0x7 ? 1 : 0);
+        if (byte_size != type->fixed_value_length)
+        {
+            char s[21];
+
+            coda_str64(byte_size, s);
+            coda_set_error(CODA_ERROR_DATA_DEFINITION,
+                           "length of fixed value (%ld) should equal rounded byte size (%s) for raw type",
+                           type->fixed_value_length, s);
+            return -1;
+        }
+    }
+    return 0;
+}
+
+coda_type_special *coda_type_no_data_singleton(coda_format format)
+{
+    assert(format < num_no_data_singletons);
+
+    if (no_data_singleton[format] == NULL)
+    {
+        coda_type_special *type;
+
+        type = (coda_type_special *)malloc(sizeof(coda_type_special));
+        if (type == NULL)
+        {
+            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                           (long)sizeof(coda_type_special), __FILE__, __LINE__);
+            return NULL;
+        }
+        type->format = format;
+        type->retain_count = 0;
+        type->type_class = coda_special_class;
+        type->read_type = coda_native_type_not_available;
+        type->name = NULL;
+        type->description = NULL;
+        type->bit_size = 0;
+        type->size_expr = NULL;
+        type->attributes = NULL;
+        type->special_type = coda_special_no_data;
+        type->base_type = NULL;
+        type->unit = NULL;
+        type->time_type = -1;
+
+        type->base_type = (coda_type *)coda_type_raw_new(format);
+        if (type->base_type == NULL)
+        {
+            special_delete(type);
+            return NULL;
+        }
+        if (coda_type_set_bit_size(type->base_type, 0) != 0)
+        {
+            special_delete(type);
+            return NULL;
+        }
+
+        no_data_singleton[format] = type;
+    }
+
+    return no_data_singleton[format];
+}
+
+coda_type_special *coda_type_vsf_integer_new(coda_format format)
+{
+    coda_type_special *type;
+
+    type = (coda_type_special *)malloc(sizeof(coda_type_special));
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                       (long)sizeof(coda_type_special), __FILE__, __LINE__);
+        return NULL;
+    }
+    type->format = format;
+    type->retain_count = 0;
+    type->type_class = coda_special_class;
+    type->read_type = coda_native_type_not_available;
+    type->name = NULL;
+    type->description = NULL;
+    type->bit_size = -1;
+    type->size_expr = NULL;
+    type->attributes = NULL;
+    type->special_type = coda_special_vsf_integer;
+    type->base_type = NULL;
+    type->unit = NULL;
+    type->time_type = -1;
+
+    type->base_type = (coda_type *)coda_type_record_new(format);
+    coda_type_set_description(type->base_type, "Variable Scale Factor Integer");
+
+    return type;
+}
+
+int coda_type_vsf_integer_set_type(coda_type_special *type, coda_type *base_type)
+{
+    coda_type_record_field *field;
+
+    if (type->format != base_type->format)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION,
+                       "cannot use element type with %s format for vsf integer with %s format",
+                       coda_type_get_format_name(base_type->format), coda_type_get_format_name(type->format));
+        return -1;
+    }
+
+    field = coda_type_record_field_new("value");
+    if (field == NULL)
+    {
+        return -1;
+    }
+    if (coda_type_record_field_set_type(field, base_type) != 0)
+    {
+        coda_type_record_field_delete(field);
+        return -1;
+    }
+    if (coda_type_record_add_field((coda_type_record *)type->base_type, field) != 0)
+    {
+        coda_type_record_field_delete(field);
+        return -1;
+    }
+    /* update bit_size */
+    type->bit_size = type->base_type->bit_size;
+    return 0;
+}
+
+int coda_type_vsf_integer_set_scale_factor(coda_type_special *type, coda_type *scale_factor)
+{
+    coda_type_record_field *field;
+    coda_native_type scalefactor_type;
+
+    if (type->format != scale_factor->format)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION,
+                       "cannot use scale factor type with %s format for vsf integer with %s format",
+                       coda_type_get_format_name(scale_factor->format), coda_type_get_format_name(type->format));
+        return -1;
+    }
+
+    if (coda_type_get_read_type(scale_factor, &scalefactor_type) != 0)
+    {
+        return -1;
+    }
+
+    switch (scalefactor_type)
+    {
+        case coda_native_type_int8:
+        case coda_native_type_uint8:
+        case coda_native_type_int16:
+        case coda_native_type_uint16:
+        case coda_native_type_int32:
+            break;
+        default:
+            /* we do not support uint32_t/int64_t/uint64_t scale factors.
+             * This allows us to use a more accurate pow10 function when applying the scale factor.
+             */
+            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid scalefactor type (%s) for vsf integer type",
+                           coda_type_get_native_type_name(scalefactor_type));
+            return -1;
+    }
+
+    field = coda_type_record_field_new("scale_factor");
+    if (field == NULL)
+    {
+        return -1;
+    }
+    if (coda_type_record_field_set_type(field, scale_factor) != 0)
+    {
+        coda_type_record_field_delete(field);
+        return -1;
+    }
+    if (coda_type_record_add_field((coda_type_record *)type->base_type, field) != 0)
+    {
+        coda_type_record_field_delete(field);
+        return -1;
+    }
+    /* update bit_size */
+    type->bit_size = type->base_type->bit_size;
+    return 0;
+}
+
+int coda_type_vsf_integer_set_unit(coda_type_special *type, const char *unit)
+{
+    if (unit == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "unit argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->unit != NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "type already has a unit");
+        return -1;
+    }
+    type->unit = strdup(unit);
+    if (type->unit == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
+                       __LINE__);
+        return -1;
+    }
+
+    return 0;
+}
+
+int coda_type_vsf_integer_validate(coda_type_special *type)
+{
+    if (((coda_type_record *)type->base_type)->num_fields != 2)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "vsf integer type requires both a base type and scale factor");
+        return -1;
+    }
+    return 0;
+}
+
+coda_type_special *coda_type_time_new(coda_format format, const char *timeformat)
+{
+    coda_type_special *type;
+
+    if ((format == coda_format_ascii || format == coda_format_binary) && timeformat == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "timeformat argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return NULL;
+    }
+
+    type = (coda_type_special *)malloc(sizeof(coda_type_special));
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                       (long)sizeof(coda_type_special), __FILE__, __LINE__);
+        return NULL;
+    }
+    type->format = format;
+    type->retain_count = 0;
+    type->type_class = coda_special_class;
+    type->read_type = coda_native_type_double;
+    type->name = NULL;
+    type->description = NULL;
+    type->bit_size = -1;
+    type->size_expr = NULL;
+    type->attributes = NULL;
+    type->special_type = coda_special_time;
+    type->base_type = NULL;
+    type->unit = NULL;
+    type->time_type = -1;
+
+    type->unit = strdup("s since 2000-01-01");
+    if (type->unit == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
+                       __LINE__);
+        special_delete(type);
+        return NULL;
+    }
+
+    if (format == coda_format_ascii)
+    {
+        type->base_type = (coda_type *)coda_type_text_new(format);
+        coda_type_set_read_type(type->base_type, coda_native_type_string);
+        if (strcmp(timeformat, "ascii_envisat_datetime") == 0)
+        {
+            type->time_type = datetime_ascii_envisat;
+            coda_type_set_description(type->base_type, "ENVISAT ASCII datetime \"DD-MMM-YYYY hh:mm:ss.uuuuuu\".");
+            coda_type_set_byte_size(type->base_type, 27);
+        }
+        else if (strcmp(timeformat, "ascii_gome_datetime") == 0)
+        {
+            type->time_type = datetime_ascii_gome;
+            coda_type_set_description(type->base_type, "GOME ASCII datetime \"DD-MMM-YYYY hh:mm:ss.uuu\".");
+            coda_type_set_byte_size(type->base_type, 24);
+        }
+        else if (strcmp(timeformat, "ascii_eps_datetime") == 0)
+        {
+            type->time_type = datetime_ascii_eps;
+            coda_type_set_description(type->base_type, "EPS generalised time \"YYYYMMDDHHMMSSZ\".");
+            coda_type_set_byte_size(type->base_type, 15);
+        }
+        else if (strcmp(timeformat, "ascii_eps_datetime_long") == 0)
+        {
+            type->time_type = datetime_ascii_eps_long;
+            coda_type_set_description(type->base_type, "EPS long generalised time \"YYYYMMDDHHMMSSmmmZ\".");
+            coda_type_set_byte_size(type->base_type, 18);
+        }
+        else if (strcmp(timeformat, "ascii_ccsds_datetime_ymd1") == 0)
+        {
+            type->time_type = datetime_ascii_ccsds_ymd1;
+            coda_type_set_description(type->base_type, "CCSDS ASCII datetime \"YYYY-MM-DDThh:mm:ss\".");
+            coda_type_set_byte_size(type->base_type, 19);
+        }
+        else if (strcmp(timeformat, "ascii_ccsds_datetime_ymd1_with_ref") == 0)
+        {
+            type->time_type = datetime_ascii_ccsds_ymd1_with_ref;
+            coda_type_set_description(type->base_type, "CCSDS ASCII datetime with time reference "
+                                      "\"RRR=YYYY-MM-DDThh:mm:ss\". The reference RRR can be any of \"UT1\", \"UTC\", "
+                                      "\"TAI\", or \"GPS\".");
+            coda_type_set_byte_size(type->base_type, 23);
+        }
+        else if (strcmp(timeformat, "ascii_ccsds_datetime_ymd2") == 0)
+        {
+            type->time_type = datetime_ascii_ccsds_ymd2;
+            coda_type_set_description(type->base_type, "CCSDS ASCII datetime \"YYYY-MM-DDThh:mm:ss.uuuuuu\".");
+            coda_type_set_byte_size(type->base_type, 26);
+        }
+        else if (strcmp(timeformat, "ascii_ccsds_datetime_ymd2_with_ref") == 0)
+        {
+            type->time_type = datetime_ascii_ccsds_ymd2_with_ref;
+            coda_type_set_description(type->base_type, "CCSDS ASCII datetime with time reference "
+                                      "\"RRR=YYYY-MM-DDThh:mm:ss.uuuuuu\". The reference RRR can be any of \"UT1\", "
+                                      "\"UTC\", \"TAI\", or \"GPS\".");
+            coda_type_set_byte_size(type->base_type, 30);
+        }
+        else if (strcmp(timeformat, "ascii_ccsds_datetime_utc1") == 0)
+        {
+            type->time_type = datetime_ascii_ccsds_utc1;
+            coda_type_set_description(type->base_type, "CCSDS ASCII datetime \"YYYY-DDDThh:mm:ss\".");
+            coda_type_set_byte_size(type->base_type, 17);
+        }
+        else if (strcmp(timeformat, "ascii_ccsds_datetime_utc2") == 0)
+        {
+            type->time_type = datetime_ascii_ccsds_utc2;
+            coda_type_set_description(type->base_type, "CCSDS ASCII datetime \"YYYY-DDDThh:mm:ss.uuuuuu\". "
+                                      "Microseconds can be written using less digits (1-6 digits): e.g.: "
+                                      "\"YYYY-DDDThh:mm:ss.u     \"");
+            coda_type_set_byte_size(type->base_type, 24);
+        }
+        else
+        {
+            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid time format (%s) for ascii time definition",
+                           timeformat);
+            special_delete(type);
+            return NULL;
+        }
+        /* update bit_size */
+        type->bit_size = type->base_type->bit_size;
+    }
+    else if (format == coda_format_binary)
+    {
+        coda_type_record *record;
+        coda_type_record_field *field;
+        coda_type *field_type;
+
+        record = coda_type_record_new(format);
+        type->base_type = (coda_type *)record;
+        if (strcmp(timeformat, "binary_envisat_datetime") == 0)
+        {
+            type->time_type = datetime_binary_envisat;
+            coda_type_set_description(type->base_type, "ENVISAT binary datetime");
+
+            field_type = (coda_type *)coda_type_number_new(format, coda_integer_class);
+            coda_type_set_description(field_type, "days since January 1st, 2000 (may be negative)");
+            coda_type_set_read_type(field_type, coda_native_type_int32);
+            coda_type_set_bit_size(field_type, 32);
+            coda_type_number_set_unit((coda_type_number *)field_type, "days since 2000-01-01");
+            field = coda_type_record_field_new("days");
+            coda_type_record_field_set_type(field, field_type);
+            coda_type_release(field_type);
+            coda_type_record_add_field(record, field);
+
+            field_type = (coda_type *)coda_type_number_new(format, coda_integer_class);
+            coda_type_set_description(field_type, "seconds since start of day");
+            coda_type_set_read_type(field_type, coda_native_type_uint32);
+            coda_type_set_bit_size(field_type, 32);
+            coda_type_number_set_unit((coda_type_number *)field_type, "s");
+            field = coda_type_record_field_new("seconds");
+            coda_type_record_field_set_type(field, field_type);
+            coda_type_release(field_type);
+            coda_type_record_add_field(record, field);
+
+            field_type = (coda_type *)coda_type_number_new(format, coda_integer_class);
+            coda_type_set_description(field_type, "microseconds since start of second");
+            coda_type_set_read_type(field_type, coda_native_type_uint32);
+            coda_type_set_bit_size(field_type, 32);
+            coda_type_number_set_unit((coda_type_number *)field_type, "1e-6 s");
+            field = coda_type_record_field_new("microseconds");
+            coda_type_record_field_set_type(field, field_type);
+            coda_type_release(field_type);
+            coda_type_record_add_field(record, field);
+        }
+        else if (strcmp(timeformat, "binary_gome_datetime") == 0)
+        {
+            type->time_type = datetime_binary_gome;
+            coda_type_set_description(type->base_type, "GOME binary datetime");
+
+            field_type = (coda_type *)coda_type_number_new(format, coda_integer_class);
+            coda_type_set_description(field_type, "days since January 1st, 1950 (may be negative)");
+            coda_type_set_read_type(field_type, coda_native_type_int32);
+            coda_type_set_bit_size(field_type, 32);
+            coda_type_number_set_unit((coda_type_number *)field_type, "days since 1950-01-01");
+            field = coda_type_record_field_new("days");
+            coda_type_record_field_set_type(field, field_type);
+            coda_type_release(field_type);
+            coda_type_record_add_field(record, field);
+
+            field_type = (coda_type *)coda_type_number_new(format, coda_integer_class);
+            coda_type_set_description(field_type, "milliseconds since start of day");
+            coda_type_set_read_type(field_type, coda_native_type_uint32);
+            coda_type_set_bit_size(field_type, 32);
+            coda_type_number_set_unit((coda_type_number *)field_type, "1e-3 s");
+            field = coda_type_record_field_new("milliseconds");
+            coda_type_record_field_set_type(field, field_type);
+            coda_type_release(field_type);
+            coda_type_record_add_field(record, field);
+        }
+        else if (strcmp(timeformat, "binary_eps_datetime") == 0)
+        {
+            type->time_type = datetime_binary_eps;
+            coda_type_set_description(type->base_type, "EPS short cds");
+
+            field_type = (coda_type *)coda_type_number_new(format, coda_integer_class);
+            coda_type_set_description(field_type, "days since January 1st, 2000 (must be positive)");
+            coda_type_set_read_type(field_type, coda_native_type_uint16);
+            coda_type_set_bit_size(field_type, 16);
+            coda_type_number_set_unit((coda_type_number *)field_type, "days since 2000-01-01");
+            field = coda_type_record_field_new("days");
+            coda_type_record_field_set_type(field, field_type);
+            coda_type_release(field_type);
+            coda_type_record_add_field(record, field);
+
+            field_type = (coda_type *)coda_type_number_new(format, coda_integer_class);
+            coda_type_set_description(field_type, "milliseconds since start of day");
+            coda_type_set_read_type(field_type, coda_native_type_uint32);
+            coda_type_set_bit_size(field_type, 32);
+            coda_type_number_set_unit((coda_type_number *)field_type, "1e-3 s");
+            field = coda_type_record_field_new("milliseconds");
+            coda_type_record_field_set_type(field, field_type);
+            coda_type_release(field_type);
+            coda_type_record_add_field(record, field);
+        }
+        else if (strcmp(timeformat, "binary_eps_datetime_long") == 0)
+        {
+            type->time_type = datetime_binary_eps_long;
+            coda_type_set_description(type->base_type, "EPS long cds");
+
+            field_type = (coda_type *)coda_type_number_new(format, coda_integer_class);
+            coda_type_set_description(field_type, "days since January 1st, 2000 (must be positive)");
+            coda_type_set_read_type(field_type, coda_native_type_uint16);
+            coda_type_set_bit_size(field_type, 16);
+            coda_type_number_set_unit((coda_type_number *)field_type, "days since 2000-01-01");
+            field = coda_type_record_field_new("days");
+            coda_type_record_field_set_type(field, field_type);
+            coda_type_release(field_type);
+            coda_type_record_add_field(record, field);
+
+            field_type = (coda_type *)coda_type_number_new(format, coda_integer_class);
+            coda_type_set_description(field_type, "milliseconds since start of day");
+            coda_type_set_read_type(field_type, coda_native_type_uint32);
+            coda_type_set_bit_size(field_type, 32);
+            coda_type_number_set_unit((coda_type_number *)field_type, "1e-3 s");
+            field = coda_type_record_field_new("milliseconds");
+            coda_type_record_field_set_type(field, field_type);
+            coda_type_release(field_type);
+            coda_type_record_add_field(record, field);
+
+            field_type = (coda_type *)coda_type_number_new(format, coda_integer_class);
+            coda_type_set_description(field_type, "microseconds since start of millisecond");
+            coda_type_set_read_type(field_type, coda_native_type_uint16);
+            coda_type_set_bit_size(field_type, 16);
+            coda_type_number_set_unit((coda_type_number *)field_type, "1e-6 s");
+            field = coda_type_record_field_new("microseconds");
+            coda_type_record_field_set_type(field, field_type);
+            coda_type_release(field_type);
+            coda_type_record_add_field(record, field);
+        }
+        else
+        {
+            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid time format (%s) for binary time definition",
+                           timeformat);
+            special_delete(type);
+            return NULL;
+        }
+        /* update bit_size */
+        type->bit_size = type->base_type->bit_size;
+    }
+    else if (timeformat != NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid time format (%s) for %s time definition", timeformat,
+                       coda_type_get_format_name(format));
+        return NULL;
+    }
+    return type;
+}
+
+int coda_type_time_add_ascii_float_mapping(coda_type_special *type, coda_ascii_float_mapping *mapping)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (mapping == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "mapping argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->special_type != coda_special_time)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "cannot add floating point ascii mapping to '%s' special type",
+                       coda_type_get_special_type_name(type->special_type));
+        return -1;
+    }
+    if (type->base_type->type_class != coda_text_class)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "cannot add floating point ascii mapping to time type with '%s'"
+                       " base class", coda_type_get_class_name(type->base_type->type_class));
+        return -1;
+    }
+    if (mapping_type_add_mapping((coda_type *)type->base_type, &((coda_type_text *)type->base_type)->mappings,
+                                 (coda_ascii_mapping *)mapping) != 0)
+    {
+        return -1;
+    }
+    /* update bit_size */
+    type->bit_size = type->base_type->bit_size;
+    return 0;
+}
+
+int coda_type_time_set_base_type(coda_type_special *type, coda_type *base_type)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (base_type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "base_type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->special_type != coda_special_time)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "cannot set base type for '%s' special type",
+                       coda_type_get_special_type_name(type->special_type));
+        return -1;
+    }
+    if (type->base_type != NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "special type already has a base type");
+        return -1;
+    }
+
+    type->base_type = base_type;
+    base_type->retain_count++;
+
+    /* update bit_size */
+    type->bit_size = type->base_type->bit_size;
+
+    return 0;
+}
+
+coda_type_special *coda_type_complex_new(coda_format format)
+{
+    coda_type_special *type;
+
+    type = (coda_type_special *)malloc(sizeof(coda_type_special));
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                       (long)sizeof(coda_type_special), __FILE__, __LINE__);
+        return NULL;
+    }
+    type->format = format;
+    type->retain_count = 0;
+    type->type_class = coda_special_class;
+    type->read_type = coda_native_type_not_available;
+    type->name = NULL;
+    type->description = NULL;
+    type->bit_size = -1;
+    type->size_expr = NULL;
+    type->attributes = NULL;
+    type->special_type = coda_special_complex;
+    type->base_type = NULL;
+    type->unit = NULL;
+    type->time_type = -1;
+
+    return type;
+}
+
+int coda_type_complex_set_type(coda_type_special *type, coda_type *element_type)
+{
+    coda_type_record_field *field;
+
+    if (type->base_type != NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "complex type already has an element type");
+        return -1;
+    }
+    if (element_type->type_class != coda_integer_class && element_type->type_class != coda_real_class)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid type class (%s) for element type of complex type",
+                       coda_type_get_class_name(type->type_class));
+        return -1;
+    }
+    if (type->format != element_type->format)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION,
+                       "cannot use element type with %s format for complex type with %s format",
+                       coda_type_get_format_name(element_type->format), coda_type_get_format_name(type->format));
+        return -1;
+    }
+
+    type->base_type = (coda_type *)coda_type_record_new(type->format);
+    field = coda_type_record_field_new("real");
+    coda_type_record_field_set_type(field, element_type);
+    coda_type_record_add_field((coda_type_record *)type->base_type, field);
+    field = coda_type_record_field_new("imaginary");
+    coda_type_record_field_set_type(field, element_type);
+    coda_type_record_add_field((coda_type_record *)type->base_type, field);
+
+    /* set bit_size */
+    type->bit_size = type->base_type->bit_size;
+
+    return 0;
+}
+
+int coda_type_complex_validate(coda_type_special *type)
+{
+    if (type->base_type == NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "missing element type for complex type");
+        return -1;
+    }
+    return 0;
+}
+
+void coda_type_done(void)
+{
+    int i;
+
+    for (i = 0; i < num_empty_record_singletons; i++)
+    {
+        if (empty_record_singleton[i] != NULL)
+        {
+            coda_type_release((coda_type *)empty_record_singleton[i]);
+        }
+        empty_record_singleton[i] = NULL;
+    }
+    for (i = 0; i < num_no_data_singletons; i++)
+    {
+        if (no_data_singleton[i] != NULL)
+        {
+            coda_type_release((coda_type *)no_data_singleton[i]);
+        }
+        no_data_singleton[i] = NULL;
+    }
+}
+
+
 /** \addtogroup coda_types
  * @{
  */
@@ -199,6 +2822,10 @@ LIBCODA_API const char *coda_type_get_format_name(coda_format format)
             return "hdf4";
         case coda_format_hdf5:
             return "hdf5";
+        case coda_format_rinex:
+            return "rinex";
+        case coda_format_sp3c:
+            return "sp3c";
     }
 
     return "unknown";
@@ -298,55 +2925,6 @@ LIBCODA_API const char *coda_type_get_special_type_name(coda_special_type specia
     return "unknown";
 }
 
-/** Determine wether data of this type is stored as ascii data.
- * You can use this function to determine whether the data is stored in ascii format. If it is in ascii format, you will
- * be able to read the data using coda_cursor_read_string().
- * If, for instance, a record consists of purely ascii data (i.e. it is a structured ascii block in the file)
- * \a has_ascii_content for a cursor pointing to that record will be 1 and you can use the coda_cursor_read_string()
- * function to read the whole record as a block of raw ascii.
- * \param type CODA type.
- * \param has_ascii_content Pointer to a variable where the ascii content status will be stored.
- * \return
- *   \arg \c 0, Success.
- *   \arg \c -1, Error occurred (check #coda_errno).
- */
-LIBCODA_API int coda_type_has_ascii_content(const coda_type *type, int *has_ascii_content)
-{
-    if (type == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    if (has_ascii_content == NULL)
-    {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "has_ascii_content argument is NULL (%s:%u)", __FILE__, __LINE__);
-        return -1;
-    }
-
-    switch (type->format)
-    {
-        case coda_format_ascii:
-            *has_ascii_content = 1;
-            break;
-        case coda_format_binary:
-            *has_ascii_content = 0;
-            break;
-        case coda_format_xml:
-            return coda_xml_type_has_ascii_content(type, has_ascii_content);
-        case coda_format_netcdf:
-        case coda_format_grib1:
-        case coda_format_grib2:
-        case coda_format_cdf:
-        case coda_format_hdf4:
-        case coda_format_hdf5:
-            *has_ascii_content = (type->type_class == coda_text_class);
-            break;
-    }
-
-    return 0;
-}
-
 /** Get the storage format of a type.
  * \param type CODA type.
  * \param format Pointer to a variable where the format will be stored.
@@ -361,7 +2939,6 @@ LIBCODA_API int coda_type_get_format(const coda_type *type, coda_format *format)
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
-
     if (format == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "format argument is NULL (%s:%u)", __FILE__, __LINE__);
@@ -386,7 +2963,6 @@ LIBCODA_API int coda_type_get_class(const coda_type *type, coda_type_class *type
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
-
     if (type_class == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type_class argument is NULL (%s:%u)", __FILE__, __LINE__);
@@ -418,49 +2994,25 @@ LIBCODA_API int coda_type_get_read_type(const coda_type *type, coda_native_type 
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
-
     if (read_type == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "read_type argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
 
-    switch (type->format)
+    if ((type->type_class == coda_integer_class || type->type_class == coda_real_class) &&
+        coda_option_perform_conversions && ((coda_type_number *)type)->conversion != NULL)
     {
-        case coda_format_ascii:
-            return coda_ascii_type_get_read_type(type, read_type);
-        case coda_format_binary:
-            return coda_bin_type_get_read_type(type, read_type);
-        case coda_format_xml:
-            return coda_xml_type_get_read_type(type, read_type);
-        case coda_format_netcdf:
-            return coda_netcdf_type_get_read_type(type, read_type);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_type_get_read_type(type, read_type);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_type_get_read_type(type, read_type);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_type_get_read_type(type, read_type);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
+        *read_type = coda_native_type_double;
+        return 0;
     }
 
-    assert(0);
-    exit(1);
+    *read_type = type->read_type;
+    return 0;
 }
 
 /** Get the length in bytes of a string data type.
- * If the type does not refer to ascii data the function will return an error.
+ * If the type does not refer to text data the function will return an error.
  * If the size is not fixed and can only be determined from information inside a product then \a length will be set
  * to -1.
  * \param type CODA type.
@@ -478,18 +3030,9 @@ LIBCODA_API int coda_type_get_string_length(const coda_type *type, long *length)
     }
     if (type->type_class != coda_text_class)
     {
-        int has_ascii_content;
-
-        if (coda_type_has_ascii_content(type, &has_ascii_content) != 0)
-        {
-            return -1;
-        }
-        if (!has_ascii_content)
-        {
-            coda_set_error(CODA_ERROR_INVALID_TYPE, "type does not refer to text (current type is %s)",
-                           coda_type_get_class_name(type->type_class));
-            return -1;
-        }
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "type does not refer to text (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
+        return -1;
     }
     if (length == NULL)
     {
@@ -497,39 +3040,8 @@ LIBCODA_API int coda_type_get_string_length(const coda_type *type, long *length)
         return -1;
     }
 
-    switch (type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_type_get_string_length(type, length);
-        case coda_format_binary:
-            assert(0);
-            exit(1);
-        case coda_format_xml:
-            return coda_xml_type_get_string_length(type, length);
-        case coda_format_netcdf:
-            return coda_netcdf_type_get_string_length(type, length);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_type_get_string_length(type, length);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_type_get_string_length(type, length);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_type_get_string_length(type, length);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-    }
-
-    assert(0);
-    exit(1);
+    *length = (type->bit_size < 0 ? -1 : (long)(type->bit_size >> 3));
+    return 0;
 }
 
 /** Get the bit size for the data type.
@@ -554,31 +3066,13 @@ LIBCODA_API int coda_type_get_bit_size(const coda_type *type, int64_t *bit_size)
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
-
     if (bit_size == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "bit_size argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
 
-    switch (type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_type_get_bit_size(type, bit_size);
-        case coda_format_binary:
-            return coda_bin_type_get_bit_size(type, bit_size);
-        case coda_format_xml:
-            return coda_xml_type_get_bit_size(type, bit_size);
-        case coda_format_netcdf:
-        case coda_format_grib1:
-        case coda_format_grib2:
-        case coda_format_cdf:
-        case coda_format_hdf4:
-        case coda_format_hdf5:
-            *bit_size = -1;
-            break;
-    }
-
+    *bit_size = (type->bit_size >= 0 ? type->bit_size : -1);
     return 0;
 }
 
@@ -602,7 +3096,6 @@ LIBCODA_API int coda_type_get_name(const coda_type *type, const char **name)
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
-
     if (name == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "name argument is NULL (%s:%u)", __FILE__, __LINE__);
@@ -610,7 +3103,6 @@ LIBCODA_API int coda_type_get_name(const coda_type *type, const char **name)
     }
 
     *name = type->name;
-
     return 0;
 }
 
@@ -630,7 +3122,6 @@ LIBCODA_API int coda_type_get_description(const coda_type *type, const char **de
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
-
     if (description == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "description argument is NULL (%s:%u)", __FILE__, __LINE__);
@@ -638,7 +3129,6 @@ LIBCODA_API int coda_type_get_description(const coda_type *type, const char **de
     }
 
     *description = type->description;
-
     return 0;
 }
 
@@ -669,31 +3159,33 @@ LIBCODA_API int coda_type_get_unit(const coda_type *type, const char **unit)
         return -1;
     }
 
-    if (type->type_class == coda_array_class)
+    switch (type->type_class)
     {
-        coda_type *base_type;
+        case coda_array_class:
+            {
+                coda_type *base_type;
 
-        if (coda_type_get_array_base_type(type, &base_type) != 0)
-        {
-            return -1;
-        }
-        return coda_type_get_unit(base_type, unit);
-    }
-
-    switch (type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_type_get_unit(type, unit);
-        case coda_format_binary:
-            return coda_bin_type_get_unit(type, unit);
-        case coda_format_xml:
-            return coda_xml_type_get_unit(type, unit);
-        case coda_format_netcdf:
-        case coda_format_grib1:
-        case coda_format_grib2:
-        case coda_format_cdf:
-        case coda_format_hdf4:
-        case coda_format_hdf5:
+                if (coda_type_get_array_base_type(type, &base_type) != 0)
+                {
+                    return -1;
+                }
+                return coda_type_get_unit(base_type, unit);
+            }
+        case coda_integer_class:
+        case coda_real_class:
+            if (coda_option_perform_conversions && ((coda_type_number *)type)->conversion != NULL)
+            {
+                *unit = ((coda_type_number *)type)->conversion->unit;
+            }
+            else
+            {
+                *unit = ((coda_type_number *)type)->unit;
+            }
+            break;
+        case coda_special_class:
+            *unit = ((coda_type_special *)type)->unit;
+            break;
+        default:
             *unit = NULL;
             break;
     }
@@ -725,27 +3217,29 @@ LIBCODA_API int coda_type_get_fixed_value(const coda_type *type, const char **fi
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
-
     if (fixed_value == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "fixed_value argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
 
-    switch (type->format)
+    switch (type->type_class)
     {
-        case coda_format_ascii:
-            return coda_ascii_type_get_fixed_value(type, fixed_value, length);
-        case coda_format_binary:
-            return coda_bin_type_get_fixed_value(type, fixed_value, length);
-        case coda_format_xml:
-            return coda_xml_type_get_fixed_value(type, fixed_value, length);
-        case coda_format_netcdf:
-        case coda_format_grib1:
-        case coda_format_grib2:
-        case coda_format_cdf:
-        case coda_format_hdf4:
-        case coda_format_hdf5:
+        case coda_text_class:
+            *fixed_value = ((coda_type_text *)type)->fixed_value;
+            if (length != NULL)
+            {
+                *length = ((*fixed_value == NULL) ? 0 : strlen(*fixed_value));
+            }
+            break;
+        case coda_raw_class:
+            *fixed_value = ((coda_type_raw *)type)->fixed_value;
+            if (length != NULL)
+            {
+                *length = ((*fixed_value == NULL) ? 0 : ((coda_type_raw *)type)->fixed_value_length);
+            }
+            break;
+        default:
             *fixed_value = NULL;
             break;
     }
@@ -778,39 +3272,11 @@ LIBCODA_API int coda_type_get_num_record_fields(const coda_type *type, long *num
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "num_fields argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
+
     }
 
-    switch (type->format)
-    {
-        case coda_format_ascii:
-        case coda_format_binary:
-            return coda_ascbin_type_get_num_record_fields(type, num_fields);
-        case coda_format_xml:
-            return coda_xml_type_get_num_record_fields(type, num_fields);
-        case coda_format_netcdf:
-            return coda_netcdf_type_get_num_record_fields(type, num_fields);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_type_get_num_record_fields(type, num_fields);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_type_get_num_record_fields(type, num_fields);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_type_get_num_record_fields(type, num_fields);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-    }
-
-    assert(0);
-    exit(1);
+    *num_fields = ((coda_type_record *)type)->num_fields;
+    return 0;
 }
 
 /** Get the field index from a field name for a record type.
@@ -824,7 +3290,7 @@ LIBCODA_API int coda_type_get_num_record_fields(const coda_type *type, long *num
  */
 LIBCODA_API int coda_type_get_record_field_index_from_name(const coda_type *type, const char *name, long *index)
 {
-    int result = 0;
+    long field_index;
 
     if (type == NULL)
     {
@@ -848,50 +3314,60 @@ LIBCODA_API int coda_type_get_record_field_index_from_name(const coda_type *type
         return -1;
     }
 
-    switch (type->format)
+    field_index = hashtable_get_index_from_name(((coda_type_record *)type)->hash_data, name);
+    if (field_index < 0)
     {
-        case coda_format_ascii:
-        case coda_format_binary:
-            result = coda_ascbin_type_get_record_field_index_from_name(type, name, index);
-            break;
-        case coda_format_xml:
-            result = coda_xml_type_get_record_field_index_from_name(type, name, index);
-            break;
-        case coda_format_netcdf:
-            result = coda_netcdf_type_get_record_field_index_from_name(type, name, index);
-            break;
-        case coda_format_grib1:
-        case coda_format_grib2:
-            result = coda_grib_type_get_record_field_index_from_name(type, name, index);
-            break;
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            result = coda_hdf4_type_get_record_field_index_from_name(type, name, index);
-            break;
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            result = coda_hdf5_type_get_record_field_index_from_name(type, name, index);
-            break;
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
+        coda_set_error(CODA_ERROR_INVALID_NAME, "record does not contain a field named '%s'", name);
+        return -1;
     }
+    *index = field_index;
+    return 0;
+}
 
-    if (result != 0)
+/** Get the field index based on the 'real name' of the field for a record type.
+ * If the type is not a record class the function will return an error.
+ * If a field has no explicit 'real name' set, a match against the regular field name will be performed.
+ * \param type CODA type.
+ * \param real_name Real name of the record field.
+ * \param index Pointer to a variable where the field index will be stored (0 <= \a index < number of fields).
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_type_get_record_field_index_from_real_name(const coda_type *type, const char *real_name,
+                                                                long *index)
+{
+    long field_index;
+
+    if (type == NULL)
     {
-        if (coda_errno == CODA_ERROR_INVALID_NAME)
-        {
-            coda_set_error(CODA_ERROR_INVALID_NAME, "record does not contain a field named '%s'", name);
-        }
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->type_class != coda_record_class)
+    {
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "type does not refer to a record (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
+        return -1;
+    }
+    if (real_name == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "real_name argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (index == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "index argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
 
+    field_index = hashtable_get_index_from_name(((coda_type_record *)type)->real_name_hash_data, real_name);
+    if (field_index < 0)
+    {
+        coda_set_error(CODA_ERROR_INVALID_NAME, "record does not contain a field with real name '%s'", real_name);
+        return -1;
+    }
+    *index = field_index;
     return 0;
 }
 
@@ -923,37 +3399,14 @@ LIBCODA_API int coda_type_get_record_field_type(const coda_type *type, long inde
         return -1;
     }
 
-    switch (type->format)
+    if (index < 0 || index >= ((coda_type_record *)type)->num_fields)
     {
-        case coda_format_ascii:
-        case coda_format_binary:
-            return coda_ascbin_type_get_record_field_type(type, index, field_type);
-        case coda_format_xml:
-            return coda_xml_type_get_record_field_type(type, index, field_type);
-        case coda_format_netcdf:
-            return coda_netcdf_type_get_record_field_type(type, index, field_type);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_type_get_record_field_type(type, index, field_type);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_type_get_record_field_type(type, index, field_type);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_type_get_record_field_type(type, index, field_type);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
+        coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
+                       ((coda_type_record *)type)->num_fields, __FILE__, __LINE__);
+        return -1;
     }
-
-    assert(0);
-    exit(1);
+    *field_type = ((coda_type_record *)type)->field[index]->type;
+    return 0;
 }
 
 /** Get the name of a record field.
@@ -985,37 +3438,14 @@ LIBCODA_API int coda_type_get_record_field_name(const coda_type *type, long inde
         return -1;
     }
 
-    switch (type->format)
+    if (index < 0 || index >= ((coda_type_record *)type)->num_fields)
     {
-        case coda_format_ascii:
-        case coda_format_binary:
-            return coda_ascbin_type_get_record_field_name(type, index, name);
-        case coda_format_xml:
-            return coda_xml_type_get_record_field_name(type, index, name);
-        case coda_format_netcdf:
-            return coda_netcdf_type_get_record_field_name(type, index, name);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_type_get_record_field_name(type, index, name);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_type_get_record_field_name(type, index, name);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_type_get_record_field_name(type, index, name);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
+        coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
+                       ((coda_type_record *)type)->num_fields, __FILE__, __LINE__);
+        return -1;
     }
-
-    assert(0);
-    exit(1);
+    *name = ((coda_type_record *)type)->field[index]->name;
+    return 0;
 }
 
 /** Get the unaltered name of a record field.
@@ -1056,37 +3486,28 @@ LIBCODA_API int coda_type_get_record_field_real_name(const coda_type *type, long
         return -1;
     }
 
-    switch (type->format)
+    if (index < 0 || index >= ((coda_type_record *)type)->num_fields)
     {
-        case coda_format_ascii:
-        case coda_format_binary:
-            return coda_ascbin_type_get_record_field_real_name(type, index, real_name);
-        case coda_format_xml:
-            return coda_xml_type_get_record_field_name(type, index, real_name);
-        case coda_format_netcdf:
-            return coda_netcdf_type_get_record_field_name(type, index, real_name);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_type_get_record_field_name(type, index, real_name);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_type_get_record_field_name(type, index, real_name);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_type_get_record_field_name(type, index, real_name);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
+        coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
+                       ((coda_type_record *)type)->num_fields, __FILE__, __LINE__);
+        return -1;
     }
-
-    assert(0);
-    exit(1);
+    if (((coda_type_record *)type)->field[index]->real_name != NULL)
+    {
+        if (type->format == coda_format_xml)
+        {
+            *real_name = coda_element_name_from_xml_name(((coda_type_record *)type)->field[index]->real_name);
+        }
+        else
+        {
+            *real_name = ((coda_type_record *)type)->field[index]->real_name;
+        }
+    }
+    else
+    {
+        *real_name = ((coda_type_record *)type)->field[index]->name;
+    }
+    return 0;
 }
 
 /** Get the hidden status of a record field.
@@ -1121,24 +3542,13 @@ LIBCODA_API int coda_type_get_record_field_hidden_status(const coda_type *type, 
         return -1;
     }
 
-    switch (type->format)
+    if (index < 0 || index >= ((coda_type_record *)type)->num_fields)
     {
-        case coda_format_ascii:
-        case coda_format_binary:
-            return coda_ascbin_type_get_record_field_hidden_status(type, index, hidden);
-        case coda_format_xml:
-            return coda_xml_type_get_record_field_hidden_status(type, index, hidden);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_type_get_record_field_hidden_status(type, index, hidden);
-        case coda_format_netcdf:
-        case coda_format_cdf:
-        case coda_format_hdf4:
-        case coda_format_hdf5:
-            *hidden = 0;
-            break;
+        coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
+                       ((coda_type_record *)type)->num_fields, __FILE__, __LINE__);
+        return -1;
     }
-
+    *hidden = ((coda_type_record *)type)->field[index]->hidden;
     return 0;
 }
 
@@ -1176,24 +3586,13 @@ LIBCODA_API int coda_type_get_record_field_available_status(const coda_type *typ
         return -1;
     }
 
-    switch (type->format)
+    if (index < 0 || index >= ((coda_type_record *)type)->num_fields)
     {
-        case coda_format_ascii:
-        case coda_format_binary:
-            return coda_ascbin_type_get_record_field_available_status(type, index, available);
-        case coda_format_xml:
-            return coda_xml_type_get_record_field_available_status(type, index, available);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_type_get_record_field_available_status(type, index, available);
-        case coda_format_netcdf:
-        case coda_format_cdf:
-        case coda_format_hdf4:
-        case coda_format_hdf5:
-            *available = 1;
-            break;
+        coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
+                       ((coda_type_record *)type)->num_fields, __FILE__, __LINE__);
+        return -1;
     }
-
+    *available = (((coda_type_record *)type)->field[index]->optional ? -1 : 1);
     return 0;
 }
 
@@ -1226,23 +3625,7 @@ LIBCODA_API int coda_type_get_record_union_status(const coda_type *type, int *is
         return -1;
     }
 
-    switch (type->format)
-    {
-        case coda_format_ascii:
-        case coda_format_binary:
-            return coda_ascbin_type_get_record_union_status(type, is_union);
-        case coda_format_xml:
-            return coda_xml_type_get_record_union_status(type, is_union);
-        case coda_format_netcdf:
-        case coda_format_grib1:
-        case coda_format_grib2:
-        case coda_format_cdf:
-        case coda_format_hdf4:
-        case coda_format_hdf5:
-            *is_union = 0;
-            break;
-    }
-
+    *is_union = (((coda_type_record *)type)->union_field_expr != NULL);
     return 0;
 }
 
@@ -1273,37 +3656,8 @@ LIBCODA_API int coda_type_get_array_num_dims(const coda_type *type, int *num_dim
         return -1;
     }
 
-    switch (type->format)
-    {
-        case coda_format_ascii:
-        case coda_format_binary:
-            return coda_ascbin_type_get_array_num_dims(type, num_dims);
-        case coda_format_xml:
-            return coda_xml_type_get_array_num_dims(type, num_dims);
-        case coda_format_netcdf:
-            return coda_netcdf_type_get_array_num_dims(type, num_dims);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_type_get_array_num_dims(type, num_dims);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_type_get_array_num_dims(type, num_dims);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_type_get_array_num_dims(type, num_dims);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-    }
-
-    assert(0);
-    exit(1);
+    *num_dims = ((coda_type_array *)type)->num_dims;
+    return 0;
 }
 
 /** Retrieve the dimensions with a constant value for an array.
@@ -1325,6 +3679,8 @@ LIBCODA_API int coda_type_get_array_num_dims(const coda_type *type, int *num_dim
  */
 LIBCODA_API int coda_type_get_array_dim(const coda_type *type, int *num_dims, long dim[])
 {
+    int i;
+
     if (type == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
@@ -1347,37 +3703,12 @@ LIBCODA_API int coda_type_get_array_dim(const coda_type *type, int *num_dims, lo
         return -1;
     }
 
-    switch (type->format)
+    *num_dims = ((coda_type_array *)type)->num_dims;
+    for (i = 0; i < ((coda_type_array *)type)->num_dims; i++)
     {
-        case coda_format_ascii:
-        case coda_format_binary:
-            return coda_ascbin_type_get_array_dim(type, num_dims, dim);
-        case coda_format_xml:
-            return coda_xml_type_get_array_dim(type, num_dims, dim);
-        case coda_format_netcdf:
-            return coda_netcdf_type_get_array_dim(type, num_dims, dim);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_type_get_array_dim(type, num_dims, dim);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_type_get_array_dim(type, num_dims, dim);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_type_get_array_dim(type, num_dims, dim);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
+        dim[i] = ((coda_type_array *)type)->dim[i];
     }
-
-    assert(0);
-    exit(1);
+    return 0;
 }
 
 /** Get the CODA type for the elements of an array.
@@ -1407,37 +3738,8 @@ LIBCODA_API int coda_type_get_array_base_type(const coda_type *type, coda_type *
         return -1;
     }
 
-    switch (type->format)
-    {
-        case coda_format_ascii:
-        case coda_format_binary:
-            return coda_ascbin_type_get_array_base_type(type, base_type);
-        case coda_format_xml:
-            return coda_xml_type_get_array_base_type(type, base_type);
-        case coda_format_netcdf:
-            return coda_netcdf_type_get_array_base_type(type, base_type);
-        case coda_format_grib1:
-        case coda_format_grib2:
-            return coda_grib_type_get_array_base_type(type, base_type);
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            return coda_hdf4_type_get_array_base_type(type, base_type);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            return coda_hdf5_type_get_array_base_type(type, base_type);
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-    }
-
-    assert(0);
-    exit(1);
+    *base_type = ((coda_type_array *)type)->base_type;
+    return 0;
 }
 
 /** Get the special type for a type.
@@ -1468,25 +3770,8 @@ LIBCODA_API int coda_type_get_special_type(const coda_type *type, coda_special_t
         return -1;
     }
 
-    switch (type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_type_get_special_type(type, special_type);
-        case coda_format_binary:
-            return coda_bin_type_get_special_type(type, special_type);
-        case coda_format_xml:
-            return coda_xml_type_get_special_type(type, special_type);
-        case coda_format_netcdf:
-        case coda_format_grib1:
-        case coda_format_grib2:
-        case coda_format_cdf:
-        case coda_format_hdf4:
-        case coda_format_hdf5:
-            break;
-    }
-
-    assert(0);
-    exit(1);
+    *special_type = ((coda_type_special *)type)->special_type;
+    return 0;
 }
 
 /** Get the base type for a special type.
@@ -1516,25 +3801,8 @@ LIBCODA_API int coda_type_get_special_base_type(const coda_type *type, coda_type
         return -1;
     }
 
-    switch (type->format)
-    {
-        case coda_format_ascii:
-            return coda_ascii_type_get_special_base_type(type, base_type);
-        case coda_format_binary:
-            return coda_bin_type_get_special_base_type(type, base_type);
-        case coda_format_xml:
-            return coda_xml_type_get_special_base_type(type, base_type);
-        case coda_format_netcdf:
-        case coda_format_grib1:
-        case coda_format_grib2:
-        case coda_format_cdf:
-        case coda_format_hdf4:
-        case coda_format_hdf5:
-            break;
-    }
-
-    assert(0);
-    exit(1);
+    *base_type = ((coda_type_special *)type)->base_type;
+    return 0;
 }
 
 /** @} */

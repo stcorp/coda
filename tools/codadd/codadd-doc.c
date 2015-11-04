@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -33,10 +33,7 @@
 
 #include "coda-internal.h"
 #include "coda-expr.h"
-#include "coda-ascbin-internal.h"
-#include "coda-ascii-internal.h"
-#include "coda-bin-internal.h"
-#include "coda-xml-internal.h"
+#include "coda-type.h"
 #include "coda-definition.h"
 
 #ifdef __GNUC__
@@ -236,13 +233,16 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
 
 static void html_attr_begin(const char *key_name, int *first_attribute)
 {
-    if (!*first_attribute)
+    if (first_attribute != NULL)
     {
-        fi_printf("<br /><br />\n");
-    }
-    else
-    {
-        *first_attribute = 0;
+        if (!*first_attribute)
+        {
+            fi_printf("<br /><br />\n");
+        }
+        else
+        {
+            *first_attribute = 0;
+        }
     }
     fi_printf("<span class=\"attr_key\">%s</span><span class=\"attr_value\">: ", key_name);
 }
@@ -252,264 +252,126 @@ static void html_attr_end(void)
     ff_printf("</span>\n");
 }
 
-static void generate_html_ascbin_attributes(const coda_ascbin_type *type, int first_attribute)
+static void generate_html_attributes(const coda_type *type, int *first_attribute)
 {
-    int i;
+    long num_fields;
+    long i;
 
-    switch (type->tag)
+    coda_type_get_num_record_fields(type, &num_fields);
+
+    for (i = 0; i < num_fields; i++)
     {
-        case tag_ascbin_record:
-            if (((coda_ascbin_record *)type)->fast_size_expr != NULL)
-            {
-                html_attr_begin("fast&nbsp;size&nbsp;expr", &first_attribute);
-                generate_html_expr(((coda_ascbin_record *)type)->fast_size_expr, 15);
-                html_attr_end();
-            }
-            break;
-        case tag_ascbin_union:
-            html_attr_begin("field&nbsp;expr", &first_attribute);
-            generate_html_expr(((coda_ascbin_union *)type)->field_expr, 15);
-            html_attr_end();
-            if (((coda_ascbin_union *)type)->fast_size_expr != NULL)
-            {
-                html_attr_begin("fast&nbsp;size&nbsp;expr", &first_attribute);
-                generate_html_expr(((coda_ascbin_union *)type)->fast_size_expr, 15);
-                html_attr_end();
-            }
-            break;
-        case tag_ascbin_array:
-            for (i = 0; i < ((coda_ascbin_array *)type)->num_dims; i++)
-            {
-                if (((coda_ascbin_array *)type)->dim_expr[i] != NULL)
-                {
-                    char dimstr[10];
+        coda_type *field_type;
+        const char *field_name;
+        const char *real_name;
+        int first_field_attribute = 1;
+        int hidden;
+        int available;
 
-                    sprintf(dimstr, "dim_%d", i);
-                    html_attr_begin(dimstr, &first_attribute);
-                    generate_html_expr(((coda_ascbin_array *)type)->dim_expr[i], 15);
-                    html_attr_end();
-                }
-            }
-            break;
-    }
-}
+        coda_type_get_record_field_type(type, i, &field_type);
+        coda_type_get_record_field_name(type, i, &field_name);
+        coda_type_get_record_field_real_name(type, i, &real_name);
+        coda_type_get_record_field_hidden_status(type, i, &hidden);
+        coda_type_get_record_field_available_status(type, i, &available);
 
-static void generate_html_ascii_attributes(const coda_ascii_type *type, int first_attribute)
-{
-    int i;
-
-    switch (type->tag)
-    {
-        case tag_bin_record:
-        case tag_bin_union:
-        case tag_bin_array:
-            generate_html_ascbin_attributes((coda_ascbin_type *)type, first_attribute);
-            break;
-        case tag_ascii_integer:
-        case tag_ascii_float:
-            {
-                coda_ascii_number *number;
-
-                number = (coda_ascii_number *)type;
-                if (number->unit != NULL)
-                {
-                    html_attr_begin("unit", &first_attribute);
-                    ff_printf("\"%s\"", number->unit);
-                    html_attr_end();
-                }
-                if (number->conversion != NULL)
-                {
-                    html_attr_begin("converted&nbsp;unit", &first_attribute);
-                    ff_printf("\"%s\" (multiply by %g/%g)",
-                              (number->conversion->unit == NULL ? "" : number->conversion->unit),
-                              number->conversion->numerator, number->conversion->denominator);
-                    html_attr_end();
-                }
-                if (number->mappings != NULL)
-                {
-                    coda_ascii_mappings *mappings = number->mappings;
-
-                    for (i = 0; i < mappings->num_mappings; i++)
-                    {
-                        html_attr_begin("mapping", &first_attribute);
-                        ff_printf("\"");
-                        generate_escaped_html_string(mappings->mapping[i]->str, mappings->mapping[i]->length);
-                        ff_printf("\"&nbsp;-&gt;&nbsp;");
-                        if (type->type_class == coda_integer_class)
-                        {
-                            char s[21];
-
-                            coda_str64(((coda_ascii_integer_mapping *)mappings->mapping[i])->value, s);
-                            ff_printf("%s", s);
-                        }
-                        else
-                        {
-                            ff_printf("%f", ((coda_ascii_float_mapping *)mappings->mapping[i])->value);
-                        }
-                        html_attr_end();
-                    }
-                }
-            }
-            break;
-        case tag_ascii_text:
-            if (((coda_ascii_text *)type)->byte_size_expr != NULL)
-            {
-                html_attr_begin("byte&nbsp;size", &first_attribute);
-                generate_html_expr(((coda_ascii_text *)type)->byte_size_expr, 15);
-                html_attr_end();
-            }
-            if (((coda_ascii_text *)type)->fixed_value != NULL)
-            {
-                html_attr_begin("fixed&nbsp;value", &first_attribute);
-                ff_printf("\"");
-                generate_escaped_html_string(((coda_ascii_text *)type)->fixed_value,
-                                             strlen(((coda_ascii_text *)type)->fixed_value));
-                ff_printf("\"");
-                html_attr_end();
-            }
-            break;
-        case tag_ascii_time:
-            html_attr_begin("unit", &first_attribute);
-            ff_printf("\"s since 2000-01-01\"");
-            html_attr_end();
-            if (((coda_ascii_text *)((coda_ascii_time *)type)->base_type)->mappings != NULL)
-            {
-                coda_ascii_mappings *mappings = ((coda_ascii_text *)((coda_ascii_time *)type)->base_type)->mappings;
-
-                for (i = 0; i < mappings->num_mappings; i++)
-                {
-                    html_attr_begin("mapping", &first_attribute);
-                    ff_printf("\"");
-                    generate_escaped_html_string(mappings->mapping[i]->str, mappings->mapping[i]->length);
-                    ff_printf("\"&nbsp;-&gt;&nbsp;%f", ((coda_ascii_float_mapping *)mappings->mapping[i])->value);
-                    html_attr_end();
-                }
-            }
-            break;
-        default:
-            break;
-    }
-}
-
-static void generate_html_bin_attributes(const coda_bin_type *type, int first_attribute)
-{
-    switch (type->tag)
-    {
-        case tag_bin_record:
-        case tag_bin_union:
-        case tag_bin_array:
-            generate_html_ascbin_attributes((coda_ascbin_type *)type, first_attribute);
-            break;
-        case tag_bin_integer:
-        case tag_bin_float:
-            {
-                coda_bin_number *number;
-
-                number = (coda_bin_number *)type;
-                if (number->unit != NULL)
-                {
-                    html_attr_begin("unit", &first_attribute);
-                    ff_printf("\"%s\"", number->unit);
-                    html_attr_end();
-                }
-                if (number->conversion != NULL)
-                {
-                    html_attr_begin("converted&nbsp;unit", &first_attribute);
-                    ff_printf("\"%s\" (multiply by %g/%g)",
-                              (number->conversion->unit == NULL ? "" : number->conversion->unit),
-                              number->conversion->numerator, number->conversion->denominator);
-                    html_attr_end();
-                }
-                if (type->bit_size > 8 && ((type->tag == tag_bin_integer &&
-                                            ((coda_bin_integer *)type)->endianness == coda_little_endian) ||
-                                           (type->tag == tag_bin_float &&
-                                            ((coda_bin_float *)type)->endianness == coda_little_endian)))
-                {
-                    html_attr_begin("endianness", &first_attribute);
-                    ff_printf("little endian");
-                    html_attr_end();
-                }
-                if (type->tag == tag_bin_integer && ((coda_bin_integer *)type)->bit_size_expr != NULL)
-                {
-                    html_attr_begin("bit&nbsp;size", &first_attribute);
-                    generate_html_expr(((coda_bin_integer *)type)->bit_size_expr, 15);
-                    html_attr_end();
-                }
-            }
-            break;
-        case tag_bin_raw:
-            if (((coda_bin_raw *)type)->bit_size_expr != NULL)
-            {
-                html_attr_begin("bit&nbsp;size", &first_attribute);
-                generate_html_expr(((coda_bin_raw *)type)->bit_size_expr, 15);
-                html_attr_end();
-            }
-            if (((coda_bin_raw *)type)->fixed_value != NULL)
-            {
-                html_attr_begin("fixed&nbsp;value", &first_attribute);
-                ff_printf("\"");
-                generate_escaped_html_string(((coda_bin_raw *)type)->fixed_value,
-                                             ((coda_bin_raw *)type)->fixed_value_length);
-                ff_printf("\"");
-                html_attr_end();
-            }
-            break;
-        case tag_bin_vsf_integer:
-            if (((coda_bin_vsf_integer *)type)->unit != NULL)
-            {
-                html_attr_begin("unit", &first_attribute);
-                ff_printf("\"%s\"", ((coda_bin_vsf_integer *)type)->unit);
-                html_attr_end();
-            }
-            break;
-        case tag_bin_time:
-            html_attr_begin("unit", &first_attribute);
-            ff_printf("\"s since 2000-01-01\"");
-            html_attr_end();
-            break;
-        default:
-            break;
-    }
-}
-
-static void generate_html_xml_attributes(const coda_xml_type *type, int first_attribute)
-{
-    if (type->tag == tag_xml_record || type->tag == tag_xml_text || type->tag == tag_xml_ascii_type)
-    {
-        coda_xml_attribute_record *attributes = ((coda_xml_element *)type)->attributes;
-        int i;
-
-        for (i = 0; i < attributes->num_attributes; i++)
+        if (first_attribute != NULL)
         {
-            if (!first_attribute)
+            if (!*first_attribute)
             {
                 fi_printf("<br /><br />\n");
             }
             else
             {
-                first_attribute = 0;
+                *first_attribute = 0;
             }
-            fi_printf("<span class=\"attr_key\">xml attribute</span><span class=\"attr_value\">: %s",
-                      attributes->attribute[i]->attr_name);
-            if (attributes->attribute[i]->fixed_value != NULL)
-            {
-                ff_printf("=\"");
-                generate_escaped_html_string(attributes->attribute[i]->fixed_value,
-                                             strlen(attributes->attribute[i]->fixed_value));
-                ff_printf("\"");
-            }
-            if (attributes->attribute[i]->optional)
-            {
-                ff_printf(" (optional)");
-            }
-            ff_printf("</span>\n");
         }
-    }
-    else if (type->tag == tag_xml_array)
-    {
-        html_attr_begin("dim_0", &first_attribute);
-        ff_printf("determined by number of occurences of xml element in file");
+        fi_printf("<table style=\"border-style: none\" cellspacing=\"0\" width=\"100%%\">\n");
+        fi_printf("<tr valign=\"top\"><td style=\"border-style: none\">");
+        html_attr_begin("attribute", NULL);
+        if (hidden)
+        {
+            fi_printf("%s", field_name);
+        }
+        else
+        {
+            fi_printf("<b>%s</b>", field_name);
+        }
+
+        ff_printf("</td><td style=\"border-width: 2px\">");
+
+        /* attributes */
+        if (strcmp(field_name, real_name) != 0)
+        {
+            html_attr_begin("real name", NULL);
+            ff_printf("<b>");
+            if (type->format == coda_format_xml)
+            {
+                char *element_name;
+                char *namespace;
+
+                element_name_and_namespace_from_xml_name(real_name, &element_name, &namespace);
+                if (namespace != NULL)
+                {
+                    ff_printf("{%s}", namespace);
+                    free(namespace);
+                }
+                ff_printf("%s", element_name);
+                free(element_name);
+            }
+            else
+            {
+                ff_printf("%s", real_name);
+            }
+            ff_printf("</b>");
+            html_attr_end();
+            ff_printf("<br />");
+        }
+
+        generate_html_type(field_type, 0, 1);
+
+        if (hidden)
+        {
+            if (first_field_attribute)
+            {
+                fi_printf("<br />\n");
+            }
+            html_attr_begin("hidden", &first_field_attribute);
+            ff_printf("true");
+            html_attr_end();
+        }
+        if (available == -1)
+        {
+            if (first_field_attribute)
+            {
+                fi_printf("<br />\n");
+            }
+            html_attr_begin("available", &first_field_attribute);
+            switch (type->format)
+            {
+                case coda_format_ascii:
+                case coda_format_binary:
+                    generate_html_expr(((coda_type_record *)type)->field[i]->available_expr, 15);
+                    break;
+                default:
+                    ff_printf("optional");
+                    break;
+            }
+            html_attr_end();
+        }
+        if (((coda_type_record *)type)->field[i]->bit_offset_expr != NULL)
+        {
+            if (first_field_attribute)
+            {
+                fi_printf("<br />\n");
+            }
+            html_attr_begin("bit offset", &first_field_attribute);
+            generate_html_expr(((coda_type_record *)type)->field[i]->bit_offset_expr, 15);
+            html_attr_end();
+        }
+
         html_attr_end();
+        ff_printf("</td></tr>\n");
+        fi_printf("</table>\n");
     }
 }
 
@@ -556,10 +418,6 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
             break;
         case coda_array_class:
             ff_printf("array");
-            if (type->format == coda_format_xml && ((coda_xml_type *)type)->tag == tag_xml_ascii_type)
-            {
-                break;
-            }
             if (type->name == NULL || expand_named_type)
             {
                 int num_dims;
@@ -593,49 +451,31 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
             coda_type_get_read_type(type, &read_type);
             ff_printf("%s", coda_type_get_native_type_name(read_type));
 
-            switch (type->format)
+            if (type->type_class == coda_text_class && type->format == coda_format_ascii)
             {
-                case coda_format_ascii:
-                    switch (((coda_ascii_type *)type)->tag)
-                    {
-                        case tag_ascii_line_separator:
-                            ff_printf(" [line&nbsp;separator]");
-                            break;
-                        case tag_ascii_line:
-                            ff_printf(" [line]");
-                            break;
-                        case tag_ascii_white_space:
-                            ff_printf(" [white&nbsp;space]");
-                            break;
-                        case tag_ascii_integer:
-                        case tag_ascii_float:
-                            if (((coda_ascii_number *)type)->conversion != NULL)
-                            {
-                                ff_printf(" (%s)", coda_type_get_native_type_name(coda_native_type_double));
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                    break;
-                case coda_format_binary:
-                    switch (((coda_bin_type *)type)->tag)
-                    {
-                        case tag_bin_integer:
-                        case tag_bin_float:
-                            if (((coda_bin_number *)type)->conversion != NULL)
-                            {
-                                ff_printf(" (%s)", coda_type_get_native_type_name(coda_native_type_double));
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                    break;
-                default:
-                    break;
+                switch (((coda_type_text *)type)->special_text_type)
+                {
+                    case ascii_text_default:
+                        break;
+                    case ascii_text_line_separator:
+                        ff_printf(" [line&nbsp;separator]");
+                        break;
+                    case ascii_text_line_with_eol:
+                    case ascii_text_line_without_eol:
+                        ff_printf(" [line]");
+                        break;
+                    case ascii_text_whitespace:
+                        ff_printf(" [white&nbsp;space]");
+                        break;
+                }
             }
-            break;
+            if (type->type_class == coda_integer_class || type->type_class == coda_real_class)
+            {
+                if (((coda_type_number *)type)->conversion != NULL)
+                {
+                    ff_printf(" (%s)", coda_type_get_native_type_name(coda_native_type_double));
+                }
+            }
     }
     if (type->name != NULL)
     {
@@ -673,96 +513,263 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
             ff_printf("\n");
             first_attribute = 0;
         }
-        switch (type->format)
+        if (type->size_expr != NULL)
         {
-            case coda_format_ascii:
-                generate_html_ascii_attributes((coda_ascii_type *)type, first_attribute);
-                break;
-            case coda_format_binary:
-                generate_html_bin_attributes((coda_bin_type *)type, first_attribute);
-                break;
-            case coda_format_xml:
-                generate_html_xml_attributes((coda_xml_type *)type, first_attribute);
-                break;
-            default:
-                assert(0);
-                exit(1);
-        }
-
-        /* base types */
-        if (type->format == coda_format_xml && ((coda_xml_type *)type)->tag == tag_xml_ascii_type)
-        {
-            if (!first_attribute)
+            if (type->bit_size == -8)
             {
-                fi_printf("<br />\n");
+                html_attr_begin("byte&nbsp;size", &first_attribute);
             }
-            fi_printf("<blockquote>\n");
-            generate_html_type((coda_type *)((coda_xml_element *)type)->ascii_type, 0, 1);
-            fi_printf("</blockquote>\n");
-        }
-        else
-        {
-            switch (type->type_class)
+            else
             {
-                case coda_record_class:
+                html_attr_begin("bit&nbsp;size", &first_attribute);
+            }
+            generate_html_expr(type->size_expr, 15);
+            html_attr_end();
+        }
+        switch (type->type_class)
+        {
+            case coda_record_class:
+                {
+                    coda_type_record *record = ((coda_type_record *)type);
+
+                    if (record->union_field_expr != NULL)
                     {
-                        long num_fields;
+                        html_attr_begin("field&nbsp;expr", &first_attribute);
+                        generate_html_expr(record->union_field_expr, 15);
+                        html_attr_end();
+                    }
+                }
+                break;
+            case coda_array_class:
+                {
+                    coda_type_array *array = ((coda_type_array *)type);
 
-                        coda_type_get_num_record_fields(type, &num_fields);
-                        if (num_fields == 0)
+                    for (i = 0; i < array->num_dims; i++)
+                    {
+                        if (array->dim[i] < 0)
                         {
-                            break;
-                        }
-                        if (!first_attribute)
-                        {
-                            fi_printf("<br /><br />\n");
-                        }
-                        fi_printf("<table class=\"fancy\" border=\"1\" cellspacing=\"0\" width=\"100%%\">\n");
-                        fi_printf("<tr><th class=\"subhdr\">id</th><th class=\"subhdr\">field&nbsp;name</th>"
-                                  "<th class=\"subhdr\">definition</th></tr>\n");
-                        for (i = 0; i < num_fields; i++)
-                        {
-                            coda_type *field_type;
-                            const char *field_name;
-                            int first_field_attribute = 1;
-                            int hidden;
-                            int available;
+                            char dimstr[10];
 
-                            coda_type_get_record_field_type(type, i, &field_type);
-                            coda_type_get_record_field_name(type, i, &field_name);
-                            coda_type_get_record_field_hidden_status(type, i, &hidden);
-                            coda_type_get_record_field_available_status(type, i, &available);
-
-                            fi_printf("<tr valign=\"top\">");
-                            fi_printf("<td>%d</td>", i);
-                            if (hidden)
+                            sprintf(dimstr, "dim_%d", i);
+                            html_attr_begin(dimstr, &first_attribute);
+                            if (array->dim_expr[i] != NULL)
                             {
-                                fi_printf("<td>%s</td>\n", field_name);
+                                generate_html_expr(array->dim_expr[i], 15);
                             }
                             else
                             {
-                                fi_printf("<td><b>%s</b></td>\n", field_name);
+                                ff_printf("determined automatically based on %s specific algorithm",
+                                          coda_type_get_format_name(type->format));
                             }
+                            html_attr_end();
+                        }
+                    }
+                }
+                break;
+            case coda_integer_class:
+            case coda_real_class:
+                {
+                    coda_type_number *number = (coda_type_number *)type;
 
-                            /* attributes */
-                            fi_printf("<td>\n");
-                            if (type->format == coda_format_xml)
+                    if (number->unit != NULL)
+                    {
+                        html_attr_begin("unit", &first_attribute);
+                        ff_printf("\"%s\"", number->unit);
+                        html_attr_end();
+                    }
+                    if (number->conversion != NULL)
+                    {
+                        int first = 1;
+
+                        html_attr_begin("converted&nbsp;unit", &first_attribute);
+                        ff_printf("\"%s\" (", (number->conversion->unit == NULL ? "" : number->conversion->unit));
+                        if (number->conversion->numerator != 1.0 || number->conversion->denominator != 1.0)
+                        {
+                            first = 0;
+                            ff_printf("multiply by %g/%g", number->conversion->numerator,
+                                      number->conversion->denominator);
+                        }
+                        if (number->conversion->add_offset != 0.0)
+                        {
+                            if (first)
                             {
-                                const char *xml_name;
-                                char *element_name;
-                                char *namespace;
+                                ff_printf(", ");
+                                first = 0;
+                            }
+                            ff_printf("add %g", number->conversion->add_offset);
+                        }
+                        if (!coda_isNaN(number->conversion->invalid_value))
+                        {
+                            if (first)
+                            {
+                                ff_printf(", ");
+                            }
+                            ff_printf("set %g to NaN", number->conversion->invalid_value);
+                        }
+                        ff_printf(")");
+                        html_attr_end();
+                    }
+                    if (number->endianness == coda_little_endian)
+                    {
+                        html_attr_begin("endianness", &first_attribute);
+                        ff_printf("little endian");
+                        html_attr_end();
+                    }
+                    if (number->mappings != NULL)
+                    {
+                        coda_ascii_mappings *mappings = number->mappings;
 
-                                first_field_attribute = 0;
-                                fi_printf("<span class=\"attr_key\">xml name</span><span class=\"attr_value\">: <b>");
-                                if (((coda_xml_type *)type)->tag == tag_xml_root)
+                        for (i = 0; i < mappings->num_mappings; i++)
+                        {
+                            html_attr_begin("mapping", &first_attribute);
+                            ff_printf("\"");
+                            generate_escaped_html_string(mappings->mapping[i]->str, mappings->mapping[i]->length);
+                            ff_printf("\"&nbsp;-&gt;&nbsp;");
+                            if (type->type_class == coda_integer_class)
+                            {
+                                char s[21];
+
+                                coda_str64(((coda_ascii_integer_mapping *)mappings->mapping[i])->value, s);
+                                ff_printf("%s", s);
+                            }
+                            else
+                            {
+                                ff_printf("%f", ((coda_ascii_float_mapping *)mappings->mapping[i])->value);
+                            }
+                            html_attr_end();
+                        }
+                    }
+                }
+                break;
+            case coda_text_class:
+                {
+                    coda_type_text *text = (coda_type_text *)type;
+
+                    if (text->fixed_value != NULL)
+                    {
+                        html_attr_begin("fixed&nbsp;value", &first_attribute);
+                        ff_printf("\"");
+                        generate_escaped_html_string(text->fixed_value, strlen(text->fixed_value));
+                        ff_printf("\"");
+                        html_attr_end();
+                    }
+                }
+                break;
+            case coda_raw_class:
+                {
+                    coda_type_raw *raw = (coda_type_raw *)type;
+
+                    if (raw->fixed_value != NULL)
+                    {
+                        html_attr_begin("fixed&nbsp;value", &first_attribute);
+                        ff_printf("\"");
+                        generate_escaped_html_string(raw->fixed_value, raw->fixed_value_length);
+                        ff_printf("\"");
+                        html_attr_end();
+                    }
+                }
+                break;
+            case coda_special_class:
+                {
+                    coda_type_special *special = (coda_type_special *)type;
+
+                    if (special->unit != NULL)
+                    {
+                        html_attr_begin("unit", &first_attribute);
+                        ff_printf("\"%s\"", special->unit);
+                        html_attr_end();
+                    }
+                    if (special->base_type->type_class == coda_text_class)
+                    {
+                        if (((coda_type_text *)special->base_type)->mappings != NULL)
+                        {
+                            coda_ascii_mappings *mappings = ((coda_type_text *)special->base_type)->mappings;
+
+                            for (i = 0; i < mappings->num_mappings; i++)
+                            {
+                                html_attr_begin("mapping", &first_attribute);
+                                ff_printf("\"");
+                                generate_escaped_html_string(mappings->mapping[i]->str, mappings->mapping[i]->length);
+                                ff_printf("\"&nbsp;-&gt;&nbsp;");
+                                if (type->type_class == coda_integer_class)
                                 {
-                                    xml_name = ((coda_xml_root *)type)->field->xml_name;
+                                    char s[21];
+
+                                    coda_str64(((coda_ascii_integer_mapping *)mappings->mapping[i])->value, s);
+                                    ff_printf("%s", s);
                                 }
                                 else
                                 {
-                                    xml_name = ((coda_xml_element *)type)->field[i]->xml_name;
+                                    ff_printf("%f", ((coda_ascii_float_mapping *)mappings->mapping[i])->value);
                                 }
-                                element_name_and_namespace_from_xml_name(xml_name, &element_name, &namespace);
+                                html_attr_end();
+                            }
+                        }
+                    }
+                }
+                break;
+        }
+        if (type->attributes != NULL)
+        {
+            generate_html_attributes((coda_type *)type->attributes, &first_attribute);
+        }
+        /* base types */
+        switch (type->type_class)
+        {
+            case coda_record_class:
+                {
+                    long num_fields;
+
+                    coda_type_get_num_record_fields(type, &num_fields);
+                    if (num_fields == 0)
+                    {
+                        break;
+                    }
+                    if (!first_attribute)
+                    {
+                        fi_printf("<br /><br />\n");
+                    }
+                    fi_printf("<table class=\"fancy\" border=\"1\" cellspacing=\"0\" width=\"100%%\">\n");
+                    fi_printf("<tr><th class=\"subhdr\">id</th><th class=\"subhdr\">field&nbsp;name</th>"
+                              "<th class=\"subhdr\">definition</th></tr>\n");
+                    for (i = 0; i < num_fields; i++)
+                    {
+                        coda_type *field_type;
+                        const char *field_name;
+                        const char *real_name;
+                        int first_field_attribute = 1;
+                        int hidden;
+                        int available;
+
+                        coda_type_get_record_field_type(type, i, &field_type);
+                        coda_type_get_record_field_name(type, i, &field_name);
+                        coda_type_get_record_field_real_name(type, i, &real_name);
+                        coda_type_get_record_field_hidden_status(type, i, &hidden);
+                        coda_type_get_record_field_available_status(type, i, &available);
+
+                        fi_printf("<tr valign=\"top\">");
+                        fi_printf("<td>%d</td>", i);
+                        if (hidden)
+                        {
+                            fi_printf("<td>%s</td>\n", field_name);
+                        }
+                        else
+                        {
+                            fi_printf("<td><b>%s</b></td>\n", field_name);
+                        }
+
+                        /* attributes */
+                        fi_printf("<td>\n");
+                        if (strcmp(field_name, real_name) != 0)
+                        {
+                            html_attr_begin("real name", NULL);
+                            ff_printf("<b>");
+                            if (type->format == coda_format_xml)
+                            {
+                                char *element_name;
+                                char *namespace;
+
+                                element_name_and_namespace_from_xml_name(real_name, &element_name, &namespace);
                                 if (namespace != NULL)
                                 {
                                     ff_printf("{%s}", namespace);
@@ -770,94 +777,93 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
                                 }
                                 ff_printf("%s", element_name);
                                 free(element_name);
-                                ff_printf("</b></span><br /><br />");
                             }
-                            generate_html_type(field_type, 0, 1);
-                            if (hidden)
+                            else
                             {
-                                if (first_field_attribute)
-                                {
-                                    fi_printf("<br />\n");
-                                }
-                                first_field_attribute = 0;
-                                fi_printf("<span class=\"attr_key\">hidden</span><span class=\"attr_value\">: "
-                                          "true</span>");
-                                fi_printf("<br /><br />\n");
+                                ff_printf("%s", real_name);
                             }
-                            if (available == -1)
-                            {
-                                if (first_field_attribute)
-                                {
-                                    fi_printf("<br />\n");
-                                }
-                                first_field_attribute = 0;
-                                fi_printf("<span class=\"attr_key\">available</span><span class=\"attr_value\">: ");
-                                switch (type->format)
-                                {
-                                    case coda_format_ascii:
-                                    case coda_format_binary:
-                                        generate_html_expr(((coda_ascbin_record *)type)->field[i]->available_expr, 15);
-                                        break;
-                                    default:
-                                        ff_printf("optional");
-                                        break;
-                                }
-                                ff_printf("</span>");
-                                fi_printf("<br /><br />\n");
-                            }
-                            if (type->format == coda_format_ascii || type->format == coda_format_binary)
-                            {
-                                if (((coda_ascbin_record *)type)->field[i]->bit_offset_expr != NULL)
-                                {
-                                    if (first_field_attribute)
-                                    {
-                                        fi_printf("<br />\n");
-                                    }
-                                    first_field_attribute = 0;
-                                    fi_printf("<span class=\"attr_key\">bit offset</span>"
-                                              "<span class=\"attr_value\">: ");
-                                    generate_html_expr(((coda_ascbin_record *)type)->field[i]->bit_offset_expr, 15);
-                                    ff_printf("</span>");
-                                    fi_printf("<br /><br />\n");
-                                }
-                            }
-                            fi_printf("</td>\n");
-                            fi_printf("</tr>\n");
+                            ff_printf("</b>");
+                            html_attr_end();
+                            ff_printf("<br /><br />");
                         }
-                        fi_printf("</table>\n");
-                    }
-                    break;
-                case coda_array_class:
-                    {
-                        coda_type *base_type;
 
-                        if (!first_attribute)
-                        {
-                            fi_printf("<br />\n");
-                        }
-                        fi_printf("<blockquote>\n");
-                        coda_type_get_array_base_type(type, &base_type);
-                        generate_html_type(base_type, 0, 1);
-                        fi_printf("</blockquote>\n");
-                    }
-                    break;
-                case coda_special_class:
-                    {
-                        coda_type *base_type;
+                        generate_html_type(field_type, 0, 1);
 
-                        if (!first_attribute)
+                        if (hidden)
                         {
-                            fi_printf("<br />\n");
+                            if (first_field_attribute)
+                            {
+                                fi_printf("<br />\n");
+                            }
+                            html_attr_begin("hidden", &first_field_attribute);
+                            ff_printf("true");
+                            html_attr_end();
                         }
-                        fi_printf("<blockquote>\n");
-                        coda_type_get_special_base_type(type, &base_type);
-                        generate_html_type(base_type, 0, 1);
-                        fi_printf("</blockquote>\n");
+                        if (available == -1)
+                        {
+                            if (first_field_attribute)
+                            {
+                                fi_printf("<br />\n");
+                            }
+                            html_attr_begin("available", &first_field_attribute);
+                            switch (type->format)
+                            {
+                                case coda_format_ascii:
+                                case coda_format_binary:
+                                    generate_html_expr(((coda_type_record *)type)->field[i]->available_expr, 15);
+                                    break;
+                                default:
+                                    ff_printf("optional");
+                                    break;
+                            }
+                            html_attr_end();
+                        }
+                        if (((coda_type_record *)type)->field[i]->bit_offset_expr != NULL)
+                        {
+                            if (first_field_attribute)
+                            {
+                                fi_printf("<br />\n");
+                            }
+                            html_attr_begin("bit offset", &first_field_attribute);
+                            generate_html_expr(((coda_type_record *)type)->field[i]->bit_offset_expr, 15);
+                            html_attr_end();
+                        }
+                        fi_printf("</td>\n");
+                        fi_printf("</tr>\n");
                     }
-                    break;
-                default:
-                    break;
-            }
+                    fi_printf("</table>\n");
+                }
+                break;
+            case coda_array_class:
+                {
+                    coda_type *base_type;
+
+                    if (!first_attribute)
+                    {
+                        fi_printf("<br />\n");
+                    }
+                    fi_printf("<blockquote>\n");
+                    coda_type_get_array_base_type(type, &base_type);
+                    generate_html_type(base_type, 0, 1);
+                    fi_printf("</blockquote>\n");
+                }
+                break;
+            case coda_special_class:
+                {
+                    coda_type *base_type;
+
+                    if (!first_attribute)
+                    {
+                        fi_printf("<br />\n");
+                    }
+                    fi_printf("<blockquote>\n");
+                    coda_type_get_special_base_type(type, &base_type);
+                    generate_html_type(base_type, 0, 1);
+                    fi_printf("</blockquote>\n");
+                }
+                break;
+            default:
+                break;
         }
         fi_printf("</td>\n");
         fi_printf("</tr>\n");
@@ -1353,6 +1359,9 @@ static void generate_html_expr(const coda_expression *expr, int precedence)
             break;
         case expr_product_class:
             ff_printf("<b>productclass</b>()");
+            break;
+        case expr_product_format:
+            ff_printf("<b>productformat</b>()");
             break;
         case expr_product_type:
             ff_printf("<b>producttype</b>()");

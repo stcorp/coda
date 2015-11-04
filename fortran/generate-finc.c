@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -31,7 +31,7 @@
 
 static void print_copyright_notice(void)
 {
-    printf("C Copyright (C) 2007-2010 S[&]T, The Netherlands.\n");
+    printf("C Copyright (C) 2007-2011 S[&]T, The Netherlands.\n");
     printf("C\n");
     printf("C This file is part of CODA.\n");
     printf("C\n");
@@ -181,6 +181,10 @@ static void print_constants(void)
     PRINT_CONSTANT(coda_format_hdf5, i);
     PRINT_CONSTANT(coda_format_cdf, i);
     PRINT_CONSTANT(coda_format_netcdf, i);
+    PRINT_CONSTANT(coda_format_grib1, i);
+    PRINT_CONSTANT(coda_format_grib2, i);
+    PRINT_CONSTANT(coda_format_rinex, i);
+    PRINT_CONSTANT(coda_format_sp3c, i);
 
     PRINT_EMPTY;
 
@@ -296,8 +300,6 @@ static void print_function_definitions(void)
     PRINT_FUNCDEF(coda_type_get_native_type_name, void);
     PRINT_FUNCDEF(coda_type_get_special_type_name, void);
 
-    PRINT_FUNCDEF(coda_type_has_ascii_content, int);
-
     PRINT_FUNCDEF(coda_type_get_format, int);
     PRINT_FUNCDEF(coda_type_get_class, int);
     PRINT_FUNCDEF(coda_type_get_read_type, int);
@@ -310,6 +312,7 @@ static void print_function_definitions(void)
 
     PRINT_FUNCDEF(coda_type_get_num_record_fields, int);
     PRINT_FUNCDEF(coda_type_get_record_field_index_from_name, int);
+    PRINT_FUNCDEF(coda_type_get_record_field_index_from_real_name, int);
     PRINT_FUNCDEF(coda_type_get_record_field_type, int);
     PRINT_FUNCDEF(coda_type_get_record_field_name, int);
     PRINT_FUNCDEF(coda_type_get_record_field_real_name, int);

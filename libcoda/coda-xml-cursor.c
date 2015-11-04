@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -19,26 +19,12 @@
  */
 
 #include "coda-xml-internal.h"
-#include "coda-bin.h"
+#include "coda-ascbin.h"
+#include "coda-ascii.h"
 
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-
-static int64_t get_bit_offset(coda_dynamic_type *type)
-{
-    switch (((coda_xml_dynamic_type *)type)->tag)
-    {
-        case tag_xml_root_dynamic:
-            return 0;
-        case tag_xml_record_dynamic:
-        case tag_xml_text_dynamic:
-        case tag_xml_ascii_type_dynamic:
-            return ((coda_xml_element_dynamic_type *)type)->inner_bit_offset;
-        default:
-            return -1;
-    }
-}
 
 int coda_xml_cursor_set_product(coda_cursor *cursor, coda_product *product)
 {
@@ -46,57 +32,51 @@ int coda_xml_cursor_set_product(coda_cursor *cursor, coda_product *product)
     cursor->n = 1;
     cursor->stack[0].type = product->root_type;
     cursor->stack[0].index = -1;        /* there is no index for the root of the product */
-    cursor->stack[0].bit_offset = get_bit_offset(product->root_type);
+    cursor->stack[0].bit_offset = 0;
     return 0;
 }
 
 int coda_xml_cursor_goto_record_field_by_index(coda_cursor *cursor, long index)
 {
-    coda_xml_dynamic_type *type;
+    coda_xml_type *type;
     coda_dynamic_type *field_type;
+    int64_t bit_offset;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
+    type = (coda_xml_type *)cursor->stack[cursor->n - 1].type;
+    if (type->definition->format == coda_format_ascii)
+    {
+        int result;
+        int depth;
+
+        /* defer to the ascii backend */
+        depth = cursor->n - 1;
+        cursor->stack[depth].type = (coda_dynamic_type *)type->definition;
+        result = coda_ascbin_cursor_goto_record_field_by_index(cursor, index);
+        cursor->stack[depth].type = (coda_dynamic_type *)type;
+        return result;
+    }
+
     switch (type->tag)
     {
-        case tag_xml_root_dynamic:
+        case tag_xml_root:
             if (index != 0)
             {
                 coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,1) (%s:%u)", index,
                                __FILE__, __LINE__);
                 return -1;
             }
-            field_type = (coda_dynamic_type *)((coda_xml_root_dynamic_type *)type)->element;
+            field_type = (coda_dynamic_type *)((coda_xml_root *)type)->element;
+            bit_offset = 0;
             break;
-        case tag_xml_ascii_type_dynamic:
-            {
-                int result;
-                int depth;
-
-                /* use the ascii base type */
-                depth = cursor->n - 1;
-                cursor->stack[depth].type =
-                    (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-                result = coda_ascbin_cursor_goto_record_field_by_index(cursor, index);
-                cursor->stack[depth].type = (coda_dynamic_type *)type;
-                return result;
-            }
-        case tag_xml_record_dynamic:
-            if (index < 0 || index >= ((coda_xml_element_dynamic_type *)type)->num_elements)
+        case tag_xml_element:
+            if (index < 0 || index >= ((coda_type_record *)type->definition)->num_fields)
             {
                 coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
-                               ((coda_xml_element_dynamic_type *)type)->num_elements, __FILE__, __LINE__);
+                               ((coda_type_record *)type->definition)->num_fields, __FILE__, __LINE__);
                 return -1;
             }
-            field_type = (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->element[index];
-            break;
-        case tag_xml_attribute_record_dynamic:
-            if (index < 0 || index >= ((coda_xml_attribute_record_dynamic_type *)type)->num_attributes)
-            {
-                coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
-                               ((coda_xml_attribute_record_dynamic_type *)type)->num_attributes, __FILE__, __LINE__);
-                return -1;
-            }
-            field_type = (coda_dynamic_type *)((coda_xml_attribute_record_dynamic_type *)type)->attribute[index];
+            field_type = (coda_dynamic_type *)((coda_xml_element *)type)->element[index];
+            bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
             break;
         default:
             assert(0);
@@ -108,11 +88,11 @@ int coda_xml_cursor_goto_record_field_by_index(coda_cursor *cursor, long index)
     if (field_type == NULL)
     {
         cursor->stack[cursor->n - 1].bit_offset = -1;
-        cursor->stack[cursor->n - 1].type = coda_bin_no_data_singleton();
+        cursor->stack[cursor->n - 1].type = coda_no_data_singleton(coda_format_xml);
     }
     else
     {
-        cursor->stack[cursor->n - 1].bit_offset = get_bit_offset(field_type);
+        cursor->stack[cursor->n - 1].bit_offset = bit_offset;
         cursor->stack[cursor->n - 1].type = field_type;
     }
 
@@ -121,22 +101,20 @@ int coda_xml_cursor_goto_record_field_by_index(coda_cursor *cursor, long index)
 
 int coda_xml_cursor_goto_next_record_field(coda_cursor *cursor)
 {
-    coda_xml_dynamic_type *record_type;
+    coda_xml_type *type;
 
-    record_type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 2].type;
-    if (record_type->tag == tag_xml_ascii_type_dynamic)
+    type = (coda_xml_type *)cursor->stack[cursor->n - 2].type;
+    if (type->definition->format == coda_format_ascii)
     {
-        int depth;
         int result;
+        int depth;
 
-        /* use the ascii base type */
+        /* defer to the ascii backend */
         depth = cursor->n - 2;
-        cursor->stack[depth].type =
-            (coda_dynamic_type *)((coda_xml_element_dynamic_type *)record_type)->type->ascii_type;
+        cursor->stack[depth].type = (coda_dynamic_type *)type->definition;
         result = coda_ascbin_cursor_goto_next_record_field(cursor);
-        cursor->stack[depth].type = (coda_dynamic_type *)record_type;
+        cursor->stack[depth].type = (coda_dynamic_type *)type;
         return result;
-
     }
 
     cursor->n--;
@@ -150,147 +128,85 @@ int coda_xml_cursor_goto_next_record_field(coda_cursor *cursor)
 
 int coda_xml_cursor_goto_available_union_field(coda_cursor *cursor)
 {
-    coda_xml_dynamic_type *type;
+    coda_xml_type *type;
     int result;
+    int depth;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    if (type->tag == tag_xml_ascii_type_dynamic)
-    {
-        int depth;
-
-        /* use the ascii base type */
-        depth = cursor->n - 1;
-        cursor->stack[depth].type = (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-        result = coda_ascbin_cursor_goto_available_union_field(cursor);
-        cursor->stack[depth].type = (coda_dynamic_type *)type;
-        return result;
-    }
-
-    assert(0);
-    exit(1);
+    /* defer to the ascii backend */
+    type = (coda_xml_type *)cursor->stack[cursor->n - 1].type;
+    assert(type->definition->format == coda_format_ascii);
+    depth = cursor->n - 1;
+    cursor->stack[depth].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    cursor->stack[depth].type = (coda_dynamic_type *)type->definition;
+    result = coda_ascbin_cursor_goto_available_union_field(cursor);
+    cursor->stack[depth].type = (coda_dynamic_type *)type;
+    return result;
 }
 
 int coda_xml_cursor_goto_array_element(coda_cursor *cursor, int num_subs, const long subs[])
 {
-    coda_xml_dynamic_type *type;
+    coda_xml_type *type;
     int result;
+    int depth;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    if (type->tag == tag_xml_ascii_type_dynamic)
-    {
-        int depth;
-
-        /* use the ascii base type */
-        depth = cursor->n - 1;
-        cursor->stack[depth].type = (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-        result = coda_ascbin_cursor_goto_array_element(cursor, num_subs, subs);
-        cursor->stack[depth].type = (coda_dynamic_type *)type;
-        return result;
-    }
-
-    /* check the number of dimensions */
-    if (num_subs != 1)
-    {
-        coda_set_error(CODA_ERROR_ARRAY_NUM_DIMS_MISMATCH,
-                       "number of dimensions argument (%d) does not match rank of array (1) (%s:%u)", num_subs,
-                       __FILE__, __LINE__);
-        return -1;
-    }
-
-    return coda_xml_cursor_goto_array_element_by_index(cursor, subs[0]);
+    /* defer to the ascii backend */
+    type = (coda_xml_type *)cursor->stack[cursor->n - 1].type;
+    assert(type->definition->format == coda_format_ascii);
+    depth = cursor->n - 1;
+    cursor->stack[depth].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    cursor->stack[depth].type = (coda_dynamic_type *)type->definition;
+    result = coda_ascbin_cursor_goto_array_element(cursor, num_subs, subs);
+    cursor->stack[depth].type = (coda_dynamic_type *)type;
+    return result;
 }
 
 int coda_xml_cursor_goto_array_element_by_index(coda_cursor *cursor, long index)
 {
-    coda_xml_dynamic_type *type;
-    coda_dynamic_type *element_type;
+    coda_xml_type *type;
     int result;
+    int depth;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    if (type->tag == tag_xml_ascii_type_dynamic)
-    {
-        int depth;
-
-        /* use the ascii base type */
-        depth = cursor->n - 1;
-        cursor->stack[depth].type = (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-        result = coda_ascbin_cursor_goto_array_element_by_index(cursor, index);
-        cursor->stack[depth].type = (coda_dynamic_type *)type;
-        return result;
-    }
-
-    assert(type->tag == tag_xml_array_dynamic);
-
-    /* check the index */
-    if (index < 0 || index >= ((coda_xml_array_dynamic_type *)type)->num_elements)
-    {
-        coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array index (%ld) exceeds array range [0:%ld) (%s:%u)",
-                       index, ((coda_xml_array_dynamic_type *)type)->num_elements, __FILE__, __LINE__);
-        return -1;
-    }
-
-    element_type = (coda_dynamic_type *)((coda_xml_array_dynamic_type *)type)->element[index];
-
-    cursor->n++;
-    cursor->stack[cursor->n - 1].index = index;
-    cursor->stack[cursor->n - 1].bit_offset = get_bit_offset(element_type);
-    cursor->stack[cursor->n - 1].type = element_type;
-
-    return 0;
+    /* defer to the ascii backend */
+    type = (coda_xml_type *)cursor->stack[cursor->n - 1].type;
+    assert(type->definition->format == coda_format_ascii);
+    depth = cursor->n - 1;
+    cursor->stack[depth].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    cursor->stack[depth].type = (coda_dynamic_type *)type->definition;
+    result = coda_ascbin_cursor_goto_array_element_by_index(cursor, index);
+    cursor->stack[depth].type = (coda_dynamic_type *)type;
+    return result;
 }
 
 int coda_xml_cursor_goto_next_array_element(coda_cursor *cursor)
 {
-    coda_xml_dynamic_type *array_type;
+    coda_xml_type *type;
     int result;
+    int depth;
 
-    array_type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 2].type;
-    if (array_type->tag == tag_xml_ascii_type_dynamic)
-    {
-        int depth;
-
-        /* use the ascii base type */
-        depth = cursor->n - 2;
-        cursor->stack[depth].type =
-            (coda_dynamic_type *)((coda_xml_element_dynamic_type *)array_type)->type->ascii_type;
-        result = coda_ascbin_cursor_goto_next_array_element(cursor);
-        cursor->stack[depth].type = (coda_dynamic_type *)array_type;
-        return result;
-
-    }
-
-    cursor->n--;
-    if (coda_xml_cursor_goto_array_element_by_index(cursor, cursor->stack[cursor->n].index + 1) != 0)
-    {
-        cursor->n++;
-        return -1;
-    }
-
-    return 0;
+    /* defer to the ascii backend */
+    type = (coda_xml_type *)cursor->stack[cursor->n - 2].type;
+    assert(type->definition->format == coda_format_ascii);
+    depth = cursor->n - 2;
+    cursor->stack[depth].type = (coda_dynamic_type *)type->definition;
+    result = coda_ascbin_cursor_goto_next_array_element(cursor);
+    cursor->stack[depth].type = (coda_dynamic_type *)type;
+    return result;
 }
 
 int coda_xml_cursor_goto_attributes(coda_cursor *cursor)
 {
-    coda_xml_dynamic_type *type;
+    coda_xml_type *type;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
+    type = (coda_xml_type *)cursor->stack[cursor->n - 1].type;
     cursor->n++;
-    switch (type->tag)
+    if (type->tag == tag_xml_element && ((coda_xml_element *)type)->attributes != NULL)
     {
-        case tag_xml_array_dynamic:
-        case tag_xml_attribute_dynamic:
-        case tag_xml_attribute_record_dynamic:
-        case tag_xml_root_dynamic:
-            cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)coda_xml_empty_dynamic_attribute_record();
-            break;
-        case tag_xml_record_dynamic:
-        case tag_xml_text_dynamic:
-        case tag_xml_ascii_type_dynamic:
-            cursor->stack[cursor->n - 1].type =
-                (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->attributes;
-            break;
+        cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)((coda_xml_element *)type)->attributes;
     }
-
+    else
+    {
+        cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)coda_mem_empty_record(coda_format_xml);
+    }
     /* we use the special index value '-1' to indicate that we are pointing to the attributes of the parent */
     cursor->stack[cursor->n - 1].index = -1;
     cursor->stack[cursor->n - 1].bit_offset = -1;       /* not applicable for attributes */
@@ -300,48 +216,46 @@ int coda_xml_cursor_goto_attributes(coda_cursor *cursor)
 
 int coda_xml_cursor_use_base_type_of_special_type(coda_cursor *cursor)
 {
-    coda_xml_dynamic_type *type;
+    coda_xml_type *type;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
+    type = (coda_xml_type *)cursor->stack[cursor->n - 1].type;
+    assert(type->definition->format == coda_format_ascii);
 
-    assert(type->tag == tag_xml_ascii_type_dynamic);
-
-    /* use the ascii base type */
-    cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
+    /* defer to the ascii backend */
+    cursor->stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
     return coda_ascii_cursor_use_base_type_of_special_type(cursor);
+}
+
+int coda_xml_cursor_has_ascii_content(const coda_cursor *cursor, int *has_ascii_content)
+{
+    *has_ascii_content = (((coda_xml_type *)cursor->stack[cursor->n - 1].type)->tag == tag_xml_element);
+    return 0;
 }
 
 int coda_xml_cursor_get_string_length(const coda_cursor *cursor, long *length)
 {
-    coda_xml_dynamic_type *type;
+    coda_xml_type *type;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    switch (type->tag)
+    type = (coda_xml_type *)cursor->stack[cursor->n - 1].type;
+    if (type->definition->format == coda_format_ascii)
     {
-        case tag_xml_ascii_type_dynamic:
-            {
-                coda_cursor dd_cursor;
+        coda_cursor sub_cursor;
 
-                /* use the ascii base type */
-                dd_cursor = *cursor;
-                dd_cursor.stack[cursor->n - 1].type =
-                    (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-                return coda_ascii_cursor_get_string_length(&dd_cursor, length,
-                                                           ((coda_xml_element_dynamic_type *)type)->inner_bit_size);
-            }
-        case tag_xml_record_dynamic:
-        case tag_xml_text_dynamic:
-            *length = (long)(((coda_xml_element_dynamic_type *)type)->inner_bit_size >> 3);
-            break;
-        case tag_xml_root_dynamic:
-            *length = (long)(cursor->product->file_size >> 3);
-            break;
-        case tag_xml_attribute_dynamic:
-            *length = strlen(((coda_xml_attribute_dynamic_type *)type)->value);
-            break;
-        default:
-            assert(0);
-            exit(1);
+        /* defer to the ascii backend */
+        sub_cursor = *cursor;
+        sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+        sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+        return coda_ascii_cursor_get_string_length(&sub_cursor, length, ((coda_xml_element *)type)->inner_bit_size);
+    }
+
+    if (type->tag == tag_xml_root)
+    {
+        *length = (long)(cursor->product->file_size >> 3);
+    }
+    else
+    {
+        *length = (long)(((coda_xml_element *)type)->inner_bit_size >> 3);
     }
 
     return 0;
@@ -349,36 +263,27 @@ int coda_xml_cursor_get_string_length(const coda_cursor *cursor, long *length)
 
 int coda_xml_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size)
 {
-    coda_xml_dynamic_type *type;
+    coda_xml_type *type;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
+    type = (coda_xml_type *)cursor->stack[cursor->n - 1].type;
+    if (type->definition->format == coda_format_ascii)
+    {
+        coda_cursor sub_cursor;
+
+        /* defer to the ascii backend */
+        sub_cursor = *cursor;
+        sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+        sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+        return coda_ascii_cursor_get_bit_size(&sub_cursor, bit_size, ((coda_xml_element *)type)->inner_bit_size);
+    }
+
     switch (type->tag)
     {
-        case tag_xml_root_dynamic:
+        case tag_xml_root:
             *bit_size = cursor->product->file_size;
             break;
-        case tag_xml_record_dynamic:
-        case tag_xml_text_dynamic:
-            *bit_size = ((coda_xml_element_dynamic_type *)type)->inner_bit_size;
-            break;
-        case tag_xml_ascii_type_dynamic:
-            {
-                coda_cursor dd_cursor;
-
-                /* use the ascii base type */
-                dd_cursor = *cursor;
-                dd_cursor.stack[cursor->n - 1].type =
-                    (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-                return coda_ascii_cursor_get_bit_size(&dd_cursor, bit_size,
-                                                      ((coda_xml_element_dynamic_type *)type)->inner_bit_size);
-            }
-            break;
-        case tag_xml_attribute_dynamic:
-            *bit_size = strlen(((coda_xml_attribute_dynamic_type *)cursor->stack[cursor->n - 1].type)->value) * 8;
-            break;
-        case tag_xml_array_dynamic:
-        case tag_xml_attribute_record_dynamic:
-            *bit_size = -1;
+        case tag_xml_element:
+            *bit_size = ((coda_xml_element *)type)->inner_bit_size;
             break;
     }
 
@@ -387,38 +292,52 @@ int coda_xml_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size)
 
 int coda_xml_cursor_get_num_elements(const coda_cursor *cursor, long *num_elements)
 {
-    coda_xml_dynamic_type *type;
+    coda_xml_type *type;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
+    type = (coda_xml_type *)cursor->stack[cursor->n - 1].type;
+    if (type->definition->format == coda_format_ascii)
+    {
+        coda_cursor sub_cursor;
+
+        /* defer to the ascii backend */
+        sub_cursor = *cursor;
+        sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+        sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+        return coda_ascii_cursor_get_num_elements(&sub_cursor, num_elements);
+    }
+
     switch (type->tag)
     {
-        case tag_xml_root_dynamic:
+        case tag_xml_root:
             *num_elements = 1;
             break;
-        case tag_xml_ascii_type_dynamic:
+        case tag_xml_element:
+            if (((coda_xml_element *)type)->definition->type_class == coda_record_class)
             {
-                coda_cursor dd_cursor;
-
-                /* use the ascii base type */
-                dd_cursor = *cursor;
-                dd_cursor.stack[cursor->n - 1].type =
-                    (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-                return coda_ascii_cursor_get_num_elements(&dd_cursor, num_elements);
+                *num_elements = ((coda_type_record *)type->definition)->num_fields;
             }
-        case tag_xml_record_dynamic:
-            *num_elements = ((coda_xml_element_dynamic_type *)type)->num_elements;
+            else
+            {
+                *num_elements = 1;
+            }
             break;
-        case tag_xml_text_dynamic:
-            *num_elements = 1;
+    }
+
+    return 0;
+}
+
+int coda_xml_cursor_get_file_bit_offset(const coda_cursor *cursor, int64_t *bit_offset)
+{
+    coda_xml_type *type;
+
+    type = (coda_xml_type *)cursor->stack[cursor->n - 1].type;
+    switch (type->tag)
+    {
+        case tag_xml_root:
+            *bit_offset = 0;
             break;
-        case tag_xml_array_dynamic:
-            *num_elements = ((coda_xml_array_dynamic_type *)type)->num_elements;
-            break;
-        case tag_xml_attribute_record_dynamic:
-            *num_elements = ((coda_xml_attribute_record_dynamic_type *)type)->num_attributes;
-            break;
-        case tag_xml_attribute_dynamic:
-            *num_elements = 1;
+        case tag_xml_element:
+            *bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
             break;
     }
 
@@ -427,926 +346,446 @@ int coda_xml_cursor_get_num_elements(const coda_cursor *cursor, long *num_elemen
 
 int coda_xml_cursor_get_record_field_available_status(const coda_cursor *cursor, long index, int *available)
 {
-    coda_xml_dynamic_type *type;
-    coda_dynamic_type *field_type;
+    coda_xml_type *type;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    switch (type->tag)
+    type = (coda_xml_type *)cursor->stack[cursor->n - 1].type;
+    if (type->definition->format == coda_format_ascii)
     {
-        case tag_xml_root_dynamic:
-            if (index != 0)
-            {
-                coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,1) (%s:%u)", index,
-                               __FILE__, __LINE__);
-                return -1;
-            }
-            field_type = (coda_dynamic_type *)((coda_xml_root_dynamic_type *)type)->element;
-            break;
-        case tag_xml_ascii_type_dynamic:
-            {
-                coda_cursor dd_cursor;
+        coda_cursor sub_cursor;
 
-                /* use the ascii base type */
-                dd_cursor = *cursor;
-                dd_cursor.stack[cursor->n - 1].type =
-                    (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-                return coda_ascbin_cursor_get_record_field_available_status(&dd_cursor, index, available);
-            }
-        case tag_xml_record_dynamic:
-            if (index < 0 || index >= ((coda_xml_element_dynamic_type *)type)->num_elements)
-            {
-                coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
-                               ((coda_xml_element_dynamic_type *)type)->num_elements, __FILE__, __LINE__);
-                return -1;
-            }
-            field_type = (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->element[index];
-            break;
-        case tag_xml_attribute_record_dynamic:
-            if (index < 0 || index >= ((coda_xml_attribute_record_dynamic_type *)type)->num_attributes)
-            {
-                coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
-                               ((coda_xml_attribute_record_dynamic_type *)type)->num_attributes, __FILE__, __LINE__);
-                return -1;
-            }
-            field_type = (coda_dynamic_type *)((coda_xml_attribute_record_dynamic_type *)type)->attribute[index];
-            break;
-        default:
-            assert(0);
-            exit(1);
+        /* defer to the ascii backend */
+        sub_cursor = *cursor;
+        sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+        sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+        return coda_ascbin_cursor_get_record_field_available_status(&sub_cursor, index, available);
     }
 
-    *available = (field_type != NULL);
+    if (type->tag == tag_xml_root)
+    {
+        if (index != 0)
+        {
+            coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,1) (%s:%u)", index,
+                           __FILE__, __LINE__);
+            return -1;
+        }
+        *available = ((coda_xml_root *)type)->element != NULL;
+    }
+    else
+    {
+        long num_elements;
+
+        num_elements = ((coda_type_record *)type->definition)->num_fields;
+        if (index < 0 || index >= num_elements)
+        {
+            coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
+                           num_elements, __FILE__, __LINE__);
+            return -1;
+        }
+        *available = ((coda_xml_element *)type)->element[index] != NULL;
+    }
+
     return 0;
 }
 
 int coda_xml_cursor_get_available_union_field_index(const coda_cursor *cursor, long *index)
 {
-    coda_xml_dynamic_type *type;
+    coda_xml_type *type;
+    coda_cursor sub_cursor;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    if (type->tag == tag_xml_ascii_type_dynamic)
-    {
-        coda_cursor dd_cursor;
+    type = (coda_xml_type *)cursor->stack[cursor->n - 1].type;
+    assert(type->definition->format == coda_format_ascii);
 
-        /* use the ascii base type */
-        dd_cursor = *cursor;
-        dd_cursor.stack[cursor->n - 1].type =
-            (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-        return coda_ascbin_cursor_get_available_union_field_index(&dd_cursor, index);
-    }
-
-    assert(0);
-    exit(1);
+    /* defer to the ascii backend */
+    sub_cursor = *cursor;
+    sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+    return coda_ascbin_cursor_get_available_union_field_index(&sub_cursor, index);
 }
 
 int coda_xml_cursor_get_array_dim(const coda_cursor *cursor, int *num_dims, long dim[])
 {
-    coda_xml_dynamic_type *type;
+    coda_xml_type *type;
+    coda_cursor sub_cursor;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    switch (type->tag)
-    {
-        case tag_xml_array_dynamic:
-            *num_dims = 1;
-            dim[0] = ((coda_xml_array_dynamic_type *)cursor->stack[cursor->n - 1].type)->num_elements;
-            break;
-        case tag_xml_ascii_type_dynamic:
-            {
-                coda_cursor dd_cursor;
-
-                /* use the ascii base type */
-                dd_cursor = *cursor;
-                dd_cursor.stack[cursor->n - 1].type =
-                    (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-                return coda_ascbin_cursor_get_array_dim(&dd_cursor, num_dims, dim);
-            }
-        default:
-            assert(0);
-            exit(1);
-    }
-
-    return 0;
+    /* defer to the ascii backend */
+    type = (coda_xml_type *)cursor->stack[cursor->n - 1].type;
+    assert(type->definition->format == coda_format_ascii);
+    sub_cursor = *cursor;
+    sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+    return coda_ascbin_cursor_get_array_dim(&sub_cursor, num_dims, dim);
 }
 
 int coda_xml_cursor_read_int8(const coda_cursor *cursor, int8_t *dst)
 {
-    coda_xml_dynamic_type *type;
+    coda_xml_element *type = (coda_xml_element *)cursor->stack[cursor->n - 1].type;
+    coda_cursor sub_cursor = *cursor;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    if (type->tag == tag_xml_ascii_type_dynamic)
-    {
-        coda_cursor dd_cursor;
-
-        /* use the ascii base type */
-        dd_cursor = *cursor;
-        dd_cursor.stack[cursor->n - 1].type =
-            (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-        return coda_ascii_cursor_read_int8(&dd_cursor, dst, ((coda_xml_element_dynamic_type *)type)->inner_bit_size);
-    }
-
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a int8 data type");
-    return -1;
+    /* defer to the ascii backend */
+    assert(type->definition->format == coda_format_ascii);
+    sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+    return coda_ascii_cursor_read_int8(&sub_cursor, dst, type->inner_bit_size);
 }
 
 int coda_xml_cursor_read_uint8(const coda_cursor *cursor, uint8_t *dst)
 {
-    coda_xml_dynamic_type *type;
+    coda_xml_element *type = (coda_xml_element *)cursor->stack[cursor->n - 1].type;
+    coda_cursor sub_cursor = *cursor;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    if (type->tag == tag_xml_ascii_type_dynamic)
-    {
-        coda_cursor dd_cursor;
-
-        /* use the ascii base type */
-        dd_cursor = *cursor;
-        dd_cursor.stack[cursor->n - 1].type =
-            (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-        return coda_ascii_cursor_read_uint8(&dd_cursor, dst, ((coda_xml_element_dynamic_type *)type)->inner_bit_size);
-    }
-
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a uint8 data type");
-    return -1;
+    /* defer to the ascii backend */
+    assert(type->definition->format == coda_format_ascii);
+    sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+    return coda_ascii_cursor_read_uint8(&sub_cursor, dst, type->inner_bit_size);
 }
 
 int coda_xml_cursor_read_int16(const coda_cursor *cursor, int16_t *dst)
 {
-    coda_xml_dynamic_type *type;
+    coda_xml_element *type = (coda_xml_element *)cursor->stack[cursor->n - 1].type;
+    coda_cursor sub_cursor = *cursor;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    if (type->tag == tag_xml_ascii_type_dynamic)
-    {
-        coda_cursor dd_cursor;
-
-        /* use the ascii base type */
-        dd_cursor = *cursor;
-        dd_cursor.stack[cursor->n - 1].type =
-            (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-        return coda_ascii_cursor_read_int16(&dd_cursor, dst, ((coda_xml_element_dynamic_type *)type)->inner_bit_size);
-    }
-
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a int16 data type");
-    return -1;
+    /* defer to the ascii backend */
+    assert(type->definition->format == coda_format_ascii);
+    sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+    return coda_ascii_cursor_read_int16(&sub_cursor, dst, type->inner_bit_size);
 }
 
 int coda_xml_cursor_read_uint16(const coda_cursor *cursor, uint16_t *dst)
 {
-    coda_xml_dynamic_type *type;
+    coda_xml_element *type = (coda_xml_element *)cursor->stack[cursor->n - 1].type;
+    coda_cursor sub_cursor = *cursor;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    if (type->tag == tag_xml_ascii_type_dynamic)
-    {
-        coda_cursor dd_cursor;
-
-        /* use the ascii base type */
-        dd_cursor = *cursor;
-        dd_cursor.stack[cursor->n - 1].type =
-            (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-        return coda_ascii_cursor_read_uint16(&dd_cursor, dst, ((coda_xml_element_dynamic_type *)type)->inner_bit_size);
-    }
-
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a uint16 data type");
+    /* defer to the ascii backend */
+    assert(type->definition->format == coda_format_ascii);
+    sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+    return coda_ascii_cursor_read_uint16(&sub_cursor, dst, type->inner_bit_size);
     return -1;
 }
 
 int coda_xml_cursor_read_int32(const coda_cursor *cursor, int32_t *dst)
 {
-    coda_xml_dynamic_type *type;
+    coda_xml_element *type = (coda_xml_element *)cursor->stack[cursor->n - 1].type;
+    coda_cursor sub_cursor = *cursor;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    if (type->tag == tag_xml_ascii_type_dynamic)
-    {
-        coda_cursor dd_cursor;
-
-        /* use the ascii base type */
-        dd_cursor = *cursor;
-        dd_cursor.stack[cursor->n - 1].type =
-            (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-        return coda_ascii_cursor_read_int32(&dd_cursor, dst, ((coda_xml_element_dynamic_type *)type)->inner_bit_size);
-    }
-
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a int32 data type");
-    return -1;
+    /* defer to the ascii backend */
+    assert(type->definition->format == coda_format_ascii);
+    sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+    return coda_ascii_cursor_read_int32(&sub_cursor, dst, type->inner_bit_size);
 }
 
 int coda_xml_cursor_read_uint32(const coda_cursor *cursor, uint32_t *dst)
 {
-    coda_xml_dynamic_type *type;
+    coda_xml_element *type = (coda_xml_element *)cursor->stack[cursor->n - 1].type;
+    coda_cursor sub_cursor = *cursor;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    if (type->tag == tag_xml_ascii_type_dynamic)
-    {
-        coda_cursor dd_cursor;
-
-        /* use the ascii base type */
-        dd_cursor = *cursor;
-        dd_cursor.stack[cursor->n - 1].type =
-            (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-        return coda_ascii_cursor_read_uint32(&dd_cursor, dst, ((coda_xml_element_dynamic_type *)type)->inner_bit_size);
-    }
-
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a uint32 data type");
-    return -1;
+    /* defer to the ascii backend */
+    assert(type->definition->format == coda_format_ascii);
+    sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+    return coda_ascii_cursor_read_uint32(&sub_cursor, dst, type->inner_bit_size);
 }
 
 int coda_xml_cursor_read_int64(const coda_cursor *cursor, int64_t *dst)
 {
-    coda_xml_dynamic_type *type;
+    coda_xml_element *type = (coda_xml_element *)cursor->stack[cursor->n - 1].type;
+    coda_cursor sub_cursor = *cursor;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    if (type->tag == tag_xml_ascii_type_dynamic)
-    {
-        coda_cursor dd_cursor;
-
-        /* use the ascii base type */
-        dd_cursor = *cursor;
-        dd_cursor.stack[cursor->n - 1].type =
-            (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-        return coda_ascii_cursor_read_int64(&dd_cursor, dst, ((coda_xml_element_dynamic_type *)type)->inner_bit_size);
-    }
-
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a int64 data type");
-    return -1;
+    /* defer to the ascii backend */
+    assert(type->definition->format == coda_format_ascii);
+    sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+    return coda_ascii_cursor_read_int64(&sub_cursor, dst, type->inner_bit_size);
 }
 
 int coda_xml_cursor_read_uint64(const coda_cursor *cursor, uint64_t *dst)
 {
-    coda_xml_dynamic_type *type;
+    coda_xml_element *type = (coda_xml_element *)cursor->stack[cursor->n - 1].type;
+    coda_cursor sub_cursor = *cursor;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    if (type->tag == tag_xml_ascii_type_dynamic)
-    {
-        coda_cursor dd_cursor;
-
-        /* use the ascii base type */
-        dd_cursor = *cursor;
-        dd_cursor.stack[cursor->n - 1].type =
-            (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-        return coda_ascii_cursor_read_uint64(&dd_cursor, dst, ((coda_xml_element_dynamic_type *)type)->inner_bit_size);
-    }
-
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a uint64 data type");
-    return -1;
+    /* defer to the ascii backend */
+    assert(type->definition->format == coda_format_ascii);
+    sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+    return coda_ascii_cursor_read_uint64(&sub_cursor, dst, type->inner_bit_size);
 }
 
 int coda_xml_cursor_read_float(const coda_cursor *cursor, float *dst)
 {
-    coda_xml_dynamic_type *type;
+    coda_xml_element *type = (coda_xml_element *)cursor->stack[cursor->n - 1].type;
+    coda_cursor sub_cursor = *cursor;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    if (type->tag == tag_xml_ascii_type_dynamic)
-    {
-        coda_cursor dd_cursor;
-
-        /* use the ascii base type */
-        dd_cursor = *cursor;
-        dd_cursor.stack[cursor->n - 1].type =
-            (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-        return coda_ascii_cursor_read_float(&dd_cursor, dst, ((coda_xml_element_dynamic_type *)type)->inner_bit_size);
-    }
-
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a float data type");
-    return -1;
+    /* defer to the ascii backend */
+    assert(type->definition->format == coda_format_ascii);
+    sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+    return coda_ascii_cursor_read_float(&sub_cursor, dst, type->inner_bit_size);
 }
 
 int coda_xml_cursor_read_double(const coda_cursor *cursor, double *dst)
 {
-    coda_xml_dynamic_type *type;
+    coda_xml_element *type = (coda_xml_element *)cursor->stack[cursor->n - 1].type;
+    coda_cursor sub_cursor = *cursor;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    if (type->tag == tag_xml_ascii_type_dynamic)
-    {
-        coda_cursor dd_cursor;
-
-        /* use the ascii base type */
-        dd_cursor = *cursor;
-        dd_cursor.stack[cursor->n - 1].type =
-            (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-        return coda_ascii_cursor_read_double(&dd_cursor, dst, ((coda_xml_element_dynamic_type *)type)->inner_bit_size);
-    }
-
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a double data type");
-    return -1;
+    /* defer to the ascii backend */
+    assert(type->definition->format == coda_format_ascii);
+    sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+    return coda_ascii_cursor_read_double(&sub_cursor, dst, type->inner_bit_size);
 }
 
 int coda_xml_cursor_read_char(const coda_cursor *cursor, char *dst)
 {
-    coda_xml_dynamic_type *type;
+    coda_xml_type *type;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    if (type->tag == tag_xml_ascii_type_dynamic)
+    type = (coda_xml_type *)cursor->stack[cursor->n - 1].type;
+    if (type->definition->format == coda_format_ascii)
     {
-        coda_cursor dd_cursor;
+        coda_cursor sub_cursor;
 
-        /* use the ascii base type */
-        dd_cursor = *cursor;
-        dd_cursor.stack[cursor->n - 1].type =
-            (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-        return coda_ascii_cursor_read_char(&dd_cursor, dst, ((coda_xml_element_dynamic_type *)type)->inner_bit_size);
+        /* defer to the ascii backend */
+        sub_cursor = *cursor;
+        sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+        sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+        return coda_ascii_cursor_read_char(&sub_cursor, dst, ((coda_xml_element *)type)->inner_bit_size);
     }
 
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a char data type");
-    return -1;
+    return coda_ascii_cursor_read_bytes(cursor, (uint8_t *)dst, 0, 1);
 }
 
 int coda_xml_cursor_read_string(const coda_cursor *cursor, char *dst, long dst_size)
 {
-    coda_xml_dynamic_type *type;
+    coda_xml_type *type;
+    coda_cursor sub_cursor;
     long read_size;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    switch (type->tag)
-    {
-        case tag_xml_ascii_type_dynamic:
-            {
-                coda_cursor dd_cursor;
+    type = (coda_xml_type *)cursor->stack[cursor->n - 1].type;
+    assert(type->tag == tag_xml_element);
 
-                /* use the ascii base type */
-                dd_cursor = *cursor;
-                dd_cursor.stack[cursor->n - 1].type =
-                    (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-                return coda_ascii_cursor_read_string(&dd_cursor, dst, dst_size,
-                                                     ((coda_xml_element_dynamic_type *)type)->inner_bit_size);
-            }
-        case tag_xml_record_dynamic:
-        case tag_xml_text_dynamic:
-            read_size = (long)(((coda_xml_element_dynamic_type *)type)->inner_bit_size >> 3);
-            if (read_size + 1 > dst_size)
-            {
-                read_size = dst_size - 1;
-            }
-            if (read_size > 0)
-            {
-                if (coda_ascii_cursor_read_bytes(cursor, (uint8_t *)dst, 0, read_size) != 0)
-                {
-                    return -1;
-                }
-                dst[read_size] = '\0';
-            }
-            else
-            {
-                dst[0] = '\0';
-            }
-            break;
-        case tag_xml_root_dynamic:
-            read_size = (long)(cursor->product->file_size >> 3);
-            if (read_size + 1 > dst_size)
-            {
-                read_size = dst_size - 1;
-            }
-            if (read_size > 0)
-            {
-                if (coda_ascii_cursor_read_bytes(cursor, (uint8_t *)dst, 0, read_size) != 0)
-                {
-                    return -1;
-                }
-                dst[read_size] = '\0';
-            }
-            else
-            {
-                dst[0] = '\0';
-            }
-            break;
-        case tag_xml_attribute_dynamic:
-            read_size = strlen(((coda_xml_attribute_dynamic_type *)type)->value);
-            if (read_size + 1 > dst_size)
-            {
-                read_size = dst_size - 1;
-            }
-            if (read_size > 0)
-            {
-                memcpy(dst, ((coda_xml_attribute_dynamic_type *)type)->value, read_size);
-                dst[read_size] = '\0';
-            }
-            else
-            {
-                dst[0] = '\0';
-            }
-            break;
-        default:
-            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a string data type");
+    sub_cursor = *cursor;
+    sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    if (type->definition->format == coda_format_ascii)
+    {
+        /* defer to the ascii backend */
+        sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+        return coda_ascii_cursor_read_string(&sub_cursor, dst, dst_size, ((coda_xml_element *)type)->inner_bit_size);
+    }
+
+    /* TODO: replace call to coda_ascii_cursor_read_bytes() with direct call to read_bytes() */
+
+    read_size = ((coda_xml_element *)type)->inner_bit_size >> 3;
+    if (read_size + 1 > dst_size)
+    {
+        read_size = dst_size - 1;
+    }
+    if (read_size > 0)
+    {
+        if (coda_ascii_cursor_read_bytes(&sub_cursor, (uint8_t *)dst, 0, read_size) != 0)
+        {
             return -1;
+        }
+        dst[read_size] = '\0';
+    }
+    else
+    {
+        dst[0] = '\0';
     }
 
     return 0;
 }
 
+
+int coda_xml_cursor_read_bits(const coda_cursor *cursor, uint8_t *dst, int64_t bit_offset, int64_t bit_length)
+{
+    if (bit_length & 0x7)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT,
+                       "cannot read this data using a bitsize that is not a multiple of 8");
+        return -1;
+    }
+    if (bit_offset & 0x7)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT,
+                       "cannot read this data using a bit offset that is not a multiple of 8");
+        return -1;
+    }
+    return coda_xml_cursor_read_bytes(cursor, dst, bit_offset >> 3, bit_length >> 3);
+}
 
 int coda_xml_cursor_read_bytes(const coda_cursor *cursor, uint8_t *dst, int64_t offset, int64_t length)
 {
-    switch (((coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type)->tag)
+    coda_xml_type *type;
+    coda_cursor sub_cursor;
+
+    /* TODO: replace call to coda_ascii_cursor_read_bytes() with direct call to read_bytes() */
+
+    /* defer to the ascii backend */
+    type = (coda_xml_type *)cursor->stack[cursor->n - 1].type;
+    sub_cursor = *cursor;
+    if (type->tag == tag_xml_root)
     {
-        case tag_xml_record_dynamic:
-        case tag_xml_text_dynamic:
-        case tag_xml_ascii_type_dynamic:
-        case tag_xml_root_dynamic:
-            return coda_ascii_cursor_read_bytes(cursor, dst, offset, length);
-        case tag_xml_attribute_dynamic:
-            {
-                coda_xml_attribute_dynamic_type *type;
-                long attribute_size;
-
-                type = (coda_xml_attribute_dynamic_type *)cursor->stack[cursor->n - 1].type;
-                attribute_size = strlen(type->value);
-                if (offset > attribute_size || offset + length > attribute_size)
-                {
-                    coda_set_error(CODA_ERROR_OUT_OF_BOUNDS_READ, NULL);
-                    return -1;
-                }
-                if (length > 0)
-                {
-                    memcpy(dst, &type->value[offset], (long)length);
-                }
-            }
-            break;
-        case tag_xml_array_dynamic:
-        case tag_xml_attribute_record_dynamic:
-            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a raw bits/bytes data type");
-            return -1;
+        sub_cursor.stack[cursor->n - 1].bit_offset = 0;
     }
-
-    return 0;
+    else
+    {
+        sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    }
+    return coda_ascii_cursor_read_bytes(&sub_cursor, dst, offset, length);
 }
 
-int coda_xml_cursor_read_int8_array(const coda_cursor *cursor, int8_t *dst, coda_array_ordering array_ordering)
+int coda_xml_cursor_read_int8_array(const coda_cursor *cursor, int8_t *dst)
 {
-    coda_xml_dynamic_type *type;
-    long num_elements;
+    coda_cursor sub_cursor;
+    coda_xml_element *type;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    if (type->tag == tag_xml_ascii_type_dynamic)
-    {
-        coda_cursor dd_cursor;
-
-        /* use the ascii base type */
-        dd_cursor = *cursor;
-        dd_cursor.stack[cursor->n - 1].type =
-            (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-        return coda_ascii_cursor_read_int8_array(&dd_cursor, dst, array_ordering,
-                                                 ((coda_xml_element_dynamic_type *)type)->inner_bit_size);
-    }
-
-    if (coda_xml_cursor_get_num_elements(cursor, &num_elements) != 0)
-    {
-        return -1;
-    }
-    if (num_elements > 0)
-    {
-        coda_cursor array_cursor = *cursor;
-        long i;
-
-        for (i = 0; i < num_elements; i++)
-        {
-            if (coda_xml_cursor_goto_array_element_by_index(&array_cursor, i) != 0)
-            {
-                return -1;
-            }
-            if (coda_xml_cursor_read_int8(&array_cursor, &dst[i]) != 0)
-            {
-                return -1;
-            }
-            coda_cursor_goto_parent(&array_cursor);
-        }
-    }
-
-    return 0;
+    /* defer to the ascii backend */
+    type = (coda_xml_element *)cursor->stack[cursor->n - 1].type;
+    assert(type->definition->format == coda_format_ascii);
+    sub_cursor = *cursor;
+    sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+    return coda_ascii_cursor_read_int8_array(&sub_cursor, dst, type->inner_bit_size);
 }
 
-int coda_xml_cursor_read_uint8_array(const coda_cursor *cursor, uint8_t *dst, coda_array_ordering array_ordering)
+int coda_xml_cursor_read_uint8_array(const coda_cursor *cursor, uint8_t *dst)
 {
-    coda_xml_dynamic_type *type;
-    long num_elements;
+    coda_cursor sub_cursor;
+    coda_xml_element *type;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    if (type->tag == tag_xml_ascii_type_dynamic)
-    {
-        coda_cursor dd_cursor;
-
-        /* use the ascii base type */
-        dd_cursor = *cursor;
-        dd_cursor.stack[cursor->n - 1].type =
-            (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-        return coda_ascii_cursor_read_uint8_array(&dd_cursor, dst, array_ordering,
-                                                  ((coda_xml_element_dynamic_type *)type)->inner_bit_size);
-    }
-
-    if (coda_xml_cursor_get_num_elements(cursor, &num_elements) != 0)
-    {
-        return -1;
-    }
-    if (num_elements > 0)
-    {
-        coda_cursor array_cursor = *cursor;
-        long i;
-
-        for (i = 0; i < num_elements; i++)
-        {
-            if (coda_xml_cursor_goto_array_element_by_index(&array_cursor, i) != 0)
-            {
-                return -1;
-            }
-            if (coda_xml_cursor_read_uint8(&array_cursor, &dst[i]) != 0)
-            {
-                return -1;
-            }
-            coda_cursor_goto_parent(&array_cursor);
-        }
-    }
-
-    return 0;
+    /* defer to the ascii backend */
+    type = (coda_xml_element *)cursor->stack[cursor->n - 1].type;
+    assert(type->definition->format == coda_format_ascii);
+    sub_cursor = *cursor;
+    sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+    return coda_ascii_cursor_read_uint8_array(&sub_cursor, dst, type->inner_bit_size);
 }
 
-int coda_xml_cursor_read_int16_array(const coda_cursor *cursor, int16_t *dst, coda_array_ordering array_ordering)
+int coda_xml_cursor_read_int16_array(const coda_cursor *cursor, int16_t *dst)
 {
-    coda_xml_dynamic_type *type;
-    long num_elements;
+    coda_cursor sub_cursor;
+    coda_xml_element *type;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    if (type->tag == tag_xml_ascii_type_dynamic)
-    {
-        coda_cursor dd_cursor;
-
-        /* use the ascii base type */
-        dd_cursor = *cursor;
-        dd_cursor.stack[cursor->n - 1].type =
-            (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-        return coda_ascii_cursor_read_int16_array(&dd_cursor, dst, array_ordering,
-                                                  ((coda_xml_element_dynamic_type *)type)->inner_bit_size);
-    }
-
-    if (coda_xml_cursor_get_num_elements(cursor, &num_elements) != 0)
-    {
-        return -1;
-    }
-    if (num_elements > 0)
-    {
-        coda_cursor array_cursor = *cursor;
-        long i;
-
-        for (i = 0; i < num_elements; i++)
-        {
-            if (coda_xml_cursor_goto_array_element_by_index(&array_cursor, i) != 0)
-            {
-                return -1;
-            }
-            if (coda_xml_cursor_read_int16(&array_cursor, &dst[i]) != 0)
-            {
-                return -1;
-            }
-            coda_cursor_goto_parent(&array_cursor);
-        }
-    }
-
-    return 0;
+    /* defer to the ascii backend */
+    type = (coda_xml_element *)cursor->stack[cursor->n - 1].type;
+    assert(type->definition->format == coda_format_ascii);
+    sub_cursor = *cursor;
+    sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+    return coda_ascii_cursor_read_int16_array(&sub_cursor, dst, type->inner_bit_size);
 }
 
-int coda_xml_cursor_read_uint16_array(const coda_cursor *cursor, uint16_t *dst, coda_array_ordering array_ordering)
+int coda_xml_cursor_read_uint16_array(const coda_cursor *cursor, uint16_t *dst)
 {
-    coda_xml_dynamic_type *type;
-    long num_elements;
+    coda_cursor sub_cursor;
+    coda_xml_element *type;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    if (type->tag == tag_xml_ascii_type_dynamic)
-    {
-        coda_cursor dd_cursor;
-
-        /* use the ascii base type */
-        dd_cursor = *cursor;
-        dd_cursor.stack[cursor->n - 1].type =
-            (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-        return coda_ascii_cursor_read_uint16_array(&dd_cursor, dst, array_ordering,
-                                                   ((coda_xml_element_dynamic_type *)type)->inner_bit_size);
-    }
-
-    if (coda_xml_cursor_get_num_elements(cursor, &num_elements) != 0)
-    {
-        return -1;
-    }
-    if (num_elements > 0)
-    {
-        coda_cursor array_cursor = *cursor;
-        long i;
-
-        for (i = 0; i < num_elements; i++)
-        {
-            if (coda_xml_cursor_goto_array_element_by_index(&array_cursor, i) != 0)
-            {
-                return -1;
-            }
-            if (coda_xml_cursor_read_uint16(&array_cursor, &dst[i]) != 0)
-            {
-                return -1;
-            }
-            coda_cursor_goto_parent(&array_cursor);
-        }
-    }
-
-    return 0;
+    /* defer to the ascii backend */
+    type = (coda_xml_element *)cursor->stack[cursor->n - 1].type;
+    assert(type->definition->format == coda_format_ascii);
+    sub_cursor = *cursor;
+    sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+    return coda_ascii_cursor_read_uint16_array(&sub_cursor, dst, type->inner_bit_size);
 }
 
-int coda_xml_cursor_read_int32_array(const coda_cursor *cursor, int32_t *dst, coda_array_ordering array_ordering)
+int coda_xml_cursor_read_int32_array(const coda_cursor *cursor, int32_t *dst)
 {
-    coda_xml_dynamic_type *type;
-    long num_elements;
+    coda_cursor sub_cursor;
+    coda_xml_element *type;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    if (type->tag == tag_xml_ascii_type_dynamic)
-    {
-        coda_cursor dd_cursor;
-
-        /* use the ascii base type */
-        dd_cursor = *cursor;
-        dd_cursor.stack[cursor->n - 1].type =
-            (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-        return coda_ascii_cursor_read_int32_array(&dd_cursor, dst, array_ordering,
-                                                  ((coda_xml_element_dynamic_type *)type)->inner_bit_size);
-    }
-
-    if (coda_xml_cursor_get_num_elements(cursor, &num_elements) != 0)
-    {
-        return -1;
-    }
-    if (num_elements > 0)
-    {
-        coda_cursor array_cursor = *cursor;
-        long i;
-
-        for (i = 0; i < num_elements; i++)
-        {
-            if (coda_xml_cursor_goto_array_element_by_index(&array_cursor, i) != 0)
-            {
-                return -1;
-            }
-            if (coda_xml_cursor_read_int32(&array_cursor, &dst[i]) != 0)
-            {
-                return -1;
-            }
-            coda_cursor_goto_parent(&array_cursor);
-        }
-    }
-
-    return 0;
+    /* defer to the ascii backend */
+    type = (coda_xml_element *)cursor->stack[cursor->n - 1].type;
+    assert(type->definition->format == coda_format_ascii);
+    sub_cursor = *cursor;
+    sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+    return coda_ascii_cursor_read_int32_array(&sub_cursor, dst, type->inner_bit_size);
 }
 
-int coda_xml_cursor_read_uint32_array(const coda_cursor *cursor, uint32_t *dst, coda_array_ordering array_ordering)
+int coda_xml_cursor_read_uint32_array(const coda_cursor *cursor, uint32_t *dst)
 {
-    coda_xml_dynamic_type *type;
-    long num_elements;
+    coda_cursor sub_cursor;
+    coda_xml_element *type;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    if (type->tag == tag_xml_ascii_type_dynamic)
-    {
-        coda_cursor dd_cursor;
-
-        /* use the ascii base type */
-        dd_cursor = *cursor;
-        dd_cursor.stack[cursor->n - 1].type =
-            (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-        return coda_ascii_cursor_read_uint32_array(&dd_cursor, dst, array_ordering,
-                                                   ((coda_xml_element_dynamic_type *)type)->inner_bit_size);
-    }
-
-    if (coda_xml_cursor_get_num_elements(cursor, &num_elements) != 0)
-    {
-        return -1;
-    }
-    if (num_elements > 0)
-    {
-        coda_cursor array_cursor = *cursor;
-        long i;
-
-        for (i = 0; i < num_elements; i++)
-        {
-            if (coda_xml_cursor_goto_array_element_by_index(&array_cursor, i) != 0)
-            {
-                return -1;
-            }
-            if (coda_xml_cursor_read_uint32(&array_cursor, &dst[i]) != 0)
-            {
-                return -1;
-            }
-            coda_cursor_goto_parent(&array_cursor);
-        }
-    }
-
-    return 0;
+    /* defer to the ascii backend */
+    type = (coda_xml_element *)cursor->stack[cursor->n - 1].type;
+    assert(type->definition->format == coda_format_ascii);
+    sub_cursor = *cursor;
+    sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+    return coda_ascii_cursor_read_uint32_array(&sub_cursor, dst, type->inner_bit_size);
 }
 
-int coda_xml_cursor_read_int64_array(const coda_cursor *cursor, int64_t *dst, coda_array_ordering array_ordering)
+int coda_xml_cursor_read_int64_array(const coda_cursor *cursor, int64_t *dst)
 {
-    coda_xml_dynamic_type *type;
-    long num_elements;
+    coda_cursor sub_cursor;
+    coda_xml_element *type;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    if (type->tag == tag_xml_ascii_type_dynamic)
-    {
-        coda_cursor dd_cursor;
-
-        /* use the ascii base type */
-        dd_cursor = *cursor;
-        dd_cursor.stack[cursor->n - 1].type =
-            (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-        return coda_ascii_cursor_read_int64_array(&dd_cursor, dst, array_ordering,
-                                                  ((coda_xml_element_dynamic_type *)type)->inner_bit_size);
-    }
-
-    if (coda_xml_cursor_get_num_elements(cursor, &num_elements) != 0)
-    {
-        return -1;
-    }
-    if (num_elements > 0)
-    {
-        coda_cursor array_cursor = *cursor;
-        long i;
-
-        for (i = 0; i < num_elements; i++)
-        {
-            if (coda_xml_cursor_goto_array_element_by_index(&array_cursor, i) != 0)
-            {
-                return -1;
-            }
-            if (coda_xml_cursor_read_int64(&array_cursor, &dst[i]) != 0)
-            {
-                return -1;
-            }
-            coda_cursor_goto_parent(&array_cursor);
-        }
-    }
-
-    return 0;
+    /* defer to the ascii backend */
+    type = (coda_xml_element *)cursor->stack[cursor->n - 1].type;
+    assert(type->definition->format == coda_format_ascii);
+    sub_cursor = *cursor;
+    sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+    return coda_ascii_cursor_read_int64_array(&sub_cursor, dst, type->inner_bit_size);
 }
 
-int coda_xml_cursor_read_uint64_array(const coda_cursor *cursor, uint64_t *dst, coda_array_ordering array_ordering)
+int coda_xml_cursor_read_uint64_array(const coda_cursor *cursor, uint64_t *dst)
 {
-    coda_xml_dynamic_type *type;
-    long num_elements;
+    coda_cursor sub_cursor;
+    coda_xml_element *type;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    if (type->tag == tag_xml_ascii_type_dynamic)
-    {
-        coda_cursor dd_cursor;
-
-        /* use the ascii base type */
-        dd_cursor = *cursor;
-        dd_cursor.stack[cursor->n - 1].type =
-            (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-        return coda_ascii_cursor_read_uint64_array(&dd_cursor, dst, array_ordering,
-                                                   ((coda_xml_element_dynamic_type *)type)->inner_bit_size);
-    }
-
-    if (coda_xml_cursor_get_num_elements(cursor, &num_elements) != 0)
-    {
-        return -1;
-    }
-    if (num_elements > 0)
-    {
-        coda_cursor array_cursor = *cursor;
-        long i;
-
-        for (i = 0; i < num_elements; i++)
-        {
-            if (coda_xml_cursor_goto_array_element_by_index(&array_cursor, i) != 0)
-            {
-                return -1;
-            }
-            if (coda_xml_cursor_read_uint64(&array_cursor, &dst[i]) != 0)
-            {
-                return -1;
-            }
-            coda_cursor_goto_parent(&array_cursor);
-        }
-    }
-
-    return 0;
+    /* defer to the ascii backend */
+    type = (coda_xml_element *)cursor->stack[cursor->n - 1].type;
+    assert(type->definition->format == coda_format_ascii);
+    sub_cursor = *cursor;
+    sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+    return coda_ascii_cursor_read_uint64_array(&sub_cursor, dst, type->inner_bit_size);
 }
 
-int coda_xml_cursor_read_float_array(const coda_cursor *cursor, float *dst, coda_array_ordering array_ordering)
+int coda_xml_cursor_read_float_array(const coda_cursor *cursor, float *dst)
 {
-    coda_xml_dynamic_type *type;
-    long num_elements;
+    coda_cursor sub_cursor;
+    coda_xml_element *type;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    if (type->tag == tag_xml_ascii_type_dynamic)
-    {
-        coda_cursor dd_cursor;
-
-        /* use the ascii base type */
-        dd_cursor = *cursor;
-        dd_cursor.stack[cursor->n - 1].type =
-            (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-        return coda_ascii_cursor_read_float_array(&dd_cursor, dst, array_ordering,
-                                                  ((coda_xml_element_dynamic_type *)type)->inner_bit_size);
-    }
-
-    if (coda_xml_cursor_get_num_elements(cursor, &num_elements) != 0)
-    {
-        return -1;
-    }
-    if (num_elements > 0)
-    {
-        coda_cursor array_cursor = *cursor;
-        long i;
-
-        for (i = 0; i < num_elements; i++)
-        {
-            if (coda_xml_cursor_goto_array_element_by_index(&array_cursor, i) != 0)
-            {
-                return -1;
-            }
-            if (coda_xml_cursor_read_float(&array_cursor, &dst[i]) != 0)
-            {
-                return -1;
-            }
-            coda_cursor_goto_parent(&array_cursor);
-        }
-    }
-
-    return 0;
+    /* defer to the ascii backend */
+    type = (coda_xml_element *)cursor->stack[cursor->n - 1].type;
+    assert(type->definition->format == coda_format_ascii);
+    sub_cursor = *cursor;
+    sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+    return coda_ascii_cursor_read_float_array(&sub_cursor, dst, type->inner_bit_size);
 }
 
-int coda_xml_cursor_read_double_array(const coda_cursor *cursor, double *dst, coda_array_ordering array_ordering)
+int coda_xml_cursor_read_double_array(const coda_cursor *cursor, double *dst)
 {
-    coda_xml_dynamic_type *type;
-    long num_elements;
+    coda_cursor sub_cursor;
+    coda_xml_element *type;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    if (type->tag == tag_xml_ascii_type_dynamic)
-    {
-        coda_cursor dd_cursor;
-
-        /* use the ascii base type */
-        dd_cursor = *cursor;
-        dd_cursor.stack[cursor->n - 1].type =
-            (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-        return coda_ascii_cursor_read_double_array(&dd_cursor, dst, array_ordering,
-                                                   ((coda_xml_element_dynamic_type *)type)->inner_bit_size);
-    }
-
-    if (coda_xml_cursor_get_num_elements(cursor, &num_elements) != 0)
-    {
-        return -1;
-    }
-    if (num_elements > 0)
-    {
-        coda_cursor array_cursor = *cursor;
-        long i;
-
-        for (i = 0; i < num_elements; i++)
-        {
-            if (coda_xml_cursor_goto_array_element_by_index(&array_cursor, i) != 0)
-            {
-                return -1;
-            }
-            if (coda_xml_cursor_read_double(&array_cursor, &dst[i]) != 0)
-            {
-                return -1;
-            }
-            coda_cursor_goto_parent(&array_cursor);
-        }
-    }
-
-    return 0;
+    /* defer to the ascii backend */
+    type = (coda_xml_element *)cursor->stack[cursor->n - 1].type;
+    assert(type->definition->format == coda_format_ascii);
+    sub_cursor = *cursor;
+    sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+    return coda_ascii_cursor_read_double_array(&sub_cursor, dst, type->inner_bit_size);
 }
 
-int coda_xml_cursor_read_char_array(const coda_cursor *cursor, char *dst, coda_array_ordering array_ordering)
+int coda_xml_cursor_read_char_array(const coda_cursor *cursor, char *dst)
 {
-    coda_xml_dynamic_type *type;
-    long num_elements;
+    coda_cursor sub_cursor;
+    coda_xml_element *type;
 
-    type = (coda_xml_dynamic_type *)cursor->stack[cursor->n - 1].type;
-    if (type->tag == tag_xml_ascii_type_dynamic)
-    {
-        coda_cursor dd_cursor;
-
-        /* use the ascii base type */
-        dd_cursor = *cursor;
-        dd_cursor.stack[cursor->n - 1].type =
-            (coda_dynamic_type *)((coda_xml_element_dynamic_type *)type)->type->ascii_type;
-        return coda_ascii_cursor_read_char_array(&dd_cursor, dst, array_ordering,
-                                                 ((coda_xml_element_dynamic_type *)type)->inner_bit_size);
-    }
-
-    if (coda_xml_cursor_get_num_elements(cursor, &num_elements) != 0)
-    {
-        return -1;
-    }
-    if (num_elements > 0)
-    {
-        coda_cursor array_cursor = *cursor;
-        long i;
-
-        for (i = 0; i < num_elements; i++)
-        {
-            if (coda_xml_cursor_goto_array_element_by_index(&array_cursor, i) != 0)
-            {
-                return -1;
-            }
-            if (coda_xml_cursor_read_char(&array_cursor, &dst[i]) != 0)
-            {
-                return -1;
-            }
-            coda_cursor_goto_parent(&array_cursor);
-        }
-    }
-
-    return 0;
+    /* defer to the ascii backend */
+    type = (coda_xml_element *)cursor->stack[cursor->n - 1].type;
+    assert(type->definition->format == coda_format_ascii);
+    sub_cursor = *cursor;
+    sub_cursor.stack[cursor->n - 1].bit_offset = ((coda_xml_element *)type)->inner_bit_offset;
+    sub_cursor.stack[cursor->n - 1].type = (coda_dynamic_type *)type->definition;
+    return coda_ascii_cursor_read_char_array(&sub_cursor, dst, type->inner_bit_size);
 }

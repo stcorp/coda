@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2007-2010 S[&]T, The Netherlands.
+// Copyright (C) 2007-2011 S[&]T, The Netherlands.
 //
 // This file is part of CODA.
 //
@@ -65,7 +65,6 @@
 %rename(type_get_class_name) coda_type_get_class_name;
 %rename(type_get_native_type_name) coda_type_get_native_type_name;
 %rename(type_get_special_type_name) coda_type_get_special_type_name;
-%rename(type_has_ascii_content) coda_type_has_ascii_content;
 %rename(type_has_xml_content) coda_type_has_xml_content;
 %rename(type_get_format) coda_type_get_format;
 %rename(type_get_class) coda_type_get_class;
@@ -78,6 +77,7 @@
 %rename(type_get_fixed_value) coda_type_get_fixed_value;
 %rename(type_get_num_record_fields) coda_type_get_num_record_fields;
 %rename(type_get_record_field_index_from_name) coda_type_get_record_field_index_from_name;
+%rename(type_get_record_field_index_from_real_name) coda_type_get_record_field_index_from_real_name;
 %rename(type_get_record_field_type) coda_type_get_record_field_type;
 %rename(type_get_record_field_name) coda_type_get_record_field_name;
 %rename(type_get_record_field_real_name) coda_type_get_record_field_real_name;

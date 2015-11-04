@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2007-2010 S[&]T, The Netherlands.
+// Copyright (C) 2007-2011 S[&]T, The Netherlands.
 //
 // This file is part of CODA.
 //
@@ -325,7 +325,6 @@ POSIX_SCALAR_OUTPUT_HELPER(uint64_t, PyLong_FromUnsignedLongLong)
                                   int *HOUR, int *MINUTE, int *SECOND,
                                   int *MUSEC
     coda_get_product_version()::int *version
-    coda_type_has_ascii_content::int *has_ascii_content
     coda_type_get_record_field_hidden_status()::int *hidden
     coda_type_get_record_field_available_status()::int *available
     coda_type_get_record_union_status()::int *is_union
@@ -354,6 +353,7 @@ POSIX_SCALAR_OUTPUT_HELPER(uint64_t, PyLong_FromUnsignedLongLong)
     coda_cursor_get_string_length()::long *length    
     coda_type_get_num_record_fields()::long *num_fields
     coda_type_get_record_field_index_from_name()::long *index
+    coda_type_get_record_field_index_from_real_name()::long *index
     coda_cursor_get_index()::long *index
     coda_cursor_get_record_field_index_from_name()::long *index
     coda_cursor_get_available_union_field_index()::long *index

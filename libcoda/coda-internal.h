@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -42,27 +42,32 @@ enum coda_endianness_enum
 };
 typedef enum coda_endianness_enum coda_endianness;
 
+#define first_dynamic_backend_id 100
+enum coda_backend_enum
+{
+    /* first all backends for which the dynamic types equal the static types */
+    coda_backend_ascii = coda_format_ascii, /**< Backend that reads ascii data from a file */
+    coda_backend_binary = coda_format_binary,   /**< Backend that reads binary data from a file */
+
+    /* then all backends that have separate dynamic types */
+    coda_backend_memory = first_dynamic_backend_id,   /**< Backend that feeds data from memory */
+    coda_backend_xml,   /**< Backend that reads data from an XML file */
+    coda_backend_hdf4,  /**< Backend that reads data via the HDF4 library */
+    coda_backend_hdf5,  /**< Backend that reads data via the HDF5 library */
+    coda_backend_netcdf,      /**< Backend that reads data from netCDF 3.x files */
+    coda_backend_grib   /**< Backend that reads data from GRIB files */
+};
+typedef enum coda_backend_enum coda_backend;
+
 /* type 'base class' that describes the dynamic (i.e. instance specific) type information of a data element */
 /* this is the type that is used within coda_product for the root type and within coda_cursor */
 /* depending on the backend a coda_dynamic_type instance can also be a coda_type (or vice versa) */
 struct coda_dynamic_type_struct
 {
-    int retain_count;
-    coda_format format;
-    coda_type_class type_class;
+    coda_backend backend;
+    coda_type *definition;
 };
 typedef struct coda_dynamic_type_struct coda_dynamic_type;
-
-/* type 'base class' that describes the definition of a data element */
-/* this is the type that is used throughout the CODA Types module */
-struct coda_type_struct
-{
-    int retain_count;
-    coda_format format;
-    coda_type_class type_class;
-    char *name;
-    char *description;
-};
 
 typedef struct coda_product_definition_struct coda_product_definition;
 
@@ -79,7 +84,6 @@ struct coda_product_struct
     int64_t **product_variable;
 };
 
-
 extern int coda_option_bypass_special_types;
 extern int coda_option_perform_boundary_checks;
 extern int coda_option_perform_conversions;
@@ -92,15 +96,16 @@ void coda_set_error_message(const char *message, ...);
 void coda_add_error_message_vargs(const char *message, va_list ap);
 void coda_set_error_message_vargs(const char *message, va_list ap);
 
-void coda_release_type(coda_type *type);
-void coda_release_dynamic_type(coda_dynamic_type *type);
-
 int coda_data_dictionary_init(void);
 void coda_data_dictionary_done(void);
 int coda_read_definitions(const char *path);
 int coda_read_product_definition(coda_product_definition *product_definition);
 
-int coda_get_type_for_dynamic_type(coda_dynamic_type *dynamic_type, coda_type **type);
+coda_dynamic_type *coda_no_data_singleton(coda_format format);
+coda_dynamic_type *coda_mem_empty_record(coda_format format);
+coda_type *coda_get_type_for_dynamic_type(coda_dynamic_type *dynamic_type);
+void coda_dynamic_type_delete(coda_dynamic_type *type);
+int coda_dynamic_type_update(coda_dynamic_type **type, coda_type **definition);
 
 int coda_product_variable_get_size(coda_product *product, const char *name, long *size);
 int coda_product_variable_get_pointer(coda_product *product, const char *name, long i, int64_t **ptr);
@@ -111,8 +116,6 @@ const char *coda_element_name_from_xml_name(const char *xml_name);
 int coda_is_identifier(const char *name);
 char *coda_identifier_from_name(const char *name, hashtable *hash_data);
 char *coda_short_identifier_from_name(const char *name, hashtable *hash_data, int maxlength);
-
-int coda_array_transpose(void *array, int num_dims, const long dim[], int element_size);
 
 int coda_dayofyear_to_month_day(int year, int day_of_year, int *month, int *day_of_month);
 int coda_month_to_integer(const char month[3]);

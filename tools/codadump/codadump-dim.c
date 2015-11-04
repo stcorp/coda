@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -631,6 +631,11 @@ static int get_record_field_available_status(int depth, int array_depth, int rec
                 if (array_depth == 0)
                 {
                     array_info->global_index = 0;
+                }
+                if (array_depth < traverse_info.num_arrays)
+                {
+                    traverse_info.array_info[array_depth + 1].global_index =
+                        array_info->global_index * array_info->num_elements;
                 }
 
                 number_of_elements = 1;

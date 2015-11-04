@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -134,8 +134,8 @@ static double sec2day(double sec)
 }
 
 #define CODA_IDL_ERR_EXPECTED_SCALAR                                (-901)
-#define CODA_IDL_ERR_FETCH_EXPECTED_DATAHANDLE                      (-904)
-#define CODA_IDL_ERR_FETCH_EXPECTED_DATAHANDLE_VALUE_GOT_ARRAY      (-905)
+#define CODA_IDL_ERR_EXPECTED_DATAHANDLE                            (-904)
+#define CODA_IDL_ERR_EXPECTED_DATAHANDLE_VALUE_GOT_ARRAY            (-905)
 #define CODA_IDL_ERR_WRONG_DATA_ITEM_SELECTOR                       (-907)
 #define CODA_IDL_ERR_WRONG_NUM_DIMS_ARRAY                           (-908)
 #define CODA_IDL_ERR_WRONG_DATA_ITEM_SELECTOR_INTEGER               (-909)
@@ -148,7 +148,7 @@ static double sec2day(double sec)
 #define CODA_IDL_ERR_MULTIPLE_VARIABLE_INDICES                      (-992)
 #define CODA_IDL_ERR_RECORD_FIELD_NOT_AVAILABLE                     (-993)
 #define CODA_IDL_ERR_NOT_A_RECORD                                   (-994)
-
+#define CODA_IDL_ERR_VOID_EXPRESSION_NOT_SUPPORTED                  (-995)
 
 static void fill_error(struct IDL_CodaError *fill, int err)
 {
@@ -162,12 +162,12 @@ static void fill_error(struct IDL_CodaError *fill, int err)
             case CODA_IDL_ERR_EXPECTED_SCALAR:
                 message = "scalar numerical argument expected";
                 break;
-            case CODA_IDL_ERR_FETCH_EXPECTED_DATAHANDLE:
-                message = "first argument should be a CODA_DATAHANDLE structure or LONG64 product-file identifier";
+            case CODA_IDL_ERR_EXPECTED_DATAHANDLE:
+                message = "expected a CODA_DATAHANDLE structure or LONG64 product-file identifier";
                 break;
-            case CODA_IDL_ERR_FETCH_EXPECTED_DATAHANDLE_VALUE_GOT_ARRAY:
-                message = "first argument should be a *single* CODA_DATAHANDLE single stucture; use "
-                    "CODA_FETCH(datahandle_array[x], ...) instead of CODA_FETCH(datahandle_array, x, ...)";
+            case CODA_IDL_ERR_EXPECTED_DATAHANDLE_VALUE_GOT_ARRAY:
+                message = "expected a *single* CODA_DATAHANDLE single stucture; use (datahandle_array[x], ...) "
+                    "instead of (datahandle_array, x, ...)";
                 break;
             case CODA_IDL_ERR_WRONG_DATA_ITEM_SELECTOR:
                 message = "only strings, integer-type scalars, or integer-type vectors may be used to select a "
@@ -205,6 +205,9 @@ static void fill_error(struct IDL_CodaError *fill, int err)
                 break;
             case CODA_IDL_ERR_NOT_A_RECORD:
                 message = "arguments do not point to a record";
+                break;
+            case CODA_IDL_ERR_VOID_EXPRESSION_NOT_SUPPORTED:
+                message = "cannot evaluate void expressions";
                 break;
             default:
                 message = "unknown error";
@@ -2334,13 +2337,13 @@ static int idl_coda_fetchspec_to_datahandle(int argc, IDL_VPTR *argv, struct IDL
 
         if (argv[0]->value.s.sdef != coda_datahandle_sdef)
         {
-            coda_set_error(CODA_IDL_ERR_FETCH_EXPECTED_DATAHANDLE, NULL);
+            coda_set_error(CODA_IDL_ERR_EXPECTED_DATAHANDLE, NULL);
             return -1;
         }
 
         if (argv[0]->value.s.arr->n_dim > 1 || argv[0]->value.s.arr->dim[0] > 1)
         {
-            coda_set_error(CODA_IDL_ERR_FETCH_EXPECTED_DATAHANDLE_VALUE_GOT_ARRAY, NULL);
+            coda_set_error(CODA_IDL_ERR_EXPECTED_DATAHANDLE_VALUE_GOT_ARRAY, NULL);
             return -1;
         }
 
@@ -2749,6 +2752,128 @@ static IDL_VPTR x_coda_attributes(int argc, IDL_VPTR *argv)
     {
         return mk_coda_error(coda_errno);
     }
+
+    return retval;
+}
+
+static IDL_VPTR x_coda_eval(int argc, IDL_VPTR *argv)
+{
+    struct IDL_CodaDataHandle datahandle;
+    coda_expression_type type;
+    coda_cursor *cursor = NULL;
+    coda_expression *expr;
+    IDL_VPTR retval;
+    char *exprstring;
+
+    assert(argc > 0);   /* this is guaranteed by the limits set in 'coda-idl.dlm' */
+    if (idl_coda_init() != 0)
+    {
+        return mk_coda_error(coda_errno);
+    }
+
+    IDL_ENSURE_STRING(argv[0]);
+    exprstring = IDL_STRING_STR(&argv[0]->value.str);
+    if (coda_expression_from_string(exprstring, &expr) != 0)
+    {
+        return mk_coda_error(coda_errno);
+    }
+    if (coda_expression_get_type(expr, &type) != 0)
+    {
+        coda_expression_delete(expr);
+        return mk_coda_error(coda_errno);
+    }
+
+    if (argc > 1)
+    {
+        /* we move the datahandle to the requested cursor position */
+        if (idl_coda_fetchspec_to_datahandle(argc - 1, &argv[1], &datahandle, NULL, NULL, NULL) != 0)
+        {
+            coda_expression_delete(expr);
+            return mk_coda_error(coda_errno);
+        }
+        cursor = &datahandle.cursor;
+    }
+    else if (!coda_expression_is_constant(expr))
+    {
+        coda_expression_delete(expr);
+        return mk_coda_error(CODA_IDL_ERR_EXPECTED_DATAHANDLE);
+    }
+
+    switch (type)
+    {
+        case coda_expression_boolean:
+            {
+                int value;
+
+                if (coda_expression_eval_bool(expr, cursor, &value) != 0)
+                {
+                    coda_expression_delete(expr);
+                    return mk_coda_error(coda_errno);
+                }
+                retval = IDL_Gettmp();
+                retval->type = IDL_TYP_INT;
+                retval->value.i = value;
+            }
+            break;
+        case coda_expression_integer:
+            {
+                int64_t value;
+
+                if (coda_expression_eval_integer(expr, cursor, &value) != 0)
+                {
+                    coda_expression_delete(expr);
+                    return mk_coda_error(coda_errno);
+                }
+                retval = IDL_Gettmp();
+                retval->type = IDL_TYP_LONG64;
+                retval->value.l64 = value;
+            }
+            break;
+        case coda_expression_float:
+            {
+                double value;
+
+                if (coda_expression_eval_float(expr, cursor, &value) != 0)
+                {
+                    coda_expression_delete(expr);
+                    return mk_coda_error(coda_errno);
+                }
+                retval = IDL_Gettmp();
+                retval->type = IDL_TYP_DOUBLE;
+                retval->value.d = value;
+            }
+            break;
+        case coda_expression_string:
+            {
+                char *value;
+                long length;
+
+                if (coda_expression_eval_string(expr, cursor, &value, &length) != 0)
+                {
+                    coda_expression_delete(expr);
+                    return mk_coda_error(coda_errno);
+                }
+                retval = IDL_StrToSTRING(value != NULL ? value : "");
+            }
+            break;
+        case coda_expression_node:
+            {
+                char *data;
+
+                if (coda_expression_eval_node(expr, cursor) != 0)
+                {
+                    coda_expression_delete(expr);
+                    return mk_coda_error(coda_errno);
+                }
+                data = IDL_MakeTempStructVector(coda_datahandle_sdef, 1, &retval, FALSE);
+                ((struct IDL_CodaDataHandle *)data)[0] = datahandle;
+            }
+            break;
+        case coda_expression_void:
+            coda_expression_delete(expr);
+            return mk_coda_error(CODA_IDL_ERR_VOID_EXPRESSION_NOT_SUPPORTED);
+    }
+    coda_expression_delete(expr);
 
     return retval;
 }
@@ -3313,6 +3438,7 @@ static int register_idl_functions_and_procedures(void)
         {{x_coda_attributes}, "CODA_ATTRIBUTES", 1, IDL_MAXPARAMS, 0, 0},
         {{x_coda_close}, "CODA_CLOSE", 1, 1, 0, 0},
         {{x_coda_description}, "CODA_DESCRIPTION", 1, IDL_MAXPARAMS, 0, 0},
+        {{x_coda_eval}, "CODA_EVAL", 1, IDL_MAXPARAMS, 0, 0},
         {{x_coda_fetch}, "CODA_FETCH", 1, IDL_MAXPARAMS, 0, 0},
         {{x_coda_fetch_datahandle}, "CODA_FETCH_DATAHANDLE", 1, IDL_MAXPARAMS, 0, 0},
         {{x_coda_fieldavailable}, "CODA_FIELDAVAILABLE", 2, IDL_MAXPARAMS, 0, 0},
@@ -3346,6 +3472,7 @@ static int register_idl_functions_and_procedures(void)
         {x_coda_attributes, "CODA_ATTRIBUTES", 1, IDL_MAXPARAMS, 0, 0},
         {x_coda_close, "CODA_CLOSE", 1, 1, 0, 0},
         {x_coda_description, "CODA_DESCRIPTION", 1, IDL_MAXPARAMS, 0, 0},
+        {x_coda_eval, "CODA_EVAL", 1, IDL_MAXPARAMS, 0, 0},
         {x_coda_fetch, "CODA_FETCH", 1, IDL_MAXPARAMS, 0, 0},
         {x_coda_fetch_datahandle, "CODA_FETCH_DATAHANDLE", 1, IDL_MAXPARAMS, 0, 0},
         {x_coda_fieldavailable, "CODA_FIELDAVAILABLE", 2, IDL_MAXPARAMS, 0, 0},
@@ -3384,6 +3511,7 @@ static int register_idl_functions_and_procedures(void)
         {x_coda_attributes, "CODA_ATTRIBUTES", 1, IDL_MAXPARAMS, 0},
         {x_coda_close, "CODA_CLOSE", 1, 1, 0},
         {x_coda_description, "CODA_DESCRIPTION", 1, IDL_MAXPARAMS, 0},
+        {x_coda_eval, "CODA_EVAL", 1, IDL_MAXPARAMS, 0},
         {x_coda_fetch, "CODA_FETCH", 1, IDL_MAXPARAMS, 0},
         {x_coda_fetch_datahandle, "CODA_FETCH_DATAHANDLE", 1, IDL_MAXPARAMS, 0},
         {x_coda_fieldavailable, "CODA_FIELDAVAILABLE", 2, IDL_MAXPARAMS, 0},

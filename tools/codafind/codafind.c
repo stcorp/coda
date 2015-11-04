@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -34,7 +34,7 @@ static int verbosity;
 static void print_version()
 {
     printf("codafind %s\n", libcoda_version);
-    printf("Copyright (C) 2007-2010 S[&]T, The Netherlands.\n");
+    printf("Copyright (C) 2007-2011 S[&]T, The Netherlands.\n");
     printf("\n");
 }
 

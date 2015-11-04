@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -27,32 +27,6 @@
 
 coda_data_dictionary *coda_global_data_dictionary = NULL;
 
-void coda_ascii_release_type(coda_type *type);
-void coda_bin_release_type(coda_type *type);
-void coda_xml_release_type(coda_type *type);
-void coda_netcdf_release_type(coda_type *type);
-void coda_grib_release_type(coda_type *type);
-
-#ifdef HAVE_HDF4
-void coda_hdf4_release_type(coda_type *type);
-#endif
-#ifdef HAVE_HDF5
-void coda_hdf5_release_type(coda_type *type);
-#endif
-
-void coda_ascii_release_dynamic_type(coda_dynamic_type *type);
-void coda_bin_release_dynamic_type(coda_dynamic_type *type);
-void coda_xml_release_dynamic_type(coda_dynamic_type *type);
-void coda_netcdf_release_dynamic_type(coda_dynamic_type *type);
-void coda_grib_release_dynamic_type(coda_dynamic_type *type);
-
-#ifdef HAVE_HDF4
-void coda_hdf4_release_dynamic_type(coda_dynamic_type *type);
-#endif
-#ifdef HAVE_HDF5
-void coda_hdf5_release_dynamic_type(coda_dynamic_type *type);
-#endif
-
 void coda_ascbin_detection_tree_delete(void *detection_tree);
 int coda_ascbin_detection_tree_add_rule(void *detection_tree, coda_detection_rule *detection_rule);
 
@@ -61,127 +35,6 @@ int coda_xml_detection_tree_add_rule(void *detection_tree, coda_detection_rule *
 
 static int data_dictionary_add_detection_rule(coda_detection_rule *detection_rule);
 static int data_dictionary_rebuild_detection_tree(void);
-
-void coda_release_type(coda_type *type)
-{
-    switch (type->format)
-    {
-        case coda_format_ascii:
-            coda_ascii_release_type(type);
-            break;
-        case coda_format_binary:
-            coda_bin_release_type(type);
-            break;
-        case coda_format_xml:
-            coda_xml_release_type(type);
-            break;
-        case coda_format_netcdf:
-            coda_netcdf_release_type(type);
-            break;
-        case coda_format_grib1:
-        case coda_format_grib2:
-            coda_grib_release_type(type);
-            break;
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            coda_hdf4_release_type(type);
-#endif
-            break;
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            coda_hdf5_release_type(type);
-#endif
-            break;
-    }
-}
-
-void coda_release_dynamic_type(coda_dynamic_type *type)
-{
-    switch (type->format)
-    {
-        case coda_format_ascii:
-            coda_ascii_release_dynamic_type(type);
-            break;
-        case coda_format_binary:
-            coda_bin_release_dynamic_type(type);
-            break;
-        case coda_format_xml:
-            coda_xml_release_dynamic_type(type);
-            break;
-        case coda_format_netcdf:
-            coda_netcdf_release_dynamic_type(type);
-            break;
-        case coda_format_grib1:
-        case coda_format_grib2:
-            coda_grib_release_dynamic_type(type);
-            break;
-        case coda_format_cdf:
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            coda_hdf4_release_dynamic_type(type);
-#endif
-            break;
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            coda_hdf5_release_dynamic_type(type);
-#endif
-            break;
-    }
-}
-
-int coda_type_set_name(coda_type *type, const char *name)
-{
-    char *new_name = NULL;
-
-    if (type->name != NULL)
-    {
-        coda_set_error(CODA_ERROR_DATA_DEFINITION, "type already has a name");
-        return -1;
-    }
-    if (!coda_is_identifier(name))
-    {
-        coda_set_error(CODA_ERROR_DATA_DEFINITION, "name '%s' is not a valid identifier", name);
-        return -1;
-    }
-    if (name != NULL)
-    {
-        new_name = strdup(name);
-        if (new_name == NULL)
-        {
-            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
-                           __LINE__);
-            return -1;
-        }
-    }
-    type->name = new_name;
-
-    return 0;
-}
-
-int coda_type_set_description(coda_type *type, const char *description)
-{
-    char *new_description = NULL;
-
-    if (type->description != NULL)
-    {
-        coda_set_error(CODA_ERROR_DATA_DEFINITION, "type already has a description");
-        return -1;
-    }
-    if (description != NULL)
-    {
-        new_description = strdup(description);
-        if (new_description == NULL)
-        {
-            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
-                           __LINE__);
-            return -1;
-        }
-    }
-    type->description = new_description;
-
-    return 0;
-}
 
 void coda_detection_rule_entry_delete(coda_detection_rule_entry *entry)
 {
@@ -537,7 +390,7 @@ void coda_product_definition_delete(coda_product_definition *product_definition)
     }
     if (product_definition->root_type != NULL)
     {
-        coda_release_type(product_definition->root_type);
+        coda_type_release(product_definition->root_type);
     }
     if (product_definition->hash_data != NULL)
     {
@@ -904,7 +757,7 @@ void coda_product_class_delete(coda_product_class *product_class)
     {
         for (i = 0; i < product_class->num_named_types; i++)
         {
-            coda_release_type(product_class->named_type[i]);
+            coda_type_release(product_class->named_type[i]);
         }
         free(product_class->named_type);
     }
@@ -1328,6 +1181,8 @@ static int data_dictionary_add_detection_rule(coda_detection_rule *detection_rul
         case coda_format_netcdf:
         case coda_format_grib1:
         case coda_format_grib2:
+        case coda_format_rinex:
+        case coda_format_sp3c:
             assert(0);
             exit(1);
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -144,8 +144,8 @@ void print_full_field_name(FILE *f, int print_dims, int compound_as_array)
                             fprintf(f, ",");
                         }
                         print_array_dim(f, array_id);
+                        array_id++;
                     }
-                    array_id++;
                 }
             }
             if (compound_as_array && array_id < traverse_info.num_arrays)

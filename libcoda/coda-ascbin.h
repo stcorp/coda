@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -23,32 +23,15 @@
 
 #include "coda-internal.h"
 
-coda_dynamic_type *coda_ascbin_empty_record(void);
-
-void coda_ascbin_done(void);
 int coda_ascbin_open(const char *filename, int64_t file_size, coda_product **product);
 int coda_ascbin_close(coda_product *product);
 
 int coda_ascbin_recognize_file(const char *filename, int64_t size, coda_product_definition **definition);
 
-int coda_ascbin_type_get_num_record_fields(const coda_type *type, long *num_fields);
-int coda_ascbin_type_get_record_field_index_from_name(const coda_type *type, const char *name, long *index);
-int coda_ascbin_type_get_record_field_type(const coda_type *type, long index, coda_type **field_type);
-int coda_ascbin_type_get_record_field_name(const coda_type *type, long index, const char **name);
-int coda_ascbin_type_get_record_field_real_name(const coda_type *type, long index, const char **real_name);
-int coda_ascbin_type_get_record_field_hidden_status(const coda_type *type, long index, int *hidden);
-int coda_ascbin_type_get_record_field_available_status(const coda_type *type, long index, int *available);
-int coda_ascbin_type_get_record_union_status(const coda_type *type, int *is_union);
-int coda_ascbin_type_get_array_num_dims(const coda_type *type, int *num_dims);
-int coda_ascbin_type_get_array_dim(const coda_type *type, int *num_dims, long dim[]);
-int coda_ascbin_type_get_array_base_type(const coda_type *type, coda_type **base_type);
-
 int coda_ascbin_cursor_set_product(coda_cursor *cursor, coda_product *product);
 int coda_ascbin_cursor_goto_record_field_by_index(coda_cursor *cursor, long index);
 int coda_ascbin_cursor_goto_next_record_field(coda_cursor *cursor);
 int coda_ascbin_cursor_goto_available_union_field(coda_cursor *cursor);
-int coda_ascbin_cursor_goto_union_field_by_index(coda_cursor *cursor, long index);
-int coda_ascbin_cursor_goto_next_union_field(coda_cursor *cursor);
 int coda_ascbin_cursor_goto_array_element(coda_cursor *cursor, int num_subs, const long subs[]);
 int coda_ascbin_cursor_goto_array_element_by_index(coda_cursor *cursor, long index);
 int coda_ascbin_cursor_goto_next_array_element(coda_cursor *cursor);

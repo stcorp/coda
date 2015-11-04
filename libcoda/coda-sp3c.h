@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -18,18 +18,13 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "coda-bin-internal.h"
+#ifndef CODA_SP3C_H
+#define CODA_SP3C_H
 
-#include "coda-definition.h"
-#include "coda-bin-definition.h"
+#include "coda-internal.h"
 
-int coda_bin_close(coda_product *product)
-{
-    return coda_ascbin_close(product);
-}
+int coda_sp3c_open(const char *filename, int64_t file_size, coda_product **product);
+int coda_sp3c_close(coda_product *product);
+int coda_sp3c_cursor_set_product(coda_cursor *cursor, coda_product *product);
 
-int coda_bin_get_type_for_dynamic_type(coda_dynamic_type *dynamic_type, coda_type **type)
-{
-    *type = (coda_type *)dynamic_type;
-    return 0;
-}
+#endif

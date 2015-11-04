@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2011 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -21,7 +21,7 @@
 #ifndef CODA_EXPR_H
 #define CODA_EXPR_H
 
-#include "coda.h"
+#include "coda-internal.h"
 
 enum coda_expression_node_type_enum
 {
@@ -88,6 +88,7 @@ enum coda_expression_node_type_enum
     expr_or,
     expr_power,
     expr_product_class,
+    expr_product_format,
     expr_product_type,
     expr_product_version,
     expr_regex,
