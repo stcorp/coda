@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2014 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2015 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -333,7 +333,7 @@ static void write_basic_data(FILE *f, int depth)
                             }
                             else
                             {
-                                fprintf(f, "%.6f", data);
+                                fprintf(f, "%.16g", data);
                             }
                         }
                         break;

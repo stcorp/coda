@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2014 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2015 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -286,6 +286,8 @@ static int init_product_variable(coda_product *product, int index)
         if (coda_expression_eval_integer
             (product->product_definition->product_variable[index]->size_expr, &cursor, &value) != 0)
         {
+            coda_add_error_message(" while determining length of product variable %s",
+                                   product->product_definition->product_variable[index]->name);
             return -1;
         }
     }
@@ -300,6 +302,8 @@ static int init_product_variable(coda_product *product, int index)
     }
     if (coda_expression_eval_void(product->product_definition->product_variable[index]->init_expr, &cursor) != 0)
     {
+        coda_add_error_message(" while initializing product variable %s",
+                               product->product_definition->product_variable[index]->name);
         return -1;
     }
 

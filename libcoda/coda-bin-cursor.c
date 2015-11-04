@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2014 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2015 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -809,84 +809,8 @@ static int read_double(const coda_cursor *cursor, double *dst)
     return 0;
 }
 
-/* Gives a ^ b where b is a small integer */
-static double ipow(double a, int b)
-{
-    double val = 1.0;
-
-    if (b < 0)
-    {
-        while (b++)
-        {
-            val *= a;
-        }
-        val = 1.0 / val;
-    }
-    else
-    {
-        while (b--)
-        {
-            val *= a;
-        }
-    }
-    return val;
-}
-
-static int read_vsf_integer(const coda_cursor *cursor, double *dst)
-{
-    coda_cursor vsf_cursor;
-    int32_t scale_factor;
-    double base_value;
-
-    vsf_cursor = *cursor;
-    if (coda_ascbin_cursor_use_base_type_of_special_type(&vsf_cursor) != 0)
-    {
-        return -1;
-    }
-    if (coda_cursor_goto_record_field_by_name(&vsf_cursor, "scale_factor") != 0)
-    {
-        return -1;
-    }
-    if (coda_cursor_read_int32(&vsf_cursor, &scale_factor) != 0)
-    {
-        return -1;
-    }
-    coda_cursor_goto_parent(&vsf_cursor);
-    if (coda_cursor_goto_record_field_by_name(&vsf_cursor, "value") != 0)
-    {
-        return -1;
-    }
-    if (coda_cursor_read_double(&vsf_cursor, &base_value) != 0)
-    {
-        return -1;
-    }
-
-    /* Apply scaling factor */
-    *dst = base_value * ipow(10, -scale_factor);
-
-    return 0;
-}
-
 int coda_bin_cursor_read_double(const coda_cursor *cursor, double *dst)
 {
-    coda_type *type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
-
-    if (type->type_class == coda_special_class)
-    {
-        switch (((coda_type_special *)type)->special_type)
-        {
-            case coda_special_vsf_integer:
-                return read_vsf_integer(cursor, dst);
-            case coda_special_time:
-                /* this should have already been handled in coda-cursor-read.c */
-                assert(0);
-                exit(1);
-            default:
-                coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a double data type");
-                return -1;
-        }
-    }
-
     return read_double(cursor, dst);
 }
 

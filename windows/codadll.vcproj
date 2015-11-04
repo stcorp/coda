@@ -234,6 +234,7 @@
 		<File RelativePath="..\libcoda\expat\xmltol_impl.h"/>
 		<File RelativePath="..\libcoda\hashtable.c"/>
 		<File RelativePath="..\libcoda\hashtable.h"/>
+		<File RelativePath="..\libcoda\ipow.h"/>
 		<File RelativePath="..\libcoda\pcre\coda_pcre_config.h"/>
 		<File RelativePath="..\libcoda\pcre\coda_pcre_mangle.h"/>
 		<File RelativePath="..\libcoda\pcre\pcre.h"/>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2014 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2015 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -98,6 +98,8 @@ extern int coda_option_read_all_definitions;
 extern int coda_option_use_fast_size_expressions;
 extern int coda_option_use_mmap;
 
+#define coda_get_type_for_dynamic_type(dynamic_type) (((coda_dynamic_type *)dynamic_type)->backend < first_dynamic_backend_id ? (coda_type *)dynamic_type : ((coda_dynamic_type *)dynamic_type)->definition)
+
 void coda_add_error_message(const char *message, ...);
 void coda_set_error_message(const char *message, ...);
 void coda_add_error_message_vargs(const char *message, va_list ap);
@@ -111,7 +113,6 @@ int coda_read_product_definition(coda_product_definition *product_definition);
 
 coda_dynamic_type *coda_no_data_singleton(coda_format format);
 coda_dynamic_type *coda_mem_empty_record(coda_format format);
-coda_type *coda_get_type_for_dynamic_type(coda_dynamic_type *dynamic_type);
 void coda_dynamic_type_delete(coda_dynamic_type *type);
 
 LIBCODA_API int coda_type_get_record_field_index_from_name_n(const coda_type *type, const char *name, int name_length,

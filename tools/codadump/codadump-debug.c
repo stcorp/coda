@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2014 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2015 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -553,7 +553,7 @@ static void print_data(coda_cursor *cursor)
                                 handle_coda_error();
                             }
 
-                            ff_printf(" %g\n", data);
+                            ff_printf("%.16g\n", data);
                         }
                         break;
                     case coda_special_time:
@@ -567,7 +567,7 @@ static void print_data(coda_cursor *cursor)
                             }
                             if (coda_isNaN(data) || coda_isInf(data))
                             {
-                                ff_printf(" %g\n", data);
+                                ff_printf(" %.16g\n", data);
                             }
                             else
                             {

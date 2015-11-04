@@ -36,13 +36,15 @@
       <h2 id="general">General description</h2>
 
       <p>With codadump you can view data from any product file that is supported by CODA. The tool allows you to inspect the product structure (including array sizes), view and export data from the product in ASCII format, and export data into HDF4 format.</p>
-
+      
       <p>The available functionality of the tool is described below in separate sections.</p>
+
+      <p>CODA will look for .codadef files using a definition path, which is a ':' separated (';' on Windows) list of paths to .codadef files and/or to directories containing .codadef files. By default the definition path is set to a single directory relative to the tool location. A different definition path can be set via the <code>CODA_DEFINITION</code> environment variable or via the <code>-D</code> option. (the <code>-D</code> option overrides the environment variable setting).</p>
 
       <h2 id="list">Getting product file information</h2>
 
 <pre>
-    codadump list [&lt;list options&gt;] &lt;product file&gt;
+    codadump [-D definitionpath] list [&lt;list options&gt;] &lt;product file&gt;
         List the contents of a product file
         List options:
             -c, --calc_dim
@@ -75,7 +77,7 @@
       <h2 id="ascii">Viewing and exporting data in ascii format</h2>
 
 <pre>
-    codadump ascii [&lt;ascii options&gt;] &lt;product file&gt;
+    codadump [-D definitionpath] ascii [&lt;ascii options&gt;] &lt;product file&gt;
         Show the contents of a product file in ascii format
         List options:
             -d, --disable_conversions
@@ -107,7 +109,7 @@
       <h2 id="hdf4">Exporting data to HDF4</h2>
 
 <pre>
-    codadump hdf4 [&lt;hdf4 options&gt;] &lt;product file&gt;
+    codadump [-D definitionpath] hdf4 [&lt;hdf4 options&gt;] &lt;product file&gt;
         Convert a product file to a HDF4 file
         HDF4 options:
             -d, --disable_conversions
@@ -299,7 +301,7 @@ Vgroup "dataset" containing:
       <h2 id="debug">Debugging a product file</h2>
 
 <pre>
-    codadump debug [&lt;debug options&gt;] &lt;product file&gt;
+    codadump [-D definitionpath] debug [&lt;debug options&gt;] &lt;product file&gt;
         Show the contents of a product file in sequential order for debug
         purposes. No conversions are applied and (if applicable) for each
         data element the file offset is given
@@ -315,7 +317,7 @@ Vgroup "dataset" containing:
 
       <div class="footer">
         <hr />
-        <p>Copyright &copy; 2007-2014 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+        <p>Copyright &copy; 2007-2015 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
       </div>
 
     </div>

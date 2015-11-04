@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2014 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2015 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -1272,9 +1272,10 @@ coda_type_record *coda_type_empty_record(coda_format format)
     return empty_record_singleton[format];
 }
 
-int coda_type_record_add_field(coda_type_record *type, coda_type_record_field *field)
+int coda_type_record_insert_field(coda_type_record *type, long index, coda_type_record_field *field)
 {
     const char *real_name;
+    long i;
 
     if (type == NULL)
     {
@@ -1284,6 +1285,11 @@ int coda_type_record_add_field(coda_type_record *type, coda_type_record_field *f
     if (field == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "field argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (field->type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type of field argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
 
@@ -1312,7 +1318,7 @@ int coda_type_record_add_field(coda_type_record *type, coda_type_record_field *f
         }
         type->field = new_field;
     }
-    if (hashtable_add_name(type->hash_data, field->name) != 0)
+    if (hashtable_insert_name(type->hash_data, index, field->name) != 0)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "duplicate field with name %s for record definition", field->name);
         return -1;
@@ -1321,10 +1327,17 @@ int coda_type_record_add_field(coda_type_record *type, coda_type_record_field *f
     if (hashtable_get_index_from_name(type->real_name_hash_data, real_name) < 0)
     {
         /* only add the 'real_name' to the hash table if it was not there yet */
-        hashtable_add_name(type->real_name_hash_data, real_name);
+        hashtable_insert_name(type->real_name_hash_data, index, real_name);
+    }
+    if (index < type->num_fields)
+    {
+        for (i = type->num_fields; i > index; i--)
+        {
+            type->field[i] = type->field[i - 1];
+        }
     }
     type->num_fields++;
-    type->field[type->num_fields - 1] = field;
+    type->field[index] = field;
 
     if (type->format == coda_format_ascii || type->format == coda_format_binary)
     {
@@ -1353,16 +1366,26 @@ int coda_type_record_add_field(coda_type_record *type, coda_type_record_field *f
             /* set bit_offset */
             if (field->bit_offset_expr == NULL)
             {
-                if (type->num_fields == 1)
+                if (index == 0)
                 {
                     field->bit_offset = 0;
                 }
-                else if (type->field[type->num_fields - 2]->bit_offset >= 0 &&
-                         type->field[type->num_fields - 2]->type->bit_size >= 0 &&
-                         !type->field[type->num_fields - 2]->optional)
+                else if (type->field[index - 1]->bit_offset >= 0 && type->field[index - 1]->type->bit_size >= 0 &&
+                         !type->field[index - 1]->optional)
                 {
-                    field->bit_offset = type->field[type->num_fields - 2]->bit_offset +
-                        type->field[type->num_fields - 2]->type->bit_size;
+                    field->bit_offset = type->field[index - 1]->bit_offset + type->field[index - 1]->type->bit_size;
+                }
+            }
+            for (i = index + 1; i < type->num_fields; i++)
+            {
+                if (type->field[i]->bit_offset_expr == NULL)
+                {
+                    if (type->field[i - 1]->bit_offset >= 0 && type->field[i - 1]->type->bit_size >= 0 &&
+                        !type->field[i - 1]->optional)
+                    {
+                        type->field[i]->bit_offset =
+                            type->field[i - 1]->bit_offset + type->field[i - 1]->type->bit_size;
+                    }
                 }
             }
 
@@ -1384,10 +1407,36 @@ int coda_type_record_add_field(coda_type_record *type, coda_type_record_field *f
     return 0;
 }
 
+int coda_type_record_add_field(coda_type_record *type, coda_type_record_field *field)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    return coda_type_record_insert_field(type, type->num_fields, field);
+}
+
 int coda_type_record_create_field(coda_type_record *type, const char *real_name, coda_type *field_type)
 {
     coda_type_record_field *field;
     char *field_name;
+
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (real_name == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "real_name argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (field_type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "field_type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
 
     field_name = coda_type_record_get_unique_field_name(type, real_name);
     if (field_name == NULL)
@@ -2246,6 +2295,11 @@ int coda_type_vsf_integer_set_type(coda_type_special *type, coda_type *base_type
                        coda_type_get_format_name(base_type->format), coda_type_get_format_name(type->format));
         return -1;
     }
+    if (((coda_type_record *)type->base_type)->num_fields != 1)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "value should be second field of a vsf integer record");
+        return -1;
+    }
 
     field = coda_type_record_field_new("value");
     if (field == NULL)
@@ -2277,6 +2331,11 @@ int coda_type_vsf_integer_set_scale_factor(coda_type_special *type, coda_type *s
         coda_set_error(CODA_ERROR_DATA_DEFINITION,
                        "cannot use scale factor type with %s format for vsf integer with %s format",
                        coda_type_get_format_name(scale_factor->format), coda_type_get_format_name(type->format));
+        return -1;
+    }
+    if (((coda_type_record *)type->base_type)->num_fields != 0)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "scale factor should be first field of a vsf integer record");
         return -1;
     }
 

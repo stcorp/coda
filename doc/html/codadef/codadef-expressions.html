@@ -577,11 +577,11 @@ inf
 
       <p>How to construct a path (i.e. which identifiers to use) depends entirely on the format of the data product. The basis is that a product is composed of compound elements that can be traversed using identifiers (i.e. fields in a record) or using indices (i.e. elements of an array).</p>
 
-      <p>Within CODA the format of field names is restricted to identifiers, which means that the first character should be a-z or A-Z and all subsequent characters should be a-z, A-Z, 0-9, or _.</p>
+      <p>Within CODA the format of field names is restricted to identifiers, which means that the first character should be a-z or A-Z and all subsequent characters should be a-z, A-Z, 0-9, or _. Instead of specifying a field name, it is also possible to provide a zero-based index of the field between '{', '}'. So '<code>/first_field</code>' and '<code>/{0}</code>' are equivalent.</p>
 
       <p>Array indices are 0-based indices on the flattened view of an array. This means that if an array is defined as having more than one dimension the index as used in a node expression should be between 0 and the total number of array elements (exclusive). For example, for a [10,8] array, the index should be &gt;= 0 and &lt;= 79. The CODA product format definition document will always show the dimension order in such a way that the last dimension is the fastest running dimension.</p>
 
-      <p>A node can be specified as a relative or absolute path. An absolute path starts at the root of the product and the expression starts with either '<code>/</code>', '<code>[</code>' (start of a top-level index reference), or '<code>@</code>' (start of a top-level attribute reference). Relative paths start with either '<code>.</code>', '<code>..</code>', or '<code>:</code>'. When a node starts with '<code>..</code>' this is just a shorthand for '<code>./..</code>', which refers to the parent node of the current node. The relative paths '<code>.</code>' and '<code>:</code>' both refer to the current node position but with a slightly different meaning. The '<code>:</code>' node will always refer to the node with which the evaluation was started, whereas the location of '<code>.</code>' will depend on where the expression is used (for instance, if it used within the evaluation of the second argument of a  '<code>count(node, boolean)</code>' expression it will refer to the array element in '<code>node</code>' that is being evaluated). The node position with which the evaluation is started is either equal to the node to which the expression is attached or, if the expression is not attached to a specific product parameter, it is the root of the product.</p>
+      <p>A node can be specified as a relative or absolute path. An absolute path starts at the root of the product and the expression starts with either '<code>/</code>', '<code>[</code>' (start of a top-level index reference), or '<code>@</code>' (start of a top-level attribute reference). Relative paths start with either '<code>.</code>', '<code>..</code>', or '<code>:</code>'. When a node starts with '<code>..</code>' this is just a shorthand for '<code>./..</code>', which refers to the parent node of the current node. The relative paths '<code>.</code>' and '<code>:</code>' both refer to the current node position but with a slightly different meaning. The '<code>:</code>' node will always refer to the node with which the evaluation was started, whereas the location of '<code>.</code>' will depend on where the expression is used (for instance, if '<code>.</code>' is used within the evaluation of the second argument of a '<code>count(node, boolean)</code>' expression it will refer to the array element in '<code>node</code>' that is being evaluated). The node position with which the evaluation is started is either equal to the node to which the expression is attached or, if the expression is not attached to a specific product parameter, it is the root of the product.</p>
 
       <p>There is a special node expression '<code>asciiline</code>' that can only be used in expressions for product format definitions for ASCII products. The '<code>asciiline</code>' expression can only be used as start point of a node expression and will map the view of a file to an array of strings where each string corresponds with a single line (including end of line character(s)) of the ascii file. For example the expression <code><b>bitoffset</b>(<b>asciiline</b>[<b>index</b>(<b>asciiline</b>, <b>str</b>(., 1) != "#")])</code> will give the bitoffset in the file of the first line that does not start with a '#' character.</p>
 
@@ -653,7 +653,7 @@ voidexpr =
 	'for' indexvar '=' intexpr 'to' intexpr 'do' voidexpr |
 	'for' indexvar '=' intexpr 'to' intexpr 'step' intexpr 'do' voidexpr |
 	'for' indexvar '=' intexpr 'to' intexpr 'step' intexpr 'do' voidexpr |
-	'goto' '(' node ')' ;
+	'goto' '(' node ')' |
 	'with', '(', indexvar, '=', intexpr, ',', voidexpr, ')' ;
 
 boolexpr =
@@ -696,8 +696,8 @@ boolexpr =
 	'regex', '(', stringexpr, ',', stringexpr ')' |
 	'exists', '(', node, ')' |
 	'exists', '(', node, ',', boolexpr, ')' |
-	'all', '(', node, ',', boolexpr, ')' ;
-	'if', '(' boolexpr, ',', boolexpr, ',', boolexpr, ')' ;
+	'all', '(', node, ',', boolexpr, ')' |
+	'if', '(' boolexpr, ',', boolexpr, ',', boolexpr, ')' |
 	'with', '(', indexvar, '=', intexpr, ',', boolexpr, ')' ;
 
 intexpr = 
@@ -737,7 +737,7 @@ intexpr =
 	'index', '(', node, ',', boolexpr, ')' |
 	'if', '(', boolexpr, ',', intexpr, ',' intexpr, ')' |
 	'unboundindex', '(', node, ',', boolexpr, ')' |
-	'unboundindex', '(', node, ',', boolexpr, ',', boolexpr, ')' ;
+	'unboundindex', '(', node, ',', boolexpr, ',', boolexpr, ')' |
 	'with', '(', indexvar, '=', intexpr, ',', intexpr, ')' ;
 
 floatexpr = 
@@ -784,7 +784,7 @@ floatexpr =
 	'add', '(' node, ',', floatexpr, ')' |
 	'if', '(' boolexpr, ',', floatexpr, ',', floatexpr, ')' |
 	'if', '(' boolexpr, ',', floatexpr, ',', intexpr, ')' |
-	'if', '(' boolexpr, ',', intexpr, ',', floatexpr, ')' ;
+	'if', '(' boolexpr, ',', intexpr, ',', floatexpr, ')' |
 	'with', '(', indexvar, '=', intexpr, ',', floatexpr, ')' ;
 
 stringexpr = 
@@ -811,7 +811,7 @@ stringexpr =
 	'strtime', '(', floatexpr, ')' |
 	'strtime', '(', intexpr, ',', stringexpr ')' |
 	'strtime', '(', floatexpr, ',', stringexpr ')' |
-	'if', '(' boolexpr, ',', stringexpr, ',', stringexpr, ')' ;
+	'if', '(' boolexpr, ',', stringexpr, ',', stringexpr, ')' |
 	'with', '(', indexvar, '=', intexpr, ',', stringexpr, ')' ;
 
 rootnode = '/'
@@ -822,12 +822,16 @@ nonrootnode =
 	'..' |
 	'asciiline' |
 	rootnode, identifier |
+	rootnode, '{', intexpr, '}' |
 	nonrootnode, '/..' |
 	nonrootnode, '/', identifier |
+	nonrootnode, '/', '{', intexpr, '}' |
 	'[', intexpr, ']' |
 	node, '[', intexpr, ']' |
-	'@', identifier ;
-	node, '@', identifier ;
+	'@', identifier |
+	'@', '{', intexpr, '}' |
+	node, '@', identifier |
+	node, '@', '{', intexpr, '}' ;
 
 node =
 	rootnode |
@@ -836,7 +840,7 @@ node =
 
       <div class="footer">
         <hr />
-        <p>Copyright &copy; 2007-2014 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+        <p>Copyright &copy; 2007-2015 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
       </div>
 
     </div>

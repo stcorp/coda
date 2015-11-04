@@ -21,7 +21,7 @@
       <p>The product format definitions in CODA should be of sufficient quality that whenever problems are detected while reading product files, it is usually the product files that are at fault. The codacheck program was written with this in mind. It uses CODA as an active product file problem-detection tool. It takes as arguments one or more product files. CODA will try to open each of these files and will actively look for any problems in these files. Any errors are reported in a user-readable way.</p>
 
 <pre>
-    codacheck [&lt;options&gt;] &lt;files&gt;
+    codacheck [-D definitionpath] [&lt;options&gt;] &lt;files&gt;
         Provide a basic sanity check on product files supported by CODA
         Options:
             -d, --definition
@@ -45,11 +45,19 @@
 
     codacheck -v, --version
         Print the version number of CODA and exit
+
+    CODA will look for .codadef files using a definition path, which is a
+    ':' separated (';' on Windows) list of paths to .codadef files and/or
+    to directories containing .codadef files.
+    By default the definition path is set to a single directory relative
+    to the tool location. A different definition path can be set via the
+    CODA_DEFINITION environment variable or via the -D option.
+    (the -D option overrides the environment variable setting).
 </pre>
 
       <div class="footer">
         <hr />
-        <p>Copyright &copy; 2007-2014 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+        <p>Copyright &copy; 2007-2015 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
       </div>
 
     </div>

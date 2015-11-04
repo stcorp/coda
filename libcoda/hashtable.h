@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2014 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2015 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -40,6 +40,7 @@ typedef struct hashtable_struct hashtable;
 
 hashtable *hashtable_new(int case_sensitive);
 int hashtable_add_name(hashtable *table, const char *name);
+int hashtable_insert_name(hashtable *table, long index, const char *name);
 long hashtable_get_index_from_name(hashtable *table, const char *name);
 long hashtable_get_index_from_name_n(hashtable *table, const char *name, int name_length);
 void hashtable_delete(hashtable *table);

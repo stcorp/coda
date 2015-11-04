@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2014 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2015 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -250,6 +250,7 @@ int coda_type_record_field_get_type(const coda_type_record_field *field, coda_ty
 coda_type_record *coda_type_record_new(coda_format format);
 coda_type_record *coda_type_empty_record(coda_format format);
 int coda_type_record_add_field(coda_type_record *type, coda_type_record_field *field_type);
+int coda_type_record_insert_field(coda_type_record *type, long index, coda_type_record_field *field);
 int coda_type_record_create_field(coda_type_record *type, const char *real_name, coda_type *field_type);
 int coda_type_record_set_union_field_expression(coda_type_record *type, coda_expression *field_expr);
 int coda_type_record_validate(const coda_type_record *type);

@@ -21,7 +21,7 @@
       <p>The codafind tool is able to assist you in searching for specific product files within a large set of locally available (product) files. The tool supports searching within a given list of files. If you provide one or more directories, then codafind will search these directories recursively for files that match the given search criteria. It is possible to provide a mix of files and directories as arguments to codafind.</p>
 
 <pre>
-    codafind [&lt;options&gt;] &lt;files|directories&gt;
+    codafind [-D definitionpath] [&lt;options&gt;] &lt;files|directories&gt;
         Match a filter on a series of files and/or recursively on all contents
         of directories
 
@@ -34,6 +34,14 @@
                     can be opened with CODA
             -V, --verbose
                     show the match result for each file
+
+    CODA will look for .codadef files using a definition path, which is a
+    ':' separated (';' on Windows) list of paths to .codadef files and/or
+    to directories containing .codadef files.
+    By default the definition path is set to a single directory relative
+    to the tool location. A different definition path can be set via the
+    CODA_DEFINITION environment variable or via the -D option.
+    (the -D option overrides the environment variable setting).
 </pre>
 
       <p>You can provide a search criterium with the -f option. If you do not explicitly provide a search criterium codafind will try to find all files that can be accessed with CODA. If you do provide a search criterium, codafind will try to match each file it can open with CODA against the filter. If the filter matches positively then it will print the path to this file to the console. The filter should be a valid boolean <a href="../codadef/codadef-expressions.html">CODA expression</a>.</p>
@@ -44,7 +52,7 @@
 
       <div class="footer">
         <hr />
-        <p>Copyright &copy; 2007-2014 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+        <p>Copyright &copy; 2007-2015 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
       </div>
 
     </div>

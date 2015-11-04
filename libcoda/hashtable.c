@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2014 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2015 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -125,7 +125,7 @@ hashtable *hashtable_new(int case_sensitive)
     return table;
 }
 
-int hashtable_add_name(hashtable *table, const char *name)
+int hashtable_insert_name(hashtable *table, long index, const char *name)
 {
     unsigned long mask;
     unsigned long hash;
@@ -223,6 +223,18 @@ int hashtable_add_name(hashtable *table, const char *name)
         table->size = new_size;
     }
 
+    /* increase index of all items that come after the new one */
+    if (index < table->used)
+    {
+        for (i = 0; i < table->size; i++)
+        {
+            if (table->count[i] && table->index[i] >= index)
+            {
+                table->index[i]++;
+            }
+        }
+    }
+
     /* add entry */
     mask = (unsigned long)table->size - 1;
     i = hash & mask;
@@ -239,12 +251,16 @@ int hashtable_add_name(hashtable *table, const char *name)
 
     table->count[i] = 1;
     table->name[i] = name;
-    table->index[i] = table->used;
+    table->index[i] = index;
     table->used++;
 
     return 0;
 }
 
+int hashtable_add_name(hashtable *table, const char *name)
+{
+    return hashtable_insert_name(table, table->used, name);
+}
 
 long hashtable_get_index_from_name(hashtable *table, const char *name)
 {

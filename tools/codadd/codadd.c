@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2014 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2015 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -49,14 +49,14 @@ void generate_detection_tree(coda_format format);
 static void print_version()
 {
     printf("codadd %s\n", libcoda_version);
-    printf("Copyright (C) 2007-2014 S[&]T, The Netherlands.\n");
+    printf("Copyright (C) 2007-2015 S[&]T, The Netherlands.\n");
     printf("\n");
 }
 
 static void print_help()
 {
     printf("Usage:\n");
-    printf("    codadd\n");
+    printf("    codadd [-D definitionpath]\n");
     printf("        Try to read all product format definitions and report any problems\n");
     printf("\n");
     printf("    codadd [-D definitionpath] doc <directory>\n");
@@ -112,6 +112,14 @@ static void print_help()
     printf("\n");
     printf("    codadd -v, --version\n");
     printf("        Print the version number of CODA and exit\n");
+    printf("\n");
+    printf("    CODA will look for .codadef files using a definition path, which is a\n");
+    printf("    ':' separated (';' on Windows) list of paths to .codadef files and/or\n");
+    printf("    to directories containing .codadef files.\n");
+    printf("    By default the definition path is set to a single directory relative\n");
+    printf("    to the tool location. A different definition path can be set via the\n");
+    printf("    CODA_DEFINITION environment variable or via the -D option.\n");
+    printf("    (the -D option overrides the environment variable setting).\n");
     printf("\n");
 }
 

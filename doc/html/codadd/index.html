@@ -22,7 +22,7 @@
 
 
 <pre>
-    codadd
+    codadd [-D definitionpath]
         Try to read all product definitions and report any problems
 
     codadd [-D definitionpath] doc &lt;directory&gt;
@@ -78,11 +78,19 @@
 
     codadd -v, --version
         Print the version number of CODA and exit
+
+    CODA will look for .codadef files using a definition path, which is a
+    ':' separated (';' on Windows) list of paths to .codadef files and/or
+    to directories containing .codadef files.
+    By default the definition path is set to a single directory relative
+    to the tool location. A different definition path can be set via the
+    CODA_DEFINITION environment variable or via the -D option.
+    (the -D option overrides the environment variable setting).
 </pre>
 
       <div class="footer">
         <hr />
-        <p>Copyright &copy; 2007-2014 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+        <p>Copyright &copy; 2007-2015 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
       </div>
 
     </div>

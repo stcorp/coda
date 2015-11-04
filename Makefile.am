@@ -279,6 +279,7 @@ libcoda_la_SOURCES = \
 	libcoda/coda.c \
 	libcoda/hashtable.c \
 	libcoda/hashtable.h \
+	libcoda/ipow.h \
 	libcoda/ziparchive.c \
 	libcoda/ziparchive.h
 libcoda_hdf4_files = \
@@ -384,6 +385,7 @@ libcoda_internal_la_SOURCES = \
 	libcoda/coda.c \
 	libcoda/hashtable.c \
 	libcoda/hashtable.h \
+	libcoda/ipow.h \
 	libcoda/ziparchive.c \
 	libcoda/ziparchive.h
 if WITH_HDF4

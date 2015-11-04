@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2014 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2015 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -937,12 +937,20 @@ nonrootnode:
             $$ = coda_expression_new(expr_goto_field, $2, $1, NULL, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
+    | rootnode '{' intexpr '}' {
+            $$ = coda_expression_new(expr_goto_field, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
     | nonrootnode '/' GOTO_PARENT {
             $$ = coda_expression_new(expr_goto_parent, NULL, $1, NULL, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
     | nonrootnode '/' identifier {
             $$ = coda_expression_new(expr_goto_field, $3, $1, NULL, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | nonrootnode '/' '{' intexpr '}' {
+            $$ = coda_expression_new(expr_goto_field, NULL, $1, $4, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
     | '[' intexpr ']' {
@@ -957,8 +965,16 @@ nonrootnode:
             $$ = coda_expression_new(expr_goto_attribute, $2, NULL, NULL, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
+    | '@' '{' intexpr '}' {
+            $$ = coda_expression_new(expr_goto_attribute, NULL, NULL, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
     | node '@' identifier {
             $$ = coda_expression_new(expr_goto_attribute, $3, $1, NULL, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | node '@' '{' intexpr '}' {
+            $$ = coda_expression_new(expr_goto_attribute, NULL, $1, $4, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
     ;

@@ -103,14 +103,14 @@ static void generate_escaped_string(const char *str, int length)
 static void print_version()
 {
     printf("codaeval %s\n", libcoda_version);
-    printf("Copyright (C) 2007-2014 S[&]T, The Netherlands\n");
+    printf("Copyright (C) 2007-2015 S[&]T, The Netherlands\n");
     printf("\n");
 }
 
 static void print_help()
 {
     printf("Usage:\n");
-    printf("    codaeval [<options>] expression [<files|directories>]\n");
+    printf("    codaeval [-D definitionpath] [<options>] expression [<files|directories>]\n");
     printf("        Evaluate a CODA expression on a series of files and/or recursively on\n");
     printf("        all contents of directories\n");
     printf("        If no files or directories are provided then codaeval should be a\n");
@@ -138,6 +138,14 @@ static void print_help()
     printf("\n");
     printf("    codaeval -v, --version\n");
     printf("        Print the version number of CODA and exit\n");
+    printf("\n");
+    printf("    CODA will look for .codadef files using a definition path, which is a\n");
+    printf("    ':' separated (';' on Windows) list of paths to .codadef files and/or\n");
+    printf("    to directories containing .codadef files.\n");
+    printf("    By default the definition path is set to a single directory relative\n");
+    printf("    to the tool location. A different definition path can be set via the\n");
+    printf("    CODA_DEFINITION environment variable or via the -D option.\n");
+    printf("    (the -D option overrides the environment variable setting).\n");
     printf("\n");
 }
 
@@ -303,7 +311,27 @@ int main(int argc, char *argv[])
         exit(0);
     }
 
-    for (i = 1; i < argc; i++)
+    i = 1;
+    if (i + 1 < argc && strcmp(argv[i], "-D") == 0)
+    {
+        coda_set_definition_path(argv[i + 1]);
+        i += 2;
+    }
+    else
+    {
+#ifdef WIN32
+        const char *definition_path = "../definitions";
+#else
+        const char *definition_path = "../share/" PACKAGE "/definitions";
+#endif
+        if (coda_set_definition_path_conditional(argv[0], NULL, definition_path) != 0)
+        {
+            fprintf(stderr, "ERROR: %s\n", coda_errno_to_string(coda_errno));
+            exit(1);
+        }
+    }
+
+    while (i < argc)
     {
         if (strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--check") == 0)
         {
@@ -338,6 +366,7 @@ int main(int argc, char *argv[])
             print_help();
             exit(1);
         }
+        i++;
     }
 
     /* expression parameter */
@@ -373,26 +402,6 @@ int main(int argc, char *argv[])
 
     if (i < argc)
     {
-#ifdef WIN32
-        const char *definition_path = "../definitions";
-#else
-        const char *definition_path = "../share/" PACKAGE "/definitions";
-#endif
-
-        if (expr_type != coda_expression_boolean && expr_type != coda_expression_integer &&
-            expr_type != coda_expression_float && expr_type != coda_expression_string)
-        {
-            fprintf(stderr, "ERROR: only boolean, integer, floating point, and string expressions can be evaluated on "
-                    "products\n");
-            exit(1);
-        }
-
-        if (coda_set_definition_path_conditional(argv[0], NULL, definition_path) != 0)
-        {
-            fprintf(stderr, "ERROR: %s\n", coda_errno_to_string(coda_errno));
-            exit(1);
-        }
-
         if (coda_init() != 0)
         {
             fprintf(stderr, "ERROR: %s\n", coda_errno_to_string(coda_errno));

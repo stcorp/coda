@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2014 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2015 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -46,6 +46,7 @@
 #ifdef CODA_USE_QIAP
 #include "coda-qiap.h"
 #endif
+#include "ipow.h"
 
 static int get_read_type(const coda_cursor *cursor, coda_native_type *read_type)
 {
@@ -277,6 +278,41 @@ static int read_time(const coda_cursor *cursor, double *dst)
         return -1;
     }
     return coda_expression_eval_float(type->value_expr, &expr_cursor, dst);
+}
+
+static int read_vsf_integer(const coda_cursor *cursor, double *dst)
+{
+    coda_cursor vsf_cursor;
+    int32_t scale_factor;
+    double base_value;
+
+    vsf_cursor = *cursor;
+    if (coda_cursor_use_base_type_of_special_type(&vsf_cursor) != 0)
+    {
+        return -1;
+    }
+    /* scale factor comes before the value */
+    if (coda_cursor_goto_first_record_field(&vsf_cursor) != 0)
+    {
+        return -1;
+    }
+    if (coda_cursor_read_int32(&vsf_cursor, &scale_factor) != 0)
+    {
+        return -1;
+    }
+    if (coda_cursor_goto_next_record_field(&vsf_cursor) != 0)
+    {
+        return -1;
+    }
+    if (coda_cursor_read_double(&vsf_cursor, &base_value) != 0)
+    {
+        return -1;
+    }
+
+    /* Apply scaling factor */
+    *dst = base_value * ipow(10, -scale_factor);
+
+    return 0;
 }
 
 static int read_int8(const coda_cursor *cursor, int8_t *dst)
@@ -693,9 +729,16 @@ static int read_double(const coda_cursor *cursor, double *dst)
     }
 #endif
     type = (coda_type *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
-    if (type->type_class == coda_special_class && ((coda_type_special *)type)->special_type == coda_special_time)
+    if (type->type_class == coda_special_class)
     {
-        return read_time(cursor, dst);
+        if (((coda_type_special *)type)->special_type == coda_special_time)
+        {
+            return read_time(cursor, dst);
+        }
+        if (((coda_type_special *)type)->special_type == coda_special_vsf_integer)
+        {
+            return read_vsf_integer(cursor, dst);
+        }
     }
     switch (cursor->stack[cursor->n - 1].type->backend)
     {

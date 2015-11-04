@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2014 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2015 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -175,15 +175,6 @@ void coda_dynamic_type_delete(coda_dynamic_type *type)
             coda_grib_type_delete(type);
             break;
     }
-}
-
-coda_type *coda_get_type_for_dynamic_type(coda_dynamic_type *dynamic_type)
-{
-    if (dynamic_type->backend < first_dynamic_backend_id)
-    {
-        return (coda_type *)dynamic_type;
-    }
-    return dynamic_type->definition;
 }
 
 int coda_cursor_print_path(const coda_cursor *cursor, int (*print) (const char *, ...))

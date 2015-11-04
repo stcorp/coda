@@ -5891,14 +5891,13 @@ SWIGINTERN PyObject *_wrap_time_parts_to_string(PyObject *SWIGUNUSEDPARM(self), 
   } 
   arg7 = (int)(val7);
   {
-    int length;
-    int res = SWIG_AsCharPtrAndSize(obj7, &arg8, NULL, &alloc8);
+    size_t length;
+    int res = SWIG_AsCharPtrAndSize(obj7, &arg8, &length, &alloc8);
     if (!SWIG_IsOK(res))
     {
       SWIG_exception_fail(SWIG_ArgError(res), "in variable '""format""' of type '""char const *""'");
     }
-    length = (alloc8 == SWIG_NEWOBJ ? strlen(arg8) : 0);
-    arg9 = malloc(length + 1);
+    arg9 = malloc(length);
     if( arg9 == NULL )
     {
       return PyErr_NoMemory();
@@ -5974,14 +5973,13 @@ SWIGINTERN PyObject *_wrap_time_string_to_parts(PyObject *SWIGUNUSEDPARM(self), 
   arg9 = &temp9;
   if (!PyArg_ParseTuple(args,(char *)"O:time_string_to_parts",&obj0)) SWIG_fail;
   {
-    int length;
-    int res = SWIG_AsCharPtrAndSize(obj0, &arg1, NULL, &alloc1);
+    size_t length;
+    int res = SWIG_AsCharPtrAndSize(obj0, &arg1, &length, &alloc1);
     if (!SWIG_IsOK(res))
     {
       SWIG_exception_fail(SWIG_ArgError(res), "in variable '""format""' of type '""char const *""'");
     }
-    length = (alloc1 == SWIG_NEWOBJ ? strlen(arg1) : 0);
-    arg2 = malloc(length + 1);
+    arg2 = malloc(length);
     if( arg2 == NULL )
     {
       return PyErr_NoMemory();
@@ -6080,14 +6078,13 @@ SWIGINTERN PyObject *_wrap_time_double_to_string(PyObject *SWIGUNUSEDPARM(self),
   } 
   arg1 = (double)(val1);
   {
-    int length;
-    int res = SWIG_AsCharPtrAndSize(obj1, &arg2, NULL, &alloc2);
+    size_t length;
+    int res = SWIG_AsCharPtrAndSize(obj1, &arg2, &length, &alloc2);
     if (!SWIG_IsOK(res))
     {
       SWIG_exception_fail(SWIG_ArgError(res), "in variable '""format""' of type '""char const *""'");
     }
-    length = (alloc2 == SWIG_NEWOBJ ? strlen(arg2) : 0);
-    arg3 = malloc(length + 1);
+    arg3 = malloc(length);
     if( arg3 == NULL )
     {
       return PyErr_NoMemory();
@@ -6144,14 +6141,13 @@ SWIGINTERN PyObject *_wrap_time_double_to_string_utc(PyObject *SWIGUNUSEDPARM(se
   } 
   arg1 = (double)(val1);
   {
-    int length;
-    int res = SWIG_AsCharPtrAndSize(obj1, &arg2, NULL, &alloc2);
+    size_t length;
+    int res = SWIG_AsCharPtrAndSize(obj1, &arg2, &length, &alloc2);
     if (!SWIG_IsOK(res))
     {
       SWIG_exception_fail(SWIG_ArgError(res), "in variable '""format""' of type '""char const *""'");
     }
-    length = (alloc2 == SWIG_NEWOBJ ? strlen(arg2) : 0);
-    arg3 = malloc(length + 1);
+    arg3 = malloc(length);
     if( arg3 == NULL )
     {
       return PyErr_NoMemory();
@@ -6203,14 +6199,13 @@ SWIGINTERN PyObject *_wrap_time_string_to_double(PyObject *SWIGUNUSEDPARM(self),
   arg3 = &temp3;
   if (!PyArg_ParseTuple(args,(char *)"O:time_string_to_double",&obj0)) SWIG_fail;
   {
-    int length;
-    int res = SWIG_AsCharPtrAndSize(obj0, &arg1, NULL, &alloc1);
+    size_t length;
+    int res = SWIG_AsCharPtrAndSize(obj0, &arg1, &length, &alloc1);
     if (!SWIG_IsOK(res))
     {
       SWIG_exception_fail(SWIG_ArgError(res), "in variable '""format""' of type '""char const *""'");
     }
-    length = (alloc1 == SWIG_NEWOBJ ? strlen(arg1) : 0);
-    arg2 = malloc(length + 1);
+    arg2 = malloc(length);
     if( arg2 == NULL )
     {
       return PyErr_NoMemory();
@@ -6268,14 +6263,13 @@ SWIGINTERN PyObject *_wrap_time_string_to_double_utc(PyObject *SWIGUNUSEDPARM(se
   arg3 = &temp3;
   if (!PyArg_ParseTuple(args,(char *)"O:time_string_to_double_utc",&obj0)) SWIG_fail;
   {
-    int length;
-    int res = SWIG_AsCharPtrAndSize(obj0, &arg1, NULL, &alloc1);
+    size_t length;
+    int res = SWIG_AsCharPtrAndSize(obj0, &arg1, &length, &alloc1);
     if (!SWIG_IsOK(res))
     {
       SWIG_exception_fail(SWIG_ArgError(res), "in variable '""format""' of type '""char const *""'");
     }
-    length = (alloc1 == SWIG_NEWOBJ ? strlen(arg1) : 0);
-    arg2 = malloc(length + 1);
+    arg2 = malloc(length);
     if( arg2 == NULL )
     {
       return PyErr_NoMemory();

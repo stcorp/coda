@@ -1,3 +1,16 @@
+2.12 2015-01-15
+~~~~~~~~~~~~~~~
+
+* Fixed memory corruption in 'time to string' functions in Python interface.
+
+* Added -D option to all command line tools to allow explicit setting
+  of CODA definition path.
+
+* Added feature to reference record fields by index in CODA expressions
+  using the '/{0}' style syntax.
+
+* Improved performance of reading vsf_integer data.
+
 2.11.1 2014-11-14
 ~~~~~~~~~~~~~~~~~
 

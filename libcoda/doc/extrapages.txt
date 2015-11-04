@@ -24,4 +24,18 @@
  * - \link coda_expression CODA Expression\endlink
  * - \link coda_time CODA Time\endlink
  * - \link coda_error CODA Error\endlink
+ *
+ * \section performance Performance considerations
+ * The following are some things to try that may help to improve the performance of reading data with CODA
+ * - Disable boundary checks with coda_set_option_perform_boundary_checks().
+ *   This can be a huge speed improvement, but only disable this once you have fully tested your program
+ *   and are sure that all coda function calls return succesfully (i.e. return value equals 0).
+ * - Disable special types with coda_set_option_bypass_special_types() and use the base type of the data.
+ *   This can particularly increase performance for variable scale factor integers (::coda_special_vsf_integer).
+ *   Note that this option can be enabled/disabled at will, so you might disable it when reading one field,
+ *   but leave it enabled for reading others.
+ * - Disable conversions with coda_set_option_perform_conversions() and use the data in its native format.
+ * - For a single CODA cursor, read data as much as possible in sequence and use
+ *   coda_cursor_goto_next_record_field() and coda_cursor_goto_next_array_element()
+ *   when iterating over records and arrays.
  */

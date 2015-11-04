@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2007-2014 S[&]T, The Netherlands.
+// Copyright (C) 2007-2015 S[&]T, The Netherlands.
 //
 // This file is part of CODA.
 //
@@ -304,14 +304,13 @@
 
 %typemap(in, numinputs = 1) (const char *FORMAT, char *STRING) (int alloc = 0)
 {
-	int length;
-	int res = SWIG_AsCharPtr($input, &$1, &alloc);
+	size_t length;
+	int res = SWIG_AsCharPtrAndSize($input, &$1, &length, &alloc);
     if (!SWIG_IsOK(res))
     {
         %variable_fail(res,"$1_type","$1_name");
     }
-    length = (alloc == SWIG_NEWOBJ ? strlen($1) : 0);
- 	$2 = malloc(length + 1);
+ 	$2 = malloc(length);
     if( $2 == NULL )
     {
         return PyErr_NoMemory();

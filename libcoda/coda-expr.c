@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2014 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2015 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -28,6 +28,7 @@
 #include <string.h>
 
 #include "coda-ascii.h"
+#include "ipow.h"
 
 #include "pcre.h"
 
@@ -94,29 +95,6 @@
 static int iswhitespace(char a)
 {
     return (a == ' ' || a == '\t' || a == '\n' || a == '\r');
-}
-
-/* Gives a ^ b where b is a small integer */
-static double ipow(double a, int b)
-{
-    double val = 1.0;
-
-    if (b < 0)
-    {
-        while (b++)
-        {
-            val *= a;
-        }
-        val = 1.0 / val;
-    }
-    else
-    {
-        while (b--)
-        {
-            val *= a;
-        }
-    }
-    return val;
 }
 
 static long decode_escaped_string(char *str)
@@ -3423,9 +3401,25 @@ static int eval_cursor(eval_info *info, const coda_expression *expr)
                         return -1;
                     }
                 }
-                if (coda_cursor_goto_record_field_by_name(&info->cursor, opexpr->identifier) != 0)
+                if (opexpr->identifier != NULL)
                 {
-                    return -1;
+                    if (coda_cursor_goto_record_field_by_name(&info->cursor, opexpr->identifier) != 0)
+                    {
+                        return -1;
+                    }
+                }
+                else
+                {
+                    int64_t index;
+
+                    if (eval_integer(info, opexpr->operand[1], &index) != 0)
+                    {
+                        return -1;
+                    }
+                    if (coda_cursor_goto_record_field_by_index(&info->cursor, index) != 0)
+                    {
+                        return -1;
+                    }
                 }
             }
             break;

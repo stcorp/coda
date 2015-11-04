@@ -21,7 +21,7 @@
       <p>With codacmp one can compare two product files. The tool is primarily intended for verification purposes.</p>
 
 <pre>
-    codacmp [&lt;options&gt;] file1 file2
+    codacmp [-D definitionpath] [&lt;options&gt;] file1 file2
         Compare contents of file1 and file2
         Options:
             -d, --disable_conversions
@@ -41,11 +41,19 @@
 
     codacmp -v, --version
         Print the version number of CODA and exit
+
+    CODA will look for .codadef files using a definition path, which is a
+    ':' separated (';' on Windows) list of paths to .codadef files and/or
+    to directories containing .codadef files.
+    By default the definition path is set to a single directory relative
+    to the tool location. A different definition path can be set via the
+    CODA_DEFINITION environment variable or via the -D option.
+    (the -D option overrides the environment variable setting).
 </pre>
 
       <div class="footer">
         <hr />
-        <p>Copyright &copy; 2007-2014 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+        <p>Copyright &copy; 2007-2015 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
       </div>
 
     </div>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2014 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2015 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -45,14 +45,14 @@ int show_description;
 static void print_version()
 {
     printf("codadump version %s\n", libcoda_version);
-    printf("Copyright (C) 2007-2014 S[&]T, The Netherlands.\n");
+    printf("Copyright (C) 2007-2015 S[&]T, The Netherlands.\n");
     printf("\n");
 }
 
 static void print_help()
 {
     printf("Usage:\n");
-    printf("    codadump list [<list options>] <product file>\n");
+    printf("    codadump [-D definitionpath] list [<list options>] <product file>\n");
     printf("        List the contents of a product file\n");
     printf("        List options:\n");
     printf("            -c, --calc_dim\n");
@@ -75,7 +75,7 @@ static void print_help()
     printf("                    data with a special type is treated using its non-special\n");
     printf("                    base type\n");
     printf("\n");
-    printf("    codadump ascii [<ascii options>] <product file>\n");
+    printf("    codadump [-D definitionpath] ascii [<ascii options>] <product file>\n");
     printf("        Show the contents of a product file in ascii format\n");
     printf("        List options:\n");
     printf("            -d, --disable_conversions\n");
@@ -100,7 +100,7 @@ static void print_help()
     printf("                    base type\n");
     printf("\n");
 #ifdef HAVE_HDF4
-    printf("    codadump hdf4 [<hdf4 options>] <product file>\n");
+    printf("    codadump [-D definitionpath] hdf4 [<hdf4 options>] <product file>\n");
     printf("        Convert a product file to a HDF4 file\n");
     printf("        HDF4 options:\n");
     printf("            -d, --disable_conversions\n");
@@ -117,7 +117,7 @@ static void print_help()
     printf("                    base type\n");
     printf("\n");
 #endif
-    printf("    codadump debug [<debug options>] <product file>\n");
+    printf("    codadump [-D definitionpath] debug [<debug options>] <product file>\n");
     printf("        Show the contents of a product file in sequential order for debug\n");
     printf("        purposes. No conversions are applied and (if applicable) for each\n");
     printf("        data element the file offset is given\n");
@@ -133,6 +133,14 @@ static void print_help()
     printf("\n");
     printf("    codadump -v, --version\n");
     printf("        Print the version number of CODA and exit\n");
+    printf("\n");
+    printf("    CODA will look for .codadef files using a definition path, which is a\n");
+    printf("    ':' separated (';' on Windows) list of paths to .codadef files and/or\n");
+    printf("    to directories containing .codadef files.\n");
+    printf("    By default the definition path is set to a single directory relative\n");
+    printf("    to the tool location. A different definition path can be set via the\n");
+    printf("    CODA_DEFINITION environment variable or via the -D option.\n");
+    printf("    (the -D option overrides the environment variable setting).\n");
     printf("\n");
 }
 
@@ -160,7 +168,7 @@ static void handle_list_run_mode(int argc, char *argv[])
     show_unit = 0;
     show_description = 0;
 
-    for (i = 1; i < argc; i++)
+    for (i = 0; i < argc; i++)
     {
         if (strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--calc_dim") == 0)
         {
@@ -260,7 +268,7 @@ static void handle_ascii_run_mode(int argc, char *argv[])
     show_quotes = 0;
     show_time_as_string = 0;
 
-    for (i = 1; i < argc; i++)
+    for (i = 0; i < argc; i++)
     {
         if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--disable_conversions") == 0)
         {
@@ -376,7 +384,7 @@ static void handle_hdf4_run_mode(int argc, char *argv[])
     use_special_types = 1;
     perform_conversions = 1;
 
-    for (i = 1; i < argc; i++)
+    for (i = 0; i < argc; i++)
     {
         if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--disable_conversions") == 0)
         {
@@ -482,7 +490,7 @@ static void handle_debug_run_mode(int argc, char *argv[])
     starting_path = NULL;
     ascii_output = stdout;
 
-    for (i = 1; i < argc; i++)
+    for (i = 0; i < argc; i++)
     {
         if ((strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "--output") == 0) && i + 1 < argc && argv[i + 1][0] != '-')
         {
@@ -542,11 +550,8 @@ static void handle_debug_run_mode(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-#ifdef WIN32
-    const char *definition_path = "../definitions";
-#else
-    const char *definition_path = "../share/" PACKAGE "/definitions";
-#endif
+    int i;
+
     if (argc == 1 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)
     {
         print_help();
@@ -559,33 +564,51 @@ int main(int argc, char *argv[])
         exit(0);
     }
 
-    if (coda_set_definition_path_conditional(argv[0], NULL, definition_path) != 0)
+    i = 1;
+    if (i + 1 < argc && strcmp(argv[i], "-D") == 0)
     {
-        fprintf(stderr, "ERROR: %s\n", coda_errno_to_string(coda_errno));
-        exit(1);
+        coda_set_definition_path(argv[i + 1]);
+        i += 2;
+    }
+    else
+    {
+#ifdef WIN32
+        const char *definition_path = "../definitions";
+#else
+        const char *definition_path = "../share/" PACKAGE "/definitions";
+#endif
+        if (coda_set_definition_path_conditional(argv[0], NULL, definition_path) != 0)
+        {
+            fprintf(stderr, "ERROR: %s\n", coda_errno_to_string(coda_errno));
+            exit(1);
+        }
     }
 
-    if (strcmp(argv[1], "list") == 0)
+    if (strcmp(argv[i], "list") == 0)
     {
         run_mode = RUN_MODE_LIST;
-        handle_list_run_mode(argc - 1, &argv[1]);
+        i++;
+        handle_list_run_mode(argc - i, &argv[i]);
     }
-    else if (strcmp(argv[1], "ascii") == 0)
+    else if (strcmp(argv[i], "ascii") == 0)
     {
         run_mode = RUN_MODE_ASCII;
-        handle_ascii_run_mode(argc - 1, &argv[1]);
+        i++;
+        handle_ascii_run_mode(argc - i, &argv[i]);
     }
 #ifdef HAVE_HDF4
-    else if (strcmp(argv[1], "hdf4") == 0)
+    else if (strcmp(argv[i], "hdf4") == 0)
     {
         run_mode = RUN_MODE_HDF4;
-        handle_hdf4_run_mode(argc - 1, &argv[1]);
+        i++;
+        handle_hdf4_run_mode(argc - i, &argv[i]);
     }
 #endif
-    else if (strcmp(argv[1], "debug") == 0)
+    else if (strcmp(argv[i], "debug") == 0)
     {
         run_mode = RUN_MODE_DEBUG;
-        handle_debug_run_mode(argc - 1, &argv[1]);
+        i++;
+        handle_debug_run_mode(argc - i, &argv[i]);
     }
     else
     {

@@ -18,25 +18,30 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef CODA_ASCBIN_INTERNAL_H
-#define CODA_ASCBIN_INTERNAL_H
+#ifndef IPOW_H
+#define IPOW_H
 
-#include "coda-ascbin.h"
-#include "coda-definition.h"
-
-struct coda_ascbin_detection_node_struct
+/* Gives a ^ b where b is a small integer */
+static double ipow(double a, int b)
 {
-    /* detection rule entry at this node; will be NULL for root node */
-    coda_detection_rule_entry *entry;
+    double val = 1.0;
 
-    coda_detection_rule *rule;  /* the matching rule when 'entry' matches and none of the subnodes match */
-
-    /* sub nodes of this node */
-    int num_subnodes;
-    struct coda_ascbin_detection_node_struct **subnode;
-};
-typedef struct coda_ascbin_detection_node_struct coda_ascbin_detection_node;
-
-coda_ascbin_detection_node *coda_ascbin_get_detection_tree(void);
+    if (b < 0)
+    {
+        while (b++)
+        {
+            val *= a;
+        }
+        val = 1.0 / val;
+    }
+    else
+    {
+        while (b--)
+        {
+            val *= a;
+        }
+    }
+    return val;
+}
 
 #endif

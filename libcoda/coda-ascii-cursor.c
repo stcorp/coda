@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2014 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2015 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -25,6 +25,7 @@
 #include "coda-read-array.h"
 #include "coda-transpose-array.h"
 #include "coda-ascbin.h"
+#include "ipow.h"
 
 #include <sys/types.h>
 #include <assert.h>
@@ -156,29 +157,6 @@ static int get_bit_size_boundary(const coda_cursor *cursor, int64_t *bit_size_bo
     *bit_size_boundary = bit_size - current_bit_offset;
 
     return 0;
-}
-
-/* Gives a ^ b where b is a small integer */
-static double ipow(double a, int b)
-{
-    double val = 1.0;
-
-    if (b < 0)
-    {
-        while (b++)
-        {
-            val *= a;
-        }
-        val = 1.0 / val;
-    }
-    else
-    {
-        while (b--)
-        {
-            val *= a;
-        }
-    }
-    return val;
 }
 
 static int parse_mapping_size(const char *buffer, long buffer_length, coda_ascii_mappings *mappings, int64_t *bit_size)

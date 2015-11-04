@@ -2,7 +2,7 @@
 #
 project(CODA)
 
-set(VERSION 2.11.1)
+set(VERSION 2.12)
 set(CODA_VERSION \"${VERSION}\")
 
 # General setup
@@ -337,6 +337,7 @@ set(LIBCODA_SOURCES
   libcoda/coda.c
   libcoda/hashtable.c
   libcoda/hashtable.h
+  libcoda/ipow.h
   libcoda/ziparchive.c
   libcoda/ziparchive.h)
 
@@ -718,7 +719,7 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
   # Set dynamic library version
   #
   set(LIBCODA_CURRENT 11)
-  set(LIBCODA_REVISION 1)
+  set(LIBCODA_REVISION 2)
   set(LIBCODA_AGE 5)
   math(EXPR LIBCODA_MAJOR "${LIBCODA_CURRENT} - ${LIBCODA_AGE}")
   set(LIBCODA_MINOR ${LIBCODA_AGE})
