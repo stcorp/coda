@@ -121,6 +121,7 @@
 		<File RelativePath="..\libcoda\coda-ascii.h"/>
 		<File RelativePath="..\libcoda\coda-bin-cursor.c"/>
 		<File RelativePath="..\libcoda\coda-bin.h"/>
+		<File RelativePath="..\libcoda\coda-check.c"/>
 		<File RelativePath="..\libcoda\coda-cursor-read.c"/>
 		<File RelativePath="..\libcoda\coda-cursor.c"/>
 		<File RelativePath="..\libcoda\coda-definition-parse.c"/>

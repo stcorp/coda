@@ -582,7 +582,7 @@ LIBCODA_API int coda_datetime_to_double(int YEAR, int MONTH, int DAY, int HOUR, 
  * 2008-12-31 23:59:60 UTC will be 284083233
  * 2009-01-01 00:00:00 UTC will be 284083234
  * \warning For dates before 1972-01-01 UTC a fixed leap second offset of 10 is used.
- * \note CODA has a built in table of leap seconds up to Jan 2009. To use a more recent leap second table, download
+ * \note CODA has a built in table of leap seconds. To use a more recent leap second table, download
  * the most recent file from ftp://maia.usno.navy.mil/ser7/tai-utc.dat and set the environment variable
  * CODA_LEAP_SECOND_TABLE with a full path to this file.
  * \param YEAR     The year.
@@ -741,7 +741,7 @@ LIBCODA_API int coda_double_to_datetime(double datetime, int *YEAR, int *MONTH, 
  * 284083233 will be 2008-12-31 23:59:60 UTC
  * 284083234 will be 2009-01-01 00:00:00 UTC
  * \warning For dates before 1972-01-01 UTC a fixed leap second offset of 10 is used.
- * \note CODA has a built in table of leap seconds up to Jan 2009. To use a more recent leap second table, download
+ * \note CODA has a built in table of leap seconds. To use a more recent leap second table, download
  * the most recent file from ftp://maia.usno.navy.mil/ser7/tai-utc.dat and set the environment variable
  * CODA_LEAP_SECOND_TABLE with a full path to this file.
  * \param datetime The amount of seconds since Jan 1st 2000.

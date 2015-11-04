@@ -111,28 +111,14 @@ enum
 
     grib2_localRecordIndex,
     grib2_gridRecordIndex,
-    grib2_table2Version,
     grib2_editionNumber,
     grib2_centre,
-    grib2_generatingProcessIdentifier,
-    grib2_gridDefinition,
-    grib2_indicatorOfParameter,
-    grib2_indicatorOfTypeOfLevel,
-    grib2_level,
-    grib2_yearOfCentury,
     grib2_year,
     grib2_month,
     grib2_day,
     grib2_hour,
     grib2_minute,
     grib2_second,
-    grib2_unitOfTimeRange,
-    grib2_P1,
-    grib2_P2,
-    grib2_timeRangeIndicator,
-    grib2_numberIncludedInAverage,
-    grib2_numberMissingFromAveragesOrAccumulations,
-    grib2_centuryOfReferenceTimeOfData,
     grib2_subCentre,
     grib2_decimalScaleFactor,
     grib2_discipline,
@@ -168,6 +154,19 @@ enum
     grib2_pv_array,
     grib2_sourceOfGridDefinition,
     grib2_numberOfDataPoints,
+    grib2_parameterCategory,
+    grib2_parameterNumber,
+    grib2_typeOfGeneratingProcess,
+    grib2_backgroundProcess,
+    grib2_generatingProcessIdentifier,
+    grib2_hoursAfterDataCutoff,
+    grib2_minutesAfterDataCutoff,
+    grib2_indicatorOfUnitOfTimeRange,
+    grib2_forecastTime,
+    grib2_typeOfFirstFixedSurface,
+    grib2_firstFixedSurface,
+    grib2_typeOfSecondFixedSurface,
+    grib2_secondFixedSurface,
     grib2_gridDefinitionTemplateNumber,
     grib2_bitsPerValue,
     grib2_binaryScaleFactor,
@@ -649,12 +648,6 @@ static int grib_init(void)
     grib_type[grib2_gridRecordIndex] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
     coda_type_set_read_type(grib_type[grib2_gridRecordIndex], coda_native_type_uint32);
 
-    grib_type[grib2_table2Version] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
-    coda_type_set_read_type(grib_type[grib2_table2Version], coda_native_type_uint8);
-    coda_type_set_description(grib_type[grib2_table2Version],
-                              "Parameter Table Version number, currently 3 for international exchange. "
-                              "(Parameter table version numbers 128-254 are reserved for local use.)");
-
     grib_type[grib2_editionNumber] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
     coda_type_set_read_type(grib_type[grib2_editionNumber], coda_native_type_uint8);
     coda_type_set_description(grib_type[grib2_editionNumber], "GRIB edition number");
@@ -662,31 +655,6 @@ static int grib_init(void)
     grib_type[grib2_centre] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
     coda_type_set_read_type(grib_type[grib2_centre], coda_native_type_uint16);
     coda_type_set_description(grib_type[grib2_centre], "Identification of originating/generating centre");
-
-    grib_type[grib2_generatingProcessIdentifier] = (coda_type *)coda_type_number_new(coda_format_grib2,
-                                                                                     coda_integer_class);
-    coda_type_set_read_type(grib_type[grib2_generatingProcessIdentifier], coda_native_type_uint8);
-    coda_type_set_description(grib_type[grib2_generatingProcessIdentifier], "Generating process ID number");
-
-    grib_type[grib2_gridDefinition] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
-    coda_type_set_read_type(grib_type[grib2_gridDefinition], coda_native_type_uint8);
-    coda_type_set_description(grib_type[grib2_gridDefinition], "Grid Identification");
-
-    grib_type[grib2_indicatorOfParameter] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
-    coda_type_set_read_type(grib_type[grib2_indicatorOfParameter], coda_native_type_uint8);
-    coda_type_set_description(grib_type[grib2_indicatorOfParameter], "Indicator of parameter and units");
-
-    grib_type[grib2_indicatorOfTypeOfLevel] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
-    coda_type_set_read_type(grib_type[grib2_indicatorOfTypeOfLevel], coda_native_type_uint8);
-    coda_type_set_description(grib_type[grib2_indicatorOfTypeOfLevel], "Indicator of type of level or layer");
-
-    grib_type[grib2_level] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
-    coda_type_set_read_type(grib_type[grib2_level], coda_native_type_uint16);
-    coda_type_set_description(grib_type[grib2_level], "Height, pressure, etc. of the level or layer");
-
-    grib_type[grib2_yearOfCentury] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
-    coda_type_set_read_type(grib_type[grib2_yearOfCentury], coda_native_type_uint8);
-    coda_type_set_description(grib_type[grib2_yearOfCentury], "Year of century");
 
     grib_type[grib2_year] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
     coda_type_set_read_type(grib_type[grib2_year], coda_native_type_uint16);
@@ -711,39 +679,6 @@ static int grib_init(void)
     grib_type[grib2_second] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
     coda_type_set_read_type(grib_type[grib2_second], coda_native_type_uint8);
     coda_type_set_description(grib_type[grib2_second], "Second of minute");
-
-    grib_type[grib2_unitOfTimeRange] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
-    coda_type_set_read_type(grib_type[grib2_unitOfTimeRange], coda_native_type_uint8);
-    coda_type_set_description(grib_type[grib2_unitOfTimeRange], "Forecast time unit");
-
-    grib_type[grib2_P1] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
-    coda_type_set_read_type(grib_type[grib2_P1], coda_native_type_uint8);
-    coda_type_set_description(grib_type[grib2_P1], "Period of time (Number of time units)");
-
-    grib_type[grib2_P2] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
-    coda_type_set_read_type(grib_type[grib2_P2], coda_native_type_uint8);
-    coda_type_set_description(grib_type[grib2_P2], "Period of time (Number of time units)");
-
-    grib_type[grib2_timeRangeIndicator] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
-    coda_type_set_read_type(grib_type[grib2_timeRangeIndicator], coda_native_type_uint8);
-    coda_type_set_description(grib_type[grib2_timeRangeIndicator], "Time range indicator");
-
-    grib_type[grib2_numberIncludedInAverage] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
-    coda_type_set_read_type(grib_type[grib2_numberIncludedInAverage], coda_native_type_uint16);
-    coda_type_set_description(grib_type[grib2_numberIncludedInAverage], "Number included in average, when "
-                              "timeRangeIndicator indicates an average or accumulation; otherwise set to zero.");
-
-    grib_type[grib2_numberMissingFromAveragesOrAccumulations] = (coda_type *)coda_type_number_new(coda_format_grib2,
-                                                                                                  coda_integer_class);
-    coda_type_set_read_type(grib_type[grib2_numberMissingFromAveragesOrAccumulations], coda_native_type_uint8);
-    coda_type_set_description(grib_type[grib2_numberMissingFromAveragesOrAccumulations], "Number Missing from "
-                              "averages or accumulations.");
-
-    grib_type[grib2_centuryOfReferenceTimeOfData] = (coda_type *)coda_type_number_new(coda_format_grib2,
-                                                                                      coda_integer_class);
-    coda_type_set_read_type(grib_type[grib2_centuryOfReferenceTimeOfData], coda_native_type_uint8);
-    coda_type_set_description(grib_type[grib2_centuryOfReferenceTimeOfData], "Century of Initial (Reference) time "
-                              "(=20 until Jan. 1, 2001)");
 
     grib_type[grib2_subCentre] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
     coda_type_set_read_type(grib_type[grib2_subCentre], coda_native_type_uint16);
@@ -899,6 +834,65 @@ static int grib_init(void)
     coda_type_set_read_type(grib_type[grib2_numberOfDataPoints], coda_native_type_uint32);
     coda_type_set_description(grib_type[grib2_numberOfDataPoints], "Number of data points");
 
+    grib_type[grib2_parameterCategory] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    coda_type_set_read_type(grib_type[grib2_parameterCategory], coda_native_type_uint8);
+    coda_type_set_description(grib_type[grib2_parameterCategory], "Parameter Category");
+
+    grib_type[grib2_parameterNumber] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    coda_type_set_read_type(grib_type[grib2_parameterNumber], coda_native_type_uint8);
+    coda_type_set_description(grib_type[grib2_parameterNumber], "Parameter Number");
+
+    grib_type[grib2_typeOfGeneratingProcess] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    coda_type_set_read_type(grib_type[grib2_typeOfGeneratingProcess], coda_native_type_uint8);
+    coda_type_set_description(grib_type[grib2_typeOfGeneratingProcess], "Type of generating process");
+
+    grib_type[grib2_backgroundProcess] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    coda_type_set_read_type(grib_type[grib2_backgroundProcess], coda_native_type_uint8);
+    coda_type_set_description(grib_type[grib2_backgroundProcess], "Background generating process identifier");
+
+    grib_type[grib2_generatingProcessIdentifier] = (coda_type *)coda_type_number_new(coda_format_grib2,
+                                                                                     coda_integer_class);
+    coda_type_set_read_type(grib_type[grib2_generatingProcessIdentifier], coda_native_type_uint8);
+    coda_type_set_description(grib_type[grib2_generatingProcessIdentifier],
+                              "Analysis or forecast generating process identifier");
+
+    grib_type[grib2_hoursAfterDataCutoff] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    coda_type_set_read_type(grib_type[grib2_hoursAfterDataCutoff], coda_native_type_uint16);
+    coda_type_set_description(grib_type[grib2_hoursAfterDataCutoff],
+                              "Hours of observational data cut-off after reference time");
+
+    grib_type[grib2_minutesAfterDataCutoff] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    coda_type_set_read_type(grib_type[grib2_minutesAfterDataCutoff], coda_native_type_uint8);
+    coda_type_set_description(grib_type[grib2_minutesAfterDataCutoff],
+                              "Minutes of observational data cut-off after reference time");
+
+    grib_type[grib2_indicatorOfUnitOfTimeRange] =
+        (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    coda_type_set_read_type(grib_type[grib2_indicatorOfUnitOfTimeRange], coda_native_type_uint8);
+    coda_type_set_description(grib_type[grib2_indicatorOfUnitOfTimeRange], "Indicator of unit of time range");
+
+    grib_type[grib2_forecastTime] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    coda_type_set_read_type(grib_type[grib2_forecastTime], coda_native_type_uint32);
+    coda_type_set_description(grib_type[grib2_forecastTime],
+                              "Forecast time in units defined by indicatorOfUnitOfTimeRange");
+
+    grib_type[grib2_typeOfFirstFixedSurface] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    coda_type_set_read_type(grib_type[grib2_typeOfFirstFixedSurface], coda_native_type_uint8);
+    coda_type_set_description(grib_type[grib2_typeOfFirstFixedSurface], "Type of first fixed surface");
+
+    grib_type[grib2_firstFixedSurface] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_real_class);
+    coda_type_set_read_type(grib_type[grib2_firstFixedSurface], coda_native_type_double);
+    coda_type_set_description(grib_type[grib2_firstFixedSurface], "First fixed surface");
+
+    grib_type[grib2_typeOfSecondFixedSurface] = (coda_type *)coda_type_number_new(coda_format_grib2,
+                                                                                  coda_integer_class);
+    coda_type_set_read_type(grib_type[grib2_typeOfSecondFixedSurface], coda_native_type_uint8);
+    coda_type_set_description(grib_type[grib2_typeOfSecondFixedSurface], "Type of second fixed surface");
+
+    grib_type[grib2_secondFixedSurface] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_real_class);
+    coda_type_set_read_type(grib_type[grib2_secondFixedSurface], coda_native_type_double);
+    coda_type_set_description(grib_type[grib2_secondFixedSurface], "Second fixed surface");
+
     grib_type[grib2_gridDefinitionTemplateNumber] = (coda_type *)coda_type_number_new(coda_format_grib2,
                                                                                       coda_integer_class);
     coda_type_set_read_type(grib_type[grib2_gridDefinitionTemplateNumber], coda_native_type_uint16);
@@ -1003,6 +997,45 @@ static int grib_init(void)
     grib_type[grib2_data] = (coda_type *)coda_type_record_new(coda_format_grib2);
     field = coda_type_record_field_new("gridRecordIndex");
     coda_type_record_field_set_type(field, grib_type[grib2_gridRecordIndex]);
+    coda_type_record_add_field((coda_type_record *)grib_type[grib2_data], field);
+    field = coda_type_record_field_new("parameterCategory");
+    coda_type_record_field_set_type(field, grib_type[grib2_parameterCategory]);
+    coda_type_record_add_field((coda_type_record *)grib_type[grib2_data], field);
+    field = coda_type_record_field_new("parameterNumber");
+    coda_type_record_field_set_type(field, grib_type[grib2_parameterNumber]);
+    coda_type_record_add_field((coda_type_record *)grib_type[grib2_data], field);
+    field = coda_type_record_field_new("typeOfGeneratingProcess");
+    coda_type_record_field_set_type(field, grib_type[grib2_typeOfGeneratingProcess]);
+    coda_type_record_add_field((coda_type_record *)grib_type[grib2_data], field);
+    field = coda_type_record_field_new("backgroundProcess");
+    coda_type_record_field_set_type(field, grib_type[grib2_backgroundProcess]);
+    coda_type_record_add_field((coda_type_record *)grib_type[grib2_data], field);
+    field = coda_type_record_field_new("generatingProcessIdentifier");
+    coda_type_record_field_set_type(field, grib_type[grib2_generatingProcessIdentifier]);
+    coda_type_record_add_field((coda_type_record *)grib_type[grib2_data], field);
+    field = coda_type_record_field_new("hoursAfterDataCutoff");
+    coda_type_record_field_set_type(field, grib_type[grib2_hoursAfterDataCutoff]);
+    coda_type_record_add_field((coda_type_record *)grib_type[grib2_data], field);
+    field = coda_type_record_field_new("minutesAfterDataCutoff");
+    coda_type_record_field_set_type(field, grib_type[grib2_minutesAfterDataCutoff]);
+    coda_type_record_add_field((coda_type_record *)grib_type[grib2_data], field);
+    field = coda_type_record_field_new("indicatorOfUnitOfTimeRange");
+    coda_type_record_field_set_type(field, grib_type[grib2_indicatorOfUnitOfTimeRange]);
+    coda_type_record_add_field((coda_type_record *)grib_type[grib2_data], field);
+    field = coda_type_record_field_new("forecastTime");
+    coda_type_record_field_set_type(field, grib_type[grib2_forecastTime]);
+    coda_type_record_add_field((coda_type_record *)grib_type[grib2_data], field);
+    field = coda_type_record_field_new("typeOfFirstFixedSurface");
+    coda_type_record_field_set_type(field, grib_type[grib2_typeOfFirstFixedSurface]);
+    coda_type_record_add_field((coda_type_record *)grib_type[grib2_data], field);
+    field = coda_type_record_field_new("firstFixedSurface");
+    coda_type_record_field_set_type(field, grib_type[grib2_firstFixedSurface]);
+    coda_type_record_add_field((coda_type_record *)grib_type[grib2_data], field);
+    field = coda_type_record_field_new("typeOfSecondFixedSurface");
+    coda_type_record_field_set_type(field, grib_type[grib2_typeOfSecondFixedSurface]);
+    coda_type_record_add_field((coda_type_record *)grib_type[grib2_data], field);
+    field = coda_type_record_field_new("secondFixedSurface");
+    coda_type_record_field_set_type(field, grib_type[grib2_secondFixedSurface]);
     coda_type_record_add_field((coda_type_record *)grib_type[grib2_data], field);
     field = coda_type_record_field_new("bitsPerValue");
     coda_type_record_field_set_type(field, grib_type[grib2_bitsPerValue]);
@@ -1848,6 +1881,19 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
     int64_t bitmask_length = 0;
     long localRecordIndex = -1;
     long gridSectionIndex = -1;
+    uint8_t parameterCategory = 0;
+    uint8_t parameterNumber = 0;
+    uint8_t typeOfGeneratingProcess = 0;
+    uint8_t backgroundProcess = 0;
+    uint8_t generatingProcessIdentifier = 0;
+    uint16_t hoursAfterDataCutoff = 0;
+    uint8_t minutesAfterDataCutoff = 0;
+    uint8_t indicatorOfUnitOfTimeRange = 0;
+    uint32_t forecastTime = 0;
+    uint8_t typeOfFirstFixedSurface = 0;
+    double firstFixedSurface = 0;
+    uint8_t typeOfSecondFixedSurface = 0;
+    double secondFixedSurface = 0;
     int16_t decimalScaleFactor = 0;
     int16_t binaryScaleFactor = 0;
     float referenceValue = 0;
@@ -2212,6 +2258,9 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
         }
         else if (*buffer == 4)
         {
+            uint16_t productDefinitionTemplate;
+            uint16_t num_coordinate_values;
+
             /* Section 4: Product Definition Section */
             if (prev_section != 3 && prev_section != 7)
             {
@@ -2220,10 +2269,89 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                 return -1;
             }
 
-            if (section_size > 5)
+            if (read(product->fd, buffer, 4) < 0)
             {
-                file_offset += section_size - 5;
-                if (lseek(product->fd, (off_t)(section_size - 5), SEEK_CUR) < 0)
+                coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
+                               strerror(errno));
+                return -1;
+            }
+            num_coordinate_values = (buffer[0] * 256 + buffer[1]);
+            productDefinitionTemplate = (buffer[2] * 256 + buffer[3]);
+            file_offset += 4;
+
+            /* we could possibly add support for 40, 41, 44, 45 and 48 in the future as well */
+            if (productDefinitionTemplate <= 6 || productDefinitionTemplate == 15 || productDefinitionTemplate == 51)
+            {
+                if (read(product->fd, buffer, 25) < 0)
+                {
+                    coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
+                                   strerror(errno));
+                    return -1;
+                }
+                parameterCategory = buffer[0];
+                parameterNumber = buffer[1];
+                typeOfGeneratingProcess = buffer[2];
+                backgroundProcess = buffer[3];
+                generatingProcessIdentifier = buffer[4];
+                hoursAfterDataCutoff = buffer[5] * 256 + buffer[6];
+                minutesAfterDataCutoff = buffer[7];
+                indicatorOfUnitOfTimeRange = buffer[8];
+                forecastTime = ((buffer[9] * 256 + buffer[10]) * 256 + buffer[11]) * 256 + buffer[12];
+                typeOfFirstFixedSurface = buffer[13];
+                if (typeOfFirstFixedSurface != 255)
+                {
+                    int8_t scaleFactor = ((int8_t *)buffer)[14];
+
+                    firstFixedSurface = ((buffer[15] * 256 + buffer[16]) * 256 + buffer[17]) * 256 + buffer[18];
+                    while (scaleFactor < 0)
+                    {
+                        firstFixedSurface *= 10;
+                        scaleFactor++;
+                    }
+                    while (scaleFactor > 0)
+                    {
+                        firstFixedSurface /= 10;
+                        scaleFactor--;
+                    }
+                }
+                else
+                {
+                    firstFixedSurface = coda_NaN();
+                }
+                typeOfSecondFixedSurface = buffer[19];
+                if (typeOfSecondFixedSurface != 255)
+                {
+                    int8_t scaleFactor = ((int8_t *)buffer)[20];
+
+                    secondFixedSurface = ((buffer[21] * 256 + buffer[22]) * 256 + buffer[23]) * 256 + buffer[24];
+                    while (scaleFactor < 0)
+                    {
+                        secondFixedSurface *= 10;
+                        scaleFactor++;
+                    }
+                    while (scaleFactor > 0)
+                    {
+                        secondFixedSurface /= 10;
+                        scaleFactor--;
+                    }
+                }
+                else
+                {
+                    secondFixedSurface = coda_NaN();
+                }
+                file_offset += 25;
+            }
+            else
+            {
+                coda_set_error(CODA_ERROR_PRODUCT, "unsupported Product Definition Template (%d)",
+                               productDefinitionTemplate);
+                return -1;
+            }
+
+            if (section_size > 34)
+            {
+                file_offset += section_size - 34;
+                if (lseek(product->fd, (off_t)(section_size - 34), SEEK_CUR) < 0)
                 {
                     char file_offset_str[21];
 
@@ -2269,16 +2397,16 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
 #ifndef WORDS_BIGENDIAN
                 swap_float(&referenceValue);
 #endif
-                if (read(product->fd, &referenceValue, 5) < 0)
+                if (read(product->fd, buffer, 5) < 0)
                 {
                     coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
                                    strerror(errno));
                     return -1;
                 }
 
-                binaryScaleFactor = (buffer[4] & 0x80 ? -1 : 1) * ((buffer[4] & 0x7F) * 256 + buffer[5]);
-                decimalScaleFactor = (buffer[6] & 0x80 ? -1 : 1) * ((buffer[6] & 0x7F) * 256 + buffer[7]);
-                bitsPerValue = buffer[8];
+                binaryScaleFactor = (buffer[0] & 0x80 ? -1 : 1) * ((buffer[0] & 0x7F) * 256 + buffer[1]);
+                decimalScaleFactor = (buffer[2] & 0x80 ? -1 : 1) * ((buffer[2] & 0x7F) * 256 + buffer[3]);
+                bitsPerValue = buffer[4];
                 if (bitsPerValue > 63)
                 {
                     coda_set_error(CODA_ERROR_PRODUCT, "bitsPerValue (%d) too large", bitsPerValue);
@@ -2385,6 +2513,66 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
             type = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)grib_type[grib2_gridRecordIndex],
                                                              gridSectionIndex);
             coda_mem_record_add_field(data, "gridRecordIndex", type, 0);
+
+            type = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)grib_type[grib2_parameterCategory],
+                                                             parameterCategory);
+            coda_mem_record_add_field(data, "parameterCategory", type, 0);
+
+            type = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)grib_type[grib2_parameterNumber],
+                                                             parameterNumber);
+            coda_mem_record_add_field(data, "parameterNumber", type, 0);
+
+            type =
+                (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)grib_type[grib2_typeOfGeneratingProcess],
+                                                          typeOfGeneratingProcess);
+            coda_mem_record_add_field(data, "typeOfGeneratingProcess", type, 0);
+
+            type = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)grib_type[grib2_backgroundProcess],
+                                                             backgroundProcess);
+            coda_mem_record_add_field(data, "backgroundProcess", type, 0);
+
+            type =
+                (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)
+                                                          grib_type[grib2_generatingProcessIdentifier],
+                                                          generatingProcessIdentifier);
+            coda_mem_record_add_field(data, "generatingProcessIdentifier", type, 0);
+
+            type = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)grib_type[grib2_hoursAfterDataCutoff],
+                                                             hoursAfterDataCutoff);
+            coda_mem_record_add_field(data, "hoursAfterDataCutoff", type, 0);
+
+            type =
+                (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)grib_type[grib2_minutesAfterDataCutoff],
+                                                          minutesAfterDataCutoff);
+            coda_mem_record_add_field(data, "minutesAfterDataCutoff", type, 0);
+
+            type =
+                (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)
+                                                          grib_type[grib2_indicatorOfUnitOfTimeRange],
+                                                          indicatorOfUnitOfTimeRange);
+            coda_mem_record_add_field(data, "indicatorOfUnitOfTimeRange", type, 0);
+
+            type = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)grib_type[grib2_forecastTime],
+                                                             forecastTime);
+            coda_mem_record_add_field(data, "forecastTime", type, 0);
+
+            type =
+                (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)grib_type[grib2_typeOfFirstFixedSurface],
+                                                          typeOfFirstFixedSurface);
+            coda_mem_record_add_field(data, "typeOfFirstFixedSurface", type, 0);
+
+            type = (coda_dynamic_type *)coda_mem_real_new((coda_type_number *)grib_type[grib2_firstFixedSurface],
+                                                          firstFixedSurface);
+            coda_mem_record_add_field(data, "firstFixedSurface", type, 0);
+
+            type =
+                (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)grib_type[grib2_typeOfSecondFixedSurface],
+                                                          typeOfSecondFixedSurface);
+            coda_mem_record_add_field(data, "typeOfSecondFixedSurface", type, 0);
+
+            type = (coda_dynamic_type *)coda_mem_real_new((coda_type_number *)grib_type[grib2_secondFixedSurface],
+                                                          secondFixedSurface);
+            coda_mem_record_add_field(data, "secondFixedSurface", type, 0);
 
             type = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)grib_type[grib2_bitsPerValue],
                                                              bitsPerValue);

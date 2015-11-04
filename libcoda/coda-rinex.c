@@ -2243,6 +2243,16 @@ static int read_observation_record_for_satellite(ingest_info *info)
     }
     assert(sat_info->sat_obs_definition != NULL);
 
+    if (linelength >= 3 + sat_info->num_observables * 16 - 2)
+    {
+        /* append truncated 'blank' values back again to ease processing */
+        while (linelength < 3 + sat_info->num_observables * 16)
+        {
+            line[linelength] = ' ';
+            linelength++;
+        }
+    }
+
     if (linelength < 3 + sat_info->num_observables * 16)
     {
         coda_set_error(CODA_ERROR_FILE_READ, "epoch line length (%ld) too short (line: %ld, byte offset: %ld)",

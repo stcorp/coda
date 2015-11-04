@@ -214,6 +214,7 @@ libcoda_la_SOURCES = \
 	libcoda/coda-ascii.h \
 	libcoda/coda-bin-cursor.c \
 	libcoda/coda-bin.h \
+	libcoda/coda-check.c \
 	libcoda/coda-cursor-read.c \
 	libcoda/coda-cursor.c \
 	libcoda/coda-definition-parse.c \
@@ -300,6 +301,7 @@ libcoda_internal_la_SOURCES = \
 	libcoda/coda-ascii.h \
 	libcoda/coda-bin-cursor.c \
 	libcoda/coda-bin.h \
+	libcoda/coda-check.c \
 	libcoda/coda-cursor-read.c \
 	libcoda/coda-cursor.c \
 	libcoda/coda-definition-parse.c \

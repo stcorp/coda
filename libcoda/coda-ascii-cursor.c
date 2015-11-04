@@ -1179,9 +1179,9 @@ int coda_ascii_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size,
                                     char s[21];
 
                                     coda_str64(cursor->stack[cursor->n - 1].bit_offset >> 3, s);
-                                    coda_set_error(CODA_ERROR_PRODUCT, "product error detected in %s (invalid "
-                                                   "end-of-line sequence - not a carriage return or linefeed "
-                                                   "character - byte offset = %s)", cursor->product->filename, s);
+                                    coda_set_error(CODA_ERROR_PRODUCT, "product error detected (invalid end-of-line "
+                                                   "sequence - not a carriage return or linefeed character - byte "
+                                                   "offset = %s)", s);
                                     return -1;
                                 }
                         }

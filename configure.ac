@@ -1,7 +1,7 @@
 # autoconf file for CODA
-AC_INIT([CODA],[2.4.1])
+AC_INIT([CODA],[2.5])
 AC_CONFIG_AUX_DIR([.])
-AM_INIT_AUTOMAKE(foreign 1.8.3 -Wall)
+AM_INIT_AUTOMAKE(foreign 1.10 -Wall)
 
 AC_PREREQ(2.63)
 
@@ -100,7 +100,7 @@ AC_CONFIG_FILES([windows/coda.iss windows/setup.py])
 # 6. If any interfaces have been removed or changed since the last public
 #    release, then set age to 0.
 LIBCODA_CURRENT=9
-LIBCODA_REVISION=1
+LIBCODA_REVISION=2
 LIBCODA_AGE=3
 AC_SUBST(LIBCODA_CURRENT)
 AC_SUBST(LIBCODA_REVISION)
@@ -111,6 +111,9 @@ AC_SUBST(LIBCODA_AGE)
 AC_PROG_CC
 AC_PROG_F77
 
+# AM_PROG_AR is only available since automake 1.11.1
+m4_define_default([AM_PROG_AR])
+AM_PROG_AR
 AM_PROG_CC_C_O
 
 # check for fortran 77 compiler characteristics needed for wrapping c to fortran

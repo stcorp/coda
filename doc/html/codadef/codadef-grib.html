@@ -20,15 +20,15 @@
 
       <p>Since a file consists of a list of messages the root of the product is mapped to an <i>array</i> of <i>records</i> with each message being mapped to a <i>record</i>. The mapping of each message depends on the version/edition number of GRIB and is explained below.</p>
       
-      <p>CODA will try to provide as direct a mapping to the underlying data as possible. This means that code table indices will just be provided as indices and not be interpreted. You will have to consult the appropriate WMO code tables in order to interpret the data. The reason for this design choice was to eliminate as much as possible the dependency of CODA on the WMO tables. For certain structural information (such as the contents of the Grid Description Section) table information has been hard-coded in CODA.</p>
+      <p>CODA will try to provide as direct a mapping to the underlying data as possible. This means that code table indices will just be provided as indices and not be interpreted. You will have to consult the appropriate WMO code tables in order to interpret the data. The reason for this design choice was to eliminate as much as possible the dependency of CODA on the WMO tables. For certain structural information (such as the contents of the Grid Description Section or Product Definition Section) table information has been hard-coded in CODA.</p>
       
-      <p>There are a few exceptions to the 'direct mapping' approach. One is that CODA will already perform the decoding of the parameter values. The bit-packed data is already converted back to floating point values using the scale factors and reference value as described by the GRIB standard. The scale factors and reference values are still made accessible as fields in the GRIB message record, but they have the <i>hidden</i> property, since you should not have to need them to interpret the values that CODA will give back.</p>
+      <p>There are a few exceptions to the 'direct mapping' approach. One is that CODA will already perform the decoding of the parameter values. The bit-packed data is already converted back to floating point values using the scale factors and reference value as described by the GRIB standard. The scale factors and reference values are still made accessible as fields in the GRIB message record, but they have the <i>hidden</i> property, since you should not need them to interpret the values that CODA will give back.</p>
 
       <p>CODA will also perform the decoding of bitmap packed data (using the Bit Map Section). The data available in /[]/data/values[] will thus always contain the full grid, where <i>missing</i> grid points are given the 'referenceValue' as value.</p>
 
       <p>In addition, for GRIB1, any IBM floating point values will be converted to IEEE754 floating point values.</p>
       
-      <p>CODA currently only supports to most common storage mechanism of GRIB which is the simple package form. Data that is stored using complex packaging or jpeg/png images. Also, CODA currently only supports grid definitions that use a lat/lon or Gaussian grid. Other grids, including Spherical Harmonic data, are currently not supported. If an unsupported feature is encountered, CODA will abort opening the product and return with an error.</p>
+      <p>CODA currently only supports to most common storage mechanism of GRIB which is the simple package form. Data that is stored using complex packaging or jpeg/png images is not supported. Also, CODA currently only supports grid definitions that use a lat/lon or Gaussian grid. Other grids, including Spherical Harmonic data, are currently not supported. If an unsupported feature is encountered, CODA will abort opening the product and return with an error.</p>
 
       <h2>GRIB1</h2>
       
@@ -110,7 +110,7 @@
       
       <p>Within a message, sequences 3-7, 4-7, and/or 5-7 can be repeated several times.</p>
 
-      <p>The contents of the Identification Section are mapped directly as fields in the message <i>record</i>. For the Local Use, Grid Definition, and Data Sections special 'local', 'grid', and 'data' fields are available, with each being an array of the contents of each occurence of the section. Each 'data' record will contain a 0-based index into the 'grid' array to reference the applicable grid for the parameter. Similary, for each 'grid' record a 0-based index into the 'local' array will be available. The visible content of the Product Definition and Data Representation Section are available in the 'data' record of the associated Data Section.</p>
+      <p>The contents of the Identification Section are mapped directly as fields in the message <i>record</i>. For the Local Use, Grid Definition, and Data Sections special 'local', 'grid', and 'data' fields are available, with each being an array of the contents of each occurence of the section. Each 'data' record will contain a 0-based index into the 'grid' array to reference the applicable grid for the parameter. Similary, for each 'grid' record a 0-based index into the 'local' array will be available. The visible content of the Product Definition and Data Representation Section are available in the 'data' record of the associated Data Section (Product Definition Section information can thus end up appearing replicated).</p>
       
       <p>As for GRIB1, for the naming of fields CODA tries to stay as close as possible to the naming scheme that is used by the ECMWF GRIB API software.</p>
       
@@ -159,6 +159,19 @@
       <tr><td>/[]/grid[]/N</td><td>integer</td><td>uint32</td><td></td></tr>
       <tr><td>/[]/grid[]/scanningMode</td><td>integer</td><td>uint8</td><td></td></tr>
       <tr><td>/[]/data[]/gridRecordIndex</td><td>integer</td><td>uint32</td><td>index into /[]/grid[] to find associated grid definition data</td></tr>
+      <tr><td>/[]/data[]/parameterCategory</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/data[]/parameterNumber</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/data[]/typeOfGeneratingProcess</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/data[]/backgroundProcess</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/data[]/generatingProcessIdentifier</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/data[]/hoursAfterDataCutoff</td><td>integer</td><td>uint16</td><td></td></tr>
+      <tr><td>/[]/data[]/minutesAfterDataCutoff</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/data[]/indicatorOfUnitOfTimeRange</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/data[]/forecastTime</td><td>integer</td><td>uint32</td><td></td></tr>
+      <tr><td>/[]/data[]/typeOfFirstFixedSurface</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/data[]/firstFixedSurface</td><td>integer</td><td>double</td><td></td></tr>
+      <tr><td>/[]/data[]/typeOfSecondFixedSurface</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/data[]/secondFixedSurface</td><td>integer</td><td>double</td><td></td></tr>
       <tr><td>/[]/data[]/bitsPerValue</td><td>integer</td><td>uint8</td><td>(hidden field)</td></tr>
       <tr><td>/[]/data[]/decimalScaleFactor</td><td>integer</td><td>int16</td><td>(hidden field)</td></tr>
       <tr><td>/[]/data[]/binaryScaleFactor</td><td>integer</td><td>int16</td><td>(hidden field)</td></tr>

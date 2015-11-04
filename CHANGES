@@ -1,3 +1,15 @@
+2.5 2012-05-14
+~~~~~~~~~~~~~~
+
+* Improved support for GRIB2 data:
+  - fixed reading of Data Representation Section information
+  - added fields for Product Definition Section
+
+* codacheck now checks for expected end of line sequences in ASCII files again.
+
+* Fixed issue where truncated blank characters in RINEX Observation records
+  were not properly supported.
+
 2.4.1 2012-04-18
 ~~~~~~~~~~~~~~~~
 
