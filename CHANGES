@@ -1,3 +1,10 @@
+2.10.1 2014-03-21
+~~~~~~~~~~~~~~~~~
+
+* Fixed use of CODA_BUILD_SUBPACKAGE_MODE in CMake build.
+
+* Fixed small html documentation generation issue in codadd for conversions.
+
 2.10 2014-02-01
 ~~~~~~~~~~~~~~~
 

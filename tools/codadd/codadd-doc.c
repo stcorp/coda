@@ -595,17 +595,17 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
                         }
                         if (number->conversion->add_offset != 0.0)
                         {
-                            if (first)
+                            if (!first)
                             {
                                 ff_printf(", ");
-                                first = 0;
                             }
+                            first = 0;
                             coda_strfl(number->conversion->add_offset, s);
                             ff_printf("add %s", s);
                         }
                         if (!coda_isNaN(number->conversion->invalid_value))
                         {
-                            if (first)
+                            if (!first)
                             {
                                 ff_printf(", ");
                             }
