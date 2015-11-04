@@ -130,13 +130,37 @@ static int get_relative_field_bit_offset_by_index(const coda_Cursor *cursor, lon
 
     if (field->bit_offset_expr != NULL)
     {
+        if (field->available_expr != NULL)
+        {
+            int available;
+
+            if (coda_expr_eval_bool(field->available_expr, cursor, &available) != 0)
+            {
+                return -1;
+            }
+            /* don't evaluate offset expression if field is not available! */
+            if (!available)
+            {
+                if (field_index == 0)
+                {
+                    /* Just set to 0. With a proper format definition you should actually never have this case. */
+                    *rel_bit_offset = 0;
+                    return 0;
+                }
+                else
+                {
+                    /* the size of this field is zero, so just use the offset of the previous field */
+                    return get_relative_field_bit_offset_by_index(cursor, field_index - 1, rel_bit_offset);
+                }
+            }
+        }
         /* determine offset using expr */
         return coda_expr_eval_integer(field->bit_offset_expr, cursor, rel_bit_offset);
     }
 
     assert(field_index != 0);   /* the first field should either have a fixed bit offset or a bit_offset_expr */
 
-    /* previous methods did not work, determine offset by:
+    /* determine offset by:
      *  - finding previous field with a fixed bit_offset or a bit_offset_expr
      *  - calculating the bit offset for that field
      *  - adding bit sizes of fields after that offset until we get to our field
@@ -202,22 +226,40 @@ static int get_next_relative_field_bit_offset(const coda_Cursor *cursor, int64_t
         return 0;
     }
 
+    prev_bit_offset = cursor->stack[cursor->n - 1].bit_offset - cursor->stack[cursor->n - 2].bit_offset;
+
     if (field->bit_offset_expr != NULL)
     {
         coda_Cursor record_cursor;
 
-        /* determine offset using expr */
         record_cursor = *cursor;
         record_cursor.n--;
         if (current_field_size != NULL)
         {
             *current_field_size = -1;   /* not calculated */
         }
+
+        if (field->available_expr != NULL)
+        {
+            int available;
+
+            if (coda_expr_eval_bool(field->available_expr, &record_cursor, &available) != 0)
+            {
+                return -1;
+            }
+            /* don't evaluate offset expression if field is not available! */
+            if (!available)
+            {
+                /* the size of this field is zero, so just use the offset of the previous field */
+                *rel_bit_offset = prev_bit_offset;
+                return 0;
+            }
+        }
+        /* determine offset using expr */
         return coda_expr_eval_integer(field->bit_offset_expr, &record_cursor, rel_bit_offset);
     }
 
-    /* previous methods did not work, determine offset by using bit_offset of current field and adding its bit size */
-    prev_bit_offset = cursor->stack[cursor->n - 1].bit_offset - cursor->stack[cursor->n - 2].bit_offset;
+    /* determine offset by using bit_offset of current field and adding its bit size */
     if (coda_cursor_get_bit_size(cursor, &bit_size) != 0)
     {
         return -1;

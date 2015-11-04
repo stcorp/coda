@@ -252,6 +252,10 @@ static int new_hdf5BasicDataType(hid_t datatype_id, coda_hdf5DataType **type, in
                     case H5T_SGN_ERROR:
                         coda_set_error(CODA_ERROR_HDF5, NULL);
                         delete_hdf5BasicDataType(basic_type);
+                        if (H5Tget_class(basic_type->datatype_id) == H5T_ENUM)
+                        {
+                            H5Tclose(datatype_id);
+                        }
                         return -1;
                     default:
                         /* signed type */
@@ -279,7 +283,15 @@ static int new_hdf5BasicDataType(hid_t datatype_id, coda_hdf5DataType **type, in
                     default:
                         /* the integer type is larger than what CODA can support */
                         delete_hdf5BasicDataType(basic_type);
+                        if (H5Tget_class(basic_type->datatype_id) == H5T_ENUM)
+                        {
+                            H5Tclose(datatype_id);
+                        }
                         return 1;
+                }
+                if (H5Tget_class(basic_type->datatype_id) == H5T_ENUM)
+                {
+                    H5Tclose(datatype_id);
                 }
             }
             break;
@@ -306,8 +318,10 @@ static int new_hdf5BasicDataType(hid_t datatype_id, coda_hdf5DataType **type, in
                 {
                     /* unsupported floating point type */
                     delete_hdf5BasicDataType(basic_type);
+                    H5Tclose(native_type);
                     return 1;
                 }
+                H5Tclose(native_type);
             }
             break;
         case H5T_STRING:

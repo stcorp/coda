@@ -121,7 +121,7 @@ static void set_definition_path(const char *argv0)
     }
 }
 
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
     int i = 1;
 
@@ -230,7 +230,7 @@ int main(int argc, char **argv)
                      i + 1 < argc && argv[i + 1][0] != '-')
             {
                 i++;
-                ascii_col_sep = argv[i + 1];
+                ascii_col_sep = argv[i];
             }
             else if (argv[i][0] != '-')
             {

@@ -802,7 +802,7 @@ static void check_file(char *filename)
     printf("\n");
 }
 
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
     int option_stdin;
     int i;

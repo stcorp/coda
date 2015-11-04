@@ -116,6 +116,10 @@ static void delete_netcdfRoot(coda_netcdfRoot *type)
 
 static void delete_netcdfArray(coda_netcdfArray *type)
 {
+    if (type->attributes != NULL)
+    {
+        delete_netcdfAttributeRecord(type->attributes);
+    }
     coda_netcdf_release_type((coda_Type *)type->base_type);
     free(type);
 }
@@ -278,8 +282,17 @@ coda_netcdfArray *coda_netcdf_array_new(int num_dims, long dim[CODA_MAX_NUM_DIMS
         type->num_elements *= dim[i];
     }
     type->base_type = base_type;
+    type->attributes = NULL;
 
     return type;
+}
+
+int coda_netcdf_array_add_attributes(coda_netcdfArray *type, coda_netcdfAttributeRecord *attributes)
+{
+    assert(type->attributes == NULL);
+    type->attributes = attributes;
+
+    return 0;
 }
 
 coda_netcdfBasicType *coda_netcdf_basic_type_new(int nc_type, int64_t offset, int record_var, int length)

@@ -289,7 +289,6 @@ int coda_netcdf_cursor_goto_attributes(coda_Cursor *cursor)
     cursor->n++;
     switch (type->tag)
     {
-        case tag_netcdf_array:
         case tag_netcdf_attribute_record:
             cursor->stack[cursor->n - 1].type = (coda_DynamicType *)coda_netcdf_empty_attribute_record();
             break;
@@ -307,6 +306,16 @@ int coda_netcdf_cursor_goto_attributes(coda_Cursor *cursor)
             if (((coda_netcdfBasicType *)type)->attributes != NULL)
             {
                 cursor->stack[cursor->n - 1].type = (coda_DynamicType *)((coda_netcdfBasicType *)type)->attributes;
+            }
+            else
+            {
+                cursor->stack[cursor->n - 1].type = (coda_DynamicType *)coda_netcdf_empty_attribute_record();
+            }
+            break;
+        case tag_netcdf_array:
+            if (((coda_netcdfArray *)type)->attributes != NULL)
+            {
+                cursor->stack[cursor->n - 1].type = (coda_DynamicType *)((coda_netcdfArray *)type)->attributes;
             }
             else
             {

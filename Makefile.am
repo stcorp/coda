@@ -609,6 +609,7 @@ DOCFILES = \
 	doc/html/codadef/codadef-format.html \
 	doc/html/codadef/codadef-hdf4.html \
 	doc/html/codadef/codadef-hdf5.html \
+	doc/html/codadef/codadef-netcdf.html \
 	doc/html/codadef/codadef-xml.html \
 	doc/html/codacheck/index.html \
 	doc/html/codacmp/index.html \

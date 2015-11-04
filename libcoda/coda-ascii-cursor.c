@@ -1285,7 +1285,7 @@ int coda_ascii_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size,
                     {
                         return -1;
                     }
-                    if (*buffer != ' ')
+                    if (*buffer != ' ' && *buffer != '\t')
                     {
                         break;
                     }

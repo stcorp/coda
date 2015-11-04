@@ -483,12 +483,14 @@ static int coda_hdf5_read_array(const coda_Cursor *cursor, void *dst, coda_nativ
         if (H5Tconvert(super, mem_type_id, num_elements, buffer, NULL, H5P_DEFAULT) < 0)
         {
             coda_set_error(CODA_ERROR_HDF5, NULL);
+            H5Tclose(super);
             if (conversion_needed)
             {
                 free(buffer);
             }
             return -1;
         }
+        H5Tclose(super);
     }
 
     if (!conversion_needed)
@@ -936,7 +938,7 @@ static int coda_hdf5_read_basic_type(const coda_Cursor *cursor, coda_native_type
         }
         else
         {
-            from_type = base_type->datatype_id;
+            from_type = H5Tcopy(base_type->datatype_id);
         }
         get_hdf5_type_and_size(to_type, &datatype_to, &new_size);
         if (new_size > size)
@@ -946,6 +948,7 @@ static int coda_hdf5_read_basic_type(const coda_Cursor *cursor, coda_native_type
             if (H5Tconvert(from_type, datatype_to, 1, dst, NULL, H5P_DEFAULT) < 0)
             {
                 coda_set_error(CODA_ERROR_HDF5, NULL);
+                H5Tclose(from_type);
                 free(buffer);
                 return -1;
             }
@@ -956,11 +959,13 @@ static int coda_hdf5_read_basic_type(const coda_Cursor *cursor, coda_native_type
             if (H5Tconvert(from_type, datatype_to, 1, buffer_offset, NULL, H5P_DEFAULT) < 0)
             {
                 coda_set_error(CODA_ERROR_HDF5, NULL);
+                H5Tclose(from_type);
                 free(buffer);
                 return -1;
             }
             memcpy(dst, buffer_offset, new_size);
         }
+        H5Tclose(from_type);
     }
     free(buffer);
 

@@ -2,7 +2,6 @@
 # create .codadef file from a directory containg xml definition files
 # and write them to an (optional) output directory. The default output
 # directory is the current directory
-#set -x
 
 if test $# -eq 0 -o $# -gt 2 ; then
   echo "Usage: $0 <input directory> [<output directory>]"
@@ -55,7 +54,7 @@ echo Creating $class-$date.codadef
 rm -f ${class}-${date}.codadef
 cd ${inputdir}
 echo ${date} > VERSION
-zip -q ${targetdir}/${class}-${date}.codadef VERSION index.xml types/*.xml products/*.xml
+zip -q ${targetdir}/${class}-${date}.codadef VERSION *.xml types/*.xml products/*.xml
 status=$?
 rm -f VERSION
 

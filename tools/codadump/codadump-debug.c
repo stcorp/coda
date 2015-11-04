@@ -247,7 +247,10 @@ static void print_data(coda_Cursor *cursor)
                             INDENT--;
                             if (i < num_fields - 1)
                             {
-                                coda_cursor_goto_next_record_field(cursor);
+                                if (coda_cursor_goto_next_record_field(cursor) != 0)
+                                {
+                                    handle_coda_error();
+                                }
                             }
                         }
                         coda_cursor_goto_parent(cursor);

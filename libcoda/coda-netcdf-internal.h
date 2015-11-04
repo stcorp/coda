@@ -75,6 +75,8 @@ typedef struct coda_netcdfArray_struct
     long dim[CODA_MAX_NUM_DIMS];
     long num_elements;
     struct coda_netcdfBasicType_struct *base_type;
+
+    struct coda_netcdfAttributeRecord_struct *attributes;
 } coda_netcdfArray;
 
 typedef struct coda_netcdfBasicType_struct
@@ -144,6 +146,7 @@ int coda_netcdf_root_add_variable(coda_netcdfRoot *root, const char *name, coda_
 int coda_netcdf_root_add_attributes(coda_netcdfRoot *root, coda_netcdfAttributeRecord *attributes);
 
 coda_netcdfArray *coda_netcdf_array_new(int num_dims, long dim[CODA_MAX_NUM_DIMS], coda_netcdfBasicType *base_type);
+int coda_netcdf_array_add_attributes(coda_netcdfArray *type, coda_netcdfAttributeRecord *attributes);
 
 coda_netcdfBasicType *coda_netcdf_basic_type_new(int nc_type, int64_t offset, int record_var, int length);
 int coda_netcdf_basic_type_add_attributes(coda_netcdfBasicType *type, coda_netcdfAttributeRecord *attributes);

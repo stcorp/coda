@@ -2489,6 +2489,13 @@ static int eval_string(eval_info *info, const coda_Expr *expr, long *offset, lon
                 {
                     return -1;
                 }
+                if (new_length == 0)
+                {
+                    *offset = 0;
+                    *length = 0;
+                    *value = NULL;
+                    return 0;
+                }
                 if (new_length < 0)
                 {
                     coda_set_error(CODA_ERROR_EXPRESSION, "negative length in substr expression");

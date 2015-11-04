@@ -26,7 +26,7 @@
       
       <p>Except for the character (NC_CHAR) which can become either char or string, CODA maps all netCDF basic types to the corresponding CODA basic types: NC_BYTE becomes int8, NC_SHORT becomes int16, NC_INT becomes int32, NC_FLOAT becomes float, and NC_DOUBLE becomes double.</p>
 
-      <p>The global attributes can be accessed via CODA as attributes of the root record. The attributes of a variable can be accessed as attributes of the base type of the variabele (this means that for an array of basic types, the attributes are a property of the array element and not of the array itself!). The same character to string mapping properties for variables also hold for attributes.</p>
+      <p>The global attributes can be accessed via CODA as attributes of the root record. The attributes of a variable can be accessed as attributes of the base type (in case of scalar data) or as attributes of the array (for variables that have one or more dimensions). The same character to string mapping properties for variables also hold for attributes.</p>
 
       <div class="footer">
         <hr />

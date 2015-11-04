@@ -24,6 +24,14 @@
 
 #include "coda-hdf4-internal.h"
 
+/* Compatibility with versions before HDF4r2 */
+#ifndef _HDF_SDSVAR
+#define _HDF_SDSVAR            "SDSVar"
+#endif
+#ifndef _HDF_CRDVAR
+#define _HDF_CRDVAR          "CoordVar"
+#endif
+
 #undef DEBUG
 
 static coda_hdf4Attributes *empty_attributes_singleton = NULL;
@@ -1954,6 +1962,8 @@ static coda_hdf4Vdata *new_hdf4Vdata(coda_hdf4ProductFile *pf, int32 vdata_ref)
      *  RIGATTRNAME     "RIATTR0.0N"    - name of a Vdata containing an attribute
      *  RIGATTRCLASS    "RIATTR0.0C"    - class of a Vdata containing an attribute
      *  _HDF_ATTRIBUTE  "Attr0.0"       - class of a Vdata containing SD/Vdata/Vgroup interface attribute
+     *  _HDF_SDSVAR     "SDSVar"        - class of a Vdata indicating its group is an SDS variable
+     *  _HDF_CRDVAR     "CoorVar"       - class of a Vdata indicating its group is a coordinate variable
      *  DIM_VALS        "DimVal0.0"     - class of a Vdata containing an SD dimension size and fake values
      *  DIM_VALS01      "DimVal0.1"     - class of a Vdata containing an SD dimension size
      *  _HDF_CDF        "CDF0.0"
@@ -1962,7 +1972,8 @@ static coda_hdf4Vdata *new_hdf4Vdata(coda_hdf4ProductFile *pf, int32 vdata_ref)
      *                  "_HDF_CHK_TBL_" - this class name prefix is reserved by the Chunking interface
      */
     T->hide = (strcasecmp(T->classname, RIGATTRNAME) == 0 || strcasecmp(T->classname, RIGATTRCLASS) == 0 ||
-               strcasecmp(T->classname, _HDF_ATTRIBUTE) == 0 || strcasecmp(T->classname, DIM_VALS) == 0 ||
+               strcasecmp(T->classname, _HDF_ATTRIBUTE) == 0 || strcasecmp(T->classname, _HDF_SDSVAR) == 0 ||
+               strcasecmp(T->classname, _HDF_CRDVAR) == 0 || strcasecmp(T->classname, DIM_VALS) == 0 ||
                strcasecmp(T->classname, DIM_VALS01) == 0 || strcasecmp(T->classname, _HDF_CDF) == 0 ||
                strcasecmp(T->classname, DATA0) == 0 || strcasecmp(T->classname, ATTR_FIELD_NAME) == 0 ||
                strncmp(T->classname, "_HDF_CHK_TBL_", 13) == 0);

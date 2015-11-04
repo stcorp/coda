@@ -802,17 +802,18 @@ static int read_var_array(coda_netcdfProductFile *pf, int32_t num_dim_lengths, i
             basic_type->has_fill_value = 1;
             basic_type->fill_value = fill_value;
         }
-        if (attributes != NULL)
-        {
-            if (coda_netcdf_basic_type_add_attributes(basic_type, attributes) != 0)
-            {
-                coda_netcdf_release_type((coda_netcdfType *)attributes);
-                free(name);
-                return -1;
-            }
-        }
         if (num_dims == 0)
         {
+            if (attributes != NULL)
+            {
+                if (coda_netcdf_basic_type_add_attributes(basic_type, attributes) != 0)
+                {
+                    coda_netcdf_release_type((coda_netcdfType *)basic_type);
+                    coda_netcdf_release_type((coda_netcdfType *)attributes);
+                    free(name);
+                    return -1;
+                }
+            }
             if (coda_netcdf_root_add_variable(root, name, (coda_netcdfType *)basic_type) != 0)
             {
                 coda_netcdf_release_type((coda_netcdfType *)basic_type);
@@ -828,12 +829,23 @@ static int read_var_array(coda_netcdfProductFile *pf, int32_t num_dim_lengths, i
             if (array == NULL)
             {
                 coda_netcdf_release_type((coda_netcdfType *)basic_type);
+                coda_netcdf_release_type((coda_netcdfType *)attributes);
                 free(name);
                 return -1;
             }
+            if (attributes != NULL)
+            {
+                if (coda_netcdf_array_add_attributes(array, attributes) != 0)
+                {
+                    coda_netcdf_release_type((coda_netcdfType *)array);
+                    coda_netcdf_release_type((coda_netcdfType *)attributes);
+                    free(name);
+                    return -1;
+                }
+            }
             if (coda_netcdf_root_add_variable(root, name, (coda_netcdfType *)array) != 0)
             {
-                coda_netcdf_release_type((coda_netcdfType *)basic_type);
+                coda_netcdf_release_type((coda_netcdfType *)array);
                 free(name);
                 return -1;
             }
