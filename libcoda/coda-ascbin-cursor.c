@@ -643,8 +643,8 @@ int coda_ascbin_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size
                                 field_bit_size = -1;
                                 if (i < record->num_fields - 1)
                                 {
-                                    if (get_next_relative_field_bit_offset
-                                        (&field_cursor, &rel_bit_offset, &field_bit_size) != 0)
+                                    if (get_next_relative_field_bit_offset(&field_cursor, &rel_bit_offset,
+                                                                           &field_bit_size) != 0)
                                     {
                                         return -1;
                                     }
@@ -803,7 +803,8 @@ int coda_ascbin_cursor_get_num_elements(const coda_Cursor *cursor, long *num_ele
                             if (var_dim < 0)
                             {
                                 coda_set_error(CODA_ERROR_PRODUCT, "product error detected in %s (invalid array size - "
-                                               "calculated array size = %ld)", cursor->pf->filename, (long)var_dim);
+                                               "calculated array size = %lld)", cursor->pf->filename,
+                                               (long long)var_dim);
                                 return -1;
                             }
                             n *= (long)var_dim;
@@ -888,10 +889,10 @@ int coda_ascbin_cursor_get_available_union_field_index(const coda_Cursor *cursor
     if (index64 < 0 || index64 >= dd_union->num_fields)
     {
         coda_set_error(CODA_ERROR_PRODUCT,
-                       "possible product error detected in %s (invalid result (%ld) from union field expression - num "
-                       "fields = %ld - byte:bit offset = %ld:%ld)", cursor->pf->filename, (long)index64,
-                       dd_union->num_fields, (long)(cursor->stack[cursor->n - 1].bit_offset >> 3),
-                       (long)(cursor->stack[cursor->n - 1].bit_offset & 0x7));
+                       "possible product error detected in %s (invalid result (%lld) from union field expression - num "
+                       "fields = %ld - byte:bit offset = %lld:%d)", cursor->pf->filename, (long long)index64,
+                       dd_union->num_fields, (long long)(cursor->stack[cursor->n - 1].bit_offset >> 3),
+                       (int)(cursor->stack[cursor->n - 1].bit_offset & 0x7));
         return -1;
     }
     *index = (int)index64;
@@ -918,8 +919,8 @@ int coda_ascbin_cursor_get_array_dim(const coda_Cursor *cursor, int *num_dims, l
             }
             if (var_dim < 0)
             {
-                coda_set_error(CODA_ERROR_PRODUCT, "product error detected in %s (invalid array size (%ld))",
-                               cursor->pf->filename, (long)var_dim);
+                coda_set_error(CODA_ERROR_PRODUCT, "product error detected in %s (invalid array size (%lld))",
+                               cursor->pf->filename, (long long)var_dim);
                 return -1;
             }
             dim[i] = (long)var_dim;

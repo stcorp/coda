@@ -74,9 +74,6 @@ static void print_escaped(const char *data, long length)
         c = data[i];
         switch (c)
         {
-            case '\0':
-                ff_printf("\\0");
-                break;
             case '\a':
                 ff_printf("\\a");
                 break;
@@ -193,10 +190,10 @@ static void print_data(coda_Cursor *cursor)
                             }
                             if (offset >= 0)
                             {
-                                ff_printf(":%ld", (long)(offset >> 3));
+                                ff_printf(":%lld", (long long)(offset >> 3));
                                 if ((offset & 0x7) != 0)
                                 {
-                                    ff_printf(":%ld", (long)(offset & 0x7));
+                                    ff_printf(":%d", (int)(offset & 0x7));
                                 }
                             }
                         }
@@ -231,10 +228,10 @@ static void print_data(coda_Cursor *cursor)
                                 }
                                 if (offset >= 0)
                                 {
-                                    ff_printf("%ld", (long)(offset >> 3));
+                                    ff_printf("%lld", (long long)(offset >> 3));
                                     if ((offset & 0x7) != 0)
                                     {
-                                        ff_printf(":%ld", (long)(offset & 0x7));
+                                        ff_printf(":%d", (int)(offset & 0x7));
                                     }
                                 }
                             }
@@ -303,10 +300,10 @@ static void print_data(coda_Cursor *cursor)
                                 }
                                 if (offset >= 0)
                                 {
-                                    ff_printf(":%ld", (long)(offset >> 3));
+                                    ff_printf(":%lld", (long long)(offset >> 3));
                                     if ((offset & 0x7) != 0)
                                     {
-                                        ff_printf(":%ld", (long)(offset & 0x7));
+                                        ff_printf(":%d", (int)(offset & 0x7));
                                     }
                                 }
                             }
@@ -391,30 +388,38 @@ static void print_data(coda_Cursor *cursor)
                     {
                         case coda_native_type_bytes:
                             {
-                                int64_t size;
+                                int64_t bit_size;
+                                int64_t byte_size;
                                 uint8_t *data;
 
-                                if (coda_cursor_get_byte_size(cursor, &size) != 0)
+                                if (coda_cursor_get_bit_size(cursor, &bit_size) != 0)
                                 {
                                     handle_coda_error();
                                 }
-                                data = (uint8_t *)malloc((size_t)size);
+                                byte_size = (bit_size >> 3) + (bit_size & 0x7 ? 1 : 0);
+                                data = (uint8_t *)malloc((size_t)byte_size);
                                 if (data == NULL)
                                 {
                                     coda_set_error(CODA_ERROR_OUT_OF_MEMORY,
                                                    "out of memory (could not allocate %lu bytes) (%s:%u)",
-                                                   (long)size, __FILE__, __LINE__);
+                                                   (long)byte_size, __FILE__, __LINE__);
                                     handle_coda_error();
                                 }
-                                if (coda_cursor_read_bytes(cursor, data, 0, size) != 0)
+                                if (coda_cursor_read_bits(cursor, data, 0, bit_size) != 0)
                                 {
                                     handle_coda_error();
                                 }
 
                                 fi_printf("\"");
-                                print_escaped((char *)data, (long)size);
-                                ff_printf("\" (size=%.0f)\n", (double)size);
-
+                                print_escaped((char *)data, (long)byte_size);
+                                ff_printf("\" (size=");
+                                ff_printf("%lld", (long long)(bit_size >> 3));
+                                if ((bit_size & 0x7) != 0)
+                                {
+                                    ff_printf(":%d", (int)(bit_size & 0x7));
+                                }
+                                ff_printf(")\n");
+                                    
                                 free(data);
                             }
                             break;
@@ -447,16 +452,27 @@ static void print_data(coda_Cursor *cursor)
                             }
                             break;
                         case coda_native_type_int64:
-                        case coda_native_type_uint64:
                             {
-                                double data;
+                                int64_t data;
 
-                                if (coda_cursor_read_double(cursor, &data) != 0)
+                                if (coda_cursor_read_int64(cursor, &data) != 0)
                                 {
                                     handle_coda_error();
                                 }
 
-                                fi_printf("%.0f\n", data);
+                                fi_printf("%lld\n", (long long)data);
+                            }
+                            break;
+                        case coda_native_type_uint64:
+                            {
+                                uint64_t data;
+
+                                if (coda_cursor_read_uint64(cursor, &data) != 0)
+                                {
+                                    handle_coda_error();
+                                }
+
+                                fi_printf("%llu\n", (unsigned long long)data);
                             }
                             break;
                         case coda_native_type_float:

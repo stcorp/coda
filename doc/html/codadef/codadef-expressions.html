@@ -123,6 +123,10 @@
       <div class="fragment"><code><b>all</b>(/calibration/value, <b>float</b>(.) &gt; 10.0)</code></div>
       <p>This will return true if all of the elements '/calibration/value[]' have a value > 10, and false otherwise.</p>
 
+      <h5>if(boolean, boolean, boolean)</h5>
+
+      <p>If the first boolean expression argument evaluates to true the second argument is evaluated and its result returned, otherwise the third argument is evaluated and its result returned.</p>
+
       <h2>integer expressions</h2>
 
       <p>An integer expression is an expression that results in an integer value.</p>
@@ -536,6 +540,7 @@ boolexpr =
 	'exists', '(', node, ')' |
 	'exists', '(', node, ',', boolexpr, ')' |
 	'all', '(', node, ',', boolexpr, ')' ;
+	'if', '(' boolexpr, ',', boolexpr, ',', boolexpr, ')' ;
 
 intexpr = 
 	intvalue |

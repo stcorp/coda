@@ -97,16 +97,6 @@ set(XML_LARGE_SIZE 1)
 set(XML_CONTEXT_BYTES 1024)
 
 
-# Required libraries
-#
-find_library(LIBM_LIBRARY m)
-if(LIBM_LIBRARY)
-  link_libraries(${LIBM_LIBRARY})
-  set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} ${LIBM_LIBRARY})
-  set(HAVE_LIBM 1)
-endif(LIBM_LIBRARY)
-mark_as_advanced(LIBM_LIBRARY)
-
 # Lex / Yacc - adapted from CMake's own CMakeLists.txt
 #
 find_program(YACC_EXECUTABLE
@@ -502,7 +492,7 @@ if(CODA_BUILD_MATLAB)
       ${MEX_OUTPUT}
       )
 
-    add_dependencies(coda_matlab coda_static expat z)
+    add_dependencies(coda_matlab coda_static)
     install(FILES ${MEX_OUTPUT} DESTINATION ${MATLAB_INSTALL_DIR})
 
     # *** matlab data ***
@@ -592,7 +582,6 @@ set(LIBEXPAT_SOURCES
 )
 
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/expat)
-add_library(expat STATIC ${LIBEXPAT_SOURCES})
 
 
 # Custom CODA zlib library
@@ -616,7 +605,7 @@ set(LIBZLIB_SOURCES
 )
 
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/zlib)
-add_library(z STATIC ${LIBZLIB_SOURCES})
+
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/coda.h DESTINATION include)
 
@@ -629,7 +618,7 @@ set(LIBCODA_REVISION 0)
 set(LIBCODA_AGE 0)
 
 add_library(coda SHARED ${LIBCODA_SOURCES})
-target_link_libraries(coda expat z ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
+target_link_libraries(coda ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
 set_target_properties(coda PROPERTIES
   VERSION ${LIBCODA_CURRENT}.${LIBCODA_REVISION}.${LIBCODA_AGE}
   SOVERSION ${LIBCODA_CURRENT}
@@ -658,13 +647,18 @@ if(MSVC)
 endif(MSVC)
 
 
+# Required libraries
+#
+find_library(LIBM_LIBRARY m)
+mark_as_advanced(LIBM_LIBRARY)
+
 # tools codacheck
 
 set(codacheck_SOURCES
   tools/codacheck/codacheck.c
   )
 add_executable(codacheck ${codacheck_SOURCES})
-target_link_libraries(codacheck coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
+target_link_libraries(codacheck coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${LIBM_LIBRARY})
 install(TARGETS codacheck DESTINATION bin)
 
 if(MSVC)
@@ -679,7 +673,7 @@ set(codacmp_SOURCES
   tools/codacmp/codacmp.c
   )
 add_executable(codacmp ${codacmp_SOURCES})
-target_link_libraries(codacmp coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
+target_link_libraries(codacmp coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${LIBM_LIBRARY})
 install(TARGETS codacmp DESTINATION bin)
 
 # tools/codadump
@@ -701,7 +695,7 @@ if(CODA_WITH_HDF4)
   set(codadump_SOURCES ${codadump_SOURCES} ${codadump_hdf4_files})
 endif(CODA_WITH_HDF4)
 add_executable(codadump ${codadump_SOURCES})
-target_link_libraries(codadump coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
+target_link_libraries(codadump coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${LIBM_LIBRARY})
 install(TARGETS codadump DESTINATION bin)
 
 # tools codafind
@@ -710,7 +704,7 @@ set(codafind_SOURCES
   tools/codafind/codafind.c
   )
 add_executable(codafind ${codafind_SOURCES})
-target_link_libraries(codafind coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
+target_link_libraries(codafind coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${LIBM_LIBRARY})
 install(TARGETS codafind DESTINATION bin)
 
 # tools codadd
@@ -721,7 +715,7 @@ set(codadd_SOURCES
   tools/codadd/codadd-list.c
   )
 add_executable(codadd ${codadd_SOURCES})
-target_link_libraries(codadd coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
+target_link_libraries(codadd coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${LIBM_LIBRARY})
 install(TARGETS codadd DESTINATION bin)
 
 

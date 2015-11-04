@@ -380,7 +380,7 @@ int coda_ascbin_record_add_field(coda_ascbinRecord *record, coda_ascbinField *fi
     /* update bit_size */
     if (record->bit_size >= 0)
     {
-        if (field->type->bit_size >= 0)
+        if (field->type->bit_size >= 0 && record->field[record->num_fields - 1]->available_expr == NULL)
         {
             record->bit_size += field->type->bit_size;
         }

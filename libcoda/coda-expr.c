@@ -1126,6 +1126,30 @@ static int eval_boolean(eval_info *info, const coda_Expr *expr, int *value)
                 info->cursor = prev_cursor;
             }
             break;
+        case expr_if:
+            {
+                int condition;
+
+                if (eval_boolean(info, opexpr->operand[0], &condition) != 0)
+                {
+                    return -1;
+                }
+                if (condition)
+                {
+                    if (eval_boolean(info, opexpr->operand[1], value) != 0)
+                    {
+                        return -1;
+                    }
+                }
+                else
+                {
+                    if (eval_boolean(info, opexpr->operand[2], value) != 0)
+                    {
+                        return -1;
+                    }
+                }
+            }
+            break;
         default:
             assert(0);
             exit(1);
@@ -2320,6 +2344,7 @@ static int eval_string(eval_info *info, const coda_Expr *expr, long *offset, lon
             {
                 coda_Cursor prev_cursor;
                 int64_t num_bytes;
+                int64_t num_bits = -1;
 
                 if (info->orig_cursor == NULL)
                 {
@@ -2337,19 +2362,24 @@ static int eval_string(eval_info *info, const coda_Expr *expr, long *offset, lon
                     {
                         return -1;
                     }
+                    if (num_bytes > 0)
+                    {
+                        num_bits = num_bytes << 3;
+                    }
                 }
                 else
                 {
-                    if (coda_cursor_get_byte_size(&info->cursor, &num_bytes) != 0)
+                    if (coda_cursor_get_bit_size(&info->cursor, &num_bits) != 0)
                     {
                         return -1;
                     }
                 }
-                if (num_bytes < 0)
+                if (num_bits < 0)
                 {
                     coda_set_error(CODA_ERROR_EXPRESSION, "negative byte size in bytes expression");
                     return -1;
                 }
+                num_bytes = (num_bits >> 3) + (num_bits & 0x7 ? 1 : 0);
                 *offset = 0;
                 *length = (long)num_bytes;
                 if (num_bytes > 0)
@@ -2361,7 +2391,7 @@ static int eval_string(eval_info *info, const coda_Expr *expr, long *offset, lon
                                        (long)num_bytes, __FILE__, __LINE__);
                         return -1;
                     }
-                    if (coda_cursor_read_bytes(&info->cursor, (uint8_t *)*value, 0, num_bytes) != 0)
+                    if (coda_cursor_read_bits(&info->cursor, (uint8_t *)*value, 0, num_bits) != 0)
                     {
                         free(*value);
                         return -1;
@@ -2885,12 +2915,25 @@ static int eval_cursor(eval_info *info, const coda_Expr *expr)
                 if (!coda_option_perform_boundary_checks)
                 {
                     long num_elements;
+                    coda_type_class type_class;
 
                     /* if boundary checking is disabled globally, we still want to perform boundary checks on
                      * expressions since these can also go wrong when files are corrupted. Therefore, if the
                      * coda_cursor_goto_array_element_by_index() does not perform such a check itself, we perform a
                      * boundary check here.
                      */
+
+                    if (coda_cursor_get_type_class(&info->cursor, &type_class) != 0)
+                    {
+                        return -1;
+                    }
+                    if (type_class != coda_array_class)
+                    {
+                        coda_set_error(CODA_ERROR_INVALID_TYPE,
+                                       "cursor does not refer to an array (current type is %s)",
+                                       coda_type_get_class_name(type_class));                        
+                        return -1;
+                    }
 
                     if (coda_cursor_get_num_elements(&info->cursor, &num_elements) != 0)
                     {

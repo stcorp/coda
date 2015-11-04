@@ -5397,7 +5397,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_coda_get_product_format(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_get_product_format(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   coda_ProductFile *arg1 = (coda_ProductFile *) 0 ;
   coda_format *arg2 = (coda_format *) 0 ;
@@ -5409,10 +5409,10 @@ SWIGINTERN PyObject *_wrap_coda_get_product_format(PyObject *SWIGUNUSEDPARM(self
   int result;
   
   arg2 = &temp2;
-  if (!PyArg_ParseTuple(args,(char *)"O:coda_get_product_format",&obj0)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"O:get_product_format",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_coda_ProductFile_struct, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "coda_get_product_format" "', argument " "1"" of type '" "coda_ProductFile const *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "get_product_format" "', argument " "1"" of type '" "coda_ProductFile const *""'"); 
   }
   arg1 = (coda_ProductFile *)(argp1);
   {
@@ -8547,7 +8547,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"close", _wrap_close, METH_VARARGS, NULL},
 	 { (char *)"get_product_filename", _wrap_get_product_filename, METH_VARARGS, NULL},
 	 { (char *)"get_product_file_size", _wrap_get_product_file_size, METH_VARARGS, NULL},
-	 { (char *)"coda_get_product_format", _wrap_coda_get_product_format, METH_VARARGS, NULL},
+	 { (char *)"get_product_format", _wrap_get_product_format, METH_VARARGS, NULL},
 	 { (char *)"get_product_class", _wrap_get_product_class, METH_VARARGS, NULL},
 	 { (char *)"get_product_type", _wrap_get_product_type, METH_VARARGS, NULL},
 	 { (char *)"get_product_version", _wrap_get_product_version, METH_VARARGS, NULL},

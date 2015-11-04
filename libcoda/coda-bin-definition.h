@@ -38,6 +38,7 @@ void coda_bin_release_type(coda_binType *type);
 coda_binInteger *coda_bin_integer_new(void);
 int coda_bin_integer_set_unit(coda_binInteger *integer, const char *unit);
 int coda_bin_integer_set_bit_size(coda_binInteger *integer, long bit_size);
+int coda_bin_integer_set_bit_size_expression(coda_binInteger *integer, coda_Expr *bit_size_expr);
 int coda_bin_integer_set_read_type(coda_binInteger *integer, coda_native_type read_type);
 int coda_bin_integer_set_conversion(coda_binInteger *integer, coda_Conversion *conversion);
 int coda_bin_integer_set_endianness(coda_binInteger *integer, coda_endianness endianness);

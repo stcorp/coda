@@ -49,6 +49,7 @@
 %rename(close) coda_close;
 %rename(get_product_filename) coda_get_product_filename;
 %rename(get_product_file_size) coda_get_product_file_size;
+%rename(get_product_format) coda_get_product_format;
 %rename(get_product_class) coda_get_product_class;
 %rename(get_product_type) coda_get_product_type;
 %rename(get_product_version) coda_get_product_version;

@@ -140,13 +140,6 @@ int coda_ascbin_recognize_file(const char *filename, int64_t size, coda_ProductD
     int open_flags;
     int fd;
 
-    /* If the file is empty we can forget about automatically recognizing the product */
-    if (size <= 0)
-    {
-        coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, NULL);
-        return -1;
-    }
-
     open_flags = O_RDONLY;
 #ifdef WIN32
     open_flags |= _O_BINARY;

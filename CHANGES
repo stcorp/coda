@@ -1,3 +1,30 @@
+1.2.2 2009-05-08
+~~~~~~~~~~~~~~~~
+
+* CODA expression 'if' now also works with boolean typed 2nd and 3rd argument.
+
+* CODA expression to read 'raw' data now properly reads the number of required
+  bits (and not any padding bits that could be in the sequence of the rounded
+  up number of bytes).
+  The same issue was also fixed in codacheck and codadump.
+
+* codacheck now checks the file size of a product in number of bits instead of
+  rounded up number of bytes (i.e. undefined spare bits at the end of a product
+  is now considered an error).
+
+* Binary signed integers in CODA definitions are no longer limited to a
+  multiple of 8 bits.
+
+* It is now possible to define 'fixed values' in format definitions for data
+  that is not a rounded number of bytes.
+
+* Solved several compiler warnings regarding 64-bit support.
+
+* codacmp now escapes 'unprintable characters' when printing differences in
+  'raw' data.
+
+* Fixed name of coda.get_product_format() in Python interface.
+
 1.2.1 2009-03-01
 ~~~~~~~~~~~~~~~~
 

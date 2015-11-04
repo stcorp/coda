@@ -331,7 +331,7 @@ static void generate_html_ascii_attributes(const coda_asciiType *type, int first
                         ff_printf("\"&nbsp;-&gt;&nbsp;");
                         if (type->type_class == coda_integer_class)
                         {
-                            ff_printf("%lld", ((coda_asciiIntegerMapping *)mappings->mapping[i])->value);
+                            ff_printf("%lld", (long long)((coda_asciiIntegerMapping *)mappings->mapping[i])->value);
                         }
                         else
                         {
@@ -418,6 +418,12 @@ static void generate_html_bin_attributes(const coda_binType *type, int first_att
                 {
                     html_attr_begin("endianness", &first_attribute);
                     ff_printf("little endian");
+                    html_attr_end();
+                }
+                if (type->tag == tag_bin_integer && ((coda_binInteger *)type)->bit_size_expr != NULL)
+                {
+                    html_attr_begin("bit&nbsp;size", &first_attribute);
+                    generate_html_expr(((coda_binInteger *)type)->bit_size_expr, 15);
                     html_attr_end();
                 }
             }
@@ -628,13 +634,13 @@ static void generate_html_type(const coda_Type *type, int expand_named_type, int
         coda_type_get_bit_size(type, &bit_size);
         if (bit_size >= 0)
         {
-            long bytes = (long)(bit_size >> 3);
-            int bits = (int)(bit_size & 0x7);
-
-            ff_printf("%ld", bytes);
-            if (bits > 0)
+            if (bit_size & 0x7)
             {
-                ff_printf(":%d", bits);
+                ff_printf("%lld:%d", (long long)(bit_size >> 3), (int)(bit_size & 0x7));
+            }
+            else
+            {
+                ff_printf("%lld", (long long)(bit_size >> 3));
             }
         }
         else
@@ -989,7 +995,7 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             ff_printf("%f", ((coda_ExprDoubleConstant *)expr)->value);
             break;
         case expr_constant_integer:
-            ff_printf("%lld", ((coda_ExprIntegerConstant *)expr)->value);
+            ff_printf("%lld", (long long)((coda_ExprIntegerConstant *)expr)->value);
             break;
         case expr_constant_string:
             ff_printf("\"");
@@ -1510,8 +1516,8 @@ static void generate_html_product_definition(const char *filename, coda_ProductD
 
                 if (entry->use_filename)
                 {
-                    fi_printf("<b>filename</b>[%ld:%ld] == \"", (long)entry->offset,
-                              (long)entry->offset + entry->value_length);
+                    fi_printf("<b>filename</b>[%lld:%lld] == \"", (long long)entry->offset,
+                              (long long)entry->offset + entry->value_length);
                     generate_escaped_html_string(entry->value, entry->value_length);
                     ff_printf("\"");
                 }
@@ -1521,14 +1527,14 @@ static void generate_html_product_definition(const char *filename, coda_ProductD
                     {
                         if (entry->value != NULL)
                         {
-                            fi_printf("<b>file</b>[%ld:%ld] == \"", (long)entry->offset,
-                                      (long)entry->offset + entry->value_length);
+                            fi_printf("<b>file</b>[%lld:%lld] == \"", (long long)entry->offset,
+                                      (long long)entry->offset + entry->value_length);
                             generate_escaped_html_string(entry->value, entry->value_length);
                             ff_printf("\"");
                         }
                         else
                         {
-                            fi_printf("<b>filesize</b> >= %ld", (long)entry->offset);
+                            fi_printf("<b>filesize</b> >= %lld", (long long)entry->offset);
                         }
                     }
                     else if (entry->path != NULL)
@@ -1710,7 +1716,9 @@ static void generate_html_named_types_index(const char *filename, coda_ProductCl
 
             for (k = 0; k < product_type->num_product_definitions; k++)
             {
-                if (type_uses_type(product_type->product_definition[k]->root_type, type, 1))
+                coda_ProductDefinition *product_definition = product_type->product_definition[k];
+
+                if (type_uses_type(product_definition->root_type, type, 1))
                 {
                     if (prod_count == 0)
                     {
@@ -1720,8 +1728,8 @@ static void generate_html_named_types_index(const char *filename, coda_ProductCl
                     {
                         ff_printf(", ");
                     }
-                    ff_printf("<a href=\"products/%s.html\">%s</a>", product_type->product_definition[k]->name,
-                              product_type->product_definition[k]->name);
+                    ff_printf("<a href=\"products/%s_v%d.html\">%s</a>", product_type->name,
+                              product_definition->version, product_definition->name);
                     prod_count++;
                 }
             }

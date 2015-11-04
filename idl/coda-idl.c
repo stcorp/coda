@@ -1221,7 +1221,7 @@ static int idl_coda_fetch_cursor_to_StructDefPtr(coda_Cursor *cursor, IDL_Struct
                             }
                             else
                             {
-                                record_tags[field_index].type = (void *)idl_type;
+                                record_tags[field_index].type = (void *)(long)idl_type;
                             }
 
                             /* create the array descriptor */
@@ -1479,13 +1479,13 @@ static int idl_coda_fetch_datahandle_scalar_filldata(struct IDL_CodaDataHandle *
                         }
                         break;
                     case coda_native_type_int64:
-                        if (coda_cursor_read_int64(&datahandle->cursor, (IDL_LONG64 *)data) != 0)
+                        if (coda_cursor_read_int64(&datahandle->cursor, (int64_t *)(IDL_LONG64 *)data) != 0)
                         {
                             return -1;
                         }
                         break;
                     case coda_native_type_uint64:
-                        if (coda_cursor_read_uint64(&datahandle->cursor, (IDL_ULONG64 *)data) != 0)
+                        if (coda_cursor_read_uint64(&datahandle->cursor, (uint64_t *)(IDL_ULONG64 *)data) != 0)
                         {
                             return -1;
                         }
@@ -1846,7 +1846,7 @@ static int idl_coda_fetch_datahandle_to_VPTR(struct IDL_CodaDataHandle *datahand
                     case coda_native_type_int64:
                         *retval = IDL_Gettmp();
                         (*retval)->type = IDL_TYP_LONG64;
-                        if (coda_cursor_read_int64(&datahandle->cursor, &(*retval)->value.l64) != 0)
+                        if (coda_cursor_read_int64(&datahandle->cursor, (int64_t *)&(*retval)->value.l64) != 0)
                         {
                             return -1;
                         }
@@ -1854,7 +1854,7 @@ static int idl_coda_fetch_datahandle_to_VPTR(struct IDL_CodaDataHandle *datahand
                     case coda_native_type_uint64:
                         *retval = IDL_Gettmp();
                         (*retval)->type = IDL_TYP_ULONG64;
-                        if (coda_cursor_read_uint64(&datahandle->cursor, &(*retval)->value.ul64) != 0)
+                        if (coda_cursor_read_uint64(&datahandle->cursor, (uint64_t *)&(*retval)->value.ul64) != 0)
                         {
                             return -1;
                         }

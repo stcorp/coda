@@ -450,6 +450,10 @@ boolexpr:
             $$ = coda_expr_new(expr_array_all, NULL, $3, $5, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
+    | FUNC_IF '(' boolexpr ',' boolexpr ',' boolexpr ')' {
+            $$ = coda_expr_new(expr_if, NULL, $3, $5, $7, NULL);
+            if ($$ == NULL) YYERROR;
+        }
     ;
 
 intexpr:

@@ -159,11 +159,12 @@ struct coda_binInteger_struct
     char *description;
 
     bin_type_tag tag;
-    int64_t bit_size;   /* anywhere from 1 to 64 bits. if signed it should be a rounded number of bytes */
+    int64_t bit_size;   /* anywhere from 1 to 64 bits. -1 means it's variable -> use bit_size_expr */
     char *unit;
     coda_native_type read_type;
     coda_Conversion *conversion;
     coda_endianness endianness;
+    coda_Expr *bit_size_expr;
 };
 
 struct coda_binFloat_struct

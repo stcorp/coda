@@ -50,6 +50,10 @@ static void delete_bin_integer(coda_binInteger *integer)
     {
         coda_conversion_delete(integer->conversion);
     }
+    if (integer->bit_size_expr != NULL)
+    {
+        coda_expr_delete(integer->bit_size_expr);
+    }
     free(integer);
 }
 
@@ -284,6 +288,7 @@ coda_binInteger *coda_bin_integer_new(void)
     integer->read_type = coda_native_type_not_available;
     integer->conversion = NULL;
     integer->endianness = coda_big_endian;
+    integer->bit_size_expr = NULL;
 
     return integer;
 }
@@ -307,6 +312,24 @@ int coda_bin_integer_set_bit_size(coda_binInteger *integer, long bit_size)
         return -1;
     }
     integer->bit_size = bit_size;
+    if (integer->bit_size_expr != NULL)
+    {
+        coda_expr_delete(integer->bit_size_expr);
+        integer->bit_size_expr = NULL;
+    }
+    return 0;
+}
+
+int coda_bin_integer_set_bit_size_expression(coda_binInteger *integer, coda_Expr *bit_size_expr)
+{
+    assert(bit_size_expr != NULL);
+    if (integer->bit_size_expr != NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "integer already has a bit size expression");
+        return -1;
+    }
+    integer->bit_size_expr = bit_size_expr;
+    integer->bit_size = -1;
     return 0;
 }
 
@@ -349,9 +372,10 @@ int coda_bin_integer_set_endianness(coda_binInteger *integer, coda_endianness en
 
 int coda_bin_integer_validate(coda_binInteger *integer)
 {
-    if (integer->bit_size == -1)
+    if (integer->bit_size_expr == NULL && integer->bit_size == -1)
     {
-        coda_set_error(CODA_ERROR_DATA_DEFINITION, "missing bit size for binary integer definition");
+        coda_set_error(CODA_ERROR_DATA_DEFINITION,
+                       "missing bit size or bit size expression for binary integer definition");
         return -1;
     }
     if (integer->read_type == coda_native_type_not_available)
@@ -362,66 +386,42 @@ int coda_bin_integer_validate(coda_binInteger *integer)
     switch (integer->read_type)
     {
         case coda_native_type_int8:
-            if (integer->bit_size != 8)
-            {
-                coda_set_error(CODA_ERROR_DATA_DEFINITION, "incorrect bit size (%ld) for binary integer definition - "
-                               "it should be 8 when the read type is int8", (long)integer->bit_size);
-                return -1;
-            }
-            break;
         case coda_native_type_uint8:
             if (integer->bit_size > 8)
             {
                 coda_set_error(CODA_ERROR_DATA_DEFINITION, "incorrect bit size (%ld) for binary integer definition - "
-                               "it should be <= 8 when the read type is uint8", (long)integer->bit_size);
+                               "it should be <= 8 when the read type is %s", (long)integer->bit_size,
+                               coda_type_get_native_type_name(integer->read_type));
                 return -1;
             }
             break;
         case coda_native_type_int16:
-            if (integer->bit_size != 16)
-            {
-                coda_set_error(CODA_ERROR_DATA_DEFINITION, "incorrect bit size (%ld) for binary integer definition - "
-                               "it should be 16 when the read type is int16", (long)integer->bit_size);
-                return -1;
-            }
-            break;
         case coda_native_type_uint16:
             if (integer->bit_size > 16)
             {
                 coda_set_error(CODA_ERROR_DATA_DEFINITION, "incorrect bit size (%ld) for binary integer definition - "
-                               "it should be <= 16 when the read type is uint16", (long)integer->bit_size);
+                               "it should be <= 16 when the read type is %s", (long)integer->bit_size,
+                               coda_type_get_native_type_name(integer->read_type));
                 return -1;
             }
             break;
         case coda_native_type_int32:
-            if (integer->bit_size != 32)
-            {
-                coda_set_error(CODA_ERROR_DATA_DEFINITION, "incorrect bit size (%ld) for binary integer definition - "
-                               "it should be 32 when the read type is int32", (long)integer->bit_size);
-                return -1;
-            }
-            break;
         case coda_native_type_uint32:
             if (integer->bit_size > 32)
             {
                 coda_set_error(CODA_ERROR_DATA_DEFINITION, "incorrect bit size (%ld) for binary integer definition - "
-                               "it should be <= 32 when the read type is uint32", (long)integer->bit_size);
+                               "it should be <= 32 when the read type is %s", (long)integer->bit_size,
+                               coda_type_get_native_type_name(integer->read_type));
                 return -1;
             }
             break;
         case coda_native_type_int64:
-            if (integer->bit_size != 64)
-            {
-                coda_set_error(CODA_ERROR_DATA_DEFINITION, "incorrect bit size (%ld) for binary integer definition - "
-                               "it should be 64 when the read type is int64", (long)integer->bit_size);
-                return -1;
-            }
-            break;
         case coda_native_type_uint64:
             if (integer->bit_size > 64)
             {
                 coda_set_error(CODA_ERROR_DATA_DEFINITION, "incorrect bit size (%ld) for binary integer definition - "
-                               "it should be <= 64 when the read type is uint64", (long)integer->bit_size);
+                               "it should be <= 64 when the read type is %s", (long)integer->bit_size,
+                               coda_type_get_native_type_name(integer->read_type));
                 return -1;
             }
             break;
@@ -659,12 +659,12 @@ int coda_bin_raw_validate(coda_binRaw *raw)
     {
         int64_t byte_size;
 
-        byte_size = (raw->bit_size >> 3) + ((raw->bit_size & 0x7) != 0 ? 1 : 0);
+        byte_size = (raw->bit_size >> 3) + (raw->bit_size & 0x7 ? 1 : 0);
         if (byte_size != raw->fixed_value_length)
         {
             coda_set_error(CODA_ERROR_DATA_DEFINITION,
-                           "length of fixed value (%ld) should equal rounded byte size (%ld) for raw definition",
-                           raw->fixed_value_length, (long)byte_size);
+                           "length of fixed value (%ld) should equal rounded byte size (%lld) for raw definition",
+                           raw->fixed_value_length, (long long)byte_size);
             return -1;
         }
     }

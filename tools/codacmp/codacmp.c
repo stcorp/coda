@@ -60,6 +60,54 @@ static void print_help()
     printf("\n");
 }
 
+static void print_escaped(const char *data, long length)
+{
+    long i;
+    
+    for (i = 0; i < length; i++)
+    {
+        char c;
+        
+        c = data[i];
+        switch (c)
+        {
+            case '\a':
+                printf("\\a");
+                break;
+            case '\b':
+                printf("\\b");
+                break;
+            case '\t':
+                printf("\\t");
+                break;
+            case '\n':
+                printf("\\n");
+                break;
+            case '\v':
+                printf("\\v");
+                break;
+            case '\f':
+                printf("\\f");
+                break;
+            case '\r':
+                printf("\\r");
+                break;
+            case '\\':
+                printf("\\\\");
+                break;
+            default:
+                if (c >= 32 && c <= 126)
+                {
+                    printf("%c", c);
+                }
+                else
+                {
+                    printf("\\%03o", (int)(unsigned char)c);
+                }
+        }
+    }
+}
+
 static void set_definition_path(const char *argv0)
 {
     char *location;
@@ -548,8 +596,8 @@ static int compare_data(coda_Cursor *cursor1, coda_Cursor *cursor2)
                                 printf("\n");
                                 if (option_verbose)
                                 {
-                                    printf("%s%lld\n", pre[0], value1);
-                                    printf("%s%lld\n", pre[1], value2);
+                                    printf("%s%lld\n", pre[0], (long long)value1);
+                                    printf("%s%lld\n", pre[1], (long long)value2);
                                 }
                                 return 0;
                             }
@@ -586,8 +634,8 @@ static int compare_data(coda_Cursor *cursor1, coda_Cursor *cursor2)
                                 printf("\n");
                                 if (option_verbose)
                                 {
-                                    printf("%s%llu\n", pre[0], value1);
-                                    printf("%s%llu\n", pre[1], value2);
+                                    printf("%s%llu\n", pre[0], (unsigned long long)value1);
+                                    printf("%s%llu\n", pre[1], (unsigned long long)value2);
                                 }
                                 return 0;
                             }
@@ -730,8 +778,8 @@ static int compare_data(coda_Cursor *cursor1, coda_Cursor *cursor2)
                     printf("\n");
                     if (option_verbose)
                     {
-                        printf("%s%lld bits\n", pre[0], bit_size1);
-                        printf("%s%lld bits\n", pre[1], bit_size2);
+                        printf("%s%lld bits\n", pre[0], (long long)bit_size1);
+                        printf("%s%lld bits\n", pre[1], (long long)bit_size2);
                     }
                     return 0;
                 }
@@ -782,6 +830,15 @@ static int compare_data(coda_Cursor *cursor1, coda_Cursor *cursor2)
                         printf("data differs at ");
                         print_cursor_position(cursor1);
                         printf("\n");
+                        if (option_verbose && byte_size1 <= 256)
+                        {
+                            printf("%s", pre[0]);
+                            print_escaped((char *)value1, byte_size1);
+                            printf("\n");
+                            printf("%s", pre[1]);
+                            print_escaped((char *)value2, byte_size2);
+                            printf("\n");
+                        }
                     }
                     free(value1);
                     free(value2);

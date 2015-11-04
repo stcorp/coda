@@ -53,17 +53,17 @@ static void print_help()
 {
     printf("Usage:\n");
     printf("    codadd\n");
-    printf("        Try to read all product definitions and report any problems\n");
+    printf("        Try to read all product format definitions and report any problems\n");
     printf("\n");
     printf("    codadd [-D definitionpath] doc <directory>\n");
     printf("        Generate HTML product format documentation in the specified directory\n");
     printf("\n");
     printf("    codadd [-D definitionpath] list [<list options>]\n");
     printf("                               [<product class> [<product type> [<version>]]]\n");
-    printf("        Gives an overview of available product definitions\n");
+    printf("        Gives an overview of available product format definitions\n");
     printf("        When all of product class, product type, and format version are provided\n");
-    printf("        an overview of the product content for the specified product definition\n");
-    printf("        is given\n");
+    printf("        an overview of the product content for the specified product format\n");
+    printf("        definition is given\n");
     printf("        List options:\n");
     printf("            -e, --expr\n");
     printf("                    show expressions for dynamic array sizes\n");

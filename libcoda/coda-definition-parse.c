@@ -335,19 +335,17 @@ static int decode_escaped_string(char *str)
                     {
                         return -1;
                     }
-                    str[to] = (str[from] - '0') * 64;
-                    from++;
-                    if (str[from] < '0' || str[from] > '9')
+                    str[to] = str[from] - '0';
+                    if (str[from + 1] >= '0' && str[from + 1] <= '9')
                     {
-                        return -1;
+                        from++;
+                        str[to] = str[to] * 8 + (str[from] - '0');
+                        if (str[from + 1] >= '0' && str[from + 1] <= '9')
+                        {
+                            from++;
+                            str[to] = str[to] * 8 + (str[from] - '0');
+                        }
                     }
-                    str[to] += (str[from] - '0') * 8;
-                    from++;
-                    if (str[from] < '0' || str[from] > '9')
-                    {
-                        return -1;
-                    }
-                    str[to] += str[from] - '0';
                     to++;
             }
         }
@@ -1578,7 +1576,7 @@ static int cd_float_init(parser_info *info, const char **attr)
             info->node->finalise_element = cd_float_binary_finalise;
             break;
         case coda_format_xml:
-            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid format 'xml' for Integer");
+            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid format 'xml' for Float");
             return -1;
         default:
             assert(0);
@@ -1649,7 +1647,23 @@ static int cd_integer_binary_set_unit(parser_info *info)
 
 static int cd_integer_binary_set_bit_size(parser_info *info)
 {
-    return coda_bin_integer_set_bit_size((coda_binInteger *)info->node->parent->data, (long)info->node->integer_data);
+    if (info->node->data != NULL)
+    {
+        if (coda_bin_integer_set_bit_size_expression((coda_binInteger *)info->node->parent->data,
+                                                     (coda_Expr *)info->node->data) != 0)
+        {
+            return -1;
+        }
+        info->node->data = NULL;
+    }
+    else
+    {
+        if (coda_bin_integer_set_bit_size((coda_binInteger *)info->node->parent->data, info->node->integer_data) != 0)
+        {
+            return -1;
+        }
+    }
+    return 0;
 }
 
 static int cd_integer_binary_set_read_type(parser_info *info)
@@ -1702,7 +1716,7 @@ static int cd_integer_init(parser_info *info, const char **attr)
         case coda_format_binary:
             info->node->data = coda_bin_integer_new();
             register_sub_element(info->node, element_cd_unit, string_data_init, cd_integer_binary_set_unit);
-            register_sub_element(info->node, element_cd_bit_size, integer_constant_init,
+            register_sub_element(info->node, element_cd_bit_size, integer_constant_or_expression_init,
                                  cd_integer_binary_set_bit_size);
             register_sub_element(info->node, element_cd_native_type, cd_native_type_init,
                                  cd_integer_binary_set_read_type);

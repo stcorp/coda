@@ -489,9 +489,17 @@ static void read_data(int depth, int array_depth)
                         }
                         break;
                     case coda_native_type_bytes:
-                        result = coda_cursor_read_bytes(&traverse_info.cursor,
-                                                        (uint8_t *)&hdf4_info.data[hdf4_info.offset], 0,
-                                                        dim_info.dim[traverse_info.array_info[array_depth].dim_id]);
+                        {
+                            int64_t bit_size;
+                            
+                            if (coda_cursor_get_bit_size(&traverse_info.cursor, &bit_size) != 0)
+                            {
+                                handle_coda_error();
+                            }
+                            result = coda_cursor_read_bits(&traverse_info.cursor,
+                                                           (uint8_t *)&hdf4_info.data[hdf4_info.offset], 0,
+                                                           bit_size);
+                        }
                         break;
                     case coda_native_type_not_available:
                         assert(0);
@@ -1083,11 +1091,11 @@ void export_data_element_to_hdf4()
         printf(" '%s'->'%s'", coda_type_get_native_type_name(read_type), hdf_type_name(hdf4_info.hdf_type));
         if (filled_size != size)
         {
-            printf(" (%.0f/%.0f bytes)", (double)filled_size, (double)size);
+            printf(" (%lld/%lld bytes)", (long long)filled_size, (long long)size);
         }
         else
         {
-            printf(" (%.0f bytes)", (double)size);
+            printf(" (%lld bytes)", (long long)size);
         }
         printf("\n");
     }

@@ -2263,7 +2263,7 @@ LIBCODA_API int coda_cursor_read_bits(const coda_Cursor *cursor, uint8_t *dst, i
     switch (cursor->stack[cursor->n - 1].type->format)
     {
         case coda_format_ascii:
-            break;
+            return coda_ascii_cursor_read_bits(cursor, dst, bit_offset, bit_length);
         case coda_format_binary:
             return coda_bin_cursor_read_bits(cursor, dst, bit_offset, bit_length);
         case coda_format_xml:

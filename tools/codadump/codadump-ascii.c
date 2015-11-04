@@ -134,37 +134,36 @@ static void write_basic_data(FILE *f, int depth)
                         break;
                     case coda_native_type_bytes:
                         {
-                            int64_t size;
+                            int64_t bit_size;
+                            int64_t byte_size;
                             uint8_t *data;
                             int i;
 
-                            if (coda_cursor_get_byte_size(&traverse_info.cursor, &size) != 0)
+                            if (coda_cursor_get_bit_size(&traverse_info.cursor, &bit_size) != 0)
                             {
                                 handle_coda_error();
                             }
-                            data = (uint8_t *)malloc((size_t)size);
+                            byte_size = (bit_size >> 3) + (bit_size & 0x7 ? 1 : 0);
+                            data = (uint8_t *)malloc((size_t)byte_size);
                             if (data == NULL)
                             {
                                 coda_set_error(CODA_ERROR_OUT_OF_MEMORY,
                                                "out of memory (could not allocate %lu bytes) (%s:%u)",
-                                               (long)size, __FILE__, __LINE__);
+                                               (long)byte_size, __FILE__, __LINE__);
                                 handle_coda_error();
                             }
-                            if (coda_cursor_read_bytes(&traverse_info.cursor, data, 0, size) != 0)
+                            if (coda_cursor_read_bits(&traverse_info.cursor, data, 0, bit_size) != 0)
                             {
                                 handle_coda_error();
                             }
 
-                            for (i = 0; i < size; i++)
+                            for (i = 0; i < byte_size; i++)
                             {
                                 char c;
 
                                 c = data[i];
                                 switch (c)
                                 {
-                                    case '\0':
-                                        fprintf(f, "\\0");
-                                        break;
                                     case '\a':
                                         fprintf(f, "\\a");
                                         break;
@@ -233,16 +232,27 @@ static void write_basic_data(FILE *f, int depth)
                         }
                         break;
                     case coda_native_type_int64:
-                    case coda_native_type_uint64:
                         {
-                            double data;
+                            int64_t data;
 
-                            if (coda_cursor_read_double(&traverse_info.cursor, &data) != 0)
+                            if (coda_cursor_read_int64(&traverse_info.cursor, &data) != 0)
                             {
                                 handle_coda_error();
                             }
 
-                            fprintf(f, "%.0f", data);
+                            fprintf(f, "%lld", (long long)data);
+                        }
+                        break;
+                    case coda_native_type_uint64:
+                        {
+                            uint64_t data;
+
+                            if (coda_cursor_read_uint64(&traverse_info.cursor, &data) != 0)
+                            {
+                                handle_coda_error();
+                            }
+
+                            fprintf(f, "%llu", (unsigned long long)data);
                         }
                         break;
                     case coda_native_type_float:

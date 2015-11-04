@@ -631,11 +631,11 @@ int coda_ascii_text_validate(coda_asciiText *text)
         return -1;
     }
     /* if there is a fixed_value its length should equal the byte size of the data element */
-    if (text->fixed_value != NULL && text->bit_size != 8 * (int64_t)strlen(text->fixed_value))
+    if (text->fixed_value != NULL && (text->bit_size >> 3) != strlen(text->fixed_value))
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION,
-                       "byte size of fixed value (%ld) should equal byte size (%ld) for text definition",
-                       8 * strlen(text->fixed_value), (long)text->bit_size);
+                       "byte size of fixed value (%ld) should equal byte size (%lld) for text definition",
+                       strlen(text->fixed_value), (long long)(text->bit_size >> 3));
         return -1;
     }
     return 0;

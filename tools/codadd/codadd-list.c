@@ -246,7 +246,7 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             printf("%f", ((coda_ExprDoubleConstant *)expr)->value);
             break;
         case expr_constant_integer:
-            printf("%lld", ((coda_ExprIntegerConstant *)expr)->value);
+            printf("%lld", (long long)((coda_ExprIntegerConstant *)expr)->value);
             break;
         case expr_constant_string:
             printf("\"");

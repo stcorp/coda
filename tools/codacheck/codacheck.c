@@ -240,6 +240,8 @@ static int quick_size_check(coda_ProductFile *pf)
     {
         return -1;
     }
+    real_file_size <<= 3; /* now in bits */
+
     if (coda_cursor_set_product(&cursor, pf) != 0)
     {
         return -1;
@@ -256,18 +258,24 @@ static int quick_size_check(coda_ProductFile *pf)
     }
     coda_set_option_use_fast_size_expressions(prev_option_value);
 
-    /* convert bits to bytes */
-    calculated_file_size >>= 3;
-
     if (real_file_size != calculated_file_size)
     {
-        printf("  ERROR: incorrect file size (actual size: %lld, calculated: %lld)\n", real_file_size,
-               calculated_file_size);
+        if (calculated_file_size & 0x7)
+        {
+            printf("  ERROR: incorrect file size (actual size: %lld, calculated: %lld:%d)\n",
+                   (long long)(real_file_size >> 3), (long long)(calculated_file_size >> 3),
+                   (int)(calculated_file_size & 0x7));
+        }
+        else
+        {
+            printf("  ERROR: incorrect file size (actual size: %lld, calculated: %lld)\n",
+                   (long long)(real_file_size >> 3), (long long)(calculated_file_size >> 3));
+        }
         count_size_error++;
     }
     else
     {
-        count_bytes += calculated_file_size;
+        count_bytes += (calculated_file_size >> 3) + (calculated_file_size & 0x7 ? 1 : 0);
     }
 
     return 0;
@@ -400,12 +408,7 @@ static int check_data(coda_Cursor *cursor, int64_t *bit_size)
                     if (coda_cursor_get_bit_size(cursor, bit_size) != 0)
                     {
                         print_error_with_cursor(cursor, coda_errno);
-                        if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT)
-                        {
-                            return -1;
-                        }
-                        /* if we can't determine the bit size, don't try to read the data */
-                        break;
+                        return -1;
                     }
                 }
                 if (coda_cursor_read_double(cursor, &value) != 0)
@@ -432,12 +435,7 @@ static int check_data(coda_Cursor *cursor, int64_t *bit_size)
                     if (coda_cursor_get_bit_size(cursor, bit_size) != 0)
                     {
                         print_error_with_cursor(cursor, coda_errno);
-                        if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT)
-                        {
-                            return -1;
-                        }
-                        /* if we can't determine the bit size, don't try to read the data */
-                        break;
+                        return -1;
                     }
                 }
                 if (coda_cursor_get_string_length(cursor, &string_length) != 0)
@@ -515,6 +513,7 @@ static int check_data(coda_Cursor *cursor, int64_t *bit_size)
             break;
         case coda_raw_class:
             {
+                int64_t local_bit_size;
                 int64_t byte_size;
                 coda_Type *type;
                 const char *fixed_value;
@@ -525,18 +524,13 @@ static int check_data(coda_Cursor *cursor, int64_t *bit_size)
                     if (coda_cursor_get_bit_size(cursor, bit_size) != 0)
                     {
                         print_error_with_cursor(cursor, coda_errno);
-                        if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT)
-                        {
-                            return -1;
-                        }
-                        /* if we can't determine the bit size, don't try to read the data */
-                        break;
+                        return -1;
                     }
-                    byte_size = (*bit_size >> 3) + ((*bit_size & 0x7) != 0 ? 1 : 0);
+                    local_bit_size = *bit_size;
                 }
                 else
                 {
-                    if (coda_cursor_get_byte_size(cursor, &byte_size) != 0)
+                    if (coda_cursor_get_bit_size(cursor, &local_bit_size) != 0)
                     {
                         print_error_with_cursor(cursor, coda_errno);
                         if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT)
@@ -547,6 +541,14 @@ static int check_data(coda_Cursor *cursor, int64_t *bit_size)
                         break;
                     }
                 }
+                if (local_bit_size < 0)
+                {
+                    coda_set_error(CODA_ERROR_PRODUCT, "bit size is negative");
+                    print_error_with_cursor(cursor, coda_errno);
+                    /* if we can't determine a proper size, don't try to read the data */
+                    break;
+                }
+                byte_size = (local_bit_size >> 3) + (local_bit_size & 0x7 ? 1 : 0);
 
                 if (coda_cursor_get_type(cursor, &type) != 0)
                 {
@@ -579,7 +581,7 @@ static int check_data(coda_Cursor *cursor, int64_t *bit_size)
                             print_error_with_cursor(cursor, coda_errno);
                             return -1;
                         }
-                        if (coda_cursor_read_bytes(cursor, data, 0, byte_size) != 0)
+                        if (coda_cursor_read_bits(cursor, data, 0, local_bit_size) != 0)
                         {
                             print_error_with_cursor(cursor, coda_errno);
                             free(data);
@@ -681,6 +683,8 @@ static int size_and_read_check(coda_ProductFile *pf)
     {
         return -1;
     }
+    real_file_size <<= 3; /* now in bits */
+
     if (coda_cursor_set_product(&cursor, pf) != 0)
     {
         return -1;
@@ -691,18 +695,25 @@ static int size_and_read_check(coda_ProductFile *pf)
         /* The error is already printed, so return success */
         return 0;
     }
-    /* convert bits to bytes */
-    calculated_file_size >>= 3;
 
     if (real_file_size != calculated_file_size)
     {
-        printf("  ERROR: incorrect file size (actual size: %lld, calculated: %lld)\n", real_file_size,
-               calculated_file_size);
+        if (calculated_file_size & 0x7)
+        {
+            printf("  ERROR: incorrect file size (actual size: %lld, calculated: %lld:%d)\n",
+                   (long long)(real_file_size >> 3), (long long)(calculated_file_size >> 3),
+                   (int)(calculated_file_size & 0x7));
+        }
+        else
+        {
+            printf("  ERROR: incorrect file size (actual size: %lld, calculated: %lld)\n",
+                   (long long)(real_file_size >> 3), (long long)(calculated_file_size >> 3));
+        }
         count_size_error++;
     }
     else
     {
-        count_bytes += calculated_file_size;
+        count_bytes += (calculated_file_size >> 3) + (calculated_file_size & 0x7 ? 1 : 0);
     }
 
     return 0;
@@ -956,7 +967,7 @@ int main(int argc, char **argv)
     {
         printf("\n");
         printf("  files processed ...........................: %12ld\n", count_files);
-        printf("  bytes processed ...........................: %12lld (%.1f MB)\n\n", count_bytes,
+        printf("  bytes processed ...........................: %12lld (%.1f MB)\n\n", (long long)count_bytes,
                (double)count_bytes / 1048576.0);
         printf("  files open failures .......................: %12ld --> %s\n", count_open_error,
                count_open_error ? "ERRORS DETECTED" : "PERFECT");

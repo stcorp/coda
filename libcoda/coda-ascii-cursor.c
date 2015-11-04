@@ -1144,9 +1144,9 @@ int coda_ascii_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size,
                             default:
                                 coda_set_error(CODA_ERROR_PRODUCT,
                                                "product error detected in %s (invalid end-of-line sequence - not a "
-                                               "carriage return or linefeed character - byte offset = %ld)",
+                                               "carriage return or linefeed character - byte offset = %lld)",
                                                cursor->pf->filename,
-                                               (long)(cursor->stack[cursor->n - 1].bit_offset >> 3));
+                                               (long long)(cursor->stack[cursor->n - 1].bit_offset >> 3));
                                 return -1;
                         }
                     }
@@ -2674,6 +2674,22 @@ int coda_ascii_cursor_read_char(const coda_Cursor *cursor, char *dst, int64_t si
 int coda_ascii_cursor_read_string(const coda_Cursor *cursor, char *dst, long dst_size, int64_t size_boundary)
 {
     return read_string(cursor, dst, dst_size, size_boundary);
+}
+
+int coda_ascii_cursor_read_bits(const coda_Cursor *cursor, uint8_t *dst, int64_t bit_offset, int64_t bit_length)
+{
+    if (bit_length & 0x7)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT,
+                       "cannot read ascii data using a bitsize that is not a multiple of 8");
+        return -1;
+    }
+    if ((cursor->stack[cursor->n - 1].bit_offset + bit_offset) & 0x7)
+    {
+        coda_set_error(CODA_ERROR_PRODUCT, "product error detected (ascii text does not start at byte boundary)");
+        return -1;
+    }
+    return read_bytes(cursor->pf, (cursor->stack[cursor->n - 1].bit_offset + bit_offset) >> 3, bit_length >> 3, dst);
 }
 
 int coda_ascii_cursor_read_bytes(const coda_Cursor *cursor, uint8_t *dst, int64_t offset, int64_t length)
