@@ -14,7 +14,7 @@ find_path(JPEG_INCLUDE_DIR
   PATHS ${JPEG_INCLUDE} ENV JPEG_INCLUDE)
 
 set(JPEG_NAMES jpeg libjpeg)
-find_library(JPEG_LIBRARY 
+find_library(JPEG_LIBRARY
   NAMES ${JPEG_NAMES}
   PATHS ${JPEG_LIB} ENV JPEG_LIB)
 if (JPEG_LIBRARY)
@@ -30,3 +30,4 @@ endif (JPEG_LIBRARY)
 #
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(JPEG DEFAULT_MSG JPEG_LIBRARIES JPEG_INCLUDE_DIR)
+mark_as_advanced(JPEG_LIBRARY JPEG_INCLUDE_DIR)

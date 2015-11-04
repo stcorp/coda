@@ -1,5 +1,5 @@
 # autoconf file for CODA
-AC_INIT(CODA, 1.2.0)
+AC_INIT(CODA, 1.2.1)
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE(foreign 1.8.3 -Wall)
 

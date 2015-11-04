@@ -514,11 +514,11 @@ intexpr:
             $$ = coda_expr_new(expr_power, NULL, $1, $3, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
-    | intexpr LOGICAL_AND intexpr {
+    | intexpr AND intexpr {
             $$ = coda_expr_new(expr_and, NULL, $1, $3, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
-    | intexpr LOGICAL_OR intexpr {
+    | intexpr OR intexpr {
             $$ = coda_expr_new(expr_or, NULL, $1, $3, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }

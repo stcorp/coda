@@ -592,6 +592,7 @@ EXTRA_DIST += \
 	CMakeLists.txt \
 	CMakeModules/CheckTypeExists.cmake \
 	CMakeModules/FindPython.cmake \
+	CMakeModules/FindNumPy.cmake \
 	CMakeModules/FindHDF4.cmake \
 	CMakeModules/FindHDF5.cmake \
 	CMakeModules/FindZLIB.cmake \
@@ -599,8 +600,7 @@ EXTRA_DIST += \
 	CMakeModules/FindSZIP.cmake \
 	cmakeify-dot-infiles.pl \
 	config.h.cmake.in \
-	libcoda/coda.h.cmake.in \
-	win32/config.h.cmake.in
+	libcoda/coda.h.cmake.in 
 
 # *** windows-specific ***
 

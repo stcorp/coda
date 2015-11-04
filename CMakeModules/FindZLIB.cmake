@@ -10,11 +10,11 @@
 #
 
 find_path(ZLIB_INCLUDE_DIR
-  NAMES zlib.h 
+  NAMES zlib.h
   PATHS ${ZLIB_INCLUDE} ENV ZLIB_INCLUDE)
 
 set(ZLIB_NAMES z zlib1 zlib zdll)
-find_library(ZLIB_LIBRARY 
+find_library(ZLIB_LIBRARY
   NAMES ${ZLIB_NAMES}
   PATHS ${ZLIB_LIB} ENV ZLIB_LIB)
 if (ZLIB_LIBRARY)
@@ -29,4 +29,4 @@ endif (ZLIB_LIBRARY)
 #
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(ZLIB DEFAULT_MSG ZLIB_LIBRARIES ZLIB_INCLUDE_DIR)
-
+mark_as_advanced(ZLIB_LIBRARY ZLIB_INCLUDE_DIR)

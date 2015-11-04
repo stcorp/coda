@@ -5,7 +5,6 @@
 #ifndef CODA_CONFIG_H
 #define CODA_CONFIG_H
 
-
 /* This is the current version of coda */
 #cmakedefine CODA_VERSION ${CODA_VERSION}
 
@@ -313,6 +312,15 @@ int strncasecmp(const char *, const char *, size_t);
 int vsnprintf(const char *, size_t, const char *, va_list ap);
 #endif
 
+/* Make sure we use the 1.6 compatibility API for HDF 1.8 */
+#define H5_USE_16_API
+ 
+/* This is the relative path to CODA definitions for the IDL interface. */	
+#cmakedefine CODA_DEFINITION_IDL ${CODA_DEFINITION_IDL}
+
+/* This is the relative path to CODA definitions for the MATLAB interface. */	
+#cmakedefine CODA_DEFINITION_MATLAB ${CODA_DEFINITION_MATLAB}
+
 #ifdef WIN32
 /* include windows specific headers */
 #include <windows.h>
@@ -350,6 +358,10 @@ int vsnprintf(const char *, size_t, const char *, va_list ap);
 
 /* coda-idl defines */
 
+#ifndef CODA_DEFINITION_IDL
+#define CODA_DEFINITION_IDL "../definitions"
+#endif
+
 #ifdef IDL_V5_3
 #define HAVE_IDL_SYSFUN_DEF2 1
 #endif
@@ -360,6 +372,10 @@ int vsnprintf(const char *, size_t, const char *, va_list ap);
 #endif
 
 /* coda-matlab defines */
+
+#ifndef CODA_DEFINITION_MATLAB
+#define CODA_DEFINITION_MATLAB "../definitions"
+#endif
 
 #if defined(MATLAB_R11) || defined(MATLAB_R12)
 #define mxCreateDoubleScalar replacement_mxCreateDoubleScalar

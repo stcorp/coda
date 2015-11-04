@@ -1,8 +1,8 @@
-# CMake configuration file for Coda.
+# CMake configuration file for CODA.
 #
 project(CODA)
 
-set(VERSION 1.1.1)
+set(VERSION 1.2.1)
 set(CODA_VERSION \"${VERSION}\")
 
 # General setup
@@ -19,27 +19,31 @@ include(CheckIncludeFile)
 include(CheckTypeSize)
 include(TestBigEndian)
 include(CheckTypeExists)
+include(CMakeDependentOption)
 
 # Option handling
 #
-option(SUBPACKAGE_MODE "build CODA as sub-package" OFF)
-option(BUILD_IDL "build IDL interface" OFF)
-option(BUILD_MATLAB "build MATLAB interface" OFF)
-option(BUILD_PYTHON "build Python interface" OFF)
-option(DISABLE_HDF4_VDATA_ATTRIBUTES "enable HDF4 Vdata attributes" OFF)
-option(WITH_HDF4 "use HDF4" OFF)
-option(WITH_HDF5 "use HDF5" OFF)
+option(CODA_BUILD_SUBPACKAGE_MODE "build CODA as sub-package" OFF)
+option(CODA_BUILD_IDL "build IDL interface" OFF)
+option(CODA_BUILD_MATLAB "build MATLAB interface" OFF)
+option(CODA_WITH_HDF4 "use HDF4" OFF)
+option(CODA_WITH_HDF5 "use HDF5" OFF)
+cmake_dependent_option(
+  CODA_DISABLE_HDF4_VDATA_ATTRIBUTES "enable HDF4 Vdata attributes" OFF
+  CODA_WITH_HDF4 ON)
+#Python is not yet supported in this release of CODA.
+#option(CODA_BUILD_PYTHON "build Python interface" OFF)
 
 # The following is done because in CMake options are always
 # ON/OFF only, but for config.h substition we need something with
 # value 1.
 #
-if (NOT DISABLE_HDF4_VDATA_ATTRIBUTES)
+if(NOT CODA_DISABLE_HDF4_VDATA_ATTRIBUTES)
   set(ENABLE_HDF4_VDATA_ATTRIBUTES 1)
-endif (NOT DISABLE_HDF4_VDATA_ATTRIBUTES)
+endif(NOT CODA_DISABLE_HDF4_VDATA_ATTRIBUTES)
 
 # Some autoconf variables that CMake does not use itself, but
-# that are used in the config files.
+# that are used in the config file substitutions.
 #
 set(PACKAGE_NAME \"${CMAKE_PROJECT_NAME}\")
 string(TOLOWER ${PACKAGE_NAME} PACKAGE)
@@ -52,40 +56,41 @@ set(PACKAGE_BUGREPORT \"\")
 
 # Global compilation settings
 #
-if (CMAKE_COMPILER_IS_GNUCC)
-  set(GNU_WARNING_FLAGS "-W -Wall")
+if(CMAKE_COMPILER_IS_GNUCC)
+  set(GNU_WARNING_FLAGS "-W -Wall -Wextra")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${GNU_WARNING_FLAGS}")
-endif (CMAKE_COMPILER_IS_GNUCC)
+endif(CMAKE_COMPILER_IS_GNUCC)
 
 # hdf
 #
-if (WITH_HDF4)
+if(CODA_WITH_HDF4)
 
   find_package(HDF4)
 
-  if (NOT HDF4_FOUND)
+  if(NOT HDF4_FOUND)
     message(FATAL_ERROR "HDF4 libraries and/or header files are not found. Try setting the HDF4_LIB and HDF4_INCLUDE environment variables to the location of your HDF4 library and include files.")
-  else (NOT HDF4_FOUND)
+  else(NOT HDF4_FOUND)
     include_directories(${HDF4_INCLUDE_DIR})
-  endif (NOT HDF4_FOUND)
+  endif(NOT HDF4_FOUND)
 
-endif (WITH_HDF4)
+endif(CODA_WITH_HDF4)
 
 
-if (WITH_HDF5)
+if(CODA_WITH_HDF5)
 
   find_package(HDF5)
 
-  if (NOT HDF5_FOUND)
+  if(NOT HDF5_FOUND)
     message(FATAL_ERROR "HDF5 libraries and/or header files are not found. Try setting the HDF5_LIB and HDF5_INCLUDE environment variables to the location of your HDF5 library and include files.")
-  else (NOT HDF5_FOUND)
+  else(NOT HDF5_FOUND)
     include_directories(${HDF5_INCLUDE_DIR})
-  endif (NOT HDF5_FOUND)
+  endif(NOT HDF5_FOUND)
 
-endif (WITH_HDF5)
+endif(CODA_WITH_HDF5)
 
 
 # *** xml ***
+#
 set(XML_NS 1)
 set(XML_DTD 1)
 set(XML_LARGE_SIZE 1)
@@ -95,11 +100,12 @@ set(XML_CONTEXT_BYTES 1024)
 # Required libraries
 #
 find_library(LIBM_LIBRARY m)
-if (LIBM_LIBRARY)
-  link_libraries (${LIBM_LIBRARY})
+if(LIBM_LIBRARY)
+  link_libraries(${LIBM_LIBRARY})
   set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} ${LIBM_LIBRARY})
   set(HAVE_LIBM 1)
-endif (LIBM_LIBRARY)
+endif(LIBM_LIBRARY)
+mark_as_advanced(LIBM_LIBRARY)
 
 # Lex / Yacc - adapted from CMake's own CMakeLists.txt
 #
@@ -145,12 +151,12 @@ endif(FLEX_EXECUTABLE)
 #
 set(INCLUDES "")
 
-macro (find_include FILE VARIABLE)
+macro(find_include FILE VARIABLE)
   CHECK_INCLUDE_FILE(${FILE} ${VARIABLE})
-  if (${VARIABLE})
+  if(${VARIABLE})
     set(INCLUDES ${INCLUDES} ${FILE})
-  endif (${VARIABLE})
-endmacro (find_include)
+  endif(${VARIABLE})
+endmacro(find_include)
 
 find_include(dirent.h		HAVE_DIRENT_H)
 find_include(dlfcn.h		HAVE_DLFCN_H)
@@ -161,7 +167,7 @@ find_include(stdint.h		HAVE_STDINT_H)
 find_include(stdlib.h		HAVE_STDLIB_H)
 find_include(strings.h		HAVE_STRINGS_H)
 find_include(string.h		HAVE_STRING_H)
-find_include(sys/mman.h	    HAVE_SYS_MMAN_H)
+find_include(sys/mman.h		HAVE_SYS_MMAN_H)
 find_include(sys/stat.h		HAVE_SYS_STAT_H)
 find_include(sys/types.h	HAVE_SYS_TYPES_H)
 find_include(unistd.h		HAVE_UNISTD_H)
@@ -184,13 +190,13 @@ check_function_exists(strdup HAVE_STRDUP)
 check_function_exists(strncasecmp HAVE_STRNCASECMP)
 check_function_exists(vsnprintf HAVE_VSNPRINTF)
 
-if (WIN32)
+if(WIN32)
   # Hack for Windows
-  set (HAVE_STRDUP 1)
-  set (HAVE_STRCASECMP 1)
-  set (HAVE_STRNCASECMP 1)
-  set (HAVE_VSNPRINTF 1)
-endif (WIN32)
+  set(HAVE_STRDUP 1)
+  set(HAVE_STRCASECMP 1)
+  set(HAVE_STRNCASECMP 1)
+  set(HAVE_VSNPRINTF 1)
+endif(WIN32)
 
 
 # Required types (and their sizes)
@@ -212,15 +218,15 @@ check_type_size(short SIZEOF_SHORT)
 
 test_big_endian(WORDS_BIGENDIAN)
 
-if (HAVE_STDLIB_H AND HAVE_STDDEF_H)
+if(HAVE_STDLIB_H AND HAVE_STDDEF_H)
   set(STDC_HEADERS 1)
-endif (HAVE_STDLIB_H AND HAVE_STDDEF_H)
-if (NOT HAVE_SYS_TYPES_H)
+endif(HAVE_STDLIB_H AND HAVE_STDDEF_H)
+if(NOT HAVE_SYS_TYPES_H)
   set(NO_SYS_TYPES_H 1)
-endif (NOT HAVE_SYS_TYPES_H)
-if (NOT HAVE_STRERROR)
+endif(NOT HAVE_SYS_TYPES_H)
+if(NOT HAVE_STRERROR)
   set(NO_STRERROR 1)
-endif (NOT HAVE_STRERROR)
+endif(NOT HAVE_STRERROR)
 
 set(CODA_INCLUDE_DIRS
   ${CMAKE_CURRENT_SOURCE_DIR}/libcoda
@@ -232,21 +238,6 @@ include_directories(
 )
 
 
-# config files
-#
-add_definitions(-DHAVE_CONFIG_H)
-
-configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake.in 
-  ${CMAKE_CURRENT_BINARY_DIR}/config.h)
-configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/coda.h.cmake.in 
-  ${CMAKE_CURRENT_BINARY_DIR}/coda.h)
-configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/idl/coda-idl.dlm.in 
-  ${CMAKE_CURRENT_BINARY_DIR}/idl/coda-idl.dlm)
-
-
 # The Doxyfile uses some autoconf variables CMake does not have.
 # We set them here manually, so that we can use the same .in
 # file for both autoconf and cmake
@@ -255,7 +246,7 @@ set(top_builddir ${CMAKE_BINARY_DIR})
 set(top_srcdir ${CMAKE_SOURCE_DIR})
 set(srcdir ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/doc)
 configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/doc/Doxyfile.in 
+  ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/doc/Doxyfile.in
   ${CMAKE_CURRENT_BINARY_DIR}/libcoda/doc/Doxyfile)
 
 
@@ -326,9 +317,9 @@ set(LIBCODA_HDF4_FILES
   libcoda/coda-hdf4.h
 )
 
-if (WITH_HDF4)
+if(CODA_WITH_HDF4)
   set(LIBCODA_SOURCES ${LIBCODA_SOURCES} ${LIBCODA_HDF4_FILES})
-endif (WITH_HDF4)
+endif(CODA_WITH_HDF4)
 
 
 set(LIBCODA_HDF5_FILES
@@ -339,14 +330,14 @@ set(LIBCODA_HDF5_FILES
   libcoda/coda-hdf5.h
   )
 
-if (WITH_HDF5)
+if(CODA_WITH_HDF5)
   set(LIBCODA_SOURCES ${LIBCODA_SOURCES} ${LIBCODA_HDF5_FILES})
-endif (WITH_HDF5)
+endif(CODA_WITH_HDF5)
 
 
 # fortran
 
-if (NOT SUBPACKAGE_MODE)
+if(NOT CODA_BUILD_SUBPACKAGE_MODE)
 
   set(fortran_DATA
     fortran/Makefile
@@ -357,7 +348,7 @@ if (NOT SUBPACKAGE_MODE)
   set(fortran_SCRIPTS
 	fortran/checkf77.sh
     )
-endif (NOT SUBPACKAGE_MODE)
+endif(NOT CODA_BUILD_SUBPACKAGE_MODE)
 
 set(generate_finc_SOURCES
   fortran/generate-finc.c
@@ -373,100 +364,211 @@ add_custom_command(
 
 # idl
 
-if (BUILD_IDL)
-  message("CMake IDL build not supported yet.")
-endif (BUILD_IDL)
+if(CODA_BUILD_IDL)
+
+  # If not in cache, try from environment
+  if(NOT IDL_DIR)
+    if($ENV{IDL_DIR} MATCHES ".+")
+      file(TO_CMAKE_PATH $ENV{IDL_DIR} IDL_DIR)
+    endif($ENV{IDL_DIR} MATCHES ".+")
+  endif(NOT IDL_DIR)
+
+  if(IDL_DIR)
+    set(IDL_DIR ${IDL_DIR} CACHE STRING "Root directory of an IDL installation" FORCE)
+    set(IDL_INSTALL_DIR "idl")
+
+    set(HAVE_IDL_SYSFUN_DEF2 1)
+    set(HAVE_IDL_SYSRTN_UNION 1)
+    if(WIN32)
+      set(IDL_COMPILE_FLAGS "-nologo -I. -I${CODA_BINARY_DIR} -I${CODA_SOURCE_DIR}/libcoda -DWIN32_LEAN_AND_MEAN -DWIN32 -DHAVE_CONFIG_H -DIDL_V5_4")
+      set(IDL_LIBDIR "${IDL_DIR}/bin/bin.x86/")
+      set(IDL_LIB "${IDL_LIBDIR}/idl.lib")
+      set(IDL_LINK_FLAGS "/DEF:${CODA_SOURCE_DIR}/win32/coda-idl.def")
+    else(WIN32)
+      set(IDL_LINK_FLAGS "-module -shared -avoid-version")
+      if(APPLE)
+        set(IDL_LINK_FLAGS "${IDL_LINK_FLAGS} -undefined dynamic_lookup")
+      endif(APPLE)
+    endif(WIN32)
+
+    set(IDL_INCLUDE_DIR "${IDL_DIR}/external")
+    include_directories(${IDL_INCLUDE_DIR})
+
+    set(CODA_IDL_SOURCES
+      idl/coda-idl.c
+      )
+    set_source_files_properties(${CODA_IDL_SOURCES}
+      PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS} ${IDL_COMPILE_FLAGS}"
+      )
+    # Visual Studio does not like targets with a dash in the
+    # name, hence coda_idl rather than coda-idl.
+    add_library(coda_idl MODULE
+      ${CODA_IDL_SOURCES}
+      )
+    target_link_libraries(coda_idl coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${IDL_LIB})
+    set_target_properties(coda_idl
+      PROPERTIES LINK_FLAGS "${IDL_LINK_FLAGS}"
+      OUTPUT_NAME "coda-idl"
+      PREFIX ""
+      )
+    
+    install(TARGETS coda_idl DESTINATION ${IDL_INSTALL_DIR})
+
+    configure_file(
+      ${CMAKE_CURRENT_SOURCE_DIR}/idl/coda-idl.dlm.in
+      ${CMAKE_CURRENT_BINARY_DIR}/idl/coda-idl.dlm)
+    
+    install(
+      FILES ${CMAKE_CURRENT_BINARY_DIR}/idl/coda-idl.dlm 
+      DESTINATION ${IDL_INSTALL_DIR}
+      )
+
+  else(IDL_DIR)
+    message(FATAL_ERROR "IDL not found. Try setting the IDL_DIR environment or CMake variable to the root directory of an IDL installation.")
+  endif(IDL_DIR)
+
+endif(CODA_BUILD_IDL)
+
 
 # matlab
 
-set(CODA_MATLAB_SOURCE_FILES
-  matlab/coda-matlab.h
-  matlab/coda-matlab-getdata.c
-  matlab/coda-matlab-traverse.c
-  matlab/coda_matlab.c
-  matlab/mxCreateDoubleScalar.c
-  matlab/mxCreateNumericMatrix.c
-  )
+if(CODA_BUILD_MATLAB)
 
-if (BUILD_MATLAB)
-  message(STATUS "CMake MATLAB build not supported yet.")
-endif (BUILD_MATLAB)
+  # If not in cache, try from environment
+  if(NOT MATLAB_DIR)
+    if($ENV{MATLAB_DIR} MATCHES ".+")
+      file(TO_CMAKE_PATH $ENV{MATLAB_DIR} MATLAB_DIR)
+    endif($ENV{MATLAB_DIR} MATCHES ".+")
+  endif(NOT MATLAB_DIR)
+  
+  if(MATLAB_DIR)
 
-# python
+    set(MATLAB_DIR ${MATLAB_DIR} CACHE STRING "Root directory of MATLAB installation" FORCE)
+    set(MATLAB_INSTALL_DIR "matlab")
 
-set(CODA_PYTHON_SOURCE_FILES
-  python/codac.c
-)
+    find_path(MATLAB_INCLUDE_DIR "mex.h" ${MATLAB_DIR}/extern/include)
+    mark_as_advanced(MATLAB_INCLUDE_DIR)
 
-if (BUILD_PYTHON)
-  find_package(Python)
+    set(CODA_MATLAB_SOURCE_FILES
+      ${CODA_SOURCE_DIR}/matlab/coda-matlab-getdata.c
+      ${CODA_SOURCE_DIR}/matlab/coda-matlab-traverse.c
+      ${CODA_SOURCE_DIR}/matlab/coda_matlab.c
+      )
 
-  if (NOT PYTHON)
-    message(FATAL_ERROR "PYTHON interpreter and/or header files are not found. Try setting the PYTHON and/or PYTHON_INCLUDE environment variables to the location of your PYTHON interpreter and include files.")
-  else (NOT PYTHON)
-    include_directories(${PYTHON_INCLUDE})
-  endif (NOT PYTHON)
+    # Configure the mex compiler
+    set(MEX ${MATLAB_DIR}/bin/mex)
 
-  find_package(NumPy)
+    set(MEXFLAGS -I${MATLAB_INCLUDE_DIR} -I. -I${CODA_BINARY_DIR} -I${CODA_SOURCE_DIR}/libcoda -DHAVE_CONFIG_H)
+    if(WIN32)
+      set(MEXEXT_PROG "mexext.bat")
+      set(MEXFLAGS ${MEXFLAGS} -DWIN32_LEAN_AND_MEAN -DWIN32 -DHAVE_CONFIG_H -v)
+    else(WIN32)
+      set(MEXEXT_PROG "mexext")
+      set(MEXFLAGS ${MEXFLAGS} -g -O)
+    endif(WIN32)
 
-  if (NOT NUMPY_FOUND)
-    message(FATAL_ERROR "Python numpy package is needed for the Python interface. Please install 'numpy' or, if you have already installed this package, set the NUMPY_INCLUDE environment variable and make sure that the file $NUMPY_INCLUDE/numpy/ndarrayobject.h exists.")
-  else (NOT NUMPY_FOUND)
-    include_directories(${NUMPY_INCLUDE_DIR})
-  endif (NOT NUMPY_FOUND)
+    file(TO_NATIVE_PATH ${MATLAB_DIR}/bin/${MEXEXT_PROG} MEXEXT_CMD)
+    execute_process(
+      COMMAND ${MEXEXT_CMD}
+      OUTPUT_VARIABLE MEXEXT
+      )
+    string(STRIP ${MEXEXT} MEXEXT)
+
+    set(MEX_OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/coda_matlab.${MEXEXT})
 
 
+    # Because we are essentially bypassing CMake with the mex command,
+    # we need to specify exactly where the build libraries can be found.
+    # Since the user may have overridden CMAKE_ARCHIVE_OUTPUT_DIRECTORY,
+    # we have to take that possibility into account. Just prefixing is
+    # not enough, because the variable can also be empty, and then you'd
+    # get names starting with a slash.
+    set(INT_LIB_DIR ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
 
-  set(LIBCODA_SOURCES ${LIBCODA_SOURCES} ${CODA_PYTHON_SOURCE_FILES})
+    if(WIN32)
+      set(MEX_CMD ${MEX} ${MEXFLAGS} ${CODA_MATLAB_SOURCE_FILES} ${INT_LIB_DIR}/libcoda.lib ${INT_LIB_DIR}/expat.lib ${INT_LIB_DIR}/z.lib ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} -output ${MEX_OUTPUT})
+    else(WIN32)
+      set(MEX_CMD ${MEX} ${MEXFLAGS} ${CODA_MATLAB_SOURCE_FILES} ${INT_LIB_DIR}/libcoda.a ${INT_LIB_DIR}/libexpat.a ${INT_LIB_DIR}/libz.a ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} -o ${MEX_OUTPUT})
+    endif(WIN32)
+ 
+    add_custom_command(
+      COMMENT "Compiling the CODA MATLAB interface..."
+      DEPENDS ${CODA_MATLAB_SOURCE_FILES}
+      OUTPUT ${MEX_OUTPUT}
+      COMMAND ${MEX_CMD}
+      )
+ 
+    add_custom_target(coda_matlab ALL DEPENDS
+      ${MEX_OUTPUT}
+      )
+
+    add_dependencies(coda_matlab coda_static expat z)
+    install(FILES ${MEX_OUTPUT} DESTINATION ${MATLAB_INSTALL_DIR})
+
+    # *** matlab data ***
+
+    set(CODA_MATLAB_MFILES
+      matlab/coda_attributes.m
+	  matlab/coda_class.m
+	  matlab/coda_clearall.m
+	  matlab/coda_close.m
+	  matlab/coda_description.m
+	  matlab/coda_fetch.m
+	  matlab/coda_fieldavailable.m
+	  matlab/coda_fieldcount.m
+	  matlab/coda_fieldnames.m
+	  matlab/coda_getopt.m
+	  matlab/coda_open.m
+	  matlab/coda_options.m
+	  matlab/coda_param.m
+	  matlab/coda_product_class.m
+	  matlab/coda_product_type.m
+	  matlab/coda_product_version.m
+	  matlab/coda_setopt.m
+	  matlab/coda_size.m
+	  matlab/coda_time_to_string.m
+	  matlab/coda_unit.m
+	  matlab/coda_version.m
+      )
+    
+    install(FILES ${CODA_MATLAB_MFILES} DESTINATION ${MATLAB_INSTALL_DIR})
+    
+  else(MATLAB_DIR)
+    
+    message(FATAL_ERROR "MATLAB not found. Try setting the MATLAB_DIR environment or CMake variable to the root directory of a MATLAB installation.")
+    
+  endif(MATLAB_DIR)
+  
+endif(CODA_BUILD_MATLAB)
 
 
+# python -- not yet supported for CMake in this release of CODA.
+#
+#set(CODA_PYTHON_SOURCE_FILES
+#  python/codac.c
+#)
+#
+#if(CODA_BUILD_PYTHON)
+#  find_package(Python)
+#
+#  if(NOT PYTHON)
+#    message(FATAL_ERROR "PYTHON interpreter and/or header files are not found. Try setting the PYTHON and/or PYTHON_INCLUDE environment variables to the location of your PYTHON interpreter and include files.")
+#  else(NOT PYTHON)
+#    include_directories(${PYTHON_INCLUDE})
+# endif(NOT PYTHON)
+#
+#  find_package(NumPy)
+#
+#  if(NOT NUMPY_FOUND)
+#    message(FATAL_ERROR "Python numpy package is needed for the Python interface. Please install 'numpy' or, if you have already installed this package, set the NUMPY_INCLUDE environment variable and make sure that the file $NUMPY_INCLUDE/numpy/ndarrayobject.h exists.")
+#  else(NOT NUMPY_FOUND)
+#    include_directories(${NUMPY_INCLUDE_DIR})
+#  endif(NOT NUMPY_FOUND)
+#
+#  set(LIBCODA_SOURCES ${LIBCODA_SOURCES} ${CODA_PYTHON_SOURCE_FILES})
+#
+#endif(CODA_BUILD_PYTHON)
 
-
-endif (BUILD_PYTHON)
-
-# *** idl data ***
-
-set(CODA_IDL_DIMFILES
-  idl/coda-idl.dlm
-  )
-
-if (NOT SUBPACKAGE_MODE)
-  if (BUILD_IDL)
-    set(idldlmexec_DATA ${CODA_IDL_DIMFILES})
-  endif(BUILD_IDL)
-endif(NOT SUBPACKAGE_MODE)
-
-# *** matlab data ***
-
-set(CODA_MATLAB_MFILES
-	matlab/coda_attributes.m
-	matlab/coda_class.m
-	matlab/coda_clearall.m
-	matlab/coda_close.m
-	matlab/coda_description.m
-	matlab/coda_fetch.m
-	matlab/coda_fieldavailable.m
-	matlab/coda_fieldcount.m
-	matlab/coda_fieldnames.m
-	matlab/coda_getopt.m
-	matlab/coda_open.m
-	matlab/coda_options.m
-	matlab/coda_param.m
-	matlab/coda_product_class.m
-	matlab/coda_product_type.m
-	matlab/coda_product_version.m
-	matlab/coda_setopt.m
-	matlab/coda_size.m
-	matlab/coda_time_to_string.m
-	matlab/coda_unit.m
-	matlab/coda_version.m
-    )
-
-if (NOT SUBPACKAGE_MODE)
-  if (BUILD_MATLAB)
-    set(matlabmexexec_DATA ${CODA_MATLAB_MFILES})
-  endif(BUILD_MATLAB)
-endif(NOT SUBPACKAGE_MODE)
 
 # Custom CODA expat library
 #
@@ -522,9 +624,9 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/coda.h DESTINATION include)
 #
 # Set dynamic library version
 #
-set(LIBCODA_CURRENT 0)
+set(LIBCODA_CURRENT 1)
 set(LIBCODA_REVISION 0)
-set(LIBCODA_AGE 1)
+set(LIBCODA_AGE 0)
 
 add_library(coda SHARED ${LIBCODA_SOURCES})
 target_link_libraries(coda expat z ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
@@ -534,18 +636,26 @@ set_target_properties(coda PROPERTIES
 )
 install(TARGETS coda DESTINATION lib)
 
-add_library(coda_static STATIC ${LIBCODA_SOURCES})
-target_link_libraries(coda_static expat z)
-set_target_properties(coda_static PROPERTIES
-  OUTPUT_NAME "coda"
-)
+add_library(coda_static STATIC ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBZLIB_SOURCES})
+
+# On Windows, we want libcoda.lib for static, coda.dll & coda.lib for shared.
+# On Unix, we want libcoda.a and libcoda.so
+if(WIN32)
+  set_target_properties(coda_static PROPERTIES
+    OUTPUT_NAME "libcoda"
+    )
+else(WIN32)
+  set_target_properties(coda_static PROPERTIES
+    OUTPUT_NAME "coda"
+    )
+endif(WIN32)
 install(TARGETS coda_static DESTINATION lib)
 
-if (MSVC)
+if(MSVC)
   set_source_files_properties(coda-expr-tokenizer.c PROPERTIES
     COMPILE_FLAGS "/D YY_NO_UNISTD_H"
     )
-endif (MSVC)
+endif(MSVC)
 
 
 # tools codacheck
@@ -557,11 +667,11 @@ add_executable(codacheck ${codacheck_SOURCES})
 target_link_libraries(codacheck coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
 install(TARGETS codacheck DESTINATION bin)
 
-if (MSVC)
+if(MSVC)
   set_target_properties(codacheck PROPERTIES
     COMPILE_FLAGS "/nologo /GX /D_CONSOLE /D_MBCS /YX /FD"
     )
-endif (MSVC)
+endif(MSVC)
 
 # tools codacmp
 
@@ -587,9 +697,9 @@ set(codadump_SOURCES
 set(codadump_hdf4_files
   tools/codadump/codadump-hdf4.c
   )
-if (WITH_HDF4)
-  set (codadump_SOURCES ${codadump_SOURCES} ${codadump_hdf4_files})
-endif (WITH_HDF4)
+if(CODA_WITH_HDF4)
+  set(codadump_SOURCES ${codadump_SOURCES} ${codadump_hdf4_files})
+endif(CODA_WITH_HDF4)
 add_executable(codadump ${codadump_SOURCES})
 target_link_libraries(codadump coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
 install(TARGETS codadump DESTINATION bin)
@@ -615,15 +725,27 @@ target_link_libraries(codadd coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
 install(TARGETS codadd DESTINATION bin)
 
 
+# config files
+#
+add_definitions(-DHAVE_CONFIG_H)
+
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/coda.h.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/coda.h)
+
+
 # Windows stuff
 
 # Notice that doing this on Linux does not copy the
 # DOS line endings (CMake bug 0008506)
 #
 configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/win32/coda.iss.in 
+  ${CMAKE_CURRENT_SOURCE_DIR}/win32/coda.iss.in
   ${CMAKE_CURRENT_BINARY_DIR}/win32/coda.iss)
 configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/win32/setup.py.in 
+  ${CMAKE_CURRENT_SOURCE_DIR}/win32/setup.py.in
   ${CMAKE_CURRENT_BINARY_DIR}/win32/setup.py)
 

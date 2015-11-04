@@ -29,4 +29,4 @@ endif (SZIP_LIBRARY)
 #
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(SZIP DEFAULT_MSG SZIP_LIBRARIES SZIP_INCLUDE_DIR)
-
+mark_as_advanced(SZIP_LIBRARIES SZIP_INCLUDE_DIR)

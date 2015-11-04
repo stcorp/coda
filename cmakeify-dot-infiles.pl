@@ -40,6 +40,13 @@ sub CopyFile($$)
                 m@#endif /\* !defined\(CODA_CONFIG_H\) \*/@)
             {
                 $_ = <<'EOF' . $_;
+
+/* This is the relative path to CODA definitions for the IDL interface. */	
+#cmakedefine CODA_DEFINITION_IDL ${CODA_DEFINITION_IDL}
+
+/* This is the relative path to CODA definitions for the MATLAB interface. */	
+#cmakedefine CODA_DEFINITION_MATLAB ${CODA_DEFINITION_MATLAB}
+
 #ifdef WIN32
 /* include windows specific headers */
 #include <windows.h>
@@ -77,6 +84,10 @@ sub CopyFile($$)
 
 /* coda-idl defines */
 
+#ifndef CODA_DEFINITION_IDL
+#define CODA_DEFINITION_IDL "../definitions"
+#endif
+
 #ifdef IDL_V5_3
 #define HAVE_IDL_SYSFUN_DEF2 1
 #endif
@@ -87,6 +98,10 @@ sub CopyFile($$)
 #endif
 
 /* coda-matlab defines */
+
+#ifndef CODA_DEFINITION_MATLAB
+#define CODA_DEFINITION_MATLAB "../definitions"
+#endif
 
 #if defined(MATLAB_R11) || defined(MATLAB_R12)
 #define mxCreateDoubleScalar replacement_mxCreateDoubleScalar

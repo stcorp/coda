@@ -43,7 +43,7 @@ static int coda_idl_option_time_unit_days = 0;
 
 struct IDL_CodaError
 {
-    short errno;
+    short number;
     IDL_STRING message;
 };
 
@@ -79,8 +79,8 @@ static void idl_coda_set_definition_path(void)
 {
     if (getenv("CODA_DEFINITION") == NULL && getenv("IDL_DLM_PATH") != NULL)
     {
-#ifdef WIN32
-        const char *definition_path = "../definitions";
+#ifdef CODA_DEFINITION_IDL
+        const char *definition_path = CODA_DEFINITION_IDL;
 #else
         const char *definition_path = "../../../share/" PACKAGE "/definitions";
 #endif
@@ -232,7 +232,7 @@ static void fill_error(struct IDL_CodaError *fill, int err)
         }
     }
     /* fill ERRNO and MESSAGE fields */
-    fill->errno = err;
+    fill->number = err;
     IDL_StrStore(&fill->message, (char *)message);
 }
 
@@ -249,11 +249,11 @@ static IDL_VPTR mk_coda_error(int error)
     data = (struct IDL_CodaError *)IDL_MakeTempStructVector(coda_error_sdef, 1, &retval, FALSE);
     fill_error(data, error);
 
-    if (data->errno != CODA_SUCCESS && coda_idl_option_verbose)
+    if (data->number != CODA_SUCCESS && coda_idl_option_verbose)
     {
         char errmsg[1001];
 
-        snprintf(errmsg, 1000, "CODA-IDL ERROR %d: \"%s\"\n", data->errno, IDL_STRING_STR(&data->message));
+        snprintf(errmsg, 1000, "CODA-IDL ERROR %d: \"%s\"\n", data->number, IDL_STRING_STR(&data->message));
         errmsg[1000] = '\0';
         IDL_Message(IDL_M_GENERIC, IDL_MSG_INFO, errmsg);
     }
@@ -290,7 +290,7 @@ static IDL_VPTR x_coda_is_error(int argc, IDL_VPTR *argv)
     {
         struct IDL_CodaError *error = (struct IDL_CodaError *)argv[0]->value.s.arr->data;
 
-        if (error->errno != CODA_SUCCESS)
+        if (error->number != CODA_SUCCESS)
         {
             retval->value.i = 1;
         }

@@ -9,20 +9,22 @@
 # variables to locate include files and library
 #
 
-if (NOT HDF5_INCLUDE_DIR)
+if (NOT HDF5_INCLUDE)
   if ($ENV{HDF5_INCLUDE} MATCHES ".+")
     file(TO_CMAKE_PATH $ENV{HDF5_INCLUDE} HDF5_INCLUDE)
     message(STATUS "Using HDF5_INCLUDE environment variable: ${HDF5_INCLUDE}")
-    set(CMAKE_REQUIRED_INCLUDES ${HDF5_INCLUDE})
   endif ($ENV{HDF5_INCLUDE} MATCHES ".+")
-endif (NOT HDF5_INCLUDE_DIR)
+endif (NOT HDF5_INCLUDE)
+set(HDF5_INCLUDE ${HDF5_INCLUDE} CACHE STRING "Location of HDF5 include files" FORCE)
+set(CMAKE_REQUIRED_INCLUDES ${HDF5_INCLUDE})
 
-if (NOT HDF5_LIBRARIES)
+if (NOT HDF5_LIB)
   if ($ENV{HDF5_LIB} MATCHES ".+")
     file(TO_CMAKE_PATH $ENV{HDF5_LIB} HDF5_LIB)
     message(STATUS "Using HDF5_LIB environment variable: ${HDF5_LIB}")
   endif ($ENV{HDF5_LIB} MATCHES ".+")
-endif (NOT HDF5_LIBRARIES)
+endif (NOT HDF5_LIB)
+set(HDF5_LIB ${HDF5_LIB} CACHE STRING "Location of HDF5 libraries" FORCE)
 
 find_package(ZLIB)
 find_package(SZIP)
@@ -34,11 +36,11 @@ if (HAVE_HDF5_H)
 endif (HAVE_HDF5_H)
 
 set(HDF5_NAMES hdf5)
-find_library(HDF5_LIBRARY 
+find_library(HDF5_LIBRARY
   NAMES ${HDF5_NAMES}
   PATHS ${HDF5_LIB} ENV HDF5_LIB)
 if (HDF5_LIBRARY)
-  
+
   # Leo: check_library_exists will not work right now, because
   # CMake insists on using CMAKE_BUILD_TYPE=Debug and freshly
   # reinitialised CMAKE_FLAGS_DEBUG compiler options for the test
@@ -71,7 +73,7 @@ if (HDF5_LIBRARY)
   set(HAVE_HDF5 1)
 
   if (HAVE_HDF5)
-    set(HDF5_LIBRARIES ${HDF5_LIBRARY} CACHE STRING "HDF5 Libraries")
+    set(HDF5_LIBRARIES ${HDF5_LIBRARY})
   endif(HAVE_HDF5)
 
 endif (HDF5_LIBRARY)
@@ -89,3 +91,4 @@ endif (HAVE_HDF5)
 #
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(HDF5 DEFAULT_MSG HDF5_LIBRARIES HDF5_INCLUDE_DIR)
+mark_as_advanced(HDF5_LIBRARY HDF5_INCLUDE_DIR)

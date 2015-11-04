@@ -17,6 +17,7 @@ if ($ENV{PYTHON} MATCHES ".+")
   file(TO_CMAKE_PATH $ENV{PYTHON} PYTHON)
   message(STATUS "Using PYTHON environment variable: ${PYTHON}")
 endif ($ENV{PYTHON} MATCHES ".+")
+set(PYTHON ${PYTHON} CACHE STRING "The full path of the Python executable" FORCE)
 
 if (NOT PYTHON)
   find_package(PythonInterp)

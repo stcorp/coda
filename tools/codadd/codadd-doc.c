@@ -1843,7 +1843,7 @@ static void generate_html_product_class(const char *filename, coda_ProductClass 
 
                 fi_printf("<tr><td align=\"center\">%d</td><td>%s</td><td><a href=\"products/%s_v%d.html\">%s</td>"
                           "</tr>\n", product_definition->version, coda_type_get_format_name(product_definition->format),
-                          product_type->name, j, product_definition->name);
+                          product_type->name, product_definition->version, product_definition->name);
             }
         }
         ff_printf("\n");
@@ -1976,7 +1976,8 @@ void generate_html(const char *prefixdir)
 
             for (k = 0; k < product_type->num_product_definitions; k++)
             {
-                sprintf(filename, "%s/%s/products/%s_v%d.html", prefixdir, product_class->name, product_type->name, k);
+                sprintf(filename, "%s/%s/products/%s_v%d.html", prefixdir, product_class->name, product_type->name,
+                        product_type->product_definition[k]->version);
                 generate_html_product_definition(filename, product_type->product_definition[k]);
             }
         }

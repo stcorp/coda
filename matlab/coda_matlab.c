@@ -168,8 +168,8 @@ static void coda_matlab_set_definition_path(void)
 {
     if (getenv("CODA_DEFINITION") == NULL)
     {
-#ifdef WIN32
-        const char *definition_path = "../definitions";
+#ifdef CODA_DEFINITION_MATLAB
+        const char *definition_path = CODA_DEFINITION_MATLAB;
 #else
         const char *definition_path = "../../../share/" PACKAGE "/definitions";
 #endif
@@ -199,6 +199,7 @@ static void coda_matlab_set_definition_path(void)
                 coda_path_free(location);
             }
         }
+        mxFree(path);
     }
 }
 
