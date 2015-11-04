@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html>
+
+  <head>
+    <title>CODA IDL interface</title>
+    <link rel="stylesheet" href="../css/codadoc.css" type="text/css" />
+  </head>
+
+  <body>
+
+    <div class="main">
+
+      <h1>CODA IDL interface</h1>
+
+      <p>The CODA IDL interface consists of just a handful of IDL 'named structures' and functions. A primary design goal was to simplify, as much as possible, the number of different types and functions a user would have to master in order to effectively use the library.</p>
+
+      <p>This page describes all IDL 'named structure' types and functions provided by the CODA IDL interface.</p>
+
+      <h2>Contents</h2>
+
+      <ul>
+        <li><a href="#named-structures">Named Structures</a>
+          <ul>
+            <li><a href="#coda_datahandle"><code>CODA_DATAHANDLE</code></a></li>
+            <li><a href="#coda_error"><code>CODA_ERROR</code></a></li>
+            <li><a href="#coda_no_data"><code>CODA_NO_DATA</code></a></li>
+          </ul>
+        </li>
+        <li><a href="#functions-and-procedures">Functions and Procedures</a>
+          <ul>
+            <li><a href="#coda_version"><code>CODA_VERSION</code></a></li>
+            <li><a href="#coda_getopt"><code>CODA_GETOPT</code></a></li>
+            <li><a href="#coda_setopt"><code>CODA_SETOPT</code></a></li>
+            <li><a href="#coda_open"><code>CODA_OPEN</code></a></li>
+            <li><a href="#coda_close"><code>CODA_CLOSE</code></a></li>
+            <li><a href="#coda_product_class"><code>CODA_PRODUCT_CLASS</code></a></li>
+            <li><a href="#coda_product_type"><code>CODA_PRODUCT_TYPE</code></a></li>
+            <li><a href="#coda_product_version"><code>CODA_PRODUCT_VERSION</code></a></li>
+            <li><a href="#coda_fetch"><code>CODA_FETCH</code></a>
+              <ul>
+                <li><a href="#coda_fetch_first">The first argument</a></li>
+                <li><a href="#coda_fetch_specification">Specification arguments</a></li>
+                <li><a href="#coda_fetch_return">Return type</a>
+                  <ul>
+                    <li><a href="#coda_fetch_simple">Fetching simple (non-composite) types</a></li>
+                    <li><a href="#coda_fetch_record">Fetching records</a></li>
+                    <li><a href="#coda_fetch_array">Fetching arrays</a></li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+            <li><a href="#coda_fetch_datahandle"><code>CODA_FETCH_DATAHANDLE</code></a></li>
+            <li><a href="#coda_attributes"><code>CODA_ATTRIBUTES</code></a></li>
+            <li><a href="#coda_fieldavailable"><code>CODA_FIELDAVAILABLE</code></a></li>
+            <li><a href="#coda_fieldcount"><code>CODA_FIELDCOUNT</code></a></li>
+            <li><a href="#coda_fieldnames"><code>CODA_FIELDNAMES</code></a></li>
+            <li><a href="#coda_size"><code>CODA_SIZE</code></a></li>
+            <li><a href="#coda_description"><code>CODA_DESCRIPTION</code></a></li>
+            <li><a href="#coda_unit"><code>CODA_UNIT</code></a></li>
+            <li><a href="#coda_time_to_string"><code>CODA_TIME_TO_STRING</code></a></li>
+            <li><a href="#coda_is_no_data"><code>CODA_IS_NO_DATA</code></a></li>
+            <li><a href="#coda_is_error"><code>CODA_IS_ERROR</code></a></li>
+            <li><a href="#coda_unload"><code>CODA_UNLOAD</code></a></li>
+          </ul>
+        </li>
+      </ul>
+
+      <h2 id="named-structures">Named Structures</h2>
+
+      <p>The CODA IDL interface defines three 'named structures'. This section discusses them in detail. For reference, the three types are shown in the table below.</p>
+
+      <table border="1">
+        <tr><th>name</th><th>fields</th><th>type</th><th>usage</th></tr>
+        <tr><td><code>CODA_DATAHANDLE</code></td><td><code>PF_ID</code><br /><code>OPAQUE</code></td><td><code>ULONG64</code><br />not user-accessible</td><td>represents a data-item in a product-file</td></tr>
+        <tr><td><code>CODA_ERROR</code></td><td><code>ERRNO</code><br /><code>MESSAGE</code></td><td><code>INT</code><br /><code>STRING</code></td><td>CODA call return status (can also indicate success)</td></tr>
+        <tr><td><code>CODA_NO_DATA</code></td><td><code>OPAQUE</code></td><td><code>BYTE</code></td><td>represents an empty data item; the <code>OPAQUE</code> field is a dummy value and should not be used</td></tr>
+      </table>
+
+      <h3 id="coda_datahandle">The <code>CODA_DATAHANDLE</code> named structure</h3>
+
+      <p>The <code>CODA_DATAHANDLE</code> type represents a piece of data within a currently opened product-file; internally, it maintains a pointer to a certain offset within the data product, as well as information on the type of expression residing at that offset.</p>
+
+      <p><code>CODA_DATAHANDLE</code> variables are used extensively 'under the hood' of the CODA IDL interface; however, there are two closely related cases where this type will also be visible at the IDL user level.</p>
+
+      <p>If a call to <code>CODA_FETCH</code> is made that should return an 'array of array' or 'array of record' type, the call will return an 'array of <code>CODA_DATAHANDLE</code>' instead. The reason for this is that the sophisticated type system supported by CODA does not map in full generality onto the IDL type system.</p>
+
+      <p>The notion of an 'array of array' cannot be mapped onto IDL other than by combining the dimensions of the outer and inner arrays; however, for technical reasons, this would only work for a limited set of product formats.</p>
+
+      <p>Similarly, the notion of an 'array of record' could, on first sight, be expressed by using a structure-array in IDL. Again, this is not possible in the general case.</p>
+         
+      <p>For consistency, we have chosen to handle all these cases uniformly, always returning an 'array of <code>CODA_DATAHANDLE</code>' when an 'array of array' or an 'array of record' is fetched. You can then manually traverse the 'array of <code>CODA_DATAHANDLE</code>', and use <code>CODA_FETCH</code> to obtain the individual records or arrays represented by the <code>CODA_DATAHANDLE</code> elements.</p>
+
+      <p>Although the proper use of <code>CODA_DATAHANDLE</code>-arrays is probably the most subtle and difficult aspect of using the CODA IDL interface, it has proved to be quite easy to get used to. In fact, when used properly, the use of an 'array of <code>CODA_DATAHANDLE</code>' often improves performance as the <code>CODA_DATAHANDLE</code> elements effectively cache the information needed to access the data, thereby speeding up subsequent accesses.</p>
+
+      <p>The <code>CODA_DATAHANDLE</code> structure has two fields:</p>
+
+      <ul>
+        <li>The <code>PF_ID</code> is a product-file ID as returned by the <code>CODA_OPEN</code> function (see below). At the IDL user level, you are free to inspect its value. However, do not change its value.</li>
+        <li>The <code>OPAQUE</code> field is used internally to maintain pointer and data type information. This field should not be accessed from within IDL; most importantly, its value should not be changed.</li>
+      </ul>
+
+      <p>The meaning of a <code>CODA_DATAHANDLE</code> becomes undefined after the product to which it is associated is closed; You should not use it in subsequent CODA IDL interface operations. Doing so will generate an error.</p>
+
+      <h3 id="coda_error">The <code>CODA_ERROR</code> named structure</h3>
+
+      <p>The <code>CODA_ERROR</code> structure may be returned by any CODA IDL interface function, usually indicating that the operation failed for some reason. Despite the name, you should think of a <code>CODA_ERROR</code> as a 'status report' of the last CODA IDL interface call; the status may, in fact, indicate successful completion.</p>
+
+      <p>For example, the <code>CODA_CLOSE</code> function will always return a value of type <code>CODA_ERROR</code>, even when the operation succeeds.</p>
+
+      <p>The <code>CODA_ERROR</code> has two fields. The <code>ERRNO</code> field gives a numerical error code. This code is guaranteed to be either 0 (zero), indicating success, or a negative number, indicating failure.</p>
+
+      <p>The <code>MESSAGE</code> field is a STRING that provides a human-readable description corresponding to the <code>ERRNO</code> field. Some errors originate from the underlying C library that the CODA IDL interface uses, others are specific to IDL. For example, if one of the parameters you pass to a CODA IDL interface function is incorrect you will get a <code>CODA_ERROR</code> indicating the type of error.</p>
+
+      <h3 id="coda_no_data">The <code>CODA_NO_DATA</code> named structure</h3>
+
+      <p>The <code>CODA_NO_DATA</code> is used to represent unavailable record fields or zero-element arrays in IDL. CODA is capable of representing arrays that have zero indices in any dimension but such a data structure cannot be represented in IDL. Whenever CODA needs to represent a zero-element array, an instance of type <code>CODA_NO_DATA</code> is used instead.</p>
+
+      <p>The <code>CODA_NO_DATA</code> has one field. The <code>OPAQUE</code> field is present only to assure that the structure has a field (which is required by IDL). It does not contain any useful data.</p>
+
+      <h2 id="functions-and-procedures">Functions and Procedures</h2>
+
+      <h3 id="coda_version">Function <code>CODA_VERSION(): STRING</code></h3>
+
+      <p>The <code>CODA_VERSION</code> function returns a string containing the current version number of CODA. The version number is always of the format 'x.y.z', i.e., major, minor, and revision numbers, separated by dots.</p>
+
+      <h3 id="coda_getopt">Function <code>CODA_GETOPT(option_name: STRING): INT</code></h3>
+
+      <p>The <code>CODA_GETOPT</code> function returns the numerical value of a CODA IDL interface option. The following options are supported:</p>
+
+      <table border="1">
+        <tr><th>option name</th><th>possible values</th><th>default value</th><th>meaning</th>
+        <tr>
+          <td>FilterRecordFields</td>
+          <td>0 or 1</td>
+          <td>1</td>
+          <td>if set, the CODA IDL interface will skip spare fields and fields that have a fixed value (such as header labels) when retrieving records, avoiding unnecessary clutter.</td>
+        </tr>
+        <tr>
+          <td>PerformConversions</td>
+          <td>0 or 1</td>
+          <td>1</td>
+          <td>if set, CODA will perform unit/value conversions for fields that have a 'conversion' defined in the CODA product format definitions.</td>
+        </tr>
+        <tr>
+          <td>PerformBoundaryChecks</td>
+          <td>0 or 1</td>
+          <td>1</td>
+          <td>if set, CODA will perform boundary checking on array accesses. This makes CODA more robust, at the cost of some performance. It is recommended to disable boundary checks only for thoroughly tested programs; disabling boundary checks can lead to wrong results and/or IDL crashes if arrays are accessed beyond their boundaries.</td>
+        </tr>
+        <tr>
+          <td>TimeUnitDays</td>
+          <td>0 or 1</td>
+          <td>0</td>
+          <td>if set, the CODA IDL interface will represent all time values as days since 1-1-2000 instead of seconds since 1-1-2000. This is true both for fetched values and for values passed to <code>CODA_TIME_TO_STRING</code>. Use of this functionality is discouraged, as this will make data exchange between programs more difficult.</td>
+        </tr>
+        <tr>
+          <td>UseMMap</td>
+          <td>0 or 1</td>
+          <td>1</td>
+          <td>By default CODA uses a technique called 'memory mapping' to open and access data from product files. Using mmap greatly outperforms the default approach of reading data using the open()/read() combination. The downside of mapping a file into memory is that it takes away valuable address space. When you run a 32-bit Operating System your maximum addressable memory range is 4GB and if you simultaneously try to keep a few large product files open your memory space can quickly become full. Opening additional files will then produce 'out of memory' errors. Note that this 'out of memory' situation has nothing to do with the amount of RAM you have installed in your computer. It is only related to the size of a memory pointer on your system, which is limited to 4GB. If you are using CODA in a situation where you need to have multiple large product files open at the same time you can turn of the use of memory mapping by disabling this option. If you change the memory mapping option, the new setting will only be applicable for files that will be opened after you changed the option. Any files that were already open will keep using the mechanism with which they were opened.</td>
+        </tr>
+        <tr>
+          <td>UseSpecialTypes</td>
+          <td>0 or 1</td>
+          <td>1</td>
+          <td>if you disable this option, CODA will use the base type of a special type (and not the special type itself) when reading data or retrieving information about a data item. See the CODA Product Format Definitions documentation for more information about special types.</td>
+        </tr>
+        <tr>
+          <td>Verbose</td>
+          <td>0 or 1</td>
+          <td>1</td>
+          <td>if set, the CODA IDL interface will echo 'error' return values to the IDL command line just before returning them to the IDL user level. This can be helpful in detecting problems.</td>
+        </tr>
+      </table>
+
+      <h3 id="coda_setopt">Function <code>CODA_SETOPT(option_name: STRING, new_value: INT): INT</code></h3>
+
+      <p>The <code>CODA_SETOPT</code> function is used to set the CODA IDL interface option to a new value. See the <code>CODA_GETOPT</code> description above for a list of allowed options and values, and their associated meanings.</p>
+      
+      <p>The <code>CODA_SETOPT</code> function will return the <i>previous</i> value of the option.</p>
+
+      <h3 id="coda_open">Function <code>CODA_OPEN(STRING filename): ULONG64</code></h3>
+
+      <p><code>CODA_OPEN</code> will attempt to open the file (which may fail, for example, if you specify a file that does not exist).</p>
+
+      <p>If <code>CODA_OPEN</code> succeeds, it returns a unique positive 64-bit unsigned integer that can subsequently be used to identifty the file in <code>CODA_FETCH</code> and <code>CODA_CLOSE</code> calls. If it fails a <code>CODA_ERROR</code> structure is returned giving the reason for failure.</p>
+
+      <p>It is perfectly OK to have multiple files open at the same time. Still, you are advised to close files as soon as you are done with them, since each of them consumes a vital system resource: <i>address space</i>. Note that this is <i>not</i> the same as 'memory': a data product is not read in its entirety into memory. A typical opened product file should consume a couple of tens of kilobytes of memory. However, the entire product file is virtually <i>mapped into</i> memory (a well-known technique that provides high-performance I/O access to a file). On a modern 32-bit computer (e.g., an Intel x86-class computer running Linux or Windows), up to 3 gigabytes worth of files may be mapped into memory at any one point in time.</p>
+
+      <p>In the CODA IDL interface, you can have up to 100 files open simultaneously. An attempt to open more files will yield an error.</p>
+
+      <h3 id="coda_close">Function <code>CODA_CLOSE(ULONG64 pf_id): CODA_ERROR</code></h3>
+
+      <p>The <code>CODA_CLOSE</code> function is used to release a previously-opened product file. Its one argument should be a 64-bit unsigned integer as returned by a previously executed successful <code>CODA_OPEN</code> call.</p>
+
+      <h3 id="coda_product_class">Function <code>CODA_PRODUCT_CLASS(ULONG64 pf_id): STRING</code></h3>
+
+      <p>The <code>CODA_PRODUCT_CLASS</code> function returns a string containing the product class of a product file if it has one (otherwise an empty string is returned).</p>
+
+      <h3 id="coda_product_type">Function <code>CODA_PRODUCT_TYPE(ULONG64 pf_id): STRING</code></h3>
+
+      <p>The <code>CODA_PRODUCT_TYPE</code> function returns a string containing the product type of a product file if it has one (otherwise an empty string is returned).</p>
+
+      <h3 id="coda_product_version">Function <code>CODA_PRODUCT_VERSION(ULONG64 pf_id): INT</code></h3>
+
+      <p>The <code>CODA_PRODUCT_VERSION</code> function returns an integer denoting the product format version. If the product does not have a format version number this functiion will return -1.</p>
+
+      <h3 id="coda_fetch">Function <code>CODA_FETCH(...)</code></h3>
+
+      <p>The <code>CODA_FETCH</code> function is used to fetch data from somewhere in an open product-file and turn it into an IDL variable.</p>
+
+      <h4 id="coda_fetch_first"><code>CODA_FETCH</code>: the first argument</h4>
+
+      <p>Several forms of <code>CODA_FETCH</code> exist that are distinguished by the first argument argument. Depending on the form of the call, <code>CODA_FETCH</code> will try to read data from different header-parts or datasets in the product files. This is summarized below.</p>
+
+      <table border="1">
+        <tr><th>call</th><th>Fetch-root</th></tr>
+        <tr><td><code>CODA_FETCH(pf_id)</code></td><td>Entire product</td></tr>
+        <tr><td><code>CODA_FETCH(pf_id, [, <i>what</i>, ...])</code></td><td>Data (from product root)</td></tr>
+        <tr><td><code>CODA_FETCH(data_handle [, <i>what</i>, ...])</code></td><td>Data described by handle</td></tr>
+      </table>
+
+      <p>As noted before, in some cases the <code>CODA_FETCH</code> call may return an array of <code>CODA_DATAHANDLE</code> structures. The last form of the <code>CODA_FETCH</code> call allows you to traverse such an array and fetch the data described by each of the data-handles in turn.</p>
+
+      <h4 id="coda_fetch_specification"><code>CODA_FETCH</code>: data-item specification arguments</h4>
+
+      <p>After the first argument you can specify more arguments that tell <code>CODA_FETCH</code> to retrieve only a specific part of the data pointed to by the first argument. It is possible to have more than one such 'specification argument' in case of nested data-types.</p>
+
+      <p>Three forms of 'specification arguments' exist:</p>
+
+      <ul>
+        <li>If the element is a record, it is possible to fetch a specific field of the record by providing the name of the field as a string argument.</li>
+        <li>If the element is an array, it is possible to fetch a specific element of the record by providing the array indices as an integer vector.</li>
+        <li>If the element is a one-dimensional array, it is possible to simply specify an integer value; this is equivalent to specifying '[i]' (a 1-element array-index vector).</li>
+      </ul>
+
+      <p>An example will help to understand all this. Suppose we have a product that contains a dataset called 'MEASUREMENTS', having 1000 records. Each of these records contains a field called 'samples' that is a 2-dimensional 101x101 array of doubles.</p>
+
+      <p>Now suppose we want to fetch the central 'sample' contained in record #10. The following <code>CODA_FETCH</code> would do the trick:</p>
+
+      <p><code>result = CODA_FETCH(pf_id, 'MEASUREMENTS', [10], 'samples', [50,50])</code></p>
+
+      <p>Alternatively, since the '[10]' specifies the index of a one-dimensional array, we could also write</p>
+
+      <p><code>result = CODA_FETCH(pf, 'MEASUREMENTS', 10, 'samples', [50,50])</code></p>
+
+      <p>For the <code>CODA_FETCH</code> and <code>CODA_FETCH_DATAHANDLE</code> functions (but not for the other CODA IDL interface functions that use data-item specification arguments) there is an additional feature. If you provide a <code>-1</code> for one or more of the dimensions of an array you will fetch all elements in this dimension. For example, with</p>
+
+      <p><code>result = CODA_FETCH(pf, 'MEASUREMENTS', -1, 'samples', [50,50])</code></p>
+
+      <p>you can fetch all central samples of all measurements into a single array. Similarly, you can use</p>
+
+      <p><code>result = CODA_FETCH(pf, 'MEASUREMENTS', 0, 'samples', [-1,0])</code></p>
+
+      <p>to fetch the first samples column of the first measurement.</p>
+      
+      <p>The <code>-1</code> parameter may only be used for one array in a fetch statement (e.g. <code>CODA_FETCH(pf, 'MEASUREMENTS', 0, 'samples', [-1,-1])</code> is allowed, but <code>CODA_FETCH(pf, 'MEASUREMENTS', -1, 'samples', [-1,0])</code> is not).</p>
+
+      <h4 id="coda_fetch_return"><code>CODA_FETCH</code> return type</h4>
+
+      <p>The IDL type of the <code>CODA_FETCH</code> return-value depends on the CODA data type of the data item being fetched. Three cases are distinguished:</p>
+
+      <h5 id="coda_fetch_simple">Return types for simple (non-composite) types</h5>
+
+      <p>If the data item has a basic type the return type is determined according to the following table.</p>
+
+      <table border="1">
+        <tr><th>CODA read type</th><th>IDL Type</th><th>remark</th></tr>
+        <tr><td>int8</td><td>INT</td><td>&nbsp;</td></tr>
+        <tr><td>uint8</td><td>BYTE</td><td><i>a BYTE is unsigned in IDL</i></td></tr>
+        <tr><td>int16</td><td>INT</td><td>&nbsp;</td></tr>
+        <tr><td>uint16</td><td>UINT</td><td>&nbsp;</td></tr>
+        <tr><td>int32</td><td>LONG</td><td>&nbsp;</td></tr>
+        <tr><td>uint32</td><td>ULONG</td><td>&nbsp;</td></tr>
+        <tr><td>int64</td><td>LONG64</td><td>&nbsp;</td></tr>
+        <tr><td>uint64</td><td>ULONG64</td><td>&nbsp;</td></tr>
+        <tr><td>float</td><td>FLOAT</td><td>&nbsp;</td></tr>
+        <tr><td>double</td><td>DOUBLE</td><td>&nbsp;</td></tr>
+        <tr><td>char</td><td>STRING</td><td>&nbsp;</td></tr>
+        <tr><td>string</td><td>STRING</td><td>&nbsp;</td></tr>
+        <tr><td>bytes</td><td>BYTE</td><td>This will actually translate into an array of type BYTE</td></tr>
+      </table>
+
+      <p><b><code>CODA_FETCH</code> return types for basic data types</b></p>
+
+      <h5 id="coda_fetch_record">Return types for Record types</h5>
+
+      <p>Record types will be returned as anonymous (unnamed) IDL structures, where each field will correspond to a field in the original data set. If a field has the hidden property and if the FilterRecordFields option is set then the field will not be copied into the IDL structure.</p>
+
+      <p>For basic types, the IDL field type will be determined according to the 'basic data types' table given above. Fields that are themselves records are expanded as 'nested records'. Fields that are themselves arrays are expanded as 'array types', as discussed below.</p>
+      
+      <p>If a record contains no fields (i.e. an empty record) then CODA will return a <code>CODA_NO_DATA</code> named structure instead of an empty anonymous struct.</p>
+
+      <h5 id="coda_fetch_array">Return types for Array types</h5>
+
+      <p>Array types will be returned as multi-dimensional IDL arrays, with the IDL array base-type derived from the base-type of the CODA type according to the 'basic data types' table given above. There are, however, some complications that IDL programmers need to be aware of when the base type itself is either an array or a record.</p>
+
+      <p>For array and record base-types (i.e., 'array of array', 'array of record'), there is, in general,  no equivalent type in IDL. As explained in the <a href="#coda_datahandle">section about the <code>CODA_DATAHANDLE</code> structure</a> above, both these cases will yield an 'array of <code>CODA_DATAHANDLE</code>' instead.</p>
+
+      <p>If an array is empty (i.e. the size of one of its dimensions is 0) then CODA will return a <code>CODA_NO_DATA</code> named structure instead of a multi-dimensional IDL array.</p>
+
+      <h3 id="coda_fetch_datahandle">Function <code>CODA_FETCH_DATAHANDLE(...): CODA_DATAHANDLE</code></h3>
+
+      <p>This function takes the same kind of argument as <code>CODA_FETCH</code>; however, instead of returning the specified data from the product, it <em>always</em> returns a datahandle to the specified data (even if it would be easily representable in IDL).</p>
+
+      <h3 id="coda_attributes">Function <code>CODA_ATTRIBUTES(...): INT-array</code></h3>
+
+      <p>This function takes the same kind of argument as <code>CODA_FETCH</code>; however, instead of returning the specified data from the product, it returns a record containing all attributes of the specified data item. The record can be empty if no attributes are available.</p>
+
+      <h3 id="coda_fieldavailable">Function <code>CODA_FIELDAVAILABLE(...): INT</code></h3>
+
+      <p>This function takes the same kind of argument as <code>CODA_FETCH</code>; however, instead of returning the specified data from the product, it returns the availabillity of a record field. It returns 1 if it is available and 0 if it is not.</p>
+      
+      <p>If the arguments to <code>CODA_FIELDAVAILABLE</code> do not point to a record, a <code>CODA_ERROR</code> structure is returned.</p>
+      
+      <h3 id="coda_fieldcount">Function <code>CODA_FIELDCOUNT(...): INT</code></h3>
+
+      <p>This function takes the same kind of argument as <code>CODA_FETCH</code>; however, instead of returning the specified data from the product, it returns the number of fields in a record.</p>
+      
+      <p>If the arguments to <code>CODA_FIELDCOUNT</code> do not point to a record, a <code>CODA_ERROR</code> structure is returned.</p>
+
+      <h3 id="coda_fieldnames">Function <code>CODA_FIELDNAMES(...): STRING-array</code></h3>
+
+      <p>This function takes the same kind of argument as <code>CODA_FETCH</code>; however, instead of returning the specified data from the product, it returns the field-names of the fields in a record.</p>
+      
+      <p>If the arguments to <code>CODA_FIELDNAMES</code> do not point to a record, a <code>CODA_ERROR</code> structure is returned.</p>
+
+      <h3 id="coda_size">Function <code>CODA_SIZE(...): INT-array</code></h3>
+
+      <p>This function takes the same kind of argument as <code>CODA_FETCH</code>; however, instead of returning the specified data from the product, it returns the actual dimensionality of a multi-dimensional array.</p>
+      
+      <p>If the arguments to <code>CODA_SIZE</code> do not point to an array, a <code>CODA_ERROR</code> structure is returned.</p>
+
+      <h3 id="coda_description">Function <code>CODA_DESCRIPTION(...): STRING</code></h3>
+
+      <p>This function takes the same kind of argument as <code>CODA_FETCH</code>; however, instead of returning the specified data from the product, it returns the description of a data item.</p>
+
+      <h3 id="coda_unit">Function <code>CODA_UNIT(...): STRING</code></h3>
+
+      <p>This function takes the same kind of argument as <code>CODA_FETCH</code>; however, instead of returning the specified data from the product, it returns the description of a data item.</p>
+
+      <h3 id="coda_time_to_string">Function <code>CODA_TIME_TO_STRING(<i>numerical argument</i>): STRING</code></h3>
+
+      <p>CODA by default stores time values as a double denoting the number of seconds since Midnight, January 1<sup>st</sup>, 2000 UTC.</p>
+
+      <p>The <code>CODA_TIME_TO_STRING</code> function takes a <code>DOUBLE</code>-encoded time value and converts it to a human-readable string of the form "2000-01-01 00:00:00.000000"</p>
+
+      <h3 id="coda_is_no_data">Function <code>CODA_IS_NO_DATA(...): INT</code></h3>
+
+      <p>The <code>CODA_IS_NO_DATA</code> function takes one argument; it returns a value of TRUE (1) if and only if the argument is a <code>CODA_EMPTY_ARRAY</code> structure.</p>
+        <ul>
+          <li>its <code>ERRNO</code> field is not equal to zero</li>
+        </ul>
+
+      <h3 id="coda_is_error">Function <code>CODA_IS_ERROR(...): INT</code></h3>
+
+      <p>The <code>CODA_IS_ERROR</code> function takes one argument; it returns a value of TRUE (1) if and only if</p>
+
+      <ul>
+        <li>the argument is a <code>CODA_ERROR</code> structure</li>
+        <li>its <code>ERRNO</code> field is not equal to zero</li>
+      </ul>
+
+      <p>If either of these is not true, <code>CODA_IS_ERROR</code> returns FALSE (0).</p>
+
+      <p>Using <code>CODA_IS_ERROR</code>, you can make your CODA-based IDL programs robust (i.e., resistant to failures). If you test the result of any CODA IDLinterface call with <code>CODA_IS_ERROR</code>, you should be able to intercept any error.</p>
+
+      <h3 id="coda_unload">Procedure <code>CODA_UNLOAD</code></h3>
+
+      <p>The <code>CODA_UNLOAD</code> procedure will close all opened product files and unload any chached CODA product format definitions from memory.</p>
+
+      <p>The CODA product format definitions are loaded on-demand if any CODA function that needs it is invoked.</p>
+
+      <p>This function may be (slightly) useful on systems with little memory. You could open a product file, fetch the important data, close the file, and then unload the product format definitions to free extra memory before starting data-processing. Other than that, this function is of little practical use.</p>
+
+      <div class="footer">
+        <hr />
+        <p>Copyright &copy; 2007-2008 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+      </div>
+
+    </div>
+
+  </body>
+
+</html>

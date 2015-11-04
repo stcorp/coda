@@ -1,0 +1,81 @@
+#ifndef CODA_CONFIG_WIN_H
+#define CODA_CONFIG_WIN_H
+
+/* include windows specific headers */
+#include <windows.h>
+#include <io.h>
+#include <direct.h>
+
+/* include string.h for size_t definition */
+#include <string.h>
+
+/* include sys/types.h and sys/stat.h because we are going to override off_t and stat */
+#include <sys/types.h>
+#include <sys/stat.h>
+
+/* This is the current version of libcoda */
+#undef CODA_VERSION
+
+/* Version number of package */
+#undef VERSION
+
+/* some defines that are needed to configure expat */
+#define HAVE_MEMMOVE
+/* we need to redefine ELEMENT_TYPE because it conflicts with io.h contents */
+#define ELEMENT_TYPE ELEMENT_TYPE_RENAMED
+#define XML_NS 1
+#define XML_DTD 1
+#define XML_LARGE_SIZE 1
+#define XML_CONTEXT_BYTES 1024
+#define XML_BUILDING_EXPAT 1
+
+/* redefines for special string handling functions */
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
+#define snprintf _snprintf
+#define vsnprintf _vsnprintf
+
+/* redefines for file handling functions */
+#define open(arg1,arg2) _open(arg1,arg2)
+#define close(arg1) _close(arg1)
+#define read(arg1,arg2,arg3) _read(arg1,arg2,arg3)
+#define lseek(arg1,arg2,arg3) _lseeki64(arg1,arg2,arg3)
+#define off_t __int64
+#define stat _stati64
+#define S_IFREG _S_IFREG
+
+#ifdef HAVE_HDF4
+/* Define to 1 if HDF4 Vdata/Vgroup attributes can be used (only enable if
+   CODA is linked against HDF4 library version 4.2r2 or higher). */
+#define ENABLE_HDF4_VDATA_ATTRIBUTES 1
+#endif
+
+#define YYMALLOC malloc
+#define YYFREE free
+
+/* coda-idl defines */
+
+#ifdef IDL_V5_3
+#define HAVE_IDL_SYSFUN_DEF2 1
+#endif
+
+#ifdef IDL_V5_4
+#define HAVE_IDL_SYSFUN_DEF2 1
+#define HAVE_IDL_SYSRTN_UNION 1
+#endif
+
+/* coda-matlab defines */
+
+#if defined(MATLAB_R11) || defined(MATLAB_R12)
+#define mxCreateDoubleScalar replacement_mxCreateDoubleScalar
+#else
+#define HAVE_MXCREATEDOUBLESCALAR 1
+#endif
+
+#ifdef MATLAB_R11
+#define mxCreateNumericMatrix replacement_mxCreateNumericMatrix
+#else
+#define HAVE_MXCREATENUMERICMATRIX 1
+#endif
+
+#endif /* !defined(CODA_CONFIG_WIN_H) */

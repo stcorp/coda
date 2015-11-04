@@ -1,0 +1,103 @@
+Copyright (C) 2007-2008 S&T, The Netherlands
+
+                CODA Frequently Asked Questions
+
+    This document contains answers to questions regarding CODA.
+
+General questions
+=================
+
+ * The tool works well, but I miss the following feature: <...>. Can you
+   include it?
+
+Please tell us how we can improve CODA and we will at least consider it. If we
+consider the request to be useful to many people, it will have a good chance to
+be implemented by us and included in the next release. Otherwise (in case of
+very specific requests) you might also consider to have it implemented
+commercially, either by us, or by someone else (after all, it's open source!).
+But, in that case, be sure to read the question about commercial use later on.
+
+ * Can I use CODA for commercial purposes, or does the GPL prevent this?
+
+By all means, you can. It is a common misconception that the GPL in some way
+prevents code from being used in a commercial setting. There are some
+restrictions; most importantly, you can't take the source and use it in a
+closed-source program that you sell or give away. Please read the GPL for an
+exact statement of what you can and cannot do.
+If your application would benefit greatly from CODA, but you cannot comply to
+the terms of the GPL, there is still the option of contacting us to negotiate
+other terms. As the copyright holders of CODA, we are free to negotiate a
+different type of license with you; this includes the option of allowing you to
+use CODA in a proprietary (closed-source) application. By doing so, we will not
+(and cannot) take away the rights of users of the open-source version of the
+library.
+
+ * How do I uninstall CODA?
+
+If you use Windows with the binary installer of CODA, then go to the
+'add/remove software' control panel of Windows and select CODA. When it asks
+you whether you want to remove CODA, click yes and all CODA components will be
+removed.
+Also, don't forget to remove any IDL and MATLAB settings you might have made
+regarding CODA (since CODA is now removed, these settings have become invalid).
+If you accidentally installed a new version of BEAT over a previous
+installation then the BEAT directory (which you provided during installation;
+'C:\BEAT' by default) might still contain some files and is thus not removed.
+If the BEAT directory is still there, check whether this directory contains
+files you might have put there yourself and still want to keep, otherwise you
+can safely delete this directory.
+
+If you use a UNIX system, you may try a 'make uninstall' in the unpacked BEAT
+source directory (if you still have this directory available). However, this is
+not guaranteed to always work and especially if you have installed a new
+version of BEAT over a previous BEAT installation the best thing to do is to
+remove the following files and directories by hand ($(PREFIX) equals the
+directory you gave with the --prefix option to ./configure during installation.
+If you did not provide a --prefix option then $(PREFIX) equals '/usr/local'):
+
+   $(PREFIX)/bin/codacheck
+   $(PREFIX)/bin/codacmp
+   $(PREFIX)/bin/codadump
+   $(PREFIX)/bin/codafind
+   $(PREFIX)/include/coda.h
+   $(PREFIX)/lib/libcoda.*
+   $(PREFIX)/lib/coda/          (remove the directory and its contents)
+   $(PREFIX)/lib/python2.4/site-packages/coda/
+                                (remove the directory and its contents)
+   $(PREFIX)/share/coda/        (remove the directory and its contents)
+   
+If you used a different version of Python you will have to use a different path
+for $(PREFIX)/lib/python2.4/site-packages.
+
+ * Can I provide my own compiler optimisation flags for building CODA?
+
+It is possible to override the compiler flags when you want to build CODA.
+For Windows you will have to edit the .dsp files (either by hand or via the
+Visual C++ Developer environment) and the coda_idl.bat and coda_matlab.bat
+batchfiles for the IDL and MATLAB interfaces (all these files are located in
+the 'win32' subdirectory of your unpacked source package).
+For Unix based systems you can pass a 'CFLAGS="..."' option to the configure
+script. By default configure will use -g -O2 for the gcc compiler and use the
+default optimisation settings for all other compilers.
+If you have, for instance, the SUN WorkShop compiler and want to use level 4
+optimisation then pass the parameter 'CFLAGS="-xO4"' to ./configure and this
+option will be used.
+
+ * I get a 'could not map file into memory' error when I try to open a
+   data file with CODA.
+
+This situation can occur if you have too many (large) files open at the same
+time. It is perfectly OK to have multiple files open at the same time. Still,
+you are advised to close files as soon as you are done with them, since each of
+them consumes a vital system resource: address space. Note that this is not the
+same as 'memory': in CODA a data product is not read in its entirety into
+memory when you open it. A typical opened product file should consume a maximum
+of about 20 kilobytes of memory. However, the entire product file is virtually
+mapped into memory (a well-known technique that provides high-performance I/O
+access to a file). On a recent 32-bit computer (e.g., an Intel x86-class
+computer running Linux or Windows), up to 3 gigabytes worth of files may be
+mapped into memory at any one point in time. This means that if you use files
+that are about 250MB apiece, you can probably use 5 simultaneously opened
+files, but not 50. So a remedy to this situation is to close some product-files
+before you open a new one.
+

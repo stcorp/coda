@@ -1,0 +1,40 @@
+# Make sure to set the CODA_DEFINITION environment variable to point to your
+# directory with the CODA .codadef files before running the example program
+
+
+CC = @CC@
+F77 = @F77@
+LD = @F77@ @FFLAGS@
+
+# The possible wrapping flags are:
+#   -DWRAPFORTRAN_USE_UPPERCASE_IDENTIFIERS=1
+#   -DWRAPFORTRAN_USE_ADDITIONAL_UNDERSCORE=1
+WRAPFORTRAN_FLAGS = @WRAPFORTRAN_FLAGS@
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+includedir = @includedir@
+libdir = @libdir@
+
+CPPFLAGS = -I. -I$(includedir) $(WRAPFORTRAN_FLAGS)
+CFLAGS = @CFLAGS@
+FFLAGS = @FFLAGS@
+LDFLAGS = @LDFLAGS@
+
+LIBS = @LIBS@
+HDF4LIBS = @HDF4LIBS@
+HDF5LIBS = @HDF5LIBS@
+
+all: example
+
+coda_fortran.o: coda_fortran.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c coda_fortran.c
+
+example.o: example.f
+	$(F77) $(FFLAGS) -c example.f
+
+example: example.o coda_fortran.o
+	$(LD) $(LDFLAGS) -o example example.o coda_fortran.o $(libdir)/libcoda.a $(HDF4LIBS) $(HDF5LIBS) $(LIBS)
+
+clean:
+	-rm -f *.o $(DEMOS)

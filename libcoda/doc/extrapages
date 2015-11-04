@@ -1,0 +1,17 @@
+/** \page index CODA C interface
+ *
+ * \section intro Introduction
+ *
+ * This is the documentation that describes the Application Programmers Interface (API) for the CODA C Library.
+ * It contains a full description for each of the functions in the API and a general description for each of the modules
+ * mentioned below.
+ *
+ * \section intro_modules Modules
+ * Each module has a separate section that contains its general description together with descriptions for all types,
+ * variables, functions, etc. that are part of this module.
+ * - \link coda_general CODA General\endlink
+ * - \link coda_productfile CODA Product File\endlink
+ * - \link coda_types CODA Types\endlink
+ * - \link coda_cursor CODA Cursor\endlink
+ * - \link coda_error CODA Error\endlink
+ */

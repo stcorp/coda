@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html>
+
+  <head>
+    <title>CODA Documentation</title>
+    <link rel="stylesheet" href="css/codadoc.css" type="text/css" />
+  </head>
+
+  <body>
+
+    <div class="main">
+
+      <h1>CODA Documentation</h1>
+
+      <p>The Common Data Access toolbox (CODA) provides a set of tools for ingesting, processing, and analyzing remote sensing data.</p>
+
+      <p>CODA consists of several modules. These modules can be applications, libraries, interfaces to existing applications (such as IDL and MATLAB), or interfaces to other programming languages (such as Fortran and Python).  All modules deal with direct access to product data. With the CODA software you will be able to access each and every piece of data that is inside a product. In order to read data via this interface, you will first have to familiarize yourself with the structural layout of the products you want to access. The CODA interface provides functions to dynamically retrieve structural information of a product, but the easiest way to find your away around in a product is to have a look at the Data Definition documentation. This documentation provides an overview of the structure descriptions for each of the CODA supported products and is included with the CODA package.</p>
+
+      <h2>Installing CODA</h2>
+      <p>For installation instructions for CODA look at the INSTALL file that comes with each downloadable source package.</p>
+
+      <h2>CODA Product Format Definitions</h2>
+      <p>CODA uses a single view on data, independent of the underlying basic ascii/binary/xml/hdf file format.</p>
+      <p>A description of the common type system that CODA uses to provide a hierarchical view on data can be found in the <a href="codadef/codadef-format.html">CODA Product Format Definition Description Format</a> documentation.</p>
+      <p>Product format definitions in CODA can make use of a powerful expression language for e.g. determining array sizes, bit offsets, etc. This expression language is described in the <a href="codadef/codadef-expressions.html">CODA Expressions</a> documentation.</p>
+      <p>Data products that are in XML, HDF4, or HDF5 do not always need a CODA product format description, since they are self describing formats. The approach that CODA uses to map the XML/HDF4/HDF5 data types to CODA data types can be found in the <a href="codadef/codadef-xml.html">CODA XML Mapping Description</a>, <a href="codadef/codadef-hdf4.html">CODA HDF4 Mapping Description</a>, and <a href="codadef/codadef-hdf5.html">CODA HDF5 Mapping Description</a> documentation.</p>
+
+      <h2>C interface</h2>
+      <p>The C interface is the foundation of CODA upon which all other CODA tools are build. As a developer you can also use this library and gain easy, high-performance access to all data in products that are supported by CODA.</p>
+      <p>A description of the C interface can be found in the <a href="libcoda/index.html">CODA C interface documentation</a>.</p>
+
+      <h2>Fortran interface</h2>
+      <p>The Fortran interface provides a small wrapper for the C Library and allows you to call its functions from your Fortran 77/90 programs.</p>
+      <p>A description of the Fortran interface can be found in the <a href="coda-fortran/index.html">CODA Fortran interface documentation</a>.</p>
+
+      <h2>IDL interface</h2>
+      <p>The IDL interface provides a wrapper for the C Library through a small set of powerful functions (such as <code>coda_fetch</code>) which are available from within IDL.</p>
+      <p>A description of the IDL interface can be found in the <a href="coda-idl/index.html">CODA IDL interface documentation</a>.</p>
+
+      <h2>MATLAB interface</h2>
+      <p>The MATLAB interface provides a wrapper for the C Library through a small set of powerful functions (such as <code>coda_fetch</code>) which are available from within MATLAB.</p>
+      <p>A description of the MATLAB interface can be found in the <a href="coda-matlab/index.html">CODA MATLAB interface documentation</a>.</p>
+
+      <h2>Python interface</h2>
+      <p>The Python interface provides a wrapper for the CODA C Library. The Python interface contains both direct wrappers for the C Library functions (so you can traverse a product using the so-called CODA cursors) as well as the more high level functions that can be found in the IDL and MATLAB interfaces (e.g. <code>coda_fetch</code>).</p>
+      <p>A description of the Python interface can be found in the <a href="coda-python/index.html">CODA Python interface documentation</a>.</p>
+
+      <h2>codacheck</h2>
+      <p>With codacheck it is possible to provide a basic sanity check on product files.</p>
+      <p>More information about this tool can be found in the <a href="codacheck/index.html">codacheck documentation</a>.</p>
+
+      <h2>codacmp</h2>
+      <p>With codacmp two product files can be compared. In other words, it is a 'diff' tool for product data. The tool is primarily intended for verification purposes.</p>
+      <p>More information about this tool can be found in the <a href="codacmp/index.html">codacmp documentation</a>.</p>
+
+      <h2>codadd</h2>
+      <p>The codadd tool allows for a quick validation of .codadef files and is able to generate HTML documentation for the product format definitions that are inside the .codadef files.</p>
+      <p>More information about this tool can be found in the <a href="codadd/index.html">codadd documentation</a>.</p>
+
+      <h2>codadump</h2>
+      <p>With the codadump command line tool you can view data from any product file that is supported by CODA. The tool allows you to inspect the product structure (including array sizes), view and export data from the product in ASCII format, and export data into HDF4 format.</p>
+      <p>More information about this tool can be found in the <a href="codadump/index.html">codadump documentation</a>.</p>
+
+      <h2>codafind</h2>
+      <p>The codafind command line tool allows you to search files and directories for product files that are supported by CODA. The tool comes with a very powerful filtering mechanism that makes it possible to search for only those product files that match certain filter criteria.</p>
+      <p>More information about this tool can be found in the <a href="codafind/index.html">codafind documentation</a>.</p>
+
+      <div class="footer">
+        <hr />
+        <p>Copyright &copy; 2007-2008 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>      
+      </div>
+
+    </div>
+
+  </body>
+
+</html>

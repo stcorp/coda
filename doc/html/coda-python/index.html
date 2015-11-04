@@ -1,0 +1,571 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html>
+
+  <head>
+    <title>CODA Python interface</title>
+    <link rel="stylesheet" href="../css/codadoc.css" type="text/css" />
+  </head>
+
+  <body>
+
+    <div class="main">
+
+      <h1>CODA Python interface</h1>
+
+      <p>The CODA Python interface consists of a Python package 'coda' containing several functions that allow the user to easily access data inside product files.</p>
+
+      <p>The CODA Python interface contains both a wrapping of the <a href="../libcoda/index.html">CODA C interface</a> as well as a version of the higher level CODA functions as can be found in the <a href="../coda-idl/index.html">IDL</a> and <a href="../coda-matlab/index.html">MATLAB</a> interfaces of CODA.</p>
+
+      <h2>Contents</h2>
+
+      <ul>
+      	<li><a href="#initialisation">Initialisation of CODA</a></li>
+      	<li><a href="#high_level_types">High level CODA Data Types</a></li>
+        <li><a href="#high_level_functions">High level CODA Functions</a>
+          <ul>
+            <li><a href="#coda_open_hl"><code>coda.open</code></a></li>
+            <li><a href="#coda_close_hl"><code>coda.close</code></a></li>
+            <li><a href="#coda_get_attributes"><code>coda.get_attributes</code></a></li>
+            <li><a href="#coda_get_description"><code>coda.get_description</code></a></li>
+            <li><a href="#coda_fetch"><code>coda.fetch</code></a></li>
+            <li><a href="#coda_get_field_available"><code>coda.get_field_available</code></a></li>
+            <li><a href="#coda_get_field_count"><code>coda.get_field_count</code></a></li>
+            <li><a href="#coda_get_field_names"><code>coda.get_field_names</code></a></li>
+            <li><a href="#coda_get_size"><code>coda.get_size</code></a></li>
+            <li><a href="#coda_time_to_string"><code>coda.time_to_string</code></a></li>
+            <li><a href="#coda_get_unit"><code>coda.get_unit</code></a></li>
+            <li><a href="#coda_version"><code>coda.version</code></a></li>
+            <li><a href="#coda_set_option_filter_record_fields"><code>coda.set_option_filter_record_fields</code></a></li>
+            <li><a href="#coda_get_option_filter_record_fields"><code>coda.get_option_filter_record_fields</code></a></li>
+          </ul>
+        </li>
+      	<li><a href="#low_level_types">Low level CODA Data Types</a></li>
+        <li><a href="#low_level_functions">Low level CODA Functions</a>
+          <ul>
+            <li><a href="#coda_init"><code>coda.init</code></a></li>
+            <li><a href="#coda_done"><code>coda.done</code></a></li>
+            <li><a href="#coda_set_option_bypass_special_types"><code>coda.set_option_bypass_special_types</code></a></li>
+            <li><a href="#coda_get_option_bypass_special_types"><code>coda.get_option_bypass_special_types</code></a></li>
+            <li><a href="#coda_set_option_perform_boundary_checks"><code>coda.set_option_perform_boundary_checks</code></a></li>
+            <li><a href="#coda_get_option_perform_boundary_checks"><code>coda.get_option_perform_boundary_checks</code></a></li>
+            <li><a href="#coda_set_option_perform_conversions"><code>coda.set_option_perform_conversions</code></a></li>
+            <li><a href="#coda_get_option_perform_conversions"><code>coda.get_option_perform_conversions</code></a></li>
+            <li><a href="#coda_set_option_use_fast_size_expressions"><code>coda.set_option_use_fast_size_expressions</code></a></li>
+            <li><a href="#coda_get_option_use_fast_size_expressions"><code>coda.get_option_use_fast_size_expressions</code></a></li>
+            <li><a href="#coda_set_option_use_mmap"><code>coda.set_option_use_mmap</code></a></li>
+            <li><a href="#coda_get_option_use_mmap"><code>coda.get_option_use_mmap</code></a></li>
+            <li><a href="#coda_NaN"><code>coda.NaN</code></a></li>
+            <li><a href="#coda_isNaN"><code>coda.isNaN</code></a></li>
+            <li><a href="#coda_PlusInf"><code>coda.PlusInf</code></a></li>
+            <li><a href="#coda_MinInf"><code>coda.MinInf</code></a></li>
+            <li><a href="#coda_isInf"><code>coda.isInf</code></a></li>
+            <li><a href="#coda_isPlusInf"><code>coda.isPlusInf</code></a></li>
+            <li><a href="#coda_isMinInf"><code>coda.isMinInf</code></a></li>
+            <li><a href="#coda_c_index_to_fortran_index"><code>coda.c_index_to_fortran_index</code></a></li>
+            <li><a href="#coda_datetime_to_double"><code>coda.datetime_to_double</code></a></li>
+            <li><a href="#coda_double_to_datetime"><code>coda.double_to_datetime</code></a></li>
+            <li><a href="#coda_time_to_string"><code>coda.time_to_string</code></a></li>
+            <li><a href="#coda_string_to_time"><code>coda.string_to_time</code></a></li>
+            <li><a href="#coda_match_filefilter"><code>coda.match_filefilter</code></a></li>
+            <li><a href="#coda_recognize_file"><code>coda.recognize_file</code></a></li>
+            <li><a href="#coda_open"><code>coda.open</code></a></li>
+            <li><a href="#coda_close"><code>coda.close</code></a></li>
+            <li><a href="#coda_get_product_filename"><code>coda.get_product_filename</code></a></li>
+            <li><a href="#coda_get_product_file_size"><code>coda.get_product_file_size</code></a></li>
+            <li><a href="#coda_get_product_format"><code>coda.get_product_format</code></a></li>
+            <li><a href="#coda_get_product_class"><code>coda.get_product_class</code></a></li>
+            <li><a href="#coda_get_product_type"><code>coda.get_product_type</code></a></li>
+            <li><a href="#coda_get_product_version"><code>coda.get_product_version</code></a></li>
+            <li><a href="#coda_get_product_root_type"><code>coda.get_product_root_type</code></a></li>
+            <li><a href="#coda_get_product_variable_value"><code>coda.get_product_variable_value</code></a></li>
+            <li><a href="#coda_type_get_format_name"><code>coda.type_get_format_name</code></a></li>
+            <li><a href="#coda_type_get_class_name"><code>coda.type_get_class_name</code></a></li>
+            <li><a href="#coda_type_get_native_type_name"><code>coda.type_get_native_type_name</code></a></li>
+            <li><a href="#coda_type_get_special_type_name"><code>coda.type_get_special_type_name</code></a></li>
+            <li><a href="#coda_type_has_ascii_content"><code>coda.type_has_ascii_content</code></a></li>
+            <li><a href="#coda_type_get_format"><code>coda.type_get_format</code></a></li>
+            <li><a href="#coda_type_get_class"><code>coda.type_get_class</code></a></li>
+            <li><a href="#coda_type_get_read_type"><code>coda.type_get_read_type</code></a></li>
+            <li><a href="#coda_type_get_string_length"><code>coda.type_get_string_length</code></a></li>
+            <li><a href="#coda_type_get_bit_size"><code>coda.type_get_bit_size</code></a></li>
+            <li><a href="#coda_type_get_name"><code>coda.type_get_name</code></a></li>
+            <li><a href="#coda_type_get_description"><code>coda.type_get_description</code></a></li>
+            <li><a href="#coda_type_get_unit"><code>coda.type_get_unit</code></a></li>
+            <li><a href="#coda_type_get_fixed_value"><code>coda.type_get_fixed_value</code></a></li>
+            <li><a href="#coda_type_get_num_record_fields"><code>coda.type_get_num_record_fields</code></a></li>
+            <li><a href="#coda_type_get_record_field_index_from_name"><code>coda.type_get_record_field_index_from_name</code></a></li>
+            <li><a href="#coda_type_get_record_field_type"><code>coda.type_get_record_field_type</code></a></li>
+            <li><a href="#coda_type_get_record_field_name"><code>coda.type_get_record_field_name</code></a></li>
+            <li><a href="#coda_type_get_record_field_hidden_status"><code>coda.type_get_record_field_hidden_status</code></a></li>
+            <li><a href="#coda_type_get_record_field_available_status"><code>coda.type_get_record_field_available_status</code></a></li>
+            <li><a href="#coda_type_get_record_union_status"><code>coda.type_get_record_union_status</code></a></li>
+            <li><a href="#coda_type_get_array_num_dims"><code>coda.type_get_array_num_dims</code></a></li>
+            <li><a href="#coda_type_get_array_dim"><code>coda.type_get_array_dim</code></a></li>
+            <li><a href="#coda_type_get_array_base_type"><code>coda.type_get_array_base_type</code></a></li>
+            <li><a href="#coda_type_get_special_type"><code>coda.type_get_special_type</code></a></li>
+            <li><a href="#coda_type_get_special_base_type"><code>coda.type_get_special_base_type</code></a></li>
+            <li><a href="#coda_cursor_set_product"><code>coda.cursor_set_product</code></a></li>
+            <li><a href="#coda_cursor_goto_first_record_field"><code>coda.cursor_goto_first_record_field</code></a></li>
+            <li><a href="#coda_cursor_goto_next_record_field"><code>coda.cursor_goto_next_record_field</code></a></li>
+            <li><a href="#coda_cursor_goto_record_field_by_index"><code>coda.cursor_goto_record_field_by_index</code></a></li>
+            <li><a href="#coda_cursor_goto_record_field_by_name"><code>coda.cursor_goto_record_field_by_name</code></a></li>
+            <li><a href="#coda_cursor_goto_available_union_field"><code>coda.cursor_goto_available_union_field</code></a></li>
+            <li><a href="#coda_cursor_goto_first_array_element"><code>coda.cursor_goto_first_array_element</code></a></li>
+            <li><a href="#coda_cursor_goto_next_array_element"><code>coda.cursor_goto_next_array_element</code></a></li>
+            <li><a href="#coda_cursor_goto_array_element"><code>coda.cursor_goto_array_element</code></a></li>
+            <li><a href="#coda_cursor_goto_array_element_by_index"><code>coda.cursor_goto_array_element_by_index</code></a></li>
+            <li><a href="#coda_cursor_goto_attributes"><code>coda.cursor_goto_attributes</code></a></li>
+            <li><a href="#coda_cursor_goto_root"><code>coda.cursor_goto_root</code></a></li>
+            <li><a href="#coda_cursor_goto_parent"><code>coda.cursor_goto_parent</code></a></li>
+            <li><a href="#coda_cursor_use_base_type_of_special_type"><code>coda.cursor_use_base_type_of_special_type</code></a></li>
+            <li><a href="#coda_cursor_has_ascii_content"><code>coda.cursor_has_ascii_content</code></a></li>
+            <li><a href="#coda_cursor_get_string_length"><code>coda.cursor_get_string_length</code></a></li>
+            <li><a href="#coda_cursor_get_bit_size"><code>coda.cursor_get_bit_size</code></a></li>
+            <li><a href="#coda_cursor_get_byte_size"><code>coda.cursor_get_byte_size</code></a></li>
+            <li><a href="#coda_cursor_get_num_elements"><code>coda.cursor_get_num_elements</code></a></li>
+            <li><a href="#coda_cursor_get_product_file"><code>coda.cursor_get_product_file</code></a></li>
+            <li><a href="#coda_cursor_get_depth"><code>coda.cursor_get_depth</code></a></li>
+            <li><a href="#coda_cursor_get_index"><code>coda.cursor_get_index</code></a></li>
+            <li><a href="#coda_cursor_get_file_bit_offset"><code>coda.cursor_get_file_bit_offset</code></a></li>
+            <li><a href="#coda_cursor_get_file_byte_offset"><code>coda.cursor_get_file_byte_offset</code></a></li>
+            <li><a href="#coda_cursor_get_format"><code>coda.cursor_get_format</code></a></li>
+            <li><a href="#coda_cursor_get_type_class"><code>coda.cursor_get_type_class</code></a></li>
+            <li><a href="#coda_cursor_get_read_type"><code>coda.cursor_get_read_type</code></a></li>
+            <li><a href="#coda_cursor_get_special_type"><code>coda.cursor_get_special_type</code></a></li>
+            <li><a href="#coda_cursor_get_type"><code>coda.cursor_get_type</code></a></li>
+            <li><a href="#coda_cursor_get_record_field_index_from_name"><code>coda.cursor_get_record_field_index_from_name</code></a></li>
+            <li><a href="#coda_cursor_get_record_field_available_status"><code>coda.cursor_get_record_field_available_status</code></a></li>
+            <li><a href="#coda_cursor_get_available_union_field_index"><code>coda.cursor_get_available_union_field_index</code></a></li>
+            <li><a href="#coda_cursor_get_array_dim"><code>coda.cursor_get_array_dim</code></a></li>
+            <li><a href="#coda_cursor_read_int8"><code>coda.cursor_read_int8</code></a></li>
+            <li><a href="#coda_cursor_read_uint8"><code>coda.cursor_read_uint8</code></a></li>
+            <li><a href="#coda_cursor_read_int16"><code>coda.cursor_read_int16</code></a></li>
+            <li><a href="#coda_cursor_read_uint16"><code>coda.cursor_read_uint16</code></a></li>
+            <li><a href="#coda_cursor_read_int32"><code>coda.cursor_read_int32</code></a></li>
+            <li><a href="#coda_cursor_read_uint32"><code>coda.cursor_read_uint32</code></a></li>
+            <li><a href="#coda_cursor_read_int64"><code>coda.cursor_read_int64</code></a></li>
+            <li><a href="#coda_cursor_read_uint64"><code>coda.cursor_read_uint64</code></a></li>
+            <li><a href="#coda_cursor_read_float"><code>coda.cursor_read_float</code></a></li>
+            <li><a href="#coda_cursor_read_double"><code>coda.cursor_read_double</code></a></li>
+            <li><a href="#coda_cursor_read_char"><code>coda.cursor_read_char</code></a></li>
+            <li><a href="#coda_cursor_read_string"><code>coda.cursor_read_string</code></a></li>
+            <li><a href="#coda_cursor_read_bits"><code>coda.cursor_read_bits</code></a></li>
+            <li><a href="#coda_cursor_read_bytes"><code>coda.cursor_read_bytes</code></a></li>
+            <li><a href="#coda_cursor_read_int8_array"><code>coda.cursor_read_int8_array</code></a></li>
+            <li><a href="#coda_cursor_read_uint8_array"><code>coda.cursor_read_uint8_array</code></a></li>
+            <li><a href="#coda_cursor_read_int16_array"><code>coda.cursor_read_int16_array</code></a></li>
+            <li><a href="#coda_cursor_read_uint16_array"><code>coda.cursor_read_uint16_array</code></a></li>
+            <li><a href="#coda_cursor_read_int32_array"><code>coda.cursor_read_int32_array</code></a></li>
+            <li><a href="#coda_cursor_read_uint32_array"><code>coda.cursor_read_uint32_array</code></a></li>
+            <li><a href="#coda_cursor_read_int64_array"><code>coda.cursor_read_int64_array</code></a></li>
+            <li><a href="#coda_cursor_read_uint64_array"><code>coda.cursor_read_uint64_array</code></a></li>
+            <li><a href="#coda_cursor_read_float_array"><code>coda.cursor_read_float_array</code></a></li>
+            <li><a href="#coda_cursor_read_double_array"><code>coda.cursor_read_double_array</code></a></li>
+            <li><a href="#coda_cursor_read_char_array"><code>coda.cursor_read_char_array</code></a></li>
+            <li><a href="#coda_cursor_read_complex_double_pair"><code>coda.cursor_read_complex_double_pair</code></a></li>
+            <li><a href="#coda_cursor_read_complex_double_pairs_array"><code>coda.cursor_read_complex_double_pairs_array</code></a></li>
+            <li><a href="#coda_cursor_read_complex_double_split"><code>coda.cursor_read_complex_double_split</code></a></li>
+            <li><a href="#coda_cursor_read_complex_double_split_array"><code>coda.cursor_read_complex_double_split_array</code></a></li>
+          </ul>
+        </li>
+      </ul>
+
+
+      <h2 id="initialisation">Initialisation of CODA</h2>
+      
+      <p>When you import the CODA Python package this will trigger an initialisation of CODA. Part of this initialisation is that CODA will search its definition path for all .codadef Product Format Definition files. In order to specify where CODA will look for its .codadef files you can set the CODA_DEFINITION environment variable before you import the CODA Python package. Setting the environment variable can be performed from within Python using:</p>
+      
+<div class="fragment"><pre>
+import os
+
+os.putenv('CODA_DEFINITION', '&lt;your codadef search path&gt;')
+
+# ...
+
+import coda
+</pre></div>
+      
+
+      <h2 id="high_level_types">High level CODA Data Types</h2>
+      
+      <p>When reading data from a product file, CODA will use the following mapping to translate the ingested data into Python data structures:</p>
+
+      <table class="fancy" border="1" cellspacing="0">
+        <tr><th>CODA&nbsp;class</th><th>CODA&nbsp;read&nbsp;type / CODA&nbsp;special&nbsp;type</th><th>Python data type</th></tr>
+        <tr><td>record</td><td>&nbsp;</td><td><code>coda.Record</code></td></tr>
+        <tr><td>array</td><td>&nbsp;</td><td>Depending on the base type this will be either an array of scalars (a <code>numarray.array</code> object) or an array of Python objects (a <code>numarray.objects.array</code> object). The following table relates the CODA array base type to the numarray base type:
+           <table class="fancy" border="1" cellspacing="0">
+             <tr><th>CODA&nbsp;class</th><th>CODA&nbsp;read&nbsp;type / CODA&nbsp;special&nbsp;type</th><th>numarray base type</th></tr>
+             <tr><td>record</td><td>&nbsp;</td><td>Python object (<code>coda.Record</code>)</td></tr>
+             <tr><td>array</td><td>&nbsp;</td><td>Python object (a numarray object)</td></tr>
+             <tr><td>integer</td><td>int8</td><td>Int8</td></tr>
+             <tr><td>integer</td><td>uint8</td><td>UInt8</td></tr>
+             <tr><td>integer</td><td>int16</td><td>Int16</td></tr>
+             <tr><td>integer</td><td>uint16</td><td>UInt16</td></tr>
+             <tr><td>integer</td><td>int32</td><td>Int32</td></tr>
+             <tr><td>integer</td><td>uint32</td><td>UInt32</td></tr>
+             <tr><td>integer</td><td>int64</td><td>Int64</td></tr>
+             <tr><td>integer</td><td>uint64</td><td>UInt64</td></tr>
+             <tr><td>real</td><td>float</td><td>Float32</td></tr>
+             <tr><td>real</td><td>double</td><td>Float64</td></tr>
+             <tr><td>text</td><td>char</td><td>Python object (the Python object is a Python String of length 1)</td></tr>
+             <tr><td>text</td><td>string</td><td>Python object (Python String)</td></tr>
+             <tr><td>raw</td><td>bytes</td><td>Python object (<code>numarray.array</code> array with base type uint8)</td></tr>
+             <tr><td>special</td><td>no_data</td><td>Python object (<code>None</code>)</td></tr>
+             <tr><td>special</td><td>time</td><td>Float64</td></tr>
+             <tr><td>special</td><td>complex</td><td>Complex64</td></tr>
+           </table>   
+        </td></tr>
+        <tr><td>integer</td><td>int8</td><td>Python Integer</td></tr>
+        <tr><td>integer</td><td>uint8</td><td>Python Integer</td></tr>
+        <tr><td>integer</td><td>int16</td><td>Python Integer</td></tr>
+        <tr><td>integer</td><td>uint16</td><td>Python Integer</td></tr>
+        <tr><td>integer</td><td>int32</td><td>Python Integer</td></tr>
+        <tr><td>integer</td><td>uint32</td><td>Python Long</td></tr>
+        <tr><td>integer</td><td>int64</td><td>Python Long</td></tr>
+        <tr><td>integer</td><td>uint64</td><td>Python Long</td></tr>
+        <tr><td>real</td><td>float</td><td>Python Float</td></tr>
+        <tr><td>real</td><td>double</td><td>Python Float</td></tr>
+        <tr><td>text</td><td>char</td><td>Python String</td></tr>
+        <tr><td>text</td><td>string</td><td>Python String</td></tr>
+        <tr><td>raw</td><td>bytes</td><td><code>numarray.array</code> array with base type uint8</td></tr>
+        <tr><td>special</td><td>no_data</td><td><code>None</code></td></tr>
+        <tr><td>special</td><td>time</td><td>Python Float</td></tr>
+        <tr><td>special</td><td>complex</td><td>Python Complex Number</td></tr>
+      </table>
+
+      <h2 id="high_level_functions">High level CODA Functions</h2>
+      
+      <a name="coda_path_argument"></a><p>Most high level CODA functions require a <code>start</code> and <code>path</code> parameter. These two parameters together define the location of a data item in a product.</p>
+
+      <p>The <code>start</code> parameter determines the offset in the product from which the <code>path</code> parameter is expanded. It can either be a file handle or a CODA Cursor (see <a href="#low_level_types">Low level CODA Data Types</a>). When a file handle is passed we start at the root of the product and when it is a cursor we start at the position of the cursor.</p>
+
+      <p>The <code>path</code> argument is actually a series of parameters (which can also be empty). Starting from the <code>start</code> position, the <code>path</code> parameters should provide valid fieldnames and array indices to navigate deeper into the product. For example, suppose we have a product that  has a <code>measurements</code> data set with 100 data set records and in each data set record there is a <code>time</code> field containing a time value of type double. If we want to read the time value in the first data set record (using the file handle <code>filehandle</code> as <code>start</code> parameter) we would use: <code>coda.fetch(filehandle, "measurements", 0, "time")</code>. However, it is also possible to read several data elements at once. We can for instance read the full data set record using <code>coda.fetch(filehandle, "measurements", 0)</code> or even read the whole product using <code>coda.fetch(filehandle)</code>. When you read a group of data at once, CODA will create a dynamic data structure in Python (consisting of <code>coda.Record</code> and numarray objects to represent records and arrays) for the product data that is read.</p>
+
+      <p>The two types of arguments that you can use in the list of arguments for <code>path</code> are:</p>
+      <ul>
+        <li>Array index: You need to provide an array index that has the same number of elements as there are dimensions in the array that you are refering to. So if the array is two dimensional you have to pass indices for both dimensions like <code>[4,5]</code>. If the array is one dimensional (like the datasets) you can just provide a single index value (without the '[]') to get to the k-th element. You can use <a href="#coda_get_size"><code>coda.get_size</code></a> to check the number of dimensions of an array and the size of each dimension.</li>
+        <li>Field name: To go to a certain field inside the record that you are pointing to, just provide the field name as a string. You should be aware that some record fields can be dynamically available. In such cases it is better to check in advance (using <a href="#coda_get_field_available"><code>coda.get_field_available</code></a>) whether the field is available, before traversing it.</li>
+      </ul>
+
+      <p>Just as the low level functions, the high level CODA Python functions will throw an exception when an error condition occurs. For the high level functions the exception will be of type <code>coda.CodaError</code>.</p>
+
+      <h3 id="coda_open_hl"><code>coda.open(filename)</code></h3>
+
+      <p>This function opens a file and returns a handle to the opened product file.</p>
+
+      <p>The high and lowel level <code>coda.open</code> functions are actually one and the same. You can thus use the product file handle that is returned by <code>coda.open</code> both as <code>start</code> parameter in the high level CODA functions mentioned below as well as <code>pf</code> parameter in the <a href="#low_level_functions">low level CODA functions</a>.</p>
+
+      <h3 id="coda_close_hl"><code>coda.close(filehandle)</code></h3>
+      
+      <p>This function closes the file associated with the file handle <code>filehandle</code>.</p>
+
+      <p>Just as the <code>coda.open</code> function, the high and lowel level <code>coda.close</code> functions are one and the same.</p>
+
+      <h3 id="coda_get_attributes"><code>coda.get_attributes(start, *path)</code></h3>
+
+      <p>Retrieve the attributes of the specified data item.</p>
+    
+      <p>This function returns a <a href="#high_level_types"><code>coda.Record</code></a> containing the attributes of the specified data item.</p>
+    
+      <p>The <code>start</code> parameter must be a valid CODA file handle that was retrieved with <code>coda.open()</code> <i>or</i> a valid <a href="#low_level_types">CODA Cursor</a>. If the start argument is a cursor, then the specified path is traversed starting from the position represented by the cursor. The format of the <code>path</code> argument is described at the <a href="#coda_path_argument">top of this section</a>.</p>
+
+      <h3 id="coda_get_description"><code>coda.get_description(start, *path)</code></h3>
+
+      <p>Retrieve the description of a field.</p>
+
+      <p>This function returns a string containing the description in the data dictionary of the specified data element.</p>
+
+      <p>The <code>start</code> parameter must be a valid CODA file handle that was retrieved with <code>coda.open()</code> <i>or</i> a valid <a href="#low_level_types">CODA Cursor</a>. If the start argument is a cursor, then the specified path is traversed starting from the position represented by the cursor. The format of the <code>path</code> argument is described at the <a href="#coda_path_argument">top of this section</a>.</p>
+
+      <h3 id="coda_fetch"><code>coda.fetch(start, *path)</code></h3>
+      
+      <p>Retrieve data from a product file.</p>
+    
+      <p>Reads the specified data element from the product file. Instead of just reading individual values, like strings, integers, doubles, etc. it is also possible to read complete arrays or records of data. For instance if <code>pf</code> is a product file handle obtained by calling <code>coda.open()</code>, then you can read the complete MPH of a product with:</p>
+
+<div class="fragment"><pre>
+>>> mph = coda.fetch(pf, 'mph')
+</pre></div>
+
+      <p>which gives you a <a href="#high_level_types"><code>coda.Record</code></a> containing all the mph fields.</p>
+
+      <p>It is also possible to read an entire product at once by leaving the data specification argument list empty (<code>product = coda.fetch(pf)</code>).</p>
+
+      <p>For the <code>coda.fetch</code> function there is an additional feature. If you provide a -1 for one or more of the dimensions of an array you will fetch all elements in the specified dimension(s). For example, with <code>coda.fetch(pf,'datasetname',-1,'dsr_time')</code> you can fetch all <code>dsr_time</code> values for all measurements into a single array.</p>
+
+      <p>The <code>start</code> parameter must be a valid CODA file handle that was retrieved with <code>coda.open()</code> <i>or</i> a valid <a href="#low_level_types">CODA Cursor</a>. If the start argument is a cursor, then the specified path is traversed starting from the position represented by the cursor. The format of the <code>path</code> argument is described at the <a href="#coda_path_argument">top of this section</a>.</p>
+
+      <h3 id="coda_get_field_available"><code>coda.get_field_available(start, *path)</code></h3>
+
+      <p>Find out whether a dynamically available record field is available or not.</p>
+    
+      <p>This function returns True if the record field is available and False if it is not. The last item of the <code>path</code> argument should point to a record field. An empty <code>path</code> is considered an error, even if the start argument is a CODA cursor.</p>
+
+      <p>The <code>start</code> parameter must be a valid CODA file handle that was retrieved with <code>coda.open()</code> <i>or</i> a valid <a href="#low_level_types">CODA Cursor</a>. If the start argument is a cursor, then the specified path is traversed starting from the position represented by the cursor. The format of the <code>path</code> argument is described at the <a href="#coda_path_argument">top of this section</a>.</p>
+
+      <h3 id="coda_get_field_count"><code>coda.get_field_count(start, *path)</code></h3>
+
+      <p>Retrieve the number of fields in a record.</p>
+
+      <p>This function returns the number of fields in the <a href="#high_level_types"><code>coda.Record</code></a> instance that will be returned if <code>coda.fetch()</code> is called with the same arguments. The last node on the path should reference a record.</p>
+
+      <p>The <code>start</code> parameter must be a valid CODA file handle that was retrieved with <code>coda.open()</code> <i>or</i> a valid <a href="#low_level_types">CODA Cursor</a>. If the start argument is a cursor, then the specified path is traversed starting from the position represented by the cursor. The format of the <code>path</code> argument is described at the <a href="#coda_path_argument">top of this section</a>.</p>
+
+      <h3 id="coda_get_field_names"><code>coda.get_field_names(start, *path)</code></h3>
+
+      <p>Retrieve the names of the fields in a record.</p>
+
+      <p>This function returns the names of the fields in the <a href="#high_level_types"><code>coda.Record</code></a> instance that will be returned if <code>coda.fetch()</code> is called with the same arguments. The last node on the path should reference a record.</p>
+
+      <p>The <code>start</code> parameter must be a valid CODA file handle that was retrieved with <code>coda.open()</code> <i>or</i> a valid <a href="#low_level_types">CODA Cursor</a>. If the start argument is a cursor, then the specified path is traversed starting from the position represented by the cursor. The format of the <code>path</code> argument is described at the <a href="#coda_path_argument">top of this section</a>.</p>
+
+      <h3 id="coda_get_size"><code>coda.get_size(start, *path)</code></h3>
+
+      <p>Retrieve the dimensions of the specified array.</p>
+
+      <p>This function returns the dimensions of the array that will be returned if <code>coda.fetch()</code> is called with the same arguments. Thus, you can check what the dimensions of an array are without having to retrieve the entire array with <code>coda.fetch()</code>. The last node on the path should reference an array.</p>
+
+      <p>The <code>start</code> parameter must be a valid CODA file handle that was retrieved with <code>coda.open()</code> <i>or</i> a valid <a href="#low_level_types">CODA Cursor</a>. If the start argument is a cursor, then the specified path is traversed starting from the position represented by the cursor. The format of the <code>path</code> argument is described at the <a href="#coda_path_argument">top of this section</a>.</p>
+
+      <h3 id="coda_time_to_string"><code>coda.time_to_string(n_seconds_since_2000)</code></h3>
+
+      <p>Convert a number of seconds since 1-1-2000 to a human readable string format. For example:</p>
+
+<div class="fragment"><pre>
+>>> coda.time_to_string(68260079.0)
+</pre></div>
+
+      <p>would return the string <code>'2002-03-01 01:07:59.000000'</code>.</p>
+
+      <p>It is possible to input a list or tuple of doubles, in which case a list of strings will be returned.</p>
+
+      <h3 id="coda_get_unit"><code>coda.get_unit(start, *path)</code></h3>
+
+      <p>Retrieve unit information.</p>
+
+      <p>This function returns a string containing the unit information which is stored in the data dictionary for the specified data item.</p>
+
+      <p>The <code>start</code> parameter must be a valid CODA file handle that was retrieved with <code>coda.open()</code> <i>or</i> a valid <a href="#low_level_types">CODA Cursor</a>. If the start argument is a cursor, then the specified path is traversed starting from the position represented by the cursor. The format of the <code>path</code> argument is described at the <a href="#coda_path_argument">top of this section</a>.</p>
+
+      <h3 id="coda_version"><code>coda.version()</code></h3>
+
+      <p>Retrieve CODA version information.</p>
+
+      <p>This function returns a string containing the version number of CODA. The version number is always of the format 'x.y.z', i.e., major, minor, and revision numbers, separated by dots.</p>
+
+      <h3 id="coda_set_option_filter_record_fields"><code>coda.set_option_filter_record_fields(enable)</code></h3>
+
+      <p>Records like for instance a Main Product Header contain fields that have a fixed value (fieldnames like 'PRODUCT=', quote characters, end of line characters, etc.) or are spare fields. If this option is set to 1 then these kinds of fields will be filtered out when retrieving a record from a product file (using e.g. <code>coda.fetch</code>). If this option is set to 0 then all fields will be returned.</p>
+
+      <p>The default value for this option is: 1</p>
+      
+      <p>This option only effects the higher level CODA Python functions. The lower level functions do not perform filtering on record fields.</p>
+
+      <h3 id="coda_get_option_filter_record_fields "><code>coda.get_option_filter_record_fields()</code></h3>
+
+      <p>Retrieve the current setting for filtering of record fields.</p>
+      
+      <p>See also <a href="#coda_set_option_filter_record_fields"><code>coda.set_option_filter_record_fields(enable)</code></a>.</p>
+
+      <h2 id="low_level_types">Low level CODA Data Types</h2>
+      
+      <p>Just as in the C interface the <code>coda_ProductFile</code>, <code>coda_Type</code>, and <code>coda_Cursor</code> types are opaque types. This means that you can not print or inspect these types, but can only pass them around.</p>
+
+      <p>To create a new CODA Cursor there is a special <code>coda.Cursor</code> class from which you instantiate new Cursor objects (these objects are opaque wrappers of the underlying cursors in the C domain). You can create a new cursors with: <code>cursor = coda.Cursor()</code>. After creation you will have to initialize it using the <code>coda.cursor_set_product</code> function (just like in C). It is possible to create a copy of a CODA Cursor by using a so-called deep copy:
+
+<div class="fragment"><pre>
+import copy
+cursor = coda.Cursor()
+cursor2 = copy.deepcopy(cursor)
+</pre></div>
+
+      <h2 id="low_level_functions">Low level CODA Functions</h2>
+      
+      <p>For a description of all low level CODA functions please consult the <a href="../libcoda/index.html">CODA C interface documentation</a>. There are a few differences between the Python and C interface with respect to certain parameters and error handling. Below you will find an overview of the calling signature for each of the supported low level CODA functions. You'll notice that most differences are rather straightforward (parameters have moved from the parameter list to the list of return values or have been removed). If a change requires more explanation a remark is added to the function definition.</p>
+
+      <a name="error_handling"></a><p>The low level CODA Python functions do not return error codes to indicate succes or failure (as is the case for the C functions). If an error condition occurs, an exception (of type <code>coda.CodacError</code>) will be thrown. You can catch this exception using e.g.:</p>
+
+<div class="fragment"><pre>
+try:
+    # call your CODA function(s) here
+except coda.CodacError, e:
+    # handle CODA-specific exception
+    print "ERROR: %s" % e
+</pre></div>
+
+      <p>If you do not catch the exception, the error message will be printed to the console.</p>
+
+      <h5 id="coda_init"><code>coda.init()</code></h5>
+      <p>You do not have to call this function yourself to initialize CODA. When CODA is imported in Python the <code>init</code> function will already be called for you. If, however, you call <code>coda.done</code> at any time, you can use this function to re-initialize CODA again.</p>
+      <p>Note that the <code>coda_set_definition_path</code> function is not provided in the CODA Python interface. You should use the CODA_DEFINITION environment variable to set the definition path as explained in the <a href="#initialisation">Initialisation of CODA</a> section.
+      <h5 id="coda_done"><code>coda.done()</code></h5>
+      <p>If, for some reason, you want to unload the CODA package, you should first clean up CODA by calling this function. However, unloading a Python package is not a common activity, so you should rarely have to call <code>coda.done()</code>.</p>
+      <h5 id="coda_set_option_bypass_special_types"><code>coda.set_option_bypass_special_types(enable)</code></h5>
+      <h5 id="coda_get_option_bypass_special_types"><code>coda.get_option_bypass_special_types()</code></h5>
+      <h5 id="coda_set_option_perform_boundary_checks"><code>coda.set_option_perform_boundary_checks(enable)</code></h5>
+      <h5 id="coda_get_option_perform_boundary_checks"><code>coda.get_option_perform_boundary_checks()</code></h5>
+      <h5 id="coda_set_option_perform_conversions"><code>coda.set_option_perform_conversions(enable)</code></h5>
+      <h5 id="coda_get_option_perform_conversions"><code>coda.get_option_perform_conversions()</code></h5>
+      <h5 id="coda_set_option_use_fast_size_expressions"><code>coda.set_option_use_fast_size_expressions</code></h5>
+      <h5 id="coda_get_option_use_fast_size_expressions"><code>coda.get_option_use_fast_size_expressions</code></h5>
+      <h5 id="coda_set_option_use_mmap"><code>coda.set_option_use_mmap</code></h5>
+      <h5 id="coda_get_option_use_mmap"><code>coda.get_option_use_mmap</code></h5>
+      <h5 id="coda_NaN"><code>coda.NaN()</code></h5>
+      <h5 id="coda_isNaN"><code>coda.isNaN(x)</code></h5>
+      <h5 id="coda_PlusInf"><code>coda.PlusInf()</code></h5>
+      <h5 id="coda_MinInf"><code>coda.MinInf()</code></h5>
+      <h5 id="coda_isInf"><code>coda.isInf(x)</code></h5>
+      <h5 id="coda_isPlusInf"><code>coda.isPlusInf(x)</code></h5>
+      <h5 id="coda_isMinInf"><code>coda.isMinInf(x)</code></h5>
+      <h5 id="coda_c_index_to_fortran_index"><code>coda.c_index_to_fortran_index(num_dims, dim, index)</code></h5>
+      <h5 id="coda_datetime_to_double"><code>datetime = coda.datetime_to_double(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC)</code></h5>
+      <h5 id="coda_double_to_datetime"><code>[YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC] = coda.double_to_datetime(datetime)</code></h5>
+      <h5 id="coda_time_to_string"><code>str = coda.time_to_string(time)</code></h5>
+      <h5 id="coda_string_to_time"><code>time = coda.string_to_time(str)</code></h5>
+      <h5 id="coda_match_filefilter"><code>coda.match_filefilter(filter, filepaths, callbackfunc)</code></h5>
+      <p>The <code>callbackfunc</code> parameter should be a Python function that accepts <code>filepath</code>, <code>status</code> and <code>error</code> as parameters. For example:</p>
+<div class="fragment"><pre>
+>>> def findhelper(filepath, status, error):
+...     if status == coda.coda_ffs_match:
+...         print "File %s matches filter!" % filepath    
+...     elif ((status == coda.coda_ffs_unsupported_file)
+...         or (status == coda.coda_ffs_no_match)):
+...         # don't print anything if the file does not positively match the filter
+...         pass
+...     else:
+...         print "ERROR: %s (%s)" % (error, filepath)
+...     return 0
+>>> coda.match_filefilter('', '/home/codauser', findhelper)
+</pre></div>
+      <h5 id="coda_recognize_file"><code>[file_size, format, product_class, product_type, version] = coda.recognize_file(filename)</code></h5>
+      <h5 id="coda_open"><code>pf = coda.open(filename)</code></h5>
+      <p>The product file handle returned by this function can also be used with the <a href="#high_level_functions">high level CODA functions</a>.</p>
+      <h5 id="coda_close"><code>coda.close(pf)</code></h5>
+      <h5 id="coda_get_product_filename"><code>filename = coda.get_product_filename(pf)</code></h5>
+      <h5 id="coda_get_product_file_size"><code>file_size = coda.get_product_file_size(pf)</code></h5>
+      <h5 id="coda_get_product_format"><code>format = coda.get_product_format(pf)</code></h5>
+      <h5 id="coda_get_product_class"><code>product_class = coda.get_product_class(pf)</code></h5>
+      <h5 id="coda_get_product_type"><code>product_type = coda.get_product_type(pf)</code></h5>
+      <h5 id="coda_get_product_version"><code>version = coda.get_product_version(pf)</code></h5>
+      <h5 id="coda_get_product_root_type"><code>type = coda.get_product_root_type(pf)</code></h5>
+      <h5 id="coda_get_product_backend"><code>backend = coda.get_product_backend(pf)</code></h5>
+      <h5 id="coda_get_product_variable_value"><code>value = coda.get_product_variable_value(pf, variable, index)</code></h5>
+      <h5 id="coda_type_get_format_name"><code>coda.type_get_format_name(type_class)</code></h5>
+      <h5 id="coda_type_get_class_name"><code>coda.type_get_class_name(type_class)</code></h5>
+      <h5 id="coda_type_get_native_type_name"><code>coda.type_get_native_type_name(native_type)</code></h5>
+      <h5 id="coda_type_get_special_type_name"><code>coda.type_get_special_type_name(special_type)</code></h5>
+      <h5 id="coda_type_has_ascii_content"><code>has_ascii_content = coda.type_has_ascii_content(type)</code></h5>
+      <h5 id="coda_type_get_format"><code>format = coda.type_get_format(type)</code></h5>
+      <h5 id="coda_type_get_class"><code>type_class = coda.type_get_class(type)</code></h5>
+      <h5 id="coda_type_get_read_type"><code>read_type = coda.type_get_read_type(type)</code></h5>
+      <h5 id="coda_type_get_string_length"><code>length = coda.type_get_string_length(type)</code></h5>
+      <h5 id="coda_type_get_bit_size"><code>bit_size = coda.type_get_bit_size(type)</code></h5>
+      <h5 id="coda_type_get_name"><code>name = coda.type_get_name(type)</code></h5>
+      <h5 id="coda_type_get_description"><code>description = coda.type_get_description(type)</code></h5>
+      <h5 id="coda_type_get_unit"><code>unit = coda.type_get_unit(pf)</code></h5>
+      <h5 id="coda_type_get_fixed_value"><code>fixed_value = coda.type_get_fixed_value(pf)</code></h5>
+      <h5 id="coda_type_get_num_record_fields"><code>num_fields = coda.type_get_num_record_fields(type)</code></h5>
+      <h5 id="coda_type_get_record_field_index_from_name"><code>index = coda.type_get_record_field_index_from_name(type, name)</code></h5>
+      <h5 id="coda_type_get_record_field_type"><code>field_type = coda.type_get_record_field_type(type, index)</code></h5>
+      <h5 id="coda_type_get_record_field_name"><code>name = coda.type_get_record_field_name(type, index)</code></h5>
+      <h5 id="coda_type_get_record_field_hidden_status"><code>hidden = coda.type_get_record_field_hidden_status(type, index)</code></h5>
+      <h5 id="coda_type_get_record_field_available_status"><code>available = coda.type_get_record_field_available_status(type, index)</code></h5>
+      <h5 id="coda_type_get_record_union_status"><code>is_union = coda.type_get_record_union_status(type)</code></h5>
+      <h5 id="coda_type_get_array_num_dims"><code>num_dims = coda.type_get_array_num_dims(type)</code></h5>
+      <h5 id="coda_type_get_array_dim"><code>dim = coda.type_get_array_dim(type)</code></h5>
+      <h5 id="coda_type_get_array_base_type"><code>base_type = coda.type_get_array_base_type(type)</code></h5>
+      <h5 id="coda_type_get_special_type"><code>special_type = coda.type_get_special_type(type)</code></h5>
+      <h5 id="coda_type_get_special_base_type"><code>base_type = coda.type_get_special_base_type(type)</code></h5>
+      <h5 id="coda_cursor_set_product"><code>coda.cursor_set_product(cursor, product)</code></h5>
+      <p>You can create a new cursor with <code>cursor = coda.Cursor()</code>. With <code>coda.cursor_set_product</code> this cursor can then be initialized to the root of a product. It is also possible to use a cursor as <code>start</code> parameter in the <a href="#high_level_functions">high level CODA functions</a>.</p>
+      <h5 id="coda_cursor_goto_first_record_field"><code>coda.cursor_goto_first_record_field(cursor)</code></h5>
+      <h5 id="coda_cursor_goto_next_record_field"><code>coda.cursor_goto_next_record_field(cursor)</code></h5>
+      <h5 id="coda_cursor_goto_record_field_by_index"><code>coda.cursor_goto_record_field_by_index(cursor, index)</code></h5>
+      <h5 id="coda_cursor_goto_record_field_by_name"><code>coda.cursor_goto_record_field_by_name(cursor, name)</code></h5>
+      <h5 id="coda_cursor_goto_available_union_field"><code>coda.cursor_goto_available_union_field(cursor)</code></h5>
+      <h5 id="coda_cursor_goto_first_array_element"><code>coda.cursor_goto_first_array_element(cursor)</code></h5>
+      <h5 id="coda_cursor_goto_next_array_element"><code>coda.cursor_goto_next_array_element(cursor)</code></h5>
+      <h5 id="coda_cursor_goto_array_element"><code>coda.cursor_goto_array_element(cursor, subs)</code></h5>
+      <p>It is not needed to provide the number of dimensions as a parameter (<code>num_subs</code>) since this value is determined from inspecting the length of <code>subs</code>.</p>
+      <h5 id="coda_cursor_goto_array_element_by_index"><code>coda.cursor_goto_array_element_by_index(cursor, index)</code></h5>
+      <h5 id="coda_cursor_goto_attributes"><code>coda.cursor_goto_attributes(cursor)</code></h5>
+      <h5 id="coda_cursor_goto_root"><code>coda.cursor_goto_root(cursor)</code></h5>
+      <h5 id="coda_cursor_goto_parent"><code>coda.cursor_goto_parent(cursor)</code></h5>
+      <h5 id="coda_cursor_use_base_type_of_special_type"><code>coda.cursor_use_base_type_of_special_type(cursor)</code></h5>
+      <h5 id="coda_cursor_has_ascii_content"><code>has_ascii_content = coda.cursor_has_ascii_content(cursor)</code></h5>
+      <h5 id="coda_cursor_get_string_length"><code>length = coda.cursor_get_string_length(cursor)</code></h5>
+      <h5 id="coda_cursor_get_bit_size"><code>bit_size = coda.cursor_get_bit_size(cursor)</code></h5>
+      <h5 id="coda_cursor_get_byte_size"><code>byte_size = coda.cursor_get_byte_size(cursor)</code></h5>
+      <h5 id="coda_cursor_get_num_elements"><code>num_elements = coda.cursor_get_num_elements(cursor)</code></h5>
+      <h5 id="coda_cursor_get_product_file"><code>pf = coda.cursor_get_product_file(cursor)</code></h5>
+      <h5 id="coda_cursor_get_depth"><code>depth = coda.cursor_get_depth(cursor)</code></h5>
+      <h5 id="coda_cursor_get_index"><code>index = coda.cursor_get_index(cursor)</code></h5>
+      <h5 id="coda_cursor_get_file_bit_offset"><code>bit_offset = coda.cursor_get_file_bit_offset(cursor)</code></h5>
+      <h5 id="coda_cursor_get_file_byte_offset"><code>byte_offset = coda.cursor_get_file_byte_offset(cursor)</code></h5>
+      <h5 id="coda_cursor_get_format"><code>format = coda.cursor_get_format(cursor)</code></h5>
+      <h5 id="coda_cursor_get_type_class"><code>type_class = coda.cursor_get_type_class(cursor)</code></h5>
+      <h5 id="coda_cursor_get_read_type"><code>read_type = coda.cursor_get_read_type(cursor)</code></h5>
+      <h5 id="coda_cursor_get_special_type"><code>special_type = coda.cursor_get_special_type(cursor)</code></h5>
+      <h5 id="coda_cursor_get_type"><code>type = coda.cursor_get_type(cursor)</code></h5>
+      <h5 id="coda_cursor_get_record_field_index_from_name"><code>index = coda.cursor_get_record_field_index_from_name(cursor, name)</code></h5>
+      <h5 id="coda_cursor_get_record_field_available_status"><code>available = coda.cursor_get_record_field_available_status(cursor, index)</code></h5>
+      <h5 id="coda_cursor_get_available_union_field_index"><code>index = coda.cursor_get_available_union_field_index(cursor)</code></h5>
+      <h5 id="coda_cursor_get_array_dim"><code>dim = coda.cursor_get_array_dim(cursor)</code></h5>
+      <h5 id="coda_cursor_read_int8"><code>dst = coda.cursor_read_int8(cursor)</code></h5>
+      <h5 id="coda_cursor_read_uint8"><code>dst = coda.cursor_read_uint8(cursor)</code></h5>
+      <h5 id="coda_cursor_read_int16"><code>dst = coda.cursor_read_int16(cursor)</code></h5>
+      <h5 id="coda_cursor_read_uint16"><code>dst = coda.cursor_read_uint16(cursor)</code></h5>
+      <h5 id="coda_cursor_read_int32"><code>dst = coda.cursor_read_int32(cursor)</code></h5>
+      <h5 id="coda_cursor_read_uint32"><code>dst = coda.cursor_read_uint32(cursor)</code></h5>
+      <h5 id="coda_cursor_read_int64"><code>dst = coda.cursor_read_int64(cursor)</code></h5>
+      <h5 id="coda_cursor_read_uint64"><code>dst = coda.cursor_read_uint64(cursor)</code></h5>
+      <h5 id="coda_cursor_read_float"><code>dst = coda.cursor_read_float(cursor)</code></h5>
+      <h5 id="coda_cursor_read_double"><code>dst = coda.cursor_read_double(cursor)</code></h5>
+      <h5 id="coda_cursor_read_char"><code>dst = coda.cursor_read_char(cursor)</code></h5>
+      <p>Since Python does not have a native char type the character data will be returned as a string of length 1.</p>
+      <h5 id="coda_cursor_read_string"><code>dst = coda.cursor_read_string(cursor)</code></h5>
+      <h5 id="coda_cursor_read_bits"><code>dst = coda.cursor_read_bits(cursor, bit_offset, bit_length)</code></h5>
+      <h5 id="coda_cursor_read_bytes"><code>dst = coda.cursor_read_bytes(cursor, offset, length)</code></h5>
+      <h5 id="coda_cursor_read_int8_array"><code>dst = coda.cursor_read_int8_array(cursor)</code></h5>
+      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numarray object using C array ordering.</p>
+      <h5 id="coda_cursor_read_uint8_array"><code>dst = coda.cursor_read_uint8_array(cursor)</code></h5>
+      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numarray object using C array ordering.</p>
+      <h5 id="coda_cursor_read_int16_array"><code>dst = coda.cursor_read_int16_array(cursor)</code></h5>
+      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numarray object using C array ordering.</p>
+      <h5 id="coda_cursor_read_uint16_array"><code>dst = coda.cursor_read_uint16_array(cursor)</code></h5>
+      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numarray object using C array ordering.</p>
+      <h5 id="coda_cursor_read_int32_array"><code>dst = coda.cursor_read_int32_array(cursor)</code></h5>
+      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numarray object using C array ordering.</p>
+      <h5 id="coda_cursor_read_uint32_array"><code>dst = coda.cursor_read_uint32_array(cursor)</code></h5>
+      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numarray object using C array ordering.</p>
+      <h5 id="coda_cursor_read_int64_array"><code>dst = coda.cursor_read_int64_array(cursor)</code></h5>
+      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numarray object using C array ordering.</p>
+      <h5 id="coda_cursor_read_uint64_array"><code>dst = coda.cursor_read_uint64_array(cursor)</code></h5>
+      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numarray object using C array ordering.</p>
+      <h5 id="coda_cursor_read_float_array"><code>dst = coda.cursor_read_float_array(cursor)</code></h5>
+      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numarray object using C array ordering.</p>
+      <h5 id="coda_cursor_read_double_array"><code>dst = coda.cursor_read_double_array(cursor)</code></h5>
+      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numarray object using C array ordering.</p>
+      <h5 id="coda_cursor_read_char_array"><code>dst = coda.cursor_read_char_array(cursor)</code></h5>
+      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numarray object using C array ordering.</p>
+      <p>Since Python does not have a native char type the character array will be returned as an array of signed 8 bit integers.</p>
+      <h5 id="coda_cursor_read_complex_double_pair"><code>dst = coda.cursor_read_complex_double_pair</code></h5>
+      <h5 id="coda_cursor_read_complex_double_pairs_array"><code>dst = coda.cursor_read_complex_double_pairs_array</code></h5>
+      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numarray object using C array ordering.</p>
+      <h5 id="coda_cursor_read_complex_double_split"><code>[dst_re, dst_im] = coda.cursor_read_complex_double_split</code></h5>
+      <h5 id="coda_cursor_read_complex_double_split_array"><code>[dst_re, dst_im] = coda.cursor_read_complex_double_split_array</code></h5>
+      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numarray object using C array ordering.</p>
+      
+      <div class="footer">
+        <hr />
+        <p>Copyright &copy; 2007-2008 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+      </div>
+
+    </div>
+
+  </body>
+
+</html>

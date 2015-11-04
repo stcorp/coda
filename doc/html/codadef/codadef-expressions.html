@@ -1,0 +1,572 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html>
+
+  <head>
+    <title>CODA Expressions</title>
+    <link rel="stylesheet" href="../css/codadoc.css" type="text/css" />
+  </head>
+
+  <body>
+
+    <div class="main">
+
+      <h1>CODA Expressions</h1>
+      
+      <p>CODA comes with an advanced expression language that is able to perform calculations on product data. The expression language is primarilay used in the definitions of the product formats to formally describe how variable sizes, offsets, etc. are calculated. However, the expression language is also used within e.g. the codafind tool to formulate queries on data products. The expression language provides a means to specify locations in the file, read values from the file and apply calculations on these values.</p>
+
+      <p>The expression language is a basic language in ASCII format. In this document we will describe the language and provide a formal definition using the ISO/IEC 14977 EBNF (Extended Backus-Naur Form) format.</p>
+      
+      <p>The expression language knows 5 different types: <i>integer</i>, <i>float</i>, <i>string</i>, <i>boolean</i>, and <i>node</i>. <i>integer</i> and <i>float</i> represent integer and floating point values, <i>string</i> represents text data, <i>boolean</i> represents logical values (true/false), and <i>node</i> represents locations in a data file.</p>
+      
+      <p>When we talk about the 'type of an expression' we refer to the type of the value that will result from evaluating the expression. A float expression will thus result in a floating point value and a boolean expression in a true/false value.</p>
+      
+      <p>Expressions can range from being very simple (specifying just a constant value) to very complex (using various functions/operations to calculate the resulting value). An expression of one type can make use of sub-expressions of another type. For instance, a boolean expresssion can return the result of a comparison of two string expressions.</p>
+
+      <p>In addition to expressions for each of the 5 types there is also a sixth category, the expressions that do not return any value. Those expressions are refered to as <i>void</i> expressions (i.e. statements).</p>
+      
+      <p>The CODA expressions can thus be categorized in the following six groups:</p>
+
+      <ul>
+      <li>void expressions: statements</li>
+      <li>boolean expressions: expressions that return either True or False</li>
+      <li>integer expressions: expressions that return a numerical value</li>
+      <li>float expressions: expressions that return a floating point value</li>
+      <li>string expressions: expressions that return a character string</li>
+      <li>node expressions: expressions that refer to data in the product file</li>
+      </ul>
+
+      <p>It should be noted that the expression language allows arbitrary whitespace (in the form of space characters) between the components of an expression.</p>
+
+      <h2>void expressions</h2>
+      
+      <p>void expressions are statements. They won't return a value and can only be used at the topmost level of an expression.</p>
+      
+      <h3>operators</h3>
+      
+      <p>There are two void operators. One is the sequence operator '<code>;</code>'. This operator is used to instruct the sequential execution of two or more statements. The other operator is the assignment operator '<code>=</code>', which is used to assign values to product variables.</p>
+      
+      <p>Example:</p>
+      <div class="fragment"><code><i>$count</i>[0] = 100; <i>$count</i>[1] = 200; <i>$count</i>[2] = 300</code></div>
+      <p>This will set the first three elements of the 1-dimensional product variable 'count' to 100, 200, and 300 respectively.</p>
+      
+      <p>Product variables can be either scalars or 1-dimensional arrays. The array subscript '<code>[]</code>' is only used for product variables that are arrays. For scalar product variables one should use e.g. '<code><i>$count</i> = 100</code>'.</p>
+
+      <h3>functions</h3>
+      
+      <h5>for i = integer to integer (step integer) do void</h5>
+
+      <p>The <code>for</code> expression executes the void expression after '<code>do</code>' in a loop. The loop will terminate as soon as the index <code><i>i</i></code> exceeds the value of the integer expression after '<code>to</code>'. The step value is optional. The step may be negative, in which case the loop index will decrease with each step. The current value of the loop index can be used inside the void expression using the '<code>i</code>' integer expression.</p>
+
+      <p>Example:</p>
+      <div class="fragment"><code><b>for</b> <i>i</i> = 0 <b>to</b> 2 <b>do</b> <i>$count</i>[<i>i</i>] = 100 * <i>i</i></code></div>
+      <p>This expression has the same effect as the example provided in the previous section.</p>
+
+      <h2>boolean expressions</h2>
+      
+      <p>A boolean expression is an expression that results in a true or false value.</p>
+      
+      <h3>constant values</h3>
+      
+      <p>There are two possible constant values '<code>true</code>' and '<code>false</code>'.</p>
+
+      <h3>operators</h3>
+      
+      <p>There are three logical operators that operate on boolean values: AND, OR, and NOT ('<code>&&</code>', '<code>||</code>', and '<code>!</code>'). Boolean expressions can be put between braces ( '<code>(</code>' and '<code>)</code>' ) in order to guide the evaluation order.</p>
+      
+      <p>The AND and OR expressions are lazy evaluated. This means that the second argument to AND will not be evaluated if the first argument already evaluated to false, and for OR similarly if the first argument already evaluated to true.</p>
+
+      <p>Integer, float, and string expressions can be compared using the following relations: equality ('<code>==</code>'), inequality ('<code>!=</code>'), less than ('<code>&lt;</code>'), less than or equal ('<code>&lt;=</code>'), greater than ('<code>&gt;</code>'), or greater than or equal ('<code>&gt;=</code>'). The relative ordering of strings (to determine whether one string is larger than the other) will be based on the (unsigned) integer value of each byte character.</p>
+
+      <p>Integers cannot be compared directly to floats. To compare a float value with an integer value, first convert the integer value to a float using the 'float()' function.</p>
+
+      <h3>functions</h3>
+    
+      <h5>exists(node)</h5>
+
+      <p>Some product types will have certain data elements defined as optional. For instance, a calibration data set may be available for one product, but not for another, even though both products are of the same product type. With the '<code>exists</code>' function it is possible to check for the availability of this optional data. Note that this function only works on nodes that refer to data that is actually defined as being optional. Providing a node to a location that could never exist will result in an error.</p>
+      
+      <p>Example:</p>
+      <div class="fragment"><code><b>if</b>(<b>exists</b>(/calibration), <b>int</b>(/calibration/num_values), 0)</code></div>
+      <p>This will return the value of the num_values parameter if the calibration data set exists and 0 otherwise.</p>
+
+      <h5>exists(node, boolean)</h5>
+      
+      <p>This function only works if node points to an array in the product. It will then walk the elements of the array (in ascending order) until it finds an element for which the boolean expression returns true, or, if none of the array elements match, will return false.</p>
+      
+      <p>Example:</p>
+      <div class="fragment"><code><b>exists</b>(/calibration/value, <b>float</b>(.) &gt; 10.0)</code></div>
+      <p>This will return true if any of the elements '/calibration/value[]' has a value > 10, and false otherwise.</p>
+
+      <h5>all(node, boolean)</h5>
+      
+      <p>This function works just as the previous function, but will return false as soon as it finds an element for which the boolean expression returns false, or, if all elements match, will return true.</p>
+      
+      <p>Example:</p>
+      <div class="fragment"><code><b>all</b>(/calibration/value, <b>float</b>(.) &gt; 10.0)</code></div>
+      <p>This will return true if all of the elements '/calibration/value[]' have a value > 10, and false otherwise.</p>
+
+      <h2>integer expressions</h2>
+
+      <p>An integer expression is an expression that results in an integer value.</p>
+
+      <p>All integer expressions are evaluated using a signed 64 bit integer.</p>
+
+      <h3>constant values</h3>
+      
+      <p>Constants can be any integer number. However, it should be possible to represent the number by a 64 bit signed integer.</p>
+      
+      <h3>variables</h3>
+      
+      <p>There are two kinds of variables that can be used as integer expression: product variables and the for-loop index. CODA only supports integer variables (i.e. variables can not contain boolean, floating point, or string data).</p>
+      
+      <p>Product variables are referenced using a '<code>$</code>' character followed by the name of the product variable. If the product variable is an array then an additional array subscript should also be provided using '<code>[]</code>'. For example '<code>$foo</code>' will return the value of the scalar product variable 'foo' and '<code>$bar[10]</code>' will return the 11-th array element from the 1-dimensional product variable 'bar'. Note that product variables can only be refered to if they have been defined in the CODA product format definition for the open product file.</p>
+
+      <p>Inside a for loop the current value of the loop index can be retrieved by using the '<code><i>i</i></code>' expression.</p>
+
+      <h3>operators</h3>
+      
+      <p>The following operations are provided: addition ('<code>+</code>'), subtraction ('<code>-</code>'), multiplication ('<code>*</code>'), division ('<code>/</code>'), modulo ('<code>%</code>'), and power ('<code>^</code>').</p>
+
+      <p>A unary '<code>-</code>' before an integer expression can be used to turn the sign of an integer.</p>
+
+      <p>Integer expressions can be put between braces ( '<code>(</code>' and '<code>)</code>' ) in order to guide the evaluation order.</p>
+
+      <h3>functions</h3>
+
+      <h5>int(node)</h5>
+
+      <p>Reads the value at the node as an integer. If the node does not point to data that represents an integer value this will result in an error.</p>
+
+      <p>When the integer is stored as an unsigned 64 bit integer the value is returned as a signed 64 bit integer by converting all values &gt;= 2^63 into negative values (e.g. 2^64 - 1 becomes -1). Integer values &gt;= 2^64 are not supported.</p>
+
+      <h5>int(string)</h5>
+
+      <p>Convert the string to an integer value.</p>
+
+      <p>The rules for conversion are the same as for specifying a constant integer value in the expression language.</p>
+
+      <h5>max(integer, integer)</h5>
+
+      <p>Returns the maximum of both integers.</p>
+
+      <h5>min(integer, integer)</h5>
+
+      <p>Returns the minimum of both integers.</p>
+
+      <h5>numelements(node)</h5>
+
+      <p>Will return the number of fields if the node points to a record or the number of array elements if the node points to an array. If the node points to a scalar the function will return 1.</p>
+
+      <p>Example:</p>
+      <div class="fragment"><code><b>numelements</b>(/calibration/value)==<b>int</b>(/calibration/num_values)</code></div>
+      <p>This comparison should return true of the product is consistent.</p>
+
+      <h5>count(node, boolean)</h5>
+
+      <p>This function is similar to the <code><b>exists</b>(<i>node</i>, <i>boolean</i>)</code> function, but will return the total number of array elements for which the boolean expression evaluates to true.</p>
+
+      <p>Example:</p>
+      <div class="fragment"><code>100.0 * <b>float</b>(<b>count</b>(/calibration/value, <b>float</b>(.) > 10.0))) / <b>float</b>(<b>numelements</b>(/calibration/value))</code></div>
+      <p>This calculates the percentage of values for which the value is larger than 10.</p>
+
+      <h5>add(node, integer)</h5>
+
+      <p>This function only works if node points to an array in the product. It will then walk the elements of the array, evaluate the integer expression for each element and return the sum of those results.</p>
+
+      <p>Example:</p>
+      <div class="fragment"><code><b>float</b>(<b>add</b>(/calibration/value, <b>float</b>(.))) / <b>float</b>(<b>numelements</b>(/calibration/value))</code></div>
+      <p>This will calculate the average of the values in the value array.</p>
+
+      <h5>length(string)</h5>
+
+      <p>This function will return the length (number of characters) of the string argument.</p>
+
+      <p>Example:</p>
+      <div class="fragment"><code><b>length</b>("A String")==8</code></div>
+      <p>This should always be true.</p>
+
+      <h5>bitsize(node)</h5>
+
+      <p>This function will return the bit size of the data item pointed to by '<code>node</code>'. If the bit size is not available (e.g. for HDF products) this function will return -1.</p>
+
+      <h5>bytesize(node)</h5>
+
+      <p>This function will return the byte size (rounded up) of the data item pointed to by '<code>node</code>'. If the byte size is not available (e.g. for HDF products) this function will return -1.</p>
+
+      <h5>productversion()</h5>
+
+      <p>This function will return the version number of the product format for the file. The version number is a CODA specific version number (the number can be found in the CODA product format definition documentation for the data file).</p>
+
+      <h5>filesize()</h5>
+
+      <p>This function will return the size of the file as a number of bytes.</p>
+
+      <h5>bitoffset(node)</h5>
+
+      <p>This function will return the bit offset of the data item pointed to by '<code>node</code>' relative to the start of the file. If the bit offset is not available (e.g. for HDF products) this function will return -1.</p>
+
+      <h5>byteoffset(node)</h5>
+
+      <p>This function will return the byte offset (rounded down) of the data item pointed to by '<code>node</code>' relative to the start of the file. If the byte offset is not available (e.g. for HDF products) this function will return -1.</p>
+
+      <h5>index(node)</h5>
+
+      <p>This function will return the 0-based index (field number or array element index) that was used to get from the parent node to the current node.</p>
+
+      <p>Example:</p>
+      <div class="fragment"><code><b>index</b>(/calibration/value[6])==6</code></div>
+      <p>This should always be true.</p>
+
+      <h5>index(node, boolean)</h5>
+
+      <p>This function is similar to the <code><b>exists</b>(<i>node</i>, <i>boolean</i>)</code> function, but will return the 0-based array index of the first array element for which the boolean expression evaluates to true. If none of the array elements match, the function will return -1.</p>
+
+      <h5>if(boolean, integer, integer)</h5>
+
+      <p>If the boolean expression evaluates to true the second argument is evaluated and its result returned, otherwise the third argument is evaluated and its result returned.</p>
+
+      <p>Example:</p>
+      <div class="fragment"><code><b>if</b>(<b>float</b>(/calibration/value[0]) < 0.0, -1, 1)</code></div>
+      <p>This will return the sign of the first array element.</p>
+
+      <h2>float expressions</h2>
+
+      <p>A float expression is an expression that results in a floating point value.</p>
+
+      <p>All float expressions are evaluated using a IEE754 double precision floating point value.</p>
+
+      <h3>constant values</h3>
+      
+      <p>Floating point constant values should always have a '<code>.</code>' and can optionally have an exponent. The special values '<code>nan</code>', and '<code>inf</code>' can be used to represent the IEEE754 special cases not-a-number and infinity.</p>
+
+      <p>Examples:</p>
+
+<div class="fragment"><code><pre>
+1.0
+.1
+-1.
+1.0E-20
+-.09e99
+nan
+inf
+-inf
++inf
+</pre></code></div>
+
+      <h3>operators</h3>
+      
+      <p>The following operations are provided: addition ('<code>+</code>'), subtraction ('<code>-</code>'), multiplication ('<code>*</code>'), division ('<code>/</code>'), modulo ('<code>%</code>'), and power ('<code>^</code>').</p>
+
+      <p>A unary '<code>-</code>' before a float expression can be used to turn the sign of the value.</p>
+
+      <p>Float expressions can be put between braces ( '<code>(</code>' and '<code>)</code>' ) in order to guide the evaluation order.</p>
+
+      <h3>functions</h3>
+
+      <h5>float(node)</h5>
+
+      <p>Reads the value at the node as a floating point value. If the node does not point to data that represents an floating point or integer value this will result in an error.</p>
+
+      <h5>float(integer)</h5>
+
+      <p>Convert the integer to a floating point value.</p>
+
+      <p>For large integer values this can result in a loss of precision.</p>
+
+      <h5>float(string)</h5>
+
+      <p>Convert the string to a floating point value.</p>
+
+      <p>The rules for conversion are the same as for specifying a constant floating point value in the expression language.</p>
+
+      <h5>max(float, float)</h5>
+
+      <p>Returns the maximum of both floating point values.</p>
+
+      <h5>min(float, float)</h5>
+
+      <p>Returns the minimum of both floating point values.</p>
+
+      <h5>if(boolean, float, float)</h5>
+
+      <p>If the boolean expression evaluates to true the second argument is evaluated and its result returned, otherwise the third argument is evaluated and its result returned.</p>
+
+      <h2>string expressions</h2>
+
+      <p>A string expression is an expression that results in a character string.</p>
+
+      <p>A string value is simply a sequence of bytes. No special character encoding interpretation is used and all byte values (0-255) are allowed for a character (e.g. no special string termination character is applied).</p>
+
+      <h3>constant values</h3>
+      
+      <p>A string constant is provided by a sequence of printable ASCII characters between double quote characters. The double quote character itself or any characters that are not ASCII printable characters can be included in string constants by using an escape sequence. An escape sequence is a '\' followed by either a character or by a 3 digit octal number of the byte value (for instance, '\060' is equal to 'A'). The following table lists the possible escape sequences that are allowed:</p>
+      
+      <table class="fancy" width="60%" cellspacing="0" cellpadding="0">
+        <tr><th>Escape sequence</th><th>ASCII Character</th><th>Decimal code</th></tr>
+        <tr><td align="center">\a</td><td>Bell</td><td align="right">7</td></tr>
+        <tr><td align="center">\b</td><td>Backspace</td><td align="right">8</td></tr>
+        <tr><td align="center">\t</td><td>Tab</td><td align="right">9</td></tr>
+        <tr><td align="center">\n</td><td>Linefeed</td><td align="right">10</td></tr>
+        <tr><td align="center">\v</td><td>Vertical tab</td><td align="right">11</td></tr>
+        <tr><td align="center">\f</td><td>Formfeed</td><td align="right">12</td></tr>
+        <tr><td align="center">\r</td><td>Carriage return</td><td align="right">13</td></tr>
+        <tr><td align="center">\"</td><td>"</td><td align="right">34</td></tr>
+        <tr><td align="center">\'</td><td>'</td><td align="right">39</td></tr>
+        <tr><td align="center">\\</td><td>\</td><td align="right">92</td></tr>
+        <tr><td align="center">\nnn</td><td>A byte value equal to the octal number 'nnn'</td><td align="right">&nbsp;</td></tr>
+      </table>
+
+      <p>Examples:</p>
+
+<div class="fragment"><code><pre>
+"Hello World!"
+""
+"Line 1\nLine 2\n"
+"A string with a \000 character"
+"How to quote a '\"'?"
+</pre></code></div>
+
+      <h3>operators</h3>
+      
+      <p>Strings can be concatenated using the '<code>+</code>' operator.</p>
+
+      <h3>functions</h3>
+
+      <h5>str(node)</h5>
+
+      <p>Reads the string the data element pointed to by the node parameter.</p>
+
+      <h5>str(node, integer)</h5>
+
+      <p>Similar to the previous function, but now limit the read to a maximum number of bytes as indicated by the second argument. Note that the length of the returned string may be less than the provided maximum if the length of the data in the product is less than the indicated maximum.</p>
+
+      <h5>bytes(node)</h5>
+
+      <p>Reads the data element pointed to by the node parameter as a raw byte array. This function differs from <code><b>str</b>(node)</code> because it is not restricted to reading text data, but can be used independent of the type of data at the node position (e.g. it can be used to read a binary record).</p>
+
+      <h5>bytes(node, integer)</h5>
+
+      <p>Similar to the previous function, but now explicitly set the number of bytes that should be read (as indicated by the second argument). The function will always read the given number of bytes, even if this exceeds the length of the data item at the node position. If the number of bytes from the node position till the end of the file is less than the provided maximum, CODA will return an error.</p>
+
+      <h5>substr(integer, integer, string)</h5>
+
+      <p>Return a substring of the third argument, where the first argument indicates the 0-based offset and the second argument the length. The values for both the offset and length arguments should be greater or equal to 0 and the sum of the offset and length parameters should not exceed the string length of the third argument.</p>
+
+      <p>Example:</p>
+      <div class="fragment"><code>"bcd" == <b>substr</b>(1, 3, "abcdef")</code></div>
+      <p>This should always be true.</p>
+
+      <h5>add(node, string)</h5>
+
+      <p>This function only works if node points to an array in the product. It will then walk the elements of the array (in ascending order), evaluate the string expression for each element and return the concatenated string of the results.</p>
+
+      <h5>productclass()</h5>
+
+      <p>Returns the name of the productclass of the file. If the file does not have a productclass an empty string will be returned.</p>
+
+      <h5>producttype()</h5>
+
+      <p>Returns the name of the productype of the file. If the file does not have a producttype an empty string will be returned.</p>
+
+      <h5>filename()</h5>
+
+      <p>Returns the filename (<i>not</i> including directory path components, but including the file extension) as a string.</p>
+
+      <h5>if(boolean, string, string)</h5>
+
+      <p>If the boolean expression evaluates to true the second argument is evaluated and its result returned, otherwise the third argument is evaluated and its result returned.</p>
+
+      <h2>node expressions</h2>
+      
+      <p>A node describes a path into a product file similar to XPath for XML.</p>
+
+      <p>How to construct a path (i.e. which identifiers to use) depends entirely on the format of the data product. The basis is that a product is composed of compound elements that can be traversed using identifiers (i.e. fields in a record) or using indices (i.e. elements of an array).</p>
+
+      <p>Within CODA the format of field names is restricted to identifiers, which means that the first character should be a-z or A-Z and all subsequent characters should be a-z, A-Z, 0-9, or _.</p>
+
+      <p>Array indices are 0-based indices on the flattened view of an array. This means that if an array is defined as having more than one dimension the index as used in a node expression should be between 0 and the total number of array elements (exclusive). For example, for a [10,8] array, the index should be >= 0 and <= 79. The CODA product format definition document will always show the dimension order in such a way that the last dimension is the fastest running dimension.</p>
+
+      <p>A node can be specified as a relative or absolute path. An absolute path starts with a '<code>/</code>', which refers to the root of the product. Relative paths start with either '<code>.</code>', '<code>..</code>', or '<code>:</code>'. When a node starts with '<code>..</code>' this is just a shorthand for '<code>./..</code>', which refers to the parent node of the current node. The relative paths '<code>.</code>' and '<code>:</code>' both refer to the current node position but with a slightly different meaning. The '<code>:</code>' node will always refer to the node with which the evaluation was started, whereas the location of '<code>.</code>' will depend on where the expression is used (for instance, if it used within the evaluation of the second argument of a  '<code>count(node, boolean)</code>' expression it will refer to the array element in '<code>node</code>' that is being evaluated). The node position with which the evaluation is started is either equal to the node to which the expression is attached or, if the expression is not attached to a specific product parameter, it is the root of the product.</p>
+
+      <p>There is a special node expression '<code>asciiline</code>' that can only be used in expressions for product format definitions for ASCII products. The '<code>asciiline</code>' expression should be used as start point of a node expression and will map the view of a file to an array of strings where each string corresponds a single line (include end of line characters) of the ascii file. For example the expression <code><b>bitoffset</b>(<b>asciiline</b>[<b>index</b>(<b>asciiline</b>, <b>str</b>(., 1) != "#")])</code> will give the bitoffset in the file of the first line that does not start with a '#' character.</p>
+
+      <h2>formal definition</h2>
+      
+      <p><pre>
+alpha =
+	'a'|'b'|'c'|'d'|'e'|'f'|'g'|'h'|'i'|'j'|'k'|'l'|'m'|
+	'n'|'o'|'p'|'q'|'r'|'s'|'t'|'u'|'v'|'w'|'x'|'y'|'z'|
+	'A'|'B'|'C'|'D'|'E'|'F'|'G'|'H'|'I'|'J'|'K'|'L'|'M'|
+	'N'|'O'|'P'|'Q'|'R'|'S'|'T'|'U'|'V'|'W'|'X'|'Y'|'Z' ;
+
+character = alpha | digit |
+	' '|'!'|'"'|'#'|'$'|'%'|'&'|"'"|'('|')'|'*'|'+'|','|
+	'-'|'.'|'/'|':'|';'|'<'|'='|'>'|'?'|'@'|'['|'\'|']'|
+	'^'|'_'|'`'|'{'|'|'|'}'|'~' ;
+
+identifier = alpha, [{alpha | alpha | '_'}] ;
+
+digit = '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9' ;
+sign = '+'|'-' ;
+
+intvalue = {digit} ;
+
+floatvalue = (intvalue, '.', [intvalue] | '.', intvalue), [('E' | 'e'), [sign], intvalue] ;
+
+strvalue = '"', [{character-'"' | ('\', '"')}], '"' ;
+
+voidexpr =
+	'$' identifier '=' int |
+	'$' identifier '[' ']' '=' int |
+	'false' |
+	boolexpr, '&&', boolexpr |
+	boolexpr, '||', boolexpr |
+	'!', boolexpr |
+	intexpr, '==', intexpr |
+	intexpr, '!=', intexpr |
+	intexpr, '>', intexpr |
+	intexpr, '>=', intexpr |
+	intexpr, '<', intexpr |
+	intexpr, '<=', intexpr |
+	floatexpr, '==', floatexpr |
+	floatexpr, '!=', floatexpr |
+	floatexpr, '>', floatexpr |
+	floatexpr, '>=', floatexpr |
+	floatexpr, '<', floatexpr |
+	floatexpr, '<=', floatexpr |
+	stringexpr, '==', stringexpr |
+	stringexpr, '!=', stringexpr |
+	stringexpr, '>', stringexpr |
+	stringexpr, '>=', stringexpr |
+	stringexpr, '<', stringexpr |
+	stringexpr, '<=', stringexpr |
+	'(', boolexpr, ')' |
+	'exists', '(', node, ')' |
+	'exists', '(', node, ',', boolexpr, ')' |
+	'all', '(', node, ',', boolexpr, ')' ;
+
+boolexpr =
+	'true' |
+	'false' |
+	boolexpr, '&&', boolexpr |
+	boolexpr, '||', boolexpr |
+	'!', boolexpr |
+	intexpr, '==', intexpr |
+	intexpr, '!=', intexpr |
+	intexpr, '>', intexpr |
+	intexpr, '>=', intexpr |
+	intexpr, '<', intexpr |
+	intexpr, '<=', intexpr |
+	floatexpr, '==', floatexpr |
+	floatexpr, '!=', floatexpr |
+	floatexpr, '>', floatexpr |
+	floatexpr, '>=', floatexpr |
+	floatexpr, '<', floatexpr |
+	floatexpr, '<=', floatexpr |
+	stringexpr, '==', stringexpr |
+	stringexpr, '!=', stringexpr |
+	stringexpr, '>', stringexpr |
+	stringexpr, '>=', stringexpr |
+	stringexpr, '<', stringexpr |
+	stringexpr, '<=', stringexpr |
+	'(', boolexpr, ')' |
+	'exists', '(', node, ')' |
+	'exists', '(', node, ',', boolexpr, ')' |
+	'all', '(', node, ',', boolexpr, ')' ;
+
+intexpr = 
+	intvalue |
+	'int', '(', node, ')' |
+	'int', '(', stringexpr, ')' |
+	'$', identifier |
+	'$', identifier, '[', intexpr, ']' |
+	'i' |
+	'-', intexpr |
+	'+', intexpr |
+	intexpr, '+', intexpr |
+	intexpr, '-', intexpr |
+	intexpr, '*', intexpr |
+	intexpr, '/', intexpr |
+	intexpr, '%', intexpr |
+	intexpr, '^', intexpr |
+	'(', intexpr, ')' |
+	'max', '(', intexpr, ',', intexpr, ')' |
+	'min', '(', intexpr, ',', intexpr, ')' |
+	'numelements', '(', node, ')' |
+	'count', '(' node, ',', boolexpr, ')' |
+	'add', '(' node, ',', intexpr, ')' |
+	'length', '(', stringexpr, ')' |
+	'bitsize', '(', node, ')' |
+	'bytesize', '(', node, ')' |
+	'productversion', '(', ')' |
+	'filesize', '(', ')' |
+	'bitoffset', '(', node, ')' |
+	'byteoffset', '(', node, ')' |
+	'index', '(', node, ')' |
+	'index', '(', node, ',', boolexpr, ')' |
+	'if', '(', boolexpr, ',', intexpr, ',' intexpr, ')' ;
+
+floatexpr = 
+	floatvalue |
+	'nan' |
+	'inf' |
+	'float', '(', node, ')' |
+	'float', '(', intexpr, ')' |
+	'float', '(', stringexpr, ')' |
+	'-', floatexpr |
+	'+', floatexpr |
+	floatexpr, '+', floatexpr |
+	floatexpr, '-', floatexpr |
+	floatexpr, '*', floatexpr |
+	floatexpr, '/', floatexpr |
+	floatexpr, '%', floatexpr |
+	floatexpr, '^', floatexpr |
+	'(', floatexpr, ')' |
+	'min', '(', floatexpr, ',', floatexpr, ')' |
+	'max', '(', floatexpr, ',', floatexpr, ')' |
+	'if', '(' boolexpr, ',', floatexpr, ',', floatexpr, ')' ;
+
+stringexpr = 
+	stringvalue |
+	'str', '(', node, ')' |
+	'str', '(', node, ',', intexpr, ')' |
+	'bytes', '(', node, ')' |
+	'bytes', '(', node, ',', intexpr, ')' |
+	stringexpr, '+', stringexpr |
+	'substr', '(', intexpr, ',', intexpr, ',', stringexpr, ')' |
+	'add', '(', node, ',', stringexpr, ')' |
+	'productclass', '(', ')' |
+	'producttype', '(', ')' |
+	'filename', '(', ')' |
+	'if', '(' boolexpr, ',', stringexpr, ',', stringexpr, ')' ;
+
+rootnode = '/'
+
+nonrootnode =
+	'.' |
+	':' |
+	'..' |
+	'asciiline' |
+	rootnode, identifier |
+	nonrootnode, '/..' |
+	nonrootnode, '/', identifier |
+	node, '[', intexpr, ']' |
+	node, '@', identifier ;
+
+node =
+	rootnode |
+	nonrootnode ;
+</pre></p>
+
+      <div class="footer">
+        <hr />
+        <p>Copyright &copy; 2007-2008 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+      </div>
+
+    </div>
+
+  </body>
+
+</html>

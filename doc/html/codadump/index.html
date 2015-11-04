@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html>
+
+  <head>
+    <title>codadump</title>
+    <link rel="stylesheet" href="../css/codadoc.css" type="text/css" />
+  </head>
+
+  <body>
+
+    <div class="main">
+
+      <h1>codadump</h1>
+
+      <p>This documentation describes the functionality of the codadump tool which is part of CODA.</p>
+    
+      <h2>Contents</h2>
+
+      <ul>
+        <li><a href="#general">General description</a></li>
+        <li><a href="#list">Getting product file information</a></li>
+        <li><a href="#ascii">Viewing and exporting data in ascii format</a></li>
+        <li><a href="#hdf4">Exporting data to HDF4</a>
+          <ul>
+            <li><a href="#hdf4_mapping">Mapping of a product file to HDF4</a></li>
+            <li><a href="#hdf4_attr">Additional attributes</a></li>
+            <li><a href="#hdf4_enviview">Differences with the HDF4 export of ENVIVIEW</a></li>
+          </ul>
+        </li>
+        <li><a href="#filtering">Filtering of data</a></li>
+        <li><a href="#debug">Debugging a product file</a></li>
+      </ul>
+
+      <h2 id="general">General description</h2>
+
+      <p>With codadump you can view data from any product file that is supported by CODA. The tool allows you to inspect the product structure (including array sizes), view and export data from the product in ASCII format, and export data into HDF4 format.</p>
+
+      <p>The available functionality of the tool is described below in separate sections.</p>
+
+      <h2 id="list">Getting product file information</h2>
+
+<pre>
+    codadump list [&lt;list options&gt;] &lt;product file&gt;
+        List the contents of a product file
+        List options:
+            -c, --calc_dim
+                    calculate dimensions of all arrays
+            -d, --disable_conversions
+                    do not perform unit/value conversions
+            -f, --filter '&lt;filter expression&gt;'
+                    restrict the output to data that matches the filter
+            -t, --type
+                    show basic data type
+            -u, --unit
+                    show unit information
+            --description
+                    show description information
+            --dim_values
+                    show all possible values for a variable sized dim
+                    (implies --calc_dim)
+            --no_special_types
+                    bypass special data types from the CODA Data Dictionary -
+                    data with a special type is treated using its non-special
+                    base type
+</pre>
+
+      <p>With the list option of codadump you can view the structure of a product file. If you provide just the 'list' option and a product file you get a listing of all the fields that are inside the product file together with array size information for each of the arrays. With the -f option you can restrict this list to only certain parts of the product file (you can find more information about this filter option in section "<a href="#filtering">Filtering of data</a>").</p>
+
+      <p>By default codadump will display a '?' for an array dimension if the dimension is variable sized. In order to let codadump calculate the array dimensions for you (this may take some time for complex products with deeply nested arrays), you can provide the -c option. If codadump encounters multiple sizes of an array dimension in a product it will display the minimum and maximum dimension sizes it finds separated with a '-'. If you provide the -d option codadump will also show you, for each dimension, a list with each of the encountered dimension sizes together with the number of occurrences of this specific size.</p>
+
+      <p>It is also possible to view additional information such as type or unit information with the -t and -u options for each of the fields. Depending on whether you enable the automatic value/unit conversion in the CODA library (switchable via the -d option) you may get different values for the type and unit for a field. If you use the -d option you will see the field information for the data as it is actually stored in the product file.</p>
+
+      <h2 id="ascii">Viewing and exporting data in ascii format</h2>
+
+<pre>
+    codadump ascii [&lt;ascii options&gt;] &lt;product file&gt;
+        Show the contents of a product file in ascii format
+        List options:
+            -d, --disable_conversions
+                    do not perform unit/value conversions
+            -f, --filter '&lt;filter expression&gt;'
+                    restrict the output to data that matches the filter
+            -i, --index
+                    print the array index for each array element
+            -l, --label
+                    print the full name and array dims for each data block
+            -o, --output &lt;filename&gt;
+                    write output to specified file
+            -q, --quote_strings
+                    put "" around string data and '' around character data
+            -s, --column_separator '&lt;separator string&gt;'
+                    use the given string as column separator (default: ' ')
+            -t, --time_as_string
+                    print time as a string (instead of a floating point value)
+            --no_special_types
+                    bypass special data types from the CODA Data Dictionary -
+                    data with a special type is treated using its non-special
+                    base type
+</pre>
+
+      <p>If you want to view data from a product file on screen or export it to a text file you can use the 'ascii' option of codadump. This option is very useful if you want to quickly examine the contents of a product file or if you want to use (part of) the product data in other tools that require input in ascii format. Usually when you use the ascii option you will provide a filter with the additional -f option (see section "<a href="#filtering">Filtering of data</a>") to select a single field from a product, but it is also possible to create a complete ascii export of a product file with codadump.</p>
+
+      <p>If you display multiple fields, then fields are separated by blank lines. If you display (multi dimensional) arrays then each array element is printed on a separate line. In order to know which array index corresponds with each array element you can use the -i option which prints the (multi dimensional) array index (array indexes start at 0) in front of each array element. By default array index and array elements are separated by a ' '. However, to be able to use exported data in applications that require comma separated ascii files you can change the column separator with the -s option (e.g. -s ', ').</p>
+
+      <h2 id="hdf4">Exporting data to HDF4</h2>
+
+<pre>
+    codadump hdf4 [&lt;hdf4 options&gt;] &lt;product file&gt;
+        Convert a product file to a HDF4 file
+        HDF4 options:
+            -d, --disable_conversions
+                    do not perform unit/value conversions
+            -f '&lt;filter expression&gt;', --filter '&lt;filter expression&gt;'
+                    restrict the output to data that matches the filter
+            -o, --output &lt;filename&gt;
+                    write output to specified file
+            -s, --silent
+                    run in silent mode
+            --no_special_types
+                    bypass special data types from the CODA Data Dictionary -
+                    data with a special type is treated using its non-special
+                    base type
+</pre>
+
+      <p>To export a complete file to HDF4 simply provide the 'hdf4' option to codadump together with the filename of the product. If you do not provide an output file explicitly (with the -o option) the filename of the product file will be used appended with the extension '.hdf'.</p>
+
+      <p>It is possible to export only part of a product file by specifying a filter with the -f option. For more information about this filtering option look at the section titled "<a href="#filtering">Filtering of data</a>".</p>
+
+      <p>The codadump tool uses a generic method to export product data into HDF4. The advantage of this approach is that updates to the Data Dictionary in the CODA library will automatically be supported by the HDF4 conversion routines when the codadump tool is rebuilt from source. Another advantage is that there exists a fixed mapping between the structure of a product file and the exported version in HDF4 format, which allows you to know beforehand what the exported file will look like.</p>
+
+      <p>There is however also a downside to this generic approach. Since the HDF4 format is more restrictive in how it can deal with complex data structures compared compared to some of raw binary product formats, some products can not properly be exported into HDF4.</p>
+
+      <p>Below we will explain how this mapping from a product file to HDF4 is done.</p>
+
+      <h3 id="hdf4_mapping">Mapping of a product file to HDF4</h3>
+
+      <p>Before we explain the mapping we will first describe the general data structure that is used in CODA and the data structure of HDF4 files.</p>
+
+      <p>Product files in CODA are described using three main data type classes (this is also described in the CODA Product Format Definition documentation): the compound types (array and record), the basic types (8 bit integer, double, 32 bit unsigned integer, string, etc.), and some special types (such as the compound types for a complex double). The compound types can contain any other data type, which means you can also have arrays of arrays, arrays of records, and the fields of a record can also contain array or record data. A very important aspect of arrays is that the elements of an array do not necessarily have to be of the same size. For instance if a Data Set (which is an array of records at the root of a product) has a series of Data Set Records (which are of compound type 'record') then a DSR field containing an array may have different array dimensions for DSR #1 than for DSR #2, which means that DSR #1 and DSR #2 will have different storage sizes in a product file. The special compound types (complex and geolocatioN) are also a form of compound types, but their structure is fixed and they can only contain data elements of a basic type (i.e. no compound types).</p>
+
+      <p>HDF4 on the other hand is (from a user point of view) build up from 6 data type classes: Scientific Data Sets (SD), Vdatas (VS), Vgroups (V), 8-bit Raster Images (DFR8), 24-bit Raster Images (DF24), General Raster Images (GR), Palettes (DFP), Annotations (AN), and the basic types (16-bit integer, double, float, character, etc.). The Scientific Data Set is the most used and represents a multidimensional array of one of the basic types. A Vdata is an array of records. The fields of a record are all of basic types. It is possible to store a small array (of fixed length) in a Vdata field by making use of the 'order' property of a Vdata field which denotes the amount of elements of the basic type that are stored in a field. Then there is the Vgroup. This is a kind of container type that can be used to group together several data elements in an HDF4 file, comparable to directories on a file system. Vgroups can contain any of the HDF4 types including other Vgroups (but excluding the basic types, which can not be stored individually in a file). The Raster Images and Palettes types are used to store image information, but since in general the products that are  supported by CODA do not contain image information we won't describe these data types here. Finally, the Annotations data type can be used to attach annotation data to HDF4 files and objects within these files. However, both the interfaces for Scientific Data Sets, Vdatas, and Vgroups already have functionality to attach attribute data to objects, so the CODA HDF4 export does not use this data type.</p>
+
+      <p>So how does codadump map a product file to HDF4? First we will look at the most difficult types, the compound types 'array' and 'record'. Since Data Sets in a product file are one dimensional arrays of records it might seem logical that each Data Set would be converted into a Vdata element (which is a one dimensional array of records). But because the Vdata type can only contain (small arrays of) basic types this is not sufficient for many types of Data Set Records that exist in product files. Furthermore, this not only holds for Data Set Records, but for each record in a product file (i.e. also for records inside Data Set Record fields). An alternative approach for converting a Data Set Record, which is also the one used by codadump, is to represent a record by a Vgroup and to represent each field by a separate object. However the Data Set should then become an array of Vgroups and both the HDF4 types that can represent arrays, the Scientific Data Set and the Vdata (if the array is one dimensional), only support elements of a basic type. In codadump this problem has been solved by transforming each array of records (Vgroups) into a single record (Vgroup) with an array for each of its fields (HDF4 objects). This can best be explained by a simple example.</p>
+
+      <p>Suppose we have a Data Set consisting of 10 Data Set Records. The Data Set Record consists of a time field (a single datetime value) and a geo field, which is again a record containing a corner_coord field (a one dimensional array of 4 geolocation values) and a center_coord field (a single geolocation value). We could write this as:</p>
+
+<pre>
+dataset: array[10] of
+{
+    time: time_type
+    geo:
+    {
+        corner_coord: array[4] of
+        {
+            latitude: float
+            longitude: float
+        }
+        center_coord:
+        {
+            latitude: float
+            longitude: float
+        }
+    }
+}
+</pre>
+      
+      <p>After applying the transformation on the array of Data Set Records we get</p>
+
+<pre>
+dataset:
+{
+    time: array[10] of time_type
+    geo: array[10] of
+    {
+        corner_coord: array[4] of
+        {
+            latitude: float
+            longitude: float
+        }
+        center_coord:
+        {
+            latitude: float
+            longitude: float
+        }
+    }
+}
+</pre>
+
+      <p>But now the geolocation field has become an array of records, so we apply a transformation again to get</p>
+
+<pre>
+dataset:
+{
+    time: array[10] of time_type
+    geo:
+    {
+        corner_coord: array[10] of array[4] of
+        {
+            latitude: float
+            longitude: float
+        }
+        center_coord: array[10] of
+        {
+            latitude: float
+            longitude: float
+        }
+    }
+}
+</pre>
+
+      <p>and again for each latitude/longitude to get</p>
+
+<pre>
+dataset:
+{
+    time: array[10] of time_type
+    geo:
+    {
+        corner_coord:
+        {
+            latitude: array[10] of array[4] of float
+            longitude: array[10] of array[4] of float
+        }
+        center_coord:
+        {
+            latitude: array[10] of float
+            longitude: array[10] of float
+        }
+    }
+}
+</pre>
+
+      <p>After all arrays of records have been transformed codadump will map each single basic element and all arrays of (arrays of) basic elements to a Scientific Data Set (SD). In the example we would thus get an HDF4 file containing:</p>
+
+<pre>
+Vgroup "dataset" containing:
+{
+    Scientific Data Set "time" containing 10 time_type elements
+    Vgroup "geo" containing:
+    {
+        Vgroup "corner_coord" containing:
+        {
+            SD "latitude" containing 10 x 4 float elements
+            SD "longitude" containing 10 x 4 float elements
+        }
+        Vgroup "center_coord" containing:
+        {
+            SD "latitude" containing 10 float elements
+            SD "longitude" containing 10 float elements
+        }
+    }
+}
+</pre>
+
+      <p>This is in short the basic approach taken by codadump for exporting a product file to HDF4. There are however some more details which we will describe below.</p>
+
+      <p>The first problem is the handling of basic types and special compound types. For almost all basic types in a product file there exists a similar basic type in HDF4 (the only problems are 64 bit integers and strings which are not properly supported by HDF4 an are therefore mapped to 64 bit floating point values and arrays of characters respectively). The mapping is as follows:</p>
+
+<pre>
+  int8   -> int8
+  uint8  -> uint8
+  int16  -> int16
+  uint16 -> uint16
+  int32  -> int32
+  uint32 -> uint32
+  int64  -> float64
+  uint64 -> float64
+  float  -> float32
+  double -> float64
+  char   -> char
+  string -> array[&lt;length&gt;] of char
+  bytes  -> array[&lt;size&gt;] of char
+</pre>
+
+      <p>For complex values, HDF4 does not have an equivalent. Therefore, codadump will apply the following transformation for complex types (where the first element will be the real part):</p>
+
+<pre>
+  complex     -> array[2] of float64
+</pre>
+
+      <p>Another issue regarding conversion has to do with variable sized arrays. In the example the corner_coord field in the product file had the same array size (4) in each Data Set Record, so after all transformations the corner_coord lat/long values could be stored in a SD with 2 dimensions [10,4] (the first being the Data Set Record index and the second the coordinate ID). But this is not directly possible if the array sizes would have been different per Data Set Record (e.g. 4 corner coordinates for DSR #1 and 8 corner coordinates for DSR #2). The problem is that Scientific Data Sets in HDF4 can not have variable dimensions. To be able to still store everything, codadump will therefore take the maximum dimension when variable dimensions are encountered. In this case that will thus be [10,8]. Another disadvantage within HDF4 is that it does not supported efficient storage of sparse Scientific Data Sets, so if, by taking the maximum, the dimensions of the resulting Scientific Data Set become very large. Codadump will always try to use the maximum dimension if it encounters a variable dimension. But if the storage efficiency is very low (i.e. in most cases the actual dimension is much lower than the maximum), codadump will just skip exporting these specific Scientific Data Sets (all other data of a product file will still be exported).</p>
+
+      <p>If codadump encounters a variable sized array it will also store extra Scientific Data Sets containing the dimension sizes for the variable sized dimensions. The dimension SDs have the same name as the SD that contains the data but are followed by a '_dims{#}' with '#' being the dimension for which the dimension-SD contains the variable sizes. The number of dimensions of a dimension-SD is usually # - 1, but if codadump can figure out that the variable sized dimension does not vary with respect to the previous dimension(s) it will use less dimensions for the dimension SD. This means that if you want to read the size for a certain dimension from a dimensions-SD you should first retrieve the dimensions of this dimension-SD to check whether a more efficient storage was used.</p>
+
+      <h3 id="hdf4_attr">Additional attributes</h3>
+      
+      <p>The codadump tool also store several attributes, containing extra information coming from the CODA Product Format Definitions, with each SD and Vgroup. If 'description' and/or 'unit' information is available these will be attached to the corresponding SD or Vgroup.</p>
+
+      <h2 id="filtering">Filtering of data</h2>
+
+      <p>Each of the codadump output methods (except the 'debug' method) has a filter option that allows you to restrict the operation on only a selected part of a product file. Such a filter is passed as a string containing a list of field descriptions separated by either a ',' or a ';'. A field description is similar to the output of 'codadump list' for a product file without the array index part (i.e. the '[...]' part).</p>
+
+      <p>When parsing a filter string, codadump will eliminate all duplicate entries in a filter. Say that your filter string would contain 'rec;rec.field_1'. In such a case codadump is able to deduce that the 'rec.field_1' filter part is already included in the previous filter part ('rec') and codadump will thus skip the 'rec.field_1' filter entry.</p>
+
+      <p>When performing a codadump operation with a filter, codadump will handle the filter entries in the order that they are specified in the filter string. For instance, if you try to display fields 'field_1' and 'field_2' with the filter string 'field_2;field_1' then codadump will first display field_2 and then field_1.</p>
+
+      <h2 id="debug">Debugging a product file</h2>
+
+<pre>
+    codadump debug [&lt;debug options&gt;] &lt;product file&gt;
+        Show the contents of a product file in sequential order for debug
+        purposes. No conversions are applied and (if applicable) for each
+        data element the file offset is given
+        Debug options:\n"
+            -o, --output &lt;filename&gt;\n"
+                    write output to specified file\n"
+</pre>
+
+      <p>The debug option of codadump is ment to inspect the contents of a product for possible product formatting errors. When using this mode codadump will walk sequentially through the product and print all data including meta data such as fieldnames, array indices and file offsets (in bytes).</p>
+
+      <div class="footer">
+        <hr />
+        <p>Copyright &copy; 2007-2008 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+      </div>
+
+    </div>
+
+  </body>
+
+</html>

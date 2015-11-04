@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html>
+
+  <head>
+    <title>CODA MATLAB interface</title>
+    <link rel="stylesheet" href="../css/codadoc.css" type="text/css" />
+  </head>
+
+  <body>
+
+    <div class="main">
+
+      <h1>CODA MATLAB interface</h1>
+
+      <p>The CODA MATLAB interface consists of several functions that allow the user to easily access data inside product files.</p>
+
+      <p>This page describes how to use the functions that are provided by the CODA MATLAB interface.</p>
+
+      <h2>Contents</h2>
+
+      <ul>
+        <li><a href="#functions">Functions</a>
+          <ul>
+            <li><a href="#coda_attributes"><code>CODA_ATTRIBUTES</code></a></li>
+            <li><a href="#coda_class"><code>CODA_CLASS</code></a></li>
+            <li><a href="#coda_clearall"><code>CODA_CLEARALL</code></a></li>
+            <li><a href="#coda_close"><code>CODA_CLOSE</code></a></li>
+            <li><a href="#coda_description"><code>CODA_DESCRIPTION</code></a></li>
+            <li><a href="#coda_fetch"><code>CODA_FETCH</code></a></li>
+            <li><a href="#coda_fieldavailable"><code>CODA_FIELDAVAILABLE</code></a></li>
+            <li><a href="#coda_fieldcount"><code>CODA_FIELDCOUNT</code></a></li>
+            <li><a href="#coda_fieldnames"><code>CODA_FIELDNAMES</code></a></li>
+            <li><a href="#coda_getopt"><code>CODA_GETOPT</code></a></li>
+            <li><a href="#coda_open"><code>CODA_OPEN</code></a></li>
+            <li><a href="#coda_product_class"><code>CODA_PRODUCT_CLASS</code></a></li>
+            <li><a href="#coda_product_type"><code>CODA_PRODUCT_TYPE</code></a></li>
+            <li><a href="#coda_product_version"><code>CODA_PRODUCT_VERSION</code></a></li>
+            <li><a href="#coda_setopt"><code>CODA_SETOPT</code></a></li>
+            <li><a href="#coda_size"><code>CODA_SIZE</code></a></li>
+            <li><a href="#coda_time_to_string"><code>CODA_TIME_TO_STRING</code></a></li>
+            <li><a href="#coda_unit"><code>CODA_UNIT</code></a></li>
+            <li><a href="#coda_version"><code>CODA_VERSION</code></a></li>
+          </ul>
+        </li>
+	<li><a href="#coda_param">Data Specification Argument List</a></li>
+	<li><a href="#coda_options">CODA MATLAB interface options</a></li>
+      </ul>
+
+      <h2 id="functions">Functions</h2>
+
+      <p>The descriptions for each CODA MATLAB interface function are formatted in the same way that MATLAB documents its functions. This means that although functions might be written in capitals here, you should use the small-caps version in MATLAB to call them.</p>
+
+      <h3 id="coda_attributes"><code>CODA_ATTRIBUTES</code></h3>
+
+      <p><code>CODA_ATTRIBUTES</code> Return object attributes.</p>
+
+      <p><code>C = CODA_ATTRIBUTES(CODA_FILE_ID, &lt;DATA SPEC ARGS&gt;)</code> returns a struct containing all attributes that are associated with the specified data element. If no attributes are available an empty struct will be returned.</p>
+
+      <p>The <code>coda_file_id</code> parameter must be a valid CODA file handle that was retrieved with <code>coda_open</code>. The format for the data specification argument list <code>&lt;data spec args&gt;</code> is described in a separate section.</p>
+
+      <p>See also <a href="#coda_fetch"><code>CODA_FETCH</code></a>, <a href="#coda_open"><code>CODA_OPEN</code></a>, <a href="#coda_param"><code>DATA SPEC ARGS</code></a></p>
+
+      <h3 id="coda_class"><code>CODA_CLASS</code></h3>
+
+      <p><code>CODA_CLASS</code> Return object class.</p>
+
+      <p><code>C = CODA_CLASS(CODA_FILE_ID, &lt;DATA SPEC ARGS&gt;)</code> returns the MATLAB class of the specified data element. With <code>coda_class</code> you can check what the class of a data element will be without the need to retrieve it via <code>coda_fetch</code>. The returned class is identical to what would be returned by <code>class(coda_fetch(...))</code> if <code>coda_class</code> and <code>coda_fetch</code> had identical parameters.</p>
+
+      <p>The <code>coda_file_id</code> parameter must be a valid CODA file handle that was retrieved with <code>coda_open</code>. The format for the data specification argument list <code>&lt;data spec args&gt;</code> is described in a separate section.</p>
+
+      <p>See also <a href="#coda_fetch"><code>CODA_FETCH</code></a>, <a href="#coda_open"><code>CODA_OPEN</code></a>, <a href="#coda_param"><code>DATA SPEC ARGS</code></a></p>
+         
+      <h3 id="coda_clearall"><code>CODA_CLEARALL</code></h3>
+
+      <p><code>CODA_CLEARALL</code> Close all open product files and unload all cached product format definitions from memory.</p>
+
+      <p><code>CODA_CLEARALL</code> will close all currently open product files (similar to calling <code>coda_close</code> for all open product files). This can be especially helpful to close files for which you have lost the file handle (something that can occur if you were running an M file that opened a product file, but terminated halfway and thus left the file open).</p>
+
+      <p>This function will also free all product format definitions from memory. When <code>coda_open</code> is called, CODA will read the product format definition for the opened file and keeps this cached in memory. A call to <code>coda_clearall</code> will remove all cached definitions.</p>
+      
+      <p>See also <a href="#coda_open"><code>CODA_OPEN</code></a>, <a href="#coda_close"><code>CODA_CLOSE</code></a></p>
+
+      <h3 id="coda_close"><code>CODA_CLOSE</code></h3>
+
+      <p><code>CODA_CLOSE</code> Close an open product file.</p>
+       
+      <p><code>CODA_CLOSE(CODA_FILE_ID)</code> closes the product file which is associated with the <code>coda_file_id</code> file handle.</p>
+
+      <p>The <code>coda_file_id</code> parameter must be a valid CODA file handle that was retrieved with <code>coda_open</code>.</p>
+
+      <p>See also <a href="#coda_open"><code>CODA_OPEN</code></a>, <a href="#coda_clearall"><code>CODA_CLEARALL</code></a></p>
+
+      <h3 id="coda_description"><code>CODA_DESCRIPTION</code></h3>
+
+      <p><code>CODA_DESCRIPTION</code> Retrieve field description.</p>
+
+      <p><code>DESC = CODA_DESCRIPTION(CODA_FILE_ID, &lt;DATA SPEC ARGS&gt;)</code> returns a string containing the description in the product format definition of the specified data element. If the last item of the data specifier argument list equals a fieldname then you will get the description from the product format definition for this field.</p>
+
+      <p>The <code>coda_file_id</code> parameter must be a valid CODA file handle that was retrieved with <code>coda_open</code>. The format for the data specification argument list <code>&lt;data spec args&gt;</code> is described in a separate section.</p>
+
+      <p>See also <a href="#coda_fetch"><code>CODA_FETCH</code></a>, <a href="#coda_open"><code>CODA_OPEN</code></a>, <a href="#coda_param"><code>DATA SPEC ARGS</code></a></p>
+
+
+      <h3 id="coda_fetch"><code>CODA_FETCH</code></h3>
+
+      <p><code>CODA_FETCH</code> Retrieve data from a product file.</p>
+
+      <p><code>DATA = CODA_FETCH(CODA_FILE_ID, &lt;DATA SPEC ARGS&gt;)</code> reads the specified data element from the product file. Instead of just reading individual values, like strings, integers, doubles, etc. it is also possible to read complete arrays or records of data or even the full product. For instance if 'pf' is a valid file handle, then you can read the complete product by simply omitting the data specification argument:</p>
+
+      <p><code>mph = coda_fetch(pf)</code></p>
+      
+      <p>which gives you a MATLAB structure containing the full product content.</p>
+      
+      <p>The <code>coda_file_id</code> parameter must be a valid CODA file handle that was retrieved with <code>coda_open</code>. The format for the data specification argument list <code>&lt;data spec args&gt;</code> is described in a separate section.</p>
+
+      <p>See also <a href="#coda_open"><code>CODA_OPEN</code></a>, <a href="#coda_param"><code>DATA SPEC ARGS</code></a></p>
+
+      <h3 id="coda_fieldavailable"><code>CODA_FIELDAVAILABLE</code></h3>
+
+      <p><code>CODA_FIELDAVAILABLE</code> Find out whether a dynamically available record field is available or not.</p>
+
+      <p><code> IS_AVAILABLE = CODA_FIELDAVAILABLE(CODA_FILE_ID, &lt;DATA SPEC ARGS&gt;)</code> returns 1 if the record field is available and 0 if it is not. The last item of the data specifier argument should point to a record field.</p>
+
+      <p>The <code>coda_file_id</code> parameter must be a valid CODA file handle that was retrieved with <code>coda_open</code>. The format for the data specification argument list <code>&lt;data spec args&gt;</code> is described in a separate section.</p>
+
+      <p>See also <a href="#coda_fetch"><code>CODA_FETCH</code></a>, <a href="#coda_open"><code>CODA_OPEN</code></a>, <a href="#coda_param"><code>DATA SPEC ARGS</code></a></p>
+
+      <h3 id="coda_fieldcount"><code>CODA_FIELDCOUNT</code></h3>
+
+      <p><code>CODA_FIELDCOUNT</code> Retrieve the number of fields for a record in a product file.</p>
+
+      <p><code>N = CODA_FIELDCOUNT(CODA_FILE_ID, &lt;DATA SPEC ARGS&gt;)</code> returns the number of fields for the struct that would be returned if <code>coda_fetch</code> would have been called with the same arguments. The last item of the data specifier argument should point to a record.</p>
+
+      <p>The <code>coda_file_id</code> parameter must be a valid CODA file handle that was retrieved with <code>coda_open</code>. The format for the data specification argument list <code>&lt;data spec args&gt;</code> is described in a separate section.</p>
+
+      <p>See also <a href="#coda_fetch"><code>CODA_FETCH</code></a>, <a href="#coda_open"><code>CODA_OPEN</code></a>, <a href="#coda_param"><code>DATA SPEC ARGS</code></a></p>
+
+      <h3 id="coda_fieldnames"><code>CODA_FIELDNAMES</code></h3>
+
+      <p><code>CODA_FIELDNAMES</code> Retrieve a list of fieldnames for a record in a product file.</p>
+
+      <p><code>FIELDNAMES = CODA_FIELDNAMES(CODA_FILE_ID, &lt;DATA SPEC ARGS&gt;)</code> returns a cellarray of strings of fieldnames for the struct that would be returned if <code>coda_fetch</code> would have been called with the same arguments. The last item of the data specifier argument should point to a record.</p>
+
+      <p>The <code>coda_file_id</code> parameter must be a valid CODA file handle that was retrieved with <code>coda_open</code>. The format for the data specification argument list <code>&lt;data spec args&gt;</code> is described in a separate section.</p>
+
+      <p>See also <a href="#coda_fetch"><code>CODA_FETCH</code></a>, <a href="#coda_open"><code>CODA_OPEN</code></a>, <a href="#coda_param"><code>DATA SPEC ARGS</code></a></p>
+
+      <h3 id="coda_getopt"><code>CODA_GETOPT</code></h3>
+
+      <p><code>CODA_GETOPT</code> Retrieve CODA MATLAB interface options.</p>
+
+      <p><code>OPTIONS = CODA_GETOPT</code> returns a record with all available CODA MATLAB interface options and their current values.</p>
+
+      <p><code>VALUE = CODA_GETOPT(OPTION_NAME)</code> will return the value of the specified option.</p>
+
+      <p>See also <a href="#coda_setopt"><code>CODA_SETOPT</code></a>, <a href="#coda_options"><code>CODA MATLAB interface options</code></a></p>
+
+      <h3 id="coda_open"><code>CODA_OPEN</code></h3>
+
+      <p><code>CODA_OPEN</code> Open a product file.</p>
+       
+      <p><code>CODA_FILE_ID = CODA_OPEN(FILEPATH)</code> opens the product file pointed to by <code>filepath</code>. Upon successful opening the function returns a file handle that should be passed to other CODA MATLAB interface functions that need to read data/information from this product file.</p>
+
+      <p>The <code>filepath</code> parameter must be a string containing the full path (or relative path with respect to the current working directory) of the product file.</p>
+
+      <p>See also <a href="#coda_close"><code>CODA_CLOSE</code></a>, <a href="#coda_clearall"><code>CODA_CLEARALL</code></a></p>
+
+      <h3 id="coda_product_class"><code>CODA_PRODUCT_CLASS</code></h3>
+
+      <p><code>CODA_PRODUCT_CLASS</code> Retrieve product class of a product file.</p>
+
+      <p><code>PRODUCT_CLASS = CODA_PRODUCT_CLASS(CODA_FILE_ID)</code> returns a string containing the product class of the product.</p>
+
+      <p>The <code>coda_file_id</code> parameter must be a valid CODA file handle that was retrieved with <code>coda_open</code>.</p>
+
+      <p>See also <a href="#coda_open"><code>CODA_OPEN</code></a></p>
+
+      <h3 id="coda_product_type"><code>CODA_PRODUCT_TYPE</code></h3>
+
+      <p><code>CODA_PRODUCT_TYPE</code> Retrieve product type of a product file.</p>
+
+      <p><code>PRODUCT_TYPE = CODA_PRODUCT_TYPE(CODA_FILE_ID)</code> returns a string containing the product type of the product.</p>
+
+      <p>The <code>coda_file_id</code> parameter must be a valid CODA file handle that was retrieved with <code>coda_open</code>.</p>
+
+      <p>See also <a href="#coda_open"><code>CODA_OPEN</code></a></p>
+
+      <h3 id="coda_product_version"><code>CODA_PRODUCT_VERSION</code></h3>
+
+      <p><code>CODA_PRODUCT_VERSION</code> Retrieve product version for a product file.</p>
+
+      <p><code>PRODUCT_VERSION = CODA_PRODUCT_VERSION(CODA_FILE_ID)</code> returns an integer denoting the product version, maintained by CODA to be able to distinguish between different versions of product specifications.</p>
+
+      <p>The <code>coda_file_id</code> parameter must be a valid CODA file handle that was retrieved with <code>coda_open</code>.</p>
+
+      <p>See also <a href="#coda_open"><code>CODA_OPEN</code></a></p>
+
+      <h3 id="coda_setopt"><code>CODA_SETOPT</code></h3>
+
+      <p><code>CODA_SETOPT</code> Set CODA MATLAB interface options.</p>
+
+      <p><code>CODA_SETOPT(OPTION_NAME, VALUE)</code> assigns VALUE to the option specified by OPTION_NAME.</p>
+
+      <p>See also <a href="#coda_getopt"><code>CODA_GETOPT</code></a>, <a href="#coda_options"><code>CODA MATLAB interface options</code></a></p>
+
+      <h3 id="coda_size"><code>CODA_SIZE</code></h3>
+
+      <p><code>CODA_SIZE</code> Retrieve the dimensions for an array in a product file.</p>
+
+      <p><code>DIMS = CODA_SIZE(CODA_FILE_ID, &lt;DATA SPEC ARGS&gt;)</code> returns the dimensions of the specified array. With <code>coda_size</code> you can check what the dimensions of an array will be without the need to retrieve it via <code>coda_fetch</code>. The returned dimension information is identical to what would be returned by <code>size(coda_fetch(...))</code> if <code>coda_size</code> and <code>coda_fetch</code> had identical parameters. The last item of the data specifier argument should point to an array.</p>
+
+      <p>The <code>coda_file_id</code> parameter must be a valid CODA file handle that was retrieved with <code>coda_open</code>. The format for the data specification argument list <code>&lt;data spec args&gt;</code> is described in a separate section.</p>
+
+      <p>See also <a href="#coda_fetch"><code>CODA_FETCH</code></a>, <a href="#coda_open"><code>CODA_OPEN</code></a>, <a href="#coda_param"><code>DATA SPEC ARGS</code></a></p>
+
+      <h3 id="coda_time_to_string"><code>CODA_TIME_TO_STRING</code></h3>
+
+      <p><code>CODA_TIME_TO_STRING</code> Convert a number of seconds since 1-1-2000 to a human readable string format.</p>
+
+      <p><code>STR = CODA_TIME_TO_STRING(N_SECONDS_SINCE_2000)</code> turns the double value containing the number of seconds since 1-1-2000 into a string containing the date and time in a human readable string of the form '2000-01-01 00:00:00.000000'.</p>
+
+      <h3 id="coda_unit"><code>CODA_UNIT</code></h3>
+
+      <p><code>CODA_UNIT</code> Retrieve unit information.</p>
+
+      <p><code>UNIT = CODA_UNIT(CODA_FILE_ID, &lt;DATA SPEC ARGS&gt;)</code> returns a string containing the unit information which is stored in the product format definition for the specified data element.</p>
+
+      <p>The <code>coda_file_id</code> parameter must be a valid CODA file handle that was retrieved with <code>coda_open</code>. The format for the data specification argument list <code>&lt;data spec args&gt;</code> is described in a separate section.</p>
+
+      <p>See also <a href="#coda_fetch"><code>CODA_FETCH</code></a>, <a href="#coda_open"><code>CODA_OPEN</code></a>, <a href="#coda_param"><code>DATA SPEC ARGS</code></a></p>
+
+      <h3 id="coda_version"><code>CODA_VERSION</code></h3>
+
+      <p><code>CODA_VERSION</code> Get version number of CODA.</p>
+
+      <p><code>VERSION = CODA_VERSION</code> returns the version number of CODA.</p>
+
+      <h2 id="coda_param">Data Specification Argument List</h2>
+
+      <p>Several functions from the CODA MATLAB interface take a data specification argument list to specify a certain data element in a product file. This argument list is a comma separated list of names and identifiers that allow you to walk to a certain point in a product. The list can be left empty if you want to point to the root of the product. There are two types of arguments you can use in the list of arguments:</p>
+
+      <ul>
+        <li>Array index: You need to provide an array index that has the same number of elements as there are dimensions in the array that you are refering to. So if the array is two dimensional you have to pass indices for both dimensions like <code>[4 5]</code>. If the array is one dimensional (like the datasets) you can just provide a single index value (without the '[]') to get to the k-th element. You can use <a href="#coda_size"><code>coda_size</code></a> to check the number of dimensions of an array and the size of each dimension.</li>
+        <li>Field name: To go to a certain field inside the record that you are pointing to, you can provide the field name as a string (which is case sensitive, so you should make sure that the name is exactly the same as is returned by <a href="#coda_fieldnames"><code>coda_fieldnames</code></a>).</li>
+      </ul>
+      
+      <p>Note that all indices inside the data specification argument list go from 1..N (and not from 0..(N-1)).</p>
+
+      <p>For the <code>coda_fetch</code> function there is an additional feature. If you provide a -1 for one or more of the dimensions of an array you will fetch all elements in the specified dimension(s). For example, with <code>coda_fetch(pf,'datasetname',-1,'dsr_time')</code> you can fetch all <code>dsr_time</code> values for all measurements into a single array.</p>
+
+      <p>See also <a href="#coda_class"><code>CODA_CLASS</code></a>, <a href="#coda_fetch"><code>CODA_FETCH</code></a>, <a href="#coda_fieldnames"><code>CODA_FIELDNAMES</code></a>, <a href="#coda_size"><code>CODA_SIZE</code></a></p>
+
+      <h2 id="coda_options">CODA MATLAB interface options</h2>
+
+      <h3><code>ConvertNumbersToDouble</code></h3>
+
+      <p>If set to 0 then the CODA MATLAB interface will, when reading data from a product file, use a matlab class that best matches the datatype of the data element in the product file (i.e. use 'int8' when the data is a one byte signed integer).</p>
+      <p>If set to 1 then the CODA MATLAB interface will use the matlab class 'double' for all numbers that are read from a product file.</p>
+      <p>The default value for this option is: 1</p>
+
+      <h3><code>FilterRecordFields</code></h3>
+
+      <p>Some records contain fields that have a fixed value or are spare fields. If this option is set to 1 then these kinds of fields will be filtered out when retrieving a record from a product file. If this option is set to 0 then all fields will be returned.</p>
+      <p>The default value for this option is: 1</p>
+
+      <h3><code>PerformConversions</code></h3>
+      
+      <p>The CODA library has a global option that allows you to switch between reading data from a productfile in the way that it was exactly stored or in a more convenient way. For instance, sometimes floating point values with one digit precision are first multiplied by 10 and stored as an integer value in the product. If PerformConversions is set to 0 then CODA will read this integer value, but if it is set to 1 then CODA will first convert the integer back to a floating point value and divide it by 10 again. To see which fields of a product are effected by the PerformConversions option and what the conversion factor is look at the corresponding CODA Product Format Definition documentation.</p>
+      <p>You should also be aware that changing this option not only effects the result of <code>CODA_FETCH</code>, but also the result of <code>CODA_CLASS</code> (since this may, for instance, return 'single' instead of 'int16' if PerformConversions is set to 1) and <code>CODA_UNIT</code>.</p>
+      <p>The default value for this option is: 1</p>
+
+      <h3><code>Use64bitInteger</code></h3>
+
+      <p>Some data elements in a product file are stored as 64bit integers. The CODA MATLAB interface is able to read this data and return them to matlab with the not fully supported matlab classes 'int64' and 'uint64'. If you set Use64bitInteger to 0 then the CODA MATLAB interface will convert the 64bit integer to a double and return the data with a matlab class 'double'.</p>
+      <p>Note that if ConvertNumbersToDouble is set to 1 then all integers will already be converted to doubles so in that case this option won't have any effect.</p>
+      <p>The default value for this option is: 0</p>
+
+      <h3><code>UseMMap</code></h3>
+
+      <p>By default CODA uses a technique called 'memory mapping' to open and access data from product files. Using mmap greatly outperforms the default approach of reading data using the open()/read() combination. The downside of mapping a file into memory is that it takes away valuable address space. When you run a 32-bit Operating System your maximum addressable memory range is 4GB and if you simultaneously try to keep a few large product files open your memory space can quickly become full. Opening additional files will then produce 'out of memory' errors. Note that this 'out of memory' situation has nothing to do with the amount of RAM you have installed in your computer. It is only related to the size of a memory pointer on your system, which is limited to 4GB.</p>
+      <p>If you are using CODA in a situation where you need to have multiple large product files open at the same time you can turn of the use of memory mapping by disabling this option. If you change the memory mapping option, the new setting will only be applicable for files that will be opened after you changed the option. Any files that were already open will keep using the mechanism with which they were opened.</p>
+      <p>The default value for this option is: 1</p>
+
+      <h3><code>UseSpecialTypes</code></h3>
+      
+      <p>The CODA type system contains a series of special types that were introduced to make it easier for the user to read certain types of information. Examples of special types are the 'time', 'complex', and 'no data' types. Each special data type is an abstraction on top of another non-special data type. Sometimes you want to access a file using just the non-special data types (e.g. if you want to get to the raw time data in a file). If you disable this option, CODA will use the base type of a special type (and not the special type itself) when reading data or retrieving information about a data item. See the CODA Product Format Definition documentation for more information about special types.</p>
+      <p>The default value for this option is: 1</p>
+
+      <p>See also <a href="#coda_getopt"><code>CODA_GETOPT</code></a>, <a href="#coda_setopt"><code>CODA_SETOPT</code></a></p>
+
+      <div class="footer">
+        <hr />
+        <p>Copyright &copy; 2007-2008 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+      </div>
+
+    </div>
+
+  </body>
+
+</html>

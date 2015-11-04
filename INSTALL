@@ -1,0 +1,483 @@
+Copyright (C) 2007-2008 S&T, The Netherlands
+
+                        CODA Installation Documentation
+
+This documentation provides installation instructions for CODA.
+
+This release has been verified to work on Linux, Windows XP, and Mac OS X, but
+you may encounter problems when trying to build or run this library on other
+systems. If you do encounter problems, please read the FAQ document which is
+also contained in this package to see if your problem is already described
+there. Otherwise, look at the Feedback section of this document to see what you
+can do to report your problem back to us.
+
+Supported platforms
+===================
+
+CODA is designed to run on most Unix-based operating systems (including Linux
+and Mac OS X) and Windows. The platforms that are supported include at least
+Linux, Windows, and Mac OS X.
+
+What you will need
+==================
+
+  - The CODA package : You can choose between a source installation
+    (coda-x.y.z.tar.gz) or a binary installation (codasetup-x.y.z.exe (Windows
+    only)). Note that x.y.z stands for the version number of the package.
+    The source package contains the source code for all CODA components (C
+    Library, IDL interface, MATLAB interface, Fortran interface, Python
+    interface, and the tools codacheck, codacmp, codadd, codadump, and
+    codafind) together with all documentation.
+    You will need this package if you want to use CODA on a Unix-based system.
+    For Windows you will only need this package if you want to have access to
+    the CODA source (if, for instance, you want to extend/improve CODA).
+    The binary package, which is only available for Windows, contains pre-built
+    versions of everything from the source distribution (without the sources)
+    and all documentation and examples. For the IDL and MATLAB interfaces,
+    pre-built versions are included for IDL 5.4 - 6.3 for Windows, and MATLAB
+    R13 (v6.5) - R2007a (v7.4) for Windows. For the Python interface, a
+    pre-built version for Python 2.4 is included. All CODA interfaces have been
+    compiled with HDF4 and HDF5 support built in.
+
+    If you do not have the CODA package you need, you can download it from the
+    CODA website:
+
+        http://www.stcorp.nl/coda/
+
+  - If you plan on using the Fortran interface you should have a Fortran 77 or
+    Fortran 90 compiler.
+
+  - If you plan on using the IDL interface you need a recent version of IDL :
+    The IDL interface has been verified to work with IDL version 5.2 and
+    higher, but earlier versions may also work.
+
+  - If you plan on using the MATLAB interface you need a recent version of
+    MATLAB : The MATLAB interface will only work with MATLAB version 5.3 (R11)
+    and higher.
+
+  - If you plan on using the Python interface you need Python version 2.4 and
+    the Python 'numarray' package (version 1.1 or higer).
+
+
+  The following items are only needed if you use the CODA source distribution:
+
+  - A C compiler : Most Unix platforms come with their own C compiler so this
+    should not be a problem. For Mac OS X you should make sure you have
+    installed the Developer Tools. For Windows you need Microsoft Visual C++
+    6.0 or 7.x.
+
+  - The zlib package: containing the libz library and zlib.h (and related)
+    include files. 
+
+  - If you want to use the HDF4 features of CODA then you will need to have a
+    recent version of HDF4 installed (for building the source package on
+    Windows you will need to have version 4.2r3 of HDF).
+    You will also need the additional required libraries libjpeg, szlib, and
+    zlib.
+    On some UNIX systems you can install HDF4 via the package manager on your
+    system. Make sure that this package also installs the netcdf.h include file
+    on your system. If this is not the case you will also have to install the
+    netcdf package on your system.
+
+  - If you want to use the HDF5 features of CODA then you will need to have a
+    recent version of HDF5 installed (for building the source package on
+    Windows you will need to have version 1.6.7 of HDF5).
+    You will also need the additional required libraries szlib and zlib.
+
+Building the source package (Unix)
+==================================
+
+The following steps will guide you through the process of building the CODA
+libraries and executables (including the IDL, MATLAB, and Python interfaces) on
+a Unix-based platform :
+
+ 1) Go to the directory that contains the downloaded coda-x.y.z.tar.gz file and
+    unpack this package:
+
+    % gzip -d coda-x.y.z.tar.gz
+    % tar xf coda-x.y.z.tar
+
+    Make sure you replace x.y.z with the appropriate version number.
+
+ 2) You should now have a coda-x.y.z directory. Go to this directory:
+
+    % cd coda-x.y.z
+
+ 3) Next you will have to execute the 'configure' script that checks what
+    system you are on and sets up the build environment. There are several
+    options you can pass to this script. The most important ones are:
+
+    --prefix <CODA installation directory> : By default, if you perform an
+    installation of the CODA package (see further below on how to do this) all
+    files are installed in subdirectories under /usr/local. Executables will
+    appear under /usr/local/bin, libraries under /usr/local/lib and all data
+    files (documentation and examples) under /usr/local/share/coda.
+    However, installing the files into the default places requires you to have
+    administrator privileges, which you may not have. In order to install CODA
+    in a different location where you do have permission to copy files to, you
+    can use this option to provide a different installation directory. For
+    instance, you can use --prefix=$HOME/coda to install CODA in the
+    subdirectory 'coda' of your home directory.
+
+    ZLIB_LIB=<zlib library directory> : CODA will try to locate the zlib
+    library in the default locations for libraries (/usr/local/lib is usually
+    not considered a default location!). If ./configure complains that it can't
+    find the 'libz' library file, pass this option to ./configure with the
+    location of the library file.
+    
+    ZLIB_INCLUDE=<zlib include file directory> : CODA will try to locate the
+    zlib include files in the default locations for include files
+    (/usr/local/include is usually not considered a default location!). If
+    ./configure complains that it can't find the 'zlib.h' include file, pass
+    this option to ./configure with the location of the include file.
+
+    --enable-idl : By default CODA is built without the IDL interface. Use this
+    option to enable building of the interface to IDL. 
+
+    IDL=<IDL root directory> : If you want to build the IDL interface you
+    should also use this option to tell the configuration script where you have
+    installed IDL. The <IDL root directory> is the root directory of your IDL
+    installation. It should contain for instance the 'bin' directory with the
+    idl executable and an 'external' directory containing the file 'export.h'.
+    Also make sure that you provide an absolute path for the IDL root directory
+    (i.e. starting with a '/').
+
+    --enable-matlab : By default CODA is built without the MATLAB interface.
+    Use this option to enable building of the interface to MATLAB. 
+    
+    MATLAB=<MATLAB root directory> : If you want to build the MATLAB interface
+    you should also use this option to tell the configuration script where you
+    have installed MATLAB. The <MATLAB root directory> is the root directory of
+    your MATLAB installation. It should contain for instance the 'bin'
+    directory with the matlab and mex executables (or symbolic links to them)
+    and an 'extern/include' subdirectory containing the file 'mex.h'. Also make
+    sure that you provide an absolute path for the MATLAB root directory (i.e.
+    starting with a '/').
+
+    --enable-python : By default CODA is built without the Python interface.
+    Use this option to enable building of the interface to Python. If you
+    enable the Python interface then make sure you have installed the numarray
+    package for Python.
+
+    PYTHON=<Python executable> : If you want to build the Python interface you
+    should also use this option to tell the configuration script where your
+    Python executable is located (e.g. PYTHON=/usr/bin/python). Make sure that
+    you provide an absolute path for the Python executable (i.e. the path
+    should start with a '/').
+
+    --with-hdf4 : CODA is able to read HDF4 files and provide some export
+    functionality using this format. By default this capability is not included
+    when you built CODA. To include HDF4 support you will need to have a recent
+    version of HDF4 installed and include the --with-hdf4 option when calling
+    ./configure.
+    
+    HDF4_LIB=<HDF4 library directory> : If you have installed HDF4 then CODA
+    will try to locate the HDF4 libraries in the default locations for
+    libraries (/usr/local/lib is usually not considered a default location!).
+    If ./configure complains that it can't find the 'df' or 'mfhdf' library
+    files, pass this option to ./configure with the location of these library
+    files.
+    
+    HDF4_INCLUDE=<HDF4 include file directory> : If you have installed HDF4
+    then CODA will try to locate the HDF4 include files in the default
+    locations for include files (/usr/local/include is usually not considered a
+    default location!). If ./configure complains that it can't find the
+    'hdf.h', 'netcdf.h', or 'mfhdf.h' include files, pass this option to
+    ./configure with the location of these include files.
+
+    --disable-hdf4-vdata-attributes : Pass this option if you are using HDF4
+    version 4.2r1 or earlier. This option disables the support for vdata and
+    vgroup attributes because of a problem in the HDF4 library for HDF 4.2r1
+    and earlier. The problem was solved is HDF 4.2r2, so for that version and
+    later versions don't provide this option.
+
+    --with-hdf5 : CODA is able to read HDF5 files and provide some export
+    functionality using this format. By default this capability is not included
+    when you built CODA. To include HDF5 support you will need to have a recent
+    version of HDF5 installed and include the --with-hdf5 option when calling
+    ./configure.
+    
+    HDF5_LIB=<HDF5 library directory> : If you have installed HDF5 then CODA
+    will try to locate the HDF5 library in the default locations for libraries
+    (/usr/local/lib is usually not considered a default location!). If
+    ./configure complains that it can't find the 'hdf5' library files, pass
+    this option to ./configure with the location of this library file.
+    
+    HDF5_INCLUDE=<HDF5 include file directory> : If you have installed HDF5
+    then CODA will try to locate the HDF5 include files in the default
+    locations for include files (/usr/local/include is usually not considered a
+    default location!). If ./configure complains that it can't find the
+    'hdf5.h' include file, pass this option to ./configure with the location of
+    this include file.
+
+    Note that you don't have to provide any options to the configure script to
+    create the Fortran interface for CODA. The wrapper code is always created.
+
+    You should now call the configure script with the options that are
+    appropriate for you. For instance, if you want to install CODA in the
+    default location (/usr/local) and if you want to build the IDL interface
+    (but not the MATLAB interface) with IDL installed in /usr/local/rsi/idl and
+    if you don't need to have the HDF4 and HDF5 capability of CODA then your
+    invocation of configure would be :
+
+    % ./configure --enable-idl IDL=/usr/local/rsi/idl
+
+ 4) If this completes successfully, you are now able to build the library by
+    executing the `make' command :
+
+    % make
+
+    If everything was successful, you are now ready to install the package
+    (this installation step is not optional! You will have to install CODA
+    before you can use it). If you encountered any problems while building CODA
+    and if you need help, please take a look at the FAQ in the root directory
+    of the unpacked CODA package or contact us (see the Feedback section at the
+    bottom of this document for contact information).
+
+Installing the source package (Unix)
+====================================
+
+In order to make use of the CODA library and interfaces, you should install
+the CODA software. Please make sure you have provided the appropriate
+installation directory option (--prefix=<installdir>) to the configure script,
+as explained in the previous section, if you do not want to install CODA in its
+default location /usr/local. After running the configure script, issue the
+following command :
+
+    % make install
+
+Next, you may want to install one or more product format definition files
+(.codadef files). There are no .codadef files included with CODA, but they are
+available from several other sources. If you put them in the default definition
+directory ($prefix/share/coda/definition) then the CODA command line tools and
+the IDL and MATLAB interfaces will automatically find them. You can also
+install the .codadef files in a different location and set the CODA_DEFINITION
+environment to point to a ':' separated list of paths. Each path can either be
+a full path to a .codadef file or a directory (containg only .codadef files).
+When you use the CODA_DEFINITION environment variable then also the C, Fortran
+and Python interfaces of CODA will be able to find the .codadef files.
+
+If you also want to use the CODA IDL, MATLAB or Python interfaces, the final
+step is to tell IDL/MATLAB/Python where they can find CODA.
+
+For IDL you will have to add <CODA installdir>/lib/coda/idl to your DLM_PATH.
+You do this by setting an IDL_DLM_PATH environment variable and add this
+setting to your system shell startup script (if you don't now how to set
+environment variables or add these to your shell startup script, please ask
+your system administrator). The variable should be set to "<IDL_DEFAULT>"
+appended with the CODA DLM directory. If, for instance, you have installed CODA
+in /usr/local then you should set the IDL_DLM_PATH environment variable to
+"<IDL_DEFAULT>:/usr/local/lib/coda/idl".
+
+For MATLAB you should create a startup.m file in a 'matlab' directory in your
+home directory (~/matlab/startup.m) that contains the line:
+
+    addpath <CODA installdir>/lib/coda/matlab
+    
+If you enabled Python then you won't have to do anything if you installed CODA
+in the same directory as you installed Python (e.g. if both are installed under
+/usr/local for instance). You can verify whether this is the case by checking
+that the file <CODA installdir>/lib/python2.4/os.py exists. If you installed
+CODA in another location then you should create a 'coda.pth' file in the
+directory <Python installdir>/lib/python2.4/site-packages containing one text
+line with the location of the Python package:
+
+    <CODA installdir>/lib/python2.4/site-packages
+
+Python will then automatically load the coda.pth file at startup and add the
+path to the Python package to the Python searchpath. You can also manually
+modify the searchpath from within Python by calling the following Python
+commands:
+    >>> import sys
+    >>> sys.path.append('<CODA installdir>/lib/python2.4/site-packages')
+But this manual modification will be lost as soon as you quit Python.
+
+Of course you should replace <CODA installdir> with the installation directory
+you have chosen with the --prefix option for the configure script or otherwise
+/usr/local (the default install location for CODA).
+
+Building the source package (Windows)
+=====================================
+
+The following steps will guide you through the process of building the CODA
+libraries and executables (including the CODA IDL, MATLAB, and Python
+interfaces) on a Windows platform :
+
+ 1) Unpack the downloaded coda-x.y.z.tar.gz file to a location of your choice.
+
+ 2) CODA can import/export HDF4 and/or HDF5 data. The VC++ project files for
+    these components contain both targets that include the HDF4 and HDF5
+    capability and targets without this capability. To be able to build CODA
+    with HDF4 and HDF5 you will need to have both HDF4 version 4.2r3 and HDF5
+    version 1.6.7 installed and add the system environment variables
+    HDF4_INCLUDE, HDF4_LIB, HDF4_DLL, HDF5_INCLUDE, HDF5_LIB, and HDF5_DLL that
+    point to your HDF4 and HDF5 include file, library file, and dll file
+    directories.
+    Because HDF4 (since version 4.2r0) and HDF5 do not come with their own
+    versions of libjpeg, szlib, and zlib, you should also download these
+    libraries and define ZLIB_LIB, SZIP_LIB, JPEG_LIB, ZLIB_DLL, and SZIP_DLL
+    environment variables with the directory locations of the library and dll
+    files for these libraries.
+
+ 3) If you want to build the Python interfaces, make sure you have installed
+    Python 2.4 and the numarray package. You should then create an environment
+    variable PYTHONHOME that points to your Python2.4 directory
+    (e.g. PYTHONHOME=C:\Python24).
+
+ 4) Go to the win32 subdirectory of your unpacked source package.
+ 
+ 5) Open the coda.dsw workspace file with Visual C++. Visual C++ 7.1 is
+    perfered (this will automatically convert the project to a .sln), but
+    Visual C++ 6.0 should also work.
+
+ 6) From Visual C++ choose 'Batch Build...' from the 'Build' menu. Enable all
+    targets. Then disable the 'with HDF' targets if you do not have HDF4 and
+    HDF5 installed or did not perform step 2. If you do not want to build the
+    Python interfaces then disable the python target (codapython). Then, to
+    build CODA, make sure the 'Selection only' option is checked and click on
+    the 'Build' button.
+
+    When Visual C++ has finished, you will have successfully built the C
+    libraries, command line tools, and, if you enabled this, the Python
+    extensions. Versions with debugging information will have been created in
+    the 'Debug' subdirectory and versions without debugging information in the
+    'Release' subdirectory. Versions with HDF4 and HDF5 support are located in
+    the 'Debug\withhdf' and 'Release\withhdf'. There will also be a 'build'
+    subdirectory, but this directory only contains intermediate files for the
+    builds, so you may ignore its contents.
+
+ 7) If you want to build the IDL interface for CODA first build the C Library
+    (as explained in the previous step). Then edit the coda-idl.bat file in the
+    win32 subdirectory and change the IDL_DIR and IDL_VERSION settings at the
+    top of the file so it matches your local path and version of IDL (you
+    should be aware that if you have multiple versions of IDL on your system
+    then you can use the IDL interface with only one of these versions).
+    Then save the batch file and run it. After completion there should be an
+    idl subdirectory containing all the files you need to use CODA within IDL.
+ 
+ 8) If you want to build the MATLAB interfaces for CODA first build the C
+    Library (as explained in step 4). Then you have to configure MEX for
+    MATLAB. Run the mex.bat file, that is located in the bin/win32 directory of
+    your MATLAB installation, with the -setup option and choose the same
+    compiler that you used to build the CODA library (mind that MATLAB releases
+    before R13 do not support VC++ 7.x, but are limited to VC++ 6.0).
+    Then edit the generated mexopts.bat file (the mex.bat file should have told
+    you the location of this 'default options file') and remove the /MD and
+    /MDd options if they are there.
+
+    Now edit the coda-matlab.bat file in the win32 subdirectory of the CODA
+    package and change the MATLAB_DIR and MATLAB_RELEASE settings at the top of
+    the file so it matches your local path and release number of MATLAB (you
+    should be aware that if you have multiple versions of MATLAB on your system
+    that unlike for the IDL interface for CODA you can have multiple versions
+    of the MATLAB interface installed. MATALB releases R13 - R2007a can share
+    the same MATLAB build of CODA but for R12 you need to create a separate
+    build).
+    Then save the batch file and run it. After completion there should be a
+    matlab subdirectory containing all the files you need to use CODA within
+    MATLAB.
+
+Installing the source package (Windows)
+=======================================
+
+The source package of CODA does not come with an additional installation step
+for Windows (if you want to have a nicely installed version of CODA you should
+use the binary package of CODA for Windows). If you want to link in the
+libraries in your program just provide the appropriate 'library include path'
+flags that point to either the 'win32\Release' or 'win32\Debug' subdirectory
+and provide a 'header include path' flag to the 'win32' subdirectory of your
+CODA source directory.
+
+If you want to use the command line tools then copy them from the Release (or
+Release\withhdf) directory to your preferred location for command line tools.
+Note that you will have to set the CODA_DEFINITION environment variable to point
+to your location of .codadef files if you have product format definitions files
+that you want CODA to use.
+
+For the IDL and MATLAB interfaces follow the instructions mentioned in the
+following section but use the 'win32\idl' and 'win32\matlab' subdirectories as
+locations for the IDL DLM and MATLAB MEX files.
+Since this type of installation will not use the default installation location,
+this approach also requires you to set the CODA_DEFINITION environment variable
+if you want to make use of your separately downloaded .codadef files.
+
+Installing the binary package (Windows)
+=======================================
+
+To install the binary package of CODA for Windows just run the executable which
+will guide you through the installation process. After a successful
+installation you will have to perform some last steps if you want to use the
+IDL, MATLAB and/or Python interfaces.
+
+For IDL you will have to add <CODA installdir>\idl to your DLM_PATH for IDL
+versions 6.3 and higher, or <CODA installdir>\idl61 if you are using IDL
+version 6.1 or 6.2, <CODA installdir>\idl55 if you are using an IDL version in
+the range  5.5-6.0, or <CODA installdir>\idl54 if you are using IDL version
+5.4. You do this by setting an IDL_DLM_PATH environment variable.
+On Windows NT, 2000, and XP open the 'System' control panel of your Windows
+operating system and goto the 'Advanced' tab. Then click on 'Environment
+Variables' and create a new system variable with the name 'IDL_DLM_PATH' and
+value '<IDL_DEFAULT>;C:\CODA\idl' (or e.g. '<IDL_DEFAULT>;C:\CODA\idl61').
+If you have installed CODA in a location different from C:\CODA then replace
+this part in the value by the installation directory you chose when installing
+CODA. For Windows 98 you should add the line 'SET IDL_DLM_PATH=C:\CODA\idl'
+(or e.g. 'SET IDL_DLM_PATH=C:\CODA\idl61'), also replacing the C:\CODA part if
+necessary, to your autoexec.bat.
+
+For MATLAB you will have to start MATLAB and goto the 'Set Path...' menu item
+in the 'File' menu. Here you should add the directory 'C:\CODA\matlab'. If you
+have installed CODA in a location different from C:\CODA then replace this part
+of the directory by the installation directory you had chosen when you
+installed CODA.
+
+For Python you will have to open a command prompt and goto the CODA python
+directory ('C:\CODA\python' by default). Make sure the python application is in
+your PATH and execute the following command 'python setup.py install'. This
+will copy the coda Python package to your Python installation directory. Next,
+to use coda from python, just start python and import the coda package. Make
+sure you keep the directory where the CODA library is installed in your PATH
+(the CODA installer already automatically modifies the PATH variable for you).
+Otherwise the Python interface will not work anymore.
+
+Note: The binary installer for Windows comes with full HDF4 and HDF5 support
+included in all CODA modules.
+
+Next, you may want to install one or more product format definition files
+(.codadef files). There are no .codadef files included with CODA, but they are
+available from several other sources. If you put them in the default definition
+directory (<CODA installdir>\definition) then the CODA command line tools and
+the IDL and MATLAB interfaces will automatically find them. You can also
+install the .codadef files in a different location and set the CODA_DEFINITION
+environment to point to a ';' separated list of paths. Each path can either be
+a full path to a .codadef file or a directory (containg only .codadef files).
+When you use the CODA_DEFINITION environment variable then also the C, Fortran
+and Python interfaces of CODA will be able to find the .codadef files.
+
+Documentation
+=============
+
+Both the source and binary CODA packages come with documentation in HTML.
+For the source package you can access the documentation from within the
+unpacked CODA source package directory by going to the doc/html subdirectory
+and opening the file index.html in your Internet browser. If you perform an
+install of the source package all documentation will also be installed. You can
+find the documentation under the subdirectory share/coda/doc/html of your
+installation directory (/usr/local by default).
+For the Windows binary package all documentation can be found in the
+subdirectory doc\html of your installation directory (C:\CODA by default).
+
+Feedback
+========
+
+If you encounter any problems while trying to build, install or run one or more
+components of the CODA package you can send an e-mail to:
+
+    coda@stcorp.nl
+    
+If you are using the source package on a Unix based system, please provide a
+copy of the config.log file that is created when you run './configure' and a
+copy of the output of 'make' with your e-mail.
+
+Apart from problems, we would also appreciate to hear from you if you have any
+ideas, suggestions, or comments that may help us to improve the quality or
+functionality of CODA.

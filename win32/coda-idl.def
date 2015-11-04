@@ -1,0 +1,2 @@
+LIBRARY			coda-idl
+EXPORTS			IDL_Load		@1

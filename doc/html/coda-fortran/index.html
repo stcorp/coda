@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html>
+
+  <head>
+    <title>CODA-Fortran</title>
+    <link rel="stylesheet" href="../css/codadoc.css" type="text/css" />
+  </head>
+
+  <body>
+
+    <div class="main">
+
+      <h1>CODA-Fortran interface</h1>
+
+      <p>The CODA-Fortran interface is a direct wrapping of all functions that are available in the CODA C Library.</p>
+
+      <p>Currently the CODA-Fortran interface is only supported on Unix based platforms (i.e. Linux, SUN, Mac OS X, etc.). Whether the interface also works on Windows is unkown.</p>
+
+      <p>This page describes how to use the wrapped interface and how to compile your own Fortran programs with CODA.</p>
+
+      <h2>Contents</h2>
+
+      <ul>
+        <li><a href="#fortran">Supported Fortran versions</a></li>
+        <li><a href="#cvsfortran">Differences between C and Fortran</a>
+          <ul>
+            <li><a href="#typesizes">Type Sizes</a></li>
+            <li><a href="#pointers">Pointers</a></li>
+            <li><a href="#strings">Strings</a></li>
+            <li><a href="#enumandconst">Enumeration values and constants</a></li>
+            <li><a href="#indices">Indices</a></li>
+            <li><a href="#notwrapped">Functions that are not wrapped</a></li>
+            <li><a href="#extrafunc">Functions that are only available in Fortran</a></li>
+          </ul>
+        </li>
+        <li><a href="#build">Creating your Fortran program</a></li>
+        <li><a href="#functions">Functions</a></li>
+      </ul>
+
+      <h2 id="fortran">Supported Fortran versions</h2>
+      
+      <p>The CODA Fortran interface can be used with both Fortran 77 and Fortran 90. However, the CODA Fortran interface is neither fully Fortran 77 nor fully Fortran 90 compliant. Fortran 77 requires that identifiers (i.e. variable and function names) are not longer than 6 characters and with Fortran 90 they should be no longer than 31 characters. Furthemore Fortran 77 does not allow '_' characters in identifiers. For the CODA interface, however, some identifiers are longer than 31 characters and they all contain '_' characters. Fortunately, most Fortran compilers shouldn't have any problems dealing with these exceptions.</p>
+
+      <p>Besides the identifier naming issue, the CODA Fortran interface should be fully compliant with Fortran 77 (and, since Fortran 77 is a supported subset of Fortran 90, the interface is thus also compliant with Fortran 90).</p> 
+
+      <h2 id="cvsfortran">Differences between C and Fortran</h2>
+      
+      <p>This section details the differences between the C and Fortran interfaces of CODA and explains how the wrapping was done. Although most of the CODA functions are mapped 1-to-1 from C to Fortran there are some guidelines and some exceptions that you should be aware of.</p>
+
+      <h3 id="typesizes">Type sizes</h3>
+      
+      <p>Both the C and the Fortran standards do not prescribe fixed byte sizes for their integer types. On most platforms for C an 8 bit integer is represented by a <code>char</code>, a 16 bit integer by a <code>short</code>, a 32 bit integer by <code>int</code> or <code>long</code>, and a 64 bit integer by a <code>long long</code> (although this last type has only been recently added to the C standard) or a <code>long</code> on 64-bit systems. Fortran (version 77 to be precise) on the other hand only supports the <code>INTEGER</code> type, which has a length of 32 bits on most systems. However, most Fortran 77 compilers support an extension that allows you to define e.g. a 16 bit / 2 byte integer by <code>INTEGER*2</code>. Fortran 90 on the other hand, doesn't support this <code>INTEGER*...</code> mechanism, but uses a system in which you can specify which <i>kind</i> of integer you want (e.g. <code>INTEGER(4)</code>). Unfortunately this system is not very portable (you need to use the intrinsic function <code>SELECTED_INT_KIND</code> to find the <i>kind</i> index for the precision you want) and this is not guaranteed to give you a variable that has the exact number of bytes that you want.</p>
+
+      <p>Another issue is that C supports both signed and unsigned integer types, but in Fortran (both Fortran 77 and Fortran 90) all integers are signed (i.e. unsigned types are not supported).</p>
+
+      <p>For the C interface of CODA the type size issue has been solved by introducing special types for 8/16/32/64 bit integers (both signed and unsigned): <code>int8_t</code>, <code>uint8_t</code>, <code>in16_t</code>, <code>uint16_t</code>, <code>int32_t</code>, <code>uint32_t</code>, <code>int64_t</code>, and <code>uint64_t</code>. But these types are only used for cases where portabillity was really needed, which, in case of CODA, is for variables that contain data that was read from product files. For internal variables, such as e.g. result codes and indices, CODA uses the native C types <code>int</code> and <code>long</code> (note that <code>long</code> will be 32 bits for 32-bit systems and will be 64 bits when you compile for 64-bit systems).</p>
+
+      <p>Now what does all this mean for your Fortran program? The thing to remember is that when you pass arguments to a wrapped CODA function from Fortran that you should pass variables that are the <i>exact same size in bytes</i> as what CODA expects. Unsigned integers will be casted to signed integers, so if you try to retrieve e.g. an uint32 value mind that values >= 2.147.483.648 will appear in Fortran as negative values.</p>
+
+      <p>The list of <a href="#functions">function prototypes</a> below gives an overview of how you should use the wrapped functions when you use a Fortran 77 compiler that supports the <code>INTEGER*...</code> extension.</p>
+
+      <p>When reading data from a product file using the <code>CODA_CURSOR_READ_...</code> functions you should be aware that you can read data that is stored in one kind of type into a variable that is of another type. For instance, if the data is stored as a 8 bit unsigned integer, you can use the function <code>CODA_CURSOR_READ_INT32</code> to read it into a signed 32 bit variable. So, this means you can use a plain <code>INTEGER</code> variable (assuming that your platform uses a 32 bit type for this) and the <code>CODA_CURSOR_READ_INT32</code> function to read all kinds of integers. The only exception to this automatic type conversion is that you can not read data that uses more bits into a variable that uses less bits. For example you can not read a 64 integer into a 32 bit integer variable. For the same reason CODA also won't allow you to read an unsigned 32 bit integer using <code>CODA_CURSOR_READ_INT32</code> because there is no way to represent values >= 2.147.483.648 with a signed 32 bit integer and the C interface doesn't allow casting unsigned values to signed values. The Fortran interface will allow you to use <code>CODA_CURSOR_READ_UINT32</code> however, and cast the result to <code>INTEGER*4</code>. If your Fortran compiler does not support <code>INTEGER*8</code> for 64 bit integers but you still want to read such data, then the best thing to do is to read 64 bit integer data as a <code>DOUBLE PRECISION</code> value using the <code>CODA_CURSOR_READ_DOUBLE</code> function.</p>
+
+      <p>For floating point data the situation is a bit more straightforward. CODA requires that your system uses IEEE 754 for storing single and double precision floating point values. If this is the case then the C types <code>float</code> and <code>double</code> should be 100% equal to the Fortran types <code>REAL</code> and <code>DOUBLE PRECISION</code>.</p>
+
+      <h3 id="pointers">Pointers</h3>
+      
+      <p>In the CODA C interface several items, such as product file handles and cursors, are passed as pointers. Since Fortran doesn't have a proper type to store such handles you should use a variable of type <code>INTEGER</code> to store these handles (this is also reflected in the <a href="#functions">function prototypes</a> below).</p>
+
+      <p>Beware that using an <code>INTEGER</code> is only valid when you are on a 32-bit platform. If you are on a 64-bit platform where pointers are 64 bits large then you should use a 64 bit integer type (such as <code>INTEGER*8</code>) for pointer values.</p>
+
+      <h3 id="strings">Strings</h3>
+      
+      <p>There is a big difference in the way C and Fortran deal with string data. String data in C can be allocated dynamically and the exact length of a string is determined by a termination character (the character with ascii code 0: <code>CHAR(0)</code>). In Fortran all strings are fixed in size (the size is determined by the dimensions of the character array) and string data is padded on the right with space characters if the string is shorter than the size of the character array.</p>
+
+      <p>For the CODA Fortran interface the translation between C strings and Fortran strings is done completely automatically for you. If you provide a character array of sufficient size, string data will be passed properly from Fortran to C and back again. If your character array is too short to fit the string data you requested from CODA, then the CODA Fortran interface will automatically truncate the string data such that it fits in your character array. There are a few cases in the <a href="#functions">function prototypes</a> below where an explicit size is provided for the <code>CHARACTER*(...)</code> parameter (e.g. <code>CHARACTER*(CODA_TIME_TO_STRING)</code>). In these cases you should provide a character array with <i>at least</i> this size or the function will return an error.</p>
+ 
+      <h3 id="enumandconst">Enumeration values and constants</h3>
+      
+      <p>For the CODA C interface a lot of constant values, such as CODA error codes, CODA Type Classes, CODA Native Type identifiers, etc. are named constants. For the Fortran interface a <code>coda.inc</code> is available that contains a full list of all available named constants (using the <code>PARAMETER</code> construct).</p>
+
+      <p>The <code>coda.inc</code> file also contains return type definitions for all <a href="#functions">wrapped functions</a>.</p>  
+
+      <h3 id="indices">Indices</h3>
+      
+      <p>Normally in Fortran all indices start with one. For instance, the first element of an array <code>A</code> is retrieved using <code>A(1)</code>. In C all indices are zero based (i.e. the first element of <code>A</code> is <code>A[0]</code>. The CODA Fortran interface provides <i>no</i> wrapping for these indices. This means that you will have to pass all index parameters to CODA functions using zero based indices. For example, <code>CODA_CURSOR_GOTO_ARRAY_ELEMENT_BY_INDEX(CURSOR,2)</code> will move the cursor to the <i>third</i> element of the array.</p>
+
+      <p>Furthermore, C and Fortran differ in the way they store multi-dimensional data. Where in C you would define an array to be <code>[6][4]</code>, in Fortran you would use <code>(4,6)</code> to get a similar structered array. The fastest running index in C is the last dimension and in Fortran it is the first dimension. For example, the second element in C would be <code>[0][1]</code> (remember that in C we use zero based indices) and in Fortran it would be <code>(2,1)</code>. When retrieving or specifying dimensions via the CODA interface you should remember that CODA uses the C style of specifying dimensions. This means that if you want to read multidimensional data and CODA tells you that the dimensions are <code>[6][4]</code> then you should either read it into a <code>(4,6)</code> array in Fortran, or, if you use a <code>CODA_CURSOR_READ_..._ARRAY</code> function you may read it into a <code>(6,4)</code> array and provide the <code>CODA_ARRAY_ORDERING_FORTRAN</code> parameter (but this will trigger a reshuffle of the data and thus greatly impacts performance).</p> 
+      
+      <h3 id="notwrapped">Functions that are not wrapped</h3>
+      
+      <p>Because of some issues with callback functions the CODA function <code>coda_match_filefilter</code> from the C interface is not wrapped to Fortran.</p>
+
+      <h3 id="extrafunc">Functions that are only available in Fortran</h3>
+      
+      <p>The Fortran interface contains some additional functions to deal with global CODA variables, cursor management, etc.</p>
+
+      <p>When wrapping a C interface to Fortran it is not possible to make global variables from the C interface available in Fortran. To solve this problem we have provided access routines to such variables in the CODA Fortran interface. The functions <code>CODA_VERSION</code> and <code>CODA_GET_ERRNO</code> let you retrieve the values of the global C variables <code>libcoda_version</code> and <code>coda_errno</code>.</p>
+
+      <p>In C it is possible to directly create a CODA cursor using: '<code>coda_Cursor cursor;</code>', but using such a mechanism for the cursor data type is not possible in Fortran. For this reason the CODA Fortran interface has been extended with three cursor management functions that allow you to create, duplicate, and remove cursors: <code>CODA_CURSOR_NEW</code>, <code>CODA_CURSOR_DUPLICATE</code>, <code>CODA_CURSOR_DELETE</code>. The functions <code>CODA_CURSOR_NEW</code> and <code>CODA_CURSOR_DUPLICATE</code> both return a pointer to a new CODA cursor (both functions return 0 if memory allocation for the new cursor failed). After you are finished with a cursor you should remove it with <code>CODA_CURSOR_DELETE</code> in order to prevent memory leaks.</p>
+
+      <p>Since there is no standard way to get the current system time within Fortran the CODA Fortran interface also includes a <code>CODA_TIME</code> function that is a simple wrapping of the C function <code>time()</code>. The result of this function will be the amount of seconds since 1-JAN-2000 (i.e. the result of the <code>time()</code> is converted from seconds since 1-JAN-1970 to seconds since 1-JAN-2000). The <code>CODA_TIME</code> function takes no parameters.</p>
+
+      <h2 id="build">Creating your Fortran program</h2>
+      
+      <p>After you have build and installed CODA, you will have a directory '<code>&lt;prefix&gt;/share/coda/fortran</code>' (with &lt;prefix&gt; being the installation directory you provided to the CODA configure script). In this directory you will find a <code>Makefile</code>, a <code>checkf77.sh</code> script, the <code>coda.inc</code> include file, the wrapper file <code>coda_fortran.c</code> that should be linked into your Fortran program, and an example file.</p>
+
+      <p>When you ran the ./configure script of CODA, the configure script was automatically locating your Fortran compiler and finding out which options it requires. These settings should already be included in the Makefile. You are however advised to check the contents of the Makefile in order to verify that these settings are correct. If you change the Fortran compiler to a different compiler then make sure to also run the <code>checkf77.sh</code> script (pass your Fortran compiler as parameter: e.g. <code>./checkf77.sh g77</code>) to find out what options should be assigned to the <code>WRAPFORTRAN_FLAGS</code> variable.</p>
+
+     <p>Note: Although the F77 variable in the Makefile suggests that it is only meant for Fortran 77 compilers you can safely let it point to a Fortran 90/95 compiler.</p>
+
+      <p>After verifying the <code>Makefile</code> you can run:</p>
+      
+<div class="fragment"><pre>
+$ make
+</pre></div>
+
+      <p>This should build the example. If this succeeds then just copy the files <code>Makefile</code>, <code>coda.inc</code>, and <code>coda_fortran.c</code> to a directory of your own and modify the <code>Makefile</code> such that it works with your own Fortran program.</p>
+
+      <h2 id="functions">Functions</h2>
+
+      <p>Below you will find an overview of all available Fortran functions. For a full description of each function please refer to the description of the corresponding C function in the <a href="../libcoda/index.html">CODA C interface documentation</a>. There are a few functions that are Fortran only, but these are described in the previous paragraphs.</p>
+
+      <h3 id="codafunc">CODA Functions</h3>
+
+<p><b>CODA General</b></p>
+<pre><code>
+SUBROUTINE CODA_VERSION(CHARACTER*(*) VERSION)
+
+INTEGER FUNCTION CODA_INIT()
+SUBROUTINE       CODA_DONE()
+
+INTEGER FUNCTION CODA_SET_OPTION_BYPASS_SPECIAL_TYPES(INTEGER ENABLE)
+INTEGER FUNCTION CODA_GET_OPTION_BYPASS_SPECIAL_TYPES()
+INTEGER FUNCTION CODA_SET_OPTION_PERFORM_BOUNDARY_CHECKS(INTEGER ENABLE)
+INTEGER FUNCTION CODA_GET_OPTION_PERFORM_BOUNDARY_CHECKS()
+INTEGER FUNCTION CODA_SET_OPTION_PERFORM_CONVERSIONS(INTEGER ENABLE)
+INTEGER FUNCTION CODA_GET_OPTION_PERFORM_CONVERSIONS()
+INTEGER FUNCTION CODA_SET_OPTION_USE_FAST_SIZE_EXPRESSIONS(INTEGER ENABLE)
+INTEGER FUNCTION CODA_GET_OPTION_USE_FAST_SIZE_EXPRESSIONS()
+INTEGER FUNCTION CODA_SET_OPTION_USE_MMAP(INTEGER ENABLE)
+INTEGER FUNCTION CODA_GET_OPTION_USE_MMAP()
+
+DOUBLE PRECISION FUNCTION CODA_NAN()
+INTEGER          FUNCTION CODA_ISNAN(DOUBLE PRECISION X)
+DOUBLE PRECISION FUNCTION CODA_PLUSINF()
+DOUBLE PRECISION FUNCTION CODA_MININF()
+INTEGER          FUNCTION CODA_ISINF(DOUBLE PRECISION X)
+INTEGER          FUNCTION CODA_ISPLUSINF(DOUBLE PRECISION X)
+INTEGER          FUNCTION CODA_ISMININF(DOUBLE PRECISION X)
+
+INTEGER FUNCTION CODA_C_INDEX_TO_FORTRAN_INDEX(INTEGER N_DIMS, INTEGER DIM(CODA_MAX_N_DIMS), INT INDEX)
+
+DOUBLE PRECISION FUNCTION CODA_TIME()
+INTEGER          FUNCTION CODA_DATETIME_TO_DOUBLE(INTEGER YEAR, INTEGER MONTH, INTEGER DAY, INTEGER HOUR, INTEGER MINUTE, INTEGER SECOND, INTEGER MUSEC, DOUBLE PRECISION DATETIME)
+INTEGER          FUNCTION CODA_DOUBLE_TO_DATETIME(DOUBLE PRECISION DATETIME, INTEGER YEAR, INTEGER MONTH, INTEGER DAY, INTEGER HOUR, INTEGER MINUTE, INTEGER SECOND, INTEGER MUSEC)
+INTEGER FUNCTION CODA_TIME_TO_STRING(DOUBLE PRECISION TIME, CHARACTER*(26) UTC_STRING)
+INTEGER FUNCTION CODA_STRING_TO_TIME(CHARACTER*(*) STR, DOUBLE PRECISION TIME)
+</code></pre>
+
+<p><b>CODA Error</b></p>
+<pre><code>
+INTEGER FUNCTION CODA_GET_ERRNO()
+SUBROUTINE       CODA_ERRNO_TO_STRING(INTEGER ERR, CHARACTER*(*) STR)
+</code></pre>
+
+<p><b>CODA Product File</b></p>
+<pre><code>
+INTEGER FUNCTION CODA_RECOGNIZE_FILE(CHARACTER*(*) FILENAME, INTEGER*8 FILE_SIZE, INTEGER FILE_FORMAT, CHARACTER*(*)PRODUCT_CLASS, CHARACTER*(*) PRODUCT_TYPE, INTEGER PRODUCT_VERSION)
+INTEGER FUNCTION CODA_OPEN(CHARACTER*(*) FILENAME, INTEGER PF)
+INTEGER FUNCTION CODA_CLOSE(INTEGER PF)
+
+INTEGER FUNCTION CODA_GET_PRODUCT_FILENAME(INTEGER PF, CHARACTER*(*) FILENAME)
+INTEGER FUNCTION CODA_GET_PRODUCT_FILE_SIZE(INTEGER PF, INTEGER*8 FILE_SIZE)
+INTEGER FUNCTION CODA_GET_PRODUCT_FORMAT(INTEGER PF, INTEGER FORMAT)
+INTEGER FUNCTION CODA_GET_PRODUCT_CLASS(INTEGER PF, CHARACTER*(*) PRODUCT_CLASS)
+INTEGER FUNCTION CODA_GET_PRODUCT_TYPE(INTEGER PF, CHARACTER*(*) PRODUCT_TYPE)
+INTEGER FUNCTION CODA_GET_PRODUCT_VERSION(INTEGER PF, INTEGER VERSION)
+INTEGER FUNCTION CODA_GET_PRODUCT_ROOT_TYPE(INTEGER PF, INTEGER TYPE)
+
+INTEGER FUNCTION CODA_GET_PRODUCT_VARIABLE_VALUE(INTEGER PF, CHARACTER*(*) VARIABLE, INTEGER INDEX, INTEGER*8 VALUE)
+</code></pre>
+
+<p><b>CODA Types</b></p>
+<pre><code>
+SUBROUTINE CODA_TYPE_GET_FORMAT_NAME(INTEGER FORMAT, CHARACTER*(*) CLASS_NAME)
+SUBROUTINE CODA_TYPE_GET_CLASS_NAME(INTEGER TYPE, CHARACTER*(*) CLASS_NAME)
+SUBROUTINE CODA_TYPE_GET_NATIVE_TYPE_NAME(INTEGER TYPE, CHARACTER*(*) NATIVE_TYPE_NAME)
+SUBROUTINE CODA_TYPE_GET_SPECIAL_TYPE_NAME(INTEGER TYPE, CHARACTER*(*) SPECIAL_TYPE_NAME)
+
+INTEGER FUNCTION CODA_TYPE_HAS_ASCII_CONTENT(INTEGER TYPE, INTEGER HAS_ASCII_CONTENT)
+
+INTEGER FUNCTION CODA_TYPE_GET_FORMAT(INTEGER TYPE, INTEGER FORMAT)
+INTEGER FUNCTION CODA_TYPE_GET_CLASS(INTEGER TYPE, INTEGER TYPE_CLASS)
+INTEGER FUNCTION CODA_TYPE_GET_READ_TYPE(INTEGER TYPE, INTEGER READ_TYPE)
+INTEGER FUNCTION CODA_TYPE_GET_STRING_LENGTH(INTEGER TYPE, INTEGER LENGTH)
+INTEGER FUNCTION CODA_TYPE_GET_BIT_SIZE(INTEGER TYPE, INTEGER*8 BIT_SIZE)
+INTEGER FUNCTION CODA_TYPE_GET_NAME(INTEGER TYPE, CHARACTER*(*) NAME)
+INTEGER FUNCTION CODA_TYPE_GET_DESCRIPTION(INTEGER TYPE, CHARACTER*(*) DESCRIPTION)
+INTEGER FUNCTION CODA_TYPE_GET_UNIT(INTEGER TYPE, CHARACTER*(*) UNIT)
+INTEGER FUNCTION CODA_TYPE_GET_FIXED_VALUE(INTEGER TYPE, CHARACTER*(*) FIXED_VALUE, INTEGER LENGTH)
+
+INTEGER FUNCTION CODA_TYPE_GET_NUM_RECORD_FIELDS(INTEGER TYPE, INTEGER NUM_FIELDS)
+INTEGER FUNCTION CODA_TYPE_GET_RECORD_FIELD_INDEX_FROM_NAME(INTEGER TYPE, CHARACTER*(*) NAME, INTEGER INDEX)
+INTEGER FUNCTION CODA_TYPE_GET_RECORD_FIELD_TYPE(INTEGER TYPE, INTEGER INDEX, INTEGER FIELD_TYPE)
+INTEGER FUNCTION CODA_TYPE_GET_RECORD_FIELD_NAME(INTEGER TYPE, INTEGER INDEX, CHARACTER*(*) NAME)
+INTEGER FUNCTION CODA_TYPE_GET_RECORD_FIELD_HIDDEN_STATUS(INTEGER TYPE, INTEGER INDEX, INTEGER HIDDEN)
+INTEGER FUNCTION CODA_TYPE_GET_RECORD_FIELD_AVAILABLE_STATUS(INTEGER TYPE, INTEGER INDEX, INTEGER AVAILABLE)
+INTEGER FUNCTION CODA_TYPE_GET_RECORD_UNION_STATUS(INTEGER TYPE, INTEGER IS_UNION)
+
+INTEGER FUNCTION CODA_TYPE_GET_ARRAY_NUM_DIMS(INTEGER TYPE, INTEGER NUM_DIMS)
+INTEGER FUNCTION CODA_TYPE_GET_ARRAY_FIXED_DIM(INTEGER TYPE, INTEGER NUM_DIMS, INTEGER DIM(CODA_MAX_NUM_DIMS))
+INTEGER FUNCTION CODA_TYPE_GET_ARRAY_BASE_TYPE(INTEGER TYPE, INTEGER BASE_TYPE)
+
+INTEGER FUNCTION CODA_TYPE_GET_SPECIAL_TYPE(INTEGER TYPE, INTEGER SPECIAL_TYPE)
+INTEGER FUNCTION CODA_TYPE_GET_SPECIAL_TYPE_BASE_TYPE(INTEGER TYPE, INTEGER BASE_TYPE)
+</code></pre>
+
+<p><b>CODA Cursor</b></p>
+<pre><code>
+INTEGER FUNCTION CODA_CURSOR_NEW()
+INTEGER FUNCTION CODA_CURSOR_DUPLICATE(INTEGER CURSOR)
+SUBROUTINE       CODA_CURSOR_DELETE(INTEGER CURSOR)
+
+INTEGER FUNCTION CODA_CURSOR_SET_PRODUCT(INTEGER CURSOR, INTEGER PF)
+
+INTEGER FUNCTION CODA_CURSOR_GOTO_FIRST_RECORD_FIELD)(INTEGER CURSOR)
+INTEGER FUNCTION CODA_CURSOR_GOTO_NEXT_RECORD_FIELD)(INTEGER CURSOR)
+INTEGER FUNCTION CODA_CURSOR_GOTO_RECORD_FIELD_BY_INDEX(INTEGER CURSOR, INTEGER INDEX)
+INTEGER FUNCTION CODA_CURSOR_GOTO_RECORD_FIELD_BY_NAME(INTEGER CURSOR, CHARACTER*(*) NAME)
+INTEGER FUNCTION CODA_CURSOR_GOTO_AVAILABLE_UNION_FIELD(INTEGER CURSOR)
+
+INTEGER FUNCTION CODA_CURSOR_GOTO_FIRST_ARRAY_ELEMENT(INTEGER CURSOR)
+INTEGER FUNCTION CODA_CURSOR_GOTO_NEXT_ARRAY_ELEMENT(INTEGER CURSOR)
+INTEGER FUNCTION CODA_CURSOR_GOTO_ARRAY_ELEMENT(INTEGER CURSOR, INTEGER NUM_SUBS, INTEGER SUBS(CODA_MAX_NUM_DIMS))
+INTEGER FUNCTION CODA_CURSOR_GOTO_ARRAY_ELEMENT_BY_INDEX(INTEGER CURSOR, INTEGER INDEX)
+
+INTEGER FUNCTION CODA_CURSOR_GOTO_ATTRIBUTES(INTEGER CURSOR)
+
+INTEGER FUNCTION CODA_CURSOR_GOTO_ROOT(INTEGER CURSOR)
+INTEGER FUNCTION CODA_CURSOR_GOTO_PARENT(INTEGER CURSOR)
+
+INTEGER FUNCTION CODA_CURSOR_USE_BASE_TYPE_OF_SPECIAL_TYPE(INTEGER CURSOR)
+
+INTEGER FUNCTION CODA_CURSOR_HAS_ASCII_CONTENT(INTEGER CURSOR, INTEGER HAS_ASCII_CONTENT)
+INTEGER FUNCTION CODA_CURSOR_HAS_XML_CONTENT(INTEGER CURSOR, INTEGER HAS_XML_CONTENT)
+
+INTEGER FUNCTION CODA_CURSOR_GET_STRING_LENGTH(INTEGER CURSOR, INTEGER LENGTH)
+INTEGER FUNCTION CODA_CURSOR_GET_BIT_SIZE(INTEGER CURSOR, INTEGER*8 BIT_SIZE)
+INTEGER FUNCTION CODA_CURSOR_GET_BYTE_SIZE(INTEGER CURSOR, INTEGER*8 BYTE_SIZE)
+INTEGER FUNCTION CODA_CURSOR_GET_NUM_ELEMENTS(INTEGER CURSOR, INTEGER NUM_ELEMENTS)
+
+INTEGER FUNCTION CODA_CURSOR_GET_PRODUCT_FILE(INTEGER CURSOR, INTEGER PF)
+
+INTEGER FUNCTION CODA_CURSOR_GET_DEPTH(INTEGER CURSOR, INTEGER DEPTH)
+INTEGER FUNCTION CODA_CURSOR_GET_INDEX(INTEGER CURSOR, INTEGER INDEX)
+
+INTEGER FUNCTION CODA_CURSOR_GET_FILE_BIT_OFFSET(INTEGER CURSOR, INTEGER*8 BIT_OFFSET)
+INTEGER FUNCTION CODA_CURSOR_GET_FILE_BYTE_OFFSET(INTEGER CURSOR, INTEGER*8 BYTE_OFFSET)
+
+INTEGER FUNCTION CODA_CURSOR_GET_FORMAT(INTEGER CURSOR, INTEGER FORMAT)
+INTEGER FUNCTION CODA_CURSOR_GET_TYPE_CLASS(INTEGER CURSOR, INTEGER TYPE_CLASS)
+INTEGER FUNCTION CODA_CURSOR_GET_READ_TYPE(INTEGER CURSOR, INTEGER READ_TYPE)
+INTEGER FUNCTION CODA_CURSOR_GET_SPECIAL_TYPE(INTEGER CURSOR, INTEGER SPECIAL_TYPE)
+INTEGER FUNCTION CODA_CURSOR_GET_TYPE(INTEGER CURSOR, INTEGER TYPE)
+
+INTEGER FUNCTION CODA_CURSOR_GET_RECORD_FIELD_INDEX_FROM_NAME(INTEGER CURSOR, CHARACTER*(*) NAME, INTEGER INDEX)
+INTEGER FUNCTION CODA_CURSOR_GET_RECORD_FIELD_AVAILABLE_STATUS(INTEGER CURSOR, INTEGER INDEX, INTEGER AVAILABLE)
+INTEGER FUNCTION CODA_CURSOR_GET_AVAILABLE_UNION_FIELD(INTEGER CURSOR, INTEGER INDEX)
+
+INTEGER FUNCTION CODA_CURSOR_GET_ARRAY_DIM(INTEGER CURSOR, INTEGER NUM_DIMS, INTEGER DIM(CODA_MAX_NUM_DIMS))
+
+INTEGER FUNCTION CODA_CURSOR_READ_INT8(INTEGER CURSOR, INTEGER*1 DST)
+INTEGER FUNCTION CODA_CURSOR_READ_UINT8(INTEGER CURSOR, INTEGER*1 DST)
+INTEGER FUNCTION CODA_CURSOR_READ_INT16(INTEGER CURSOR, INTEGER*2 DST)
+INTEGER FUNCTION CODA_CURSOR_READ_UINT16(INTEGER CURSOR, INTEGER*2 DST)
+INTEGER FUNCTION CODA_CURSOR_READ_INT32(INTEGER CURSOR, INTEGER*4 DST)
+INTEGER FUNCTION CODA_CURSOR_READ_UINT32(INTEGER CURSOR, INTEGER*4 DST)
+INTEGER FUNCTION CODA_CURSOR_READ_INT64(INTEGER CURSOR, INTEGER*8 DST)
+INTEGER FUNCTION CODA_CURSOR_READ_UINT64(INTEGER CURSOR, INTEGER*8 DST)
+INTEGER FUNCTION CODA_CURSOR_READ_FLOAT(INTEGER CURSOR, REAL DST)
+INTEGER FUNCTION CODA_CURSOR_READ_DOUBLE(INTEGER CURSOR, DOUBLE PRECISION DST)
+INTEGER FUNCTION CODA_CURSOR_READ_CHAR(INTEGER CURSOR, CHARACTER DST)
+INTEGER FUNCTION CODA_CURSOR_READ_STRING(INTEGER CURSOR, CHARACTER*(*) DST)
+
+INTEGER FUNCTION CODA_CURSOR_READ_BITS(INTEGER CURSOR, CHARACTER DST, INTEGER*8 BIT_OFFSET, INTEGER*8 BIT_LENGTH)
+INTEGER FUNCTION CODA_CURSOR_READ_BYTES(INTEGER CURSOR, CHARACTER DST, INTEGER*8 OFFSET, INTEGER*8 LENGTH)
+
+INTEGER FUNCTION CODA_CURSOR_READ_INT8_ARRAY(INTEGER CURSOR, INTEGER*1 DST, INTEGER ARRAY_ORDERING)
+INTEGER FUNCTION CODA_CURSOR_READ_UINT8_ARRAY(INTEGER CURSOR, INTEGER*1 DST, INTEGER ARRAY_ORDERING)
+INTEGER FUNCTION CODA_CURSOR_READ_INT16_ARRAY(INTEGER CURSOR, INTEGER*2 DST, INTEGER ARRAY_ORDERING)
+INTEGER FUNCTION CODA_CURSOR_READ_UINT16_ARRAY(INTEGER CURSOR, INTEGER*2 DST, INTEGER ARRAY_ORDERING)
+INTEGER FUNCTION CODA_CURSOR_READ_INT32_ARRAY(INTEGER CURSOR, INTEGER*4 DST, INTEGER ARRAY_ORDERING)
+INTEGER FUNCTION CODA_CURSOR_READ_UINT32_ARRAY(INTEGER CURSOR, INTEGER*4 DST, INTEGER ARRAY_ORDERING)
+INTEGER FUNCTION CODA_CURSOR_READ_INT64_ARRAY(INTEGER CURSOR, INTEGER*8 DST, INTEGER ARRAY_ORDERING)
+INTEGER FUNCTION CODA_CURSOR_READ_UINT64_ARRAY(INTEGER CURSOR, INTEGER*8 DST, INTEGER ARRAY_ORDERING)
+INTEGER FUNCTION CODA_CURSOR_READ_FLOAT_ARRAY(INTEGER CURSOR, REAL DST, INTEGER ARRAY_ORDERING)
+INTEGER FUNCTION CODA_CURSOR_READ_DOUBLE_ARRAY(INTEGER CURSOR, DOUBLE PRECISION DST, INTEGER ARRAY_ORDERING)
+INTEGER FUNCTION CODA_CURSOR_READ_CHAR_ARRAY(INTEGER CURSOR, CHARACTER DST, INTEGER ARRAY_ORDERING)
+
+INTEGER FUNCTION CODA_CURSOR_READ_COMPLEX_DOUBLE_PAIR(INTEGER CURSOR, DOUBLE PRECISION DST)
+INTEGER FUNCTION CODA_CURSOR_READ_COMPLEX_DOUBLE_PAIRS_ARRAY(INTEGER CURSOR, DOUBLE PRECISION DST, INTEGER ARRAY_ORDERING)
+INTEGER FUNCTION CODA_CURSOR_READ_COMPLEX_DOUBLE_SPLIT(INTEGER CURSOR, DOUBLE PRECISION DST_RE, DOUBLE PRECISION DST_IM)
+INTEGER FUNCTION CODA_CURSOR_READ_COMPLEX_DOUBLE_SPLIT_ARRAY(INTEGER CURSOR, DOUBLE PRECISION DST_RE, DOUBLE PRECISION DST_IM, INTEGER ARRAY_ORDERING)
+</code></pre>
+
+      <div class="footer">
+        <hr />
+        <p>Copyright &copy; 2007-2008 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+      </div>
+
+    </div>
+
+  </body>
+
+</html>

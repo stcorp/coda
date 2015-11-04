@@ -1,0 +1,44 @@
+Copyright (C) 2007-2008 S&T, The Netherlands
+
+                CODA 1.0.0 Release Notes
+
+
+CODA is the Common Data Access framework that allows reading of scientific data
+from various data formats, including structured ascii, structured binary, XML,
+HDF4, and HDF5. It provides a single consistent hierarchical view on data
+independent of the underlying storage format.
+
+CODA is used as a core component in various ESA software among which the
+Basic Envisat Atmospheric Toolbox (BEAT) and the Basic Radar Altimetry Toolbox
+(BRAT).
+
+The CODA software package comes with interfaces for C, Fortran, IDL, MATLAB,
+and Python and several useful command-line tools.
+
+In order to make use of the data acces facilities of CODA, you will need to
+have the CODA product format definition files (.codadef files) for the data
+products that you want to access. It is important to note that the CODA
+software package does not come with any product format definition files itself!
+The get access to .codadef files have a look at the software packages that make
+use of CODA.
+
+Since HDF4 and HDF5 files are selfdescribing (i.e. their format can be
+determined from the file itself), you can still use CODA without any .codadef
+files to access HDF4 and HDF5 data.
+
+
+Download
+========
+
+The latest release of CODA can be downloaded from the CODA website:
+
+  http://www.stcorp.nl/coda/
+
+If you encounter any issues with CODA or if you would like to see certain
+functionality added, be sure to let us know at:
+
+    coda@stcorp.nl
+
+
+CODA Developers
+S&T, The Netherlands

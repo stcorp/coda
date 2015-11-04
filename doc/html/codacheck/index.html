@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html>
+
+  <head>
+    <title>codacheck</title>
+    <link rel="stylesheet" href="../css/codadoc.css" type="text/css" />
+  </head>
+
+  <body>
+
+    <div class="main">
+
+      <h1>codacheck</h1>
+
+      <p>This documentation describes the functionality of the codacheck tool which is part of CODA.</p>
+    
+      <h2 id="general">General description</h2>
+
+      <p>The product format definitions in CODA should be of sufficient quality that whenever problems are detected while reading product files, it is usually the product files that are at fault. The codacheck program was written with this in mind. It uses CODA as an active product file problem-detection tool. It takes as arguments one or more product files. CODA will try to open each of these files and will actively look for any problems in these files. Any errors are reported in a user-readable way.</p>
+
+<pre>
+    codacheck [&lt;options&gt;] &lt;files&gt;
+        Provide a basic sanity check on product files supported by CODA
+        Options:
+            -q, --quick
+                    only perform a quick check of the product
+                    (do not traverse the full product)
+            -t, --totals
+                    show a statistical summary at the end
+            -V, --verbose
+                    show more information while performing the check
+
+        If you pass a '-' for the &lt;files&gt; section then the list of files will
+        be read from stdin.
+
+    codacheck -h, --help
+        Show help (this text)
+
+    codacheck -v, --version
+        Print the version number of CODA and exit
+</pre>
+
+      <div class="footer">
+        <hr />
+        <p>Copyright &copy; 2007-2008 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+      </div>
+
+    </div>
+
+  </body>
+
+</html>

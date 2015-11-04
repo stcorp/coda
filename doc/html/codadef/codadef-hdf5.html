@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html>
+
+  <head>
+    <title>CODA HDF5 Mapping Description</title>
+    <link rel="stylesheet" href="../css/codadoc.css" type="text/css" />
+  </head>
+
+  <body>
+
+    <div class="main">
+
+      <h1>CODA HDF5 Mapping Description</h1>
+
+      <p>CODA provides access to HDF5 by creating a view on the HDF files using the CODA <a href="codadef-format.html">data types</a>. Below we will describe how CODA maps the HDF5 product structure to one that is based on the CODA data types.</p>
+
+      <p>HDF products are self describing products. This means that when an HDF file is opened one can retrieve the product structure from the file itself.  For this reason, CODA will not require fixed product format descriptions for HDF files. What CODA will do is use the underlying HDF5 library to retrieve the product format dynamically once an HDF file is opened. Based on this format CODA will create, on the fly, a mapping of the HDF product structure to one that is based on the CODA data types. Because of this approach CODA is able to provide you access to <i>all</i> HDF files, no matter whether the HDF file contains atmospheric data or not. In order to read data from HDF files you can use the same CODA reading routines as you would have used for all other products (underneath CODA will redirect these calls to the appropriate HDF5 routines for you).</p>
+
+      <p>HDF5 files consist of Groups, Data Sets, Links, and Data Types. CODA only supports the Group and Data Set objects (Links and Data Types are ignored).</p>
+      
+      <p>Just as for HDF4, HDF5 names for objects and attributes can contain any kind of string and do not have to be unique. Since fieldnames in CODA have to be unique and have to be formatted as an identifier (i.e. no spaces and special characters may be used), CODA translates all object names it finds in the HDF5 file to unique identifiers. This translation is the same translation as is used for HDF4, so please look at the <a href="codadef-hdf4.html">HDF4 mapping</a> for an explanation of this mapping.</p>
+
+      <p>Group objects are represented in CODA as records with each field being an element of the group. In HDF5 it is possible to create cycles in the grouping structure (i.e. a group can have one of its parents as element). In CODA such cycles are not allowed and for this reason CODA only allows one occurence of each HDF5 object in the nested CODA record structure (the choice to allow only one occurence of each object is also the reason why CODA does not support HDF5 Link objects). The root of an HDF5 file is always a Group object and will thus also be presented as a CODA record.</p>
+
+      <p>A Data Set is a multi-dimensional array of some underlying data type. In HDF5 it is possible to define your own data types for this, however this is only supported in a very limited way by CODA. CODA supports Data Sets that use either one of the predefined basic data types or use a compound data type that consists of only basic data types. The data types and their mapping to the CODA basic data types are summarized in the table below.</p>
+
+      <table class="fancy" border="1" cellspacing="0">
+      <tr><th>HDF5&nbsp;type&nbsp;class</th><th>CODA&nbsp;type&nbsp;class</th><th>CODA&nbsp;read&nbsp;type</th></tr>
+      <tr><td>H5T_INTEGER</td><td>integer</td><td>The read type depends on the sign and byte size attributes of the HDF5 data type. int8 and uint8 is used if the byte size is 1, int16 and uint16 if it is 2, int32 and uint32 if it is 3 or 4, and int64 and uint64 if it is 5, 6, 7, or 8 bytes in size. Larger integer data types are not supported by CODA.</td></tr>
+      <tr><td>H5T_FLOAT</td><td>real</td><td>CODA uses a float for H5T_NATIVE_FLOAT and a double for H5T_NATIVE_DOUBLE. Other HDF5 floating point types are not supported.</td></tr>
+      <tr><td>H5T_STRING</td><td>text</td><td>string (CODA does not use the char read type for HDF5 data).</td></tr>
+      <tr><td>H5T_ENUM</td><td>integer</td><td>The read type depends on the byte size attribute of the HDF5 data type. uint8 is used if the byte size is 1, uint16 if it is 2, uint32 if it is 3 or 4, and uint64 if it is 5, 6, 7, or 8 bytes in size. Larger integer data types are not supported by CODA.</td></tr>
+      <tr><td>H5T_COMPOUND</td><td>record</td><td>CODA will only map elements of the compound data type to CODA record fields that are of type H5T_INTEGER, H5T_FLOAT, H5T_STRING, or H5T_ENUM. Elements in the compound data type that are of a different type will be ignored.</td></tr>
+      </table>
+      
+      <p>Data Sets that have a data type with a different HDF5 type class (e.g. H5T_TIME, H5T_BITFIELD, H5T_OPAQUE, H5T_REFERENCE, H5T_ARRAY, H5T_VLEN, H5T_NO_CLASS, or H5T_NCLASSES) are not supported. Unsupported Data Sets are ignored when opening the HDF5 file and will not show up in any of the CODA records for Group objects.</p>
+
+      <p>Each Group or Data Set object can have attributes. CODA makes these attributes accessible via an attribute record. Each record field describes an attribute which is a (multi-dimensional) array of a basic type. The mapping of a single attribute is similar to the mapping of a Data Set (and the same restrictions with regard to supported base types hold).</p>
+
+      <div class="footer">
+        <hr />
+        <p>Copyright &copy; 2007-2008 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+      </div>
+
+    </div>
+
+  </body>
+
+</html>

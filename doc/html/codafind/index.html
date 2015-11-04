@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html>
+
+  <head>
+    <title>codafind</title>
+    <link rel="stylesheet" href="../css/codadoc.css" type="text/css" />
+  </head>
+
+  <body>
+
+    <div class="main">
+
+      <h1>codafind</h1>
+
+      <p>This documentation describes the functionality of the codafind tool which is part of CODA.</p>
+    
+      <h2>General description</h2>
+
+      <p>The codafind tool is able to assist you in searching for specific product files within a large set of locally available (product) files. The tool supports searching within a given list of files. If you provide one or more directories, then codafind will search these directories recursively for files that match the given search criteria. It is possible to provide a mix of files and directories as arguments to codafind.</p>
+
+<pre>
+    codafind [&lt;options&gt;] &lt;files|directories&gt;
+        Match a filter on a series of files and/or recursively on all contents
+        of directories
+
+        Options:
+            -d, --disable_conversions
+                    do not perform unit/value conversions
+            -f, --filter '&lt;filter expression&gt;'
+                    restrict the output to data that matches the filter
+                    if no filter is provided codafind will find all files that
+                    can be opened with CODA
+            -V, --verbose
+                    show the match result for each file
+</pre>
+
+      <p>You can provide a search criterium with the -f option. If you do not explicitly provide a search criterium codafind will try to find all files that can be accessed with CODA. If you do provide a search criterium, codafind will try to match each file it can open with CODA against the filter. If the filter matches positively then it will print the path to this file to the console. The filter should be a valid boolean <a href="../codadef/codadef-expressions.html">CODA expression</a>.</p>
+
+      <p>If you want to see the result of the search filter for each of the files that codafind checks you can use the -V,--verbose option. When you provide this option, codafind will show you the filepath followed by the match result for each of the files it encounters.</p>
+
+      <p>As is explained further in the next section, with codafind it is possible to create filter expressions in which you perform some comparison against data inside a product file. Since codafind uses the CODA C library to read the data from a product file, by default it will read the unit/value converted value. If you want to disable this conversion you can use the -d option and comparison will then be done with the 'raw' product data.</p>
+
+      <div class="footer">
+        <hr />
+        <p>Copyright &copy; 2007-2008 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+      </div>
+
+    </div>
+
+  </body>
+
+</html>

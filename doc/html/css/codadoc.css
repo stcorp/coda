@@ -1,0 +1,148 @@
+body {
+  color           : #000000;
+  background-color: #ffffff;
+  font-family     : Verdana, Helvetica, sans-serif;
+  font-size       : 9pt;
+}
+
+a               { text-decoration: none; }
+a:link          { color: #883322; background-color: inherit; } 
+a:hover         { color: #BB3322; background-color: inherit; }
+a:visited       { color: #551100; background-color: inherit; }
+a:visited:hover { color: #881100; background-color: inherit; }
+
+a.grey:link          { color: #EEEEEE; background-color: inherit; }
+a.grey:hover         { color: #999999; background-color: inherit; }
+a.grey:visited       { color: #CCCCCC; background-color: inherit; }
+a.grey:visited:hover { color: #999999; background-color: inherit; }
+
+h1 { color: #553322; background-color: inherit; font-size: 3.6ex; }
+h2 { color: #333333; background-color: inherit; font-size: 3.0ex; }
+h3 { color: #000000; background-color: inherit; font-size: 2.4ex; }
+h4 { color: #000000; background-color: inherit; font-size: 2.1ex; }
+h5 { color: #000000; background-color: inherit; font-size: 1.8ex; }
+h6 { color: #000000; background-color: inherit; font-size: 1.5ex; }
+
+.soft-red { color: #993333; background-color: inherit; }
+
+td { font-size: 9pt; }
+th { font-size: 9pt; }
+
+div.main {
+  position: absolute;
+  left    :  20px;
+  top     :  10px;
+  width   : 600px;
+}
+
+div.ddmain {
+  position: absolute;
+  left    :  20px;
+  top     :  10px;
+}
+
+.wide { width: 800px; }
+
+.center { text-align: center; }
+
+.attr_key {
+  font-style: italic;
+}
+
+.attr_value {
+}
+
+.product_variable {
+  color: #663333;
+  background: inherit;
+  font-style: italic;
+}
+
+div.footer {
+  padding-top: 20px;
+  padding-bottom: 10px;
+  font-size: smaller;
+}
+
+table.fancy {
+  border-color : #cccccc;
+  border-style : solid;
+  border-width : 1px;
+}
+table.fancy tr th, table.fancy tr td {
+  border-color : #bbbbbb;
+  border-style : solid;
+  border-width : 1px;
+  padding      : 2px;
+} 
+table.fancy tr th {
+  color      : #eeeeee;
+  background : #553322;
+}
+table.fancy tr th.subhdr {
+  font-weight: normal;
+  color      : #000000;
+  background : #eeeeee;
+}
+
+a.qindex {}
+a.qindexRef {}
+a.el { text-decoration: none; font-weight: bold; }
+a.elRef { font-weight: bold; }
+a.code { text-decoration: none; font-weight: normal; color: #4444ee; background-color: inherit; }
+a.codeRef { font-weight: normal; color: #4444ee; background-color: inherit; }
+dl.el { margin-left: -1cm }
+div.fragment { width: 100%; border: none; color: inherit; background-color: #eeeeee; }
+div.ah { background-color: black; font-weight: bold; color: #ffffff; background-color: inherit; margin-bottom: 3px; margin-top: 3px }
+div.groupHeader { margin-left: 16px; margin-top: 12px; margin-bottom: 6px; font-weight: bold }
+div.groupText { margin-left: 16px; font-style: italic; font-size: smaller }
+td.indexkey {
+   color           : inherit;
+   background-color: #eeeeff;
+   font-weight     : bold;
+   padding-right   : 10px;
+   padding-top     : 2px;
+   padding-left    : 10px;
+   padding-bottom  : 2px;
+   margin-left     : 0px;
+   margin-right    : 0px;
+   margin-top      : 2px;
+   margin-bottom   : 2px;
+}
+td.indexvalue {
+   color           : inherit;
+   background-color: #eeeeff;
+   font-style      : italic;
+   padding-right   : 10px;
+   padding-top     : 2px;
+   padding-left    : 10px;
+   padding-bottom  : 2px;
+   margin-left     : 0px;
+   margin-right    : 0px;
+   margin-top      : 2px;
+   margin-bottom   : 2px;
+}
+.memname {
+  white-space: nowrap;
+  font-weight: bold;
+}
+.memdoc{
+  padding-left: 10px;
+}
+.memproto {
+  background-color: #f2f2ff;
+  width: 100%;
+}
+.paramname {
+  color: #602020;
+}
+.paramkey {
+  text-align: right;
+}
+span.keyword       { color: #760F50; background-color: inherit; }
+span.keywordtype   { color: #760F50; background-color: inherit; }
+span.keywordflow   { color: #760F50; background-color: inherit; }
+span.comment       { color: #236e25; background-color: inherit; }
+span.preprocessor  { color: #806020; background-color: inherit; }
+span.stringliteral { color: #891315; background-color: inherit; }
+span.charliteral   { color: #0000FF; background-color: inherit; }

@@ -1,0 +1,56 @@
+body {
+  color: #000000;
+  background-color: #ffffff;
+  font-family: Verdana, Helvetica, sans-serif;
+  font-size: 9pt;
+  margin-left: 25px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  width: 600px;
+}
+
+a               { text-decoration: none; }
+a:link          { color: #883322; background-color: inherit; } 
+a:hover         { color: #BB3322; background-color: inherit; }
+a:visited       { color: #551100; background-color: inherit; }
+a:visited:hover { color: #881100; background-color: inherit; }
+
+a.header:link          { color: #EEEEEE; background-color: inherit; }
+a.header:hover         { color: #999999; background-color: inherit; }
+a.header:visited       { color: #CCCCCC; background-color: inherit; }
+a.header:visited:hover { color: #999999; background-color: inherit; }
+
+h1 { color: #553322; font-size: 3.6ex; }
+h2 { color: #333333; font-size: 3.0ex; }
+h3 { color: #000000; font-size: 2.1ex; }
+
+.attr_key { font-style: italic; }
+.attr_value { }
+
+table {
+  border-color: #cccccc;
+  border-style: solid;
+  border-width: 1px;
+  border-spacing: 0px; 
+  width: 100%;
+}
+table.top {
+  width : 600px;
+}
+table tr th, table tr td {
+  font-size: 9pt;
+  border-color: #bbbbbb;
+  border-style: solid;
+  border-width: 1px;
+  border-spacing: 0px;
+  padding: 2px;
+} 
+table tr th {
+  color: #eeeeee;
+  background: #553322;
+}
+table tr th.subhdr {
+  font-weight: normal;
+  color: #000000;
+  background: #eeeeee;
+}
