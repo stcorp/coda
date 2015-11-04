@@ -121,7 +121,9 @@ INDEX        "i"|"j"|"k"
 "round"                 return FUNC_ROUND;
 "rtrim"                 return FUNC_RTRIM;
 "str"                   return FUNC_STR;
+"strtime"               return FUNC_STRTIME;
 "substr"                return FUNC_SUBSTR;
+"time"                  return FUNC_TIME;
 "trim"                  return FUNC_TRIM;
 "unboundindex"          return FUNC_UNBOUNDINDEX;
 "with"                  return FUNC_WITH;

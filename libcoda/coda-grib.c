@@ -94,8 +94,8 @@ enum
     grib1_jDirectionIncrement,
     grib1_N,
     grib1_scanningMode,
-    grib1_pv,
-    grib1_pv_array,
+    grib1_coordinateValues,
+    grib1_coordinateValues_array,
     grib1_sourceOfGridDefinition,
     grib1_numberOfDataPoints,
     grib1_gridDefinitionTemplateNumber,
@@ -149,8 +149,6 @@ enum
     grib2_jDirectionIncrement,
     grib2_N,
     grib2_scanningMode,
-    grib2_pv,
-    grib2_pv_array,
     grib2_sourceOfGridDefinition,
     grib2_numberOfDataPoints,
     grib2_parameterCategory,
@@ -166,6 +164,8 @@ enum
     grib2_firstFixedSurface,
     grib2_typeOfSecondFixedSurface,
     grib2_secondFixedSurface,
+    grib2_coordinateValues,
+    grib2_coordinateValues_array,
     grib2_gridDefinitionTemplateNumber,
     grib2_bitsPerValue,
     grib2_binaryScaleFactor,
@@ -450,12 +450,13 @@ static int grib_init(void)
     coda_type_set_read_type(grib_type[grib1_scanningMode], coda_native_type_uint8);
     coda_type_set_description(grib_type[grib1_scanningMode], "Scanning mode flags");
 
-    grib_type[grib1_pv] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_real_class);
-    coda_type_set_read_type(grib_type[grib1_pv], coda_native_type_float);
-    grib_type[grib1_pv_array] = (coda_type *)coda_type_array_new(coda_format_grib1);
-    coda_type_set_description(grib_type[grib1_pv_array], "List of vertical coordinate parameters");
-    coda_type_array_set_base_type((coda_type_array *)grib_type[grib1_pv_array], grib_type[grib1_pv]);
-    coda_type_array_add_variable_dimension((coda_type_array *)grib_type[grib1_pv_array], NULL);
+    grib_type[grib1_coordinateValues] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_real_class);
+    coda_type_set_read_type(grib_type[grib1_coordinateValues], coda_native_type_float);
+    grib_type[grib1_coordinateValues_array] = (coda_type *)coda_type_array_new(coda_format_grib1);
+    coda_type_set_description(grib_type[grib1_coordinateValues_array], "List of vertical coordinate parameters");
+    coda_type_array_set_base_type((coda_type_array *)grib_type[grib1_coordinateValues_array],
+                                  grib_type[grib1_coordinateValues]);
+    coda_type_array_add_variable_dimension((coda_type_array *)grib_type[grib1_coordinateValues_array], NULL);
 
     grib_type[grib1_sourceOfGridDefinition] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
     coda_type_set_read_type(grib_type[grib1_sourceOfGridDefinition], coda_native_type_uint8);
@@ -532,8 +533,8 @@ static int grib_init(void)
     field = coda_type_record_field_new("scanningMode");
     coda_type_record_field_set_type(field, grib_type[grib1_scanningMode]);
     coda_type_record_add_field((coda_type_record *)grib_type[grib1_grid], field);
-    field = coda_type_record_field_new("pv");
-    coda_type_record_field_set_type(field, grib_type[grib1_pv_array]);
+    field = coda_type_record_field_new("coordinateValues");
+    coda_type_record_field_set_type(field, grib_type[grib1_coordinateValues_array]);
     coda_type_record_field_set_optional(field);
     coda_type_record_add_field((coda_type_record *)grib_type[grib1_grid], field);
 
@@ -818,13 +819,6 @@ static int grib_init(void)
     coda_type_set_read_type(grib_type[grib2_scanningMode], coda_native_type_uint8);
     coda_type_set_description(grib_type[grib2_scanningMode], "Scanning mode flags");
 
-    grib_type[grib2_pv] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_real_class);
-    coda_type_set_read_type(grib_type[grib2_pv], coda_native_type_float);
-    grib_type[grib2_pv_array] = (coda_type *)coda_type_array_new(coda_format_grib2);
-    coda_type_set_description(grib_type[grib2_pv_array], "List of vertical coordinate parameters");
-    coda_type_array_set_base_type((coda_type_array *)grib_type[grib2_pv_array], grib_type[grib2_pv]);
-    coda_type_array_add_variable_dimension((coda_type_array *)grib_type[grib2_pv_array], NULL);
-
     grib_type[grib2_sourceOfGridDefinition] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
     coda_type_set_read_type(grib_type[grib2_sourceOfGridDefinition], coda_native_type_uint8);
     coda_type_set_description(grib_type[grib2_sourceOfGridDefinition], "Source of grid definition");
@@ -891,6 +885,14 @@ static int grib_init(void)
     grib_type[grib2_secondFixedSurface] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_real_class);
     coda_type_set_read_type(grib_type[grib2_secondFixedSurface], coda_native_type_double);
     coda_type_set_description(grib_type[grib2_secondFixedSurface], "Second fixed surface");
+
+    grib_type[grib2_coordinateValues] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_real_class);
+    coda_type_set_read_type(grib_type[grib2_coordinateValues], coda_native_type_float);
+    grib_type[grib2_coordinateValues_array] = (coda_type *)coda_type_array_new(coda_format_grib2);
+    coda_type_set_description(grib_type[grib2_coordinateValues_array], "List of vertical coordinate parameters");
+    coda_type_array_set_base_type((coda_type_array *)grib_type[grib2_coordinateValues_array],
+                                  grib_type[grib2_coordinateValues]);
+    coda_type_array_add_variable_dimension((coda_type_array *)grib_type[grib2_coordinateValues_array], NULL);
 
     grib_type[grib2_gridDefinitionTemplateNumber] = (coda_type *)coda_type_number_new(coda_format_grib2,
                                                                                       coda_integer_class);
@@ -1035,6 +1037,10 @@ static int grib_init(void)
     coda_type_record_add_field((coda_type_record *)grib_type[grib2_data], field);
     field = coda_type_record_field_new("secondFixedSurface");
     coda_type_record_field_set_type(field, grib_type[grib2_secondFixedSurface]);
+    coda_type_record_add_field((coda_type_record *)grib_type[grib2_data], field);
+    field = coda_type_record_field_new("coordinateValues");
+    coda_type_record_field_set_type(field, grib_type[grib2_coordinateValues_array]);
+    coda_type_record_field_set_optional(field);
     coda_type_record_add_field((coda_type_record *)grib_type[grib2_data], field);
     field = coda_type_record_field_new("bitsPerValue");
     coda_type_record_field_set_type(field, grib_type[grib2_bitsPerValue]);
@@ -1460,25 +1466,27 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
                 file_offset += PVL - 32;
                 if (NV > 0)
                 {
-                    coda_mem_array *pvArray;
+                    coda_mem_array *coordinateArray;
                     int i;
 
-                    pvArray = coda_mem_array_new((coda_type_array *)grib_type[grib1_pv_array]);
+                    coordinateArray = coda_mem_array_new((coda_type_array *)grib_type[grib1_coordinateValues_array]);
                     for (i = 0; i < NV; i++)
                     {
                         if (read_bytes((coda_product *)product, file_offset, 4, buffer) < 0)
                         {
-                            coda_dynamic_type_delete((coda_dynamic_type *)pvArray);
+                            coda_dynamic_type_delete((coda_dynamic_type *)coordinateArray);
                             coda_dynamic_type_delete((coda_dynamic_type *)gds);
                             return -1;
                         }
-                        type = (coda_dynamic_type *)coda_mem_real_new((coda_type_number *)grib_type[grib1_pv],
-                                                                      ibmfloat_to_iee754(buffer));
-                        coda_mem_array_add_element(pvArray, type);
+                        type =
+                            (coda_dynamic_type *)
+                            coda_mem_real_new((coda_type_number *)grib_type[grib1_coordinateValues],
+                                              ibmfloat_to_iee754(buffer));
+                        coda_mem_array_add_element(coordinateArray, type);
 
                         file_offset += 4;
                     }
-                    coda_mem_record_add_field(gds, "pv", (coda_dynamic_type *)pvArray, 0);
+                    coda_mem_record_add_field(gds, "coordinateValues", (coda_dynamic_type *)coordinateArray, 0);
                 }
                 if (section_size > PVL + NV * 4)
                 {
@@ -1722,9 +1730,10 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
 
     file_offset += 11;
 
-    type = (coda_dynamic_type *)coda_grib_value_array_new((coda_type_array *)grib_type[grib1_values], num_elements,
-                                                          file_offset, bitsPerValue, decimalScaleFactor,
-                                                          binaryScaleFactor, referenceValue, bitmask);
+    type = (coda_dynamic_type *)coda_grib_value_array_simple_packing_new((coda_type_array *)grib_type[grib1_values],
+                                                                         num_elements, file_offset, bitsPerValue,
+                                                                         decimalScaleFactor, binaryScaleFactor,
+                                                                         referenceValue, bitmask);
     if (bitmask != NULL)
     {
         free(bitmask);
@@ -1765,6 +1774,8 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
     int64_t bitmask_length = 0;
     long localRecordIndex = -1;
     long gridSectionIndex = -1;
+    uint16_t num_coordinate_values = 0;
+    int64_t coordinate_values_offset = -1;
     uint8_t parameterCategory = 0;
     uint8_t parameterNumber = 0;
     uint8_t typeOfGeneratingProcess = 0;
@@ -2114,7 +2125,6 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
         else if (*buffer == 4)
         {
             uint16_t productDefinitionTemplate;
-            uint16_t num_coordinate_values;
 
             /* Section 4: Product Definition Section */
             if (prev_section != 3 && prev_section != 7)
@@ -2191,6 +2201,7 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                     secondFixedSurface = coda_NaN();
                 }
                 file_offset += 25;
+                coordinate_values_offset = num_coordinate_values > 0 ? file_offset : -1;
             }
             else
             {
@@ -2390,6 +2401,16 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                                                           secondFixedSurface);
             coda_mem_record_add_field(data, "secondFixedSurface", type, 0);
 
+            if (num_coordinate_values > 0)
+            {
+                type =
+                    (coda_dynamic_type *)
+                    coda_grib_value_array_new((coda_type_array *)grib_type[grib2_coordinateValues_array],
+                                              num_coordinate_values, coordinate_values_offset);
+
+                coda_mem_record_add_field(data, "coordinateValues", type, 0);
+            }
+
             type = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)grib_type[grib2_bitsPerValue],
                                                              bitsPerValue);
             coda_mem_record_add_field(data, "bitsPerValue", type, 0);
@@ -2423,10 +2444,11 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                 }
             }
 
-            type = (coda_dynamic_type *)coda_grib_value_array_new((coda_type_array *)grib_type[grib2_values],
-                                                                  num_elements, file_offset, bitsPerValue,
-                                                                  decimalScaleFactor, binaryScaleFactor, referenceValue,
-                                                                  bitmask);
+            type =
+                (coda_dynamic_type *)
+                coda_grib_value_array_simple_packing_new((coda_type_array *)grib_type[grib2_values], num_elements,
+                                                         file_offset, bitsPerValue, decimalScaleFactor,
+                                                         binaryScaleFactor, referenceValue, bitmask);
             if (bitmask != NULL)
             {
                 free(bitmask);
@@ -2487,6 +2509,7 @@ int coda_grib_open(const char *filename, int64_t file_size, const coda_product_d
     }
 
     grib_product = (coda_grib_product *)malloc(sizeof(coda_grib_product));
+
     if (grib_product == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",

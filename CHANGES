@@ -1,3 +1,32 @@
+2.8 2012-12-12
+~~~~~~~~~~~~~~
+
+* Added coda_strfl() to the C interface to support platform independent
+  printing of nan/inf floating point values.
+
+* Added time() and strtime() to CODA expressions.
+
+* Product data of type 'time' now uses CODA expressions to calculate the
+  actual date/time value.
+
+* coda expression 'str()' can now also turn integer values into strings.
+
+* Power operator in CODA expressions (i.e. 'x ^ y') where both operands are
+  integers will now return a float instead of an integer.
+  Also fixed issue in case second operand was a negative number.
+
+* Floating point CODA expression result values are now printed in exponential
+  format for large numbers (instead of always using fixed point format) and
+  use a standardised way of printing 'nan' and 'inf'.
+
+* codacmp now has an option to compare array elements by aligning them using
+  a 'key expression' (--key option).
+
+* Added --path option to codadump debug mode.
+
+* Renamed 'pv' field in GRIB1 products to 'coordinateValues'.
+  Added 'coordinateValues' field for GRIB2 products (for vertical coordinates).
+
 2.7.2 2012-09-24
 ~~~~~~~~~~~~~~~~
 

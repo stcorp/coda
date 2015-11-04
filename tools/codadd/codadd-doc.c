@@ -580,6 +580,7 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
                     }
                     if (number->conversion != NULL)
                     {
+                        char s[24];
                         int first = 1;
 
                         html_attr_begin("converted&nbsp;unit", &first_attribute);
@@ -587,8 +588,10 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
                         if (number->conversion->numerator != 1.0 || number->conversion->denominator != 1.0)
                         {
                             first = 0;
-                            ff_printf("multiply by %g/%g", number->conversion->numerator,
-                                      number->conversion->denominator);
+                            coda_strfl(number->conversion->numerator, s);
+                            ff_printf("multiply by %s", s);
+                            coda_strfl(number->conversion->denominator, s);
+                            ff_printf("/%s", s);
                         }
                         if (number->conversion->add_offset != 0.0)
                         {
@@ -597,7 +600,8 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
                                 ff_printf(", ");
                                 first = 0;
                             }
-                            ff_printf("add %g", number->conversion->add_offset);
+                            coda_strfl(number->conversion->add_offset, s);
+                            ff_printf("add %s", s);
                         }
                         if (!coda_isNaN(number->conversion->invalid_value))
                         {
@@ -605,7 +609,8 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
                             {
                                 ff_printf(", ");
                             }
-                            ff_printf("set %g to NaN", number->conversion->invalid_value);
+                            coda_strfl(number->conversion->invalid_value, s);
+                            ff_printf("set %s to NaN", s);
                         }
                         ff_printf(")");
                         html_attr_end();
@@ -635,7 +640,10 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
                             }
                             else
                             {
-                                ff_printf("%f", ((coda_ascii_float_mapping *)mappings->mapping[i])->value);
+                                char s[24];
+
+                                coda_strfl(((coda_ascii_float_mapping *)mappings->mapping[i])->value, s);
+                                ff_printf("%s", s);
                             }
                             html_attr_end();
                         }
@@ -680,6 +688,12 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
                         ff_printf("\"%s\"", special->unit);
                         html_attr_end();
                     }
+                    if (special->value_expr != NULL)
+                    {
+                        html_attr_begin("value", &first_attribute);
+                        generate_html_expr(special->value_expr, 15);
+                        html_attr_end();
+                    }
                     if (special->base_type->type_class == coda_text_class)
                     {
                         if (((coda_type_text *)special->base_type)->mappings != NULL)
@@ -701,7 +715,10 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
                                 }
                                 else
                                 {
-                                    ff_printf("%f", ((coda_ascii_float_mapping *)mappings->mapping[i])->value);
+                                    char s[24];
+
+                                    coda_strfl(((coda_ascii_float_mapping *)mappings->mapping[i])->value, s);
+                                    ff_printf("%s", s);
                                 }
                                 html_attr_end();
                             }
@@ -1008,7 +1025,12 @@ static void generate_html_expr(const coda_expression *expr, int precedence)
             }
             break;
         case expr_constant_float:
-            ff_printf("%f", ((coda_expression_float_constant *)expr)->value);
+            {
+                char s[24];
+
+                coda_strfl(((coda_expression_float_constant *)expr)->value, s);
+                ff_printf("%s", s);
+            }
             break;
         case expr_constant_integer:
             {
@@ -1407,6 +1429,16 @@ static void generate_html_expr(const coda_expression *expr, int precedence)
             }
             ff_printf(")");
             break;
+        case expr_strtime:
+            ff_printf("<b>strtime</b>(");
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
+            if (((coda_expression_operation *)expr)->operand[1] != NULL)
+            {
+                ff_printf(", ");
+                generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
+            }
+            ff_printf(")");
+            break;
         case expr_substr:
             ff_printf("<b>substr</b>(");
             generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
@@ -1428,6 +1460,13 @@ static void generate_html_expr(const coda_expression *expr, int precedence)
             {
                 ff_printf(")");
             }
+            break;
+        case expr_time:
+            ff_printf("<b>time</b>(");
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
+            ff_printf(", ");
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
+            ff_printf(")");
             break;
         case expr_trim:
             ff_printf("<b>trim</b>(");

@@ -96,16 +96,27 @@ static int iswhitespace(char a)
     return (a == ' ' || a == '\t' || a == '\n' || a == '\r');
 }
 
-/* Gives a ^ b where both a and b are integers */
-static int64_t ipow(int64_t a, int64_t b)
+/* Gives a ^ b where b is a small integer */
+static double ipow(double a, int b)
 {
-    int64_t r = 1;
+    double val = 1.0;
 
-    while (b--)
+    if (b < 0)
     {
-        r *= a;
+        while (b++)
+        {
+            val *= a;
+        }
+        val = 1.0 / val;
     }
-    return r;
+    else
+    {
+        while (b--)
+        {
+            val *= a;
+        }
+    }
+    return val;
 }
 
 static long decode_escaped_string(char *str)
@@ -396,10 +407,12 @@ coda_expression *coda_expression_new(coda_expression_node_type tag, char *string
         case expr_variable_exists:
             expr->result_type = coda_expression_boolean;
             break;
+        case expr_power:
         case expr_ceil:
         case expr_float:
         case expr_floor:
         case expr_round:
+        case expr_time:
             expr->result_type = coda_expression_float;
             break;
         case expr_and:
@@ -430,6 +443,7 @@ coda_expression *coda_expression_new(coda_expression_node_type tag, char *string
         case expr_product_type:
         case expr_rtrim:
         case expr_string:
+        case expr_strtime:
         case expr_substr:
         case expr_trim:
             expr->result_type = coda_expression_string;
@@ -460,7 +474,6 @@ coda_expression *coda_expression_new(coda_expression_node_type tag, char *string
         case expr_min:
         case expr_modulo:
         case expr_multiply:
-        case expr_power:
         case expr_subtract:
             if (op1->result_type == coda_expression_float || op2->result_type == coda_expression_float)
             {
@@ -1587,11 +1600,32 @@ static int eval_float(eval_info *info, const coda_expression *expr, double *valu
                 {
                     return -1;
                 }
-                if (eval_float(info, opexpr->operand[1], &b) != 0)
+                if (opexpr->operand[1]->result_type == coda_expression_integer)
                 {
-                    return -1;
+                    int64_t intvalue;
+
+                    /* try to use a more accurate algorithm if the exponent is a small integer */
+                    if (eval_integer(info, opexpr->operand[1], &intvalue) != 0)
+                    {
+                        return -1;
+                    }
+                    if (intvalue >= -64 && intvalue <= 64)
+                    {
+                        *value = ipow(a, (int)intvalue);
+                    }
+                    else
+                    {
+                        *value = pow(a, (double)intvalue);
+                    }
                 }
-                *value = pow(a, b);
+                else
+                {
+                    if (eval_float(info, opexpr->operand[1], &b) != 0)
+                    {
+                        return -1;
+                    }
+                    *value = pow(a, b);
+                }
             }
             break;
         case expr_max:
@@ -1622,6 +1656,34 @@ static int eval_float(eval_info *info, const coda_expression *expr, double *valu
                     return -1;
                 }
                 *value = (a < b ? a : b);
+            }
+            break;
+        case expr_time:
+            {
+                long off_timestr, off_format;
+                long len_timestr, len_format;
+                char *timestr;
+                char *format;
+
+                if (eval_string(info, opexpr->operand[0], &off_timestr, &len_timestr, &timestr) != 0)
+                {
+                    return -1;
+                }
+                timestr[off_timestr + len_timestr] = '\0';      /* add terminating zero */
+                if (eval_string(info, opexpr->operand[1], &off_format, &len_format, &format) != 0)
+                {
+                    free(timestr);
+                    return -1;
+                }
+                format[off_format + len_format] = '\0'; /* add terminating zero */
+                if (coda_string_to_time_with_format(&format[off_format], &timestr[off_timestr], value) != 0)
+                {
+                    free(format);
+                    free(timestr);
+                    return -1;
+                }
+                free(format);
+                free(timestr);
             }
             break;
         case expr_if:
@@ -1895,21 +1957,6 @@ static int eval_integer(eval_info *info, const coda_expression *expr, int64_t *v
                     return -1;
                 }
                 *value = a % b;
-            }
-            break;
-        case expr_power:
-            {
-                int64_t a, b;
-
-                if (eval_integer(info, opexpr->operand[0], &a) != 0)
-                {
-                    return -1;
-                }
-                if (eval_integer(info, opexpr->operand[1], &b) != 0)
-                {
-                    return -1;
-                }
-                *value = ipow(a, b);
             }
             break;
         case expr_and:
@@ -2494,6 +2541,7 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
     switch (opexpr->tag)
     {
         case expr_string:
+            if (opexpr->operand[0]->result_type == coda_expression_node)
             {
                 coda_cursor prev_cursor;
 
@@ -2541,6 +2589,26 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                     *value = NULL;
                 }
                 info->cursor = prev_cursor;
+            }
+            else
+            {
+                int64_t intvalue;
+                char s[21];
+
+                if (eval_integer(info, opexpr->operand[0], &intvalue) != 0)
+                {
+                    return -1;
+                }
+                coda_str64(intvalue, s);
+                *value = strdup(s);
+                if (*value == NULL)
+                {
+                    coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)",
+                                   __FILE__, __LINE__);
+                    return -1;
+                }
+                *offset = 0;
+                *length = strlen(s);
             }
             break;
         case expr_bytes:
@@ -3080,10 +3148,62 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                     if (*value == NULL)
                     {
                         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %ld bytes) (%s:%u)",
-                                       *length, __FILE__, __LINE__);
+                                       *length + 1, __FILE__, __LINE__);
                         return -1;
                     }
                     memcpy(*value, product_type, *length);
+                }
+            }
+            break;
+        case expr_strtime:
+            {
+                double timevalue;
+                long off_format;
+                long len_format;
+                char *format;
+
+                if (eval_float(info, opexpr->operand[0], &timevalue) != 0)
+                {
+                    return -1;
+                }
+                if (opexpr->operand[1] != NULL)
+                {
+                    if (eval_string(info, opexpr->operand[1], &off_format, &len_format, &format) != 0)
+                    {
+                        return -1;
+                    }
+                    format[off_format + len_format] = '\0';     /* add terminating zero */
+                }
+                else
+                {
+                    format = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS";
+                    len_format = strlen(format);
+                    off_format = 0;
+                }
+                *value = malloc(len_format + 1);        /* add room for zero termination at the end */
+                if (*value == NULL)
+                {
+                    if (opexpr->operand[1] != NULL)
+                    {
+                        free(format);
+                    }
+                    coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %ld bytes) (%s:%u)",
+                                   *length + 1, __FILE__, __LINE__);
+                    return -1;
+                }
+                if (coda_time_to_string_with_format(&format[off_format], timevalue, *value) != 0)
+                {
+                    if (opexpr->operand[1] != NULL)
+                    {
+                        free(format);
+                    }
+                    return -1;
+                }
+                *offset = 0;
+                *length = strlen(*value);
+                if (opexpr->operand[1] != NULL)
+                {
+                    free(format);
                 }
             }
             break;

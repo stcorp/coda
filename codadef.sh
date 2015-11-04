@@ -56,7 +56,7 @@ if test ${dateonly} = "no" ; then
   echo Determining last modification date for $class definitions
 fi
 files=`find ${inputdir} ${inputdir}/types ${inputdir}/products -maxdepth 1 -name "*.xml"`
-date=`grep -m 1 last-modified $files | sed -e 's:^.*last-modified=\"\([^"]*\).*$:\1:' | sort -r | head -1 | sed 's:-::g'`
+date=`(for file in $files ; do grep last-modified $file | head -1 ; done) | sed -e 's:^.*last-modified=\"\([^"]*\).*$:\1:' | sort -r | head -1 | sed 's:-::g'`
 
 if test ${dateonly} = "yes" ; then
   echo ${date}

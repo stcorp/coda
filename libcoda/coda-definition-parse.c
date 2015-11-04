@@ -2218,7 +2218,7 @@ static int cd_product_definition_sub_init(parser_info *info, const char **attr)
     if (info->product_definition->format != info->node->format)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION,
-                       "format for product defintion %s differs between index and product file",
+                       "format for product definition %s differs between index and product file",
                        info->product_definition->name);
         return -1;
     }
@@ -2534,6 +2534,11 @@ static int cd_text_init(parser_info *info, const char **attr)
     return 0;
 }
 
+static int cd_time_set_type(parser_info *info)
+{
+    return coda_type_time_set_base_type((coda_type_special *)info->node->parent->data, (coda_type *)info->node->data);
+}
+
 static int cd_time_add_mapping(parser_info *info)
 {
     if (coda_type_time_add_ascii_float_mapping((coda_type_special *)info->node->parent->data,
@@ -2548,6 +2553,9 @@ static int cd_time_add_mapping(parser_info *info)
 static int cd_time_init(parser_info *info, const char **attr)
 {
     const char *timeformat;
+    coda_expression_type result_type;
+    coda_expression *expr;
+    coda_type *base_type = NULL;
 
     if (handle_format_attribute_for_type(info, attr) != 0)
     {
@@ -2558,17 +2566,282 @@ static int cd_time_init(parser_info *info, const char **attr)
     {
         return -1;
     }
+
+    if (info->node->format == coda_format_ascii)
+    {
+        if (strcmp(timeformat, "ascii_envisat_datetime") == 0)
+        {
+            timeformat = "time(str(.),\"dd-MMM-yyyy HH:mm:ss.SSSSSS\")";
+            base_type = (coda_type *)coda_type_text_new(info->node->format);
+            coda_type_set_read_type(base_type, coda_native_type_string);
+            coda_type_set_description(base_type, "ENVISAT ASCII datetime \"DD-MMM-YYYY hh:mm:ss.uuuuuu\".");
+            coda_type_set_byte_size(base_type, 27);
+        }
+        else if (strcmp(timeformat, "ascii_gome_datetime") == 0)
+        {
+            timeformat = "time(str(.),\"dd-MMM-yyyy HH:mm:ss.SSS\")";
+            base_type = (coda_type *)coda_type_text_new(info->node->format);
+            coda_type_set_read_type(base_type, coda_native_type_string);
+            coda_type_set_description(base_type, "GOME ASCII datetime \"DD-MMM-YYYY hh:mm:ss.uuu\".");
+            coda_type_set_byte_size(base_type, 24);
+        }
+        else if (strcmp(timeformat, "ascii_eps_datetime") == 0)
+        {
+            timeformat = "time(str(.),\"yyyyMMddHHmmss'Z'\")";
+            base_type = (coda_type *)coda_type_text_new(info->node->format);
+            coda_type_set_read_type(base_type, coda_native_type_string);
+            coda_type_set_description(base_type, "EPS generalised time \"YYYYMMDDHHMMSSZ\".");
+            coda_type_set_byte_size(base_type, 15);
+        }
+        else if (strcmp(timeformat, "ascii_eps_datetime_long") == 0)
+        {
+            timeformat = "time(str(.),\"yyyyMMddHHmmssSSS'Z'\")";
+            base_type = (coda_type *)coda_type_text_new(info->node->format);
+            coda_type_set_read_type(base_type, coda_native_type_string);
+            coda_type_set_description(base_type, "EPS long generalised time \"YYYYMMDDHHMMSSmmmZ\".");
+            coda_type_set_byte_size(base_type, 18);
+        }
+        else if (strcmp(timeformat, "ascii_ccsds_datetime_ymd1") == 0)
+        {
+            timeformat = "time(str(.),\"yyyy-MM-dd'T'HH:mm:ss\")";
+            base_type = (coda_type *)coda_type_text_new(info->node->format);
+            coda_type_set_read_type(base_type, coda_native_type_string);
+            coda_type_set_description(base_type, "CCSDS ASCII datetime \"YYYY-MM-DDThh:mm:ss\".");
+            coda_type_set_byte_size(base_type, 19);
+        }
+        else if (strcmp(timeformat, "ascii_ccsds_datetime_ymd1_with_ref") == 0)
+        {
+            timeformat = "time(str(.),\"'UTC='yyyy-MM-dd'T'HH:mm:ss|'TAI='yyyy-MM-dd'T'HH:mm:ss|"
+                "'GPS='yyyy-MM-dd'T'HH:mm:ss|'UT1='yyyy-MM-dd'T'HH:mm:ss\")";
+            base_type = (coda_type *)coda_type_text_new(info->node->format);
+            coda_type_set_read_type(base_type, coda_native_type_string);
+            coda_type_set_description(base_type, "CCSDS ASCII datetime with time reference "
+                                      "\"RRR=YYYY-MM-DDThh:mm:ss\". The reference RRR can be any of \"UT1\", \"UTC\", "
+                                      "\"TAI\", or \"GPS\".");
+            coda_type_set_byte_size(base_type, 23);
+        }
+        else if (strcmp(timeformat, "ascii_ccsds_datetime_ymd2") == 0)
+        {
+            timeformat = "time(str(.),\"yyyy-MM-dd'T'HH:mm:ss.SSSSSS\")";
+            base_type = (coda_type *)coda_type_text_new(info->node->format);
+            coda_type_set_read_type(base_type, coda_native_type_string);
+            coda_type_set_description(base_type, "CCSDS ASCII datetime \"YYYY-MM-DDThh:mm:ss.uuuuuu\".");
+            coda_type_set_byte_size(base_type, 26);
+        }
+        else if (strcmp(timeformat, "ascii_ccsds_datetime_ymd2_with_ref") == 0)
+        {
+            timeformat = "time(str(.),\"'UTC='yyyy-MM-dd'T'HH:mm:ss.SSSSSS|'TAI='yyyy-MM-dd'T'HH:mm:ss.SSSSSS|"
+                "'GPS='yyyy-MM-dd'T'HH:mm:ss.SSSSSS|'UT1='yyyy-MM-dd'T'HH:mm:ss.SSSSSS\")";
+            base_type = (coda_type *)coda_type_text_new(info->node->format);
+            coda_type_set_read_type(base_type, coda_native_type_string);
+            coda_type_set_description(base_type, "CCSDS ASCII datetime with time reference "
+                                      "\"RRR=YYYY-MM-DDThh:mm:ss.uuuuuu\". The reference RRR can be any of \"UT1\", "
+                                      "\"UTC\", \"TAI\", or \"GPS\".");
+            coda_type_set_byte_size(base_type, 30);
+        }
+        else if (strcmp(timeformat, "ascii_ccsds_datetime_utc1") == 0)
+        {
+            timeformat = "time(str(.),\"yyyy-DDD'T'HH:mm:ss\")";
+            base_type = (coda_type *)coda_type_text_new(info->node->format);
+            coda_type_set_read_type(base_type, coda_native_type_string);
+            coda_type_set_description(base_type, "CCSDS ASCII datetime \"YYYY-DDDThh:mm:ss\".");
+            coda_type_set_byte_size(base_type, 17);
+        }
+        else if (strcmp(timeformat, "ascii_ccsds_datetime_utc2") == 0)
+        {
+            timeformat = "time(str(.),\"yyyy-DDD'T'HH:mm:ss.SSSSSS|yyyy-DDD'T'HH:mm:ss.SSSSS |"
+                "yyyy-DDD'T'HH:mm:ss.SSSS  |yyyy-DDD'T'HH:mm:ss.SSS   |yyyy-DDD'T'HH:mm:ss.SS    |"
+                "yyyy-DDD'T'HH:mm:ss.S     \")";
+            base_type = (coda_type *)coda_type_text_new(info->node->format);
+            coda_type_set_read_type(base_type, coda_native_type_string);
+            coda_type_set_description(base_type, "CCSDS ASCII datetime \"YYYY-DDDThh:mm:ss.uuuuuu\". "
+                                      "Microseconds can be written using less digits (1-6 digits): e.g.: "
+                                      "\"YYYY-DDDThh:mm:ss.u     \"");
+            coda_type_set_byte_size(base_type, 24);
+        }
+    }
+    else if (info->node->format == coda_format_binary)
+    {
+        coda_type_record *record;
+        coda_type_record_field *field;
+        coda_type *field_type;
+
+        if (strcmp(timeformat, "binary_envisat_datetime") == 0)
+        {
+            timeformat = "float(./days) * 86400.0 + float(./seconds) + float(./microseconds) / 1e6";
+
+            record = coda_type_record_new(info->node->format);
+            base_type = (coda_type *)record;
+            coda_type_set_description(base_type, "ENVISAT binary datetime");
+
+            field_type = (coda_type *)coda_type_number_new(info->node->format, coda_integer_class);
+            coda_type_set_description(field_type, "days since January 1st, 2000 (may be negative)");
+            coda_type_set_read_type(field_type, coda_native_type_int32);
+            coda_type_set_bit_size(field_type, 32);
+            coda_type_number_set_unit((coda_type_number *)field_type, "days since 2000-01-01");
+            field = coda_type_record_field_new("days");
+            coda_type_record_field_set_type(field, field_type);
+            coda_type_release(field_type);
+            coda_type_record_add_field(record, field);
+
+            field_type = (coda_type *)coda_type_number_new(info->node->format, coda_integer_class);
+            coda_type_set_description(field_type, "seconds since start of day");
+            coda_type_set_read_type(field_type, coda_native_type_uint32);
+            coda_type_set_bit_size(field_type, 32);
+            coda_type_number_set_unit((coda_type_number *)field_type, "s");
+            field = coda_type_record_field_new("seconds");
+            coda_type_record_field_set_type(field, field_type);
+            coda_type_release(field_type);
+            coda_type_record_add_field(record, field);
+
+            field_type = (coda_type *)coda_type_number_new(info->node->format, coda_integer_class);
+            coda_type_set_description(field_type, "microseconds since start of second");
+            coda_type_set_read_type(field_type, coda_native_type_uint32);
+            coda_type_set_bit_size(field_type, 32);
+            coda_type_number_set_unit((coda_type_number *)field_type, "1e-6 s");
+            field = coda_type_record_field_new("microseconds");
+            coda_type_record_field_set_type(field, field_type);
+            coda_type_release(field_type);
+            coda_type_record_add_field(record, field);
+        }
+        else if (strcmp(timeformat, "binary_gome_datetime") == 0)
+        {
+            timeformat = "(float(./days) - 18262) * 86400.0 + float(./milliseconds) / 1e3";
+
+            record = coda_type_record_new(info->node->format);
+            base_type = (coda_type *)record;
+            coda_type_set_description(base_type, "GOME binary datetime");
+
+            field_type = (coda_type *)coda_type_number_new(info->node->format, coda_integer_class);
+            coda_type_set_description(field_type, "days since January 1st, 1950 (may be negative)");
+            coda_type_set_read_type(field_type, coda_native_type_int32);
+            coda_type_set_bit_size(field_type, 32);
+            coda_type_number_set_unit((coda_type_number *)field_type, "days since 1950-01-01");
+            field = coda_type_record_field_new("days");
+            coda_type_record_field_set_type(field, field_type);
+            coda_type_release(field_type);
+            coda_type_record_add_field(record, field);
+
+            field_type = (coda_type *)coda_type_number_new(info->node->format, coda_integer_class);
+            coda_type_set_description(field_type, "milliseconds since start of day");
+            coda_type_set_read_type(field_type, coda_native_type_uint32);
+            coda_type_set_bit_size(field_type, 32);
+            coda_type_number_set_unit((coda_type_number *)field_type, "1e-3 s");
+            field = coda_type_record_field_new("milliseconds");
+            coda_type_record_field_set_type(field, field_type);
+            coda_type_release(field_type);
+            coda_type_record_add_field(record, field);
+        }
+        else if (strcmp(timeformat, "binary_eps_datetime") == 0)
+        {
+            timeformat = "float(./days) * 86400.0 + float(./milliseconds) / 1e3";
+
+            record = coda_type_record_new(info->node->format);
+            base_type = (coda_type *)record;
+            coda_type_set_description(base_type, "EPS short cds");
+
+            field_type = (coda_type *)coda_type_number_new(info->node->format, coda_integer_class);
+            coda_type_set_description(field_type, "days since January 1st, 2000 (must be positive)");
+            coda_type_set_read_type(field_type, coda_native_type_uint16);
+            coda_type_set_bit_size(field_type, 16);
+            coda_type_number_set_unit((coda_type_number *)field_type, "days since 2000-01-01");
+            field = coda_type_record_field_new("days");
+            coda_type_record_field_set_type(field, field_type);
+            coda_type_release(field_type);
+            coda_type_record_add_field(record, field);
+
+            field_type = (coda_type *)coda_type_number_new(info->node->format, coda_integer_class);
+            coda_type_set_description(field_type, "milliseconds since start of day");
+            coda_type_set_read_type(field_type, coda_native_type_uint32);
+            coda_type_set_bit_size(field_type, 32);
+            coda_type_number_set_unit((coda_type_number *)field_type, "1e-3 s");
+            field = coda_type_record_field_new("milliseconds");
+            coda_type_record_field_set_type(field, field_type);
+            coda_type_release(field_type);
+            coda_type_record_add_field(record, field);
+        }
+        else if (strcmp(timeformat, "binary_eps_datetime_long") == 0)
+        {
+            timeformat = "float(./days) * 86400.0 + float(./milliseconds) / 1e3 + float(./microseconds) / 1e6";
+
+            record = coda_type_record_new(info->node->format);
+            base_type = (coda_type *)record;
+            coda_type_set_description(base_type, "EPS long cds");
+
+            field_type = (coda_type *)coda_type_number_new(info->node->format, coda_integer_class);
+            coda_type_set_description(field_type, "days since January 1st, 2000 (must be positive)");
+            coda_type_set_read_type(field_type, coda_native_type_uint16);
+            coda_type_set_bit_size(field_type, 16);
+            coda_type_number_set_unit((coda_type_number *)field_type, "days since 2000-01-01");
+            field = coda_type_record_field_new("days");
+            coda_type_record_field_set_type(field, field_type);
+            coda_type_release(field_type);
+            coda_type_record_add_field(record, field);
+
+            field_type = (coda_type *)coda_type_number_new(info->node->format, coda_integer_class);
+            coda_type_set_description(field_type, "milliseconds since start of day");
+            coda_type_set_read_type(field_type, coda_native_type_uint32);
+            coda_type_set_bit_size(field_type, 32);
+            coda_type_number_set_unit((coda_type_number *)field_type, "1e-3 s");
+            field = coda_type_record_field_new("milliseconds");
+            coda_type_record_field_set_type(field, field_type);
+            coda_type_release(field_type);
+            coda_type_record_add_field(record, field);
+
+            field_type = (coda_type *)coda_type_number_new(info->node->format, coda_integer_class);
+            coda_type_set_description(field_type, "microseconds since start of millisecond");
+            coda_type_set_read_type(field_type, coda_native_type_uint16);
+            coda_type_set_bit_size(field_type, 16);
+            coda_type_number_set_unit((coda_type_number *)field_type, "1e-6 s");
+            field = coda_type_record_field_new("microseconds");
+            coda_type_record_field_set_type(field, field_type);
+            coda_type_release(field_type);
+            coda_type_record_add_field(record, field);
+        }
+    }
+
+    if (coda_expression_from_string(timeformat, &expr) != 0)
+    {
+        coda_type_release(base_type);
+        return -1;
+    }
+    if (coda_expression_get_type(expr, &result_type) != 0)
+    {
+        coda_type_release(base_type);
+        coda_expression_delete(expr);
+        return -1;
+    }
+    if (result_type != coda_expression_float)
+    {
+        coda_type_release(base_type);
+        coda_expression_delete(expr);
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "time expression is not a float expression");
+        return -1;
+    }
+
     info->node->free_data = (free_data_handler)coda_type_release;
-    info->node->data = coda_type_time_new(info->node->format, timeformat);
+    info->node->data = coda_type_time_new(info->node->format, expr);
     if (info->node->data == NULL)
     {
+        coda_type_release(base_type);
+        coda_expression_delete(expr);
         return -1;
+    }
+    if (base_type != NULL)
+    {
+        if (coda_type_time_set_base_type((coda_type_special *)info->node->data, base_type) != 0)
+        {
+            coda_type_release(base_type);
+            return -1;
+        }
+        coda_type_release(base_type);
     }
     if (handle_name_attribute_for_type(info, attr) != 0)
     {
         return -1;
     }
 
+    register_type_elements(info->node, cd_time_set_type);
     register_sub_element(info->node, element_cd_description, string_data_init, type_set_description);
     register_sub_element(info->node, element_cd_mapping, cd_mapping_init, cd_time_add_mapping);
 
@@ -3274,7 +3547,7 @@ int coda_read_definitions(const char *definition_path)
 
                 if (hSearch == INVALID_HANDLE_VALUE)
                 {
-                    if (GetLastError() == ERROR_NO_MORE_FILES)
+                    if (GetLastError() == ERROR_FILE_NOT_FOUND || GetLastError() == ERROR_NO_MORE_FILES)
                     {
                         /* no files found */
                         continue;

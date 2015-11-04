@@ -133,221 +133,6 @@ int coda_bin_cursor_get_num_elements(const coda_cursor *cursor, long *num_elemen
     return 0;
 }
 
-/* calculates a * 10 ^ b, with a of type double and b of type long */
-static double a_pow10_b(double a, long b)
-{
-    register long i = labs(b);
-    double val = 1.0;
-
-    while (--i >= 0)
-    {
-        val *= 10;
-    }
-
-    if (b < 0)
-    {
-        return a / val;
-    }
-    return a * val;
-}
-
-static int read_binary_envisat_datetime(coda_product *product, int64_t byte_offset, double *dst)
-{
-    int32_t days;
-    uint32_t seconds;
-    uint32_t musecs;
-
-    if (read_bytes(product, byte_offset, 4, &days) != 0)
-    {
-        return -1;
-    }
-    if (read_bytes(product, byte_offset + 4, 4, &seconds) != 0)
-    {
-        return -1;
-    }
-    if (read_bytes(product, byte_offset + 8, 4, &musecs) != 0)
-    {
-        return -1;
-    }
-#if !defined(WORDS_BIGENDIAN)
-    {
-        union
-        {
-            uint8_t as_bytes[4];
-            int32_t as_int32;
-        } data;
-
-        data.as_bytes[0] = ((uint8_t *)&days)[3];
-        data.as_bytes[1] = ((uint8_t *)&days)[2];
-        data.as_bytes[2] = ((uint8_t *)&days)[1];
-        data.as_bytes[3] = ((uint8_t *)&days)[0];
-        days = data.as_int32;
-    }
-    {
-        union
-        {
-            uint8_t as_bytes[4];
-            uint32_t as_uint32;
-        } data;
-
-        data.as_bytes[0] = ((uint8_t *)&seconds)[3];
-        data.as_bytes[1] = ((uint8_t *)&seconds)[2];
-        data.as_bytes[2] = ((uint8_t *)&seconds)[1];
-        data.as_bytes[3] = ((uint8_t *)&seconds)[0];
-        seconds = data.as_uint32;
-
-        data.as_bytes[0] = ((uint8_t *)&musecs)[3];
-        data.as_bytes[1] = ((uint8_t *)&musecs)[2];
-        data.as_bytes[2] = ((uint8_t *)&musecs)[1];
-        data.as_bytes[3] = ((uint8_t *)&musecs)[0];
-        musecs = data.as_uint32;
-    }
-#endif
-
-    *dst = days * 86400.0 + seconds + musecs / 1000000.0;
-
-    return 0;
-}
-
-static int read_binary_gome_datetime(coda_product *product, int64_t byte_offset, double *dst)
-{
-    const int DAYS_1950_2000 = 18262;
-    int32_t days;
-    int32_t msecs;
-
-    if (read_bytes(product, byte_offset, 4, &days) != 0)
-    {
-        return -1;
-    }
-    if (read_bytes(product, byte_offset + 4, 4, &msecs) != 0)
-    {
-        return -1;
-    }
-#if !defined(WORDS_BIGENDIAN)
-    {
-        union
-        {
-            uint8_t as_bytes[4];
-            int32_t as_int32;
-        } data;
-
-        data.as_bytes[0] = ((uint8_t *)&days)[3];
-        data.as_bytes[1] = ((uint8_t *)&days)[2];
-        data.as_bytes[2] = ((uint8_t *)&days)[1];
-        data.as_bytes[3] = ((uint8_t *)&days)[0];
-        days = data.as_int32;
-
-        data.as_bytes[0] = ((uint8_t *)&msecs)[3];
-        data.as_bytes[1] = ((uint8_t *)&msecs)[2];
-        data.as_bytes[2] = ((uint8_t *)&msecs)[1];
-        data.as_bytes[3] = ((uint8_t *)&msecs)[0];
-        msecs = data.as_int32;
-    }
-#endif
-
-    *dst = (days - DAYS_1950_2000) * 86400.0 + msecs / 1000.0;
-
-    return 0;
-}
-
-static int read_binary_eps_datetime(coda_product *product, int64_t byte_offset, double *dst)
-{
-    uint16_t days;
-    uint32_t msecs;
-
-    if (read_bytes(product, byte_offset, 2, &days) != 0)
-    {
-        return -1;
-    }
-    if (read_bytes(product, byte_offset + 2, 4, &msecs) != 0)
-    {
-        return -1;
-    }
-#if !defined(WORDS_BIGENDIAN)
-    {
-        union
-        {
-            uint8_t as_bytes[2];
-            uint16_t as_uint16;
-        } data;
-
-        data.as_bytes[0] = ((uint8_t *)&days)[1];
-        data.as_bytes[1] = ((uint8_t *)&days)[0];
-        days = data.as_uint16;
-    }
-    {
-        union
-        {
-            uint8_t as_bytes[4];
-            uint32_t as_uint32;
-        } data;
-
-        data.as_bytes[0] = ((uint8_t *)&msecs)[3];
-        data.as_bytes[1] = ((uint8_t *)&msecs)[2];
-        data.as_bytes[2] = ((uint8_t *)&msecs)[1];
-        data.as_bytes[3] = ((uint8_t *)&msecs)[0];
-        msecs = data.as_uint32;
-    }
-#endif
-
-    *dst = days * 86400.0 + msecs / 1000.0;
-
-    return 0;
-}
-
-static int read_binary_eps_datetime_long(coda_product *product, int64_t byte_offset, double *dst)
-{
-    uint16_t days;
-    uint32_t msecs;
-    uint16_t musecs;
-
-    if (read_bytes(product, byte_offset, 2, &days) != 0)
-    {
-        return -1;
-    }
-    if (read_bytes(product, byte_offset + 2, 4, &msecs) != 0)
-    {
-        return -1;
-    }
-    if (read_bytes(product, byte_offset + 6, 2, &musecs) != 0)
-    {
-        return -1;
-    }
-    {
-        union
-        {
-            uint8_t as_bytes[2];
-            uint16_t as_uint16;
-        } data;
-
-        data.as_bytes[0] = ((uint8_t *)&days)[1];
-        data.as_bytes[1] = ((uint8_t *)&days)[0];
-        days = data.as_uint16;
-
-        data.as_bytes[0] = ((uint8_t *)&musecs)[1];
-        data.as_bytes[1] = ((uint8_t *)&musecs)[0];
-        musecs = data.as_uint16;
-    }
-    {
-        union
-        {
-            uint8_t as_bytes[4];
-            uint32_t as_uint32;
-        } data;
-
-        data.as_bytes[0] = ((uint8_t *)&msecs)[3];
-        data.as_bytes[1] = ((uint8_t *)&msecs)[2];
-        data.as_bytes[2] = ((uint8_t *)&msecs)[1];
-        data.as_bytes[3] = ((uint8_t *)&msecs)[0];
-        msecs = data.as_uint32;
-    }
-#endif
-
-    *dst = days * 86400.0 + msecs / 1000.0 + musecs / 1000000.0;
-
-    return 0;
-}
-
 int coda_bin_cursor_read_int8(const coda_cursor *cursor, int8_t *dst)
 {
     int64_t bit_size = ((coda_type *)cursor->stack[cursor->n - 1].type)->bit_size;
@@ -1013,6 +798,29 @@ static int read_double(const coda_cursor *cursor, double *dst)
     return 0;
 }
 
+/* Gives a ^ b where b is a small integer */
+static double ipow(double a, int b)
+{
+    double val = 1.0;
+
+    if (b < 0)
+    {
+        while (b++)
+        {
+            val *= a;
+        }
+        val = 1.0 / val;
+    }
+    else
+    {
+        while (b--)
+        {
+            val *= a;
+        }
+    }
+    return val;
+}
+
 static int read_vsf_integer(const coda_cursor *cursor, double *dst)
 {
     coda_cursor vsf_cursor;
@@ -1043,31 +851,9 @@ static int read_vsf_integer(const coda_cursor *cursor, double *dst)
     }
 
     /* Apply scaling factor */
-    *dst = a_pow10_b(base_value, (long)-scale_factor);
+    *dst = base_value * ipow(10, -scale_factor);
 
     return 0;
-}
-
-static int read_time(const coda_cursor *cursor, double *dst)
-{
-    int64_t bit_offset = cursor->stack[cursor->n - 1].bit_offset;
-
-    switch (((coda_type_special *)cursor->stack[cursor->n - 1].type)->time_type)
-    {
-        case datetime_binary_envisat:
-            return read_binary_envisat_datetime(cursor->product, bit_offset >> 3, dst);
-        case datetime_binary_gome:
-            return read_binary_gome_datetime(cursor->product, bit_offset >> 3, dst);
-        case datetime_binary_eps:
-            return read_binary_eps_datetime(cursor->product, bit_offset >> 3, dst);
-        case datetime_binary_eps_long:
-            return read_binary_eps_datetime_long(cursor->product, bit_offset >> 3, dst);
-        default:
-            break;
-    }
-
-    assert(0);
-    exit(1);
 }
 
 int coda_bin_cursor_read_double(const coda_cursor *cursor, double *dst)
@@ -1079,7 +865,9 @@ int coda_bin_cursor_read_double(const coda_cursor *cursor, double *dst)
             case coda_special_vsf_integer:
                 return read_vsf_integer(cursor, dst);
             case coda_special_time:
-                return read_time(cursor, dst);
+                /* this should have already been handled in coda-cursor-read.c */
+                assert(0);
+                exit(1);
             default:
                 coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a double data type");
                 return -1;

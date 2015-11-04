@@ -193,7 +193,9 @@ static coda_cdf_type *basic_type_new(int32_t data_type, int32_t num_elements)
 
 static coda_cdf_time *time_type_new(int32_t data_type, coda_cdf_type *base_type)
 {
+    char *exprstr;
     coda_cdf_time *type;
+    coda_expression *expr;
 
     assert(data_type == 31 || data_type == 33);
 
@@ -210,9 +212,25 @@ static coda_cdf_time *time_type_new(int32_t data_type, coda_cdf_type *base_type)
     type->data_type = data_type;
     type->base_type = NULL;
 
-    type->definition = coda_type_time_new(coda_format_cdf, NULL);
+    if (data_type == 31)
+    {
+        /* CDF_EPOCH */
+        exprstr = "float(.) * 1e-3 - 63113904000.0";
+    }
+    else
+    {
+        /* CDF_TIME_TT2000 */
+        exprstr = "float(.) * 1e-9 - 43200.0";
+    }
+    if (coda_expression_from_string(exprstr, &expr) != 0)
+    {
+        coda_cdf_type_delete((coda_dynamic_type *)type);
+        return NULL;
+    }
+    type->definition = coda_type_time_new(coda_format_cdf, expr);
     if (type->definition == NULL)
     {
+        coda_expression_delete(expr);
         coda_cdf_type_delete((coda_dynamic_type *)type);
         return NULL;
     }

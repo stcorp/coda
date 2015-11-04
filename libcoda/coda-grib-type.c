@@ -51,14 +51,9 @@ void coda_grib_type_delete(coda_dynamic_type *type)
     free(type);
 }
 
-coda_grib_value_array *coda_grib_value_array_new(coda_type_array *definition, long num_elements, int64_t byte_offset,
-                                                 int element_bit_size, int16_t decimalScaleFactor,
-                                                 int16_t binaryScaleFactor, float referenceValue,
-                                                 const uint8_t *bitmask)
+coda_grib_value_array *coda_grib_value_array_new(coda_type_array *definition, long num_elements, int64_t byte_offset)
 {
     coda_grib_value_array *type;
-    long bitmask_size;
-    long i;
 
     if (definition == NULL)
     {
@@ -85,10 +80,11 @@ coda_grib_value_array *coda_grib_value_array_new(coda_type_array *definition, lo
     type->num_elements = num_elements;
     type->base_type = NULL;
     type->bit_offset = 8 * byte_offset;
-    type->element_bit_size = element_bit_size;
-    type->decimalScaleFactor = decimalScaleFactor;
-    type->binaryScaleFactor = binaryScaleFactor;
-    type->referenceValue = referenceValue;
+    type->simple_packing = 0;
+    type->element_bit_size = 32;
+    type->decimalScaleFactor = 0;
+    type->binaryScaleFactor = 0;
+    type->referenceValue = 0.0;
     type->bitmask = NULL;
     type->bitmask_cumsum128 = NULL;
 
@@ -103,6 +99,32 @@ coda_grib_value_array *coda_grib_value_array_new(coda_type_array *definition, lo
     type->base_type->backend = coda_backend_grib;
     type->base_type->definition = definition->base_type;
     definition->base_type->retain_count++;
+
+    return type;
+}
+
+coda_grib_value_array *coda_grib_value_array_simple_packing_new(coda_type_array *definition, long num_elements,
+                                                                int64_t byte_offset, int element_bit_size,
+                                                                int16_t decimalScaleFactor, int16_t binaryScaleFactor,
+                                                                float referenceValue, const uint8_t *bitmask)
+{
+    coda_grib_value_array *type;
+    long bitmask_size;
+    long i;
+
+    type = coda_grib_value_array_new(definition, num_elements, byte_offset);
+    if (type == NULL)
+    {
+        return NULL;
+    }
+
+    type->simple_packing = 1;
+    type->element_bit_size = element_bit_size;
+    type->decimalScaleFactor = decimalScaleFactor;
+    type->binaryScaleFactor = binaryScaleFactor;
+    type->referenceValue = referenceValue;
+    type->bitmask = NULL;
+    type->bitmask_cumsum128 = NULL;
 
     if (bitmask != NULL)
     {

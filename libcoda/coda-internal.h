@@ -131,7 +131,8 @@ char *coda_short_identifier_from_name(const char *name, hashtable *hash_data, in
 
 int coda_dayofyear_to_month_day(int year, int day_of_year, int *month, int *day_of_month);
 int coda_month_to_integer(const char month[3]);
-
+int coda_string_to_time_with_format(const char *format, const char *str, double *datetime);
+int coda_time_to_string_with_format(const char *format, double datetime, char *str);
 int coda_leap_second_table_init(void);
 void coda_leap_second_table_done(void);
 

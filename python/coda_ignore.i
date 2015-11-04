@@ -58,5 +58,6 @@
 %ignore coda_free;
 %ignore coda_str64;
 %ignore coda_str64u;
+%ignore coda_strfl;
 %ignore coda_set_error;
 %ignore coda_errno_to_string;

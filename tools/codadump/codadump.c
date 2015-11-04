@@ -30,6 +30,7 @@ hdf4_info_t hdf4_info;
 char *ascii_col_sep;
 FILE *ascii_output;
 char *output_file_name;
+char *starting_path;
 int verbosity;
 int calc_dim;
 int show_dim_vals;
@@ -123,6 +124,9 @@ static void print_help()
     printf("        Debug options:\n");
     printf("            -o, --output <filename>\n");
     printf("                    write output to specified file\n");
+    printf("            -p, --path <path>\n");
+    printf("                    path (in the form of a CODA node expression) to the\n");
+    printf("                    location in the product where the operation should begin\n");
     printf("\n");
     printf("    codadump -h, --help\n");
     printf("        Show help (this text)\n");
@@ -475,6 +479,7 @@ static void handle_debug_run_mode(int argc, char *argv[])
 
     traverse_info.file_name = NULL;
     output_file_name = NULL;
+    starting_path = NULL;
     ascii_output = stdout;
 
     for (i = 1; i < argc; i++)
@@ -482,6 +487,11 @@ static void handle_debug_run_mode(int argc, char *argv[])
         if ((strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "--output") == 0) && i + 1 < argc && argv[i + 1][0] != '-')
         {
             output_file_name = argv[i + 1];
+            i++;
+        }
+        if ((strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "--path") == 0) && i + 1 < argc && argv[i + 1][0] != '-')
+        {
+            starting_path = argv[i + 1];
             i++;
         }
         else if (i == argc - 1 && argv[i][0] != '-')

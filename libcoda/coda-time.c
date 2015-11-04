@@ -159,6 +159,23 @@ int coda_month_to_integer(const char month[3])
     return -1;
 }
 
+static int parse_integer(const char *buffer, int num_digits, int *value)
+{
+    *value = 0;
+    while (num_digits > 0)
+    {
+        if (*buffer < '0' || *buffer > '9')
+        {
+            return -1;
+        }
+        *value = (*value) * 10 + (*buffer - '0');
+        buffer++;
+        num_digits--;
+    }
+
+    return 0;
+}
+
 static int y(int Y)
 {
     return Y + (Y < 0);
@@ -822,6 +839,409 @@ LIBCODA_API int coda_double_to_utcdatetime(double datetime, int *YEAR, int *MONT
     *MINUTE = min;
     *SECOND = sec + is_leap_sec;
     *MUSEC = musec;
+
+    return 0;
+}
+
+static int string_to_datetime(const char *format, const char *str, int *year, int *month, int *day, int *hour,
+                              int *minute, int *second, int *musec)
+{
+    int literal = 0;
+    int fi = 0;
+    int si = 0;
+    int n;
+
+    /* initialize with epoch 2000-01-01T00:00:00.000000 */
+    *year = 2000;
+    *month = 1;
+    *day = 1;
+    *hour = 0;
+    *minute = 0;
+    *second = 0;
+    *musec = 0;
+
+    while (format[fi] != '\0' && (literal || format[fi] != '|'))
+    {
+        if (format[fi] == '\'')
+        {
+            fi++;
+            if (format[fi] != '\'')
+            {
+                literal = !literal;
+                continue;
+            }
+        }
+        if (literal)
+        {
+            /* literal match */
+            if (format[fi] != str[si])
+            {
+                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect fixed character "
+                               "(format: %s)", str, format);
+                return -1;
+            }
+            fi++;
+            si++;
+        }
+        else if (format[fi] == 'y' && format[fi + 1] == 'y' && format[fi + 2] == 'y' && format[fi + 3] == 'y')
+        {
+            if (parse_integer(&str[si], 4, year) != 0)
+            {
+                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect year value "
+                               "(format: %s)", str, format);
+                return -1;
+            }
+            fi += 4;
+            si += 4;
+        }
+        else if (format[fi] == 'M' && format[fi + 1] == 'M')
+        {
+            if (format[fi + 2] == 'M')
+            {
+                /* coda_month_to_integer already limits comparison to only 3 characters */
+                *month = coda_month_to_integer(&str[si]);
+                if (*month == -1)
+                {
+                    coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect month value "
+                                   "(format: %s)", str, format);
+                    return -1;
+                }
+                fi += 3;
+                si += 3;
+            }
+            else
+            {
+                if (parse_integer(&str[si], 2, month) != 0)
+                {
+                    coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect month value "
+                                   "(format: %s)", str, format);
+                    return -1;
+                }
+                fi += 2;
+                si += 2;
+            }
+        }
+        else if (format[fi] == 'd' && format[fi + 1] == 'd')
+        {
+            if (parse_integer(&str[si], 2, day) != 0)
+            {
+                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect day value "
+                               "(format: %s)", str, format);
+                return -1;
+            }
+            fi += 2;
+            si += 2;
+        }
+        else if (format[fi] == 'D' && format[fi + 1] == 'D' && format[fi + 2] == 'D')
+        {
+            int day_of_year;
+
+            /* uses currently parsed year value to determine the actual month/day within the year */
+            if (parse_integer(&str[si], 3, &day_of_year) != 0)
+            {
+                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect day value "
+                               "(format: %s)", str, format);
+                return -1;
+            }
+            if (coda_dayofyear_to_month_day(*year, day_of_year, month, day) != 0)
+            {
+                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an invalid day value "
+                               "(format: %s)", str, format);
+                return -1;
+            }
+            fi += 3;
+            si += 3;
+        }
+        else if (format[fi] == 'H' && format[fi + 1] == 'H')
+        {
+            if (parse_integer(&str[si], 2, hour) != 0)
+            {
+                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect hour value "
+                               "(format: %s)", str, format);
+                return -1;
+            }
+            fi += 2;
+            si += 2;
+        }
+        else if (format[fi] == 'm' && format[fi + 1] == 'm')
+        {
+            if (parse_integer(&str[si], 2, minute) != 0)
+            {
+                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect minute value "
+                               "(format: %s)", str, format);
+                return -1;
+            }
+            fi += 2;
+            si += 2;
+        }
+        else if (format[fi] == 's' && format[fi + 1] == 's')
+        {
+            if (parse_integer(&str[si], 2, second) != 0)
+            {
+                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect second value "
+                               "(format: %s)", str, format);
+                return -1;
+            }
+            fi += 2;
+            si += 2;
+        }
+        else if (format[fi] == 'S')
+        {
+            n = 0;
+            while (format[fi] == 'S')
+            {
+                fi++;
+                n++;
+                if (n > 6)
+                {
+                    coda_set_error(CODA_ERROR_INVALID_FORMAT, "too many digits for fractional second in date/time "
+                                   "format (%s)", format);
+                    return -1;
+                }
+            }
+            if (parse_integer(&str[si], n, musec) != 0)
+            {
+                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect fractional "
+                               "second value (format: %s)", str, format);
+                return -1;
+            }
+            si += n;
+            while (n < 6)
+            {
+                *musec *= 10;
+                n++;
+            }
+        }
+        else if ((format[fi] >= 'A' && format[fi] <= 'Z') || (format[fi] >= 'a' && format[fi] <= 'z'))
+        {
+            /* reserved character */
+            coda_set_error(CODA_ERROR_INVALID_FORMAT, "unsuppored character sequence in date/time format (%s)", format);
+            return -1;
+        }
+        else
+        {
+            /* literal match */
+            if (format[fi] != str[si])
+            {
+                coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) has an incorrect fixed character "
+                               "(format: %s)", str, format);
+                return -1;
+            }
+            fi++;
+            si++;
+        }
+    }
+    if (literal)
+    {
+        coda_set_error(CODA_ERROR_INVALID_FORMAT, "missing closing ' in date/time format (%s)", format);
+        return -1;
+    }
+    if (str[si] != '\0')
+    {
+        coda_set_error(CODA_ERROR_INVALID_DATETIME, "date/time argument (%s) contains additional characters "
+                       "(format: %s)", str, format);
+        return -1;
+    }
+
+    return 0;
+}
+
+int coda_string_to_time_with_format(const char *format, const char *str, double *datetime)
+{
+    int year, month, day, hour, minute, second, musec;
+    int literal = 0;
+    int n = 0;
+
+    while (format[n] != '\0' && (literal || format[n] != '|'))
+    {
+        if (format[n] == '\'')
+        {
+            literal = !literal;
+        }
+        n++;
+    }
+    if (format[n] == '|')
+    {
+        int offset = 0;
+
+        /* try multiple formats */
+        while (1)
+        {
+            if (string_to_datetime(&format[offset], str, &year, &month, &day, &hour, &minute, &second, &musec) == 0)
+            {
+                /* found a format that works */
+                break;
+            }
+            if (format[n] == '\0')
+            {
+                /* the string matched none of the formats */
+                coda_set_error(CODA_ERROR_INVALID_DATETIME,
+                               "date/time argument (%s) did not match any of the formats (%s)", str, format);
+                return -1;
+            }
+            n++;
+            offset = n;
+            while (format[n] != '\0' && (literal || format[n] != '|'))
+            {
+                if (format[n] == '\'')
+                {
+                    literal = !literal;
+                }
+                n++;
+            }
+        }
+    }
+    else
+    {
+        if (string_to_datetime(format, str, &year, &month, &day, &hour, &minute, &second, &musec) != 0)
+        {
+            return -1;
+        }
+    }
+
+    return coda_datetime_to_double(year, month, day, hour, minute, second, musec, datetime);
+}
+
+/* the date/time formats that we support guarantee that strlen(format) >= strlen(str) for all formats */
+int coda_time_to_string_with_format(const char *format, double datetime, char *str)
+{
+    const char *month_name[] = { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
+    int year, month, day, hour, minute, second, musec;
+    int literal = 0;
+    int fi = 0;
+    int si = 0;
+
+    if (coda_double_to_datetime(datetime, &year, &month, &day, &hour, &minute, &second, &musec) != 0)
+    {
+        return -1;
+    }
+    if (year < 0 || year > 9999)
+    {
+        coda_set_error(CODA_ERROR_INVALID_DATETIME, "the year can not be represented using a positive four digit "
+                       "number");
+        return -1;
+    }
+
+    while (format[fi] != '\0' && (literal || format[fi] != '|'))
+    {
+        if (format[fi] == '\'')
+        {
+            fi++;
+            if (format[fi] != '\'')
+            {
+                literal = !literal;
+                continue;
+            }
+        }
+        if (literal)
+        {
+            str[si] = format[fi];
+            fi++;
+            si++;
+        }
+        else if (format[fi] == 'y' && format[fi + 1] == 'y' && format[fi + 2] == 'y' && format[fi + 3] == 'y')
+        {
+            sprintf(&str[si], "%04d", year);
+            fi += 4;
+            si += 4;
+        }
+        else if (format[fi] == 'M' && format[fi + 1] == 'M')
+        {
+            if (format[fi + 2] == 'M')
+            {
+                sprintf(&str[si], "%s", month_name[month]);
+                fi += 3;
+                si += 3;
+            }
+            else
+            {
+                sprintf(&str[si], "%02d", month);
+                fi += 2;
+                si += 2;
+            }
+        }
+        else if (format[fi] == 'd' && format[fi + 1] == 'd')
+        {
+            sprintf(&str[si], "%02d", day);
+            fi += 2;
+            si += 2;
+        }
+        else if (format[fi] == 'D' && format[fi + 1] == 'D' && format[fi + 2] == 'D')
+        {
+            int mjd, mjd_offset;
+
+            if (dmy_to_mjd2000(day, month, year, &mjd) != 0)
+            {
+                return -1;
+            }
+            if (dmy_to_mjd2000(1, 1, year, &mjd_offset) != 0)
+            {
+                return -1;
+            }
+            sprintf(&str[si], "%03d", mjd - mjd_offset + 1);
+            fi += 3;
+            si += 3;
+        }
+        else if (format[fi] == 'H' && format[fi + 1] == 'H')
+        {
+            sprintf(&str[si], "%02d", hour);
+            fi += 2;
+            si += 2;
+        }
+        else if (format[fi] == 'm' && format[fi + 1] == 'm')
+        {
+            sprintf(&str[si], "%02d", minute);
+            fi += 2;
+            si += 2;
+        }
+        else if (format[fi] == 's' && format[fi + 1] == 's')
+        {
+            sprintf(&str[si], "%02d", second);
+            fi += 2;
+            si += 2;
+        }
+        else if (format[fi] == 'S')
+        {
+            int fraction = musec;
+            int n = 0;
+            int i;
+
+            while (format[fi] == 'S')
+            {
+                fi++;
+                n++;
+                if (n > 6)
+                {
+                    coda_set_error(CODA_ERROR_INVALID_FORMAT, "too many digits for fractional second in date/time "
+                                   "format (%s)", format);
+                    return -1;
+                }
+            }
+            for (i = n; i < 6; i++)
+            {
+                fraction /= 10;
+            }
+            sprintf(&str[si], "%0*d", n, fraction);
+            si += n;
+        }
+        else if ((format[fi] >= 'A' && format[fi] <= 'Z') || (format[fi] >= 'a' && format[fi] <= 'z'))
+        {
+            /* reserved character */
+            coda_set_error(CODA_ERROR_INVALID_FORMAT, "unsuppored character sequence in date/time format (%s)", format);
+            return -1;
+        }
+        else
+        {
+            str[si] = format[fi];
+            fi++;
+            si++;
+        }
+    }
+    if (literal)
+    {
+        coda_set_error(CODA_ERROR_INVALID_FORMAT, "missing closing ' in date/time format (%s)", format);
+        return -1;
+    }
 
     return 0;
 }

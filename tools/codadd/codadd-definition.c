@@ -350,7 +350,12 @@ static void generate_expr(const coda_expression *expr, int precedence)
             }
             break;
         case expr_constant_float:
-            ff_printf("%f", ((coda_expression_float_constant *)expr)->value);
+            {
+                char s[24];
+
+                coda_strfl(((coda_expression_float_constant *)expr)->value, s);
+                ff_printf("%s", s);
+            }
             break;
         case expr_constant_integer:
             {
@@ -755,6 +760,16 @@ static void generate_expr(const coda_expression *expr, int precedence)
             }
             ff_printf(")");
             break;
+        case expr_strtime:
+            ff_printf("strtime(");
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
+            if (((coda_expression_operation *)expr)->operand[1] != NULL)
+            {
+                ff_printf(", ");
+                generate_expr(((coda_expression_operation *)expr)->operand[1], 15);
+            }
+            ff_printf(")");
+            break;
         case expr_substr:
             ff_printf("substr(");
             generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
@@ -776,6 +791,13 @@ static void generate_expr(const coda_expression *expr, int precedence)
             {
                 ff_printf(")");
             }
+            break;
+        case expr_time:
+            ff_printf("time(");
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
+            ff_printf(", ");
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 15);
+            ff_printf(")");
             break;
         case expr_trim:
             ff_printf("trim(");
@@ -1077,7 +1099,7 @@ static void generate_type(const coda_type *type, const char *xmlname, coda_forma
                 }
                 if (number_type->conversion != NULL)
                 {
-                    fi_printf("<cd:Conversion numerator=\"%f\" denominator=\"%f\"",
+                    fi_printf("<cd:Conversion numerator=\"%g\" denominator=\"%g\"",
                               number_type->conversion->numerator, number_type->conversion->denominator);
                     if (number_type->conversion->unit != NULL)
                     {

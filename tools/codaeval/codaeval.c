@@ -184,7 +184,7 @@ static int eval_expression(coda_cursor *cursor)
                                    coda_errno_to_string(coda_errno));
                     return -1;
                 }
-                printf("%f\n", value);
+                printf("%g\n", value);
             }
             break;
         case coda_expression_string:   /* string */

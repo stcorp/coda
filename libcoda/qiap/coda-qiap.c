@@ -368,11 +368,14 @@ static int tree_node_add_item_for_path(tree_node *node, const coda_type *type, c
             coda_type_get_class(type, &type_class);
             if (type_class == coda_special_class)
             {
+                coda_type *base_type;
+
                 /* use base type */
-                if (coda_type_get_special_base_type(type, &child_type) != 0)
+                if (coda_type_get_special_base_type(type, &base_type) != 0)
                 {
                     return -1;
                 }
+                type = base_type;
                 coda_type_get_class(type, &type_class);
             }
 
@@ -562,12 +565,9 @@ static int tree_node_get_item_for_cursor(tree_node *node, int depth, const coda_
             }
             if (index == node->index[top])
             {
-                if (index == node->index[top])
+                if (tree_node_get_item_for_cursor(node->indexed_child[top], depth + 1, cursor, action) != 0)
                 {
-                    if (tree_node_get_item_for_cursor(node->indexed_child[top], depth + 1, cursor, action) != 0)
-                    {
-                        return -1;
-                    }
+                    return -1;
                 }
             }
         }
@@ -645,12 +645,9 @@ static int tree_node_has_items_for_array_cursor(tree_node *node, int depth, cons
             }
             if (index == node->index[top])
             {
-                if (index == node->index[top])
+                if (tree_node_has_items_for_array_cursor(node->indexed_child[top], depth + 1, cursor) != 0)
                 {
-                    if (tree_node_has_items_for_array_cursor(node->indexed_child[top], depth + 1, cursor) != 0)
-                    {
-                        return -1;
-                    }
+                    return -1;
                 }
             }
         }

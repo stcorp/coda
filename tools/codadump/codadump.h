@@ -54,6 +54,7 @@ extern run_mode_t run_mode;
 extern char *ascii_col_sep;
 extern FILE *ascii_output;
 extern char *output_file_name;
+extern char *starting_path;
 extern int verbosity;
 extern int calc_dim;
 extern int show_dim_vals;

@@ -269,28 +269,6 @@ static int read_array(const coda_cursor *cursor, void *dst)
             }
         }
     }
-    if (!coda_option_bypass_special_types && type_class == coda_special_class)
-    {
-        coda_cdf_time *time_type = (coda_cdf_time *)variable->base_type;
-
-        /* convert time values to 'seconds since 2000-01-01T00:00:00' */
-        if (time_type->data_type == 31)
-        {
-            /* CDF_EPOCH */
-            for (i = 0; i < variable->num_records * variable->num_values_per_record; i++)
-            {
-                ((double *)dst)[i] = ((double *)dst)[i] * 1e-3 - 63113904000.0;
-            }
-        }
-        else
-        {
-            /* CDF_TIME_TT2000 */
-            for (i = 0; i < variable->num_records * variable->num_values_per_record; i++)
-            {
-                ((double *)dst)[i] = ((int64_t *)dst)[i] * 1e-9 - 43200.0;
-            }
-        }
-    }
 
     return 0;
 }
@@ -303,33 +281,12 @@ static int read_basic_type(const coda_cursor *cursor, void *dst, long size_bound
     int record_id;
     int element_id;
     int value_size;
-    int time_type = -1;
     int64_t offset;
 
-    switch (((coda_cdf_type *)cursor->stack[cursor->n - 1].type)->tag)
+    if (((coda_cdf_type *)cursor->stack[cursor->n - 1].type)->tag == tag_cdf_basic_type)
     {
-        case tag_cdf_basic_type:
-            variable = (coda_cdf_variable *)cursor->stack[cursor->n - 2].type;
-            index = cursor->stack[cursor->n - 1].index;
-            break;
-        case tag_cdf_time:
-            {
-                coda_cdf_time *type = (coda_cdf_time *)cursor->stack[cursor->n - 1].type;
-
-                if (((coda_cdf_type *)type->base_type)->tag == tag_cdf_variable)
-                {
-                    variable = (coda_cdf_variable *)type->base_type;
-                }
-                else
-                {
-                    variable = (coda_cdf_variable *)cursor->stack[cursor->n - 2].type;
-                    index = cursor->stack[cursor->n - 1].index;
-                }
-                time_type = type->data_type;
-            }
-            break;
-        case tag_cdf_variable:
-            break;
+        variable = (coda_cdf_variable *)cursor->stack[cursor->n - 2].type;
+        index = cursor->stack[cursor->n - 1].index;
     }
     assert(variable->tag == tag_cdf_variable);
     if (variable->base_type == NULL)
@@ -393,20 +350,6 @@ static int read_basic_type(const coda_cursor *cursor, void *dst, long size_bound
                     assert(0);
                     exit(1);
             }
-        }
-    }
-    if (!coda_option_bypass_special_types && time_type != -1)
-    {
-        /* convert time values to 'seconds since 2000-01-01T00:00:00' */
-        if (time_type == 31)
-        {
-            /* CDF_EPOCH */
-            *((double *)dst) = *((double *)dst) * 1e-3 - 63113904000.0;
-        }
-        else
-        {
-            /* CDF_TIME_TT2000 */
-            *((double *)dst) = *((int64_t *)dst) * 1e-9 - 43200.0;
         }
     }
 

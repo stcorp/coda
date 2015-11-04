@@ -32,6 +32,8 @@ typedef struct coda_grib_value_array_struct
     long num_elements;
     coda_dynamic_type *base_type;
     int64_t bit_offset;
+
+    int simple_packing; /* if 0, data is interpreted directly as float values, otherwise simple packing is used */
     int element_bit_size;
     int16_t decimalScaleFactor;
     int16_t binaryScaleFactor;
@@ -68,9 +70,10 @@ typedef struct coda_grib_product_struct
 } coda_grib_product;
 
 
-coda_grib_value_array *coda_grib_value_array_new(coda_type_array *definition, long num_elements, int64_t byte_offset,
-                                                 int element_bit_size, int16_t decimalScaleFactor,
-                                                 int16_t binaryScaleFactor, float referenceValue,
-                                                 const uint8_t *bitmask);
+coda_grib_value_array *coda_grib_value_array_new(coda_type_array *definition, long num_elements, int64_t byte_offset);
+coda_grib_value_array *coda_grib_value_array_simple_packing_new(coda_type_array *definition, long num_elements,
+                                                                int64_t byte_offset, int element_bit_size,
+                                                                int16_t decimalScaleFactor, int16_t binaryScaleFactor,
+                                                                float referenceValue, const uint8_t *bitmask);
 
 #endif

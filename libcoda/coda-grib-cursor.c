@@ -21,6 +21,7 @@
 #include "coda-internal.h"
 #include "coda-read-bits.h"
 #ifndef WORDS_BIGENDIAN
+#include "coda-swap4.h"
 #include "coda-swap8.h"
 #endif
 
@@ -149,65 +150,79 @@ int coda_grib_cursor_read_float(const coda_cursor *cursor, float *dst)
 {
     coda_grib_value_array *array;
     long index;
-    int64_t ivalue = 0;
-    double fvalue = 0;
-    uint8_t *buffer;
 
     assert(cursor->n > 1);
     array = (coda_grib_value_array *)cursor->stack[cursor->n - 2].type;
     assert(array->definition->type_class == coda_array_class);
-    fvalue = array->referenceValue;
-    if (array->element_bit_size == 0)
-    {
-        *((float *)dst) = (float)fvalue;
-        return 0;
-    }
     index = cursor->stack[cursor->n - 1].index;
-    if (array->bitmask != NULL)
+    if (array->simple_packing)
     {
-        uint8_t bm;
-        long bm_index;
-        long value_index = 0;
-        long i;
+        int64_t ivalue = 0;
+        double fvalue = 0;
+        uint8_t *buffer;
 
-        bm_index = index >> 3;
-        bm = array->bitmask[bm_index];
-        if (!((bm >> (7 - (index & 0x7))) & 1))
+        fvalue = array->referenceValue;
+        if (array->element_bit_size == 0)
         {
-            /* bitmask value is 0 -> return NaN */
-            *((float *)dst) = (float)coda_NaN();
+            *((float *)dst) = (float)fvalue;
             return 0;
         }
+        if (array->bitmask != NULL)
+        {
+            uint8_t bm;
+            long bm_index;
+            long value_index = 0;
+            long i;
 
-        /* bitmask value is 1 -> update index to be the index in the value array */
-        for (i = 0; i < bm_index >> 4; i++)
-        {
-            /* advance value_index based on cumsum of blocks of 128 bitmap bits (= 16 bytes) */
-            value_index += array->bitmask_cumsum128[16 * i + 15];
+            bm_index = index >> 3;
+            bm = array->bitmask[bm_index];
+            if (!((bm >> (7 - (index & 0x7))) & 1))
+            {
+                /* bitmask value is 0 -> return NaN */
+                *((float *)dst) = (float)coda_NaN();
+                return 0;
+            }
+
+            /* bitmask value is 1 -> update index to be the index in the value array */
+            for (i = 0; i < bm_index >> 4; i++)
+            {
+                /* advance value_index based on cumsum of blocks of 128 bitmap bits (= 16 bytes) */
+                value_index += array->bitmask_cumsum128[16 * i + 15];
+            }
+            if (bm_index % 16 != 0)
+            {
+                value_index += array->bitmask_cumsum128[bm_index - 1];
+            }
+            bm = array->bitmask[bm_index];
+            for (i = 0; i < (index & 0x7); i++)
+            {
+                value_index += (bm >> (7 - i)) & 1;
+            }
+            index = value_index;
         }
-        if (bm_index % 16 != 0)
+        buffer = &((uint8_t *)&ivalue)[8 - bit_size_to_byte_size(array->element_bit_size)];
+        if (read_bits(cursor->product, array->bit_offset + index * array->element_bit_size, array->element_bit_size,
+                      buffer) != 0)
         {
-            value_index += array->bitmask_cumsum128[bm_index - 1];
+            return -1;
         }
-        bm = array->bitmask[bm_index];
-        for (i = 0; i < (index & 0x7); i++)
-        {
-            value_index += (bm >> (7 - i)) & 1;
-        }
-        index = value_index;
-    }
-    buffer = &((uint8_t *)&ivalue)[8 - bit_size_to_byte_size(array->element_bit_size)];
-    if (read_bits(cursor->product, array->bit_offset + index * array->element_bit_size, array->element_bit_size,
-                  buffer) != 0)
-    {
-        return -1;
-    }
 #ifndef WORDS_BIGENDIAN
-    swap8(&ivalue);
+        swap8(&ivalue);
 #endif
-    fvalue += ivalue * fpow(2, array->binaryScaleFactor);
-    fvalue *= fpow(10, -array->decimalScaleFactor);
-    *((float *)dst) = (float)fvalue;
+        fvalue += ivalue * fpow(2, array->binaryScaleFactor);
+        fvalue *= fpow(10, -array->decimalScaleFactor);
+        *((float *)dst) = (float)fvalue;
+    }
+    else
+    {
+        if (read_bytes(cursor->product, (array->bit_offset >> 3) + index * 4, 4, dst) != 0)
+        {
+            return -1;
+        }
+#ifndef WORDS_BIGENDIAN
+        swap_float(dst);
+#endif
+    }
 
     return 0;
 }

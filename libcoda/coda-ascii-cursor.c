@@ -65,22 +65,27 @@
 
 typedef int (*read_function) (const coda_cursor *, void *, int64_t);
 
-/* calculates a * 10 ^ b, with a of type double and b of type long */
-static double a_pow10_b(double a, long b)
+/* Gives a ^ b where b is a small integer */
+static double ipow(double a, int b)
 {
-    register long i = labs(b);
     double val = 1.0;
-
-    while (--i >= 0)
-    {
-        val *= 10;
-    }
 
     if (b < 0)
     {
-        return a / val;
+        while (b++)
+        {
+            val *= a;
+        }
+        val = 1.0 / val;
     }
-    return a * val;
+    else
+    {
+        while (b--)
+        {
+            val *= a;
+        }
+    }
+    return val;
 }
 
 static int parse_mapping_size(const char *buffer, long buffer_length, coda_ascii_mappings *mappings, int64_t *bit_size)
@@ -476,339 +481,12 @@ long coda_ascii_parse_double(const char *buffer, long buffer_length, double *dst
 
     if (exponent != 0)
     {
-        value = a_pow10_b(value, exponent);
+        value *= ipow(10, exponent);
     }
 
     *dst = value;
 
     return buffer_length - length;
-}
-
-static int parse_envisat_datetime(char *buffer, long buffer_length, double *dst)
-{
-    char month[3];
-    int DAY, MONTH, YEAR, HOUR, MINUTE, SECOND, MUSEC;
-    int result;
-    int n;
-
-    if (buffer_length < 27)
-    {
-        buffer[buffer_length] = '\0';
-        coda_set_error(CODA_ERROR_INVALID_FORMAT, "date/time argument (%s) has an incorrect format", buffer);
-        return -1;
-    }
-
-    /* format: "DD-MMM-YYYY hh:mm:ss.uuuuuu" */
-
-    buffer[27] = '\0';
-    n = 0;
-    result = sscanf(buffer, "%2d-%c%c%c-%4d %2d:%2d:%2d.%6d%n", &DAY, &month[0], &month[1], &month[2], &YEAR, &HOUR,
-                    &MINUTE, &SECOND, &MUSEC, &n);
-    if (result != 9 || n != 27)
-    {
-        coda_set_error(CODA_ERROR_INVALID_FORMAT, "date/time argument (%s) has an incorrect format", buffer);
-        return -1;
-    }
-    MONTH = coda_month_to_integer(month);
-    if (MONTH == -1)
-    {
-        coda_set_error(CODA_ERROR_INVALID_FORMAT, "date/time argument (%s) has an incorrect month value", buffer);
-        return -1;
-    }
-
-    return coda_datetime_to_double(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC, dst);
-}
-
-static int parse_gome_datetime(char *buffer, long buffer_length, double *dst)
-{
-    char month[3];
-    int DAY, MONTH, YEAR, HOUR, MINUTE, SECOND, MSEC;
-    int result;
-    int n;
-
-    if (buffer_length < 24)
-    {
-        buffer[buffer_length] = '\0';
-        coda_set_error(CODA_ERROR_INVALID_FORMAT, "date/time argument (%s) has an incorrect format", buffer);
-        return -1;
-    }
-
-    /* format: "DD-MMM-YYYY hh:mm:ss.uuu" */
-
-    buffer[24] = '\0';
-    n = 0;
-    result = sscanf(buffer, "%2d-%c%c%c-%4d %2d:%2d:%2d.%3d%n", &DAY, &month[0], &month[1], &month[2], &YEAR, &HOUR,
-                    &MINUTE, &SECOND, &MSEC, &n);
-    if (result != 9 || n != 24)
-    {
-        coda_set_error(CODA_ERROR_INVALID_FORMAT, "date/time argument (%s) has an incorrect format", buffer);
-        return -1;
-    }
-    MONTH = coda_month_to_integer(month);
-    if (MONTH == -1)
-    {
-        coda_set_error(CODA_ERROR_INVALID_FORMAT, "date/time argument (%s) has an incorrect month value", buffer);
-        return -1;
-    }
-
-    return coda_datetime_to_double(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, 1000 * MSEC, dst);
-}
-
-static int parse_eps_datetime(char *buffer, long buffer_length, double *dst)
-{
-    int DAY, MONTH, YEAR, HOUR, MINUTE, SECOND;
-    int result;
-    int n;
-
-    if (buffer_length < 15)
-    {
-        buffer[buffer_length] = '\0';
-        coda_set_error(CODA_ERROR_INVALID_FORMAT, "date/time argument (%s) has an incorrect format", buffer);
-        return -1;
-    }
-
-    /* format: "YYYYMMDDhhmmssZ" */
-
-    buffer[15] = '\0';
-    n = 0;
-    result = sscanf(buffer, "%4d%2d%2d%2d%2d%2dZ%n", &YEAR, &MONTH, &DAY, &HOUR, &MINUTE, &SECOND, &n);
-    if (result != 6 || n != 15)
-    {
-        coda_set_error(CODA_ERROR_INVALID_FORMAT, "date/time argument (%s) has an incorrect format", buffer);
-        return -1;
-    }
-
-    return coda_datetime_to_double(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, 0, dst);
-}
-
-static int parse_eps_datetime_long(char *buffer, long buffer_length, double *dst)
-{
-    int DAY, MONTH, YEAR, HOUR, MINUTE, SECOND, MSEC;
-    int result;
-    int n;
-
-    if (buffer_length < 18)
-    {
-        buffer[buffer_length] = '\0';
-        coda_set_error(CODA_ERROR_INVALID_FORMAT, "date/time argument (%s) has an incorrect format", buffer);
-        return -1;
-    }
-
-    /* format: "YYYYMMDDhhmmssuuu" */
-
-    buffer[18] = '\0';
-    n = 0;
-    result = sscanf(buffer, "%4d%2d%2d%2d%2d%2d%3dZ%n", &YEAR, &MONTH, &DAY, &HOUR, &MINUTE, &SECOND, &MSEC, &n);
-    if (result != 7 || n != 18)
-    {
-        coda_set_error(CODA_ERROR_INVALID_FORMAT, "date/time argument (%s) has an incorrect format", buffer);
-        return -1;
-    }
-
-    return coda_datetime_to_double(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, 1000 * MSEC, dst);
-}
-
-static int parse_ccsds_datetime_ymd1(char *buffer, long buffer_length, double *dst)
-{
-    int DAY, MONTH, YEAR, HOUR, MINUTE, SECOND;
-    int result;
-    int n;
-
-    if (buffer_length < 19)
-    {
-        buffer[buffer_length] = '\0';
-        coda_set_error(CODA_ERROR_INVALID_FORMAT, "date/time argument (%s) has an incorrect format", buffer);
-        return -1;
-    }
-
-    /* format: "YYYY-MM-DDThh:mm:ss" */
-
-    buffer[19] = '\0';
-    n = 0;
-    result = sscanf(buffer, "%4d-%2d-%2dT%2d:%2d:%2d%n", &YEAR, &MONTH, &DAY, &HOUR, &MINUTE, &SECOND, &n);
-    if (result != 6 || n != 19)
-    {
-        coda_set_error(CODA_ERROR_INVALID_FORMAT, "date/time argument (%s) has an incorrect format", buffer);
-        return -1;
-    }
-
-    return coda_datetime_to_double(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, 0, dst);
-}
-
-static int parse_ccsds_datetime_ymd1_with_ref(char *buffer, long buffer_length, double *dst)
-{
-    int DAY, MONTH, YEAR, HOUR, MINUTE, SECOND;
-    int result;
-    int n;
-
-    if (buffer_length < 23)
-    {
-        buffer[buffer_length] = '\0';
-        coda_set_error(CODA_ERROR_INVALID_FORMAT, "date/time argument (%s) has an incorrect format", buffer);
-        return -1;
-    }
-
-    /* format: "RRR=YYYY-MM-DDThh:mm:ss" */
-
-    if (memcmp(buffer, "UT1=", 4) != 0 && memcmp(buffer, "UTC=", 4) != 0 && memcmp(buffer, "TAI=", 4) != 0 &&
-        memcmp(buffer, "GPS=", 4) != 0)
-    {
-        buffer[4] = '\0';
-        coda_set_error(CODA_ERROR_INVALID_FORMAT, "date/time argument has an invalid time reference (%s)", buffer);
-        return -1;
-    }
-
-    buffer[23] = '\0';
-    n = 0;
-    result = sscanf(&buffer[4], "%4d-%2d-%2dT%2d:%2d:%2d%n", &YEAR, &MONTH, &DAY, &HOUR, &MINUTE, &SECOND, &n);
-    if (result != 6 || n != 19)
-    {
-        coda_set_error(CODA_ERROR_INVALID_FORMAT, "date/time argument (%s) has an incorrect format", buffer);
-        return -1;
-    }
-
-    return coda_datetime_to_double(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, 0, dst);
-}
-
-static int parse_ccsds_datetime_ymd2(char *buffer, long buffer_length, double *dst)
-{
-    int DAY, MONTH, YEAR, HOUR, MINUTE, SECOND, MUSEC;
-    int result;
-    int n;
-
-    if (buffer_length < 26)
-    {
-        buffer[buffer_length] = '\0';
-        coda_set_error(CODA_ERROR_INVALID_FORMAT, "date/time argument (%s) has an incorrect format", buffer);
-        return -1;
-    }
-
-    /* format: "YYYY-MM-DDThh:mm:ss.uuuuuu" */
-
-    buffer[26] = '\0';
-    n = 0;
-    result = sscanf(buffer, "%4d-%2d-%2dT%2d:%2d:%2d.%6d%n", &YEAR, &MONTH, &DAY, &HOUR, &MINUTE, &SECOND, &MUSEC, &n);
-    if (result != 7 || n != 26)
-    {
-        coda_set_error(CODA_ERROR_INVALID_FORMAT, "date/time argument (%s) has an incorrect format", buffer);
-        return -1;
-    }
-
-    return coda_datetime_to_double(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC, dst);
-}
-
-static int parse_ccsds_datetime_ymd2_with_ref(char *buffer, long buffer_length, double *dst)
-{
-    int DAY, MONTH, YEAR, HOUR, MINUTE, SECOND, MUSEC;
-    int result;
-    int n;
-
-    if (buffer_length < 30)
-    {
-        buffer[buffer_length] = '\0';
-        coda_set_error(CODA_ERROR_INVALID_FORMAT, "date/time argument (%s) has an incorrect format", buffer);
-        return -1;
-    }
-
-    /* format: "RRR=YYYY-MM-DDThh:mm:ss.uuuuuu" */
-
-    if (memcmp(buffer, "UT1=", 4) != 0 && memcmp(buffer, "UTC=", 4) != 0 && memcmp(buffer, "TAI=", 4) != 0 &&
-        memcmp(buffer, "GPS=", 4) != 0)
-    {
-        buffer[4] = '\0';
-        coda_set_error(CODA_ERROR_INVALID_FORMAT, "date/time argument has an invalid time reference (%s)", buffer);
-        return -1;
-    }
-
-    buffer[30] = '\0';
-    n = 0;
-    result = sscanf(&buffer[4], "%4d-%2d-%2dT%2d:%2d:%2d.%6d%n", &YEAR, &MONTH, &DAY, &HOUR, &MINUTE, &SECOND, &MUSEC,
-                    &n);
-    if (result != 7 || n != 26)
-    {
-        coda_set_error(CODA_ERROR_INVALID_FORMAT, "date/time argument (%s) has an incorrect format", buffer);
-        return -1;
-    }
-
-    return coda_datetime_to_double(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC, dst);
-}
-
-static int parse_ccsds_datetime_utc1(char *buffer, long buffer_length, double *dst)
-{
-    int DAY_OF_YEAR;
-    int DAY, MONTH, YEAR, HOUR, MINUTE, SECOND;
-    int result;
-    int n;
-
-    if (buffer_length < 17)
-    {
-        buffer[buffer_length] = '\0';
-        coda_set_error(CODA_ERROR_INVALID_FORMAT, "date/time argument (%s) has an incorrect format", buffer);
-        return -1;
-    }
-
-    /* format: "YYYY-DDDThh:mm:ss" */
-
-    buffer[17] = '\0';
-    n = 0;
-    result = sscanf(buffer, "%4d-%3dT%2d:%2d:%2d%n", &YEAR, &DAY_OF_YEAR, &HOUR, &MINUTE, &SECOND, &n);
-    if (result != 5 || n != 17)
-    {
-        coda_set_error(CODA_ERROR_INVALID_FORMAT, "date/time argument (%s) has an incorrect format", buffer);
-        return -1;
-    }
-    if (coda_dayofyear_to_month_day(YEAR, DAY_OF_YEAR, &MONTH, &DAY) != 0)
-    {
-        return -1;
-    }
-    return coda_datetime_to_double(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, 0, dst);
-}
-
-static int parse_ccsds_datetime_utc2(char *buffer, long buffer_length, double *dst)
-{
-    int DAY_OF_YEAR;
-    int DAY, MONTH, YEAR, HOUR, MINUTE, SECOND, MUSEC;
-    int result;
-    int n;
-
-    if (buffer_length < 24)
-    {
-        buffer[buffer_length] = '\0';
-        coda_set_error(CODA_ERROR_INVALID_FORMAT, "date/time argument (%s) has an incorrect format", buffer);
-        return -1;
-    }
-
-    /* format: "YYYY-DDDThh:mm:ss.uuuuuu"
-     * microseconds can be written using less digits (1-6 digits): e.g.: "YYYY-DDDThh:mm:ss.u     "
-     */
-
-    buffer[24] = '\0';
-    n = 0;
-    result = sscanf(buffer, "%4d-%3dT%2d:%2d:%2d.%6d%n", &YEAR, &DAY_OF_YEAR, &HOUR, &MINUTE, &SECOND, &MUSEC, &n);
-    if (result != 6 || n < 19)
-    {
-        coda_set_error(CODA_ERROR_INVALID_FORMAT, "date/time argument (%s) has an incorrect format", buffer);
-        return -1;
-    }
-    if (n < 24)
-    {
-        int i;
-
-        if (memcmp(&buffer[n], "     ", 24 - n) != 0)
-        {
-            coda_set_error(CODA_ERROR_INVALID_FORMAT, "date/time argument (%s) has an incorrect format", buffer);
-            return -1;
-        }
-        for (i = n; i < 24; i++)
-        {
-            MUSEC *= 10;
-        }
-    }
-    if (coda_dayofyear_to_month_day(YEAR, DAY_OF_YEAR, &MONTH, &DAY) != 0)
-    {
-        return -1;
-    }
-    return coda_datetime_to_double(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC, dst);
 }
 
 static long get_buffer_size(int64_t bit_size, int64_t size_boundary, int64_t remaining_bits, int *dynamic_size)
@@ -1568,79 +1246,6 @@ int coda_ascii_cursor_read_float(const coda_cursor *cursor, float *dst, int64_t 
     return 0;
 }
 
-static int read_time(const coda_cursor *cursor, double *dst, int64_t size_boundary)
-{
-    coda_type_special *type = (coda_type_special *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
-    int64_t bit_offset = cursor->stack[cursor->n - 1].bit_offset;
-    char buffer[MAX_ASCII_NUMBER_LENGTH];
-    long buffer_size;
-    int dynamic_size;
-
-    assert(type->base_type->type_class == coda_text_class);
-    if (bit_offset & 0x7)
-    {
-        coda_set_error(CODA_ERROR_FILE_READ, "reading of ascii data does not start at byte boundary");
-        return -1;
-    }
-    buffer_size = get_buffer_size(type->bit_size, size_boundary, (cursor->product->file_size << 3) - bit_offset,
-                                  &dynamic_size);
-    if (buffer_size < 0)
-    {
-        return -1;
-    }
-    assert(buffer_size <= MAX_ASCII_NUMBER_LENGTH);
-    if (read_bytes_in_bounds(cursor->product, bit_offset >> 3, buffer_size, buffer) != 0)
-    {
-        return -1;
-    }
-    if (((coda_type_text *)type->base_type)->mappings != 0)
-    {
-        switch (parse_float_mapping(buffer, buffer_size, ((coda_type_text *)type->base_type)->mappings, dynamic_size,
-                                    dst))
-        {
-            case 0:
-                /* no mapping applied */
-                break;
-            case 1:
-                /* applicable mapping found */
-                return 0;
-            default:
-                return -1;
-        }
-    }
-    switch (type->time_type)
-    {
-        case datetime_ascii_envisat:
-            return parse_envisat_datetime(buffer, buffer_size, dst);
-        case datetime_ascii_gome:
-            return parse_gome_datetime(buffer, buffer_size, dst);
-        case datetime_ascii_eps:
-            return parse_eps_datetime(buffer, buffer_size, dst);
-        case datetime_ascii_eps_long:
-            return parse_eps_datetime_long(buffer, buffer_size, dst);
-        case datetime_ascii_ccsds_ymd1:
-            return parse_ccsds_datetime_ymd1(buffer, buffer_size, dst);
-        case datetime_ascii_ccsds_ymd1_with_ref:
-            return parse_ccsds_datetime_ymd1_with_ref(buffer, buffer_size, dst);
-        case datetime_ascii_ccsds_ymd2:
-            return parse_ccsds_datetime_ymd2(buffer, buffer_size, dst);
-        case datetime_ascii_ccsds_ymd2_with_ref:
-            return parse_ccsds_datetime_ymd2_with_ref(buffer, buffer_size, dst);
-        case datetime_ascii_ccsds_utc1:
-            return parse_ccsds_datetime_utc1(buffer, buffer_size, dst);
-        case datetime_ascii_ccsds_utc2:
-            return parse_ccsds_datetime_utc2(buffer, buffer_size, dst);
-        case datetime_binary_envisat:
-        case datetime_binary_gome:
-        case datetime_binary_eps:
-        case datetime_binary_eps_long:
-            break;
-    }
-
-    assert(0);
-    exit(1);
-}
-
 int coda_ascii_cursor_read_char(const coda_cursor *cursor, char *dst, int64_t size_boundary)
 {
     int64_t bit_offset;
@@ -1721,18 +1326,6 @@ int coda_ascii_cursor_read_string(const coda_cursor *cursor, char *dst, long dst
 
 int coda_ascii_cursor_read_double(const coda_cursor *cursor, double *dst, int64_t size_boundary)
 {
-    coda_type *type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
-
-    if (type->type_class == coda_special_class)
-    {
-        if (((coda_type_special *)type)->special_type != coda_special_time)
-        {
-            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a double data type");
-            return -1;
-        }
-        return read_time(cursor, dst, size_boundary);
-    }
-
     return read_double(cursor, dst, size_boundary);
 }
 

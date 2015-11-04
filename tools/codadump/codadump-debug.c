@@ -629,6 +629,14 @@ void print_debug_data()
     {
         handle_coda_error();
     }
+    if (starting_path != NULL)
+    {
+        result = coda_cursor_goto(&cursor, starting_path);
+        if (result != 0)
+        {
+            handle_coda_error();
+        }
+    }
 
     print_data(&cursor);
 

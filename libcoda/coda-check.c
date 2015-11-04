@@ -136,6 +136,47 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size,
                     }
                     coda_cursor_goto_parent(cursor);
                 }
+                if (bit_size != NULL)
+                {
+                    coda_type *type;
+
+                    if (coda_cursor_get_type(cursor, &type) != 0)
+                    {
+                        return -1;
+                    }
+                    if (((coda_type_record *)type)->size_expr != NULL)
+                    {
+                        int64_t fast_size;
+                        int prev_option_value = coda_get_option_use_fast_size_expressions();
+
+                        coda_set_option_use_fast_size_expressions(1);
+                        if (coda_cursor_get_bit_size(cursor, &fast_size) != 0)
+                        {
+                            callbackfunc(cursor, coda_errno_to_string(coda_errno), userdata);
+                        }
+                        else if (*bit_size != fast_size)
+                        {
+                            char msg[256];
+                            char s1[30];
+                            char s2[30];
+
+                            coda_str64((*bit_size) >> 3, s1);
+                            if (*bit_size & 0x7)
+                            {
+                                sprintf(&s1[strlen(s1)], ":%d", (int)((*bit_size) & 0x7));
+                            }
+                            coda_str64(fast_size >> 3, s2);
+                            if (fast_size & 0x7)
+                            {
+                                sprintf(&s2[strlen(s2)], ":%d", (int)(fast_size & 0x7));
+                            }
+                            sprintf(msg, "invalid result for record size expression (actual record size %s does not "
+                                    "match expression result %s)", s1, s2);
+                            callbackfunc(cursor, msg, userdata);
+                        }
+                        coda_set_option_use_fast_size_expressions(prev_option_value);
+                    }
+                }
             }
             break;
         case coda_integer_class:

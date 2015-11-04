@@ -484,6 +484,18 @@ static int read_split_array(const coda_cursor *cursor, read_function read_basic_
     return 0;
 }
 
+static int read_time(const coda_cursor *cursor, double *dst)
+{
+    coda_cursor expr_cursor = *cursor;
+    coda_type_special *type = (coda_type_special *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    if (coda_cursor_use_base_type_of_special_type(&expr_cursor) != 0)
+    {
+        return -1;
+    }
+    return coda_expression_eval_float(type->value_expr, &expr_cursor, dst);
+}
+
 static int read_int8(const coda_cursor *cursor, int8_t *dst)
 {
 #if CODA_USE_QIAP
@@ -904,6 +916,8 @@ static int read_float(const coda_cursor *cursor, float *dst)
 
 static int read_double(const coda_cursor *cursor, double *dst)
 {
+    coda_type *type;
+
 #if CODA_USE_QIAP
     int result;
 
@@ -913,6 +927,12 @@ static int read_double(const coda_cursor *cursor, double *dst)
         return (result < 0 ? -1 : 0);
     }
 #endif
+    type = (coda_type *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    if (type->type_class == coda_special_class && cursor->stack[cursor->n - 1].type->backend != coda_backend_memory &&
+        ((coda_type_special *)type)->special_type == coda_special_time)
+    {
+        return read_time(cursor, dst);
+    }
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:
@@ -1042,7 +1062,6 @@ static int read_string(const coda_cursor *cursor, char *dst, long dst_size)
     assert(0);
     exit(1);
 }
-
 
 static int read_int8_array(const coda_cursor *cursor, int8_t *dst, coda_array_ordering array_ordering)
 {
@@ -1802,6 +1821,8 @@ static int read_float_array(const coda_cursor *cursor, float *dst, coda_array_or
 
 static int read_double_array(const coda_cursor *cursor, double *dst, coda_array_ordering array_ordering)
 {
+    coda_type_array *type;
+
 #if CODA_USE_QIAP
     int result;
 
@@ -1818,6 +1839,12 @@ static int read_double_array(const coda_cursor *cursor, double *dst, coda_array_
         return (result == 1 ? 0 : -1);
     }
 #endif
+    type = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    if (type->base_type->type_class == coda_special_class)
+    {
+        /* arrays of special types should be explicitly iterated */
+        return read_array(cursor, (read_function)&read_double, (uint8_t *)dst, sizeof(double), array_ordering);
+    }
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
         case coda_backend_ascii:

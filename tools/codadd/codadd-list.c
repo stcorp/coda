@@ -245,7 +245,12 @@ static void generate_expr(const coda_expression *expr, int precedence)
             }
             break;
         case expr_constant_float:
-            printf("%f", ((coda_expression_float_constant *)expr)->value);
+            {
+                char s[24];
+
+                coda_strfl(((coda_expression_float_constant *)expr)->value, s);
+                printf("%s", s);
+            }
             break;
         case expr_constant_integer:
             {
@@ -650,6 +655,16 @@ static void generate_expr(const coda_expression *expr, int precedence)
             }
             printf(")");
             break;
+        case expr_strtime:
+            printf("strtime(");
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
+            if (((coda_expression_operation *)expr)->operand[1] != NULL)
+            {
+                printf(", ");
+                generate_expr(((coda_expression_operation *)expr)->operand[1], 15);
+            }
+            printf(")");
+            break;
         case expr_substr:
             printf("substr(");
             generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
@@ -671,6 +686,13 @@ static void generate_expr(const coda_expression *expr, int precedence)
             {
                 printf(")");
             }
+            break;
+        case expr_time:
+            printf("time(");
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
+            printf(", ");
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 15);
+            printf(")");
             break;
         case expr_trim:
             printf("trim(");

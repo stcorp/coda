@@ -160,7 +160,9 @@ static void coda_expression_error(const char *error)
 %token                FUNC_ROUND
 %token                FUNC_RTRIM
 %token                FUNC_STR
+%token                FUNC_STRTIME
 %token                FUNC_SUBSTR
+%token                FUNC_TIME
 %token                FUNC_TRIM
 %token                FUNC_UNBOUNDINDEX
 %token                FUNC_WITH
@@ -240,7 +242,9 @@ reserved_identifier:
     | FUNC_ROUND { $$ = "round"; }
     | FUNC_RTRIM { $$ = "rtrim"; }
     | FUNC_STR { $$ = "str"; }
+    | FUNC_STRTIME { $$ = "strtime"; }
     | FUNC_SUBSTR { $$ = "substr"; }
+    | FUNC_TIME { $$ = "time"; }
     | FUNC_TRIM { $$ = "trim"; }
     | FUNC_UNBOUNDINDEX { $$ = "unboundindex"; }
     | FUNC_WITH { $$ = "with"; }
@@ -524,10 +528,6 @@ intexpr:
             $$ = coda_expression_new(expr_modulo, NULL, $1, $3, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
-    | intexpr '^' intexpr {
-            $$ = coda_expression_new(expr_power, NULL, $1, $3, NULL, NULL);
-            if ($$ == NULL) YYERROR;
-        }
     | intexpr AND intexpr {
             $$ = coda_expression_new(expr_and, NULL, $1, $3, NULL, NULL);
             if ($$ == NULL) YYERROR;
@@ -728,6 +728,10 @@ floatexpr:
             $$ = coda_expression_new(expr_power, NULL, $1, $3, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
+    | intexpr '^' intexpr {
+            $$ = coda_expression_new(expr_power, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
     | '(' floatexpr ')' { $$ = $2; }
     | FUNC_ABS '(' floatexpr ')' {
             $$ = coda_expression_new(expr_abs, NULL, $3, NULL, NULL, NULL);
@@ -769,6 +773,10 @@ floatexpr:
             $$ = coda_expression_new(expr_min, NULL, $3, $5, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
+    | FUNC_TIME '(' stringexpr ',' stringexpr ')' {
+            $$ = coda_expression_new(expr_time, NULL, $3, $5, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
     | FUNC_ADD '(' node ',' floatexpr ')' {
             $$ = coda_expression_new(expr_array_add, NULL, $3, $5, NULL, NULL);
             if ($$ == NULL) YYERROR;
@@ -802,6 +810,10 @@ stringexpr:
         }
     | FUNC_STR '(' stringexpr ')' {
             $$ = $3;
+        }
+    | FUNC_STR '(' intexpr ')' {
+            $$ = coda_expression_new(expr_string, NULL, $3, NULL, NULL, NULL);
+            if ($$ == NULL) YYERROR;
         }
     | FUNC_STR '(' node ')' {
             $$ = coda_expression_new(expr_string, NULL, $3, NULL, NULL, NULL);
@@ -865,6 +877,22 @@ stringexpr:
         }
     | FUNC_FILENAME '(' ')' {
             $$ = coda_expression_new(expr_filename, NULL, NULL, NULL, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_STRTIME '(' intexpr ')' {
+            $$ = coda_expression_new(expr_strtime, NULL, $3, NULL, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_STRTIME '(' floatexpr ')' {
+            $$ = coda_expression_new(expr_strtime, NULL, $3, NULL, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_STRTIME '(' intexpr ',' stringexpr ')' {
+            $$ = coda_expression_new(expr_strtime, NULL, $3, $5, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_STRTIME '(' floatexpr ',' stringexpr ')' {
+            $$ = coda_expression_new(expr_strtime, NULL, $3, $5, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
     | FUNC_IF '(' boolexpr ',' stringexpr ',' stringexpr ')' {

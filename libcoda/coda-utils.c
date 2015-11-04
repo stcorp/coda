@@ -848,7 +848,7 @@ LIBCODA_API void coda_str64(int64_t a, char *s)
 /** Write 64 bit unsigned integer to a string.
  * The string \a s will be 0 terminated.
  * \param a  An unsigned 64 bit integer value.
- * \param s  A character buffer that is at least 21 bytes long.
+ * \param s  A character buffer that is at least 20 bytes long.
  */
 LIBCODA_API void coda_str64u(uint64_t a, char *s)
 {
@@ -872,6 +872,34 @@ LIBCODA_API void coda_str64u(uint64_t a, char *s)
         {
             sprintf(s, "%ld%08ld", a2, a1);
         }
+    }
+}
+
+/** Write floating point value to a string.
+ * This will write the floating point value to a string using the printf '%.16g' format.
+ * However, if the floating point is NaN or Inf it will write 'nan', '+inf', or '-inf' (instead of the platform
+ * specific alternative that printf might have used).
+ * The string \a s will be 0 terminated.
+ * \param a  A floating point value.
+ * \param s  A character buffer that is at least 24 bytes long.
+ */
+LIBCODA_API void coda_strfl(double a, char *s)
+{
+    if (coda_isNaN(a))
+    {
+        strcpy(s, "nan");
+    }
+    else if (coda_isPlusInf(a))
+    {
+        strcpy(s, "+inf");
+    }
+    else if (coda_isMinInf(a))
+    {
+        strcpy(s, "-inf");
+    }
+    else
+    {
+        sprintf(s, "%.16g", a);
     }
 }
 

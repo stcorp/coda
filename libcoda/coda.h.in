@@ -310,6 +310,7 @@ LIBCODA_API int coda_isMinInf(double x);
 
 LIBCODA_API void coda_str64(int64_t a, char *s);
 LIBCODA_API void coda_str64u(uint64_t a, char *s);
+LIBCODA_API void coda_strfl(double a, char *s);
 
 LIBCODA_API long coda_c_index_to_fortran_index(int num_dims, const long dim[], long index);
 

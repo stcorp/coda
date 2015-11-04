@@ -179,6 +179,7 @@
 		<File RelativePath="..\libcoda\coda-swap4.h"/>
 		<File RelativePath="..\libcoda\coda-swap8.h"/>
 		<File RelativePath="..\libcoda\coda-time.c"/>
+		<File RelativePath="..\libcoda\coda-tree.c"/>
 		<File RelativePath="..\libcoda\coda-type.c"/>
 		<File RelativePath="..\libcoda\coda-utils.c"/>
 		<File RelativePath="..\libcoda\coda-xml-cursor.c"/>

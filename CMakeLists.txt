@@ -2,7 +2,7 @@
 #
 project(CODA)
 
-set(VERSION 2.7.2)
+set(VERSION 2.8)
 set(CODA_VERSION \"${VERSION}\")
 
 # General setup
@@ -327,6 +327,8 @@ set(LIBCODA_SOURCES
   libcoda/coda-swap4.h
   libcoda/coda-swap8.h
   libcoda/coda-time.c
+  libcoda/coda-tree.c
+  libcoda/coda-tree.h
   libcoda/coda-type.c
   libcoda/coda-type.h
   libcoda/coda-utils.c
@@ -718,9 +720,9 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/coda.h DESTINATION include)
 #
 # Set dynamic library version
 #
-set(LIBCODA_CURRENT 9)
-set(LIBCODA_REVISION 5)
-set(LIBCODA_AGE 3)
+set(LIBCODA_CURRENT 10)
+set(LIBCODA_REVISION 0)
+set(LIBCODA_AGE 4)
 math(EXPR LIBCODA_MAJOR "${LIBCODA_CURRENT} - ${LIBCODA_AGE}")
 set(LIBCODA_MINOR ${LIBCODA_AGE})
 

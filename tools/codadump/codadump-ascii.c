@@ -269,7 +269,7 @@ static void write_basic_data(FILE *f, int depth)
                                 handle_coda_error();
                             }
 
-                            fprintf(f, "%.15g", data);
+                            fprintf(f, "%.16g", data);
                         }
                         break;
                     case coda_native_type_not_available:

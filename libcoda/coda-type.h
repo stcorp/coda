@@ -245,7 +245,7 @@ typedef struct coda_type_special_struct
     coda_special_type special_type;
     coda_type *base_type;
     char *unit;
-    coda_time_type time_type;
+    coda_expression *value_expr;
 } coda_type_special;
 
 coda_conversion *coda_conversion_new(double numerator, double denominator, double add_offset, double invalid_value);
@@ -320,7 +320,7 @@ int coda_type_vsf_integer_set_scale_factor(coda_type_special *type, coda_type *s
 int coda_type_vsf_integer_set_unit(coda_type_special *type, const char *unit);
 int coda_type_vsf_integer_validate(coda_type_special *type);
 
-coda_type_special *coda_type_time_new(coda_format format, const char *timeformat);
+coda_type_special *coda_type_time_new(coda_format format, coda_expression *value_expr);
 int coda_type_time_add_ascii_float_mapping(coda_type_special *type, coda_ascii_float_mapping *mapping);
 int coda_type_time_set_base_type(coda_type_special *type, coda_type *base_type);
 

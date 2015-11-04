@@ -26,6 +26,13 @@
         Options:
             -d, --disable_conversions
                     do not perform unit/value conversions
+            -k, --key &lt;path_to_array&gt; &lt;key_string_expr&gt;
+                    for the given array in the product use the string
+                    expression as a unique key to line up the array elements in
+                    the two products. The array elements will then be compared
+                    as if it were record fields where the 'key' is used as the
+                    field name. This option can be provided multiple times (for
+                    different paths).
             -V, --verbose
                     show more information while performing the comparison
 

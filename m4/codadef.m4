@@ -4,7 +4,7 @@
 AC_DEFUN([ST_CODADEF_VERSION],
 [if test -d $1/$2 ; then
 files=`find $1/$2 $1/$2/types $1/$2/products -maxdepth 1 -name "*.xml"`
-CODADEF_VERSION_$2=`grep -m 1 last-modified $files | sed -e 's:^.*last-modified=\"\([[^"]]*\).*$:\1:' | sort -r | head -1 | sed 's:-::g'`
+CODADEF_VERSION_$2=`(for file in $files ; do grep last-modified $file | head -1 ; done) | sed -e 's:^.*last-modified=\"\([[^"]]*\).*$:\1:' | sort -r | head -1 | sed 's:-::g'`
 else
 file=`ls $1/$2-*.codadef | sort -r | head -1`
 if test -z "$file" ; then

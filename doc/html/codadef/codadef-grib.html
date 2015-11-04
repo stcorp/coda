@@ -28,7 +28,7 @@
 
       <p>In addition, for GRIB1, any IBM floating point values will be converted to IEEE754 floating point values.</p>
       
-      <p>CODA currently only supports to most common storage mechanism of GRIB which is the simple package form. Data that is stored using complex packaging or jpeg/png images is not supported. Also, CODA currently only supports grid definitions that use a lat/lon or Gaussian grid. Other grids, including Spherical Harmonic data, are currently not supported. If an unsupported feature is encountered, CODA will abort opening the product and return with an error.</p>
+      <p>CODA currently only supports to most common storage mechanism of GRIB which is the simple packing form. Data that is stored using complex packing or jpeg/png images is not supported. Also, CODA currently only supports grid definitions that use a lat/lon or Gaussian grid. Other grids, including Spherical Harmonic data, are currently not supported. If an unsupported feature is encountered, CODA will abort opening the product and return with an error.</p>
 
       <h2>GRIB1</h2>
       
@@ -86,7 +86,7 @@
       <tr><td>/[]/grid/jDirectionIncrement</td><td>integer</td><td>int16</td><td></td></tr>
       <tr><td>/[]/grid/N</td><td>integer</td><td>int16</td><td></td></tr>
       <tr><td>/[]/grid/scanningMode</td><td>integer</td><td>uint8</td><td></td></tr>
-      <tr><td>/[]/grid/pv[]</td><td>real</td><td>float</td><td></td></tr>
+      <tr><td>/[]/grid/coordinateValues[]</td><td>real</td><td>float</td><td></td></tr>
       <tr><td>/[]/data/bitsPerValue</td><td>integer</td><td>uint8</td><td>(hidden field)</td></tr>
       <tr><td>/[]/data/binaryScaleFactor</td><td>integer</td><td>int16</td><td>(hidden field)</td></tr>
       <tr><td>/[]/data/referenceValue</td><td>real</td><td>float</td><td>(hidden field)</td></tr>
@@ -172,6 +172,7 @@
       <tr><td>/[]/data[]/firstFixedSurface</td><td>integer</td><td>double</td><td></td></tr>
       <tr><td>/[]/data[]/typeOfSecondFixedSurface</td><td>integer</td><td>uint8</td><td></td></tr>
       <tr><td>/[]/data[]/secondFixedSurface</td><td>integer</td><td>double</td><td></td></tr>
+      <tr><td>/[]/data[]/coordinateValues[]</td><td>real</td><td>float</td><td></td></tr>
       <tr><td>/[]/data[]/bitsPerValue</td><td>integer</td><td>uint8</td><td>(hidden field)</td></tr>
       <tr><td>/[]/data[]/decimalScaleFactor</td><td>integer</td><td>int16</td><td>(hidden field)</td></tr>
       <tr><td>/[]/data[]/binaryScaleFactor</td><td>integer</td><td>int16</td><td>(hidden field)</td></tr>

@@ -264,6 +264,8 @@ libcoda_la_SOURCES = \
 	libcoda/coda-swap4.h \
 	libcoda/coda-swap8.h \
 	libcoda/coda-time.c \
+	libcoda/coda-tree.c \
+	libcoda/coda-tree.h \
 	libcoda/coda-type.c \
 	libcoda/coda-type.h \
 	libcoda/coda-utils.c \
@@ -366,6 +368,8 @@ libcoda_internal_la_SOURCES = \
 	libcoda/coda-swap4.h \
 	libcoda/coda-swap8.h \
 	libcoda/coda-time.c \
+	libcoda/coda-tree.c \
+	libcoda/coda-tree.h \
 	libcoda/coda-type.c \
 	libcoda/coda-type.h \
 	libcoda/coda-utils.c \
