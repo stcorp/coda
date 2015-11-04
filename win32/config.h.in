@@ -33,7 +33,9 @@
 #define strcasecmp _stricmp
 #define strncasecmp _strnicmp
 #define snprintf _snprintf
+#if defined(_MSC_VER) && _MSC_VER < 1500
 #define vsnprintf _vsnprintf
+#endif
 
 /* redefines for file handling functions */
 #define open(arg1,arg2) _open(arg1,arg2)

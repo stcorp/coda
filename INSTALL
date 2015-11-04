@@ -34,8 +34,8 @@ What you will need
     The binary package, which is only available for Windows, contains pre-built
     versions of everything from the source distribution (without the sources)
     and all documentation and examples. For the IDL and MATLAB interfaces,
-    pre-built versions are included for IDL 5.4 - 6.3 for Windows, and MATLAB
-    R13 (v6.5) - R2007a (v7.4) for Windows. For the Python interface, a
+    pre-built versions are included for IDL 5.4 - 7.1 for Windows, and MATLAB
+    R13 (v6.5) - R2009b (v7.9) for Windows. For the Python interface, a
     pre-built version for Python 2.6 is included. All CODA interfaces have been
     compiled with HDF4 and HDF5 support built in.
 
@@ -368,7 +368,7 @@ interfaces) on a Windows platform :
     the file so it matches your local path and release number of MATLAB (you
     should be aware that if you have multiple versions of MATLAB on your system
     that unlike for the IDL interface for CODA you can have multiple versions
-    of the MATLAB interface installed. MATLAB releases R13 - R2007a can share
+    of the MATLAB interface installed. MATLAB releases R13 - R2009b can share
     the same MATLAB build of CODA but for R12 you need to create a separate
     build).
     Then save the batch file and run it. After completion there should be a

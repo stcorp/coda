@@ -745,6 +745,24 @@ EXTRA_DIST += \
 	config.h.cmake.in \
 	libcoda/coda.h.cmake.in 
 
+config.h.cmake.in: config.h.in cmakeify-dot-infiles.pl
+	$(srcdir)/cmakeify-dot-infiles.pl $(srcdir)/config.h.in config.h.cmake.in2
+	@if diff $(srcdir)/config.h.cmake.in config.h.cmake.in2 >/dev/null 2>&1 ; then \
+	  echo "config.h.cmake.in is unchanged" ; \
+	  rm -f config.h.cmake.in2 ; \
+	else \
+	  mv config.h.cmake.in2 $(srcdir)/config.h.cmake.in ; \
+	fi
+
+libcoda/coda.h.cmake.in: libcoda/coda.h.in cmakeify-dot-infiles.pl
+	$(srcdir)/cmakeify-dot-infiles.pl $(srcdir)/libcoda/coda.h.in libcoda/coda.h.cmake.in2
+	@if diff $(srcdir)/libcoda/coda.h.cmake.in libcoda/coda.h.cmake.in2 >/dev/null 2>&1 ; then \
+	  echo "libcoda/coda.h.cmake.in is unchanged" ; \
+	  rm -f libcoda/coda.h.cmake.in2 ; \
+	else \
+	  mv libcoda/coda.h.cmake.in2 $(srcdir)/libcoda/coda.h.cmake.in ; \
+	fi
+
 # *** windows-specific ***
 
 EXTRA_DIST += \
