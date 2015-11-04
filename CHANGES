@@ -1,3 +1,10 @@
+2.9 2013-05-22
+~~~~~~~~~~~~~~
+
+* Added 'SwapDimensions' option to IDL and MATLAB interfaces (default enabled).
+  With this option you can disable the automatic transpose operation that CODA
+  performs on multi-dimensional array data.
+
 2.8.1 2013-03-07
 ~~~~~~~~~~~~~~~~
 

@@ -25,13 +25,14 @@
 
 #define MAX_FUNCNAME_LENGTH     50
 
-/* set default values for: Handle, ConvertNumbersToDouble, FilterRecordFields, and Use64bitInteger */
-coda_MatlabEnvironment coda_env = { NULL, 1, 1, 0 };
+/* set default values for: Handle, ConvertNumbersToDouble, FilterRecordFields, SwapDimensions, and Use64bitInteger */
+coda_MatlabEnvironment coda_env = { NULL, 1, 1, 1, 0 };
 
 const char *coda_matlab_options[] = {
     "ConvertNumbersToDouble",
     "FilterRecordFields",
     "PerformConversions",
+    "SwapDimensions",
     "Use64bitInteger",
     "UseMMap",
     "UseSpecialTypes"
@@ -1060,6 +1061,8 @@ static void coda_matlab_getopt(int nlhs, mxArray *plhs[], int nrhs, const mxArra
                    mxCreateDoubleScalar(coda_env.option_filter_record_fields ? 1 : 0));
         mxSetField(plhs[0], 0, coda_matlab_options[CODA_MATLAB_OPTION_PERFORM_CONVERSIONS],
                    mxCreateDoubleScalar(coda_get_option_perform_conversions()));
+        mxSetField(plhs[0], 0, coda_matlab_options[CODA_MATLAB_OPTION_SWAP_DIMENSIONS],
+                   mxCreateDoubleScalar(coda_env.option_swap_dimensions ? 1 : 0));
         mxSetField(plhs[0], 0, coda_matlab_options[CODA_MATLAB_OPTION_USE_64BIT_INTEGER],
                    mxCreateDoubleScalar(coda_env.option_use_64bit_integer ? 1 : 0));
         mxSetField(plhs[0], 0, coda_matlab_options[CODA_MATLAB_OPTION_USE_MMAP],
@@ -1098,6 +1101,10 @@ static void coda_matlab_getopt(int nlhs, mxArray *plhs[], int nrhs, const mxArra
         else if (strcmp(name, coda_matlab_options[CODA_MATLAB_OPTION_PERFORM_CONVERSIONS]) == 0)
         {
             plhs[0] = mxCreateDoubleScalar(coda_get_option_perform_conversions());
+        }
+        else if (strcmp(name, coda_matlab_options[CODA_MATLAB_OPTION_SWAP_DIMENSIONS]) == 0)
+        {
+            plhs[0] = mxCreateDoubleScalar(coda_env.option_swap_dimensions ? 1 : 0);
         }
         else if (strcmp(name, coda_matlab_options[CODA_MATLAB_OPTION_USE_64BIT_INTEGER]) == 0)
         {
@@ -1379,6 +1386,16 @@ static void coda_matlab_setopt(int nlhs, mxArray *plhs[], int nrhs, const mxArra
             coda_matlab_coda_error();
         }
     }
+    else if (strcmp(name, coda_matlab_options[CODA_MATLAB_OPTION_SWAP_DIMENSIONS]) == 0)
+    {
+        int value = (int)mxGetScalar(prhs[1]);
+
+        if (!(value == 0 || value == 1))
+        {
+            mexErrMsgTxt("Incorrect value for this option");
+        }
+        coda_env.option_swap_dimensions = value;
+    }
     else if (strcmp(name, coda_matlab_options[CODA_MATLAB_OPTION_USE_64BIT_INTEGER]) == 0)
     {
         int value = (int)mxGetScalar(prhs[1]);
@@ -1468,7 +1485,14 @@ static void coda_matlab_size(int nlhs, mxArray *plhs[], int nrhs, const mxArray 
             data = mxGetData(plhs[0]);
             for (i = 0; i < num_dims; i++)
             {
-                data[i] = (double)dim[i];
+                if (coda_env.option_swap_dimensions)
+                {
+                    data[i] = (double)dim[i];
+                }
+                else
+                {
+                    data[num_dims - i - 1] = (double)dim[i];
+                }
             }
         }
     }

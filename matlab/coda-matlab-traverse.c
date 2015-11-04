@@ -122,6 +122,7 @@ void coda_matlab_traverse_data(int nrhs, const mxArray *prhs[], coda_cursor *cur
         {
             case coda_array_class:
                 {
+                    long local_index[CODA_MAX_NUM_DIMS];
                     int arg_type;
                     int length;
                     int i;
@@ -182,7 +183,11 @@ void coda_matlab_traverse_data(int nrhs, const mxArray *prhs[], coda_cursor *cur
                         }
                     }
 
-                    if (coda_cursor_goto_array_element(cursor, length, index) != 0)
+                    for (i = 0; i < length; i++)
+                    {
+                        local_index[i] = coda_env.option_swap_dimensions ? index[i] : index[length - i + 1];
+                    }
+                    if (coda_cursor_goto_array_element(cursor, length, local_index) != 0)
                     {
                         if (coda_errno == CODA_ERROR_ARRAY_NUM_DIMS_MISMATCH)
                         {

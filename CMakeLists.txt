@@ -2,7 +2,7 @@
 #
 project(CODA)
 
-set(VERSION 2.8.1)
+set(VERSION 2.9)
 set(CODA_VERSION \"${VERSION}\")
 
 # General setup
@@ -112,7 +112,7 @@ set(CODA_EXPAT_NAME_MANGLE 1)
 # Lex / Yacc - adapted from CMake's own CMakeLists.txt
 #
 find_program(YACC_EXECUTABLE
-  NAMES yacc bison
+  NAMES bison yacc
   PATHS /usr/bin
   DOC "Yacc or Bison executable")
 find_program(FLEX_EXECUTABLE
@@ -121,15 +121,10 @@ find_program(FLEX_EXECUTABLE
   DOC "Flex executable")
 mark_as_advanced(YACC_EXECUTABLE FLEX_EXECUTABLE)
 if(YACC_EXECUTABLE)
-  set(BISON_FLAGS)
-  if(YACC_EXECUTABLE MATCHES "bison")
-    set(BISON_FLAGS "--yacc --defines")
-  endif(YACC_EXECUTABLE MATCHES "bison")
   add_custom_command(
     OUTPUT coda-expr-parser.c coda-expr-parser.h
     DEPENDS libcoda/coda-expr-parser.y
-    COMMAND
-    ${YACC_EXECUTABLE} --defines=coda-expr-parser.h -ocoda-expr-parser.c ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/coda-expr-parser.y)
+    COMMAND ${YACC_EXECUTABLE} -d -o coda-expr-parser.c ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/coda-expr-parser.y)
   add_custom_target(RerunYacc DEPENDS coda-expr-parser.c)
 endif(YACC_EXECUTABLE)
 

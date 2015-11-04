@@ -48,6 +48,7 @@ typedef struct coda_MatlabEnvironment_struct
     coda_MatlabFileHandle *handle;
     int option_convert_numbers_to_double;
     int option_filter_record_fields;
+    int option_swap_dimensions; /* whether to swap the dimensions of the _data_ */
     int option_use_64bit_integer;
 } coda_MatlabEnvironment;
 
@@ -62,10 +63,11 @@ typedef struct coda_MatlabCursorInfo_struct
 #define CODA_MATLAB_OPTION_CONVERT_NUMBERS_TO_DOUBLE   0
 #define CODA_MATLAB_OPTION_FILTER_RECORD_FIELDS        1
 #define CODA_MATLAB_OPTION_PERFORM_CONVERSIONS         2
-#define CODA_MATLAB_OPTION_USE_64BIT_INTEGER           3
-#define CODA_MATLAB_OPTION_USE_MMAP                    4
-#define CODA_MATLAB_OPTION_USE_SPECIAL_TYPES           5
-#define CODA_MATLAB_NUMBER_OF_OPTIONS                  6
+#define CODA_MATLAB_OPTION_SWAP_DIMENSIONS             3
+#define CODA_MATLAB_OPTION_USE_64BIT_INTEGER           4
+#define CODA_MATLAB_OPTION_USE_MMAP                    5
+#define CODA_MATLAB_OPTION_USE_SPECIAL_TYPES           6
+#define CODA_MATLAB_NUMBER_OF_OPTIONS                  7
 extern const char *coda_matlab_options[];
 
 extern coda_MatlabEnvironment coda_env;

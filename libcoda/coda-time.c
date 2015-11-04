@@ -1523,7 +1523,7 @@ static int read_leap_second_table(char *filename)
         double scalefactor;
 
         num_read = 0;
-        fscanf(f, "%100[^\n]%n", buffer, &num_read);
+        result = fscanf(f, "%100[^\n]%n", buffer, &num_read);
         if (num_read <= 0)
         {
             break;
@@ -1535,7 +1535,7 @@ static int read_leap_second_table(char *filename)
             return -1;
         }
         buffer[num_read] = '\0';
-        fscanf(f, "%*c");       /* read single '\n' */
+        result = fscanf(f, "%*c");       /* read single '\n' */
 
         result = sscanf(buffer, " %04d %c%c%c %2d =JD %lf  TAI-UTC= %lf S + (MJD - %lf) X %lf S%n",
                         &year, &month[0], &month[1], &month[2], &day, &jd, &leap_sec, &mjd_offset, &scalefactor,

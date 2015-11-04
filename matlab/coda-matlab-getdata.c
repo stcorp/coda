@@ -94,19 +94,21 @@ static mxArray *coda_matlab_get_multi_index_data(coda_cursor *base_cursor, int n
     num_elements = 1;
     for (i = 0; i < num_dims; i++)
     {
-        if (array_dim[i] == 0)
+        long dim = coda_env.option_swap_dimensions ? array_dim[i] : array_dim[num_dims - i - 1];
+
+        if (dim == 0)
         {
             /* empty array */
             return NULL;
         }
-        num_elements *= array_dim[i];
+        num_elements *= dim;
         if (index[i] == -1)
         {
-            result_dim[i] = array_dim[i];
+            result_dim[i] = dim;
         }
         else
         {
-            if (index[i] < 0 || index[i] >= array_dim[i])
+            if (index[i] < 0 || index[i] >= dim)
             {
                 mexPrintf("ERROR: array index out of bounds\n");
                 mexErrMsgTxt("Error in parameter");
@@ -131,7 +133,9 @@ static mxArray *coda_matlab_get_multi_index_data(coda_cursor *base_cursor, int n
         read_array_element = 1;
         for (j = 0; j < num_dims; j++)
         {
-            if (index[j] != -1 && local_index[j] != index[j])
+            long ind = coda_env.option_swap_dimensions ? local_index[j] : local_index[num_dims - j - 1];
+
+            if (index[j] != -1 && ind != index[j])
             {
                 read_array_element = 0;
                 break;
@@ -177,9 +181,12 @@ static mxArray *coda_matlab_get_multi_index_data(coda_cursor *base_cursor, int n
             /* Read data */
             if (result_is_scalar)
             {
-                long index;
+                long index = result_index;
 
-                index = coda_c_index_to_fortran_index(num_dims, result_dim, result_index);
+                if (coda_env.option_swap_dimensions)
+                {
+                    index = coda_c_index_to_fortran_index(num_dims, result_dim, index);
+                }
                 if (coda_matlab_read_data_direct(&cursor, mx_array, index) != 0)
                 {
                     break;
@@ -199,7 +206,14 @@ static mxArray *coda_matlab_get_multi_index_data(coda_cursor *base_cursor, int n
                                                                prhs + (info.argument_index + 1),
                                                                info.num_variable_indices, info.variable_index);
                 }
-                mxSetCell(mx_array, coda_c_index_to_fortran_index(num_dims, result_dim, result_index), mx_data);
+                if (coda_env.option_swap_dimensions)
+                {
+                    mxSetCell(mx_array, coda_c_index_to_fortran_index(num_dims, result_dim, result_index), mx_data);
+                }
+                else
+                {
+                    mxSetCell(mx_array, result_index, mx_data);
+                }
             }
             result_index++;
         }
@@ -878,7 +892,7 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
 
     for (i = 0; i < num_dims; i++)
     {
-        matlab_dim[i] = dim[i];
+        matlab_dim[i] = coda_env.option_swap_dimensions ? dim[i] : dim[num_dims - i - 1];
     }
 
     if (coda_cursor_get_type(cursor, &array_type) != 0)
@@ -943,7 +957,14 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
                         mxArray *mx_array;
 
                         mx_array = coda_matlab_read_array(cursor, new_num_dims, new_dim, new_num_elements);
-                        mxSetCell(mx_data, coda_c_index_to_fortran_index(num_dims, dim, index), mx_array);
+                        if (coda_env.option_swap_dimensions)
+                        {
+                            mxSetCell(mx_data, coda_c_index_to_fortran_index(num_dims, dim, index), mx_array);
+                        }
+                        else
+                        {
+                            mxSetCell(mx_data, index, mx_array);
+                        }
                     }
                     index++;
                     if (index < num_elements)
@@ -1057,8 +1078,15 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
                                 mx_array = coda_matlab_read_data(cursor);
                                 /* note: if the field is not available, we put a NULL mx object in the field array */
                             }
-                            mxSetFieldByNumber(mx_data, coda_c_index_to_fortran_index(num_dims, dim, index),
-                                               struct_index[mx_field_index], mx_array);
+                            if (coda_env.option_swap_dimensions)
+                            {
+                                mxSetFieldByNumber(mx_data, coda_c_index_to_fortran_index(num_dims, dim, index),
+                                                   struct_index[mx_field_index], mx_array);
+                            }
+                            else
+                            {
+                                mxSetFieldByNumber(mx_data, index, struct_index[mx_field_index], mx_array);
+                            }
                             mx_field_index++;
                         }
                         if (field_index < num_fields - 1)
@@ -1092,6 +1120,8 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
         case coda_raw_class:
             {
                 coda_native_type read_type;
+                coda_array_ordering array_ordering =
+                    coda_env.option_swap_dimensions ? coda_array_ordering_fortran : coda_array_ordering_c;
 
                 if (coda_type_get_read_type(type, &read_type) != 0)
                 {
@@ -1103,8 +1133,7 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
                         if (coda_env.option_convert_numbers_to_double)
                         {
                             mx_data = mxCreateNumericArray(num_dims, matlab_dim, mxDOUBLE_CLASS, mxREAL);
-                            if (coda_cursor_read_double_array(cursor, mxGetData(mx_data), coda_array_ordering_fortran)
-                                != 0)
+                            if (coda_cursor_read_double_array(cursor, mxGetData(mx_data), array_ordering) != 0)
                             {
                                 coda_matlab_coda_error();
                             }
@@ -1112,8 +1141,7 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
                         else
                         {
                             mx_data = mxCreateNumericArray(num_dims, matlab_dim, mxINT8_CLASS, mxREAL);
-                            if (coda_cursor_read_int8_array(cursor, mxGetData(mx_data), coda_array_ordering_fortran) !=
-                                0)
+                            if (coda_cursor_read_int8_array(cursor, mxGetData(mx_data), array_ordering) != 0)
                             {
                                 coda_matlab_coda_error();
                             }
@@ -1123,8 +1151,7 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
                         if (coda_env.option_convert_numbers_to_double)
                         {
                             mx_data = mxCreateNumericArray(num_dims, matlab_dim, mxDOUBLE_CLASS, mxREAL);
-                            if (coda_cursor_read_double_array(cursor, mxGetData(mx_data), coda_array_ordering_fortran)
-                                != 0)
+                            if (coda_cursor_read_double_array(cursor, mxGetData(mx_data), array_ordering) != 0)
                             {
                                 coda_matlab_coda_error();
                             }
@@ -1132,8 +1159,7 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
                         else
                         {
                             mx_data = mxCreateNumericArray(num_dims, matlab_dim, mxUINT8_CLASS, mxREAL);
-                            if (coda_cursor_read_uint8_array(cursor, mxGetData(mx_data), coda_array_ordering_fortran) !=
-                                0)
+                            if (coda_cursor_read_uint8_array(cursor, mxGetData(mx_data), array_ordering) != 0)
                             {
                                 coda_matlab_coda_error();
                             }
@@ -1143,8 +1169,7 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
                         if (coda_env.option_convert_numbers_to_double)
                         {
                             mx_data = mxCreateNumericArray(num_dims, matlab_dim, mxDOUBLE_CLASS, mxREAL);
-                            if (coda_cursor_read_double_array(cursor, mxGetData(mx_data), coda_array_ordering_fortran)
-                                != 0)
+                            if (coda_cursor_read_double_array(cursor, mxGetData(mx_data), array_ordering) != 0)
                             {
                                 coda_matlab_coda_error();
                             }
@@ -1152,8 +1177,7 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
                         else
                         {
                             mx_data = mxCreateNumericArray(num_dims, matlab_dim, mxINT16_CLASS, mxREAL);
-                            if (coda_cursor_read_int16_array(cursor, mxGetData(mx_data), coda_array_ordering_fortran) !=
-                                0)
+                            if (coda_cursor_read_int16_array(cursor, mxGetData(mx_data), array_ordering) != 0)
                             {
                                 coda_matlab_coda_error();
                             }
@@ -1163,8 +1187,7 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
                         if (coda_env.option_convert_numbers_to_double)
                         {
                             mx_data = mxCreateNumericArray(num_dims, matlab_dim, mxDOUBLE_CLASS, mxREAL);
-                            if (coda_cursor_read_double_array(cursor, mxGetData(mx_data), coda_array_ordering_fortran)
-                                != 0)
+                            if (coda_cursor_read_double_array(cursor, mxGetData(mx_data), array_ordering) != 0)
                             {
                                 coda_matlab_coda_error();
                             }
@@ -1172,8 +1195,7 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
                         else
                         {
                             mx_data = mxCreateNumericArray(num_dims, matlab_dim, mxUINT16_CLASS, mxREAL);
-                            if (coda_cursor_read_uint16_array(cursor, mxGetData(mx_data), coda_array_ordering_fortran)
-                                != 0)
+                            if (coda_cursor_read_uint16_array(cursor, mxGetData(mx_data), array_ordering) != 0)
                             {
                                 coda_matlab_coda_error();
                             }
@@ -1183,8 +1205,7 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
                         if (coda_env.option_convert_numbers_to_double)
                         {
                             mx_data = mxCreateNumericArray(num_dims, matlab_dim, mxDOUBLE_CLASS, mxREAL);
-                            if (coda_cursor_read_double_array(cursor, mxGetData(mx_data), coda_array_ordering_fortran)
-                                != 0)
+                            if (coda_cursor_read_double_array(cursor, mxGetData(mx_data), array_ordering) != 0)
                             {
                                 coda_matlab_coda_error();
                             }
@@ -1192,8 +1213,7 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
                         else
                         {
                             mx_data = mxCreateNumericArray(num_dims, matlab_dim, mxINT32_CLASS, mxREAL);
-                            if (coda_cursor_read_int32_array(cursor, mxGetData(mx_data), coda_array_ordering_fortran) !=
-                                0)
+                            if (coda_cursor_read_int32_array(cursor, mxGetData(mx_data), array_ordering) != 0)
                             {
                                 coda_matlab_coda_error();
                             }
@@ -1203,8 +1223,7 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
                         if (coda_env.option_convert_numbers_to_double)
                         {
                             mx_data = mxCreateNumericArray(num_dims, matlab_dim, mxDOUBLE_CLASS, mxREAL);
-                            if (coda_cursor_read_double_array(cursor, mxGetData(mx_data), coda_array_ordering_fortran)
-                                != 0)
+                            if (coda_cursor_read_double_array(cursor, mxGetData(mx_data), array_ordering) != 0)
                             {
                                 coda_matlab_coda_error();
                             }
@@ -1212,8 +1231,7 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
                         else
                         {
                             mx_data = mxCreateNumericArray(num_dims, matlab_dim, mxUINT32_CLASS, mxREAL);
-                            if (coda_cursor_read_uint32_array(cursor, mxGetData(mx_data), coda_array_ordering_fortran)
-                                != 0)
+                            if (coda_cursor_read_uint32_array(cursor, mxGetData(mx_data), array_ordering) != 0)
                             {
                                 coda_matlab_coda_error();
                             }
@@ -1223,8 +1241,7 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
                         if (coda_env.option_convert_numbers_to_double || !coda_env.option_use_64bit_integer)
                         {
                             mx_data = mxCreateNumericArray(num_dims, matlab_dim, mxDOUBLE_CLASS, mxREAL);
-                            if (coda_cursor_read_double_array(cursor, mxGetData(mx_data), coda_array_ordering_fortran)
-                                != 0)
+                            if (coda_cursor_read_double_array(cursor, mxGetData(mx_data), array_ordering) != 0)
                             {
                                 coda_matlab_coda_error();
                             }
@@ -1232,8 +1249,7 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
                         else
                         {
                             mx_data = mxCreateNumericArray(num_dims, matlab_dim, mxINT64_CLASS, mxREAL);
-                            if (coda_cursor_read_int64_array(cursor, mxGetData(mx_data), coda_array_ordering_fortran) !=
-                                0)
+                            if (coda_cursor_read_int64_array(cursor, mxGetData(mx_data), array_ordering) != 0)
                             {
                                 coda_matlab_coda_error();
                             }
@@ -1243,8 +1259,7 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
                         if (coda_env.option_convert_numbers_to_double || !coda_env.option_use_64bit_integer)
                         {
                             mx_data = mxCreateNumericArray(num_dims, matlab_dim, mxDOUBLE_CLASS, mxREAL);
-                            if (coda_cursor_read_double_array(cursor, mxGetData(mx_data), coda_array_ordering_fortran)
-                                != 0)
+                            if (coda_cursor_read_double_array(cursor, mxGetData(mx_data), array_ordering) != 0)
                             {
                                 coda_matlab_coda_error();
                             }
@@ -1252,8 +1267,7 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
                         else
                         {
                             mx_data = mxCreateNumericArray(num_dims, matlab_dim, mxUINT64_CLASS, mxREAL);
-                            if (coda_cursor_read_uint64_array(cursor, mxGetData(mx_data), coda_array_ordering_fortran)
-                                != 0)
+                            if (coda_cursor_read_uint64_array(cursor, mxGetData(mx_data), array_ordering) != 0)
                             {
                                 coda_matlab_coda_error();
                             }
@@ -1263,8 +1277,7 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
                         if (coda_env.option_convert_numbers_to_double)
                         {
                             mx_data = mxCreateNumericArray(num_dims, matlab_dim, mxDOUBLE_CLASS, mxREAL);
-                            if (coda_cursor_read_double_array(cursor, mxGetData(mx_data), coda_array_ordering_fortran)
-                                != 0)
+                            if (coda_cursor_read_double_array(cursor, mxGetData(mx_data), array_ordering) != 0)
                             {
                                 coda_matlab_coda_error();
                             }
@@ -1272,8 +1285,7 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
                         else
                         {
                             mx_data = mxCreateNumericArray(num_dims, matlab_dim, mxSINGLE_CLASS, mxREAL);
-                            if (coda_cursor_read_float_array(cursor, mxGetData(mx_data), coda_array_ordering_fortran) !=
-                                0)
+                            if (coda_cursor_read_float_array(cursor, mxGetData(mx_data), array_ordering) != 0)
                             {
                                 coda_matlab_coda_error();
                             }
@@ -1281,7 +1293,7 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
                         break;
                     case coda_native_type_double:
                         mx_data = mxCreateNumericArray(num_dims, matlab_dim, mxDOUBLE_CLASS, mxREAL);
-                        if (coda_cursor_read_double_array(cursor, mxGetData(mx_data), coda_array_ordering_fortran) != 0)
+                        if (coda_cursor_read_double_array(cursor, mxGetData(mx_data), array_ordering) != 0)
                         {
                             coda_matlab_coda_error();
                         }
@@ -1295,7 +1307,7 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
                             mx_data = mxCreateCharArray(num_dims, matlab_dim);
                             mx_ch = mxGetData(mx_data);
                             ch = mxCalloc(num_elements, sizeof(char));
-                            if (coda_cursor_read_char_array(cursor, ch, coda_array_ordering_fortran) != 0)
+                            if (coda_cursor_read_char_array(cursor, ch, array_ordering) != 0)
                             {
                                 coda_matlab_coda_error();
                             }
@@ -1335,7 +1347,14 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
                                 }
                                 str[length] = 0;
                                 mx_array = mxCreateString(str);
-                                mxSetCell(mx_data, coda_c_index_to_fortran_index(num_dims, dim, index), mx_array);
+                                if (coda_env.option_swap_dimensions)
+                                {
+                                    mxSetCell(mx_data, coda_c_index_to_fortran_index(num_dims, dim, index), mx_array);
+                                }
+                                else
+                                {
+                                    mxSetCell(mx_data, index, mx_array);
+                                }
                                 mxFree(str);
 
                                 index++;
@@ -1364,7 +1383,14 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
                                 mxArray *mx_bytes;
 
                                 mx_bytes = coda_matlab_read_data(cursor);
-                                mxSetCell(mx_data, coda_c_index_to_fortran_index(num_dims, dim, index), mx_bytes);
+                                if (coda_env.option_swap_dimensions)
+                                {
+                                    mxSetCell(mx_data, coda_c_index_to_fortran_index(num_dims, dim, index), mx_bytes);
+                                }
+                                else
+                                {
+                                    mxSetCell(mx_data, index, mx_bytes);
+                                }
 
                                 index++;
                                 if (index < num_elements)
@@ -1386,6 +1412,8 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
         case coda_special_class:
             {
                 coda_special_type special_type;
+                coda_array_ordering array_ordering =
+                    coda_env.option_swap_dimensions ? coda_array_ordering_fortran : coda_array_ordering_c;
 
                 if (coda_type_get_special_type(type, &special_type) != 0)
                 {
@@ -1396,7 +1424,7 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
                     case coda_special_vsf_integer:
                     case coda_special_time:
                         mx_data = mxCreateNumericArray(num_dims, matlab_dim, mxDOUBLE_CLASS, mxREAL);
-                        if (coda_cursor_read_double_array(cursor, mxGetData(mx_data), coda_array_ordering_fortran) != 0)
+                        if (coda_cursor_read_double_array(cursor, mxGetData(mx_data), array_ordering) != 0)
                         {
                             coda_matlab_coda_error();
                         }
@@ -1404,8 +1432,7 @@ static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const 
                     case coda_special_complex:
                         mx_data = mxCreateNumericArray(num_dims, matlab_dim, mxDOUBLE_CLASS, mxCOMPLEX);
                         if (coda_cursor_read_complex_double_split_array(cursor, mxGetData(mx_data),
-                                                                        mxGetImagData(mx_data),
-                                                                        coda_array_ordering_fortran) != 0)
+                                                                        mxGetImagData(mx_data), array_ordering) != 0)
                         {
                             coda_matlab_coda_error();
                         }

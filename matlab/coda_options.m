@@ -34,6 +34,19 @@
 %     of 'int16' if PerformConversions is set to 1) and coda_unit.
 %     The default value for this option is: 1
 %
+%   SwapDimensions:
+%     If set, CODA will swap the dimensions of multi-dimensional arrays
+%     (i.e. performing a multi-dimensional transpose on the data) so the
+%     array dimensions that are found in e.g. the CODA format definitions
+%     can be used as-is on the data. This distinction is needed because
+%     MATLAB uses Fortran-style ordering for array indices whereas CODA
+%     uses C-style array dimensioning ordering as the standard.
+%     If you disable this option, CODA will no longer transpose the data
+%     itself, but will invert the ordering of the array indices you pass
+%     to e.g. CODA_FETCH and the dimension sizes that are returned by
+%     CODA_SIZE.
+%     The default value for this option is: 1
+%
 %   Use64bitInteger:
 %     Some data elements in a product file are stored as 64bit integers.
 %     The CODA MATLAB interface is able to read this data and return them

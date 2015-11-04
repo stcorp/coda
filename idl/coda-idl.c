@@ -33,8 +33,9 @@
 #include "coda.h"
 
 static int coda_idl_option_filter_record_fields = 1;
-static int coda_idl_option_verbose = 1;
+static int coda_idl_option_swap_dimensions = 1;
 static int coda_idl_option_time_unit_days = 0;
+static int coda_idl_option_verbose = 1;
 
 /* the maximum number of product-files that may be open simultaneously */
 
@@ -677,7 +678,7 @@ static int idl_coda_fetch_datahandle_array_filldata(struct IDL_CodaDataHandle *d
                 }
                 for (i = 0; i < number_of_elements; i++)
                 {
-                    long index = coda_c_index_to_fortran_index(num_dims, dim, i);
+                    long index = coda_idl_option_swap_dimensions ? coda_c_index_to_fortran_index(num_dims, dim, i) : i;
 
                     ((struct IDL_CodaDataHandle *)fill)[index] = *datahandle;
 
@@ -700,6 +701,8 @@ static int idl_coda_fetch_datahandle_array_filldata(struct IDL_CodaDataHandle *d
         case coda_text_class:
             {
                 coda_native_type read_type;
+                coda_array_ordering array_ordering =
+                    coda_idl_option_swap_dimensions ? coda_array_ordering_fortran : coda_array_ordering_c;
 
                 if (coda_type_get_read_type(basetype, &read_type) != 0)
                 {
@@ -708,71 +711,63 @@ static int idl_coda_fetch_datahandle_array_filldata(struct IDL_CodaDataHandle *d
                 switch (read_type)
                 {
                     case coda_native_type_int8:
-                        if (coda_cursor_read_int16_array(&datahandle->cursor, (int16_t *)fill,
-                                                         coda_array_ordering_fortran) != 0)
+                        if (coda_cursor_read_int16_array(&datahandle->cursor, (int16_t *)fill, array_ordering) != 0)
                         {
                             return -1;
                         }
                         break;
                     case coda_native_type_uint8:
-                        if (coda_cursor_read_uint8_array(&datahandle->cursor, (uint8_t *)fill,
-                                                         coda_array_ordering_fortran) != 0)
+                        if (coda_cursor_read_uint8_array(&datahandle->cursor, (uint8_t *)fill, array_ordering) != 0)
                         {
                             return -1;
                         }
                         break;
                     case coda_native_type_int16:
-                        if (coda_cursor_read_int16_array(&datahandle->cursor, (int16_t *)fill,
-                                                         coda_array_ordering_fortran) != 0)
+                        if (coda_cursor_read_int16_array(&datahandle->cursor, (int16_t *)fill, array_ordering) != 0)
                         {
                             return -1;
                         }
                         break;
                     case coda_native_type_uint16:
-                        if (coda_cursor_read_uint16_array(&datahandle->cursor, (uint16_t *)fill,
-                                                          coda_array_ordering_fortran) != 0)
+                        if (coda_cursor_read_uint16_array(&datahandle->cursor, (uint16_t *)fill, array_ordering) != 0)
                         {
                             return -1;
                         }
                         break;
                     case coda_native_type_int32:
                         if (coda_cursor_read_int32_array(&datahandle->cursor, (int32_t *)(IDL_LONG *)fill,
-                                                         coda_array_ordering_fortran) != 0)
+                                                         array_ordering) != 0)
                         {
                             return -1;
                         }
                         break;
                     case coda_native_type_uint32:
                         if (coda_cursor_read_uint32_array(&datahandle->cursor, (uint32_t *)(IDL_ULONG *)fill,
-                                                          coda_array_ordering_fortran) != 0)
+                                                          array_ordering) != 0)
                         {
                             return -1;
                         }
                         break;
                     case coda_native_type_int64:
-                        if (coda_cursor_read_int64_array(&datahandle->cursor, (int64_t *)fill,
-                                                         coda_array_ordering_fortran) != 0)
+                        if (coda_cursor_read_int64_array(&datahandle->cursor, (int64_t *)fill, array_ordering) != 0)
                         {
                             return -1;
                         }
                         break;
                     case coda_native_type_uint64:
-                        if (coda_cursor_read_uint64_array(&datahandle->cursor, (uint64_t *)fill,
-                                                          coda_array_ordering_fortran) != 0)
+                        if (coda_cursor_read_uint64_array(&datahandle->cursor, (uint64_t *)fill, array_ordering) != 0)
                         {
                             return -1;
                         }
                         break;
                     case coda_native_type_float:
-                        if (coda_cursor_read_float_array(&datahandle->cursor, (float *)fill,
-                                                         coda_array_ordering_fortran) != 0)
+                        if (coda_cursor_read_float_array(&datahandle->cursor, (float *)fill, array_ordering) != 0)
                         {
                             return -1;
                         }
                         break;
                     case coda_native_type_double:
-                        if (coda_cursor_read_double_array(&datahandle->cursor, (double *)fill,
-                                                          coda_array_ordering_fortran) != 0)
+                        if (coda_cursor_read_double_array(&datahandle->cursor, (double *)fill, array_ordering) != 0)
                         {
                             return -1;
                         }
@@ -787,7 +782,7 @@ static int idl_coda_fetch_datahandle_array_filldata(struct IDL_CodaDataHandle *d
                             }
                             for (i = 0; i < number_of_elements; i++)
                             {
-                                int index;
+                                int index = i;
                                 char str[2];
 
                                 if (coda_cursor_read_char(&datahandle->cursor, &str[0]) != 0)
@@ -795,7 +790,10 @@ static int idl_coda_fetch_datahandle_array_filldata(struct IDL_CodaDataHandle *d
                                     return -1;
                                 }
                                 str[1] = '\0';
-                                index = coda_c_index_to_fortran_index(num_dims, dim, i);
+                                if (coda_idl_option_swap_dimensions)
+                                {
+                                    index = coda_c_index_to_fortran_index(num_dims, dim, index);
+                                }
                                 IDL_StrStore(&((IDL_STRING *)fill)[index], str);
                                 if (i < number_of_elements - 1)
                                 {
@@ -823,7 +821,7 @@ static int idl_coda_fetch_datahandle_array_filldata(struct IDL_CodaDataHandle *d
                             {
                                 long length;
                                 char *str;
-                                int index;
+                                int index = i;
 
                                 if (coda_cursor_get_string_length(&datahandle->cursor, &length) != 0)
                                 {
@@ -836,7 +834,10 @@ static int idl_coda_fetch_datahandle_array_filldata(struct IDL_CodaDataHandle *d
                                 {
                                     return -1;
                                 }
-                                index = coda_c_index_to_fortran_index(num_dims, dim, i);
+                                if (coda_idl_option_swap_dimensions)
+                                {
+                                    index = coda_c_index_to_fortran_index(num_dims, dim, index);
+                                }
                                 IDL_StrStore(&((IDL_STRING *)fill)[index], str);
                                 free(str);
 
@@ -864,6 +865,8 @@ static int idl_coda_fetch_datahandle_array_filldata(struct IDL_CodaDataHandle *d
         case coda_special_class:
             {
                 coda_special_type special_type;
+                coda_array_ordering array_ordering =
+                    coda_idl_option_swap_dimensions ? coda_array_ordering_fortran : coda_array_ordering_c;
 
                 if (coda_type_get_special_type(basetype, &special_type) != 0)
                 {
@@ -876,8 +879,7 @@ static int idl_coda_fetch_datahandle_array_filldata(struct IDL_CodaDataHandle *d
                         {
                             int i;
 
-                            if (coda_cursor_read_double_array(&datahandle->cursor, (double *)fill,
-                                                              coda_array_ordering_fortran) != 0)
+                            if (coda_cursor_read_double_array(&datahandle->cursor, (double *)fill, array_ordering) != 0)
                             {
                                 return -1;
                             }
@@ -892,7 +894,7 @@ static int idl_coda_fetch_datahandle_array_filldata(struct IDL_CodaDataHandle *d
                         break;
                     case coda_special_complex:
                         if (coda_cursor_read_complex_double_pairs_array(&datahandle->cursor, (double *)fill,
-                                                                        coda_array_ordering_fortran) != 0)
+                                                                        array_ordering) != 0)
                         {
                             return -1;
                         }
@@ -1054,14 +1056,16 @@ static int idl_coda_fetch_datahandle_array_to_VPTR(struct IDL_CodaDataHandle *da
     }
     for (i = 0; i < num_dims; i++)
     {
-        if (dim[i] == 0)
+        long local_dim = coda_idl_option_swap_dimensions ? dim[i] : dim[num_dims - i - 1];
+
+        if (local_dim == 0)
         {
             /* IDL can not handle empty arrays, so return a no_data struct */
             *retval = mk_coda_no_data();
             return 0;
         }
-        number_of_elements *= dim[i];
-        idl_dimspec[i] = dim[i];
+        number_of_elements *= local_dim;
+        idl_dimspec[i] = local_dim;
     }
 
     /* Get record type */
@@ -1227,9 +1231,9 @@ static int idl_coda_fetch_cursor_to_StructDefPtr(coda_cursor *cursor, IDL_Struct
                 {
                     case coda_record_class:
                         /* insert cursor type (recursive call) */
-                        result =
-                            idl_coda_fetch_cursor_to_StructDefPtr(cursor,
-                                                                  (IDL_StructDefPtr *)&record_tags[field_index].type);
+                        result = idl_coda_fetch_cursor_to_StructDefPtr(cursor,
+                                                                       (IDL_StructDefPtr *)
+                                                                       &record_tags[field_index].type);
                         break;
                     case coda_array_class:
                         {
@@ -1294,7 +1298,8 @@ static int idl_coda_fetch_cursor_to_StructDefPtr(coda_cursor *cursor, IDL_Struct
                             record_tags[field_index].dims[0] = num_dims;
                             for (j = 0; j < num_dims; j++)
                             {
-                                record_tags[field_index].dims[j + 1] = dims[j];
+                                record_tags[field_index].dims[j + 1] =
+                                    coda_idl_option_swap_dimensions ? dims[j] : dims[num_dims - j - 1];
                             }
                         }
                         break;
@@ -2281,6 +2286,7 @@ static int idl_coda_do_fetchspec_to_datahandle(int argc, IDL_VPTR *argv, struct 
 
             case cmd_integer_vector:   /* handle integer-value vector command (goto array element) */
                 {
+                    long local_index[CODA_MAX_NUM_DIMS];
                     long index[CODA_MAX_NUM_DIMS];
                     int num_dims;       /* # of dimensions == # of elements in list-var */
                     long i;
@@ -2328,7 +2334,8 @@ static int idl_coda_do_fetchspec_to_datahandle(int argc, IDL_VPTR *argv, struct 
                             {
                                 if (index[i] == -1)
                                 {
-                                    ret_dim[i] = arr_dim[i];
+                                    ret_dim[i] =
+                                        coda_idl_option_swap_dimensions ? arr_dim[i] : arr_dim[num_dims - i - 1];
                                     index[i] = 0;
                                 }
                                 else
@@ -2353,7 +2360,11 @@ static int idl_coda_do_fetchspec_to_datahandle(int argc, IDL_VPTR *argv, struct 
                         }
                     }
 
-                    if (coda_cursor_goto_array_element(&datahandle->cursor, num_dims, index) != 0)
+                    for (i = 0; i < num_dims; i++)
+                    {
+                        local_index[i] = coda_idl_option_swap_dimensions ? index[i] : index[num_dims - i - 1];
+                    }
+                    if (coda_cursor_goto_array_element(&datahandle->cursor, num_dims, local_index) != 0)
                     {
                         return -1;
                     }
@@ -2562,10 +2573,12 @@ static int idl_coda_fetch_datahandle_fill_multi_VPTR(int argc, IDL_VPTR *argv, I
     num_elements = 1;
     for (i = 0; i < num_dims; i++)
     {
-        num_elements *= dims[i];
+        long local_dim = coda_idl_option_swap_dimensions ? dims[i] : dims[num_dims - i - 1];
+
+        num_elements *= local_dim;
         if (index[i] == -1)
         {
-            result_dims[i] = dims[i];
+            result_dims[i] = local_dim;
         }
         else
         {
@@ -2601,7 +2614,9 @@ static int idl_coda_fetch_datahandle_fill_multi_VPTR(int argc, IDL_VPTR *argv, I
         read_array_element = 1;
         for (j = 0; j < num_dims; j++)
         {
-            if (index[j] != -1 && local_index[j] != index[j])
+            long ind = coda_idl_option_swap_dimensions ? local_index[j] : local_index[num_dims - j - 1];
+
+            if (index[j] != -1 && ind != index[j])
             {
                 read_array_element = 0;
                 break;
@@ -2618,7 +2633,14 @@ static int idl_coda_fetch_datahandle_fill_multi_VPTR(int argc, IDL_VPTR *argv, I
             datahandle = datahandleBase;
 
             /* Set data pointer */
-            data = &dataptr[coda_c_index_to_fortran_index(num_dims, result_dims, result_index) * stride];
+            if (coda_idl_option_swap_dimensions)
+            {
+                data = &dataptr[coda_c_index_to_fortran_index(num_dims, result_dims, result_index) * stride];
+            }
+            else
+            {
+                data = &dataptr[result_index * stride];
+            }
 
             /* Traverse remaining parameters (should contain no more -1 indices) */
             if (idl_coda_do_fetchspec_to_datahandle(argc - (argv_index + 2), argv + (argv_index + 2), &datahandle, NULL,
@@ -2982,7 +3004,7 @@ static IDL_VPTR x_coda_size(int argc, IDL_VPTR *argv)
     data = (IDL_ULONG *)IDL_MakeTempVector(IDL_TYP_ULONG, num_dims, 0, &retval);
     for (i = 0; i < num_dims; i++)
     {
-        data[i] = dims[i];
+        data[i] = coda_idl_option_swap_dimensions ? dims[i] : dims[num_dims - i - 1];
     }
 
     return retval;
@@ -3082,6 +3104,12 @@ static IDL_VPTR x_coda_getopt(int argc, IDL_VPTR *argv)
         retval->type = IDL_TYP_INT;
         retval->value.i = coda_get_option_perform_boundary_checks();
     }
+    else if (strcasecmp("SwapDimensions", name) == 0)
+    {
+        retval = IDL_Gettmp();
+        retval->type = IDL_TYP_INT;
+        retval->value.i = coda_idl_option_swap_dimensions;
+    }
     else if (strcasecmp("TimeUnitDays", name) == 0)
     {
         retval = IDL_Gettmp();
@@ -3151,6 +3179,13 @@ static IDL_VPTR x_coda_setopt(int argc, IDL_VPTR *argv)
         retval->type = IDL_TYP_INT;
         retval->value.i = coda_get_option_perform_boundary_checks();
         coda_set_option_perform_boundary_checks(value != 0);
+    }
+    else if (strcasecmp("SwapDimensions", name) == 0)
+    {
+        retval = IDL_Gettmp();
+        retval->type = IDL_TYP_INT;
+        retval->value.i = coda_idl_option_swap_dimensions;
+        coda_idl_option_swap_dimensions = (value != 0);
     }
     else if (strcasecmp("UseSpecialTypes", name) == 0)
     {

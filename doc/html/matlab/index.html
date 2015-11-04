@@ -302,6 +302,14 @@
       <p>You should also be aware that changing this option not only effects the result of <code>CODA_FETCH</code>, but also the result of <code>CODA_CLASS</code> (since this may, for instance, return 'single' instead of 'int16' if PerformConversions is set to 1) and <code>CODA_UNIT</code>.</p>
       <p>The default value for this option is: 1</p>
 
+      <h3><code>SwapDimensions</code></h3>
+
+      <p>If set, CODA will swap the dimensions of multi-dimensional arrays (i.e. performing a multi-dimensional transpose on the data) so the array dimensions that are found in e.g. the CODA format definitions can be used as-is on the data. This distinction is needed because MATLAB uses Fortran-style ordering for array indices whereas CODA uses C-style array dimensioning ordering as the standard.</p>
+      
+      <p>If you disable this option, CODA will no longer transpose the data itself, but will invert the ordering of the array indices you pass to e.g. CODA_FETCH and the dimension sizes that are returned by CODA_SIZE.</p>
+
+      <p>The default value for this option is: 1</p>
+
       <h3><code>Use64bitInteger</code></h3>
 
       <p>Some data elements in a product file are stored as 64bit integers. The CODA MATLAB interface is able to read this data and return them to matlab with the not fully supported matlab classes 'int64' and 'uint64'. If you set Use64bitInteger to 0 then the CODA MATLAB interface will convert the 64bit integer to a double and return the data with a matlab class 'double'.</p>
