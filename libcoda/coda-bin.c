@@ -23,13 +23,13 @@
 #include "coda-definition.h"
 #include "coda-bin-definition.h"
 
-int coda_bin_close(coda_ProductFile *pf)
+int coda_bin_close(coda_product *product)
 {
-    return coda_ascbin_close(pf);
+    return coda_ascbin_close(product);
 }
 
-int coda_bin_get_type_for_dynamic_type(coda_DynamicType *dynamic_type, coda_Type **type)
+int coda_bin_get_type_for_dynamic_type(coda_dynamic_type *dynamic_type, coda_type **type)
 {
-    *type = (coda_Type *)dynamic_type;
+    *type = (coda_type *)dynamic_type;
     return 0;
 }

@@ -23,8 +23,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "coda-path.h"
-
 #define MAX_FUNCNAME_LENGTH     50
 
 /* set default values for: Handle, ConvertNumbersToDouble, FilterRecordFields, and Use64bitInteger */
@@ -41,9 +39,9 @@ const char *coda_matlab_options[] = {
 
 static int coda_matlab_initialised = 0;
 
-static mxArray *coda_matlab_add_file_handle(coda_ProductFile *pf);
+static mxArray *coda_matlab_add_file_handle(coda_product *pf);
 static void coda_matlab_remove_file_handle(const mxArray *mx_handle);
-static coda_ProductFile *coda_matlab_get_product_file(const mxArray *mx_handle);
+static coda_product *coda_matlab_get_product_file(const mxArray *mx_handle);
 static void coda_matlab_cleanup(void);
 
 static void coda_matlab_attributes(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]);
@@ -72,7 +70,7 @@ void coda_matlab_coda_error(void)
     mexErrMsgTxt("CODA Error");
 }
 
-static mxArray *coda_matlab_add_file_handle(coda_ProductFile *pf)
+static mxArray *coda_matlab_add_file_handle(coda_product *pf)
 {
     coda_MatlabFileHandle **handle_ptr;
     coda_MatlabFileHandle *handle;
@@ -122,7 +120,7 @@ static void coda_matlab_remove_file_handle(const mxArray *mx_handle)
     mexErrMsgTxt("Not a valid file handle - no file associated with this file handle");
 }
 
-static coda_ProductFile *coda_matlab_get_product_file(const mxArray *mx_handle)
+static coda_product *coda_matlab_get_product_file(const mxArray *mx_handle)
 {
     coda_MatlabFileHandle *handle;
     int handle_id;
@@ -168,22 +166,17 @@ static void coda_matlab_set_definition_path(void)
 {
     if (getenv("CODA_DEFINITION") == NULL)
     {
-#ifdef CODA_DEFINITION_MATLAB
-        const char *definition_path = CODA_DEFINITION_MATLAB;
-#else
-        const char *definition_path = "../../../share/" PACKAGE "/definitions";
-#endif
         mxArray *mxpath;
         mxArray *arg;
-        char *location;
         char *path;
         int path_length;
 
-        arg = mxCreateString("coda_matlab");
+        arg = mxCreateString("coda_version");
         if (mexCallMATLAB(1, &mxpath, 1, &arg, "which") != 0)
         {
             mexErrMsgTxt("Could not retrieve module path");
         }
+        mxDestroyArray(arg);
 
         path_length = mxGetN(mxpath) * mxGetM(mxpath) + 1;
         path = mxCalloc(path_length + 1, 1);
@@ -191,14 +184,17 @@ static void coda_matlab_set_definition_path(void)
         {
             mexErrMsgTxt("Error copying string");
         }
-        if (coda_path_from_path(path, 1, definition_path, &location) == 0)
+        /* remove 'coda_version.m' from path */
+        if (path_length > 14)
         {
-            if (location != NULL)
-            {
-                coda_set_definition_path(location);
-                coda_path_free(location);
-            }
+            path[path_length - 14 - 1] = '\0';
         }
+        mxDestroyArray(mxpath);
+#ifdef CODA_DEFINITION_MATLAB
+        coda_set_definition_path_conditional("coda_version.m", path, CODA_DEFINITION_MATLAB);
+#else
+        coda_set_definition_path_conditional("coda_version.m", path, "../../../share/" PACKAGE "/definitions");
+#endif
         mxFree(path);
     }
 }
@@ -316,8 +312,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 static void coda_matlab_attributes(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    coda_ProductFile *pf;
-    coda_Cursor cursor;
+    coda_product *pf;
+    coda_cursor cursor;
 
     /* check parameters */
     if (nlhs > 1)
@@ -349,10 +345,10 @@ static void coda_matlab_attributes(int nlhs, mxArray *plhs[], int nrhs, const mx
 
 static void coda_matlab_class(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    coda_ProductFile *pf;
-    coda_Cursor cursor;
+    coda_product *pf;
+    coda_cursor cursor;
     coda_type_class type_class;
-    coda_Type *type;
+    coda_type *type;
     int is_array = 0;
     char *class = "";
 
@@ -381,7 +377,7 @@ static void coda_matlab_class(int nlhs, mxArray *plhs[], int nrhs, const mxArray
 
     if (type_class == coda_array_class)
     {
-        coda_Type *base_type;
+        coda_type *base_type;
 
         /* return class for base type of array */
 
@@ -611,9 +607,9 @@ static void coda_matlab_close(int nlhs, mxArray *plhs[], int nrhs, const mxArray
 
 static void coda_matlab_description(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    coda_ProductFile *pf;
-    coda_Cursor cursor;
-    coda_Type *type;
+    coda_product *pf;
+    coda_cursor cursor;
+    coda_type *type;
     const char *description;
 
     /* check parameters */
@@ -647,7 +643,7 @@ static void coda_matlab_description(int nlhs, mxArray *plhs[], int nrhs, const m
 
 static void coda_matlab_fetch(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    coda_ProductFile *pf;
+    coda_product *pf;
 
     /* check parameters */
     if (nlhs > 1)
@@ -667,8 +663,8 @@ static void coda_matlab_fetch(int nlhs, mxArray *plhs[], int nrhs, const mxArray
 static void coda_matlab_fieldavailable(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     coda_type_class type_class;
-    coda_ProductFile *pf;
-    coda_Cursor cursor;
+    coda_product *pf;
+    coda_cursor cursor;
 
     /* check parameters */
     if (nlhs > 1)
@@ -730,8 +726,8 @@ static void coda_matlab_fieldavailable(int nlhs, mxArray *plhs[], int nrhs, cons
 static void coda_matlab_fieldcount(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     coda_type_class type_class;
-    coda_ProductFile *pf;
-    coda_Cursor cursor;
+    coda_product *pf;
+    coda_cursor cursor;
 
     /* check parameters */
     if (nlhs > 1)
@@ -753,7 +749,7 @@ static void coda_matlab_fieldcount(int nlhs, mxArray *plhs[], int nrhs, const mx
     }
     if (type_class == coda_record_class)
     {
-        coda_Type *record_type;
+        coda_type *record_type;
         long field_index;
         long num_fields;
         int mx_num_fields = 0;
@@ -806,8 +802,8 @@ static void coda_matlab_fieldcount(int nlhs, mxArray *plhs[], int nrhs, const mx
 static void coda_matlab_fieldnames(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     coda_type_class type_class;
-    coda_ProductFile *pf;
-    coda_Cursor cursor;
+    coda_product *pf;
+    coda_cursor cursor;
 
     /* check parameters */
     if (nlhs > 1)
@@ -831,7 +827,7 @@ static void coda_matlab_fieldnames(int nlhs, mxArray *plhs[], int nrhs, const mx
     {
         const char **field_name;
         int mx_num_fields = 0;
-        coda_Type *record_type;
+        coda_type *record_type;
         long field_index;
         long num_fields;
 
@@ -979,7 +975,7 @@ static void coda_matlab_getopt(int nlhs, mxArray *plhs[], int nrhs, const mxArra
 
 static void coda_matlab_open(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    coda_ProductFile *pf;
+    coda_product *pf;
     char *filename;
     int buflen;
 
@@ -1010,7 +1006,7 @@ static void coda_matlab_open(int nlhs, mxArray *plhs[], int nrhs, const mxArray 
 
     if (coda_open(filename, &pf) != 0)
     {
-        mexErrMsgTxt("Could not open specified productfile");
+        mexErrMsgTxt("Could not open specified product");
     }
 
     plhs[0] = coda_matlab_add_file_handle(pf);
@@ -1020,7 +1016,7 @@ static void coda_matlab_open(int nlhs, mxArray *plhs[], int nrhs, const mxArray 
 
 static void coda_matlab_product_class(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    coda_ProductFile *pf;
+    coda_product *pf;
     const char *product_class;
 
     /* check parameters */
@@ -1045,7 +1041,7 @@ static void coda_matlab_product_class(int nlhs, mxArray *plhs[], int nrhs, const
 
 static void coda_matlab_product_type(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    coda_ProductFile *pf;
+    coda_product *pf;
     const char *product_type;
 
     /* check parameters */
@@ -1070,7 +1066,7 @@ static void coda_matlab_product_type(int nlhs, mxArray *plhs[], int nrhs, const 
 
 static void coda_matlab_product_version(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    coda_ProductFile *pf;
+    coda_product *pf;
     int product_version;
 
     /* check parameters */
@@ -1203,8 +1199,8 @@ static void coda_matlab_setopt(int nlhs, mxArray *plhs[], int nrhs, const mxArra
 
 static void coda_matlab_size(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    coda_ProductFile *pf;
-    coda_Cursor cursor;
+    coda_product *pf;
+    coda_cursor cursor;
     coda_type_class type_class;
 
     /* check parameters */
@@ -1316,9 +1312,9 @@ static void coda_matlab_time_to_string(int nlhs, mxArray *plhs[], int nrhs, cons
 
 static void coda_matlab_unit(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    coda_ProductFile *pf;
-    coda_Cursor cursor;
-    coda_Type *type;
+    coda_product *pf;
+    coda_cursor cursor;
+    coda_type *type;
     const char *unit;
 
     /* check parameters */

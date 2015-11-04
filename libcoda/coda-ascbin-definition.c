@@ -26,11 +26,10 @@
 
 #include "coda-definition.h"
 #include "coda-ascbin-definition.h"
-#include "coda-expr-internal.h"
 
-static coda_ascbinRecord *empty_record_singleton = NULL;
+static coda_ascbin_record *empty_record_singleton = NULL;
 
-void coda_conversion_delete(coda_Conversion *conversion)
+void coda_conversion_delete(coda_conversion *conversion)
 {
     if (conversion->unit != NULL)
     {
@@ -39,20 +38,20 @@ void coda_conversion_delete(coda_Conversion *conversion)
     free(conversion);
 }
 
-coda_Conversion *coda_conversion_new(double numerator, double denominator)
+coda_conversion *coda_conversion_new(double numerator, double denominator)
 {
-    coda_Conversion *conversion;
+    coda_conversion *conversion;
 
     if (denominator == 0.0)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "denominator may not be 0 for conversion in definition");
         return NULL;
     }
-    conversion = (coda_Conversion *)malloc(sizeof(coda_Conversion));
+    conversion = (coda_conversion *)malloc(sizeof(coda_conversion));
     if (conversion == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_Conversion), __FILE__, __LINE__);
+                       (long)sizeof(coda_conversion), __FILE__, __LINE__);
         return NULL;
     }
     conversion->unit = NULL;
@@ -62,7 +61,7 @@ coda_Conversion *coda_conversion_new(double numerator, double denominator)
     return conversion;
 }
 
-int coda_conversion_set_unit(coda_Conversion *conversion, const char *unit)
+int coda_conversion_set_unit(coda_conversion *conversion, const char *unit)
 {
     char *new_unit = NULL;
 
@@ -86,28 +85,32 @@ int coda_conversion_set_unit(coda_Conversion *conversion, const char *unit)
     return 0;
 }
 
-void coda_ascbin_field_delete(coda_ascbinField *field)
+void coda_ascbin_field_delete(coda_ascbin_field *field)
 {
     if (field->name != NULL)
     {
         free(field->name);
     }
+    if (field->real_name != NULL)
+    {
+        free(field->real_name);
+    }
     if (field->type != NULL)
     {
-        coda_release_type((coda_Type *)field->type);
+        coda_release_type((coda_type *)field->type);
     }
     if (field->available_expr != NULL)
     {
-        coda_expr_delete(field->available_expr);
+        coda_expression_delete(field->available_expr);
     }
     if (field->bit_offset_expr != NULL)
     {
-        coda_expr_delete(field->bit_offset_expr);
+        coda_expression_delete(field->bit_offset_expr);
     }
     free(field);
 }
 
-void coda_ascbin_record_delete(coda_ascbinRecord *record)
+void coda_ascbin_record_delete(coda_ascbin_record *record)
 {
     if (record->name != NULL)
     {
@@ -119,11 +122,11 @@ void coda_ascbin_record_delete(coda_ascbinRecord *record)
     }
     if (record->fast_size_expr != NULL)
     {
-        coda_expr_delete(record->fast_size_expr);
+        coda_expression_delete(record->fast_size_expr);
     }
     if (record->hash_data != NULL)
     {
-        delete_hashtable(record->hash_data);
+        hashtable_delete(record->hash_data);
     }
     if (record->num_fields > 0)
     {
@@ -138,16 +141,16 @@ void coda_ascbin_record_delete(coda_ascbinRecord *record)
     free(record);
 }
 
-void coda_ascbin_union_delete(coda_ascbinUnion *dd_union)
+void coda_ascbin_union_delete(coda_ascbin_union *dd_union)
 {
     if (dd_union->field_expr != NULL)
     {
-        coda_expr_delete(dd_union->field_expr);
+        coda_expression_delete(dd_union->field_expr);
     }
-    coda_ascbin_record_delete((coda_ascbinRecord *)dd_union);
+    coda_ascbin_record_delete((coda_ascbin_record *)dd_union);
 }
 
-void coda_ascbin_array_delete(coda_ascbinArray *array)
+void coda_ascbin_array_delete(coda_ascbin_array *array)
 {
     int i;
 
@@ -161,7 +164,7 @@ void coda_ascbin_array_delete(coda_ascbinArray *array)
     }
     if (array->base_type != NULL)
     {
-        coda_release_type((coda_Type *)array->base_type);
+        coda_release_type((coda_type *)array->base_type);
     }
     if (array->dim != NULL)
     {
@@ -173,7 +176,7 @@ void coda_ascbin_array_delete(coda_ascbinArray *array)
         {
             if (array->dim_expr[i] != NULL)
             {
-                coda_expr_delete(array->dim_expr[i]);
+                coda_expression_delete(array->dim_expr[i]);
             }
         }
         free(array->dim_expr);
@@ -181,9 +184,9 @@ void coda_ascbin_array_delete(coda_ascbinArray *array)
     free(array);
 }
 
-coda_ascbinField *coda_ascbin_field_new(const char *name)
+coda_ascbin_field *coda_ascbin_field_new(const char *name, const char *real_name)
 {
-    coda_ascbinField *field;
+    coda_ascbin_field *field;
 
     if (!coda_is_identifier(name))
     {
@@ -192,14 +195,15 @@ coda_ascbinField *coda_ascbin_field_new(const char *name)
         return NULL;
     }
 
-    field = (coda_ascbinField *)malloc(sizeof(coda_ascbinField));
+    field = (coda_ascbin_field *)malloc(sizeof(coda_ascbin_field));
     if (field == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_ascbinField), __FILE__, __LINE__);
+                       (long)sizeof(coda_ascbin_field), __FILE__, __LINE__);
         return NULL;
     }
     field->name = NULL;
+    field->real_name = NULL;
     field->type = NULL;
     field->hidden = 0;
     field->available_expr = NULL;
@@ -213,11 +217,22 @@ coda_ascbinField *coda_ascbin_field_new(const char *name)
         coda_ascbin_field_delete(field);
         return NULL;
     }
+    if (real_name != NULL)
+    {
+        field->real_name = strdup(real_name);
+        if (field->real_name == NULL)
+        {
+            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
+                           __LINE__);
+            coda_ascbin_field_delete(field);
+            return NULL;
+        }
+    }
 
     return field;
 }
 
-int coda_ascbin_field_set_type(coda_ascbinField *field, coda_ascbinType *type)
+int coda_ascbin_field_set_type(coda_ascbin_field *field, coda_ascbin_type *type)
 {
     assert(type != NULL);
     if (field->type != NULL)
@@ -230,13 +245,13 @@ int coda_ascbin_field_set_type(coda_ascbinField *field, coda_ascbinType *type)
     return 0;
 }
 
-int coda_ascbin_field_set_hidden(coda_ascbinField *field)
+int coda_ascbin_field_set_hidden(coda_ascbin_field *field)
 {
     field->hidden = 1;
     return 0;
 }
 
-int coda_ascbin_field_set_available_expression(coda_ascbinField *field, coda_Expr *available_expr)
+int coda_ascbin_field_set_available_expression(coda_ascbin_field *field, coda_expression *available_expr)
 {
     if (field->available_expr != NULL)
     {
@@ -247,7 +262,7 @@ int coda_ascbin_field_set_available_expression(coda_ascbinField *field, coda_Exp
     return 0;
 }
 
-int coda_ascbin_field_set_bit_offset_expression(coda_ascbinField *field, coda_Expr *bit_offset_expr)
+int coda_ascbin_field_set_bit_offset_expression(coda_ascbin_field *field, coda_expression *bit_offset_expr)
 {
     if (field->bit_offset_expr != NULL)
     {
@@ -258,7 +273,7 @@ int coda_ascbin_field_set_bit_offset_expression(coda_ascbinField *field, coda_Ex
     return 0;
 }
 
-int coda_ascbin_field_validate(coda_ascbinField *field)
+int coda_ascbin_field_validate(coda_ascbin_field *field)
 {
     if (field->type == NULL)
     {
@@ -268,7 +283,7 @@ int coda_ascbin_field_validate(coda_ascbinField *field)
     return 0;
 }
 
-coda_DynamicType *coda_ascbin_empty_record(void)
+coda_dynamic_type *coda_ascbin_empty_record(void)
 {
     if (empty_record_singleton == NULL)
     {
@@ -276,13 +291,13 @@ coda_DynamicType *coda_ascbin_empty_record(void)
         assert(empty_record_singleton != NULL);
     }
 
-    return (coda_DynamicType *)empty_record_singleton;
+    return (coda_dynamic_type *)empty_record_singleton;
 }
 
 
-coda_ascbinRecord *coda_ascbin_record_new(coda_format format)
+coda_ascbin_record *coda_ascbin_record_new(coda_format format)
 {
-    coda_ascbinRecord *record;
+    coda_ascbin_record *record;
 
     if (format != coda_format_ascii && format != coda_format_binary)
     {
@@ -290,11 +305,11 @@ coda_ascbinRecord *coda_ascbin_record_new(coda_format format)
         return NULL;
     }
 
-    record = (coda_ascbinRecord *)malloc(sizeof(coda_ascbinRecord));
+    record = (coda_ascbin_record *)malloc(sizeof(coda_ascbin_record));
     if (record == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_ascbinRecord), __FILE__, __LINE__);
+                       (long)sizeof(coda_ascbin_record), __FILE__, __LINE__);
         return NULL;
     }
     record->retain_count = 0;
@@ -311,7 +326,7 @@ coda_ascbinRecord *coda_ascbin_record_new(coda_format format)
     record->has_hidden_fields = 0;
     record->has_available_expr_fields = 0;
 
-    record->hash_data = new_hashtable(0);
+    record->hash_data = hashtable_new(0);
     if (record->hash_data == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashtable) (%s:%u)", __FILE__,
@@ -323,7 +338,7 @@ coda_ascbinRecord *coda_ascbin_record_new(coda_format format)
     return record;
 }
 
-int coda_ascbin_record_set_fast_size_expression(coda_ascbinRecord *record, coda_Expr *fast_size_expr)
+int coda_ascbin_record_set_fast_size_expression(coda_ascbin_record *record, coda_expression *fast_size_expr)
 {
     if (record->fast_size_expr != NULL)
     {
@@ -334,17 +349,17 @@ int coda_ascbin_record_set_fast_size_expression(coda_ascbinRecord *record, coda_
     return 0;
 }
 
-int coda_ascbin_record_add_field(coda_ascbinRecord *record, coda_ascbinField *field)
+int coda_ascbin_record_add_field(coda_ascbin_record *record, coda_ascbin_field *field)
 {
     if (record->num_fields % BLOCK_SIZE == 0)
     {
-        coda_ascbinField **new_field;
+        coda_ascbin_field **new_field;
 
-        new_field = realloc(record->field, (record->num_fields + BLOCK_SIZE) * sizeof(coda_ascbinField *));
+        new_field = realloc(record->field, (record->num_fields + BLOCK_SIZE) * sizeof(coda_ascbin_field *));
         if (new_field == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           (record->num_fields + BLOCK_SIZE) * sizeof(coda_ascbinField *), __FILE__, __LINE__);
+                           (record->num_fields + BLOCK_SIZE) * sizeof(coda_ascbin_field *), __FILE__, __LINE__);
             return -1;
         }
         record->field = new_field;
@@ -394,9 +409,9 @@ int coda_ascbin_record_add_field(coda_ascbinRecord *record, coda_ascbinField *fi
     return 0;
 }
 
-coda_ascbinUnion *coda_ascbin_union_new(coda_format format)
+coda_ascbin_union *coda_ascbin_union_new(coda_format format)
 {
-    coda_ascbinUnion *dd_union;
+    coda_ascbin_union *dd_union;
 
     if (format != coda_format_ascii && format != coda_format_binary)
     {
@@ -404,11 +419,11 @@ coda_ascbinUnion *coda_ascbin_union_new(coda_format format)
         return NULL;
     }
 
-    dd_union = (coda_ascbinUnion *)malloc(sizeof(coda_ascbinUnion));
+    dd_union = (coda_ascbin_union *)malloc(sizeof(coda_ascbin_union));
     if (dd_union == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_ascbinUnion), __FILE__, __LINE__);
+                       (long)sizeof(coda_ascbin_union), __FILE__, __LINE__);
         return NULL;
     }
     dd_union->retain_count = 0;
@@ -426,7 +441,7 @@ coda_ascbinUnion *coda_ascbin_union_new(coda_format format)
     dd_union->has_available_expr_fields = 1;
     dd_union->field_expr = NULL;
 
-    dd_union->hash_data = new_hashtable(0);
+    dd_union->hash_data = hashtable_new(0);
     if (dd_union->hash_data == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashtable) (%s:%u)", __FILE__,
@@ -438,7 +453,7 @@ coda_ascbinUnion *coda_ascbin_union_new(coda_format format)
     return dd_union;
 }
 
-int coda_ascbin_union_set_fast_size_expression(coda_ascbinUnion *dd_union, coda_Expr *fast_size_expr)
+int coda_ascbin_union_set_fast_size_expression(coda_ascbin_union *dd_union, coda_expression *fast_size_expr)
 {
     if (dd_union->fast_size_expr != NULL)
     {
@@ -449,7 +464,7 @@ int coda_ascbin_union_set_fast_size_expression(coda_ascbinUnion *dd_union, coda_
     return 0;
 }
 
-int coda_ascbin_union_set_field_expression(coda_ascbinUnion *dd_union, coda_Expr *field_expr)
+int coda_ascbin_union_set_field_expression(coda_ascbin_union *dd_union, coda_expression *field_expr)
 {
     assert(field_expr != NULL);
     if (dd_union->field_expr != NULL)
@@ -461,17 +476,17 @@ int coda_ascbin_union_set_field_expression(coda_ascbinUnion *dd_union, coda_Expr
     return 0;
 }
 
-int coda_ascbin_union_add_field(coda_ascbinUnion *dd_union, coda_ascbinField *field)
+int coda_ascbin_union_add_field(coda_ascbin_union *dd_union, coda_ascbin_field *field)
 {
     if (dd_union->num_fields % BLOCK_SIZE == 0)
     {
-        coda_ascbinField **new_field;
+        coda_ascbin_field **new_field;
 
-        new_field = realloc(dd_union->field, (dd_union->num_fields + BLOCK_SIZE) * sizeof(coda_ascbinField *));
+        new_field = realloc(dd_union->field, (dd_union->num_fields + BLOCK_SIZE) * sizeof(coda_ascbin_field *));
         if (new_field == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           (dd_union->num_fields + BLOCK_SIZE) * sizeof(coda_ascbinField *), __FILE__, __LINE__);
+                           (dd_union->num_fields + BLOCK_SIZE) * sizeof(coda_ascbin_field *), __FILE__, __LINE__);
             return -1;
         }
         dd_union->field = new_field;
@@ -497,7 +512,7 @@ int coda_ascbin_union_add_field(coda_ascbinUnion *dd_union, coda_ascbinField *fi
     return 0;
 }
 
-int coda_ascbin_union_validate(coda_ascbinUnion *dd_union)
+int coda_ascbin_union_validate(coda_ascbin_union *dd_union)
 {
     if (dd_union->field_expr == NULL)
     {
@@ -512,9 +527,9 @@ int coda_ascbin_union_validate(coda_ascbinUnion *dd_union)
     return 0;
 }
 
-coda_ascbinArray *coda_ascbin_array_new(coda_format format)
+coda_ascbin_array *coda_ascbin_array_new(coda_format format)
 {
-    coda_ascbinArray *array;
+    coda_ascbin_array *array;
 
     if (format != coda_format_ascii && format != coda_format_binary)
     {
@@ -522,11 +537,11 @@ coda_ascbinArray *coda_ascbin_array_new(coda_format format)
         return NULL;
     }
 
-    array = (coda_ascbinArray *)malloc(sizeof(coda_ascbinArray));
+    array = (coda_ascbin_array *)malloc(sizeof(coda_ascbin_array));
     if (array == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_ascbinArray), __FILE__, __LINE__);
+                       (long)sizeof(coda_ascbin_array), __FILE__, __LINE__);
         return NULL;
     }
     array->retain_count = 0;
@@ -545,7 +560,7 @@ coda_ascbinArray *coda_ascbin_array_new(coda_format format)
     return array;
 }
 
-int coda_ascbin_array_set_base_type(coda_ascbinArray *array, coda_ascbinType *base_type)
+int coda_ascbin_array_set_base_type(coda_ascbin_array *array, coda_ascbin_type *base_type)
 {
     if (array->base_type != NULL)
     {
@@ -571,7 +586,7 @@ int coda_ascbin_array_set_base_type(coda_ascbinArray *array, coda_ascbinType *ba
     return 0;
 }
 
-static int array_add_dimension(coda_ascbinArray *array, long dim, coda_Expr *dim_expr)
+static int array_add_dimension(coda_ascbin_array *array, long dim, coda_expression *dim_expr)
 {
     if (array->num_dims == CODA_MAX_NUM_DIMS)
     {
@@ -588,7 +603,7 @@ static int array_add_dimension(coda_ascbinArray *array, long dim, coda_Expr *dim
                            sizeof(long), __FILE__, __LINE__);
             return -1;
         }
-        array->dim_expr = (coda_Expr **)malloc(sizeof(coda_Expr *));
+        array->dim_expr = (coda_expression **)malloc(sizeof(coda_expression *));
         if (array->dim_expr == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
@@ -599,7 +614,7 @@ static int array_add_dimension(coda_ascbinArray *array, long dim, coda_Expr *dim
     else
     {
         long *new_dim;
-        coda_Expr **new_dim_expr;
+        coda_expression **new_dim_expr;
 
         new_dim = (long *)realloc(array->dim, (array->num_dims + 1) * sizeof(long));
         if (new_dim == NULL)
@@ -609,11 +624,11 @@ static int array_add_dimension(coda_ascbinArray *array, long dim, coda_Expr *dim
             return -1;
         }
         array->dim = new_dim;
-        new_dim_expr = (coda_Expr **)realloc(array->dim_expr, (array->num_dims + 1) * sizeof(coda_Expr *));
+        new_dim_expr = (coda_expression **)realloc(array->dim_expr, (array->num_dims + 1) * sizeof(coda_expression *));
         if (new_dim_expr == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           (array->num_dims + 1) * sizeof(coda_Expr *), __FILE__, __LINE__);
+                           (array->num_dims + 1) * sizeof(coda_expression *), __FILE__, __LINE__);
             return -1;
         }
         array->dim_expr = new_dim_expr;
@@ -659,17 +674,17 @@ static int array_add_dimension(coda_ascbinArray *array, long dim, coda_Expr *dim
     return 0;
 }
 
-int coda_ascbin_array_add_fixed_dimension(coda_ascbinArray *array, long dim)
+int coda_ascbin_array_add_fixed_dimension(coda_ascbin_array *array, long dim)
 {
     return array_add_dimension(array, dim, NULL);
 }
 
-int coda_ascbin_array_add_variable_dimension(coda_ascbinArray *array, coda_Expr *dim_expr)
+int coda_ascbin_array_add_variable_dimension(coda_ascbin_array *array, coda_expression *dim_expr)
 {
     return array_add_dimension(array, -1, dim_expr);
 }
 
-int coda_ascbin_array_validate(coda_ascbinArray *array)
+int coda_ascbin_array_validate(coda_ascbin_array *array)
 {
     if (array->base_type == NULL)
     {
@@ -684,7 +699,7 @@ int coda_ascbin_array_validate(coda_ascbinArray *array)
     return 0;
 }
 
-static void delete_detection_node(coda_ascbinDetectionNode *node)
+static void delete_detection_node(coda_ascbin_detection_node *node)
 {
     int i;
 
@@ -699,15 +714,15 @@ static void delete_detection_node(coda_ascbinDetectionNode *node)
     free(node);
 }
 
-static coda_ascbinDetectionNode *detection_node_new(void)
+static coda_ascbin_detection_node *detection_node_new(void)
 {
-    coda_ascbinDetectionNode *node;
+    coda_ascbin_detection_node *node;
 
-    node = malloc(sizeof(coda_ascbinDetectionNode));
+    node = malloc(sizeof(coda_ascbin_detection_node));
     if (node == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_ascbinDetectionNode), __FILE__, __LINE__);
+                       (long)sizeof(coda_ascbin_detection_node), __FILE__, __LINE__);
         return NULL;
     }
     node->entry = NULL;
@@ -718,20 +733,21 @@ static coda_ascbinDetectionNode *detection_node_new(void)
     return node;
 }
 
-static int detection_node_add_node(coda_ascbinDetectionNode *node, coda_ascbinDetectionNode *new_node)
+static int detection_node_add_node(coda_ascbin_detection_node *node, coda_ascbin_detection_node *new_node)
 {
-    coda_DetectionRuleEntry *new_entry;
+    coda_detection_rule_entry *new_entry;
     int i;
 
     if (node->num_subnodes % BLOCK_SIZE == 0)
     {
-        coda_ascbinDetectionNode **new_subnode;
+        coda_ascbin_detection_node **new_subnode;
 
-        new_subnode = realloc(node->subnode, (node->num_subnodes + BLOCK_SIZE) * sizeof(coda_ascbinDetectionNode *));
+        new_subnode = realloc(node->subnode, (node->num_subnodes + BLOCK_SIZE) * sizeof(coda_ascbin_detection_node *));
         if (new_subnode == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           (node->num_subnodes + BLOCK_SIZE) * sizeof(coda_ascbinDetectionNode *), __FILE__, __LINE__);
+                           (node->num_subnodes + BLOCK_SIZE) * sizeof(coda_ascbin_detection_node *), __FILE__,
+                           __LINE__);
             return -1;
         }
         node->subnode = new_subnode;
@@ -741,7 +757,7 @@ static int detection_node_add_node(coda_ascbinDetectionNode *node, coda_ascbinDe
     node->num_subnodes++;
     for (i = node->num_subnodes - 1; i > 0; i--)
     {
-        coda_DetectionRuleEntry *entry;
+        coda_detection_rule_entry *entry;
 
         /* check if subnode[i - 1] should be after new_node */
         entry = node->subnode[i - 1]->entry;
@@ -813,14 +829,15 @@ static int detection_node_add_node(coda_ascbinDetectionNode *node, coda_ascbinDe
     return 0;
 }
 
-static coda_ascbinDetectionNode *get_node_for_entry(coda_ascbinDetectionNode *node, coda_DetectionRuleEntry *entry)
+static coda_ascbin_detection_node *get_node_for_entry(coda_ascbin_detection_node *node,
+                                                      coda_detection_rule_entry *entry)
 {
-    coda_ascbinDetectionNode *new_node;
+    coda_ascbin_detection_node *new_node;
     int i;
 
     for (i = 0; i < node->num_subnodes; i++)
     {
-        coda_DetectionRuleEntry *current_entry;
+        coda_detection_rule_entry *current_entry;
 
         /* check if entries are equal */
         current_entry = node->subnode[i]->entry;
@@ -861,12 +878,12 @@ static coda_ascbinDetectionNode *get_node_for_entry(coda_ascbinDetectionNode *no
 
 void coda_ascbin_detection_tree_delete(void *detection_tree)
 {
-    delete_detection_node((coda_ascbinDetectionNode *)detection_tree);
+    delete_detection_node((coda_ascbin_detection_node *)detection_tree);
 }
 
-int coda_ascbin_detection_tree_add_rule(void *detection_tree, coda_DetectionRule *detection_rule)
+int coda_ascbin_detection_tree_add_rule(void *detection_tree, coda_detection_rule *detection_rule)
 {
-    coda_ascbinDetectionNode *node;
+    coda_ascbin_detection_node *node;
     int i;
 
     if (detection_rule->num_entries == 0)
@@ -891,7 +908,7 @@ int coda_ascbin_detection_tree_add_rule(void *detection_tree, coda_DetectionRule
         }
     }
 
-    node = *(coda_ascbinDetectionNode **)detection_tree;
+    node = *(coda_ascbin_detection_node **)detection_tree;
     if (node == NULL)
     {
         node = detection_node_new();
@@ -899,7 +916,7 @@ int coda_ascbin_detection_tree_add_rule(void *detection_tree, coda_DetectionRule
         {
             return -1;
         }
-        *(coda_ascbinDetectionNode **)detection_tree = node;
+        *(coda_ascbin_detection_node **)detection_tree = node;
     }
     for (i = 0; i < detection_rule->num_entries; i++)
     {

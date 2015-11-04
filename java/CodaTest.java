@@ -1,4 +1,23 @@
-// Test file for the CODA Java library interface
+// CodaTest.java - Sample file for the CODA Java library interface
+//
+// Copyright (C) 2007-2010 S[&]T, The Netherlands.
+//
+// This file is part of CODA.
+//
+// CODA is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// CODA is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CODA; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//
 
 
 import java.lang.reflect.Field;
@@ -6,6 +25,7 @@ import java.lang.reflect.Field;
 import nl.stcorp.coda.Coda;
 import nl.stcorp.coda.CodaException;
 import nl.stcorp.coda.Cursor;
+import nl.stcorp.coda.Expression;
 import nl.stcorp.coda.FormatEnum;
 import nl.stcorp.coda.NativeTypeEnum;
 import nl.stcorp.coda.Product;
@@ -14,6 +34,29 @@ import nl.stcorp.coda.Type;
 import nl.stcorp.coda.TypeClassEnum;
 
 
+/**
+ * CodaTest class.
+ *
+ * This is not a unit-testing or regression-testing class, but
+ * rather an example class / starting point that illustrates some
+ * of the techniques of working with CODA through the Java
+ * interface.
+ *
+ * You can compile and run this test program on one or more
+ * product files by saying
+ *
+ *    ant run -Dargs="<product file ...>"
+ *
+ * This utility will print some global information about CODA, a
+ * very simple CODA Expression example, and it will print the
+ * structure of the product files passed on the commandline.
+ *
+ * If you encounter an "unsupported product" error in
+ * coda_open(), it means that the CODA_DEFINITION directory
+ * (typically $INSTALL/share/coda/definitions) does not have the
+ * codadef files for your particular product in it.
+ *
+ */
 public class CodaTest
 {
 
@@ -31,55 +74,55 @@ public class CodaTest
 
     private static void loadLibrary(String libraryPath, String libraryName)
     {
-		Class   myClass = ClassLoader.class;
-		Field   myField;
-		Object  original;
-		boolean bAccessible;
+        Class<ClassLoader>   myClass = ClassLoader.class;
+        Field   myField;
+        Object  original;
+        boolean bAccessible;
 
-		try {
-                /* Get the system paths field */
-			myField = myClass.getDeclaredField("sys_paths");
+        try {
+            /* Get the system paths field */
+            myField = myClass.getDeclaredField("sys_paths");
 
-                /* Make the field accessible and record that we did that */
-			bAccessible = myField.isAccessible();
-			if (!bAccessible)
+            /* Make the field accessible and record that we did that */
+            bAccessible = myField.isAccessible();
+            if (!bAccessible)
             {
-				myField.setAccessible(true);
-			}
+                myField.setAccessible(true);
+            }
 
-                /* Backup the contents of the field */
-			original = myField.get(myClass);
+            /* Backup the contents of the field */
+            original = myField.get(myClass);
 
-                /*
-                 * Reset it to null so that whenever "System.loadLibrary" is called,
-                 * it will be reconstructed with the changed value.
-                 */
-			myField.set(myClass, null);
-			try
+            /*
+             * Reset it to null so that whenever "System.loadLibrary" is called,
+             * it will be reconstructed with the changed value.
+             */
+            myField.set(myClass, null);
+            try
             {
-                    /* Change the value and load the library. */
-				System.setProperty("java.library.path", libraryPath);
-				System.loadLibrary(libraryName);
-			}
-			finally
+                /* Change the value and load the library. */
+                System.setProperty("java.library.path", libraryPath);
+                System.loadLibrary(libraryName);
+            }
+            finally
             {
-                    /* Revert back the changes. */
-				myField.set(myClass, original);
-				myField.setAccessible(bAccessible);
-			}
-		}
+                /* Revert back the changes. */
+                myField.set(myClass, original);
+                myField.setAccessible(bAccessible);
+            }
+        }
         catch (NoSuchFieldException e)
         {
-			e.printStackTrace();
-		}
+            e.printStackTrace();
+        }
         catch (IllegalAccessException e)
         {
-			e.printStackTrace();
-		}
-	}
+            e.printStackTrace();
+        }
+    }
 
 
-    private static void showCodaInfo() throws CodaException
+    private static void showCodaInfo()
     {
         System.out.println("Coda Version: " + Coda.version());
         System.out.println("Sample FormatEnum: " + Type.getFormatName(FormatEnum.coda_format_xml));
@@ -110,9 +153,12 @@ public class CodaTest
 
         TypeClassEnum rootType = cursor.getTypeClass();
         System.out.println("      Root Type = " + rootType);
-        
+
+            // Uncomment the next line if you also want to print record data.
+            // printRecord(cursor); 
         product.close();
     }
+
 
     private static void printRecord(Cursor cursor) throws CodaException
     {
@@ -124,9 +170,9 @@ public class CodaTest
             cursor.gotoFirstRecordField();
             for (int i = 0; i < numFields; i++)
             {
-                    // We don't print fields that are hidden, like the first MPH
-                    // field
-                    // (with value 'PRODUCT=')
+                // We don't print fields that are hidden, like the first MPH
+                // field
+                // (with value 'PRODUCT=')
                 boolean hidden = recordType.getRecordFieldHiddenStatus(i);
                 if (!hidden)
                 {
@@ -161,7 +207,7 @@ public class CodaTest
                         printData(cursor);
                         if (i < numElements - 1)
                         {
-                            System.out.println();
+                            System.out.print(", ");
                             cursor.gotoNextArrayElement();
                         }                      
                     }
@@ -192,6 +238,12 @@ public class CodaTest
                 
                 switch (readType)
                 {
+                    case coda_native_type_not_available:
+                    {
+                        System.out.print("Compound entity that cannot be read directly");
+                        break;
+                    }
+                    
                     case coda_native_type_int8:
                     case coda_native_type_int16:
                     case coda_native_type_int32:
@@ -245,9 +297,18 @@ public class CodaTest
                         System.out.print(String.format("\"%s\"", data));
                         break;
                     }
+
+                    case coda_native_type_bytes:
+                    {
+                        int len = cursor.getNumElements();
+                        // byte[] data = cursor.readBytes(0, len);
+                        // String dataString = new String(data);
+                        System.out.print(String.format("%d bytes", len));
+                        break;
+                    }
                     
                     default:
-                        System.out.print(String.format("*** Unexpected read type (%s) ***", Type.getNativeTypeName(readType)));
+                        System.out.print(String.format("*** Unknown native type encountered: %s ***", Type.getNativeTypeName(readType)));
                         break;
                 }
             }        
@@ -255,6 +316,26 @@ public class CodaTest
     }
 
     
+    private static void showExpressions() throws CodaException
+    {
+        showIntegerExpression("2 * 21");
+//        showIntegerExpression("fnorgle"); // This *should* fail!
+//        showIntegerExpression("2 / 0"); // This *should* fail!
+    }
+
+    
+    private static void showIntegerExpression(String exprString) throws CodaException
+    {
+        Expression expr = new Expression(exprString);
+        System.out.println("Expression:");
+        System.out.println("  init string = " + exprString);
+        System.out.println("  type        = " + expr.getType());
+        System.out.println("  isConstant? = " + expr.isConstant());
+        System.out.println("  value       = " + expr.evalInteger());
+        expr.delete();
+    }
+        
+
     public static void main(String argv[])
     {
         if (argv.length < 1)
@@ -269,6 +350,7 @@ public class CodaTest
         {
             Coda.init();
             showCodaInfo();
+            showExpressions();
             
             for (String productFile : productFiles)
             {

@@ -26,19 +26,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-int coda_ascbin_type_get_num_record_fields(const coda_Type *type, long *num_fields)
+int coda_ascbin_type_get_num_record_fields(const coda_type *type, long *num_fields)
 {
     /* this also works for unions */
-    *num_fields = ((coda_ascbinRecord *)type)->num_fields;
+    *num_fields = ((coda_ascbin_record *)type)->num_fields;
     return 0;
 }
 
-int coda_ascbin_type_get_record_field_index_from_name(const coda_Type *type, const char *name, long *index)
+int coda_ascbin_type_get_record_field_index_from_name(const coda_type *type, const char *name, long *index)
 {
-    coda_ascbinRecord *record;
+    coda_ascbin_record *record;
 
     /* this also works for unions */
-    record = (coda_ascbinRecord *)type;
+    record = (coda_ascbin_record *)type;
 
     *index = hashtable_get_index_from_name(record->hash_data, name);
     if (*index >= 0)
@@ -50,12 +50,12 @@ int coda_ascbin_type_get_record_field_index_from_name(const coda_Type *type, con
     return -1;
 }
 
-int coda_ascbin_type_get_record_field_type(const coda_Type *type, long index, coda_Type **field_type)
+int coda_ascbin_type_get_record_field_type(const coda_type *type, long index, coda_type **field_type)
 {
-    coda_ascbinRecord *record;
+    coda_ascbin_record *record;
 
     /* this also works for unions */
-    record = (coda_ascbinRecord *)type;
+    record = (coda_ascbin_record *)type;
     if (index < 0 || index >= record->num_fields)
     {
         coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
@@ -63,17 +63,17 @@ int coda_ascbin_type_get_record_field_type(const coda_Type *type, long index, co
         return -1;
     }
 
-    *field_type = (coda_Type *)record->field[index]->type;
+    *field_type = (coda_type *)record->field[index]->type;
 
     return 0;
 }
 
-int coda_ascbin_type_get_record_field_name(const coda_Type *type, long index, const char **name)
+int coda_ascbin_type_get_record_field_name(const coda_type *type, long index, const char **name)
 {
-    coda_ascbinRecord *record;
+    coda_ascbin_record *record;
 
     /* this also works for unions */
-    record = (coda_ascbinRecord *)type;
+    record = (coda_ascbin_record *)type;
     if (index < 0 || index >= record->num_fields)
     {
         coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
@@ -86,12 +86,37 @@ int coda_ascbin_type_get_record_field_name(const coda_Type *type, long index, co
     return 0;
 }
 
-int coda_ascbin_type_get_record_field_hidden_status(const coda_Type *type, long index, int *hidden)
+int coda_ascbin_type_get_record_field_real_name(const coda_type *type, long index, const char **real_name)
 {
-    coda_ascbinRecord *record;
+    coda_ascbin_record *record;
 
     /* this also works for unions */
-    record = (coda_ascbinRecord *)type;
+    record = (coda_ascbin_record *)type;
+    if (index < 0 || index >= record->num_fields)
+    {
+        coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
+                       record->num_fields, __FILE__, __LINE__);
+        return -1;
+    }
+
+    if (record->field[index]->real_name != NULL)
+    {
+        *real_name = record->field[index]->real_name;
+    }
+    else
+    {
+        *real_name = record->field[index]->name;
+    }
+
+    return 0;
+}
+
+int coda_ascbin_type_get_record_field_hidden_status(const coda_type *type, long index, int *hidden)
+{
+    coda_ascbin_record *record;
+
+    /* this also works for unions */
+    record = (coda_ascbin_record *)type;
     if (index < 0 || index >= record->num_fields)
     {
         coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
@@ -104,12 +129,12 @@ int coda_ascbin_type_get_record_field_hidden_status(const coda_Type *type, long 
     return 0;
 }
 
-int coda_ascbin_type_get_record_field_available_status(const coda_Type *type, long index, int *available)
+int coda_ascbin_type_get_record_field_available_status(const coda_type *type, long index, int *available)
 {
-    coda_ascbinRecord *record;
+    coda_ascbin_record *record;
 
     /* this also works for unions */
-    record = (coda_ascbinRecord *)type;
+    record = (coda_ascbin_record *)type;
     if (index < 0 || index >= record->num_fields)
     {
         coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
@@ -129,24 +154,24 @@ int coda_ascbin_type_get_record_field_available_status(const coda_Type *type, lo
     return 0;
 }
 
-int coda_ascbin_type_get_record_union_status(const coda_Type *type, int *is_union)
+int coda_ascbin_type_get_record_union_status(const coda_type *type, int *is_union)
 {
-    *is_union = (((coda_ascbinType *)type)->tag == tag_ascbin_union);
+    *is_union = (((coda_ascbin_type *)type)->tag == tag_ascbin_union);
     return 0;
 }
 
-int coda_ascbin_type_get_array_num_dims(const coda_Type *type, int *num_dims)
+int coda_ascbin_type_get_array_num_dims(const coda_type *type, int *num_dims)
 {
-    *num_dims = ((coda_ascbinArray *)type)->num_dims;
+    *num_dims = ((coda_ascbin_array *)type)->num_dims;
     return 0;
 }
 
-int coda_ascbin_type_get_array_dim(const coda_Type *type, int *num_dims, long dim[])
+int coda_ascbin_type_get_array_dim(const coda_type *type, int *num_dims, long dim[])
 {
-    coda_ascbinArray *array;
+    coda_ascbin_array *array;
     int i;
 
-    array = (coda_ascbinArray *)type;
+    array = (coda_ascbin_array *)type;
     *num_dims = array->num_dims;
     for (i = 0; i < array->num_dims; i++)
     {
@@ -156,8 +181,8 @@ int coda_ascbin_type_get_array_dim(const coda_Type *type, int *num_dims, long di
     return 0;
 }
 
-int coda_ascbin_type_get_array_base_type(const coda_Type *type, coda_Type **base_type)
+int coda_ascbin_type_get_array_base_type(const coda_type *type, coda_type **base_type)
 {
-    *base_type = (coda_Type *)((coda_ascbinArray *)type)->base_type;
+    *base_type = (coda_type *)((coda_ascbin_array *)type)->base_type;
     return 0;
 }

@@ -26,23 +26,23 @@
 #include <stdlib.h>
 #include <string.h>
 
-int coda_ascii_type_get_read_type(const coda_Type *type, coda_native_type *read_type)
+int coda_ascii_type_get_read_type(const coda_type *type, coda_native_type *read_type)
 {
-    switch (((coda_asciiType *)type)->tag)
+    switch (((coda_ascii_type *)type)->tag)
     {
         case tag_ascii_integer:
         case tag_ascii_float:
-            if (coda_option_perform_conversions && ((coda_asciiNumber *)type)->conversion != NULL)
+            if (coda_option_perform_conversions && ((coda_ascii_number *)type)->conversion != NULL)
             {
                 *read_type = coda_native_type_double;
             }
             else
             {
-                *read_type = ((coda_asciiNumber *)type)->read_type;
+                *read_type = ((coda_ascii_number *)type)->read_type;
             }
             break;
         case tag_ascii_text:
-            *read_type = ((coda_asciiText *)type)->read_type;
+            *read_type = ((coda_ascii_text *)type)->read_type;
             break;
         case tag_ascii_line_separator:
         case tag_ascii_line:
@@ -62,9 +62,9 @@ int coda_ascii_type_get_read_type(const coda_Type *type, coda_native_type *read_
     return 0;
 }
 
-int coda_ascii_type_get_string_length(const coda_Type *type, long *length)
+int coda_ascii_type_get_string_length(const coda_type *type, long *length)
 {
-    switch (((coda_asciiType *)type)->tag)
+    switch (((coda_ascii_type *)type)->tag)
     {
         case tag_ascii_integer:
         case tag_ascii_float:
@@ -93,22 +93,22 @@ int coda_ascii_type_get_string_length(const coda_Type *type, long *length)
     return 0;
 }
 
-int coda_ascii_type_get_bit_size(const coda_Type *type, int64_t *bit_size)
+int coda_ascii_type_get_bit_size(const coda_type *type, int64_t *bit_size)
 {
-    *bit_size = ((coda_asciiType *)type)->bit_size;
+    *bit_size = ((coda_ascii_type *)type)->bit_size;
     return 0;
 }
 
-int coda_ascii_type_get_unit(const coda_Type *type, const char **unit)
+int coda_ascii_type_get_unit(const coda_type *type, const char **unit)
 {
-    switch (((coda_asciiType *)type)->tag)
+    switch (((coda_ascii_type *)type)->tag)
     {
         case tag_ascii_integer:
         case tag_ascii_float:
             {
                 if (coda_option_perform_conversions)
                 {
-                    coda_Conversion *conversion = ((coda_asciiNumber *)type)->conversion;
+                    coda_conversion *conversion = ((coda_ascii_number *)type)->conversion;
 
                     if (conversion != NULL)
                     {
@@ -116,7 +116,7 @@ int coda_ascii_type_get_unit(const coda_Type *type, const char **unit)
                         return 0;
                     }
                 }
-                *unit = ((coda_asciiNumber *)type)->unit;
+                *unit = ((coda_ascii_number *)type)->unit;
             }
             break;
         case tag_ascii_time:
@@ -131,12 +131,12 @@ int coda_ascii_type_get_unit(const coda_Type *type, const char **unit)
     return 0;
 }
 
-int coda_ascii_type_get_fixed_value(const coda_Type *type, const char **fixed_value, long *length)
+int coda_ascii_type_get_fixed_value(const coda_type *type, const char **fixed_value, long *length)
 {
-    switch (((coda_asciiType *)type)->tag)
+    switch (((coda_ascii_type *)type)->tag)
     {
         case tag_ascii_text:
-            *fixed_value = ((coda_asciiText *)type)->fixed_value;
+            *fixed_value = ((coda_ascii_text *)type)->fixed_value;
             if (length != NULL)
             {
                 *length = ((*fixed_value == NULL) ? 0 : strlen(*fixed_value));
@@ -151,9 +151,9 @@ int coda_ascii_type_get_fixed_value(const coda_Type *type, const char **fixed_va
     return 0;
 }
 
-int coda_ascii_type_get_special_type(const coda_Type *type, coda_special_type *special_type)
+int coda_ascii_type_get_special_type(const coda_type *type, coda_special_type *special_type)
 {
-    switch (((coda_asciiType *)type)->tag)
+    switch (((coda_ascii_type *)type)->tag)
     {
         case tag_ascii_time:
             *special_type = coda_special_time;
@@ -166,8 +166,8 @@ int coda_ascii_type_get_special_type(const coda_Type *type, coda_special_type *s
     return 0;
 }
 
-int coda_ascii_type_get_special_base_type(const coda_Type *type, coda_Type **base_type)
+int coda_ascii_type_get_special_base_type(const coda_type *type, coda_type **base_type)
 {
-    *base_type = (coda_Type *)((coda_asciiSpecialType *)type)->base_type;
+    *base_type = (coda_type *)((coda_ascii_special_type *)type)->base_type;
     return 0;
 }

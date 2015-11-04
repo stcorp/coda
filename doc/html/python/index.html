@@ -35,6 +35,7 @@
             <li><a href="#coda_get_field_names"><code>coda.get_field_names</code></a></li>
             <li><a href="#coda_get_size"><code>coda.get_size</code></a></li>
             <li><a href="#coda_time_to_string"><code>coda.time_to_string</code></a></li>
+            <li><a href="#coda_time_to_utcstring"><code>coda.time_to_utcstring</code></a></li>
             <li><a href="#coda_get_unit"><code>coda.get_unit</code></a></li>
             <li><a href="#coda_version"><code>coda.version</code></a></li>
             <li><a href="#coda_set_option_filter_record_fields"><code>coda.set_option_filter_record_fields</code></a></li>
@@ -64,11 +65,13 @@
             <li><a href="#coda_isPlusInf"><code>coda.isPlusInf</code></a></li>
             <li><a href="#coda_isMinInf"><code>coda.isMinInf</code></a></li>
             <li><a href="#coda_c_index_to_fortran_index"><code>coda.c_index_to_fortran_index</code></a></li>
+            <li><a href="#coda_match_filefilter"><code>coda.match_filefilter</code></a></li>
             <li><a href="#coda_datetime_to_double"><code>coda.datetime_to_double</code></a></li>
             <li><a href="#coda_double_to_datetime"><code>coda.double_to_datetime</code></a></li>
-            <li><a href="#coda_time_to_string"><code>coda.time_to_string</code></a></li>
             <li><a href="#coda_string_to_time"><code>coda.string_to_time</code></a></li>
-            <li><a href="#coda_match_filefilter"><code>coda.match_filefilter</code></a></li>
+            <li><a href="#coda_utcdatetime_to_double"><code>coda.utcdatetime_to_double</code></a></li>
+            <li><a href="#coda_double_to_utcdatetime"><code>coda.double_to_utcdatetime</code></a></li>
+            <li><a href="#coda_utcstring_to_time"><code>coda.utcstring_to_time</code></a></li>
             <li><a href="#coda_recognize_file"><code>coda.recognize_file</code></a></li>
             <li><a href="#coda_open"><code>coda.open</code></a></li>
             <li><a href="#coda_close"><code>coda.close</code></a></li>
@@ -98,6 +101,7 @@
             <li><a href="#coda_type_get_record_field_index_from_name"><code>coda.type_get_record_field_index_from_name</code></a></li>
             <li><a href="#coda_type_get_record_field_type"><code>coda.type_get_record_field_type</code></a></li>
             <li><a href="#coda_type_get_record_field_name"><code>coda.type_get_record_field_name</code></a></li>
+            <li><a href="#coda_type_get_record_field_real_name"><code>coda.type_get_record_field_real_name</code></a></li>
             <li><a href="#coda_type_get_record_field_hidden_status"><code>coda.type_get_record_field_hidden_status</code></a></li>
             <li><a href="#coda_type_get_record_field_available_status"><code>coda.type_get_record_field_available_status</code></a></li>
             <li><a href="#coda_type_get_record_union_status"><code>coda.type_get_record_union_status</code></a></li>
@@ -168,6 +172,15 @@
             <li><a href="#coda_cursor_read_complex_double_pairs_array"><code>coda.cursor_read_complex_double_pairs_array</code></a></li>
             <li><a href="#coda_cursor_read_complex_double_split"><code>coda.cursor_read_complex_double_split</code></a></li>
             <li><a href="#coda_cursor_read_complex_double_split_array"><code>coda.cursor_read_complex_double_split_array</code></a></li>
+            <li><a href="#coda_expression_from_string"><code>coda.expression_from_string</code></a></li>
+            <li><a href="#coda_expression_delete"><code>coda.expression_delete</code></a></li>
+            <li><a href="#coda_expression_get_type"><code>coda.expression_get_type</code></a></li>
+            <li><a href="#coda_expression_is_constant"><code>coda.expression_is_constant</code></a></li>
+            <li><a href="#coda_expression_eval_bool"><code>coda.expression_eval_bool</code></a></li>
+            <li><a href="#coda_expression_eval_integer"><code>coda.expression_eval_integer</code></a></li>
+            <li><a href="#coda_expression_eval_float"><code>coda.expression_eval_float</code></a></li>
+            <li><a href="#coda_expression_eval_string"><code>coda.expression_eval_string</code></a></li>
+            <li><a href="#coda_expression_eval_node"><code>coda.expression_eval_node</code></a></li>
           </ul>
         </li>
       </ul>
@@ -238,7 +251,7 @@ import coda
 
       <h2 id="high_level_functions">High level CODA Functions</h2>
       
-      <a name="coda_path_argument"></a><p>Most high level CODA functions require a <code>start</code> and <code>path</code> parameter. These two parameters together define the location of a data item in a product.</p>
+      <a id="coda_path_argument"></a><p>Most high level CODA functions require a <code>start</code> and <code>path</code> parameter. These two parameters together define the location of a data item in a product.</p>
 
       <p>The <code>start</code> parameter determines the offset in the product from which the <code>path</code> parameter is expanded. It can either be a file handle or a CODA Cursor (see <a href="#low_level_types">Low level CODA Data Types</a>). When a file handle is passed we start at the root of the product and when it is a cursor we start at the position of the cursor.</p>
 
@@ -332,10 +345,22 @@ import coda
 
       <h3 id="coda_time_to_string"><code>coda.time_to_string(n_seconds_since_2000)</code></h3>
 
-      <p>Convert a number of seconds since 1-1-2000 to a human readable string format. For example:</p>
+      <p>Convert a number of seconds since 2000-01-01 to a human readable string format. For example:</p>
 
 <div class="fragment"><pre>
->>> coda.time_to_string(68260079.0)
+>>> coda.time_to_utcstring(68260079.0)
+</pre></div>
+
+      <p>would return the string <code>'2002-03-01 01:07:59.000000'</code>.</p>
+
+      <p>It is possible to input a list or tuple of doubles, in which case a list of strings will be returned.</p>
+
+      <h3 id="coda_time_to_utcstring"><code>coda.time_to_utcstring(n_seconds_since_2000)</code></h3>
+
+      <p>Convert a TAI number of seconds since 2000-01-01 (TAI) to a human readable string format in UTC format. For example:</p>
+
+<div class="fragment"><pre>
+>>> coda.time_to_string(68260111.0)
 </pre></div>
 
       <p>would return the string <code>'2002-03-01 01:07:59.000000'</code>.</p>
@@ -372,9 +397,9 @@ import coda
 
       <h2 id="low_level_types">Low level CODA Data Types</h2>
       
-      <p>Just as in the C interface the <code>coda_ProductFile</code>, <code>coda_Type</code>, and <code>coda_Cursor</code> types are opaque types. This means that you can not print or inspect these types, but can only pass them around.</p>
+      <p>Just as in the C interface the <code>coda_product</code>, <code>coda_type</code>, and <code>coda_cursor</code> types are opaque types. This means that you can not print or inspect these types, but can only pass them around.</p>
 
-      <p>To create a new CODA Cursor there is a special <code>coda.Cursor</code> class from which you instantiate new Cursor objects (these objects are opaque wrappers of the underlying cursors in the C domain). You can create a new cursors with: <code>cursor = coda.Cursor()</code>. After creation you will have to initialize it using the <code>coda.cursor_set_product</code> function (just like in C). It is possible to create a copy of a CODA Cursor by using a so-called deep copy:
+      <p>To create a new CODA Cursor there is a special <code>coda.Cursor</code> class from which you instantiate new Cursor objects (these objects are opaque wrappers of the underlying cursors in the C domain). You can create a new cursors with: <code>cursor = coda.Cursor()</code>. After creation you will have to initialize it using the <code>coda.cursor_set_product</code> function (just like in C). It is possible to create a copy of a CODA Cursor by using a so-called deep copy:</p>
 
 <div class="fragment"><pre>
 import copy
@@ -384,9 +409,9 @@ cursor2 = copy.deepcopy(cursor)
 
       <h2 id="low_level_functions">Low level CODA Functions</h2>
       
-      <p>For a description of all low level CODA functions please consult the <a href="../libcoda/index.html">CODA C interface documentation</a>. There are a few differences between the Python and C interface with respect to certain parameters and error handling. Below you will find an overview of the calling signature for each of the supported low level CODA functions. You'll notice that most differences are rather straightforward (parameters have moved from the parameter list to the list of return values or have been removed). If a change requires more explanation a remark is added to the function definition.</p>
+      <p>For a description of all low level CODA functions please consult the <a href="../libcoda/index.html">CODA C interface documentation</a>. There are a few differences between the Python and C interface with respect to certain parameters and error handling. Below you will find an overview of the calling signature for each of the supported low level CODA functions. You'll notice that most differences are rather straightforward (parameters have moved from the parameter list to the list of return values or have been removed). If a change requires more explanation a comment is added to the function definition.</p>
 
-      <a name="error_handling"></a><p>The low level CODA Python functions do not return error codes to indicate succes or failure (as is the case for the C functions). If an error condition occurs, an exception (of type <code>coda.CodacError</code>) will be thrown. You can catch this exception using e.g.:</p>
+      <a id="error_handling"></a><p>The low level CODA Python functions do not return error codes to indicate succes or failure (as is the case for the C functions). If an error condition occurs, an exception (of type <code>coda.CodacError</code>) will be thrown. You can catch this exception using e.g.:</p>
 
 <div class="fragment"><pre>
 try:
@@ -400,7 +425,7 @@ except coda.CodacError, e:
 
       <h5 id="coda_init"><code>coda.init()</code></h5>
       <p>You do not have to call this function yourself to initialize CODA. When CODA is imported in Python the <code>init</code> function will already be called for you. If, however, you call <code>coda.done</code> at any time, you can use this function to re-initialize CODA again.</p>
-      <p>Note that the <code>coda_set_definition_path</code> function is not provided in the CODA Python interface. You should use the CODA_DEFINITION environment variable to set the definition path as explained in the <a href="#initialisation">Initialisation of CODA</a> section.
+      <p>Note that the <code>coda_set_definition_path</code> function is not provided in the CODA Python interface. You should use the CODA_DEFINITION environment variable to set the definition path as explained in the <a href="#initialisation">Initialisation of CODA</a> section.</p>
       <h5 id="coda_done"><code>coda.done()</code></h5>
       <p>If, for some reason, you want to unload the CODA package, you should first clean up CODA by calling this function. However, unloading a Python package is not a common activity, so you should rarely have to call <code>coda.done()</code>.</p>
       <h5 id="coda_set_option_bypass_special_types"><code>coda.set_option_bypass_special_types(enable)</code></h5>
@@ -409,10 +434,10 @@ except coda.CodacError, e:
       <h5 id="coda_get_option_perform_boundary_checks"><code>coda.get_option_perform_boundary_checks()</code></h5>
       <h5 id="coda_set_option_perform_conversions"><code>coda.set_option_perform_conversions(enable)</code></h5>
       <h5 id="coda_get_option_perform_conversions"><code>coda.get_option_perform_conversions()</code></h5>
-      <h5 id="coda_set_option_use_fast_size_expressions"><code>coda.set_option_use_fast_size_expressions</code></h5>
-      <h5 id="coda_get_option_use_fast_size_expressions"><code>coda.get_option_use_fast_size_expressions</code></h5>
-      <h5 id="coda_set_option_use_mmap"><code>coda.set_option_use_mmap</code></h5>
-      <h5 id="coda_get_option_use_mmap"><code>coda.get_option_use_mmap</code></h5>
+      <h5 id="coda_set_option_use_fast_size_expressions"><code>coda.set_option_use_fast_size_expressions(enable)</code></h5>
+      <h5 id="coda_get_option_use_fast_size_expressions"><code>coda.get_option_use_fast_size_expressions()</code></h5>
+      <h5 id="coda_set_option_use_mmap"><code>coda.set_option_use_mmap(enable)</code></h5>
+      <h5 id="coda_get_option_use_mmap"><code>coda.get_option_use_mmap()</code></h5>
       <h5 id="coda_NaN"><code>coda.NaN()</code></h5>
       <h5 id="coda_isNaN"><code>coda.isNaN(x)</code></h5>
       <h5 id="coda_PlusInf"><code>coda.PlusInf()</code></h5>
@@ -421,10 +446,6 @@ except coda.CodacError, e:
       <h5 id="coda_isPlusInf"><code>coda.isPlusInf(x)</code></h5>
       <h5 id="coda_isMinInf"><code>coda.isMinInf(x)</code></h5>
       <h5 id="coda_c_index_to_fortran_index"><code>coda.c_index_to_fortran_index(num_dims, dim, index)</code></h5>
-      <h5 id="coda_datetime_to_double"><code>datetime = coda.datetime_to_double(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC)</code></h5>
-      <h5 id="coda_double_to_datetime"><code>[YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC] = coda.double_to_datetime(datetime)</code></h5>
-      <h5 id="coda_time_to_string"><code>str = coda.time_to_string(time)</code></h5>
-      <h5 id="coda_string_to_time"><code>time = coda.string_to_time(str)</code></h5>
       <h5 id="coda_match_filefilter"><code>coda.match_filefilter(filter, filepaths, callbackfunc)</code></h5>
       <p>The <code>callbackfunc</code> parameter should be a Python function that accepts <code>filepath</code>, <code>status</code> and <code>error</code> as parameters. For example:</p>
 <div class="fragment"><pre>
@@ -440,6 +461,12 @@ except coda.CodacError, e:
 ...     return 0
 >>> coda.match_filefilter('', '/home/codauser', findhelper)
 </pre></div>
+      <h5 id="coda_datetime_to_double"><code>datetime = coda.datetime_to_double(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC)</code></h5>
+      <h5 id="coda_double_to_datetime"><code>[YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC] = coda.double_to_datetime(datetime)</code></h5>
+      <h5 id="coda_string_to_time"><code>time = coda.string_to_time(str)</code></h5>
+      <h5 id="coda_utcdatetime_to_double"><code>datetime = coda.utcdatetime_to_double(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC)</code></h5>
+      <h5 id="coda_double_to_utcdatetime"><code>[YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC] = coda.double_to_utcdatetime(datetime)</code></h5>
+      <h5 id="coda_utcstring_to_time"><code>time = coda.utcstring_to_time(str)</code></h5>
       <h5 id="coda_recognize_file"><code>[file_size, format, product_class, product_type, version] = coda.recognize_file(filename)</code></h5>
       <h5 id="coda_open"><code>pf = coda.open(filename)</code></h5>
       <p>The product file handle returned by this function can also be used with the <a href="#high_level_functions">high level CODA functions</a>.</p>
@@ -471,6 +498,7 @@ except coda.CodacError, e:
       <h5 id="coda_type_get_record_field_index_from_name"><code>index = coda.type_get_record_field_index_from_name(type, name)</code></h5>
       <h5 id="coda_type_get_record_field_type"><code>field_type = coda.type_get_record_field_type(type, index)</code></h5>
       <h5 id="coda_type_get_record_field_name"><code>name = coda.type_get_record_field_name(type, index)</code></h5>
+      <h5 id="coda_type_get_record_field_real_name"><code>name = coda.type_get_record_field_real_name(type, index)</code></h5>
       <h5 id="coda_type_get_record_field_hidden_status"><code>hidden = coda.type_get_record_field_hidden_status(type, index)</code></h5>
       <h5 id="coda_type_get_record_field_available_status"><code>available = coda.type_get_record_field_available_status(type, index)</code></h5>
       <h5 id="coda_type_get_record_union_status"><code>is_union = coda.type_get_record_union_status(type)</code></h5>
@@ -552,13 +580,22 @@ except coda.CodacError, e:
       <h5 id="coda_cursor_read_char_array"><code>dst = coda.cursor_read_char_array(cursor)</code></h5>
       <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numpy array  object using C array ordering.</p>
       <p>Since Python does not have a native char type the character array will be returned as an array of signed 8 bit integers.</p>
-      <h5 id="coda_cursor_read_complex_double_pair"><code>dst = coda.cursor_read_complex_double_pair</code></h5>
-      <h5 id="coda_cursor_read_complex_double_pairs_array"><code>dst = coda.cursor_read_complex_double_pairs_array</code></h5>
+      <h5 id="coda_cursor_read_complex_double_pair"><code>dst = coda.cursor_read_complex_double_pair()</code></h5>
+      <h5 id="coda_cursor_read_complex_double_pairs_array"><code>dst = coda.cursor_read_complex_double_pairs_array()</code></h5>
       <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numpy array  object using C array ordering.</p>
-      <h5 id="coda_cursor_read_complex_double_split"><code>[dst_re, dst_im] = coda.cursor_read_complex_double_split</code></h5>
-      <h5 id="coda_cursor_read_complex_double_split_array"><code>[dst_re, dst_im] = coda.cursor_read_complex_double_split_array</code></h5>
+      <h5 id="coda_cursor_read_complex_double_split"><code>[dst_re, dst_im] = coda.cursor_read_complex_double_split()</code></h5>
+      <h5 id="coda_cursor_read_complex_double_split_array"><code>[dst_re, dst_im] = coda.cursor_read_complex_double_split_array()</code></h5>
       <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numpy array  object using C array ordering.</p>
-      
+      <h5 id="coda_expression_from_string"><code>expr = coda.expression_from_string(exprstring)</code></h5>
+      <h5 id="coda_expression_delete"><code>coda.expression_delete(expr)</code></h5>
+      <h5 id="coda_expression_get_type"><code>result_type = coda.expression_get_type(expr)</code></h5>
+      <h5 id="coda_expression_is_constant"><code>is_constant = coda.expression_is_constant(expr)</code></h5>
+      <h5 id="coda_expression_eval_bool"><code>boolvalue = coda.expression_eval_bool(expr, cursor=None)</code></h5>
+      <h5 id="coda_expression_eval_integer"><code>integervalue = coda.expression_eval_bool(expr, cursor=None)</code></h5>
+      <h5 id="coda_expression_eval_float"><code>doublevalue = coda.expression_eval_float(expr, cursor=None)</code></h5>
+      <h5 id="coda_expression_eval_string"><code>stringvalue = coda.expression_eval_string(expr, cursor=None)</code></h5>
+      <h5 id="coda_expression_eval_node"><code>coda.expression_eval_node(expr, cursor)</code></h5>
+
       <div class="footer">
         <hr />
         <p>Copyright &copy; 2007-2010 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>

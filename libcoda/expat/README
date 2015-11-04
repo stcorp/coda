@@ -7,6 +7,9 @@ build system. The changes that were made are:
  - Source files now only include config.h (instead of a choice of
    expat_config.h, winconfig.h, etc.).
 
+ - expat_external.h includes coda_expat_mangle.h to name mangle all
+   public symbols.
+
  - Checks for BYTEORDER have been replaced with checks for WORDS_BIGENDIAN.
 
  - Added 'variable = variable;' entries in many functions to eliminate

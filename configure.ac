@@ -1,5 +1,5 @@
 # autoconf file for CODA
-AC_INIT([CODA],[1.3.6])
+AC_INIT([CODA],[1.4])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE(foreign 1.8.3 -Wall)
 
@@ -94,9 +94,9 @@ AC_CONFIG_FILES([win32/coda.iss win32/setup.py])
 #    increment age.
 # 6. If any interfaces have been removed or changed since the last public
 #    release, then set age to 0.
-LIBCODA_CURRENT=2
-LIBCODA_REVISION=4
-LIBCODA_AGE=1
+LIBCODA_CURRENT=3
+LIBCODA_REVISION=0
+LIBCODA_AGE=2
 AC_SUBST(LIBCODA_CURRENT)
 AC_SUBST(LIBCODA_REVISION)
 AC_SUBST(LIBCODA_AGE)
@@ -238,10 +238,14 @@ AC_SUBST(javadir)
 
 # *** coda-idl ***
 
-AC_ARG_ENABLE(idl,
-              [AS_HELP_STRING([--enable-idl],[build the IDL interface])],
-              [ac_cv_enable_idl=$enableval],
-              [AC_CACHE_CHECK([build IDL interface], ac_cv_enable_idl, ac_cv_enable_idl=no)])
+if test $ac_cv_enable_coda_subpackage_mode = yes ; then
+  ac_cv_enable_idl=no
+else
+  AC_ARG_ENABLE(idl,
+    [AS_HELP_STRING([--enable-idl],[build the IDL interface])],
+    [ac_cv_enable_idl=$enableval],
+    [AC_CACHE_CHECK([build IDL interface], ac_cv_enable_idl, ac_cv_enable_idl=no)])
+fi
 
 if test $ac_cv_enable_idl = yes ; then
   ST_CHECK_IDL
@@ -260,10 +264,14 @@ AM_CONDITIONAL(BUILD_IDL, test $ac_cv_enable_idl = yes)
 
 # *** coda-matlab ***
 
-AC_ARG_ENABLE([matlab],
-              [AS_HELP_STRING([--enable-matlab],[build the MATLAB interface])],
-              [ac_cv_enable_matlab=$enableval],
-              [AC_CACHE_CHECK([build MATLAB interface], ac_cv_enable_matlab, ac_cv_enable_matlab=no)])
+if test $ac_cv_enable_coda_subpackage_mode = yes ; then
+  ac_cv_enable_matlab=no
+else
+  AC_ARG_ENABLE([matlab],
+    [AS_HELP_STRING([--enable-matlab],[build the MATLAB interface])],
+    [ac_cv_enable_matlab=$enableval],
+    [AC_CACHE_CHECK([build MATLAB interface], ac_cv_enable_matlab, ac_cv_enable_matlab=no)])
+fi
 
 if test $ac_cv_enable_matlab = yes ; then
   ST_CHECK_MATLAB
@@ -282,10 +290,14 @@ AM_CONDITIONAL(BUILD_MATLAB, test $ac_cv_enable_matlab = yes)
 
 # *** coda-python ***
 
-AC_ARG_ENABLE([python],
-  [AS_HELP_STRING([--enable-python],[build the Python interface])],
-  [ac_cv_enable_python=$enableval],
-  [AC_CACHE_CHECK([build Python interface], ac_cv_enable_python, ac_cv_enable_python=no)])
+if test $ac_cv_enable_coda_subpackage_mode = yes ; then
+  ac_cv_enable_python=no
+else
+  AC_ARG_ENABLE([python],
+    [AS_HELP_STRING([--enable-python],[build the Python interface])],
+    [ac_cv_enable_python=$enableval],
+    [AC_CACHE_CHECK([build Python interface], ac_cv_enable_python, ac_cv_enable_python=no)])
+fi
 
 if test $ac_cv_enable_python = yes ; then
   AM_PATH_PYTHON
@@ -315,11 +327,14 @@ AM_CONDITIONAL(BUILD_PYTHON, test $ac_cv_enable_python = yes)
 
 # *** coda-java ***
 
-AC_ARG_ENABLE([java],
-  [AS_HELP_STRING([--enable-java],[build the Java interface])],
-  [ac_cv_enable_java=$enableval],
-  [AC_CACHE_CHECK([build Java interface], ac_cv_enable_java, ac_cv_enable_java=no)]
-)
+if test $ac_cv_enable_coda_subpackage_mode = yes ; then
+  ac_cv_enable_java=no
+else
+  AC_ARG_ENABLE([java],
+    [AS_HELP_STRING([--enable-java],[build the Java interface])],
+    [ac_cv_enable_java=$enableval],
+    [AC_CACHE_CHECK([build Java interface], ac_cv_enable_java, ac_cv_enable_java=no)])
+fi
 
 if test $ac_cv_enable_java = yes ; then
   ST_CHECK_JAVA
@@ -390,6 +405,7 @@ AC_DEFINE([XML_NS], 1, [Define to make XML Namespaces functionality available.])
 AC_DEFINE([XML_DTD], 1, [Define to make parameter entity parsing functionality available.])
 AC_DEFINE([XML_LARGE_SIZE], 1, [Define to set the size of the XML_Size and XML_Index integer types to be at least 64 bits in size.])
 AC_DEFINE([XML_CONTEXT_BYTES], 1024, [Define to specify how much context to retain around the current parse point.])
+AC_DEFINE([CODA_EXPAT_NAME_MANGLE], 1, [Define to enable name mangling of symbols for the built-in expat library.])
 
 # *** extra ***
 

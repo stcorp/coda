@@ -41,7 +41,7 @@ package nl.stcorp.coda;
  */
 public class Cursor
 {
-    private SWIGTYPE_p_coda_Cursor_struct cursor;
+    private SWIGTYPE_p_coda_cursor_struct cursor;
 
 
     // Constructor used instead of explicit coda_set_product().
@@ -55,7 +55,7 @@ public class Cursor
      */
     public Cursor(Product product) throws CodaException
     {
-        this.cursor = codac.new_coda_Cursor();
+        this.cursor = codac.new_coda_cursor();
         codac.cursor_set_product(this.cursor, product.getSwigRepresentation());
     }
 
@@ -74,7 +74,7 @@ public class Cursor
     public void close() throws CodaException
     {
         if (this.cursor != null)
-            codac.delete_coda_Cursor(this.cursor);
+            codac.delete_coda_cursor(this.cursor);
         this.cursor = null;
     }
 
@@ -83,7 +83,7 @@ public class Cursor
     /**
      * @return
      */
-    SWIGTYPE_p_coda_Cursor_struct getSwigRepresentation()
+    SWIGTYPE_p_coda_cursor_struct getSwigRepresentation()
     {
         return this.cursor;
     }
@@ -96,7 +96,7 @@ public class Cursor
      */
     public Cursor(Cursor cursor)
     {
-        this.cursor = codac.deepcopy_coda_Cursor(cursor.getSwigRepresentation());
+        this.cursor = codac.deepcopy_coda_cursor(cursor.getSwigRepresentation());
     }
 
 
@@ -344,14 +344,6 @@ public class Cursor
     }
 
 
-    // Use getProduct() instead of the more algorithmically
-    // correct getProductFile(). I suppose we could have
-    // named the class ProductFile as well, but that would
-    // then have been inconsistent with all the methods that
-    // are called product_*, not product_file_*. In the end,
-    // I feel that conceptually we're talking about a
-    // product, not a file, hence the decision to use
-    // Product.
     /**
      * Retrieve the Product that was used to initialize this cursor.
      * 
@@ -361,7 +353,7 @@ public class Cursor
      */
     public Product getProduct() throws CodaException
     {
-        SWIGTYPE_p_coda_ProductFile_struct product = new SWIGTYPE_p_coda_ProductFile_struct();
+        SWIGTYPE_p_coda_product_struct product = new SWIGTYPE_p_coda_product_struct();
         codac.cursor_get_product_file(this.cursor, product);
         return new Product(product);
     }
@@ -500,7 +492,7 @@ public class Cursor
      */
     public Type getType() throws CodaException
     {
-        SWIGTYPE_p_coda_Type_struct type = new SWIGTYPE_p_coda_Type_struct();
+        SWIGTYPE_p_coda_type_struct type = new SWIGTYPE_p_coda_type_struct();
         codac.cursor_get_type(this.cursor, type);
         return new Type(type);
     }

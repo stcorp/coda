@@ -31,7 +31,7 @@ typedef enum netcdf_type_tag_enum
     tag_netcdf_attribute_record /* coda_record_class */
 } netcdf_type_tag;
 
-typedef struct coda_netcdfType_struct
+typedef struct coda_netcdf_type_struct
 {
     int retain_count;
     coda_format format;
@@ -40,9 +40,9 @@ typedef struct coda_netcdfType_struct
     char *description;
 
     netcdf_type_tag tag;
-} coda_netcdfType;
+} coda_netcdf_type;
 
-typedef struct coda_netcdfRoot_struct
+typedef struct coda_netcdf_root_struct
 {
     int retain_count;
     coda_format format;
@@ -53,15 +53,15 @@ typedef struct coda_netcdfRoot_struct
     netcdf_type_tag tag;
 
     int num_variables;
-    coda_netcdfType **variable;
+    coda_netcdf_type **variable;
     char **variable_name;
     char **variable_real_name;
     hashtable *hash_data;
 
-    struct coda_netcdfAttributeRecord_struct *attributes;
-} coda_netcdfRoot;
+    struct coda_netcdf_attribute_record_struct *attributes;
+} coda_netcdf_root;
 
-typedef struct coda_netcdfArray_struct
+typedef struct coda_netcdf_array_struct
 {
     int retain_count;
     coda_format format;
@@ -74,12 +74,12 @@ typedef struct coda_netcdfArray_struct
     int num_dims;
     long dim[CODA_MAX_NUM_DIMS];
     long num_elements;
-    struct coda_netcdfBasicType_struct *base_type;
+    struct coda_netcdf_basic_type_struct *base_type;
 
-    struct coda_netcdfAttributeRecord_struct *attributes;
-} coda_netcdfArray;
+    struct coda_netcdf_attribute_record_struct *attributes;
+} coda_netcdf_array;
 
-typedef struct coda_netcdfBasicType_struct
+typedef struct coda_netcdf_basic_type_struct
 {
     int retain_count;
     coda_format format;
@@ -98,10 +98,10 @@ typedef struct coda_netcdfBasicType_struct
     int has_fill_value;
     double fill_value;
 
-    struct coda_netcdfAttributeRecord_struct *attributes;
-} coda_netcdfBasicType;
+    struct coda_netcdf_attribute_record_struct *attributes;
+} coda_netcdf_basic_type;
 
-typedef struct coda_netcdfAttributeRecord_struct
+typedef struct coda_netcdf_attribute_record_struct
 {
     int retain_count;
     coda_format format;
@@ -112,20 +112,20 @@ typedef struct coda_netcdfAttributeRecord_struct
     netcdf_type_tag tag;
 
     int num_attributes;
-    coda_netcdfType **attribute;
+    coda_netcdf_type **attribute;
     char **attribute_name;
     char **attribute_real_name;
     hashtable *hash_data;
-} coda_netcdfAttributeRecord;
+} coda_netcdf_attribute_record;
 
-typedef struct coda_netcdfProductFile_struct
+typedef struct coda_netcdf_product_struct
 {
     /* general fields (shared between all supported product types) */
     char *filename;
     int64_t file_size;
     coda_format format;
-    coda_DynamicType *root_type;
-    coda_ProductDefinition *product_definition;
+    coda_dynamic_type *root_type;
+    coda_product_definition *product_definition;
     long *product_variable_size;
     int64_t **product_variable;
 
@@ -139,22 +139,22 @@ typedef struct coda_netcdfProductFile_struct
 
     int netcdf_version;
     long record_size;
-} coda_netcdfProductFile;
+} coda_netcdf_product;
 
-coda_netcdfRoot *coda_netcdf_root_new(void);
-int coda_netcdf_root_add_variable(coda_netcdfRoot *root, const char *name, coda_netcdfType *variable);
-int coda_netcdf_root_add_attributes(coda_netcdfRoot *root, coda_netcdfAttributeRecord *attributes);
+coda_netcdf_root *coda_netcdf_root_new(void);
+int coda_netcdf_root_add_variable(coda_netcdf_root *root, const char *name, coda_netcdf_type *variable);
+int coda_netcdf_root_add_attributes(coda_netcdf_root *root, coda_netcdf_attribute_record *attributes);
 
-coda_netcdfArray *coda_netcdf_array_new(int num_dims, long dim[CODA_MAX_NUM_DIMS], coda_netcdfBasicType *base_type);
-int coda_netcdf_array_add_attributes(coda_netcdfArray *type, coda_netcdfAttributeRecord *attributes);
+coda_netcdf_array *coda_netcdf_array_new(int num_dims, long dim[CODA_MAX_NUM_DIMS], coda_netcdf_basic_type *base_type);
+int coda_netcdf_array_add_attributes(coda_netcdf_array *type, coda_netcdf_attribute_record *attributes);
 
-coda_netcdfBasicType *coda_netcdf_basic_type_new(int nc_type, int64_t offset, int record_var, int length);
-int coda_netcdf_basic_type_add_attributes(coda_netcdfBasicType *type, coda_netcdfAttributeRecord *attributes);
+coda_netcdf_basic_type *coda_netcdf_basic_type_new(int nc_type, int64_t offset, int record_var, int length);
+int coda_netcdf_basic_type_add_attributes(coda_netcdf_basic_type *type, coda_netcdf_attribute_record *attributes);
 
-coda_netcdfAttributeRecord *coda_netcdf_attribute_record_new(void);
-int coda_netcdf_attribute_record_add_attribute(coda_netcdfAttributeRecord *type, const char *name,
-                                               coda_netcdfType *attribute);
+coda_netcdf_attribute_record *coda_netcdf_attribute_record_new(void);
+int coda_netcdf_attribute_record_add_attribute(coda_netcdf_attribute_record *type, const char *name,
+                                               coda_netcdf_type *attribute);
 
-coda_netcdfAttributeRecord *coda_netcdf_empty_attribute_record();
+coda_netcdf_attribute_record *coda_netcdf_empty_attribute_record();
 
 #endif

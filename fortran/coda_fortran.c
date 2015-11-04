@@ -86,6 +86,29 @@ int UFNAME(CODA_SET_DEFINITION_PATH,coda_set_definition_path)(char *path, int pa
     return result;
 }
 
+int UFNAME(CODA_SET_DEFINITION_PATH_CONDITIONAL,coda_set_definition_path_conditional)(char *file, char *searchpath, char *relative_location, int file_size, int searchpath_size, int relative_location_size)
+{
+    int result;
+    INSTR_BEGIN_DEF(file)
+    INSTR_BEGIN_DEF(searchpath)
+    INSTR_BEGIN_DEF(relative_location)
+    INSTR_BEGIN_INIT(file)
+    INSTR_BEGIN_INIT(searchpath)
+    INSTR_BEGIN_INIT(relative_location)
+    if (searchpath_l > 0)
+    {
+        result = coda_set_definition_path_conditional(file_s, searchpath_s, relative_location_s);
+    }
+    else
+    {
+        result = coda_set_definition_path_conditional(file_s, NULL, relative_location_s);
+    }
+    INSTR_END(relative_location)
+    INSTR_END(searchpath)
+    INSTR_END(file)
+    return result;
+}
+
 int UFNAME(CODA_SET_OPTION_BYPASS_SPECIAL_TYPES,coda_set_option_bypass_special_types)(int *enable)
 {
     return coda_set_option_bypass_special_types(*enable);
@@ -250,40 +273,40 @@ int UFNAME(CODA_OPEN,coda_open)(char *filename, void *pf, int filename_size)
 {
     int result;
     INSTR_BEGIN(filename)
-    result = coda_open(filename_s, (coda_ProductFile **)pf);
+    result = coda_open(filename_s, (coda_product **)pf);
     INSTR_END(filename)
     return result;
 }
 
 int UFNAME(CODA_CLOSE,coda_close)(void *pf)
 {
-    return coda_close(*(coda_ProductFile **)pf);
+    return coda_close(*(coda_product **)pf);
 }
 
 int UFNAME(CODA_GET_PRODUCT_FILENAME,coda_get_product_filename)(void *pf, char *filename, int filename_size)
 {
     int result;
     OUTSTR_BEGIN(filename)
-    result = coda_get_product_filename(*(coda_ProductFile **)pf, &filename_s);
+    result = coda_get_product_filename(*(coda_product **)pf, &filename_s);
     OUTSTR_END(filename)
     return result;
 }
 
 int UFNAME(CODA_GET_PRODUCT_FILE_SIZE,coda_get_product_file_size)(void *pf, int64_t *file_size)
 {
-    return coda_get_product_file_size(*(coda_ProductFile **)pf, file_size);
+    return coda_get_product_file_size(*(coda_product **)pf, file_size);
 }
 
 int UFNAME(CODA_GET_PRODUCT_FORMAT,coda_get_product_format)(void *pf, void *format)
 {
-    return coda_get_product_format(*(coda_ProductFile **)pf, (coda_format *)format);
+    return coda_get_product_format(*(coda_product **)pf, (coda_format *)format);
 }
 
 int UFNAME(CODA_GET_PRODUCT_CLASS,coda_get_product_class)(void *pf, char *product_class, int product_class_size)
 {
     int result;
     OUTSTR_BEGIN(product_class)
-    result = coda_get_product_class(*(coda_ProductFile **)pf, &product_class_s);
+    result = coda_get_product_class(*(coda_product **)pf, &product_class_s);
     OUTSTR_END(product_class)
     return result;
 }
@@ -292,26 +315,26 @@ int UFNAME(CODA_GET_PRODUCT_TYPE,coda_get_product_type)(void *pf, char *product_
 {
     int result;
     OUTSTR_BEGIN(product_type)
-    result = coda_get_product_type(*(coda_ProductFile **)pf, &product_type_s);
+    result = coda_get_product_type(*(coda_product **)pf, &product_type_s);
     OUTSTR_END(product_type)
     return result;
 }
 
 int UFNAME(CODA_GET_PRODUCT_VERSION,coda_get_product_version)(void *pf, int *version)
 {
-    return coda_get_product_version(*(coda_ProductFile **)pf, version);
+    return coda_get_product_version(*(coda_product **)pf, version);
 }
 
 int UFNAME(CODA_GET_PRODUCT_ROOT_TYPE,coda_get_product_root_type)(void *pf, void *type)
 {
-    return coda_get_product_root_type(*(coda_ProductFile **)pf, (coda_Type **)type);
+    return coda_get_product_root_type(*(coda_product **)pf, (coda_type **)type);
 }
 
 int UFNAME(CODA_GET_PRODUCT_VARIABLE_VALUE,coda_get_product_variable_value)(void *pf, char *variable, int *index, int64_t *value, int variable_size)
 {
     int result;
     INSTR_BEGIN(variable)
-    result = coda_get_product_variable_value(*(coda_ProductFile **)pf, variable_s, *index, value);
+    result = coda_get_product_variable_value(*(coda_product **)pf, variable_s, *index, value);
     INSTR_END(variable)
     return result;
 }
@@ -346,39 +369,39 @@ void UFNAME(CODA_TYPE_GET_SPECIAL_TYPE_NAME,coda_type_get_special_type_name)(int
 
 int UFNAME(CODA_TYPE_HAS_ASCII_CONTENT,coda_type_has_ascii_content)(void *type, int *has_ascii_content)
 {
-    return coda_type_has_ascii_content(*(coda_Type **)type, has_ascii_content);
+    return coda_type_has_ascii_content(*(coda_type **)type, has_ascii_content);
 }
 
 int UFNAME(CODA_TYPE_GET_FORMAT,coda_type_get_format)(void *type, int *format)
 {
-    return coda_type_get_format(*(coda_Type **)type, (coda_format *)format);
+    return coda_type_get_format(*(coda_type **)type, (coda_format *)format);
 }
 
 int UFNAME(CODA_TYPE_GET_CLASS,coda_type_get_class)(void *type, int *type_class)
 {
-    return coda_type_get_class(*(coda_Type **)type, (coda_type_class *)type_class);
+    return coda_type_get_class(*(coda_type **)type, (coda_type_class *)type_class);
 }
 
 int UFNAME(CODA_TYPE_GET_READ_TYPE,coda_type_get_read_type)(void *type, int *read_type)
 {
-    return coda_type_get_read_type(*(coda_Type **)type, (coda_native_type *)read_type);
+    return coda_type_get_read_type(*(coda_type **)type, (coda_native_type *)read_type);
 }
 
 int UFNAME(CODA_TYPE_GET_STRING_LENGTH,coda_type_get_string_length)(void *type, long *length)
 {
-    return coda_type_get_string_length(*(coda_Type **)type, length);
+    return coda_type_get_string_length(*(coda_type **)type, length);
 }
 
 int UFNAME(CODA_TYPE_GET_BIT_SIZE,coda_type_get_bit_size)(void *type, int64_t *bit_size)
 {
-    return coda_type_get_bit_size(*(coda_Type **)type, bit_size);
+    return coda_type_get_bit_size(*(coda_type **)type, bit_size);
 }
 
 int UFNAME(CODA_TYPE_GET_NAME,coda_type_get_name)(void *type, char *name, int name_size)
 {
     int result;
     OUTSTR_BEGIN(name)
-    result = coda_type_get_name(*(coda_Type **)type, &name_s);
+    result = coda_type_get_name(*(coda_type **)type, &name_s);
     OUTSTR_END(name)
     return result;
 }
@@ -387,7 +410,7 @@ int UFNAME(CODA_TYPE_GET_DESCRIPTION,coda_type_get_description)(void *type, char
 {
     int result;
     OUTSTR_BEGIN(description)
-    result = coda_type_get_description(*(coda_Type **)type, &description_s);
+    result = coda_type_get_description(*(coda_type **)type, &description_s);
     OUTSTR_END(description)
     return result;
 }
@@ -396,7 +419,7 @@ int UFNAME(CODA_TYPE_GET_UNIT,coda_type_get_unit)(void *type, char *unit, int un
 {
     int result;
     OUTSTR_BEGIN(unit)
-    result = coda_type_get_unit(*(coda_Type **)type, &unit_s);
+    result = coda_type_get_unit(*(coda_type **)type, &unit_s);
     OUTSTR_END(unit)
     return result;
 }
@@ -406,332 +429,341 @@ int UFNAME(CODA_TYPE_GET_FIXED_VALUE,coda_type_get_fixed_value)(void *type, char
 {
     int result;
     OUTSTR_BEGIN(fixed_value)
-    result = coda_type_get_fixed_value(*(coda_Type **)type, &fixed_value_s, length);
+    result = coda_type_get_fixed_value(*(coda_type **)type, &fixed_value_s, length);
     OUTSTR_END(fixed_value)
     return result;
 }
 
 int UFNAME(CODA_TYPE_GET_NUM_RECORD_FIELDS,coda_type_get_num_record_fields)(void *type, long *n_fields)
 {
-    return coda_type_get_num_record_fields(*(coda_Type **)type, n_fields);
+    return coda_type_get_num_record_fields(*(coda_type **)type, n_fields);
 }
 
 int UFNAME(CODA_TYPE_GET_RECORD_FIELD_INDEX_FROM_NAME,coda_type_get_record_field_index_from_name)(void *type, char *name, long *index, int name_size)
 {
     int result;
     INSTR_BEGIN(name)
-    result = coda_type_get_record_field_index_from_name(*(coda_Type **)type, name_s, index);
+    result = coda_type_get_record_field_index_from_name(*(coda_type **)type, name_s, index);
     INSTR_END(name)
     return result;
 }
 
 int UFNAME(CODA_TYPE_GET_RECORD_FIELD_TYPE,coda_type_get_record_field_type)(void *type, long *index, void *field_type)
 {
-    return coda_type_get_record_field_type(*(coda_Type **)type, *index, (coda_Type **)field_type);
+    return coda_type_get_record_field_type(*(coda_type **)type, *index, (coda_type **)field_type);
 }
 
 int UFNAME(CODA_TYPE_GET_RECORD_FIELD_NAME,coda_type_get_record_field_name)(void *type, long *index, char *name, int name_size)
 {
     int result;
     OUTSTR_BEGIN(name)
-    result = coda_type_get_record_field_name(*(coda_Type **)type, *index, &name_s);
+    result = coda_type_get_record_field_name(*(coda_type **)type, *index, &name_s);
     OUTSTR_END(name)
+    return result;
+}
+
+int UFNAME(CODA_TYPE_GET_RECORD_FIELD_REAL_NAME,coda_type_get_record_field_real_name)(void *type, long *index, char *real_name, int real_name_size)
+{
+    int result;
+    OUTSTR_BEGIN(real_name)
+    result = coda_type_get_record_field_real_name(*(coda_type **)type, *index, &real_name_s);
+    OUTSTR_END(real_name)
     return result;
 }
 
 int UFNAME(CODA_TYPE_GET_RECORD_FIELD_HIDDEN_STATUS,coda_type_get_record_field_hidden_status)(void *type, long *index, int *hidden)
 {
-    return coda_type_get_record_field_hidden_status(*(coda_Type **)type, *index, hidden);
+    return coda_type_get_record_field_hidden_status(*(coda_type **)type, *index, hidden);
 }
 
 int UFNAME(CODA_TYPE_GET_RECORD_FIELD_AVAILABLE_STATUS,coda_type_get_record_field_available_status)(void *type, long *index, int *available)
 {
-    return coda_type_get_record_field_available_status(*(coda_Type **)type, *index, available);
+    return coda_type_get_record_field_available_status(*(coda_type **)type, *index, available);
 }
 
 int UFNAME(CODA_TYPE_GET_RECORD_UNION_STATUS,coda_type_get_record_union_status)(void *type, int *is_union)
 {
-    return coda_type_get_record_union_status(*(coda_Type **)type, is_union);
+    return coda_type_get_record_union_status(*(coda_type **)type, is_union);
 }
 
 int UFNAME(CODA_TYPE_GET_ARRAY_NUM_DIMS,coda_type_get_array_num_dims)(void *type, int *num_dims)
 {
-    return coda_type_get_array_num_dims(*(coda_Type **)type, num_dims);
+    return coda_type_get_array_num_dims(*(coda_type **)type, num_dims);
 }
 
 int UFNAME(CODA_TYPE_GET_ARRAY_DIM,coda_type_get_array_dim)(void *type, int *num_dims, long *dim)
 {
-    return coda_type_get_array_dim(*(coda_Type **)type, num_dims, dim);    
+    return coda_type_get_array_dim(*(coda_type **)type, num_dims, dim);    
 }
 
 int UFNAME(CODA_TYPE_GET_ARRAY_BASE_TYPE,coda_type_get_array_base_type)(void *type, void *base_type)
 {
-    return coda_type_get_array_base_type(*(coda_Type **)type, (coda_Type **)base_type);
+    return coda_type_get_array_base_type(*(coda_type **)type, (coda_type **)base_type);
 }
 
 int UFNAME(CODA_TYPE_GET_SPECIAL_TYPE,coda_type_get_special_type)(void *type, int *special_type)
 {
-    return coda_type_get_special_type(*(coda_Type **)type, (coda_special_type *)special_type);
+    return coda_type_get_special_type(*(coda_type **)type, (coda_special_type *)special_type);
 }
 
 int UFNAME(CODA_TYPE_GET_SPECIAL_BASE_TYPE,coda_type_get_special_base_type)(void *type, void *base_type)
 {
-    return coda_type_get_special_base_type(*(coda_Type **)type, (coda_Type **)base_type);
+    return coda_type_get_special_base_type(*(coda_type **)type, (coda_type **)base_type);
 }
 
 void *UFNAME(CODA_CURSOR_NEW,coda_cursor_new)()
 {
-    return malloc(sizeof(coda_Cursor));
+    return malloc(sizeof(coda_cursor));
 }
 
 void *UFNAME(CODA_CURSOR_DUPLICATE,coda_cursor_duplicate)(void *cursor)
 {
-    coda_Cursor *new_cursor;
+    coda_cursor *new_cursor;
 
-    new_cursor = malloc(sizeof(coda_Cursor));
-    memcpy(new_cursor, *(coda_Cursor **)cursor, sizeof(coda_Cursor));
+    new_cursor = malloc(sizeof(coda_cursor));
+    memcpy(new_cursor, *(coda_cursor **)cursor, sizeof(coda_cursor));
 
     return new_cursor;
 }
 
 void UFNAME(CODA_CURSOR_DELETE,coda_cursor_delete)(void *cursor)
 {
-    free(*(coda_Cursor **)cursor);
+    free(*(coda_cursor **)cursor);
 }
 
 int UFNAME(CODA_CURSOR_SET_PRODUCT,coda_cursor_set_product)(void *cursor, void *pf)
 {
-    return coda_cursor_set_product(*(coda_Cursor **)cursor, *(coda_ProductFile **)pf);
+    return coda_cursor_set_product(*(coda_cursor **)cursor, *(coda_product **)pf);
 }
 
 int UFNAME(CODA_CURSOR_GOTO_FIRST_RECORD_FIELD,coda_cursor_goto_first_record_field)(void *cursor)
 {
-    return coda_cursor_goto_first_record_field(*(coda_Cursor **)cursor);
+    return coda_cursor_goto_first_record_field(*(coda_cursor **)cursor);
 }
 
 int UFNAME(CODA_CURSOR_GOTO_NEXT_RECORD_FIELD,coda_cursor_goto_next_record_field)(void *cursor)
 {
-    return coda_cursor_goto_next_record_field(*(coda_Cursor **)cursor);
+    return coda_cursor_goto_next_record_field(*(coda_cursor **)cursor);
 }
 
 int UFNAME(CODA_CURSOR_GOTO_RECORD_FIELD_BY_INDEX,coda_cursor_goto_record_field_by_index)(void *cursor, long *index)
 {
-    return coda_cursor_goto_record_field_by_index(*(coda_Cursor **)cursor, *index);
+    return coda_cursor_goto_record_field_by_index(*(coda_cursor **)cursor, *index);
 }
 
 int UFNAME(CODA_CURSOR_GOTO_RECORD_FIELD_BY_NAME,coda_cursor_goto_record_field_by_name)(void *cursor, char *name, int name_size)
 {
     int result;
     INSTR_BEGIN(name)
-    result = coda_cursor_goto_record_field_by_name(*(coda_Cursor **)cursor, name_s);
+    result = coda_cursor_goto_record_field_by_name(*(coda_cursor **)cursor, name_s);
     INSTR_END(name)
     return result;
 }
 
 int UFNAME(CODA_CURSOR_GOTO_AVAILABLE_UNION_FIELD,coda_cursor_goto_available_union_field)(void *cursor)
 {
-    return coda_cursor_goto_available_union_field(*(coda_Cursor **)cursor);
+    return coda_cursor_goto_available_union_field(*(coda_cursor **)cursor);
 }
 
 int UFNAME(CODA_CURSOR_GOTO_FIRST_ARRAY_ELEMENT,coda_cursor_goto_first_array_element)(void *cursor)
 {
-    return coda_cursor_goto_first_array_element(*(coda_Cursor **)cursor);
+    return coda_cursor_goto_first_array_element(*(coda_cursor **)cursor);
 }
 
 int UFNAME(CODA_CURSOR_GOTO_NEXT_ARRAY_ELEMENT,coda_cursor_goto_next_array_element)(void *cursor)
 {
-    return coda_cursor_goto_next_array_element(*(coda_Cursor **)cursor);
+    return coda_cursor_goto_next_array_element(*(coda_cursor **)cursor);
 }
 
 int UFNAME(CODA_CURSOR_GOTO_ARRAY_ELEMENT,coda_cursor_goto_array_element)(void *cursor, int *n_subs, long *subs)
 {
-    return coda_cursor_goto_array_element(*(coda_Cursor **)cursor, *n_subs, subs);
+    return coda_cursor_goto_array_element(*(coda_cursor **)cursor, *n_subs, subs);
 }
 
 int UFNAME(CODA_CURSOR_GOTO_ARRAY_ELEMENT_BY_INDEX,coda_cursor_goto_array_element_by_index)(void *cursor, long *index)
 {
-    return coda_cursor_goto_array_element_by_index(*(coda_Cursor **)cursor, *index);
+    return coda_cursor_goto_array_element_by_index(*(coda_cursor **)cursor, *index);
 }
 
 int UFNAME(CODA_CURSOR_GOTO_ATTRIBUTES,coda_cursor_goto_attributes)(void *cursor)
 {
-    return coda_cursor_goto_attributes(*(coda_Cursor **)cursor);
+    return coda_cursor_goto_attributes(*(coda_cursor **)cursor);
 }
 
 int UFNAME(CODA_CURSOR_GOTO_ROOT,coda_cursor_goto_root)(void *cursor)
 {
-    return coda_cursor_goto_root(*(coda_Cursor **)cursor);
+    return coda_cursor_goto_root(*(coda_cursor **)cursor);
 }
 
 int UFNAME(CODA_CURSOR_GOTO_PARENT,coda_cursor_goto_parent)(void *cursor)
 {
-    return coda_cursor_goto_parent(*(coda_Cursor **)cursor);
+    return coda_cursor_goto_parent(*(coda_cursor **)cursor);
 }
 
 int UFNAME(CODA_CURSOR_USE_BASE_TYPE_OF_SPECIAL_TYPE,coda_cursor_use_base_type_of_special_type)(void *cursor)
 {
-    return coda_cursor_use_base_type_of_special_type(*(coda_Cursor **)cursor);
+    return coda_cursor_use_base_type_of_special_type(*(coda_cursor **)cursor);
 }
 
 int UFNAME(CODA_CURSOR_HAS_ASCII_CONTENT,coda_cursor_has_ascii_content)(void *cursor, int *has_ascii_content)
 {
-    return coda_cursor_has_ascii_content(*(coda_Cursor **)cursor, has_ascii_content);
+    return coda_cursor_has_ascii_content(*(coda_cursor **)cursor, has_ascii_content);
 }
 
 int UFNAME(CODA_CURSOR_GET_STRING_LENGTH,coda_cursor_get_string_length)(void *cursor, long *length)
 {
-    return coda_cursor_get_string_length(*(coda_Cursor **)cursor, length);
+    return coda_cursor_get_string_length(*(coda_cursor **)cursor, length);
 }
 
 int UFNAME(CODA_CURSOR_GET_BIT_SIZE,coda_cursor_get_bit_size)(void *cursor, int64_t *bit_size)
 {
-    return coda_cursor_get_bit_size(*(coda_Cursor **)cursor, bit_size);
+    return coda_cursor_get_bit_size(*(coda_cursor **)cursor, bit_size);
 }
 
 int UFNAME(CODA_CURSOR_GET_BYTE_SIZE,coda_cursor_get_byte_size)(void *cursor, int64_t *byte_size)
 {
-    return coda_cursor_get_byte_size(*(coda_Cursor **)cursor, byte_size);
+    return coda_cursor_get_byte_size(*(coda_cursor **)cursor, byte_size);
 }
 
 int UFNAME(CODA_CURSOR_GET_NUM_ELEMENTS,coda_cursor_get_num_elements)(void *cursor, long *num_elements)
 {
-    return coda_cursor_get_num_elements(*(coda_Cursor **)cursor, num_elements);
+    return coda_cursor_get_num_elements(*(coda_cursor **)cursor, num_elements);
 }
 
 int UFNAME(CODA_CURSOR_GET_PRODUCT_FILE,coda_cursor_get_product_file)(void *cursor, void *pf)
 {
-    return coda_cursor_get_product_file(*(coda_Cursor **)cursor, (coda_ProductFile **)pf);
+    return coda_cursor_get_product_file(*(coda_cursor **)cursor, (coda_product **)pf);
 }
 
 int UFNAME(CODA_CURSOR_GET_DEPTH,coda_cursor_get_depth)(void *cursor, int *depth)
 {
-    return coda_cursor_get_depth(*(coda_Cursor **)cursor, depth);
+    return coda_cursor_get_depth(*(coda_cursor **)cursor, depth);
 }
 
 int UFNAME(CODA_CURSOR_GET_INDEX,coda_cursor_get_index)(void *cursor, long *index)
 {
-    return coda_cursor_get_index(*(coda_Cursor **)cursor, index);
+    return coda_cursor_get_index(*(coda_cursor **)cursor, index);
 }
 
 int UFNAME(CODA_CURSOR_GET_FILE_BIT_OFFSET,coda_cursor_get_file_bit_offset)(void *cursor, int64_t *bit_offset)
 {
-    return coda_cursor_get_file_bit_offset(*(coda_Cursor **)cursor, bit_offset);
+    return coda_cursor_get_file_bit_offset(*(coda_cursor **)cursor, bit_offset);
 }
 
 int UFNAME(CODA_CURSOR_GET_FILE_BYTE_OFFSET,coda_cursor_get_file_byte_offset)(void *cursor, int64_t *byte_offset)
 {
-    return coda_cursor_get_file_byte_offset(*(coda_Cursor **)cursor, byte_offset);
+    return coda_cursor_get_file_byte_offset(*(coda_cursor **)cursor, byte_offset);
 }
 
 int UFNAME(CODA_CURSOR_GET_FORMAT,coda_cursor_get_format)(void *cursor, int *format)
 {
-    return coda_cursor_get_format(*(coda_Cursor **)cursor, (coda_format *)format);
+    return coda_cursor_get_format(*(coda_cursor **)cursor, (coda_format *)format);
 }
 
 int UFNAME(CODA_CURSOR_GET_TYPE_CLASS,coda_cursor_get_type_class)(void *cursor, int *type_class)
 {
-    return coda_cursor_get_type_class(*(coda_Cursor **)cursor, (coda_type_class *)type_class);
+    return coda_cursor_get_type_class(*(coda_cursor **)cursor, (coda_type_class *)type_class);
 }
 
 int UFNAME(CODA_CURSOR_GET_READ_TYPE,coda_cursor_get_read_type)(void *cursor, int *read_type)
 {
-    return coda_cursor_get_read_type(*(coda_Cursor **)cursor, (coda_native_type *)read_type);
+    return coda_cursor_get_read_type(*(coda_cursor **)cursor, (coda_native_type *)read_type);
 }
 
 int UFNAME(CODA_CURSOR_GET_SPECIAL_TYPE,coda_cursor_get_special_type)(void *cursor, int *special_type)
 {
-    return coda_cursor_get_special_type(*(coda_Cursor **)cursor, (coda_special_type *)special_type);
+    return coda_cursor_get_special_type(*(coda_cursor **)cursor, (coda_special_type *)special_type);
 }
 
 int UFNAME(CODA_CURSOR_GET_TYPE,coda_cursor_get_type)(void *cursor, void *type)
 {
-    return coda_cursor_get_type(*(coda_Cursor **)cursor, (coda_Type **)type);
+    return coda_cursor_get_type(*(coda_cursor **)cursor, (coda_type **)type);
 }
 
 int UFNAME(CODA_CURSOR_GET_RECORD_FIELD_INDEX_FROM_NAME,coda_cursor_get_record_field_index_from_name)(void *cursor, char *name, long *index, int name_size)
 {
     int result;
     INSTR_BEGIN(name)
-    result = coda_cursor_get_record_field_index_from_name(*(coda_Cursor **)cursor, name_s, index);
+    result = coda_cursor_get_record_field_index_from_name(*(coda_cursor **)cursor, name_s, index);
     INSTR_END(name)
     return result;
 }
 
 int UFNAME(CODA_CURSOR_GET_RECORD_FIELD_AVAILABLE_STATUS,coda_cursor_get_record_field_available_status)(void *cursor, long *index, int *available)
 {
-    return coda_cursor_get_record_field_available_status(*(coda_Cursor **)cursor, *index, available);
+    return coda_cursor_get_record_field_available_status(*(coda_cursor **)cursor, *index, available);
 }
 
 int UFNAME(CODA_CURSOR_GET_AVAILABLE_UNION_FIELD_INDEX,coda_cursor_get_available_union_field_index)(void *cursor, long *index)
 {
-    return coda_cursor_get_available_union_field_index(*(coda_Cursor **)cursor, index);
+    return coda_cursor_get_available_union_field_index(*(coda_cursor **)cursor, index);
 }
 
 int UFNAME(CODA_CURSOR_GET_ARRAY_DIM,coda_cursor_get_array_dim)(void *cursor, int *num_dims, long *dim)
 {
-    return coda_cursor_get_array_dim(*(coda_Cursor **)cursor, num_dims, dim);
+    return coda_cursor_get_array_dim(*(coda_cursor **)cursor, num_dims, dim);
 }
 
 int UFNAME(CODA_CURSOR_READ_INT8,coda_cursor_read_int8)(void *cursor, int8_t *dst)
 {
-    return coda_cursor_read_int8(*(coda_Cursor **)cursor, dst);
+    return coda_cursor_read_int8(*(coda_cursor **)cursor, dst);
 }
 
 int UFNAME(CODA_CURSOR_READ_UINT8,coda_cursor_read_uint8)(void *cursor, uint8_t *dst)
 {
-    return coda_cursor_read_uint8(*(coda_Cursor **)cursor, dst);
+    return coda_cursor_read_uint8(*(coda_cursor **)cursor, dst);
 }
 
 int UFNAME(CODA_CURSOR_READ_INT16,coda_cursor_read_int16)(void *cursor, int16_t *dst)
 {
-    return coda_cursor_read_int16(*(coda_Cursor **)cursor, dst);
+    return coda_cursor_read_int16(*(coda_cursor **)cursor, dst);
 }
 
 int UFNAME(CODA_CURSOR_READ_UINT16,coda_cursor_read_uint16)(void *cursor, uint16_t *dst)
 {
-    return coda_cursor_read_uint16(*(coda_Cursor **)cursor, dst);
+    return coda_cursor_read_uint16(*(coda_cursor **)cursor, dst);
 }
 
 int UFNAME(CODA_CURSOR_READ_INT32,coda_cursor_read_int32)(void *cursor, int32_t *dst)
 {
-    return coda_cursor_read_int32(*(coda_Cursor **)cursor, dst);
+    return coda_cursor_read_int32(*(coda_cursor **)cursor, dst);
 }
 
 int UFNAME(CODA_CURSOR_READ_UINT32,coda_cursor_read_uint32)(void *cursor, uint32_t *dst)
 {
-    return coda_cursor_read_uint32(*(coda_Cursor **)cursor, dst);
+    return coda_cursor_read_uint32(*(coda_cursor **)cursor, dst);
 }
 
 int UFNAME(CODA_CURSOR_READ_INT64,coda_cursor_read_int64)(void *cursor, int64_t *dst)
 {
-    return coda_cursor_read_int64(*(coda_Cursor **)cursor, dst);
+    return coda_cursor_read_int64(*(coda_cursor **)cursor, dst);
 }
 
 int UFNAME(CODA_CURSOR_READ_UINT64,coda_cursor_read_uint64)(void *cursor, uint64_t *dst)
 {
-    return coda_cursor_read_uint64(*(coda_Cursor **)cursor, dst);
+    return coda_cursor_read_uint64(*(coda_cursor **)cursor, dst);
 }
 
 int UFNAME(CODA_CURSOR_READ_FLOAT,coda_cursor_read_float)(void *cursor, float *dst)
 {
-    return coda_cursor_read_float(*(coda_Cursor **)cursor, dst);
+    return coda_cursor_read_float(*(coda_cursor **)cursor, dst);
 }
 
 int UFNAME(CODA_CURSOR_READ_DOUBLE,coda_cursor_read_double)(void *cursor, double *dst)
 {
-    return coda_cursor_read_double(*(coda_Cursor **)cursor, dst);
+    return coda_cursor_read_double(*(coda_cursor **)cursor, dst);
 }
 
 int UFNAME(CODA_CURSOR_READ_CHAR,coda_cursor_read_char)(void *cursor, char *dst)
 {
-    return coda_cursor_read_char(*(coda_Cursor **)cursor, dst);
+    return coda_cursor_read_char(*(coda_cursor **)cursor, dst);
 }
 
 int UFNAME(CODA_CURSOR_READ_STRING,coda_cursor_read_string)(void *cursor, char *dst, int dst_size)
 {
     int result;
     INOUTSTR_BEGIN(dst)
-    result = coda_cursor_read_string(*(coda_Cursor **)cursor, dst_s, dst_size + 1);
+    result = coda_cursor_read_string(*(coda_cursor **)cursor, dst_s, dst_size + 1);
     INOUTSTR_END(dst)
     return result;
 }
@@ -739,85 +771,85 @@ int UFNAME(CODA_CURSOR_READ_STRING,coda_cursor_read_string)(void *cursor, char *
 int UFNAME(CODA_CURSOR_READ_BITS,coda_cursor_read_bits)(void *cursor, int8_t *dst, int64_t *bit_offset,
                                                         int64_t *bit_length)
 {
-    return coda_cursor_read_bits(*(coda_Cursor **)cursor, (uint8_t *)dst, *bit_offset, *bit_length);
+    return coda_cursor_read_bits(*(coda_cursor **)cursor, (uint8_t *)dst, *bit_offset, *bit_length);
 }
 
 int UFNAME(CODA_CURSOR_READ_BYTES,coda_cursor_read_bytes)(void *cursor, int8_t *dst, int64_t *offset, int64_t *length)
 {
-    return coda_cursor_read_bytes(*(coda_Cursor **)cursor, (uint8_t *)dst, *offset, *length);
+    return coda_cursor_read_bytes(*(coda_cursor **)cursor, (uint8_t *)dst, *offset, *length);
 }
 
 int UFNAME(CODA_CURSOR_READ_INT8_ARRAY,coda_cursor_read_int8_array)(void *cursor, int8_t *dst, int *array_ordering)
 {
-    return coda_cursor_read_int8_array(*(coda_Cursor **)cursor, dst, (coda_array_ordering)*array_ordering);
+    return coda_cursor_read_int8_array(*(coda_cursor **)cursor, dst, (coda_array_ordering)*array_ordering);
 }
 
 int UFNAME(CODA_CURSOR_READ_UINT8_ARRAY,coda_cursor_read_uint8_array)(void *cursor, uint8_t *dst, int *array_ordering)
 {
-    return coda_cursor_read_uint8_array(*(coda_Cursor **)cursor, dst, (coda_array_ordering)*array_ordering);
+    return coda_cursor_read_uint8_array(*(coda_cursor **)cursor, dst, (coda_array_ordering)*array_ordering);
 }
 
 int UFNAME(CODA_CURSOR_READ_INT16_ARRAY,coda_cursor_read_int16_array)(void *cursor, int16_t *dst, int *array_ordering)
 {
-    return coda_cursor_read_int16_array(*(coda_Cursor **)cursor, dst, (coda_array_ordering)*array_ordering);
+    return coda_cursor_read_int16_array(*(coda_cursor **)cursor, dst, (coda_array_ordering)*array_ordering);
 }
 
 int UFNAME(CODA_CURSOR_READ_UINT16_ARRAY,coda_cursor_read_uint16_array)(void *cursor, uint16_t *dst, int *array_ordering)
 {
-    return coda_cursor_read_uint16_array(*(coda_Cursor **)cursor, dst, (coda_array_ordering)*array_ordering);
+    return coda_cursor_read_uint16_array(*(coda_cursor **)cursor, dst, (coda_array_ordering)*array_ordering);
 }
 
 int UFNAME(CODA_CURSOR_READ_INT32_ARRAY,coda_cursor_read_int32_array)(void *cursor, int32_t *dst, int *array_ordering)
 {
-    return coda_cursor_read_int32_array(*(coda_Cursor **)cursor, dst, (coda_array_ordering)*array_ordering);
+    return coda_cursor_read_int32_array(*(coda_cursor **)cursor, dst, (coda_array_ordering)*array_ordering);
 }
 
 int UFNAME(CODA_CURSOR_READ_UINT32_ARRAY,coda_cursor_read_uint32_array)(void *cursor, uint32_t *dst, int *array_ordering)
 {
-    return coda_cursor_read_uint32_array(*(coda_Cursor **)cursor, dst, (coda_array_ordering)*array_ordering);
+    return coda_cursor_read_uint32_array(*(coda_cursor **)cursor, dst, (coda_array_ordering)*array_ordering);
 }
 
 int UFNAME(CODA_CURSOR_READ_INT64_ARRAY,coda_cursor_read_int64_array)(void *cursor, int64_t *dst, int *array_ordering)
 {
-    return coda_cursor_read_int64_array(*(coda_Cursor **)cursor, dst, (coda_array_ordering)*array_ordering);
+    return coda_cursor_read_int64_array(*(coda_cursor **)cursor, dst, (coda_array_ordering)*array_ordering);
 }
 
 int UFNAME(CODA_CURSOR_READ_UINT64_ARRAY,coda_cursor_read_uint64_array)(void *cursor, uint64_t *dst, int *array_ordering)
 {
-    return coda_cursor_read_uint64_array(*(coda_Cursor **)cursor, dst, (coda_array_ordering)*array_ordering);
+    return coda_cursor_read_uint64_array(*(coda_cursor **)cursor, dst, (coda_array_ordering)*array_ordering);
 }
 
 int UFNAME(CODA_CURSOR_READ_FLOAT_ARRAY,coda_cursor_read_float_array)(void *cursor, float *dst, int *array_ordering)
 {
-    return coda_cursor_read_float_array(*(coda_Cursor **)cursor, dst, (coda_array_ordering)*array_ordering);
+    return coda_cursor_read_float_array(*(coda_cursor **)cursor, dst, (coda_array_ordering)*array_ordering);
 }
 
 int UFNAME(CODA_CURSOR_READ_DOUBLE_ARRAY,coda_cursor_read_double_array)(void *cursor, double *dst, int *array_ordering)
 {
-    return coda_cursor_read_double_array(*(coda_Cursor **)cursor, dst, (coda_array_ordering)*array_ordering);
+    return coda_cursor_read_double_array(*(coda_cursor **)cursor, dst, (coda_array_ordering)*array_ordering);
 }
 
 int UFNAME(CODA_CURSOR_READ_CHAR_ARRAY,coda_cursor_read_char_array)(void *cursor, char *dst, int *array_ordering)
 {
-    return coda_cursor_read_char_array(*(coda_Cursor **)cursor, dst, (coda_array_ordering)*array_ordering);
+    return coda_cursor_read_char_array(*(coda_cursor **)cursor, dst, (coda_array_ordering)*array_ordering);
 }
 
 int UFNAME(CODA_CURSOR_READ_COMPLEX_DOUBLE_PAIR,coda_cursor_read_complex_double_pair)(void *cursor, double *dst)
 {
-    return coda_cursor_read_complex_double_pair(*(coda_Cursor **)cursor, dst);
+    return coda_cursor_read_complex_double_pair(*(coda_cursor **)cursor, dst);
 }
 
 int UFNAME(CODA_CURSOR_READ_COMPLEX_DOUBLE_PAIRS_ARRAY,coda_cursor_read_complex_double_pairs_array)(void *cursor, double *dst, int *array_ordering)
 {
-    return coda_cursor_read_complex_double_pairs_array(*(coda_Cursor **)cursor, dst, (coda_array_ordering)*array_ordering);
+    return coda_cursor_read_complex_double_pairs_array(*(coda_cursor **)cursor, dst, (coda_array_ordering)*array_ordering);
 }
 
 int UFNAME(CODA_CURSOR_READ_COMPLEX_DOUBLE_SPLIT,coda_cursor_read_complex_double_split)(void *cursor, double *dst_re, double *dst_im)
 {
-    return coda_cursor_read_complex_double_split(*(coda_Cursor **)cursor, dst_re, dst_im);
+    return coda_cursor_read_complex_double_split(*(coda_cursor **)cursor, dst_re, dst_im);
 }
 
 int UFNAME(CODA_CURSOR_READ_COMPLEX_DOUBLE_SPLIT_ARRAY,coda_cursor_read_complex_double_split_array)(void *cursor, double *dst_re, double *dst_im, int *array_ordering)
 {
-    return coda_cursor_read_complex_double_split_array(*(coda_Cursor **)cursor, dst_re, dst_im, (coda_array_ordering)*array_ordering);
+    return coda_cursor_read_complex_double_split_array(*(coda_cursor **)cursor, dst_re, dst_im, (coda_array_ordering)*array_ordering);
 }

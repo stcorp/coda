@@ -88,7 +88,7 @@ static void swap8(void *value)
 }
 #endif
 
-static int read_bytes(coda_netcdfProductFile *product_file, int64_t byte_offset, int64_t length, void *dst)
+static int read_bytes(coda_netcdf_product *product_file, int64_t byte_offset, int64_t length, void *dst)
 {
     if (((uint64_t)byte_offset + length) > ((uint64_t)product_file->file_size))
     {
@@ -111,9 +111,11 @@ static int read_bytes(coda_netcdfProductFile *product_file, int64_t byte_offset,
 #else
         if (lseek(product_file->fd, (off_t)byte_offset, SEEK_SET) < 0)
         {
-            coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %f in file %s (%s)",
-                           (double)byte_offset, product_file->filename, strerror(errno));
-            return -1;
+            char byte_offset_str[21];
+
+            coda_str64(byte_offset, byte_offset_str);
+            coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %s in file %s (%s)",
+                           byte_offset_str, product_file->filename, strerror(errno));
         }
         if (read(product_file->fd, dst, (size_t)length) < 0)
         {
@@ -127,34 +129,34 @@ static int read_bytes(coda_netcdfProductFile *product_file, int64_t byte_offset,
     return 0;
 }
 
-int coda_netcdf_cursor_set_product(coda_Cursor *cursor, coda_ProductFile *pf)
+int coda_netcdf_cursor_set_product(coda_cursor *cursor, coda_product *product)
 {
-    cursor->pf = pf;
+    cursor->product = product;
     cursor->n = 1;
-    cursor->stack[0].type = pf->root_type;
+    cursor->stack[0].type = product->root_type;
     cursor->stack[0].index = -1;        /* there is no index for the root of the product */
     cursor->stack[0].bit_offset = -1;   /* not applicable for netCDF backend */
 
     return 0;
 }
 
-int coda_netcdf_cursor_goto_record_field_by_index(coda_Cursor *cursor, long index)
+int coda_netcdf_cursor_goto_record_field_by_index(coda_cursor *cursor, long index)
 {
-    coda_Type *field_type;
+    coda_type *field_type;
 
-    if (coda_netcdf_type_get_record_field_type((coda_Type *)cursor->stack[cursor->n - 1].type, index, &field_type) != 0)
+    if (coda_netcdf_type_get_record_field_type((coda_type *)cursor->stack[cursor->n - 1].type, index, &field_type) != 0)
     {
         return -1;
     }
 
     cursor->n++;
-    cursor->stack[cursor->n - 1].type = (coda_DynamicType *)field_type;
+    cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)field_type;
     cursor->stack[cursor->n - 1].index = index;
     cursor->stack[cursor->n - 1].bit_offset = -1;       /* not applicable for netCDF backend */
     return 0;
 }
 
-int coda_netcdf_cursor_goto_next_record_field(coda_Cursor *cursor)
+int coda_netcdf_cursor_goto_next_record_field(coda_cursor *cursor)
 {
     cursor->n--;
     if (coda_netcdf_cursor_goto_record_field_by_index(cursor, cursor->stack[cursor->n].index + 1) != 0)
@@ -165,15 +167,15 @@ int coda_netcdf_cursor_goto_next_record_field(coda_Cursor *cursor)
     return 0;
 }
 
-int coda_netcdf_cursor_goto_array_element(coda_Cursor *cursor, int num_subs, const long subs[])
+int coda_netcdf_cursor_goto_array_element(coda_cursor *cursor, int num_subs, const long subs[])
 {
-    coda_Type *base_type;
-    long offset_elements;
+    coda_type *base_type;
+    long index;
     int num_dims;
     long dim[CODA_MAX_NUM_DIMS];
     long i;
 
-    if (coda_netcdf_type_get_array_dim((coda_Type *)cursor->stack[cursor->n - 1].type, &num_dims, dim) != 0)
+    if (coda_netcdf_type_get_array_dim((coda_type *)cursor->stack[cursor->n - 1].type, &num_dims, dim) != 0)
     {
         return -1;
     }
@@ -188,7 +190,7 @@ int coda_netcdf_cursor_goto_array_element(coda_Cursor *cursor, int num_subs, con
     }
 
     /* check the dimensions... */
-    offset_elements = 0;
+    index = 0;
     for (i = 0; i < num_dims; i++)
     {
         if (subs[i] < 0 || subs[i] >= dim[i])
@@ -199,27 +201,27 @@ int coda_netcdf_cursor_goto_array_element(coda_Cursor *cursor, int num_subs, con
         }
         if (i > 0)
         {
-            offset_elements *= dim[i];
+            index *= dim[i];
         }
-        offset_elements += subs[i];
+        index += subs[i];
     }
 
-    if (coda_netcdf_type_get_array_base_type((coda_Type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
+    if (coda_netcdf_type_get_array_base_type((coda_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
     {
         return -1;
     }
 
     cursor->n++;
-    cursor->stack[cursor->n - 1].type = (coda_DynamicType *)base_type;
-    cursor->stack[cursor->n - 1].index = offset_elements;
+    cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)base_type;
+    cursor->stack[cursor->n - 1].index = index;
     cursor->stack[cursor->n - 1].bit_offset = -1;       /* not applicable for netCDF backend */
 
     return 0;
 }
 
-int coda_netcdf_cursor_goto_array_element_by_index(coda_Cursor *cursor, long index)
+int coda_netcdf_cursor_goto_array_element_by_index(coda_cursor *cursor, long index)
 {
-    coda_Type *base_type;
+    coda_type *base_type;
 
     /* check the range for index */
     if (coda_option_perform_boundary_checks)
@@ -238,20 +240,20 @@ int coda_netcdf_cursor_goto_array_element_by_index(coda_Cursor *cursor, long ind
         }
     }
 
-    if (coda_netcdf_type_get_array_base_type((coda_Type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
+    if (coda_netcdf_type_get_array_base_type((coda_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
     {
         return -1;
     }
 
     cursor->n++;
-    cursor->stack[cursor->n - 1].type = (coda_DynamicType *)base_type;
+    cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)base_type;
     cursor->stack[cursor->n - 1].index = index;
     cursor->stack[cursor->n - 1].bit_offset = -1;       /* not applicable for netCDF backend */
 
     return 0;
 }
 
-int coda_netcdf_cursor_goto_next_array_element(coda_Cursor *cursor)
+int coda_netcdf_cursor_goto_next_array_element(coda_cursor *cursor)
 {
     if (coda_option_perform_boundary_checks)
     {
@@ -281,45 +283,45 @@ int coda_netcdf_cursor_goto_next_array_element(coda_Cursor *cursor)
     return 0;
 }
 
-int coda_netcdf_cursor_goto_attributes(coda_Cursor *cursor)
+int coda_netcdf_cursor_goto_attributes(coda_cursor *cursor)
 {
-    coda_netcdfType *type;
+    coda_netcdf_type *type;
 
-    type = (coda_netcdfType *)cursor->stack[cursor->n - 1].type;
+    type = (coda_netcdf_type *)cursor->stack[cursor->n - 1].type;
     cursor->n++;
     switch (type->tag)
     {
         case tag_netcdf_attribute_record:
-            cursor->stack[cursor->n - 1].type = (coda_DynamicType *)coda_netcdf_empty_attribute_record();
+            cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)coda_netcdf_empty_attribute_record();
             break;
         case tag_netcdf_root:
-            if (((coda_netcdfRoot *)type)->attributes != NULL)
+            if (((coda_netcdf_root *)type)->attributes != NULL)
             {
-                cursor->stack[cursor->n - 1].type = (coda_DynamicType *)((coda_netcdfRoot *)type)->attributes;
+                cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)((coda_netcdf_root *)type)->attributes;
             }
             else
             {
-                cursor->stack[cursor->n - 1].type = (coda_DynamicType *)coda_netcdf_empty_attribute_record();
+                cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)coda_netcdf_empty_attribute_record();
             }
             break;
         case tag_netcdf_basic_type:
-            if (((coda_netcdfBasicType *)type)->attributes != NULL)
+            if (((coda_netcdf_basic_type *)type)->attributes != NULL)
             {
-                cursor->stack[cursor->n - 1].type = (coda_DynamicType *)((coda_netcdfBasicType *)type)->attributes;
+                cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)((coda_netcdf_basic_type *)type)->attributes;
             }
             else
             {
-                cursor->stack[cursor->n - 1].type = (coda_DynamicType *)coda_netcdf_empty_attribute_record();
+                cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)coda_netcdf_empty_attribute_record();
             }
             break;
         case tag_netcdf_array:
-            if (((coda_netcdfArray *)type)->attributes != NULL)
+            if (((coda_netcdf_array *)type)->attributes != NULL)
             {
-                cursor->stack[cursor->n - 1].type = (coda_DynamicType *)((coda_netcdfArray *)type)->attributes;
+                cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)((coda_netcdf_array *)type)->attributes;
             }
             else
             {
-                cursor->stack[cursor->n - 1].type = (coda_DynamicType *)coda_netcdf_empty_attribute_record();
+                cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)coda_netcdf_empty_attribute_record();
             }
             break;
         default:
@@ -334,24 +336,24 @@ int coda_netcdf_cursor_goto_attributes(coda_Cursor *cursor)
     return 0;
 }
 
-int coda_netcdf_cursor_get_num_elements(const coda_Cursor *cursor, long *num_elements)
+int coda_netcdf_cursor_get_num_elements(const coda_cursor *cursor, long *num_elements)
 {
-    coda_netcdfType *type;
+    coda_netcdf_type *type;
 
-    type = (coda_netcdfType *)cursor->stack[cursor->n - 1].type;
+    type = (coda_netcdf_type *)cursor->stack[cursor->n - 1].type;
     switch (type->tag)
     {
         case tag_netcdf_root:
-            *num_elements = (long)((coda_netcdfRoot *)type)->num_variables;
+            *num_elements = (long)((coda_netcdf_root *)type)->num_variables;
             break;
         case tag_netcdf_array:
-            *num_elements = (long)((coda_netcdfArray *)type)->num_elements;
+            *num_elements = (long)((coda_netcdf_array *)type)->num_elements;
             break;
         case tag_netcdf_basic_type:
             *num_elements = 1;
             break;
         case tag_netcdf_attribute_record:
-            *num_elements = ((coda_netcdfAttributeRecord *)type)->num_attributes;
+            *num_elements = ((coda_netcdf_attribute_record *)type)->num_attributes;
             break;
         default:
             assert(0);
@@ -361,26 +363,26 @@ int coda_netcdf_cursor_get_num_elements(const coda_Cursor *cursor, long *num_ele
     return 0;
 }
 
-int coda_netcdf_cursor_get_string_length(const coda_Cursor *cursor, long *length)
+int coda_netcdf_cursor_get_string_length(const coda_cursor *cursor, long *length)
 {
-    return coda_netcdf_type_get_string_length((coda_Type *)cursor->stack[cursor->n - 1].type, length);
+    return coda_netcdf_type_get_string_length((coda_type *)cursor->stack[cursor->n - 1].type, length);
 }
 
-int coda_netcdf_cursor_get_array_dim(const coda_Cursor *cursor, int *num_dims, long dim[])
+int coda_netcdf_cursor_get_array_dim(const coda_cursor *cursor, int *num_dims, long dim[])
 {
-    return coda_netcdf_type_get_array_dim((coda_Type *)cursor->stack[cursor->n - 1].type, num_dims, dim);
+    return coda_netcdf_type_get_array_dim((coda_type *)cursor->stack[cursor->n - 1].type, num_dims, dim);
 }
 
-static int read_array(const coda_Cursor *cursor, void *dst)
+static int read_array(const coda_cursor *cursor, void *dst)
 {
-    coda_netcdfArray *type;
-    coda_netcdfProductFile *pf;
+    coda_netcdf_array *type;
+    coda_netcdf_product *product;
     long block_size;
     long num_blocks;
     long i;
 
-    type = (coda_netcdfArray *)cursor->stack[cursor->n - 1].type;
-    pf = (coda_netcdfProductFile *)cursor->pf;
+    type = (coda_netcdf_array *)cursor->stack[cursor->n - 1].type;
+    product = (coda_netcdf_product *)cursor->product;
 
     block_size = type->base_type->byte_size * type->num_elements;
     num_blocks = 1;
@@ -392,7 +394,7 @@ static int read_array(const coda_Cursor *cursor, void *dst)
 
     for (i = 0; i < num_blocks; i++)
     {
-        if (read_bytes(pf, type->base_type->offset + i * pf->record_size, block_size,
+        if (read_bytes(product, type->base_type->offset + i * product->record_size, block_size,
                        &((uint8_t *)dst)[i * block_size]) != 0)
         {
             return -1;
@@ -432,28 +434,28 @@ static int read_array(const coda_Cursor *cursor, void *dst)
     return 0;
 }
 
-static int read_basic_type(const coda_Cursor *cursor, void *dst, long size_boundary)
+static int read_basic_type(const coda_cursor *cursor, void *dst, long size_boundary)
 {
-    coda_netcdfBasicType *type;
-    coda_netcdfProductFile *pf;
+    coda_netcdf_basic_type *type;
+    coda_netcdf_product *product;
     int64_t offset;
 
-    type = (coda_netcdfBasicType *)cursor->stack[cursor->n - 1].type;
-    pf = (coda_netcdfProductFile *)cursor->pf;
+    type = (coda_netcdf_basic_type *)cursor->stack[cursor->n - 1].type;
+    product = (coda_netcdf_product *)cursor->product;
     offset = type->offset;
 
     if (cursor->stack[cursor->n - 2].type->type_class == coda_array_class)
     {
         if (type->record_var)
         {
-            coda_netcdfArray *array = (coda_netcdfArray *)cursor->stack[cursor->n - 2].type;
+            coda_netcdf_array *array = (coda_netcdf_array *)cursor->stack[cursor->n - 2].type;
             long num_sub_elements;
             long record_index;
 
             num_sub_elements = array->num_elements / array->dim[0];
             record_index = cursor->stack[cursor->n - 1].index / num_sub_elements;
             /* jump to record */
-            offset += record_index * pf->record_size;
+            offset += record_index * product->record_size;
             /* jump to sub element in record */
             offset += (cursor->stack[cursor->n - 1].index - record_index * num_sub_elements) * type->byte_size;
         }
@@ -465,14 +467,14 @@ static int read_basic_type(const coda_Cursor *cursor, void *dst, long size_bound
 
     if (size_boundary >= 0 && type->byte_size > size_boundary)
     {
-        if (read_bytes(pf, offset, size_boundary, dst) != 0)
+        if (read_bytes(product, offset, size_boundary, dst) != 0)
         {
             return -1;
         }
     }
     else
     {
-        if (read_bytes(pf, offset, type->byte_size, dst) != 0)
+        if (read_bytes(product, offset, type->byte_size, dst) != 0)
         {
             return -1;
         }
@@ -505,9 +507,9 @@ static int read_basic_type(const coda_Cursor *cursor, void *dst, long size_bound
     return 0;
 }
 
-int coda_netcdf_cursor_read_int8(const coda_Cursor *cursor, int8_t *dst)
+int coda_netcdf_cursor_read_int8(const coda_cursor *cursor, int8_t *dst)
 {
-    coda_netcdfBasicType *type = (coda_netcdfBasicType *)cursor->stack[cursor->n - 1].type;
+    coda_netcdf_basic_type *type = (coda_netcdf_basic_type *)cursor->stack[cursor->n - 1].type;
 
     if (coda_option_perform_conversions && type->has_conversion)
     {
@@ -528,9 +530,9 @@ int coda_netcdf_cursor_read_int8(const coda_Cursor *cursor, int8_t *dst)
     return -1;
 }
 
-int coda_netcdf_cursor_read_uint8(const coda_Cursor *cursor, uint8_t *dst)
+int coda_netcdf_cursor_read_uint8(const coda_cursor *cursor, uint8_t *dst)
 {
-    coda_netcdfBasicType *type = (coda_netcdfBasicType *)cursor->stack[cursor->n - 1].type;
+    coda_netcdf_basic_type *type = (coda_netcdf_basic_type *)cursor->stack[cursor->n - 1].type;
 
     if (coda_option_perform_conversions && type->has_conversion)
     {
@@ -551,9 +553,9 @@ int coda_netcdf_cursor_read_uint8(const coda_Cursor *cursor, uint8_t *dst)
     return -1;
 }
 
-int coda_netcdf_cursor_read_int16(const coda_Cursor *cursor, int16_t *dst)
+int coda_netcdf_cursor_read_int16(const coda_cursor *cursor, int16_t *dst)
 {
-    coda_netcdfBasicType *type = (coda_netcdfBasicType *)cursor->stack[cursor->n - 1].type;
+    coda_netcdf_basic_type *type = (coda_netcdf_basic_type *)cursor->stack[cursor->n - 1].type;
 
     if (coda_option_perform_conversions && type->has_conversion)
     {
@@ -590,9 +592,9 @@ int coda_netcdf_cursor_read_int16(const coda_Cursor *cursor, int16_t *dst)
     return -1;
 }
 
-int coda_netcdf_cursor_read_uint16(const coda_Cursor *cursor, uint16_t *dst)
+int coda_netcdf_cursor_read_uint16(const coda_cursor *cursor, uint16_t *dst)
 {
-    coda_netcdfBasicType *type = (coda_netcdfBasicType *)cursor->stack[cursor->n - 1].type;
+    coda_netcdf_basic_type *type = (coda_netcdf_basic_type *)cursor->stack[cursor->n - 1].type;
 
     if (coda_option_perform_conversions && type->has_conversion)
     {
@@ -621,9 +623,9 @@ int coda_netcdf_cursor_read_uint16(const coda_Cursor *cursor, uint16_t *dst)
     return -1;
 }
 
-int coda_netcdf_cursor_read_int32(const coda_Cursor *cursor, int32_t *dst)
+int coda_netcdf_cursor_read_int32(const coda_cursor *cursor, int32_t *dst)
 {
-    coda_netcdfBasicType *type = (coda_netcdfBasicType *)cursor->stack[cursor->n - 1].type;
+    coda_netcdf_basic_type *type = (coda_netcdf_basic_type *)cursor->stack[cursor->n - 1].type;
 
     if (coda_option_perform_conversions && type->has_conversion)
     {
@@ -668,9 +670,9 @@ int coda_netcdf_cursor_read_int32(const coda_Cursor *cursor, int32_t *dst)
     return -1;
 }
 
-int coda_netcdf_cursor_read_uint32(const coda_Cursor *cursor, uint32_t *dst)
+int coda_netcdf_cursor_read_uint32(const coda_cursor *cursor, uint32_t *dst)
 {
-    coda_netcdfBasicType *type = (coda_netcdfBasicType *)cursor->stack[cursor->n - 1].type;
+    coda_netcdf_basic_type *type = (coda_netcdf_basic_type *)cursor->stack[cursor->n - 1].type;
 
     if (coda_option_perform_conversions && type->has_conversion)
     {
@@ -707,9 +709,9 @@ int coda_netcdf_cursor_read_uint32(const coda_Cursor *cursor, uint32_t *dst)
     return -1;
 }
 
-int coda_netcdf_cursor_read_int64(const coda_Cursor *cursor, int64_t *dst)
+int coda_netcdf_cursor_read_int64(const coda_cursor *cursor, int64_t *dst)
 {
-    coda_netcdfBasicType *type = (coda_netcdfBasicType *)cursor->stack[cursor->n - 1].type;
+    coda_netcdf_basic_type *type = (coda_netcdf_basic_type *)cursor->stack[cursor->n - 1].type;
 
     if (coda_option_perform_conversions && type->has_conversion)
     {
@@ -762,9 +764,9 @@ int coda_netcdf_cursor_read_int64(const coda_Cursor *cursor, int64_t *dst)
     return -1;
 }
 
-int coda_netcdf_cursor_read_uint64(const coda_Cursor *cursor, uint64_t *dst)
+int coda_netcdf_cursor_read_uint64(const coda_cursor *cursor, uint64_t *dst)
 {
-    coda_netcdfBasicType *type = (coda_netcdfBasicType *)cursor->stack[cursor->n - 1].type;
+    coda_netcdf_basic_type *type = (coda_netcdf_basic_type *)cursor->stack[cursor->n - 1].type;
 
     if (coda_option_perform_conversions && type->has_conversion)
     {
@@ -805,9 +807,9 @@ int coda_netcdf_cursor_read_uint64(const coda_Cursor *cursor, uint64_t *dst)
     return -1;
 }
 
-int coda_netcdf_cursor_read_float(const coda_Cursor *cursor, float *dst)
+int coda_netcdf_cursor_read_float(const coda_cursor *cursor, float *dst)
 {
-    coda_netcdfBasicType *type = (coda_netcdfBasicType *)cursor->stack[cursor->n - 1].type;
+    coda_netcdf_basic_type *type = (coda_netcdf_basic_type *)cursor->stack[cursor->n - 1].type;
 
     switch (type->read_type)
     {
@@ -900,9 +902,9 @@ int coda_netcdf_cursor_read_float(const coda_Cursor *cursor, float *dst)
     return -1;
 }
 
-int coda_netcdf_cursor_read_double(const coda_Cursor *cursor, double *dst)
+int coda_netcdf_cursor_read_double(const coda_cursor *cursor, double *dst)
 {
-    coda_netcdfBasicType *type = (coda_netcdfBasicType *)cursor->stack[cursor->n - 1].type;
+    coda_netcdf_basic_type *type = (coda_netcdf_basic_type *)cursor->stack[cursor->n - 1].type;
 
     switch (type->read_type)
     {
@@ -966,9 +968,9 @@ int coda_netcdf_cursor_read_double(const coda_Cursor *cursor, double *dst)
     return -1;
 }
 
-int coda_netcdf_cursor_read_char(const coda_Cursor *cursor, char *dst)
+int coda_netcdf_cursor_read_char(const coda_cursor *cursor, char *dst)
 {
-    coda_netcdfBasicType *type = (coda_netcdfBasicType *)cursor->stack[cursor->n - 1].type;
+    coda_netcdf_basic_type *type = (coda_netcdf_basic_type *)cursor->stack[cursor->n - 1].type;
 
     switch (type->read_type)
     {
@@ -984,7 +986,7 @@ int coda_netcdf_cursor_read_char(const coda_Cursor *cursor, char *dst)
     return -1;
 }
 
-int coda_netcdf_cursor_read_string(const coda_Cursor *cursor, char *dst, long dst_size)
+int coda_netcdf_cursor_read_string(const coda_cursor *cursor, char *dst, long dst_size)
 {
     if (read_basic_type(cursor, dst, dst_size) != 0)
     {
@@ -994,9 +996,9 @@ int coda_netcdf_cursor_read_string(const coda_Cursor *cursor, char *dst, long ds
     return 0;
 }
 
-int coda_netcdf_cursor_read_int8_array(const coda_Cursor *cursor, int8_t *dst, coda_array_ordering array_ordering)
+int coda_netcdf_cursor_read_int8_array(const coda_cursor *cursor, int8_t *dst, coda_array_ordering array_ordering)
 {
-    coda_netcdfArray *type = (coda_netcdfArray *)cursor->stack[cursor->n - 1].type;
+    coda_netcdf_array *type = (coda_netcdf_array *)cursor->stack[cursor->n - 1].type;
 
     if (coda_option_perform_conversions && type->base_type->has_conversion)
     {
@@ -1027,9 +1029,9 @@ int coda_netcdf_cursor_read_int8_array(const coda_Cursor *cursor, int8_t *dst, c
     return -1;
 }
 
-int coda_netcdf_cursor_read_uint8_array(const coda_Cursor *cursor, uint8_t *dst, coda_array_ordering array_ordering)
+int coda_netcdf_cursor_read_uint8_array(const coda_cursor *cursor, uint8_t *dst, coda_array_ordering array_ordering)
 {
-    coda_netcdfArray *type = (coda_netcdfArray *)cursor->stack[cursor->n - 1].type;
+    coda_netcdf_array *type = (coda_netcdf_array *)cursor->stack[cursor->n - 1].type;
 
     if (coda_option_perform_conversions && type->base_type->has_conversion)
     {
@@ -1060,9 +1062,9 @@ int coda_netcdf_cursor_read_uint8_array(const coda_Cursor *cursor, uint8_t *dst,
     return -1;
 }
 
-int coda_netcdf_cursor_read_int16_array(const coda_Cursor *cursor, int16_t *dst, coda_array_ordering array_ordering)
+int coda_netcdf_cursor_read_int16_array(const coda_cursor *cursor, int16_t *dst, coda_array_ordering array_ordering)
 {
-    coda_netcdfArray *type = (coda_netcdfArray *)cursor->stack[cursor->n - 1].type;
+    coda_netcdf_array *type = (coda_netcdf_array *)cursor->stack[cursor->n - 1].type;
     long num_elements = type->num_elements;
     long i;
 
@@ -1114,9 +1116,9 @@ int coda_netcdf_cursor_read_int16_array(const coda_Cursor *cursor, int16_t *dst,
     return -1;
 }
 
-int coda_netcdf_cursor_read_uint16_array(const coda_Cursor *cursor, uint16_t *dst, coda_array_ordering array_ordering)
+int coda_netcdf_cursor_read_uint16_array(const coda_cursor *cursor, uint16_t *dst, coda_array_ordering array_ordering)
 {
-    coda_netcdfArray *type = (coda_netcdfArray *)cursor->stack[cursor->n - 1].type;
+    coda_netcdf_array *type = (coda_netcdf_array *)cursor->stack[cursor->n - 1].type;
     long num_elements = type->num_elements;
     long i;
 
@@ -1161,9 +1163,9 @@ int coda_netcdf_cursor_read_uint16_array(const coda_Cursor *cursor, uint16_t *ds
     return -1;
 }
 
-int coda_netcdf_cursor_read_int32_array(const coda_Cursor *cursor, int32_t *dst, coda_array_ordering array_ordering)
+int coda_netcdf_cursor_read_int32_array(const coda_cursor *cursor, int32_t *dst, coda_array_ordering array_ordering)
 {
-    coda_netcdfArray *type = (coda_netcdfArray *)cursor->stack[cursor->n - 1].type;
+    coda_netcdf_array *type = (coda_netcdf_array *)cursor->stack[cursor->n - 1].type;
     long num_elements = type->num_elements;
     long i;
 
@@ -1229,9 +1231,9 @@ int coda_netcdf_cursor_read_int32_array(const coda_Cursor *cursor, int32_t *dst,
     return -1;
 }
 
-int coda_netcdf_cursor_read_uint32_array(const coda_Cursor *cursor, uint32_t *dst, coda_array_ordering array_ordering)
+int coda_netcdf_cursor_read_uint32_array(const coda_cursor *cursor, uint32_t *dst, coda_array_ordering array_ordering)
 {
-    coda_netcdfArray *type = (coda_netcdfArray *)cursor->stack[cursor->n - 1].type;
+    coda_netcdf_array *type = (coda_netcdf_array *)cursor->stack[cursor->n - 1].type;
     long num_elements = type->num_elements;
     long i;
 
@@ -1283,9 +1285,9 @@ int coda_netcdf_cursor_read_uint32_array(const coda_Cursor *cursor, uint32_t *ds
     return -1;
 }
 
-int coda_netcdf_cursor_read_int64_array(const coda_Cursor *cursor, int64_t *dst, coda_array_ordering array_ordering)
+int coda_netcdf_cursor_read_int64_array(const coda_cursor *cursor, int64_t *dst, coda_array_ordering array_ordering)
 {
-    coda_netcdfArray *type = (coda_netcdfArray *)cursor->stack[cursor->n - 1].type;
+    coda_netcdf_array *type = (coda_netcdf_array *)cursor->stack[cursor->n - 1].type;
     long num_elements = type->num_elements;
     long i;
 
@@ -1365,9 +1367,9 @@ int coda_netcdf_cursor_read_int64_array(const coda_Cursor *cursor, int64_t *dst,
     return -1;
 }
 
-int coda_netcdf_cursor_read_uint64_array(const coda_Cursor *cursor, uint64_t *dst, coda_array_ordering array_ordering)
+int coda_netcdf_cursor_read_uint64_array(const coda_cursor *cursor, uint64_t *dst, coda_array_ordering array_ordering)
 {
-    coda_netcdfArray *type = (coda_netcdfArray *)cursor->stack[cursor->n - 1].type;
+    coda_netcdf_array *type = (coda_netcdf_array *)cursor->stack[cursor->n - 1].type;
     long num_elements = type->num_elements;
     long i;
 
@@ -1426,9 +1428,9 @@ int coda_netcdf_cursor_read_uint64_array(const coda_Cursor *cursor, uint64_t *ds
     return -1;
 }
 
-int coda_netcdf_cursor_read_float_array(const coda_Cursor *cursor, float *dst, coda_array_ordering array_ordering)
+int coda_netcdf_cursor_read_float_array(const coda_cursor *cursor, float *dst, coda_array_ordering array_ordering)
 {
-    coda_netcdfArray *type = (coda_netcdfArray *)cursor->stack[cursor->n - 1].type;
+    coda_netcdf_array *type = (coda_netcdf_array *)cursor->stack[cursor->n - 1].type;
     long num_elements = type->num_elements;
     long i;
 
@@ -1581,9 +1583,9 @@ int coda_netcdf_cursor_read_float_array(const coda_Cursor *cursor, float *dst, c
     return -1;
 }
 
-int coda_netcdf_cursor_read_double_array(const coda_Cursor *cursor, double *dst, coda_array_ordering array_ordering)
+int coda_netcdf_cursor_read_double_array(const coda_cursor *cursor, double *dst, coda_array_ordering array_ordering)
 {
-    coda_netcdfArray *type = (coda_netcdfArray *)cursor->stack[cursor->n - 1].type;
+    coda_netcdf_array *type = (coda_netcdf_array *)cursor->stack[cursor->n - 1].type;
     long num_elements = type->num_elements;
     long i;
 
@@ -1711,9 +1713,9 @@ int coda_netcdf_cursor_read_double_array(const coda_Cursor *cursor, double *dst,
     return -1;
 }
 
-int coda_netcdf_cursor_read_char_array(const coda_Cursor *cursor, char *dst, coda_array_ordering array_ordering)
+int coda_netcdf_cursor_read_char_array(const coda_cursor *cursor, char *dst, coda_array_ordering array_ordering)
 {
-    coda_netcdfArray *type = (coda_netcdfArray *)cursor->stack[cursor->n - 1].type;
+    coda_netcdf_array *type = (coda_netcdf_array *)cursor->stack[cursor->n - 1].type;
 
     switch (type->base_type->read_type)
     {

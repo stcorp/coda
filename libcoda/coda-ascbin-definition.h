@@ -22,46 +22,45 @@
 #define CODA_ASCBIN_DEFINITION_H
 
 #include "coda-internal.h"
-#include "coda-expr.h"
 
-typedef struct coda_Conversion_struct coda_Conversion;
+typedef struct coda_conversion_struct coda_conversion;
 
-coda_Conversion *coda_conversion_new(double numerator, double denominator);
-int coda_conversion_set_unit(coda_Conversion *conversion, const char *unit);
-void coda_conversion_delete(coda_Conversion *conversion);
+coda_conversion *coda_conversion_new(double numerator, double denominator);
+int coda_conversion_set_unit(coda_conversion *conversion, const char *unit);
+void coda_conversion_delete(coda_conversion *conversion);
 
-typedef struct coda_ascbinType_struct coda_ascbinType;
-typedef struct coda_ascbinField_struct coda_ascbinField;
-typedef struct coda_ascbinRecord_struct coda_ascbinRecord;
-typedef struct coda_ascbinUnion_struct coda_ascbinUnion;
-typedef struct coda_ascbinArray_struct coda_ascbinArray;
+typedef struct coda_ascbin_type_struct coda_ascbin_type;
+typedef struct coda_ascbin_field_struct coda_ascbin_field;
+typedef struct coda_ascbin_record_struct coda_ascbin_record;
+typedef struct coda_ascbin_union_struct coda_ascbin_union;
+typedef struct coda_ascbin_array_struct coda_ascbin_array;
 
-coda_ascbinField *coda_ascbin_field_new(const char *name);
-int coda_ascbin_field_set_type(coda_ascbinField *field, coda_ascbinType *type);
-int coda_ascbin_field_set_hidden(coda_ascbinField *field);
-int coda_ascbin_field_set_available_expression(coda_ascbinField *field, coda_Expr *available_expr);
-int coda_ascbin_field_set_bit_offset_expression(coda_ascbinField *field, coda_Expr *bit_offset_expr);
-int coda_ascbin_field_validate(coda_ascbinField *field);
-void coda_ascbin_field_delete(coda_ascbinField *field);
+coda_ascbin_field *coda_ascbin_field_new(const char *name, const char *real_name);
+int coda_ascbin_field_set_type(coda_ascbin_field *field, coda_ascbin_type *type);
+int coda_ascbin_field_set_hidden(coda_ascbin_field *field);
+int coda_ascbin_field_set_available_expression(coda_ascbin_field *field, coda_expression *available_expr);
+int coda_ascbin_field_set_bit_offset_expression(coda_ascbin_field *field, coda_expression *bit_offset_expr);
+int coda_ascbin_field_validate(coda_ascbin_field *field);
+void coda_ascbin_field_delete(coda_ascbin_field *field);
 
-coda_ascbinRecord *coda_ascbin_record_new(coda_format format);
-int coda_ascbin_record_set_fast_size_expression(coda_ascbinRecord *record, coda_Expr *fast_size_expr);
-int coda_ascbin_record_add_field(coda_ascbinRecord *record, coda_ascbinField *field);
-void coda_ascbin_record_delete(coda_ascbinRecord *record);
+coda_ascbin_record *coda_ascbin_record_new(coda_format format);
+int coda_ascbin_record_set_fast_size_expression(coda_ascbin_record *record, coda_expression *fast_size_expr);
+int coda_ascbin_record_add_field(coda_ascbin_record *record, coda_ascbin_field *field);
+void coda_ascbin_record_delete(coda_ascbin_record *record);
 
-coda_ascbinUnion *coda_ascbin_union_new(coda_format format);
-int coda_ascbin_union_set_fast_size_expression(coda_ascbinUnion *dd_union, coda_Expr *fast_size_expr);
-int coda_ascbin_union_set_field_expression(coda_ascbinUnion *dd_union, coda_Expr *field_expr);
-int coda_ascbin_union_add_field(coda_ascbinUnion *dd_union, coda_ascbinField *field);
-int coda_ascbin_union_validate(coda_ascbinUnion *dd_union);
-void coda_ascbin_union_delete(coda_ascbinUnion *dd_union);
+coda_ascbin_union *coda_ascbin_union_new(coda_format format);
+int coda_ascbin_union_set_fast_size_expression(coda_ascbin_union *dd_union, coda_expression *fast_size_expr);
+int coda_ascbin_union_set_field_expression(coda_ascbin_union *dd_union, coda_expression *field_expr);
+int coda_ascbin_union_add_field(coda_ascbin_union *dd_union, coda_ascbin_field *field);
+int coda_ascbin_union_validate(coda_ascbin_union *dd_union);
+void coda_ascbin_union_delete(coda_ascbin_union *dd_union);
 
-coda_ascbinArray *coda_ascbin_array_new(coda_format format);
-int coda_ascbin_array_set_base_type(coda_ascbinArray *array, coda_ascbinType *base_type);
-int coda_ascbin_array_add_fixed_dimension(coda_ascbinArray *array, long dim);
-int coda_ascbin_array_add_variable_dimension(coda_ascbinArray *array, coda_Expr *dim_expr);
-int coda_ascbin_array_validate(coda_ascbinArray *array);
-void coda_ascbin_array_delete(coda_ascbinArray *array);
+coda_ascbin_array *coda_ascbin_array_new(coda_format format);
+int coda_ascbin_array_set_base_type(coda_ascbin_array *array, coda_ascbin_type *base_type);
+int coda_ascbin_array_add_fixed_dimension(coda_ascbin_array *array, long dim);
+int coda_ascbin_array_add_variable_dimension(coda_ascbin_array *array, coda_expression *dim_expr);
+int coda_ascbin_array_validate(coda_ascbin_array *array);
+void coda_ascbin_array_delete(coda_ascbin_array *array);
 
 
 #endif

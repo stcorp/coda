@@ -23,7 +23,6 @@
 
 #include "coda-ascbin-internal.h"
 #include "coda-bin.h"
-#include "coda-expr.h"
 #include "coda-bin-definition.h"
 #include "coda-definition.h"
 
@@ -54,7 +53,7 @@ enum coda_bin_time_type_enum
 };
 typedef enum coda_bin_time_type_enum coda_bin_time_type;
 
-struct coda_binType_struct
+struct coda_bin_type_struct
 {
     int retain_count;
     coda_format format;
@@ -66,7 +65,7 @@ struct coda_binType_struct
     int64_t bit_size;   /* -1 means it's variable and needs to be calculated */
 };
 
-struct coda_binNumber_struct
+struct coda_bin_number_struct
 {
     int retain_count;
     coda_format format;
@@ -78,11 +77,11 @@ struct coda_binNumber_struct
     int64_t bit_size;
     char *unit;
     coda_native_type read_type;
-    coda_Conversion *conversion;
+    coda_conversion *conversion;
 };
-typedef struct coda_binNumber_struct coda_binNumber;
+typedef struct coda_bin_number_struct coda_bin_number;
 
-struct coda_binSpecialType_struct
+struct coda_bin_special_type_struct
 {
     int retain_count;
     coda_format format;
@@ -92,9 +91,9 @@ struct coda_binSpecialType_struct
 
     bin_type_tag tag;
     int64_t bit_size;   /* same as bit_size of base_type */
-    coda_binType *base_type;
+    coda_bin_type *base_type;
 };
-typedef struct coda_binSpecialType_struct coda_binSpecialType;
+typedef struct coda_bin_special_type_struct coda_bin_special_type;
 
 struct coda_binRecord_struct
 {
@@ -106,10 +105,10 @@ struct coda_binRecord_struct
 
     bin_type_tag tag;
     int64_t bit_size;
-    coda_Expr *fast_size_expr;
+    coda_expression *fast_size_expr;
     hashtable *hash_data;
     long num_fields;
-    coda_ascbinField **field;
+    coda_ascbin_field **field;
     int has_hidden_fields;
     int has_available_expr_fields;
 };
@@ -124,13 +123,13 @@ struct coda_binUnion_struct
 
     bin_type_tag tag;
     int64_t bit_size;
-    coda_Expr *fast_size_expr;
+    coda_expression *fast_size_expr;
     hashtable *hash_data;
     long num_fields;
-    coda_ascbinField **field;
+    coda_ascbin_field **field;
     int has_hidden_fields;
     int has_available_expr_fields;
-    coda_Expr *field_expr;      /* returns index in range [0..num_fields) */
+    coda_expression *field_expr;        /* returns index in range [0..num_fields) */
 };
 
 struct coda_binArray_struct
@@ -143,14 +142,14 @@ struct coda_binArray_struct
 
     bin_type_tag tag;
     int64_t bit_size;
-    coda_binType *base_type;
+    coda_bin_type *base_type;
     long num_elements;
     int num_dims;
     long *dim;  /* -1 means it's variable and the value needs to be retrieved from dim_expr */
-    coda_Expr **dim_expr;
+    coda_expression **dim_expr;
 };
 
-struct coda_binInteger_struct
+struct coda_bin_integer_struct
 {
     int retain_count;
     coda_format format;
@@ -162,12 +161,12 @@ struct coda_binInteger_struct
     int64_t bit_size;   /* anywhere from 1 to 64 bits. -1 means it's variable -> use bit_size_expr */
     char *unit;
     coda_native_type read_type;
-    coda_Conversion *conversion;
+    coda_conversion *conversion;
     coda_endianness endianness;
-    coda_Expr *bit_size_expr;
+    coda_expression *bit_size_expr;
 };
 
-struct coda_binFloat_struct
+struct coda_bin_float_struct
 {
     int retain_count;
     coda_format format;
@@ -179,11 +178,11 @@ struct coda_binFloat_struct
     int64_t bit_size;   /* either 32 or 64 */
     char *unit;
     coda_native_type read_type;
-    coda_Conversion *conversion;
+    coda_conversion *conversion;
     coda_endianness endianness;
 };
 
-struct coda_binRaw_struct
+struct coda_bin_raw_struct
 {
     int retain_count;
     coda_format format;
@@ -193,12 +192,12 @@ struct coda_binRaw_struct
 
     bin_type_tag tag;
     int64_t bit_size;
-    coda_Expr *bit_size_expr;
+    coda_expression *bit_size_expr;
     long fixed_value_length;
     char *fixed_value;
 };
 
-struct coda_binNoData_struct
+struct coda_bin_no_data_struct
 {
     int retain_count;
     coda_format format;
@@ -208,11 +207,11 @@ struct coda_binNoData_struct
 
     bin_type_tag tag;
     int64_t bit_size;   /* same as bit_size of base_type (which is always 0) */
-    coda_binType *base_type;
+    coda_bin_type *base_type;
 };
-typedef struct coda_binNoData_struct coda_binNoData;
+typedef struct coda_bin_no_data_struct coda_bin_no_data;
 
-struct coda_binVSFInteger_struct
+struct coda_bin_vsf_integer_struct
 {
     int retain_count;
     coda_format format;
@@ -222,11 +221,11 @@ struct coda_binVSFInteger_struct
 
     bin_type_tag tag;
     int64_t bit_size;   /* same as bit_size of base_type */
-    coda_binType *base_type;
+    coda_bin_type *base_type;
     char *unit;
 };
 
-struct coda_binTime_struct
+struct coda_bin_time_struct
 {
     int retain_count;
     coda_format format;
@@ -236,11 +235,11 @@ struct coda_binTime_struct
 
     bin_type_tag tag;
     int64_t bit_size;   /* same as bit_size of base_type */
-    coda_binType *base_type;
+    coda_bin_type *base_type;
     coda_bin_time_type time_type;
 };
 
-struct coda_binComplex_struct
+struct coda_bin_complex_struct
 {
     int retain_count;
     coda_format format;
@@ -250,7 +249,7 @@ struct coda_binComplex_struct
 
     bin_type_tag tag;
     int64_t bit_size;   /* same as bit_size of base_type */
-    coda_binType *base_type;
+    coda_bin_type *base_type;
 };
 
 #endif

@@ -11,6 +11,7 @@ PYTHON_SWIGFLAGS = -w119,451 -python -Ipython -I$(srcdir)/python -DPRINTF_ATTR= 
 JAVA_SWIGFLAGS = -w119,451 -java -Ijava -I$(srcdir)/java -package nl.stcorp.coda -outdir java/nl/stcorp/coda -DPRINTF_ATTR= @SWIGFLAGS@
 JNICPPFLAGS = @JNICPPFLAGS@
 JNIEXT = @JNIEXT@
+JAVAROOT = java
 
 AM_CPPFLAGS = -Ilibcoda -I$(srcdir)/libcoda
 AM_YFLAGS = -d
@@ -30,6 +31,9 @@ UNINSTALL_HOOK_TARGETS =
 install-data-hook: $(INSTALL_DATA_HOOK_TARGETS)
 uninstall-hook: $(UNINSTALL_HOOK_TARGETS)
 
+CLEAN_LOCAL_TARGETS =
+clean-local: $(CLEAN_LOCAL_TARGETS)
+
 ALL_LOCAL_TARGETS =
 all-local: $(ALL_LOCAL_TARGETS)
 
@@ -38,19 +42,19 @@ all-local: $(ALL_LOCAL_TARGETS)
 if SUBPACKAGE_MODE
 
 noinst_PROGRAMS = codadd
-noinst_LTLIBRARIES = libcoda_internal.la libexpat_internal.la libz_internal.la
+noinst_LTLIBRARIES = libcoda_internal.la libexpat_internal.la libpcre_internal.la libz_internal.la
 
 else
 
 # programs
 
-bin_PROGRAMS = codacheck codacmp codadump codafind codadd
+bin_PROGRAMS = codacheck codacmp codadd codadump codaeval codafind
 noinst_PROGRAMS = generate-finc findtypedef
 
 # libraries (+ related files)
 
 lib_LTLIBRARIES = libcoda.la
-noinst_LTLIBRARIES = libcoda_internal.la libexpat_internal.la libz_internal.la
+noinst_LTLIBRARIES = libcoda_internal.la libexpat_internal.la libpcre_internal.la libz_internal.la
 
 if BUILD_IDL
 idldlmexec_LTLIBRARIES = coda-idl.la
@@ -81,8 +85,6 @@ definitions_DATA =
 
 nodist_include_HEADERS = coda.h
 
-fortran_DATA = \
-	fortran/coda.inc
 endif
 
 # *** SWIG dependencies ***
@@ -114,6 +116,37 @@ libexpat_internal_la_SOURCES = \
 	libcoda/expat/xmltok_impl.h
 EXTRA_DIST += libcoda/expat/xmltok_impl.c libcoda/expat/xmltok_ns.c
 EXTRA_DIST += libcoda/expat/COPYING libcoda/expat/README
+
+# pcre
+
+libpcre_internal_la_SOURCES = \
+	libcoda/pcre/coda_pcre_config.h \
+	libcoda/pcre/coda_pcre_mangle.h \
+	libcoda/pcre/pcre.h \
+	libcoda/pcre/pcre_chartables.c \
+	libcoda/pcre/pcre_compile.c \
+	libcoda/pcre/pcre_config.c \
+	libcoda/pcre/pcre_dfa_exec.c \
+	libcoda/pcre/pcre_exec.c \
+	libcoda/pcre/pcre_fullinfo.c \
+	libcoda/pcre/pcre_get.c \
+	libcoda/pcre/pcre_globals.c \
+	libcoda/pcre/pcre_info.c \
+	libcoda/pcre/pcre_internal.h \
+	libcoda/pcre/pcre_maketables.c \
+	libcoda/pcre/pcre_newline.c \
+	libcoda/pcre/pcre_ord2utf8.c \
+	libcoda/pcre/pcre_printint.src \
+	libcoda/pcre/pcre_refcount.c \
+	libcoda/pcre/pcre_study.c \
+	libcoda/pcre/pcre_tables.c \
+	libcoda/pcre/pcre_try_flipped.c \
+	libcoda/pcre/pcre_ucd.c \
+	libcoda/pcre/pcre_valid_utf8.c \
+	libcoda/pcre/pcre_version.c \
+	libcoda/pcre/pcre_xclass.c \
+	libcoda/pcre/ucp.h
+EXTRA_DIST += libcoda/pcre/COPYING libcoda/pcre/README
 
 # zlib
 
@@ -164,13 +197,18 @@ libcoda_la_SOURCES = \
 	libcoda/coda-definition.c \
 	libcoda/coda-definition.h \
 	libcoda/coda-errno.c \
-	libcoda/coda-expr-internal.h \
 	libcoda/coda-expr-parser.y \
 	libcoda/coda-expr-tokenizer.l \
 	libcoda/coda-expr.c \
 	libcoda/coda-expr.h \
 	libcoda/coda-filefilter.c \
 	libcoda/coda-filefilter.h \
+	libcoda/coda-grib-cursor.c \
+	libcoda/coda-grib-dynamic.c \
+	libcoda/coda-grib-internal.h \
+	libcoda/coda-grib-type.c \
+	libcoda/coda-grib.c \
+	libcoda/coda-grib.h \
 	libcoda/coda-internal.h \
 	libcoda/coda-netcdf-cursor.c \
 	libcoda/coda-netcdf-dynamic.c \
@@ -180,6 +218,7 @@ libcoda_la_SOURCES = \
 	libcoda/coda-netcdf.h \
 	libcoda/coda-path.h \
 	libcoda/coda-product.c \
+	libcoda/coda-time.c \
 	libcoda/coda-type.c \
 	libcoda/coda-utils.c \
 	libcoda/coda-xml-cursor.c \
@@ -219,9 +258,9 @@ libcoda_la_SOURCES += $(libcoda_hdf5_files)
 else
 INDENTFILES += $(libcoda_hdf5_files)
 endif
-libcoda_la_CPPFLAGS = -Ilibcoda/expat -I$(srcdir)/libcoda/expat -Ilibcoda/zlib -I$(srcdir)/libcoda/zlib $(AM_CPPFLAGS)
+libcoda_la_CPPFLAGS = -Ilibcoda/expat -I$(srcdir)/libcoda/expat -Ilibcoda/pcre -I$(srcdir)/libcoda/pcre -Ilibcoda/zlib -I$(srcdir)/libcoda/zlib $(AM_CPPFLAGS)
 libcoda_la_LDFLAGS = -no-undefined -version-info $(LIBCODA_CURRENT):$(LIBCODA_REVISION):$(LIBCODA_AGE)
-libcoda_la_LIBADD = @LTLIBOBJS@ libexpat_internal.la libz_internal.la $(HDF4LIBS) $(HDF5LIBS)
+libcoda_la_LIBADD = @LTLIBOBJS@ libexpat_internal.la libpcre_internal.la libz_internal.la $(HDF4LIBS) $(HDF5LIBS)
 INDENTFILES += $(libcoda_la_SOURCES) libcoda/coda.h.in
 BUILT_SOURCES += coda-expr-parser.h
 
@@ -252,7 +291,6 @@ libcoda_internal_la_SOURCES = \
 	libcoda/coda-definition.c \
 	libcoda/coda-definition.h \
 	libcoda/coda-errno.c \
-	libcoda/coda-expr-internal.h \
 	coda-expr-parser.c \
 	coda-expr-parser.h \
 	libcoda/coda-expr-tokenizer.l \
@@ -260,6 +298,12 @@ libcoda_internal_la_SOURCES = \
 	libcoda/coda-expr.h \
 	libcoda/coda-filefilter.c \
 	libcoda/coda-filefilter.h \
+	libcoda/coda-grib-cursor.c \
+	libcoda/coda-grib-dynamic.c \
+	libcoda/coda-grib-internal.h \
+	libcoda/coda-grib-type.c \
+	libcoda/coda-grib.c \
+	libcoda/coda-grib.h \
 	libcoda/coda-internal.h \
 	libcoda/coda-netcdf-cursor.c \
 	libcoda/coda-netcdf-dynamic.c \
@@ -269,6 +313,7 @@ libcoda_internal_la_SOURCES = \
 	libcoda/coda-netcdf.h \
 	libcoda/coda-path.h \
 	libcoda/coda-product.c \
+	libcoda/coda-time.c \
 	libcoda/coda-type.c \
 	libcoda/coda-utils.c \
 	libcoda/coda-xml-cursor.c \
@@ -292,7 +337,7 @@ endif
 if WITH_HDF5
 libcoda_internal_la_SOURCES += $(libcoda_hdf5_files)
 endif
-libcoda_internal_la_CPPFLAGS = -Ilibcoda/expat -I$(srcdir)/libcoda/expat -Ilibcoda/zlib -I$(srcdir)/libcoda/zlib $(AM_CPPFLAGS)
+libcoda_internal_la_CPPFLAGS = -Ilibcoda/expat -I$(srcdir)/libcoda/expat -Ilibcoda/pcre -I$(srcdir)/libcoda/pcre -Ilibcoda/zlib -I$(srcdir)/libcoda/zlib $(AM_CPPFLAGS)
 libcoda_internal_la_LIBADD = $(libcoda_la_LIBADD)
 
 # tools/codacheck
@@ -308,6 +353,17 @@ codacmp_SOURCES = tools/codacmp/codacmp.c
 codacmp_LDADD = libcoda.la
 codacmp_LDFLAGS = -static
 INDENTFILES += $(codacmp_SOURCES)
+
+# tools/codadd
+
+codadd_SOURCES = \
+	tools/codadd/codadd.c \
+	tools/codadd/codadd-detect.c \
+	tools/codadd/codadd-doc.c \
+	tools/codadd/codadd-list.c
+codadd_LDFLAGS = -static
+codadd_LDADD = libcoda_internal.la
+INDENTFILES += $(codadd_SOURCES)
 
 # tools/codadump
 
@@ -331,6 +387,14 @@ codadump_LDADD = libcoda.la $(HDF4LIBS)
 codadump_LDFLAGS = -static
 INDENTFILES += $(codadump_SOURCES)
 
+# tools/codaeval
+
+codaeval_SOURCES = \
+	tools/codaeval/codaeval.c
+codaeval_LDFLAGS = -static
+codaeval_LDADD = libcoda.la
+INDENTFILES += $(codaeval_SOURCES)
+
 # tools/codafind
 
 codafind_SOURCES = \
@@ -339,22 +403,13 @@ codafind_LDFLAGS = -static
 codafind_LDADD = libcoda.la
 INDENTFILES += $(codafind_SOURCES)
 
-# tools/codadd
-
-codadd_SOURCES = \
-	tools/codadd/codadd.c \
-	tools/codadd/codadd-doc.c \
-	tools/codadd/codadd-list.c
-codadd_LDFLAGS = -static
-codadd_LDADD = libcoda_internal.la
-INDENTFILES += $(codadd_SOURCES)
-
 # fortran
 
 if !SUBPACKAGE_MODE
 
-fortran_DATA += \
+fortran_DATA = \
 	fortran/Makefile \
+	fortran/coda.inc \
 	fortran/coda_fortran.c \
 	fortran/example.f
 
@@ -469,19 +524,22 @@ java_files = \
 	$(srcdir)/java/nl/stcorp/coda/Product.java \
 	$(srcdir)/java/nl/stcorp/coda/Type.java \
 	$(srcdir)/java/nl/stcorp/coda/Cursor.java \
+	$(srcdir)/java/nl/stcorp/coda/Expression.java \
 	$(srcdir)/java/nl/stcorp/coda/Coda.java \
 	java/nl/stcorp/coda/ArrayOrderingEnum.java \
 	java/nl/stcorp/coda/FilefilterStatusEnum.java \
 	java/nl/stcorp/coda/FormatEnum.java \
 	java/nl/stcorp/coda/NativeTypeEnum.java \
 	java/nl/stcorp/coda/SpecialTypeEnum.java \
+	java/nl/stcorp/coda/ExpressionTypeEnum.java \
 	java/nl/stcorp/coda/TypeClassEnum.java \
 	java/nl/stcorp/coda/codacConstants.java \
 	java/nl/stcorp/coda/codac.java \
 	java/nl/stcorp/coda/codacJNI.java \
-	java/nl/stcorp/coda/SWIGTYPE_p_coda_ProductFile_struct.java \
-	java/nl/stcorp/coda/SWIGTYPE_p_coda_Cursor_struct.java \
-	java/nl/stcorp/coda/SWIGTYPE_p_coda_Type_struct.java
+	java/nl/stcorp/coda/SWIGTYPE_p_coda_product_struct.java \
+	java/nl/stcorp/coda/SWIGTYPE_p_coda_expression_struct.java \
+	java/nl/stcorp/coda/SWIGTYPE_p_coda_cursor_struct.java \
+	java/nl/stcorp/coda/SWIGTYPE_p_coda_type_struct.java
 
 EXTRA_DIST += \
 	java/coda_jni.c \
@@ -500,33 +558,37 @@ java_class_files = \
 	nl/stcorp/coda/Product.class \
 	nl/stcorp/coda/Type.class \
 	nl/stcorp/coda/Cursor.class \
+	nl/stcorp/coda/Expression.class \
 	nl/stcorp/coda/Coda.class \
 	nl/stcorp/coda/ArrayOrderingEnum.class \
 	nl/stcorp/coda/FilefilterStatusEnum.class \
 	nl/stcorp/coda/FormatEnum.class \
 	nl/stcorp/coda/NativeTypeEnum.class \
 	nl/stcorp/coda/SpecialTypeEnum.class \
+	nl/stcorp/coda/ExpressionTypeEnum.class \
 	nl/stcorp/coda/TypeClassEnum.class \
 	nl/stcorp/coda/codacConstants.class \
 	nl/stcorp/coda/codac.class \
 	nl/stcorp/coda/codacJNI.class \
-	nl/stcorp/coda/SWIGTYPE_p_coda_ProductFile_struct.class \
-	nl/stcorp/coda/SWIGTYPE_p_coda_Cursor_struct.class \
-	nl/stcorp/coda/SWIGTYPE_p_coda_Type_struct.class \
+	nl/stcorp/coda/SWIGTYPE_p_coda_product_struct.class \
+	nl/stcorp/coda/SWIGTYPE_p_coda_expression_struct.class \
+	nl/stcorp/coda/SWIGTYPE_p_coda_cursor_struct.class \
+	nl/stcorp/coda/SWIGTYPE_p_coda_type_struct.class \
 	nl/stcorp/coda/ArrayOrderingEnum\$$SwigNext.class \
 	nl/stcorp/coda/FilefilterStatusEnum\$$SwigNext.class \
 	nl/stcorp/coda/FormatEnum\$$SwigNext.class \
+	nl/stcorp/coda/ExpressionTypeEnum\$$SwigNext.class \
 	nl/stcorp/coda/NativeTypeEnum\$$SwigNext.class \
 	nl/stcorp/coda/SpecialTypeEnum\$$SwigNext.class \
 	nl/stcorp/coda/TypeClassEnum\$$SwigNext.class
 
-coda.jar: classnoinst.stamp
-	$(JAR) -cf coda.jar $(java_class_files)
+java/coda.jar: classnoinst.stamp
+	cd java && $(JAR) -cf coda.jar $(java_class_files)
 
 java_DATA = \
 	java/CodaTest.java \
 	java/build.xml \
-	coda.jar
+	java/coda.jar
 
 libcoda_jni_la_SOURCES = java/coda_jni.c
 libcoda_jni_la_CPPFLAGS = $(JNICPPFLAGS) $(AM_CPPFLAGS) -fno-strict-aliasing
@@ -534,7 +596,12 @@ libcoda_jni_la_LDFLAGS = -module -shared -avoid-version -shrext $(JNIEXT)
 libcoda_jni_la_LIBADD = libcoda_internal.la
 libcoda_jni_la_DEPENDENCIES = libcoda_internal.la
 
-CLEANFILES += coda.jar $(java_class_files)
+CLEANFILES += java/coda.jar
+
+CLEAN_LOCAL_TARGETS += clean_java_class_files
+clean_java_class_files:
+	cd java && rm -f $(java_class_files)
+
 endif
 
 # *** misc distribution files ***
@@ -555,10 +622,8 @@ CODA_IDL_DLMFILES = idl/coda-idl.dlm
 
 EXTRA_DIST += $(CODA_IDL_DLMFILES) idl/coda-idl.dlm.in
 
-if !SUBPACKAGE_MODE
 if BUILD_IDL
 idldlmexec_DATA = $(CODA_IDL_DLMFILES)
-endif
 endif
 
 # *** matlab data ***
@@ -588,10 +653,8 @@ CODA_MATLAB_MFILES = \
 
 EXTRA_DIST += $(CODA_MATLAB_MFILES)
 
-if !SUBPACKAGE_MODE
 if BUILD_MATLAB
 matlabmexexec_DATA = $(CODA_MATLAB_MFILES)
-endif
 endif
 
 # *** documentation ***
@@ -607,6 +670,7 @@ DOCFILES = \
 	$(JAVA_DOCFILES) \
 	doc/html/codadef/codadef-expressions.html \
 	doc/html/codadef/codadef-format.html \
+	doc/html/codadef/codadef-grib.html \
 	doc/html/codadef/codadef-hdf4.html \
 	doc/html/codadef/codadef-hdf5.html \
 	doc/html/codadef/codadef-netcdf.html \
@@ -615,6 +679,7 @@ DOCFILES = \
 	doc/html/codacmp/index.html \
 	doc/html/codadd/index.html \
 	doc/html/codadump/index.html \
+	doc/html/codaeval/index.html \
 	doc/html/codafind/index.html \
 	doc/html/fortran/index.html \
 	doc/html/idl/index.html \
@@ -783,11 +848,13 @@ EXTRA_DIST += \
 	win32/config.h \
 	win32/config.h.in \
 	win32/makedist.bat \
+	win32/mexopts.bat \
 	win32/codacheck.dsp \
 	win32/codacmp.dsp \
-	win32/codadump.dsp \
-	win32/codafind.dsp \
 	win32/codadd.dsp \
+	win32/codadump.dsp \
+	win32/codaeval.dsp \
+	win32/codafind.dsp \
 	win32/removepath.iss \
 	win32/setup.py \
 	win32/setup.py.in \

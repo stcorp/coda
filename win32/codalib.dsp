@@ -44,7 +44,7 @@ RSC=rc.exe
 # PROP Target_Dir ""
 MTL=midl.exe
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /I "." /I "..\libcoda" /I "..\libcoda\expat" /I ".." /I "$(ZLIB_INCLUDE)" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /D "HAVE_CONFIG_H" /YX /FD /Zm400 /c
+# ADD CPP /nologo /W3 /GX /O2 /I "." /I "..\libcoda" /I "..\libcoda\expat" /I "..\libcoda\pcre" /I ".." /I "$(ZLIB_INCLUDE)" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /D "HAVE_CONFIG_H" /YX /FD /Zm400 /c
 # ADD BASE RSC /l 0x413 /d "NDEBUG"
 # ADD RSC /l 0x413 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -68,7 +68,7 @@ LIB32=link.exe -lib
 # PROP Target_Dir ""
 MTL=midl.exe
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "." /I "..\libcoda" /I "..\libcoda\expat" /I ".." /I "$(ZLIB_INCLUDE)" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /D "HAVE_CONFIG_H" /FR /YX /FD /GZ /Zm400 /c
+# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "." /I "..\libcoda" /I "..\libcoda\expat" /I "..\libcoda\pcre" /I ".." /I "$(ZLIB_INCLUDE)" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /D "HAVE_CONFIG_H" /FR /YX /FD /GZ /Zm400 /c
 # ADD BASE RSC /l 0x413 /d "_DEBUG"
 # ADD RSC /l 0x413 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -92,7 +92,7 @@ LIB32=link.exe -lib
 # PROP Target_Dir ""
 MTL=midl.exe
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /I "." /I "..\libcoda" /I "..\libcoda\expat" /I ".." /I "$(ZLIB_INCLUDE)" /I "$(HDF4_INCLUDE)" /I "$(HDF5_INCLUDE)" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /D "HAVE_HDF4" /D "HAVE_HDF5" /D "HAVE_CONFIG_H" /YX /FD /Zm400 /c
+# ADD CPP /nologo /W3 /GX /O2 /I "." /I "..\libcoda" /I "..\libcoda\expat" /I "..\libcoda\pcre" /I ".." /I "$(ZLIB_INCLUDE)" /I "$(HDF4_INCLUDE)" /I "$(HDF5_INCLUDE)" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /D "HAVE_HDF4" /D "HAVE_HDF5" /D "HAVE_CONFIG_H" /YX /FD /Zm400 /c
 # ADD BASE RSC /l 0x413 /d "NDEBUG"
 # ADD RSC /l 0x413 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -116,7 +116,7 @@ LIB32=link.exe -lib
 # PROP Target_Dir ""
 MTL=midl.exe
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "." /I "..\libcoda" /I "..\libcoda\expat" /I ".." /I "$(ZLIB_INCLUDE)" /I "$(HDF4_INCLUDE)" /I "$(HDF5_INCLUDE)" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /D "HAVE_HDF4" /D "HAVE_HDF5" /D "HAVE_CONFIG_H" /FR /YX /FD /GZ /Zm400 /c
+# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "." /I "..\libcoda" /I "..\libcoda\expat" /I "..\libcoda\pcre" /I ".." /I "$(ZLIB_INCLUDE)" /I "$(HDF4_INCLUDE)" /I "$(HDF5_INCLUDE)" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /D "HAVE_HDF4" /D "HAVE_HDF5" /D "HAVE_CONFIG_H" /FR /YX /FD /GZ /Zm400 /c
 # ADD BASE RSC /l 0x413 /d "_DEBUG"
 # ADD RSC /l 0x413 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -211,6 +211,22 @@ SOURCE="..\libcoda\coda-filefilter.c"
 # End Source File
 # Begin Source File
 
+SOURCE="..\libcoda\coda-grib-cursor.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\coda-grib-dynamic.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\coda-grib-type.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\coda-grib.c"
+# End Source File
+# Begin Source File
+
 SOURCE="..\libcoda\coda-hdf4-cursor.c"
 
 !IF  "$(CFG)" == "codalib - Win32 Release"
@@ -291,6 +307,10 @@ SOURCE="..\libcoda\coda-product.c"
 # End Source File
 # Begin Source File
 
+SOURCE="..\libcoda\coda-time.c"
+# End Source File
+# Begin Source File
+
 SOURCE="..\libcoda\coda-type.c"
 # End Source File
 # Begin Source File
@@ -354,6 +374,86 @@ SOURCE="..\libcoda\expat\xmlrole.c"
 
 SOURCE="..\libcoda\expat\xmltok.c"
 # End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\pcre\pcre_chartables.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\pcre\pcre_compile.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\pcre\pcre_config.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\pcre\pcre_dfa_exec.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\pcre\pcre_exec.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\pcre\pcre_fullinfo.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\pcre\pcre_get.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\pcre\pcre_globals.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\pcre\pcre_info.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\pcre\pcre_maketables.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\pcre\pcre_newline.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\pcre\pcre_ord2utf8.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\pcre\pcre_refcount.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\pcre\pcre_study.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\pcre\pcre_tables.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\pcre\pcre_try_flipped.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\pcre\pcre_ucd.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\pcre\pcre_valid_utf8.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\pcre\pcre_version.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\pcre\pcre_xclass.c"
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -400,15 +500,19 @@ SOURCE="..\libcoda\coda-definition.h"
 # End Source File
 # Begin Source File
 
-SOURCE="..\libcoda\coda-expr-internal.h"
-# End Source File
-# Begin Source File
-
 SOURCE="..\libcoda\coda-expr.h"
 # End Source File
 # Begin Source File
 
 SOURCE="..\libcoda\coda-filefilter.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\coda-grib-internal.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\coda-grib.h"
 # End Source File
 # Begin Source File
 
@@ -553,6 +657,26 @@ SOURCE="..\libcoda\expat\xmltok.h"
 # Begin Source File
 
 SOURCE="..\libcoda\expat\xmltol_impl.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\pcre\coda_pcre_config.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\pcre\coda_pcre_mangle.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\pcre\pcre_internal.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\pcre\pcre.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\libcoda\pcre\ucp.h"
 # End Source File
 # End Group
 # End Target

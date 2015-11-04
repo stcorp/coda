@@ -29,6 +29,7 @@
 #include "coda-bin.h"
 #include "coda-xml.h"
 #include "coda-netcdf.h"
+#include "coda-grib.h"
 #ifdef HAVE_HDF4
 #include "coda-hdf4.h"
 #endif
@@ -41,7 +42,7 @@
 /** \defgroup coda_types CODA Types
  * Each data element or group of data elements (such as an array or record) in a product file, independent of whether
  * it is an ascii, binary, XML, netCDF, HDF4, or HDF5 product, has a unique description in CODA.
- * Each of those descriptions is refered to as a CODA type (which is of type #coda_Type).
+ * Each of those descriptions is refered to as a CODA type (which is of type #coda_type).
  * For ascii, binary, and XML products the type definition is fixed and is provided by .codadef files.
  * For netCDF, HDF4, and HDF5 files the type definition is taken from the products themselves.
  * /note For XML files CODA also allows taking the definition from the file itself, but CODA will then not know how to
@@ -133,7 +134,7 @@
  * Format Definitions documentation that is included with the CODA package.
  */
 
-/** \typedef coda_Type
+/** \typedef coda_type
  * CODA Type handle
  * \ingroup coda_types
  */
@@ -188,6 +189,10 @@ LIBCODA_API const char *coda_type_get_format_name(coda_format format)
             return "xml";
         case coda_format_netcdf:
             return "netcdf";
+        case coda_format_grib1:
+            return "grib1";
+        case coda_format_grib2:
+            return "grib2";
         case coda_format_cdf:
             return "cdf";
         case coda_format_hdf4:
@@ -305,7 +310,7 @@ LIBCODA_API const char *coda_type_get_special_type_name(coda_special_type specia
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_type_has_ascii_content(const coda_Type *type, int *has_ascii_content)
+LIBCODA_API int coda_type_has_ascii_content(const coda_type *type, int *has_ascii_content)
 {
     if (type == NULL)
     {
@@ -330,6 +335,8 @@ LIBCODA_API int coda_type_has_ascii_content(const coda_Type *type, int *has_asci
         case coda_format_xml:
             return coda_xml_type_has_ascii_content(type, has_ascii_content);
         case coda_format_netcdf:
+        case coda_format_grib1:
+        case coda_format_grib2:
         case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:
@@ -347,7 +354,7 @@ LIBCODA_API int coda_type_has_ascii_content(const coda_Type *type, int *has_asci
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_type_get_format(const coda_Type *type, coda_format *format)
+LIBCODA_API int coda_type_get_format(const coda_type *type, coda_format *format)
 {
     if (type == NULL)
     {
@@ -372,7 +379,7 @@ LIBCODA_API int coda_type_get_format(const coda_Type *type, coda_format *format)
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_type_get_class(const coda_Type *type, coda_type_class *type_class)
+LIBCODA_API int coda_type_get_class(const coda_type *type, coda_type_class *type_class)
 {
     if (type == NULL)
     {
@@ -404,7 +411,7 @@ LIBCODA_API int coda_type_get_class(const coda_Type *type, coda_type_class *type
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_type_get_read_type(const coda_Type *type, coda_native_type *read_type)
+LIBCODA_API int coda_type_get_read_type(const coda_type *type, coda_native_type *read_type)
 {
     if (type == NULL)
     {
@@ -428,6 +435,9 @@ LIBCODA_API int coda_type_get_read_type(const coda_Type *type, coda_native_type 
             return coda_xml_type_get_read_type(type, read_type);
         case coda_format_netcdf:
             return coda_netcdf_type_get_read_type(type, read_type);
+        case coda_format_grib1:
+        case coda_format_grib2:
+            return coda_grib_type_get_read_type(type, read_type);
         case coda_format_cdf:
         case coda_format_hdf4:
 #ifdef HAVE_HDF4
@@ -459,7 +469,7 @@ LIBCODA_API int coda_type_get_read_type(const coda_Type *type, coda_native_type 
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_type_get_string_length(const coda_Type *type, long *length)
+LIBCODA_API int coda_type_get_string_length(const coda_type *type, long *length)
 {
     if (type == NULL)
     {
@@ -498,6 +508,9 @@ LIBCODA_API int coda_type_get_string_length(const coda_Type *type, long *length)
             return coda_xml_type_get_string_length(type, length);
         case coda_format_netcdf:
             return coda_netcdf_type_get_string_length(type, length);
+        case coda_format_grib1:
+        case coda_format_grib2:
+            return coda_grib_type_get_string_length(type, length);
         case coda_format_cdf:
         case coda_format_hdf4:
 #ifdef HAVE_HDF4
@@ -534,7 +547,7 @@ LIBCODA_API int coda_type_get_string_length(const coda_Type *type, long *length)
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_type_get_bit_size(const coda_Type *type, int64_t *bit_size)
+LIBCODA_API int coda_type_get_bit_size(const coda_type *type, int64_t *bit_size)
 {
     if (type == NULL)
     {
@@ -557,6 +570,8 @@ LIBCODA_API int coda_type_get_bit_size(const coda_Type *type, int64_t *bit_size)
         case coda_format_xml:
             return coda_xml_type_get_bit_size(type, bit_size);
         case coda_format_netcdf:
+        case coda_format_grib1:
+        case coda_format_grib2:
         case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:
@@ -570,7 +585,7 @@ LIBCODA_API int coda_type_get_bit_size(const coda_Type *type, int64_t *bit_size)
 /** Get the name of a type.
  * A type can have an optional name that uniquely defines it within a product class. No two types within the same
  * product class may have the same name. If a type has a name, only a single instance of the definition will be used for
- * all places where the type is used (i.e. a single coda_Type object will be used for all cases where this type is 
+ * all places where the type is used (i.e. a single coda_type object will be used for all cases where this type is 
  * used).
  * If the type is unnamed a NULL pointer will be returned.
  * The \a name parameter will either be a NULL pointer or a 0 terminated string.
@@ -580,7 +595,7 @@ LIBCODA_API int coda_type_get_bit_size(const coda_Type *type, int64_t *bit_size)
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_type_get_name(const coda_Type *type, const char **name)
+LIBCODA_API int coda_type_get_name(const coda_type *type, const char **name)
 {
     if (type == NULL)
     {
@@ -608,7 +623,7 @@ LIBCODA_API int coda_type_get_name(const coda_Type *type, const char **name)
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_type_get_description(const coda_Type *type, const char **description)
+LIBCODA_API int coda_type_get_description(const coda_type *type, const char **description)
 {
     if (type == NULL)
     {
@@ -640,7 +655,7 @@ LIBCODA_API int coda_type_get_description(const coda_Type *type, const char **de
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_type_get_unit(const coda_Type *type, const char **unit)
+LIBCODA_API int coda_type_get_unit(const coda_type *type, const char **unit)
 {
     if (type == NULL)
     {
@@ -656,7 +671,7 @@ LIBCODA_API int coda_type_get_unit(const coda_Type *type, const char **unit)
 
     if (type->type_class == coda_array_class)
     {
-        coda_Type *base_type;
+        coda_type *base_type;
 
         if (coda_type_get_array_base_type(type, &base_type) != 0)
         {
@@ -674,6 +689,8 @@ LIBCODA_API int coda_type_get_unit(const coda_Type *type, const char **unit)
         case coda_format_xml:
             return coda_xml_type_get_unit(type, unit);
         case coda_format_netcdf:
+        case coda_format_grib1:
+        case coda_format_grib2:
         case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:
@@ -701,7 +718,7 @@ LIBCODA_API int coda_type_get_unit(const coda_Type *type, const char **unit)
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_type_get_fixed_value(const coda_Type *type, const char **fixed_value, long *length)
+LIBCODA_API int coda_type_get_fixed_value(const coda_type *type, const char **fixed_value, long *length)
 {
     if (type == NULL)
     {
@@ -724,6 +741,8 @@ LIBCODA_API int coda_type_get_fixed_value(const coda_Type *type, const char **fi
         case coda_format_xml:
             return coda_xml_type_get_fixed_value(type, fixed_value, length);
         case coda_format_netcdf:
+        case coda_format_grib1:
+        case coda_format_grib2:
         case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:
@@ -742,7 +761,7 @@ LIBCODA_API int coda_type_get_fixed_value(const coda_Type *type, const char **fi
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_type_get_num_record_fields(const coda_Type *type, long *num_fields)
+LIBCODA_API int coda_type_get_num_record_fields(const coda_type *type, long *num_fields)
 {
     if (type == NULL)
     {
@@ -770,6 +789,9 @@ LIBCODA_API int coda_type_get_num_record_fields(const coda_Type *type, long *num
             return coda_xml_type_get_num_record_fields(type, num_fields);
         case coda_format_netcdf:
             return coda_netcdf_type_get_num_record_fields(type, num_fields);
+        case coda_format_grib1:
+        case coda_format_grib2:
+            return coda_grib_type_get_num_record_fields(type, num_fields);
         case coda_format_cdf:
         case coda_format_hdf4:
 #ifdef HAVE_HDF4
@@ -800,7 +822,7 @@ LIBCODA_API int coda_type_get_num_record_fields(const coda_Type *type, long *num
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_type_get_record_field_index_from_name(const coda_Type *type, const char *name, long *index)
+LIBCODA_API int coda_type_get_record_field_index_from_name(const coda_type *type, const char *name, long *index)
 {
     int result = 0;
 
@@ -837,6 +859,10 @@ LIBCODA_API int coda_type_get_record_field_index_from_name(const coda_Type *type
             break;
         case coda_format_netcdf:
             result = coda_netcdf_type_get_record_field_index_from_name(type, name, index);
+            break;
+        case coda_format_grib1:
+        case coda_format_grib2:
+            result = coda_grib_type_get_record_field_index_from_name(type, name, index);
             break;
         case coda_format_cdf:
         case coda_format_hdf4:
@@ -878,7 +904,7 @@ LIBCODA_API int coda_type_get_record_field_index_from_name(const coda_Type *type
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_type_get_record_field_type(const coda_Type *type, long index, coda_Type **field_type)
+LIBCODA_API int coda_type_get_record_field_type(const coda_type *type, long index, coda_type **field_type)
 {
     if (type == NULL)
     {
@@ -906,6 +932,9 @@ LIBCODA_API int coda_type_get_record_field_type(const coda_Type *type, long inde
             return coda_xml_type_get_record_field_type(type, index, field_type);
         case coda_format_netcdf:
             return coda_netcdf_type_get_record_field_type(type, index, field_type);
+        case coda_format_grib1:
+        case coda_format_grib2:
+            return coda_grib_type_get_record_field_type(type, index, field_type);
         case coda_format_cdf:
         case coda_format_hdf4:
 #ifdef HAVE_HDF4
@@ -937,7 +966,7 @@ LIBCODA_API int coda_type_get_record_field_type(const coda_Type *type, long inde
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_type_get_record_field_name(const coda_Type *type, long index, const char **name)
+LIBCODA_API int coda_type_get_record_field_name(const coda_type *type, long index, const char **name)
 {
     if (type == NULL)
     {
@@ -965,6 +994,9 @@ LIBCODA_API int coda_type_get_record_field_name(const coda_Type *type, long inde
             return coda_xml_type_get_record_field_name(type, index, name);
         case coda_format_netcdf:
             return coda_netcdf_type_get_record_field_name(type, index, name);
+        case coda_format_grib1:
+        case coda_format_grib2:
+            return coda_grib_type_get_record_field_name(type, index, name);
         case coda_format_cdf:
         case coda_format_hdf4:
 #ifdef HAVE_HDF4
@@ -976,6 +1008,77 @@ LIBCODA_API int coda_type_get_record_field_name(const coda_Type *type, long inde
         case coda_format_hdf5:
 #ifdef HAVE_HDF5
             return coda_hdf5_type_get_record_field_name(type, index, name);
+#else
+            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
+            return -1;
+#endif
+    }
+
+    assert(0);
+    exit(1);
+}
+
+/** Get the unaltered name of a record field.
+ * The real name of a field is the name of the field without the identifier restriction.
+ * For (partially) self-describing formats such as XML, HDF, and netCDF, the name of a field as used by CODA will
+ * actually be a conversion of the name of the stored element to something that conforms to the rules of an identifier
+ * (i.e. only allowing a-z, A-Z, 0-9 and underscores characters and names have to start with an alpha character).
+ * The real name property of a field represents the original name of the element (e.g. XML element name, HDF5 DataSet
+ * name, netCDF variable name, etc.).
+ * If the concept of a real name does not apply, this function will return the same result as
+ * coda_type_get_record_field_name().
+ *
+ * If the type is not a record class the function will return an error.
+ * The \a real_name parameter will be 0 terminated.
+ * \param type CODA type.
+ * \param index Field index (0 <= \a index < number of fields).
+ * \param real_name Pointer to the variable where the real name of the record field will be stored.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_type_get_record_field_real_name(const coda_type *type, long index, const char **real_name)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->type_class != coda_record_class)
+    {
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "type does not refer to a record (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
+        return -1;
+    }
+    if (real_name == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "name argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    switch (type->format)
+    {
+        case coda_format_ascii:
+        case coda_format_binary:
+            return coda_ascbin_type_get_record_field_real_name(type, index, real_name);
+        case coda_format_xml:
+            return coda_xml_type_get_record_field_name(type, index, real_name);
+        case coda_format_netcdf:
+            return coda_netcdf_type_get_record_field_name(type, index, real_name);
+        case coda_format_grib1:
+        case coda_format_grib2:
+            return coda_grib_type_get_record_field_name(type, index, real_name);
+        case coda_format_cdf:
+        case coda_format_hdf4:
+#ifdef HAVE_HDF4
+            return coda_hdf4_type_get_record_field_name(type, index, real_name);
+#else
+            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
+            return -1;
+#endif
+        case coda_format_hdf5:
+#ifdef HAVE_HDF5
+            return coda_hdf5_type_get_record_field_name(type, index, real_name);
 #else
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
@@ -999,7 +1102,7 @@ LIBCODA_API int coda_type_get_record_field_name(const coda_Type *type, long inde
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_type_get_record_field_hidden_status(const coda_Type *type, long index, int *hidden)
+LIBCODA_API int coda_type_get_record_field_hidden_status(const coda_type *type, long index, int *hidden)
 {
     if (type == NULL)
     {
@@ -1025,6 +1128,9 @@ LIBCODA_API int coda_type_get_record_field_hidden_status(const coda_Type *type, 
             return coda_ascbin_type_get_record_field_hidden_status(type, index, hidden);
         case coda_format_xml:
             return coda_xml_type_get_record_field_hidden_status(type, index, hidden);
+        case coda_format_grib1:
+        case coda_format_grib2:
+            return coda_grib_type_get_record_field_hidden_status(type, index, hidden);
         case coda_format_netcdf:
         case coda_format_cdf:
         case coda_format_hdf4:
@@ -1051,7 +1157,7 @@ LIBCODA_API int coda_type_get_record_field_hidden_status(const coda_Type *type, 
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_type_get_record_field_available_status(const coda_Type *type, long index, int *available)
+LIBCODA_API int coda_type_get_record_field_available_status(const coda_type *type, long index, int *available)
 {
     if (type == NULL)
     {
@@ -1077,6 +1183,9 @@ LIBCODA_API int coda_type_get_record_field_available_status(const coda_Type *typ
             return coda_ascbin_type_get_record_field_available_status(type, index, available);
         case coda_format_xml:
             return coda_xml_type_get_record_field_available_status(type, index, available);
+        case coda_format_grib1:
+        case coda_format_grib2:
+            return coda_grib_type_get_record_field_available_status(type, index, available);
         case coda_format_netcdf:
         case coda_format_cdf:
         case coda_format_hdf4:
@@ -1098,7 +1207,7 @@ LIBCODA_API int coda_type_get_record_field_available_status(const coda_Type *typ
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_type_get_record_union_status(const coda_Type *type, int *is_union)
+LIBCODA_API int coda_type_get_record_union_status(const coda_type *type, int *is_union)
 {
     if (type == NULL)
     {
@@ -1125,6 +1234,8 @@ LIBCODA_API int coda_type_get_record_union_status(const coda_Type *type, int *is
         case coda_format_xml:
             return coda_xml_type_get_record_union_status(type, is_union);
         case coda_format_netcdf:
+        case coda_format_grib1:
+        case coda_format_grib2:
         case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:
@@ -1143,7 +1254,7 @@ LIBCODA_API int coda_type_get_record_union_status(const coda_Type *type, int *is
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_type_get_array_num_dims(const coda_Type *type, int *num_dims)
+LIBCODA_API int coda_type_get_array_num_dims(const coda_type *type, int *num_dims)
 {
     if (type == NULL)
     {
@@ -1171,6 +1282,9 @@ LIBCODA_API int coda_type_get_array_num_dims(const coda_Type *type, int *num_dim
             return coda_xml_type_get_array_num_dims(type, num_dims);
         case coda_format_netcdf:
             return coda_netcdf_type_get_array_num_dims(type, num_dims);
+        case coda_format_grib1:
+        case coda_format_grib2:
+            return coda_grib_type_get_array_num_dims(type, num_dims);
         case coda_format_cdf:
         case coda_format_hdf4:
 #ifdef HAVE_HDF4
@@ -1209,7 +1323,7 @@ LIBCODA_API int coda_type_get_array_num_dims(const coda_Type *type, int *num_dim
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_type_get_array_dim(const coda_Type *type, int *num_dims, long dim[])
+LIBCODA_API int coda_type_get_array_dim(const coda_type *type, int *num_dims, long dim[])
 {
     if (type == NULL)
     {
@@ -1242,6 +1356,9 @@ LIBCODA_API int coda_type_get_array_dim(const coda_Type *type, int *num_dims, lo
             return coda_xml_type_get_array_dim(type, num_dims, dim);
         case coda_format_netcdf:
             return coda_netcdf_type_get_array_dim(type, num_dims, dim);
+        case coda_format_grib1:
+        case coda_format_grib2:
+            return coda_grib_type_get_array_dim(type, num_dims, dim);
         case coda_format_cdf:
         case coda_format_hdf4:
 #ifdef HAVE_HDF4
@@ -1271,7 +1388,7 @@ LIBCODA_API int coda_type_get_array_dim(const coda_Type *type, int *num_dims, lo
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_type_get_array_base_type(const coda_Type *type, coda_Type **base_type)
+LIBCODA_API int coda_type_get_array_base_type(const coda_type *type, coda_type **base_type)
 {
     if (type == NULL)
     {
@@ -1299,6 +1416,9 @@ LIBCODA_API int coda_type_get_array_base_type(const coda_Type *type, coda_Type *
             return coda_xml_type_get_array_base_type(type, base_type);
         case coda_format_netcdf:
             return coda_netcdf_type_get_array_base_type(type, base_type);
+        case coda_format_grib1:
+        case coda_format_grib2:
+            return coda_grib_type_get_array_base_type(type, base_type);
         case coda_format_cdf:
         case coda_format_hdf4:
 #ifdef HAVE_HDF4
@@ -1329,7 +1449,7 @@ LIBCODA_API int coda_type_get_array_base_type(const coda_Type *type, coda_Type *
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_type_get_special_type(const coda_Type *type, coda_special_type *special_type)
+LIBCODA_API int coda_type_get_special_type(const coda_type *type, coda_special_type *special_type)
 {
     if (type == NULL)
     {
@@ -1357,6 +1477,8 @@ LIBCODA_API int coda_type_get_special_type(const coda_Type *type, coda_special_t
         case coda_format_xml:
             return coda_xml_type_get_special_type(type, special_type);
         case coda_format_netcdf:
+        case coda_format_grib1:
+        case coda_format_grib2:
         case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:
@@ -1375,7 +1497,7 @@ LIBCODA_API int coda_type_get_special_type(const coda_Type *type, coda_special_t
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_type_get_special_base_type(const coda_Type *type, coda_Type **base_type)
+LIBCODA_API int coda_type_get_special_base_type(const coda_type *type, coda_type **base_type)
 {
     if (type == NULL)
     {
@@ -1403,6 +1525,8 @@ LIBCODA_API int coda_type_get_special_base_type(const coda_Type *type, coda_Type
         case coda_format_xml:
             return coda_xml_type_get_special_base_type(type, base_type);
         case coda_format_netcdf:
+        case coda_format_grib1:
+        case coda_format_grib2:
         case coda_format_cdf:
         case coda_format_hdf4:
         case coda_format_hdf5:

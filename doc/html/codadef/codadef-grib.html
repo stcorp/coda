@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html>
+
+  <head>
+    <title>CODA GRIB Mapping Description</title>
+    <link rel="stylesheet" href="../css/codadoc.css" type="text/css" />
+  </head>
+
+  <body>
+
+    <div class="main">
+
+      <h1>CODA GRIB Mapping Description</h1>
+
+      <p>CODA provides access to GRIB-1 and GRIB-2 formatted data by creating a view on the GRIB files using the CODA <a href="codadef-format.html">data types</a>. Below we will describe how CODA maps the GRIB1/GRIB2 product structure to one that is based on the CODA data types. We assume you already have a decent understanding of the GRIB (edition 1 and 2) format and its details.</p>
+      
+      <p>A file can contain one or more GRIB <i>messages</i>. CODA only supports files where GRIB messages are stored without any padding between the messages and where the file does not contain any non-GRIB header or footer information in the file. All messages within a file should also use have same GRIB edition number.</p>
+
+      <p>Since a file consists of a list of messages the root of the product is mapped to an <i>array</i> of <i>records</i> with each message being mapped to a <i>record</i>. The mapping of each message depends on the version/edition number of GRIB and is explained below.</p>
+      
+      <p>CODA will try to provide as direct a mapping to the underlying data as possible. This means that code table indices will just be provided as indices and not be interpreted. You will have to consult the appropriate WMO code tables in order to interpret the data. The reason for this design choice was to eliminate as much as possible the dependency of CODA on the WMO tables. For certain structural information (such as the contents of the Grid Description Section) table information has been hard-coded in CODA.</p>
+      
+      <p>One exception to the 'direct mapping' approach is that CODA will already perform the decoding of the parameter values. The bit-packed data is already converted back to floating point values using the scale factors and reference value as described by the GRIB standard. The scale factors and reference values are still made accessible as fields in the GRIB message record, but they have the <i>hidden</i> property, since you should not have to need them to interpret the values that CODA will give back.</p>
+
+      <p>In addition, for GRIB1, any IBM floating point values will be converted to IEEE754 floating point values.</p>
+      
+      <p>CODA currently only supports to most common storage mechanism of GRIB which is the simple package form. Data that is stored using complex packaging, jpeg/png images, or using a bitmap (from the Bit Map Section) are not supported. Also, CODA currently only supports grid definitions that use a lat/lon or Gaussian grid. Other grids, including Spherical Harmonic data, are currently not supported. If an unsupported feature is encountered, CODA will abort opening the product and return with an error.</p>
+
+      <h2>GRIB1</h2>
+      
+      <p>A GRIB1 message consists of the following sections:</p>
+      <ul>
+      <li>(0) Indicator Section</li>
+      <li>(1) Product Definition Section (PDS)</li>
+      <li>(2) Grid Description Section (GDS) - optional</li>
+      <li>(3) Bit Map Section (BMS) - optional</li>
+      <li>(4) Binary Data Section (BDS)</li>
+      <li>(5) '7777' (ASCII Characters)</li>
+      </ul>
+
+      <p>The contents of the PDS are mapped directly as fields in the message <i>record</i>, but for the GDS and BDS sections separate sub-records are used. The Indicator, BMS, and '7777' sections are not mapped.</p>
+      
+      <p>For the naming of fields CODA tries to stay as close as possible to the naming scheme that is used by the ECMWF GRIB API software.</p>
+      
+      <p>The following table gives the list of parameters that are available via CODA for a GRIB1 message:</p>
+      
+      <table class="fancy" border="1" cellspacing="0">
+      <tr><th>path to variable</th><th>type class</th><th>read type</th><th>notes</th></tr>
+      <tr><td>/[]/editionNumber</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/table2Version</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/centre</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/generatingProcessIdentifier</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/gridDefinition</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/indicatorOfParameter</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/indicatorOfTypeOfLevel</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/level</td><td>integer</td><td>uint16</td><td></td></tr>
+      <tr><td>/[]/yearOfCentury</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/month</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/day</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/hour</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/minute</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/unitOfTimeRange</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/P1</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/P2</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/timeRangeIndicator</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/numberIncludedInAverage</td><td>integer</td><td>uint16</td><td></td></tr>
+      <tr><td>/[]/numberMissingFromAveragesOrAccumulations</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/centuryOfReferenceTimeOfData</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/decimalScaleFactor</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/subCentre</td><td>integer</td><td>int16</td><td>(hidden field)</td></tr>
+      <tr><td>/[]/local</td><td>raw</td><td>bytes</td><td>the originating center specific data at the end of the PDS is made available as raw data via this field if it is available</td></tr>
+      <tr><td>/[]/grid/numberOfVerticalCoordinateValues</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/grid/dataRepresentationType</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/grid/Ni</td><td>integer</td><td>uint16</td><td></td></tr>
+      <tr><td>/[]/grid/Nj</td><td>integer</td><td>uint16</td><td></td></tr>
+      <tr><td>/[]/grid/latitudeOfFirstGridPoint</td><td>integer</td><td>int32</td><td></td></tr>
+      <tr><td>/[]/grid/longitudeOfFirstGridPoint</td><td>integer</td><td>int32</td><td></td></tr>
+      <tr><td>/[]/grid/resolutionAndComponentFlags</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/grid/latitudeOfLastGridPoint</td><td>integer</td><td>int32</td><td></td></tr>
+      <tr><td>/[]/grid/longitudeOfLastGridPoint</td><td>integer</td><td>int32</td><td></td></tr>
+      <tr><td>/[]/grid/iDirectionIncrement</td><td>integer</td><td>int16</td><td></td></tr>
+      <tr><td>/[]/grid/jDirectionIncrement</td><td>integer</td><td>int16</td><td></td></tr>
+      <tr><td>/[]/grid/N</td><td>integer</td><td>int16</td><td></td></tr>
+      <tr><td>/[]/grid/scanningMode</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/grid/pv[]</td><td>real</td><td>float</td><td></td></tr>
+      <tr><td>/[]/data/bitsPerValue</td><td>integer</td><td>uint8</td><td>(hidden field)</td></tr>
+      <tr><td>/[]/data/binaryScaleFactor</td><td>integer</td><td>int16</td><td>(hidden field)</td></tr>
+      <tr><td>/[]/data/referenceValue</td><td>real</td><td>float</td><td>(hidden field)</td></tr>
+      <tr><td>/[]/data/values[]</td><td>real</td><td>float</td><td></td></tr>
+      </table>
+
+      <h2>GRIB2</h2>
+
+      <p>A GRIB2 message consists of the following sections:</p>
+      <ul>
+      <li>(0) Indicator Section</li>
+      <li>(1) Identification Section</li>
+      <li>(2) Local Use Section - optional</li>
+      <li>(3) Grid Definition Section</li>
+      <li>(4) Product Definition Section</li>
+      <li>(5) Data Representation Section</li>
+      <li>(6) Bit-Map Section</li>
+      <li>(7) Data Section</li>
+      <li>(8) End Section</li>
+      </ul>
+      
+      <p>Within a message, sequences 3-7, 4-7, and/or 5-7 can be repeated several times.</p>
+
+      <p>The contents of the Identification Section are mapped directly as fields in the message <i>record</i>. For the Local Use, Grid Definition, and Data Sections special 'local', 'grid', and 'data' fields are available, with each being an array of the contents of each occurence of the section. Each 'data' record will contain a 0-based index into the 'grid' array to reference the applicable grid for the parameter. Similary, for each 'grid' record a 0-based index into the 'local' array will be available. The visible content of the Product Definition and Data Representation Section are available in the 'data' record of the associated Data Section.</p>
+      
+      <p>As for GRIB1, for the naming of fields CODA tries to stay as close as possible to the naming scheme that is used by the ECMWF GRIB API software.</p>
+      
+      <p>The following table gives the list of parameters that are available via CODA for a GRIB2 message:</p>
+      
+      <table class="fancy" border="1" cellspacing="0">
+      <tr><th>path to variable</th><th>type class</th><th>read type</th><th>notes</th></tr>
+      <tr><td>/[]/editionNumber</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/discipline</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/centre</td><td>integer</td><td>uint16</td><td></td></tr>
+      <tr><td>/[]/subCentre</td><td>integer</td><td>uint16</td><td></td></tr>
+      <tr><td>/[]/masterTablesVersion</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/localTablesVersion</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/significanceOfReferenceTime</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/year</td><td>integer</td><td>uint16</td><td></td></tr>
+      <tr><td>/[]/month</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/day</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/hour</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/minute</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/second</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/productionStatusOfProcessedData</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/typeOfProcessedData</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/local[]</td><td>raw</td><td>bytes</td><td></td></tr>
+      <tr><td>/[]/grid[]/localRecordIndex</td><td>integer</td><td>int32</td><td>index into /[]/local[] to find associated local use data. Will be -1 if no local use data is available</td></tr>
+      <tr><td>/[]/grid[]/sourceOfGridDefinition</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/grid[]/numberOfDataPoints</td><td>integer</td><td>uint32</td><td></td></tr>
+      <tr><td>/[]/grid[]/gridDefinitionTemplateNumber</td><td>integer</td><td>uint16</td><td></td></tr>
+      <tr><td>/[]/grid[]/shapeOfTheEarth</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/grid[]/scaleFactorOfRadiusOfSphericalEarth</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/grid[]/scaledValueOfRadiusOfSphericalEarth</td><td>integer</td><td>uint32</td><td></td></tr>
+      <tr><td>/[]/grid[]/scaleFactorOfEarthMajorAxis</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/grid[]/scaledValueOfEarthMajorAxis</td><td>integer</td><td>uint32</td><td></td></tr>
+      <tr><td>/[]/grid[]/scaleFactorOfEarthMinorAxis</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/grid[]/scaledValueOfEarthMinorAxis</td><td>integer</td><td>uint32</td><td></td></tr>
+      <tr><td>/[]/grid[]/Ni</td><td>integer</td><td>uint32</td><td></td></tr>
+      <tr><td>/[]/grid[]/Nj</td><td>integer</td><td>uint32</td><td></td></tr>
+      <tr><td>/[]/grid[]/basicAngleOfTheInitialProductionDomain</td><td>integer</td><td>uint32</td><td></td></tr>
+      <tr><td>/[]/grid[]/subdivisionsOfBasicAngle</td><td>integer</td><td>uint32</td><td></td></tr>
+      <tr><td>/[]/grid[]/latitudeOfFirstGridPoint</td><td>integer</td><td>int32</td><td></td></tr>
+      <tr><td>/[]/grid[]/longitudeOfFirstGridPoint</td><td>integer</td><td>int32</td><td></td></tr>
+      <tr><td>/[]/grid[]/resolutionAndComponentFlags</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/grid[]/latitudeOfLastGridPoint</td><td>integer</td><td>int32</td><td></td></tr>
+      <tr><td>/[]/grid[]/longitudeOfLastGridPoint</td><td>integer</td><td>int32</td><td></td></tr>
+      <tr><td>/[]/grid[]/iDirectionIncrement</td><td>integer</td><td>uint32</td><td></td></tr>
+      <tr><td>/[]/grid[]/jDirectionIncrement</td><td>integer</td><td>uint32</td><td></td></tr>
+      <tr><td>/[]/grid[]/N</td><td>integer</td><td>uint32</td><td></td></tr>
+      <tr><td>/[]/grid[]/scanningMode</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/data[]/gridRecordIndex</td><td>integer</td><td>uint32</td><td>index into /[]/grid[] to find associated local use data</td></tr>
+      <tr><td>/[]/data[]/bitsPerValue</td><td>integer</td><td>uint8</td><td>(hidden field)</td></tr>
+      <tr><td>/[]/data[]/decimalScaleFactor</td><td>integer</td><td>int16</td><td>(hidden field)</td></tr>
+      <tr><td>/[]/data[]/binaryScaleFactor</td><td>integer</td><td>int16</td><td>(hidden field)</td></tr>
+      <tr><td>/[]/data[]/referenceValue</td><td>real</td><td>float</td><td>(hidden field)</td></tr>
+      <tr><td>/[]/data[]/values[]</td><td>real</td><td>float</td><td></td></tr>
+      </table>
+
+      <div class="footer">
+        <hr />
+        <p>Copyright &copy; 2007-2010 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+      </div>
+
+    </div>
+
+  </body>
+
+</html>

@@ -40,14 +40,14 @@ typedef enum ascbin_type_tag_enum
     tag_ascbin_array    /* coda_array_class */
 } ascbin_type_tag;
 
-struct coda_Conversion_struct
+struct coda_conversion_struct
 {
     char *unit;
     double numerator;
     double denominator;
 };
 
-struct coda_ascbinType_struct
+struct coda_ascbin_type_struct
 {
     int retain_count;
     coda_format format;
@@ -59,17 +59,18 @@ struct coda_ascbinType_struct
     int64_t bit_size;   /* -1 means it's variable and needs to be calculated */
 };
 
-struct coda_ascbinField_struct
+struct coda_ascbin_field_struct
 {
     char *name;
-    coda_ascbinType *type;
+    char *real_name;
+    coda_ascbin_type *type;
     int hidden;
-    coda_Expr *available_expr;
+    coda_expression *available_expr;
     int64_t bit_offset; /* relative bit offset from start of record (if -1, use bit_offset_expr or calculate) */
-    coda_Expr *bit_offset_expr; /* dynamic relative bit offset from the start of the record */
+    coda_expression *bit_offset_expr;   /* dynamic relative bit offset from the start of the record */
 };
 
-struct coda_ascbinRecord_struct
+struct coda_ascbin_record_struct
 {
     int retain_count;
     coda_format format;
@@ -79,15 +80,15 @@ struct coda_ascbinRecord_struct
 
     ascbin_type_tag tag;
     int64_t bit_size;
-    coda_Expr *fast_size_expr;
+    coda_expression *fast_size_expr;
     hashtable *hash_data;
     long num_fields;
-    coda_ascbinField **field;
+    coda_ascbin_field **field;
     int has_hidden_fields;
     int has_available_expr_fields;
 };
 
-struct coda_ascbinUnion_struct
+struct coda_ascbin_union_struct
 {
     int retain_count;
     coda_format format;
@@ -97,16 +98,16 @@ struct coda_ascbinUnion_struct
 
     ascbin_type_tag tag;
     int64_t bit_size;
-    coda_Expr *fast_size_expr;
+    coda_expression *fast_size_expr;
     hashtable *hash_data;
     long num_fields;
-    coda_ascbinField **field;
+    coda_ascbin_field **field;
     int has_hidden_fields;
     int has_available_expr_fields;
-    coda_Expr *field_expr;      /* returns index in range [0..num_fields) */
+    coda_expression *field_expr;        /* returns index in range [0..num_fields) */
 };
 
-struct coda_ascbinArray_struct
+struct coda_ascbin_array_struct
 {
     int retain_count;
     coda_format format;
@@ -116,37 +117,37 @@ struct coda_ascbinArray_struct
 
     ascbin_type_tag tag;
     int64_t bit_size;
-    coda_ascbinType *base_type;
+    coda_ascbin_type *base_type;
     long num_elements;
     int num_dims;
     long *dim;  /* -1 means it's variable and the value needs to be retrieved from dim_expr */
-    coda_Expr **dim_expr;
+    coda_expression **dim_expr;
 };
 
 
-struct coda_ascbinDetectionNode_struct
+struct coda_ascbin_detection_node_struct
 {
     /* detection rule entry at this node; will be NULL for root node */
-    coda_DetectionRuleEntry *entry;
+    coda_detection_rule_entry *entry;
 
-    coda_DetectionRule *rule;   /* the matching rule when 'entry' matches and none of the subnodes match */
+    coda_detection_rule *rule;  /* the matching rule when 'entry' matches and none of the subnodes match */
 
     /* sub nodes of this node */
     int num_subnodes;
-    struct coda_ascbinDetectionNode_struct **subnode;
+    struct coda_ascbin_detection_node_struct **subnode;
 };
-typedef struct coda_ascbinDetectionNode_struct coda_ascbinDetectionNode;
+typedef struct coda_ascbin_detection_node_struct coda_ascbin_detection_node;
 
-coda_ascbinDetectionNode *coda_ascbin_get_detection_tree(void);
+coda_ascbin_detection_node *coda_ascbin_get_detection_tree(void);
 
-struct coda_ascbinProductFile_struct
+struct coda_ascbin_product_struct
 {
     /* general fields (shared between all supported product types) */
     char *filename;
     int64_t file_size;
     coda_format format;
-    coda_DynamicType *root_type;
-    coda_ProductDefinition *product_definition;
+    coda_dynamic_type *root_type;
+    coda_product_definition *product_definition;
     long *product_variable_size;
     int64_t **product_variable;
 
@@ -162,8 +163,8 @@ struct coda_ascbinProductFile_struct
     long num_asciilines;
     long *asciiline_end_offset; /* byte offset of the termination of the line (eol or eof) */
     eol_type lastline_ending;
-    coda_DynamicType *asciilines;
+    coda_dynamic_type *asciilines;
 };
-typedef struct coda_ascbinProductFile_struct coda_ascbinProductFile;
+typedef struct coda_ascbin_product_struct coda_ascbin_product;
 
 #endif

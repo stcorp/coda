@@ -34,6 +34,8 @@
 #ifdef HAVE_HDF5
 #include "coda-hdf5.h"
 #endif
+#include "coda-grib.h"
+#include "coda-path.h"
 
 /** \file */
 
@@ -99,7 +101,7 @@ int coda_option_use_mmap = 1;
  * types option then CODA automatically calls the coda_cursor_use_base_type_of_special_type() for you whenever you move
  * a cursor to a data item that is of a special type.
  * By default bypassing of special types is disabled.
- * \note Bypassing of special types only works on CODA cursors and not on coda_Type objects
+ * \note Bypassing of special types only works on CODA cursors and not on coda_type objects
  * (e.g. if a record field is of a special type the coda_type_get_record_field_type() function will still give you the
  * special type and not the non-special base type).
  * \param enable
@@ -381,6 +383,85 @@ LIBCODA_API int coda_set_definition_path(const char *path)
     return 0;
 }
 
+/** Set the directory for CODA product definition files based on the location of another file.
+ * This function should be called before coda_init() is called.
+ *
+ * This function will try to find the file with filename \a file in the provided searchpath \a searchpath.
+ * The first directory in the searchpath where the file \a file exists will be appended with the relative directory
+ * \a relative_location to determine the CODA product definition path. This path will be used as CODA definition path.
+ * If the file could not be found in the searchpath then the CODA definition path will not be set.
+ *
+ * If the CODA_DEFINITION environment variable was set then this function will not perform a search or set the
+ * definition path (i.e. the CODA definition path will be taken from the CODA_DEFINITION variable).
+ *
+ * If you provide NULL for \a searchpath then the PATH environment variable will be used as searchpath.
+ * For instance, you can use coda_set_definition_path_conditional(argv[0], NULL, "../somedir") to set the CODA
+ * definition path to a location relative to the location of your executable.
+ *
+ * The searchpath, if provided, should have a similar format as the PATH environment variable of your system. Path
+ * components should be separated by ';' on Windows and by ':' on other systems.
+ *
+ * The \a relative_location parameter can point either to a directory (in which case all .codadef files in this
+ * directory will be used) or to a single .codadef file.
+ *
+ * Note that this function differs from coda_set_definition_path() in two important ways:
+ *  - it will not modify the definition path if the CODA_DEFINITION variable was set
+ *  - it will set the definition path to just a single location (either a single file or a single directory)
+ *
+ * \param file Filename of the file to search for
+ * \param searchpath Search path where to look for the file \a file (can be NULL)
+ * \param relative_location Filepath relative to the directory from \a searchpath where \a file was found that should be
+ * used to determine the CODA definition path.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_set_definition_path_conditional(const char *file, const char *searchpath,
+                                                     const char *relative_location)
+{
+    char *location;
+
+    if (getenv("CODA_DEFINITION") != NULL)
+    {
+        return 0;
+    }
+
+    if (searchpath == NULL)
+    {
+        if (coda_path_for_program(file, &location) != 0)
+        {
+            return -1;
+        }
+    }
+    else
+    {
+        if (coda_path_find_file(searchpath, file, &location) != 0)
+        {
+            return -1;
+        }
+    }
+    if (location != NULL)
+    {
+        char *path;
+
+        if (coda_path_from_path(location, 1, relative_location, &path) != 0)
+        {
+            free(location);
+            return -1;
+        }
+        free(location);
+        if (coda_set_definition_path(path) != 0)
+        {
+            free(path);
+            return -1;
+        }
+        free(path);
+    }
+
+    return 0;
+}
+
+
 /** Initializes CODA.
  * This function should be called before any other CODA function is called (except for coda_set_definition_path()).
  *
@@ -403,6 +484,10 @@ LIBCODA_API int coda_init(void)
 {
     if (coda_init_counter == 0)
     {
+        if (coda_leap_second_table_init() != 0)
+        {
+            return -1;
+        }
         if (coda_data_dictionary_init() != 0)
         {
             return -1;
@@ -414,6 +499,8 @@ LIBCODA_API int coda_init(void)
                 coda_definition_path = strdup(getenv("CODA_DEFINITION"));
                 if (coda_definition_path == NULL)
                 {
+                    coda_data_dictionary_done();
+                    coda_leap_second_table_done();
                     coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)",
                                    __FILE__, __LINE__);
                     return -1;
@@ -425,6 +512,7 @@ LIBCODA_API int coda_init(void)
             if (coda_read_definitions(coda_definition_path) != 0)
             {
                 coda_data_dictionary_done();
+                coda_leap_second_table_done();
                 return -1;
             }
         }
@@ -434,9 +522,19 @@ LIBCODA_API int coda_init(void)
         if (coda_hdf5_init() != 0)
         {
             coda_data_dictionary_done();
+            if (coda_definition_path != NULL)
+            {
+                free(coda_definition_path);
+                coda_definition_path = NULL;
+            }
+            coda_leap_second_table_done();
             return -1;
         }
 #endif
+        if (coda_grib_init() != 0)
+        {
+            return -1;
+        }
     }
     coda_init_counter++;
 
@@ -465,6 +563,7 @@ LIBCODA_API void coda_done(void)
         coda_init_counter--;
         if (coda_init_counter == 0)
         {
+            coda_grib_done();
 #ifdef HAVE_HDF5
             coda_hdf5_done();
 #endif
@@ -476,18 +575,31 @@ LIBCODA_API void coda_done(void)
             coda_bin_done();
             coda_ascii_done();
             coda_data_dictionary_done();
-        }
-        if (coda_definition_path != NULL)
-        {
-            free(coda_definition_path);
-            coda_definition_path = NULL;
+            if (coda_definition_path != NULL)
+            {
+                free(coda_definition_path);
+                coda_definition_path = NULL;
+            }
+            coda_leap_second_table_done();
         }
     }
 }
 
+/** Free a memory block that was allocated by the CODA library.
+ * In some enviroments the library that performs the malloc is also the one that needs to perform the free.
+ * With this function memory that was allocated within the CODA library can be deallocated for such environments.
+ * It should be used in the following cases:
+ * - to deallocate the memory for the 'value' variables of coda_expression_eval_string()
+ * \param ptr The pointer whose memory should be freed.
+ */
+void coda_free(void *ptr)
+{
+    free(ptr);
+}
+
 /** @} */
 
-int coda_get_type_for_dynamic_type(coda_DynamicType *dynamic_type, coda_Type **type)
+int coda_get_type_for_dynamic_type(coda_dynamic_type *dynamic_type, coda_type **type)
 {
     switch (dynamic_type->format)
     {
@@ -513,6 +625,9 @@ int coda_get_type_for_dynamic_type(coda_DynamicType *dynamic_type, coda_Type **t
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
 #endif
+        case coda_format_grib1:
+        case coda_format_grib2:
+            return coda_grib_get_type_for_dynamic_type(dynamic_type, type);
     }
 
     assert(0);

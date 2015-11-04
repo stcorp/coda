@@ -29,7 +29,6 @@
 #include <time.h>
 
 #include "coda.h"
-#include "coda-path.h"
 
 int option_verbose;
 int option_quick;
@@ -65,36 +64,7 @@ static void print_help()
     printf("\n");
 }
 
-static void set_definition_path(const char *argv0)
-{
-    char *location;
-
-    if (coda_path_for_program(argv0, &location) != 0)
-    {
-        printf("  ERROR: %s\n", coda_errno_to_string(coda_errno));
-        exit(1);
-    }
-    if (location != NULL)
-    {
-#ifdef WIN32
-        const char *definition_path = "../definitions";
-#else
-        const char *definition_path = "../share/" PACKAGE "/definitions";
-#endif
-        char *path;
-
-        if (coda_path_from_path(location, 1, definition_path, &path) != 0)
-        {
-            printf("  ERROR: %s\n", coda_errno_to_string(coda_errno));
-            exit(1);
-        }
-        coda_path_free(location);
-        coda_set_definition_path(path);
-        coda_path_free(path);
-    }
-}
-
-static int print_cursor_position(const coda_Cursor *cursor)
+static int print_cursor_position(const coda_cursor *cursor)
 {
     int depth;
 
@@ -105,7 +75,7 @@ static int print_cursor_position(const coda_Cursor *cursor)
     if (depth > 0)
     {
         coda_type_class type_class;
-        coda_Cursor parent_cursor;
+        coda_cursor parent_cursor;
         long index;
 
         /* print parent */
@@ -172,7 +142,7 @@ static int print_cursor_position(const coda_Cursor *cursor)
                 case coda_record_class:
                     {
                         const char *name;
-                        coda_Type *type;
+                        coda_type *type;
 
                         if (coda_cursor_get_type(&parent_cursor, &type) != 0)
                         {
@@ -195,7 +165,7 @@ static int print_cursor_position(const coda_Cursor *cursor)
     return 0;
 }
 
-static void print_error_with_cursor(coda_Cursor *cursor, int err)
+static void print_error_with_cursor(coda_cursor *cursor, int err)
 {
     printf("  ERROR: %s at ", coda_errno_to_string(err));
     if (print_cursor_position(cursor) != 0)
@@ -206,20 +176,20 @@ static void print_error_with_cursor(coda_Cursor *cursor, int err)
     found_errors = 1;
 }
 
-static int quick_size_check(coda_ProductFile *pf)
+static int quick_size_check(coda_product *product)
 {
-    coda_Cursor cursor;
+    coda_cursor cursor;
     int64_t real_file_size;
     int64_t calculated_file_size;
     int prev_option_value;
 
-    if (coda_get_product_file_size(pf, &real_file_size) != 0)
+    if (coda_get_product_file_size(product, &real_file_size) != 0)
     {
         return -1;
     }
     real_file_size <<= 3;       /* now in bits */
 
-    if (coda_cursor_set_product(&cursor, pf) != 0)
+    if (coda_cursor_set_product(&cursor, product) != 0)
     {
         return -1;
     }
@@ -257,7 +227,7 @@ static int quick_size_check(coda_ProductFile *pf)
     return 0;
 }
 
-static int check_data(coda_Cursor *cursor, int64_t *bit_size)
+static int check_data(coda_cursor *cursor, int64_t *bit_size)
 {
     coda_type_class type_class;
 
@@ -400,7 +370,7 @@ static int check_data(coda_Cursor *cursor, int64_t *bit_size)
             break;
         case coda_text_class:
             {
-                coda_Type *type;
+                coda_type *type;
                 char *data = NULL;
                 long string_length;
                 const char *fixed_value;
@@ -491,7 +461,7 @@ static int check_data(coda_Cursor *cursor, int64_t *bit_size)
             {
                 int64_t local_bit_size;
                 int64_t byte_size;
-                coda_Type *type;
+                coda_type *type;
                 const char *fixed_value;
                 long fixed_value_length;
 
@@ -649,19 +619,19 @@ static int check_data(coda_Cursor *cursor, int64_t *bit_size)
     return 0;
 }
 
-static int size_and_read_check(coda_ProductFile *pf)
+static int size_and_read_check(coda_product *product)
 {
-    coda_Cursor cursor;
+    coda_cursor cursor;
     int64_t real_file_size;
     int64_t calculated_file_size;
 
-    if (coda_get_product_file_size(pf, &real_file_size) != 0)
+    if (coda_get_product_file_size(product, &real_file_size) != 0)
     {
         return -1;
     }
     real_file_size <<= 3;       /* now in bits */
 
-    if (coda_cursor_set_product(&cursor, pf) != 0)
+    if (coda_cursor_set_product(&cursor, product) != 0)
     {
         return -1;
     }
@@ -694,11 +664,11 @@ static int size_and_read_check(coda_ProductFile *pf)
     return 0;
 }
 
-static int read_check(coda_ProductFile *pf)
+static int read_check(coda_product *product)
 {
-    coda_Cursor cursor;
+    coda_cursor cursor;
 
-    if (coda_cursor_set_product(&cursor, pf) != 0)
+    if (coda_cursor_set_product(&cursor, product) != 0)
     {
         return -1;
     }
@@ -711,7 +681,7 @@ static int read_check(coda_ProductFile *pf)
 
 static void check_file(char *filename)
 {
-    coda_ProductFile *pf;
+    coda_product *product;
     coda_format format;
     int64_t file_size;
     const char *product_class;
@@ -739,14 +709,14 @@ static void check_file(char *filename)
         printf("\n");
     }
 
-    result = coda_open(filename, &pf);
+    result = coda_open(filename, &product);
     if (result != 0 && coda_errno == CODA_ERROR_FILE_OPEN)
     {
         /* maybe not enough memory space to map the file in memory =>
          * temporarily disable memory mapping of files and try again
          */
         coda_set_option_use_mmap(0);
-        result = coda_open(filename, &pf);
+        result = coda_open(filename, &product);
         coda_set_option_use_mmap(1);
     }
     if (result != 0)
@@ -763,19 +733,19 @@ static void check_file(char *filename)
         case coda_format_binary:
             if (option_quick)
             {
-                if (quick_size_check(pf) != 0)
+                if (quick_size_check(product) != 0)
                 {
                     printf("  ERROR: %s\n\n", coda_errno_to_string(coda_errno));
-                    coda_close(pf);
+                    coda_close(product);
                     return;
                 }
             }
             else
             {
-                if (size_and_read_check(pf) != 0)
+                if (size_and_read_check(product) != 0)
                 {
                     printf("  ERROR: %s\n\n", coda_errno_to_string(coda_errno));
-                    coda_close(pf);
+                    coda_close(product);
                     return;
                 }
             }
@@ -783,17 +753,17 @@ static void check_file(char *filename)
         default:
             if (!option_quick)
             {
-                if (read_check(pf) != 0)
+                if (read_check(product) != 0)
                 {
                     printf("  ERROR: %s\n\n", coda_errno_to_string(coda_errno));
-                    coda_close(pf);
+                    coda_close(product);
                     return;
                 }
             }
             break;
     }
 
-    if (coda_close(pf) != 0)
+    if (coda_close(product) != 0)
     {
         printf("  ERROR: %s\n", coda_errno_to_string(coda_errno));
         return;
@@ -804,6 +774,11 @@ static void check_file(char *filename)
 
 int main(int argc, char *argv[])
 {
+#ifdef WIN32
+    const char *definition_path = "../definitions";
+#else
+    const char *definition_path = "../share/" PACKAGE "/definitions";
+#endif
     int option_stdin;
     int i;
 
@@ -851,9 +826,10 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (getenv("CODA_DEFINITION") == NULL)
+    if (coda_set_definition_path_conditional(argv[0], NULL, definition_path) != 0)
     {
-        set_definition_path(argv[0]);
+        fprintf(stderr, "ERROR: %s\n", coda_errno_to_string(coda_errno));
+        exit(1);
     }
 
     if (coda_init() != 0)

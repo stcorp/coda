@@ -26,7 +26,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "coda-path.h"
 #include "coda-internal.h"
 
 char *ascii_col_sep;
@@ -41,6 +40,7 @@ int use_special_types;
 
 void generate_html(const char *prefixdir);
 void generate_list(const char *product_class, const char *product_type, int version);
+void generate_detection_tree(coda_format format);
 
 static void print_version()
 {
@@ -84,41 +84,18 @@ static void print_help()
     printf("                    data with a special type is treated using its non-special\n");
     printf("                    base type\n");
     printf("\n");
+    printf("    codadd [-D definitionpath] dtree <format>\n");
+    printf("        Shows the product recognition detection tree for the given file format.\n");
+    printf("        Supported file formats are: ascii, binary, xml\n");
+    printf("        Note that ascii and binary formatted products use the same detection\n");
+    printf("        tree\n");
+    printf("\n");
     printf("    codadd -h, --help\n");
     printf("        Show help (this text)\n");
     printf("\n");
     printf("    codadd -v, --version\n");
     printf("        Print the version number of CODA and exit\n");
     printf("\n");
-}
-
-static void set_definition_path(const char *argv0)
-{
-    char *location;
-
-    if (coda_path_for_program(argv0, &location) != 0)
-    {
-        printf("  ERROR: %s\n", coda_errno_to_string(coda_errno));
-        exit(1);
-    }
-    if (location != NULL)
-    {
-#ifdef WIN32
-        const char *definition_path = "../definitions";
-#else
-        const char *definition_path = "../share/" PACKAGE "/definitions";
-#endif
-        char *path;
-
-        if (coda_path_from_path(location, 1, definition_path, &path) != 0)
-        {
-            printf("  ERROR: %s\n", coda_errno_to_string(coda_errno));
-            exit(1);
-        }
-        coda_path_free(location);
-        coda_set_definition_path(path);
-        coda_path_free(path);
-    }
 }
 
 int main(int argc, char *argv[])
@@ -157,9 +134,15 @@ int main(int argc, char *argv[])
     }
     else
     {
-        if (getenv("CODA_DEFINITION") == NULL)
+#ifdef WIN32
+        const char *definition_path = "../definitions";
+#else
+        const char *definition_path = "../share/" PACKAGE "/definitions";
+#endif
+        if (coda_set_definition_path_conditional(argv[0], NULL, definition_path) != 0)
         {
-            set_definition_path(argv[0]);
+            fprintf(stderr, "ERROR: %s\n", coda_errno_to_string(coda_errno));
+            exit(1);
         }
     }
 
@@ -272,6 +255,34 @@ int main(int argc, char *argv[])
             }
         }
         generate_list(product_class, product_type, version);
+    }
+    else if (strcmp(argv[i], "dtree") == 0)
+    {
+        i++;
+        if (i != argc - 1)
+        {
+            fprintf(stderr, "ERROR: Incorrect arguments\n");
+            print_help();
+            exit(1);
+        }
+        if (strcmp(argv[i], "ascii") == 0)
+        {
+            generate_detection_tree(coda_format_ascii);
+        }
+        else if (strcmp(argv[i], "binary") == 0)
+        {
+            generate_detection_tree(coda_format_binary);
+        }
+        else if (strcmp(argv[i], "xml") == 0)
+        {
+            generate_detection_tree(coda_format_xml);
+        }
+        else
+        {
+            fprintf(stderr, "ERROR: Incorrect arguments\n");
+            print_help();
+            exit(1);
+        }
     }
     else
     {

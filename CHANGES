@@ -1,21 +1,55 @@
-1.3.6 2010-10-25
+1.4.0 2010-11-08
 ~~~~~~~~~~~~~~~~
+
+* Added support for reading of GRIB1 and GRIB2 formatted data. Support is
+  currently limited to data stored with simple packing and using a lat/lon or
+  Gaussian grid.
+
+* Added public C API for creating and evaluating CODA expressions.
+  A wrapper interface is available for Fortran, Python, and Java.
+
+* Added regex functions to CODA expression language. The functions use PCRE,
+  which is now included with CODA, to evaluate the regular expressions.
+
+* Added support for raw strings (i.e. strings where the escape sequences are
+  not evaluated by CODA) in the expression language. A raw string starts with
+  'r' (similar to Python): r"no \\escaping\\" -> "no \\escaping\\"
+
+* Added codaeval command line tool to verify and evaluate CODA expressions.
+
+* Added new time functions to the C interface (with Fortran, Python, and Java
+  wrappers) that can deal with leap seconds (they convert between TAI and UTC):
+  coda_utcdatetime_to_double(), coda_double_to_utcdatetime(),
+  coda_time_to_utcstring(), coda_utcstring_to_time()
+
+* C interface types coda_ProductFile, coda_Type, and coda_Cursor are now called
+  coda_product, coda_type, and coda_cursor. Defines are still available for the
+  old type names to allow backward compatibility.
+
+* Added coda_type_get_record_field_real_name().
+
+* Added coda_set_definition_path_conditional().
+
+* codadump no longer shows execution time information for HDF4 export.
+  The list view of codadump also does not quote the type names anymore.
 
 * Fixed error handling of Python coda.string_to_time() function.
 
 * Added variant of unboundindex() expression function that can take an explicit
   termination condition as third argument.
 
-* Fixes in CMake build files for big-endian systems.
+* Windows build of CODA is now performed using Visual Studio 2008 (9.0).
+  The MATLAB build on Windows now requires MATLAB R2007b or later.
 
-* Added ST_CODADEF_VERSION M4 macro to allow packages that use CODA to
-  automatically determine the version number for a .codadef file in autoconf
-  scripts.
+1.3.6 2010-06-11
+~~~~~~~~~~~~~~~~
+
+* Fixes in CMake build files for big-endian systems.
 
 1.3.5 2010-05-10
 ~~~~~~~~~~~~~~~~
 
-* Fixed support for reading of 24, 40, 48, and 56 bit little endian integers.
+* Added support for reading of 24, 40, 48, and 56 bit little endian integers.
 
 1.3.4 2010-04-02
 ~~~~~~~~~~~~~~~~
@@ -25,7 +59,7 @@
 1.3.3 2010-03-19
 ~~~~~~~~~~~~~~~~
 
-* Fixed small issue in html documentation generation (wrong byte end-position
+* Fixed small issue in html documentation generation (wrong byte end-position 
   for a detection expression).
 
 * Fixed bug in parsing of string constants in expression language (string

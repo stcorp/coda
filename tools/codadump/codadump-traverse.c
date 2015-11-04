@@ -210,7 +210,7 @@ static void handle_data_element()
                 {
                     handle_coda_error();
                 }
-                printf(" '%s'", coda_type_get_special_type_name(special_type));
+                printf(" %s", coda_type_get_special_type_name(special_type));
             }
             else
             {
@@ -220,15 +220,14 @@ static void handle_data_element()
                 {
                     handle_coda_error();
                 }
-                printf(" '%s", coda_type_get_native_type_name(read_type));
+                printf(" %s", coda_type_get_native_type_name(read_type));
                 if (read_type == coda_native_type_string || read_type == coda_native_type_bytes)
                 {
-                    printf(" (");
+                    printf("(");
                     assert(traverse_info.num_arrays > 0);
                     print_array_dim(stdout, traverse_info.num_arrays - 1);
                     printf(")");
                 }
-                printf("'");
             }
         }
         if (show_unit)

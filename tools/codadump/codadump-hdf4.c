@@ -94,7 +94,7 @@ static const char *hdf_type_name(int32 type)
     }
 }
 
-static int32 dd_type_to_hdf_type(coda_Type *type)
+static int32 dd_type_to_hdf_type(coda_type *type)
 {
     coda_type_class type_class;
 

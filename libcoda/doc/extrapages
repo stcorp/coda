@@ -10,8 +10,10 @@
  * Each module has a separate section that contains its general description together with descriptions for all types,
  * variables, functions, etc. that are part of this module.
  * - \link coda_general CODA General\endlink
- * - \link coda_productfile CODA Product File\endlink
+ * - \link coda_product CODA Product\endlink
  * - \link coda_types CODA Types\endlink
  * - \link coda_cursor CODA Cursor\endlink
+ * - \link coda_expression CODA Expression\endlink
+ * - \link coda_time CODA Time\endlink
  * - \link coda_error CODA Error\endlink
  */

@@ -28,11 +28,10 @@
 
 #include "coda-definition.h"
 #include "coda-bin-definition.h"
-#include "coda-expr-internal.h"
 
-static coda_binNoData *no_data_singleton = NULL;
+static coda_bin_no_data *no_data_singleton = NULL;
 
-static void delete_bin_integer(coda_binInteger *integer)
+static void delete_bin_integer(coda_bin_integer *integer)
 {
     if (integer->name != NULL)
     {
@@ -52,12 +51,12 @@ static void delete_bin_integer(coda_binInteger *integer)
     }
     if (integer->bit_size_expr != NULL)
     {
-        coda_expr_delete(integer->bit_size_expr);
+        coda_expression_delete(integer->bit_size_expr);
     }
     free(integer);
 }
 
-static void delete_bin_float(coda_binFloat *fl)
+static void delete_bin_float(coda_bin_float *fl)
 {
     if (fl->name != NULL)
     {
@@ -78,7 +77,7 @@ static void delete_bin_float(coda_binFloat *fl)
     free(fl);
 }
 
-static void delete_bin_raw(coda_binRaw *raw)
+static void delete_bin_raw(coda_bin_raw *raw)
 {
     if (raw->name != NULL)
     {
@@ -90,7 +89,7 @@ static void delete_bin_raw(coda_binRaw *raw)
     }
     if (raw->bit_size_expr != NULL)
     {
-        coda_expr_delete(raw->bit_size_expr);
+        coda_expression_delete(raw->bit_size_expr);
     }
     if (raw->fixed_value != NULL)
     {
@@ -99,7 +98,7 @@ static void delete_bin_raw(coda_binRaw *raw)
     free(raw);
 }
 
-static void delete_bin_no_data(coda_binNoData *no_data)
+static void delete_bin_no_data(coda_bin_no_data *no_data)
 {
     if (no_data->name != NULL)
     {
@@ -116,7 +115,7 @@ static void delete_bin_no_data(coda_binNoData *no_data)
     free(no_data);
 }
 
-static void delete_bin_vsf_integer(coda_binVSFInteger *vsf_integer)
+static void delete_bin_vsf_integer(coda_bin_vsf_integer *vsf_integer)
 {
     if (vsf_integer->name != NULL)
     {
@@ -137,7 +136,7 @@ static void delete_bin_vsf_integer(coda_binVSFInteger *vsf_integer)
     free(vsf_integer);
 }
 
-static void delete_bin_time(coda_binTime *time)
+static void delete_bin_time(coda_bin_time *time)
 {
     if (time->name != NULL)
     {
@@ -154,7 +153,7 @@ static void delete_bin_time(coda_binTime *time)
     free(time);
 }
 
-static void delete_bin_complex(coda_binComplex *compl)
+static void delete_bin_complex(coda_bin_complex *compl)
 {
     if (compl->name != NULL)
     {
@@ -171,7 +170,7 @@ static void delete_bin_complex(coda_binComplex *compl)
     free(compl);
 }
 
-void coda_bin_release_type(coda_binType *type)
+void coda_bin_release_type(coda_bin_type *type)
 {
     assert(type != NULL);
 
@@ -181,47 +180,47 @@ void coda_bin_release_type(coda_binType *type)
         return;
     }
 
-    switch (((coda_binType *)type)->tag)
+    switch (((coda_bin_type *)type)->tag)
     {
         case tag_bin_record:
-            coda_ascbin_record_delete((coda_ascbinRecord *)type);
+            coda_ascbin_record_delete((coda_ascbin_record *)type);
             break;
         case tag_bin_union:
-            coda_ascbin_union_delete((coda_ascbinUnion *)type);
+            coda_ascbin_union_delete((coda_ascbin_union *)type);
             break;
         case tag_bin_array:
-            coda_ascbin_array_delete((coda_ascbinArray *)type);
+            coda_ascbin_array_delete((coda_ascbin_array *)type);
             break;
         case tag_bin_integer:
-            delete_bin_integer((coda_binInteger *)type);
+            delete_bin_integer((coda_bin_integer *)type);
             break;
         case tag_bin_float:
-            delete_bin_float((coda_binFloat *)type);
+            delete_bin_float((coda_bin_float *)type);
             break;
         case tag_bin_raw:
-            delete_bin_raw((coda_binRaw *)type);
+            delete_bin_raw((coda_bin_raw *)type);
             break;
         case tag_bin_no_data:
             /* this is a singleton -> only free when coda_bin_done() is called */
             break;
         case tag_bin_vsf_integer:
-            delete_bin_vsf_integer((coda_binVSFInteger *)type);
+            delete_bin_vsf_integer((coda_bin_vsf_integer *)type);
             break;
         case tag_bin_time:
-            delete_bin_time((coda_binTime *)type);
+            delete_bin_time((coda_bin_time *)type);
             break;
         case tag_bin_complex:
-            delete_bin_complex((coda_binComplex *)type);
+            delete_bin_complex((coda_bin_complex *)type);
             break;
     }
 }
 
-void coda_bin_release_dynamic_type(coda_DynamicType *type)
+void coda_bin_release_dynamic_type(coda_dynamic_type *type)
 {
-    coda_bin_release_type((coda_binType *)type);
+    coda_bin_release_type((coda_bin_type *)type);
 }
 
-static int number_set_unit(coda_binNumber *number, const char *unit)
+static int number_set_unit(coda_bin_number *number, const char *unit)
 {
     char *new_unit = NULL;
 
@@ -246,35 +245,35 @@ static int number_set_unit(coda_binNumber *number, const char *unit)
 }
 
 
-coda_DynamicType *coda_bin_no_data(void)
+coda_dynamic_type *coda_bin_no_data_singleton(void)
 {
     if (no_data_singleton == NULL)
     {
-        no_data_singleton = (coda_binNoData *)malloc(sizeof(coda_binNoData));
+        no_data_singleton = (coda_bin_no_data *)malloc(sizeof(coda_bin_no_data));
         assert(no_data_singleton != NULL);
         no_data_singleton->format = coda_format_binary;
         no_data_singleton->type_class = coda_special_class;
         no_data_singleton->name = NULL;
         no_data_singleton->description = NULL;
         no_data_singleton->tag = tag_bin_no_data;
-        no_data_singleton->base_type = (coda_binType *)coda_bin_raw_new();
-        coda_bin_raw_set_bit_size((coda_binRaw *)no_data_singleton->base_type, 0);
+        no_data_singleton->base_type = (coda_bin_type *)coda_bin_raw_new();
+        coda_bin_raw_set_bit_size((coda_bin_raw *)no_data_singleton->base_type, 0);
         no_data_singleton->bit_size = no_data_singleton->base_type->bit_size;
     }
 
-    return (coda_DynamicType *)no_data_singleton;
+    return (coda_dynamic_type *)no_data_singleton;
 }
 
 
-coda_binInteger *coda_bin_integer_new(void)
+coda_bin_integer *coda_bin_integer_new(void)
 {
-    coda_binInteger *integer;
+    coda_bin_integer *integer;
 
-    integer = (coda_binInteger *)malloc(sizeof(coda_binInteger));
+    integer = (coda_bin_integer *)malloc(sizeof(coda_bin_integer));
     if (integer == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_binInteger), __FILE__, __LINE__);
+                       (long)sizeof(coda_bin_integer), __FILE__, __LINE__);
         return NULL;
     }
     integer->retain_count = 0;
@@ -293,12 +292,12 @@ coda_binInteger *coda_bin_integer_new(void)
     return integer;
 }
 
-int coda_bin_integer_set_unit(coda_binInteger *integer, const char *unit)
+int coda_bin_integer_set_unit(coda_bin_integer *integer, const char *unit)
 {
-    return number_set_unit((coda_binNumber *)integer, unit);
+    return number_set_unit((coda_bin_number *)integer, unit);
 }
 
-int coda_bin_integer_set_bit_size(coda_binInteger *integer, long bit_size)
+int coda_bin_integer_set_bit_size(coda_bin_integer *integer, long bit_size)
 {
     if (integer->bit_size != -1)
     {
@@ -314,13 +313,13 @@ int coda_bin_integer_set_bit_size(coda_binInteger *integer, long bit_size)
     integer->bit_size = bit_size;
     if (integer->bit_size_expr != NULL)
     {
-        coda_expr_delete(integer->bit_size_expr);
+        coda_expression_delete(integer->bit_size_expr);
         integer->bit_size_expr = NULL;
     }
     return 0;
 }
 
-int coda_bin_integer_set_bit_size_expression(coda_binInteger *integer, coda_Expr *bit_size_expr)
+int coda_bin_integer_set_bit_size_expression(coda_bin_integer *integer, coda_expression *bit_size_expr)
 {
     assert(bit_size_expr != NULL);
     if (integer->bit_size_expr != NULL)
@@ -333,7 +332,7 @@ int coda_bin_integer_set_bit_size_expression(coda_binInteger *integer, coda_Expr
     return 0;
 }
 
-int coda_bin_integer_set_read_type(coda_binInteger *integer, coda_native_type read_type)
+int coda_bin_integer_set_read_type(coda_bin_integer *integer, coda_native_type read_type)
 {
     if (integer->read_type != coda_native_type_not_available)
     {
@@ -353,7 +352,7 @@ int coda_bin_integer_set_read_type(coda_binInteger *integer, coda_native_type re
     return 0;
 }
 
-int coda_bin_integer_set_conversion(coda_binInteger *integer, coda_Conversion *conversion)
+int coda_bin_integer_set_conversion(coda_bin_integer *integer, coda_conversion *conversion)
 {
     if (integer->conversion != NULL)
     {
@@ -364,13 +363,13 @@ int coda_bin_integer_set_conversion(coda_binInteger *integer, coda_Conversion *c
     return 0;
 }
 
-int coda_bin_integer_set_endianness(coda_binInteger *integer, coda_endianness endianness)
+int coda_bin_integer_set_endianness(coda_bin_integer *integer, coda_endianness endianness)
 {
     integer->endianness = endianness;
     return 0;
 }
 
-int coda_bin_integer_validate(coda_binInteger *integer)
+int coda_bin_integer_validate(coda_bin_integer *integer)
 {
     if (integer->bit_size_expr == NULL && integer->bit_size == -1)
     {
@@ -439,15 +438,15 @@ int coda_bin_integer_validate(coda_binInteger *integer)
     return 0;
 }
 
-coda_binFloat *coda_bin_float_new(void)
+coda_bin_float *coda_bin_float_new(void)
 {
-    coda_binFloat *fl;
+    coda_bin_float *fl;
 
-    fl = (coda_binFloat *)malloc(sizeof(coda_binFloat));
+    fl = (coda_bin_float *)malloc(sizeof(coda_bin_float));
     if (fl == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_binFloat), __FILE__, __LINE__);
+                       (long)sizeof(coda_bin_float), __FILE__, __LINE__);
         return NULL;
     }
     fl->retain_count = 0;
@@ -465,12 +464,12 @@ coda_binFloat *coda_bin_float_new(void)
     return fl;
 }
 
-int coda_bin_float_set_unit(coda_binFloat *fl, const char *unit)
+int coda_bin_float_set_unit(coda_bin_float *fl, const char *unit)
 {
-    return number_set_unit((coda_binNumber *)fl, unit);
+    return number_set_unit((coda_bin_number *)fl, unit);
 }
 
-int coda_bin_float_set_bit_size(coda_binFloat *fl, long bit_size)
+int coda_bin_float_set_bit_size(coda_bin_float *fl, long bit_size)
 {
     if (fl->bit_size != -1)
     {
@@ -487,7 +486,7 @@ int coda_bin_float_set_bit_size(coda_binFloat *fl, long bit_size)
     return 0;
 }
 
-int coda_bin_float_set_read_type(coda_binFloat *fl, coda_native_type read_type)
+int coda_bin_float_set_read_type(coda_bin_float *fl, coda_native_type read_type)
 {
     if (fl->read_type != coda_native_type_not_available)
     {
@@ -504,7 +503,7 @@ int coda_bin_float_set_read_type(coda_binFloat *fl, coda_native_type read_type)
     return 0;
 }
 
-int coda_bin_float_set_conversion(coda_binFloat *fl, coda_Conversion *conversion)
+int coda_bin_float_set_conversion(coda_bin_float *fl, coda_conversion *conversion)
 {
     if (fl->conversion != NULL)
     {
@@ -515,13 +514,13 @@ int coda_bin_float_set_conversion(coda_binFloat *fl, coda_Conversion *conversion
     return 0;
 }
 
-int coda_bin_float_set_endianness(coda_binFloat *integer, coda_endianness endianness)
+int coda_bin_float_set_endianness(coda_bin_float *integer, coda_endianness endianness)
 {
     integer->endianness = endianness;
     return 0;
 }
 
-int coda_bin_float_validate(coda_binFloat *fl)
+int coda_bin_float_validate(coda_bin_float *fl)
 {
     if (fl->bit_size == -1)
     {
@@ -558,15 +557,15 @@ int coda_bin_float_validate(coda_binFloat *fl)
     return 0;
 }
 
-coda_binRaw *coda_bin_raw_new(void)
+coda_bin_raw *coda_bin_raw_new(void)
 {
-    coda_binRaw *raw;
+    coda_bin_raw *raw;
 
-    raw = (coda_binRaw *)malloc(sizeof(coda_binRaw));
+    raw = (coda_bin_raw *)malloc(sizeof(coda_bin_raw));
     if (raw == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_binRaw), __FILE__, __LINE__);
+                       (long)sizeof(coda_bin_raw), __FILE__, __LINE__);
         return NULL;
     }
     raw->retain_count = 0;
@@ -583,7 +582,7 @@ coda_binRaw *coda_bin_raw_new(void)
     return raw;
 }
 
-int coda_bin_raw_set_bit_size(coda_binRaw *raw, int64_t bit_size)
+int coda_bin_raw_set_bit_size(coda_bin_raw *raw, int64_t bit_size)
 {
     if (raw->bit_size != -1)
     {
@@ -598,13 +597,13 @@ int coda_bin_raw_set_bit_size(coda_binRaw *raw, int64_t bit_size)
     raw->bit_size = bit_size;
     if (raw->bit_size_expr != NULL)
     {
-        coda_expr_delete(raw->bit_size_expr);
+        coda_expression_delete(raw->bit_size_expr);
         raw->bit_size_expr = NULL;
     }
     return 0;
 }
 
-int coda_bin_raw_set_bit_size_expression(coda_binRaw *raw, coda_Expr *bit_size_expr)
+int coda_bin_raw_set_bit_size_expression(coda_bin_raw *raw, coda_expression *bit_size_expr)
 {
     assert(bit_size_expr != NULL);
     if (raw->bit_size_expr != NULL)
@@ -617,7 +616,7 @@ int coda_bin_raw_set_bit_size_expression(coda_binRaw *raw, coda_Expr *bit_size_e
     return 0;
 }
 
-int coda_bin_raw_set_fixed_value(coda_binRaw *raw, long length, char *fixed_value)
+int coda_bin_raw_set_fixed_value(coda_bin_raw *raw, long length, char *fixed_value)
 {
     char *new_fixed_value = NULL;
 
@@ -647,7 +646,7 @@ int coda_bin_raw_set_fixed_value(coda_binRaw *raw, long length, char *fixed_valu
     return 0;
 }
 
-int coda_bin_raw_validate(coda_binRaw *raw)
+int coda_bin_raw_validate(coda_bin_raw *raw)
 {
     if (raw->bit_size_expr == NULL && raw->bit_size == -1)
     {
@@ -674,15 +673,15 @@ int coda_bin_raw_validate(coda_binRaw *raw)
     return 0;
 }
 
-coda_binVSFInteger *coda_bin_vsf_integer_new(void)
+coda_bin_vsf_integer *coda_bin_vsf_integer_new(void)
 {
-    coda_binVSFInteger *integer;
+    coda_bin_vsf_integer *integer;
 
-    integer = (coda_binVSFInteger *)malloc(sizeof(coda_binVSFInteger));
+    integer = (coda_bin_vsf_integer *)malloc(sizeof(coda_bin_vsf_integer));
     if (integer == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_binVSFInteger), __FILE__, __LINE__);
+                       (long)sizeof(coda_bin_vsf_integer), __FILE__, __LINE__);
         return NULL;
     }
     integer->retain_count = 0;
@@ -694,42 +693,42 @@ coda_binVSFInteger *coda_bin_vsf_integer_new(void)
     integer->bit_size = 0;
     integer->unit = NULL;
 
-    integer->base_type = (coda_binType *)coda_ascbin_record_new(coda_format_binary);
-    coda_type_set_description((coda_Type *)integer->base_type, "Variable Scale Factor Integer");
+    integer->base_type = (coda_bin_type *)coda_ascbin_record_new(coda_format_binary);
+    coda_type_set_description((coda_type *)integer->base_type, "Variable Scale Factor Integer");
 
     return integer;
 }
 
-int coda_bin_vsf_integer_set_type(coda_binVSFInteger *integer, coda_binType *base_type)
+int coda_bin_vsf_integer_set_type(coda_bin_vsf_integer *integer, coda_bin_type *base_type)
 {
-    coda_ascbinField *field;
+    coda_ascbin_field *field;
 
-    field = coda_ascbin_field_new("value");
+    field = coda_ascbin_field_new("value", NULL);
     if (field == NULL)
     {
         return -1;
     }
-    if (coda_ascbin_field_set_type(field, (coda_ascbinType *)base_type) != 0)
+    if (coda_ascbin_field_set_type(field, (coda_ascbin_type *)base_type) != 0)
     {
         coda_ascbin_field_delete(field);
         return -1;
     }
-    if (coda_ascbin_record_add_field((coda_ascbinRecord *)integer->base_type, field) != 0)
+    if (coda_ascbin_record_add_field((coda_ascbin_record *)integer->base_type, field) != 0)
     {
         coda_ascbin_field_delete(field);
         return -1;
     }
-    integer->bit_size = ((coda_ascbinRecord *)integer->base_type)->bit_size;
+    integer->bit_size = ((coda_ascbin_record *)integer->base_type)->bit_size;
 
     return 0;
 }
 
-int coda_bin_vsf_integer_set_scale_factor(coda_binVSFInteger *integer, coda_binType *scale_factor)
+int coda_bin_vsf_integer_set_scale_factor(coda_bin_vsf_integer *integer, coda_bin_type *scale_factor)
 {
-    coda_ascbinField *field;
+    coda_ascbin_field *field;
     coda_native_type scalefactor_type;
 
-    if (coda_type_get_read_type((coda_Type *)scale_factor, &scalefactor_type) != 0)
+    if (coda_type_get_read_type((coda_type *)scale_factor, &scalefactor_type) != 0)
     {
         return -1;
     }
@@ -751,27 +750,27 @@ int coda_bin_vsf_integer_set_scale_factor(coda_binVSFInteger *integer, coda_binT
             return -1;
     }
 
-    field = coda_ascbin_field_new("scale_factor");
+    field = coda_ascbin_field_new("scale_factor", NULL);
     if (field == NULL)
     {
         return -1;
     }
-    if (coda_ascbin_field_set_type(field, (coda_ascbinType *)scale_factor) != 0)
+    if (coda_ascbin_field_set_type(field, (coda_ascbin_type *)scale_factor) != 0)
     {
         coda_ascbin_field_delete(field);
         return -1;
     }
-    if (coda_ascbin_record_add_field((coda_ascbinRecord *)integer->base_type, field) != 0)
+    if (coda_ascbin_record_add_field((coda_ascbin_record *)integer->base_type, field) != 0)
     {
         coda_ascbin_field_delete(field);
         return -1;
     }
-    integer->bit_size = ((coda_ascbinRecord *)integer->base_type)->bit_size;
+    integer->bit_size = ((coda_ascbin_record *)integer->base_type)->bit_size;
 
     return 0;
 }
 
-int coda_bin_vsf_integer_set_unit(coda_binVSFInteger *integer, const char *unit)
+int coda_bin_vsf_integer_set_unit(coda_bin_vsf_integer *integer, const char *unit)
 {
     char *new_unit = NULL;
 
@@ -795,9 +794,9 @@ int coda_bin_vsf_integer_set_unit(coda_binVSFInteger *integer, const char *unit)
     return 0;
 }
 
-int coda_bin_vsf_integer_validate(coda_binVSFInteger *integer)
+int coda_bin_vsf_integer_validate(coda_bin_vsf_integer *integer)
 {
-    if (((coda_ascbinRecord *)integer->base_type)->num_fields != 2)
+    if (((coda_ascbin_record *)integer->base_type)->num_fields != 2)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "vsf integer requires both base type and scale factor");
         return -1;
@@ -805,18 +804,18 @@ int coda_bin_vsf_integer_validate(coda_binVSFInteger *integer)
     return 0;
 }
 
-coda_binTime *coda_bin_time_new(const char *format)
+coda_bin_time *coda_bin_time_new(const char *format)
 {
-    coda_binTime *time;
-    coda_ascbinRecord *record;
-    coda_ascbinField *field;
-    coda_binInteger *type;
+    coda_bin_time *time;
+    coda_ascbin_record *record;
+    coda_ascbin_field *field;
+    coda_bin_integer *type;
 
-    time = (coda_binTime *)malloc(sizeof(coda_binTime));
+    time = (coda_bin_time *)malloc(sizeof(coda_bin_time));
     if (time == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_binTime), __FILE__, __LINE__);
+                       (long)sizeof(coda_bin_time), __FILE__, __LINE__);
         return NULL;
     }
     time->retain_count = 0;
@@ -829,125 +828,125 @@ coda_binTime *coda_bin_time_new(const char *format)
     time->time_type = 0;
 
     record = coda_ascbin_record_new(coda_format_binary);
-    time->base_type = (coda_binType *)record;
+    time->base_type = (coda_bin_type *)record;
     if (strcmp(format, "binary_envisat_datetime") == 0)
     {
         time->time_type = binary_envisat_datetime;
-        coda_type_set_description((coda_Type *)record, "ENVISAT binary datetime");
+        coda_type_set_description((coda_type *)record, "ENVISAT binary datetime");
 
         type = coda_bin_integer_new();
-        coda_type_set_description((coda_Type *)type, "days since January 1st, 2000 (may be negative)");
+        coda_type_set_description((coda_type *)type, "days since January 1st, 2000 (may be negative)");
         coda_bin_integer_set_unit(type, "days since 2000-01-01");
         coda_bin_integer_set_bit_size(type, 32);
         coda_bin_integer_set_read_type(type, coda_native_type_int32);
-        field = coda_ascbin_field_new("days");
-        coda_ascbin_field_set_type(field, (coda_ascbinType *)type);
-        coda_bin_release_type((coda_binType *)type);
+        field = coda_ascbin_field_new("days", NULL);
+        coda_ascbin_field_set_type(field, (coda_ascbin_type *)type);
+        coda_bin_release_type((coda_bin_type *)type);
         coda_ascbin_record_add_field(record, field);
 
         type = coda_bin_integer_new();
-        coda_type_set_description((coda_Type *)type, "seconds since start of day");
+        coda_type_set_description((coda_type *)type, "seconds since start of day");
         coda_bin_integer_set_unit(type, "s");
         coda_bin_integer_set_bit_size(type, 32);
         coda_bin_integer_set_read_type(type, coda_native_type_uint32);
-        field = coda_ascbin_field_new("seconds");
-        coda_ascbin_field_set_type(field, (coda_ascbinType *)type);
-        coda_bin_release_type((coda_binType *)type);
+        field = coda_ascbin_field_new("seconds", NULL);
+        coda_ascbin_field_set_type(field, (coda_ascbin_type *)type);
+        coda_bin_release_type((coda_bin_type *)type);
         coda_ascbin_record_add_field(record, field);
 
         type = coda_bin_integer_new();
-        coda_type_set_description((coda_Type *)type, "microseconds since start of second");
+        coda_type_set_description((coda_type *)type, "microseconds since start of second");
         coda_bin_integer_set_unit(type, "1e-6 s");
         coda_bin_integer_set_bit_size(type, 32);
         coda_bin_integer_set_read_type(type, coda_native_type_uint32);
-        field = coda_ascbin_field_new("microseconds");
-        coda_ascbin_field_set_type(field, (coda_ascbinType *)type);
-        coda_bin_release_type((coda_binType *)type);
+        field = coda_ascbin_field_new("microseconds", NULL);
+        coda_ascbin_field_set_type(field, (coda_ascbin_type *)type);
+        coda_bin_release_type((coda_bin_type *)type);
         coda_ascbin_record_add_field(record, field);
     }
     else if (strcmp(format, "binary_gome_datetime") == 0)
     {
         time->time_type = binary_gome_datetime;
-        coda_type_set_description((coda_Type *)record, "GOME binary datetime");
+        coda_type_set_description((coda_type *)record, "GOME binary datetime");
 
         type = coda_bin_integer_new();
-        coda_type_set_description((coda_Type *)type, "days since January 1st, 1950 (may be negative)");
+        coda_type_set_description((coda_type *)type, "days since January 1st, 1950 (may be negative)");
         coda_bin_integer_set_unit(type, "days since 1950-01-01");
         coda_bin_integer_set_bit_size(type, 32);
         coda_bin_integer_set_read_type(type, coda_native_type_int32);
-        field = coda_ascbin_field_new("days");
-        coda_ascbin_field_set_type(field, (coda_ascbinType *)type);
-        coda_bin_release_type((coda_binType *)type);
+        field = coda_ascbin_field_new("days", NULL);
+        coda_ascbin_field_set_type(field, (coda_ascbin_type *)type);
+        coda_bin_release_type((coda_bin_type *)type);
         coda_ascbin_record_add_field(record, field);
 
         type = coda_bin_integer_new();
-        coda_type_set_description((coda_Type *)type, "milliseconds since start of day");
+        coda_type_set_description((coda_type *)type, "milliseconds since start of day");
         coda_bin_integer_set_unit(type, "1e-3 s");
         coda_bin_integer_set_bit_size(type, 32);
         coda_bin_integer_set_read_type(type, coda_native_type_uint32);
-        field = coda_ascbin_field_new("milliseconds");
-        coda_ascbin_field_set_type(field, (coda_ascbinType *)type);
-        coda_bin_release_type((coda_binType *)type);
+        field = coda_ascbin_field_new("milliseconds", NULL);
+        coda_ascbin_field_set_type(field, (coda_ascbin_type *)type);
+        coda_bin_release_type((coda_bin_type *)type);
         coda_ascbin_record_add_field(record, field);
     }
     else if (strcmp(format, "binary_eps_datetime") == 0)
     {
         time->time_type = binary_eps_datetime;
-        coda_type_set_description((coda_Type *)record, "EPS short cds");
+        coda_type_set_description((coda_type *)record, "EPS short cds");
 
         type = coda_bin_integer_new();
-        coda_type_set_description((coda_Type *)type, "days since January 1st, 2000 (must be positive)");
+        coda_type_set_description((coda_type *)type, "days since January 1st, 2000 (must be positive)");
         coda_bin_integer_set_unit(type, "days since 2000-01-01");
         coda_bin_integer_set_bit_size(type, 16);
         coda_bin_integer_set_read_type(type, coda_native_type_uint16);
-        field = coda_ascbin_field_new("days");
-        coda_ascbin_field_set_type(field, (coda_ascbinType *)type);
-        coda_bin_release_type((coda_binType *)type);
+        field = coda_ascbin_field_new("days", NULL);
+        coda_ascbin_field_set_type(field, (coda_ascbin_type *)type);
+        coda_bin_release_type((coda_bin_type *)type);
         coda_ascbin_record_add_field(record, field);
 
         type = coda_bin_integer_new();
-        coda_type_set_description((coda_Type *)type, "milliseconds since start of day");
+        coda_type_set_description((coda_type *)type, "milliseconds since start of day");
         coda_bin_integer_set_unit(type, "1e-3 s");
         coda_bin_integer_set_bit_size(type, 32);
         coda_bin_integer_set_read_type(type, coda_native_type_uint32);
-        field = coda_ascbin_field_new("milliseconds");
-        coda_ascbin_field_set_type(field, (coda_ascbinType *)type);
-        coda_bin_release_type((coda_binType *)type);
+        field = coda_ascbin_field_new("milliseconds", NULL);
+        coda_ascbin_field_set_type(field, (coda_ascbin_type *)type);
+        coda_bin_release_type((coda_bin_type *)type);
         coda_ascbin_record_add_field(record, field);
     }
     else if (strcmp(format, "binary_eps_datetime_long") == 0)
     {
         time->time_type = binary_eps_datetime_long;
-        coda_type_set_description((coda_Type *)record, "EPS long cds");
+        coda_type_set_description((coda_type *)record, "EPS long cds");
 
         type = coda_bin_integer_new();
-        coda_type_set_description((coda_Type *)type, "days since January 1st, 2000 (must be positive)");
+        coda_type_set_description((coda_type *)type, "days since January 1st, 2000 (must be positive)");
         coda_bin_integer_set_unit(type, "days since 2000-01-01");
         coda_bin_integer_set_bit_size(type, 16);
         coda_bin_integer_set_read_type(type, coda_native_type_uint16);
-        field = coda_ascbin_field_new("days");
-        coda_ascbin_field_set_type(field, (coda_ascbinType *)type);
-        coda_bin_release_type((coda_binType *)type);
+        field = coda_ascbin_field_new("days", NULL);
+        coda_ascbin_field_set_type(field, (coda_ascbin_type *)type);
+        coda_bin_release_type((coda_bin_type *)type);
         coda_ascbin_record_add_field(record, field);
 
         type = coda_bin_integer_new();
-        coda_type_set_description((coda_Type *)type, "milliseconds since start of day");
+        coda_type_set_description((coda_type *)type, "milliseconds since start of day");
         coda_bin_integer_set_unit(type, "1e-3 s");
         coda_bin_integer_set_bit_size(type, 32);
         coda_bin_integer_set_read_type(type, coda_native_type_uint32);
-        field = coda_ascbin_field_new("milliseconds");
-        coda_ascbin_field_set_type(field, (coda_ascbinType *)type);
-        coda_bin_release_type((coda_binType *)type);
+        field = coda_ascbin_field_new("milliseconds", NULL);
+        coda_ascbin_field_set_type(field, (coda_ascbin_type *)type);
+        coda_bin_release_type((coda_bin_type *)type);
         coda_ascbin_record_add_field(record, field);
 
         type = coda_bin_integer_new();
-        coda_type_set_description((coda_Type *)type, "microseconds since start of millisecond");
+        coda_type_set_description((coda_type *)type, "microseconds since start of millisecond");
         coda_bin_integer_set_unit(type, "1e-6 s");
         coda_bin_integer_set_bit_size(type, 16);
         coda_bin_integer_set_read_type(type, coda_native_type_uint16);
-        field = coda_ascbin_field_new("microseconds");
-        coda_ascbin_field_set_type(field, (coda_ascbinType *)type);
-        coda_bin_release_type((coda_binType *)type);
+        field = coda_ascbin_field_new("microseconds", NULL);
+        coda_ascbin_field_set_type(field, (coda_ascbin_type *)type);
+        coda_bin_release_type((coda_bin_type *)type);
         coda_ascbin_record_add_field(record, field);
     }
     else
@@ -963,11 +962,11 @@ coda_binTime *coda_bin_time_new(const char *format)
     return time;
 }
 
-coda_binComplex *coda_bin_complex_new(void)
+coda_bin_complex *coda_bin_complex_new(void)
 {
-    coda_binComplex *compl;
+    coda_bin_complex *compl;
 
-    compl = (coda_binComplex *)malloc(sizeof(coda_binComplex));
+    compl = (coda_bin_complex *)malloc(sizeof(coda_bin_complex));
     assert(compl != NULL);
     compl->retain_count = 0;
     compl->format = coda_format_binary;
@@ -981,9 +980,9 @@ coda_binComplex *coda_bin_complex_new(void)
     return compl;
 }
 
-int coda_bin_complex_set_type(coda_binComplex *compl, coda_binType *type)
+int coda_bin_complex_set_type(coda_bin_complex *compl, coda_bin_type *type)
 {
-    coda_ascbinField *field;
+    coda_ascbin_field *field;
 
     if (compl->base_type != NULL)
     {
@@ -997,15 +996,15 @@ int coda_bin_complex_set_type(coda_binComplex *compl, coda_binType *type)
         return -1;
     }
 
-    compl->base_type = (coda_binType *)coda_ascbin_record_new(coda_format_binary);
+    compl->base_type = (coda_bin_type *)coda_ascbin_record_new(coda_format_binary);
 
-    field = coda_ascbin_field_new("real");
-    coda_ascbin_field_set_type(field, (coda_ascbinType *)type);
-    coda_ascbin_record_add_field((coda_ascbinRecord *)compl->base_type, field);
+    field = coda_ascbin_field_new("real", NULL);
+    coda_ascbin_field_set_type(field, (coda_ascbin_type *)type);
+    coda_ascbin_record_add_field((coda_ascbin_record *)compl->base_type, field);
 
-    field = coda_ascbin_field_new("imaginary");
-    coda_ascbin_field_set_type(field, (coda_ascbinType *)type);
-    coda_ascbin_record_add_field((coda_ascbinRecord *)compl->base_type, field);
+    field = coda_ascbin_field_new("imaginary", NULL);
+    coda_ascbin_field_set_type(field, (coda_ascbin_type *)type);
+    coda_ascbin_record_add_field((coda_ascbin_record *)compl->base_type, field);
 
     /* set bit_size */
     compl->bit_size = compl->base_type->bit_size;
@@ -1013,7 +1012,7 @@ int coda_bin_complex_set_type(coda_binComplex *compl, coda_binType *type)
     return 0;
 }
 
-int coda_bin_complex_validate(coda_binComplex *compl)
+int coda_bin_complex_validate(coda_bin_complex *compl)
 {
     if (compl->base_type == NULL)
     {

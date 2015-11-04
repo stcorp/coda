@@ -49,5 +49,7 @@
 %ignore CODA_PRIVATE_FIELD(name);
 %ignore CODA_CURSOR_MAXDEPTH;
 
+%ignore coda_free;
 %ignore coda_str64;
 %ignore coda_str64u;
+

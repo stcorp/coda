@@ -2,7 +2,7 @@
 #
 project(CODA)
 
-set(VERSION 1.3.6)
+set(VERSION 2.0a)
 set(CODA_VERSION \"${VERSION}\")
 
 # General setup
@@ -276,7 +276,6 @@ set(LIBCODA_SOURCES
   libcoda/coda-definition.c
   libcoda/coda-definition.h
   libcoda/coda-errno.c
-  libcoda/coda-expr-internal.h
   coda-expr-parser.c
   coda-expr-parser.h
   coda-expr-tokenizer.c
@@ -293,6 +292,7 @@ set(LIBCODA_SOURCES
   libcoda/coda-netcdf.h
   libcoda/coda-path.h
   libcoda/coda-product.c
+  libcoda/coda-time.c
   libcoda/coda-type.c
   libcoda/coda-utils.c
   libcoda/coda-xml-cursor.c
@@ -612,6 +612,39 @@ set(LIBEXPAT_SOURCES
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/expat)
 
 
+# Custom CODA pcre library
+#
+set(LIBPCRE_SOURCES
+  libcoda/pcre/coda_pcre_config.h
+  libcoda/pcre/coda_pcre_mangle.h
+  libcoda/pcre/pcre.h
+  libcoda/pcre/pcre_chartables.c
+  libcoda/pcre/pcre_compile.c
+  libcoda/pcre/pcre_config.c
+  libcoda/pcre/pcre_dfa_exec.c
+  libcoda/pcre/pcre_exec.c
+  libcoda/pcre/pcre_fullinfo.c
+  libcoda/pcre/pcre_get.c
+  libcoda/pcre/pcre_globals.c
+  libcoda/pcre/pcre_info.c
+  libcoda/pcre/pcre_internal.h
+  libcoda/pcre/pcre_maketables.c
+  libcoda/pcre/pcre_newline.c
+  libcoda/pcre/pcre_ord2utf8.c
+  libcoda/pcre/pcre_printint.src
+  libcoda/pcre/pcre_refcount.c
+  libcoda/pcre/pcre_study.c
+  libcoda/pcre/pcre_tables.c
+  libcoda/pcre/pcre_try_flipped.c
+  libcoda/pcre/pcre_ucd.c
+  libcoda/pcre/pcre_valid_utf8.c
+  libcoda/pcre/pcre_version.c
+  libcoda/pcre/pcre_xclass.c
+  libcoda/pcre/ucp.h
+)
+
+include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/pcre)
+
 # Custom CODA zlib library
 #
 set(LIBZLIB_SOURCES
@@ -645,7 +678,7 @@ set(LIBCODA_CURRENT 1)
 set(LIBCODA_REVISION 0)
 set(LIBCODA_AGE 0)
 
-add_library(coda SHARED ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBZLIB_SOURCES})
+add_library(coda SHARED ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBPCRE_SOURCES} ${LIBZLIB_SOURCES})
 target_link_libraries(coda ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
 set_target_properties(coda PROPERTIES
   VERSION ${LIBCODA_CURRENT}.${LIBCODA_REVISION}.${LIBCODA_AGE}
@@ -653,7 +686,7 @@ set_target_properties(coda PROPERTIES
 )
 install(TARGETS coda DESTINATION lib)
 
-add_library(coda_static STATIC ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBZLIB_SOURCES})
+add_library(coda_static STATIC ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBPCRE_SOURCES} ${LIBZLIB_SOURCES})
 
 # On Windows, we want libcoda.lib for static, coda.dll & coda.lib for shared.
 # On Unix, we want libcoda.a and libcoda.so
@@ -731,6 +764,15 @@ add_executable(codadump ${codadump_SOURCES})
 target_link_libraries(codadump coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${LIBM_LIBRARY})
 install(TARGETS codadump DESTINATION bin)
 
+# tools codaeval
+
+set(codaeval_SOURCES
+  tools/codaeval/codaeval.c
+  )
+add_executable(codaeval ${codaeval_SOURCES})
+target_link_libraries(codaeval coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${LIBM_LIBRARY})
+install(TARGETS codaeval DESTINATION bin)
+
 # tools codafind
 
 set(codafind_SOURCES
@@ -744,6 +786,7 @@ install(TARGETS codafind DESTINATION bin)
 
 set(codadd_SOURCES
   tools/codadd/codadd.c
+  tools/codadd/codadd-detect.c
   tools/codadd/codadd-doc.c
   tools/codadd/codadd-list.c
   )

@@ -32,7 +32,7 @@
 #include <string.h>
 
 #include "coda-internal.h"
-#include "coda-expr-internal.h"
+#include "coda-expr.h"
 #include "coda-ascbin-internal.h"
 #include "coda-ascii-internal.h"
 #include "coda-bin-internal.h"
@@ -125,8 +125,6 @@ void element_name_and_namespace_from_xml_name(const char *xml_name, char **eleme
 
 static void generate_escaped_html_string(const char *str, int length)
 {
-    int i = 0;
-
     if (length == 0 || str == NULL)
     {
         return;
@@ -137,9 +135,9 @@ static void generate_escaped_html_string(const char *str, int length)
         length = strlen(str);
     }
 
-    while (i < length)
+    while (length > 0)
     {
-        switch (str[i])
+        switch (*str)
         {
             case '\033':       /* windows does not recognize '\e' */
                 ff_printf("\\e");
@@ -184,27 +182,34 @@ static void generate_escaped_html_string(const char *str, int length)
                 ff_printf("&nbsp;");
                 break;
             default:
-                if (!isprint(str[i]))
+                if (!isprint(*str))
                 {
-                    ff_printf("\\%03o", (int)(unsigned char)str[i]);
+                    ff_printf("\\%03o", (int)(unsigned char)*str);
                 }
                 else
                 {
-                    ff_printf("%c", str[i]);
+                    ff_printf("%c", *str);
                 }
                 break;
         }
-        i++;
+        str++;
+        length--;
     }
 }
 
-static void generate_xml_string(const char *str)
+static void generate_xml_string(const char *str, int length)
 {
-    if (str == NULL)
+    if (length == 0 || str == NULL)
     {
         return;
     }
-    while (*str != '\0')
+
+    if (length < 0)
+    {
+        length = strlen(str);
+    }
+
+    while (length > 0)
     {
         switch (*str)
         {
@@ -222,11 +227,12 @@ static void generate_xml_string(const char *str)
                 break;
         }
         str++;
+        length--;
     }
 }
 
-static void generate_html_expr(const coda_Expr *expr, int precedence);
-static void generate_html_type(const coda_Type *type, int expand_named_type, int full_width);
+static void generate_html_expr(const coda_expression *expr, int precedence);
+static void generate_html_type(const coda_type *type, int expand_named_type, int full_width);
 
 static void html_attr_begin(const char *key_name, int *first_attribute)
 {
@@ -246,41 +252,41 @@ static void html_attr_end(void)
     ff_printf("</span>\n");
 }
 
-static void generate_html_ascbin_attributes(const coda_ascbinType *type, int first_attribute)
+static void generate_html_ascbin_attributes(const coda_ascbin_type *type, int first_attribute)
 {
     int i;
 
     switch (type->tag)
     {
         case tag_ascbin_record:
-            if (((coda_ascbinRecord *)type)->fast_size_expr != NULL)
+            if (((coda_ascbin_record *)type)->fast_size_expr != NULL)
             {
                 html_attr_begin("fast&nbsp;size&nbsp;expr", &first_attribute);
-                generate_html_expr(((coda_ascbinRecord *)type)->fast_size_expr, 15);
+                generate_html_expr(((coda_ascbin_record *)type)->fast_size_expr, 15);
                 html_attr_end();
             }
             break;
         case tag_ascbin_union:
             html_attr_begin("field&nbsp;expr", &first_attribute);
-            generate_html_expr(((coda_ascbinUnion *)type)->field_expr, 15);
+            generate_html_expr(((coda_ascbin_union *)type)->field_expr, 15);
             html_attr_end();
-            if (((coda_ascbinUnion *)type)->fast_size_expr != NULL)
+            if (((coda_ascbin_union *)type)->fast_size_expr != NULL)
             {
                 html_attr_begin("fast&nbsp;size&nbsp;expr", &first_attribute);
-                generate_html_expr(((coda_ascbinUnion *)type)->fast_size_expr, 15);
+                generate_html_expr(((coda_ascbin_union *)type)->fast_size_expr, 15);
                 html_attr_end();
             }
             break;
         case tag_ascbin_array:
-            for (i = 0; i < ((coda_ascbinArray *)type)->num_dims; i++)
+            for (i = 0; i < ((coda_ascbin_array *)type)->num_dims; i++)
             {
-                if (((coda_ascbinArray *)type)->dim_expr[i] != NULL)
+                if (((coda_ascbin_array *)type)->dim_expr[i] != NULL)
                 {
                     char dimstr[10];
 
                     sprintf(dimstr, "dim_%d", i);
                     html_attr_begin(dimstr, &first_attribute);
-                    generate_html_expr(((coda_ascbinArray *)type)->dim_expr[i], 15);
+                    generate_html_expr(((coda_ascbin_array *)type)->dim_expr[i], 15);
                     html_attr_end();
                 }
             }
@@ -288,7 +294,7 @@ static void generate_html_ascbin_attributes(const coda_ascbinType *type, int fir
     }
 }
 
-static void generate_html_ascii_attributes(const coda_asciiType *type, int first_attribute)
+static void generate_html_ascii_attributes(const coda_ascii_type *type, int first_attribute)
 {
     int i;
 
@@ -297,14 +303,14 @@ static void generate_html_ascii_attributes(const coda_asciiType *type, int first
         case tag_bin_record:
         case tag_bin_union:
         case tag_bin_array:
-            generate_html_ascbin_attributes((coda_ascbinType *)type, first_attribute);
+            generate_html_ascbin_attributes((coda_ascbin_type *)type, first_attribute);
             break;
         case tag_ascii_integer:
         case tag_ascii_float:
             {
-                coda_asciiNumber *number;
+                coda_ascii_number *number;
 
-                number = (coda_asciiNumber *)type;
+                number = (coda_ascii_number *)type;
                 if (number->unit != NULL)
                 {
                     html_attr_begin("unit", &first_attribute);
@@ -321,7 +327,7 @@ static void generate_html_ascii_attributes(const coda_asciiType *type, int first
                 }
                 if (number->mappings != NULL)
                 {
-                    coda_asciiMappings *mappings = number->mappings;
+                    coda_ascii_mappings *mappings = number->mappings;
 
                     for (i = 0; i < mappings->num_mappings; i++)
                     {
@@ -333,12 +339,12 @@ static void generate_html_ascii_attributes(const coda_asciiType *type, int first
                         {
                             char s[21];
 
-                            coda_str64(((coda_asciiIntegerMapping *)mappings->mapping[i])->value, s);
+                            coda_str64(((coda_ascii_integer_mapping *)mappings->mapping[i])->value, s);
                             ff_printf("%s", s);
                         }
                         else
                         {
-                            ff_printf("%f", ((coda_asciiFloatMapping *)mappings->mapping[i])->value);
+                            ff_printf("%f", ((coda_ascii_float_mapping *)mappings->mapping[i])->value);
                         }
                         html_attr_end();
                     }
@@ -346,18 +352,18 @@ static void generate_html_ascii_attributes(const coda_asciiType *type, int first
             }
             break;
         case tag_ascii_text:
-            if (((coda_asciiText *)type)->byte_size_expr != NULL)
+            if (((coda_ascii_text *)type)->byte_size_expr != NULL)
             {
                 html_attr_begin("byte&nbsp;size", &first_attribute);
-                generate_html_expr(((coda_asciiText *)type)->byte_size_expr, 15);
+                generate_html_expr(((coda_ascii_text *)type)->byte_size_expr, 15);
                 html_attr_end();
             }
-            if (((coda_asciiText *)type)->fixed_value != NULL)
+            if (((coda_ascii_text *)type)->fixed_value != NULL)
             {
                 html_attr_begin("fixed&nbsp;value", &first_attribute);
                 ff_printf("\"");
-                generate_escaped_html_string(((coda_asciiText *)type)->fixed_value,
-                                             strlen(((coda_asciiText *)type)->fixed_value));
+                generate_escaped_html_string(((coda_ascii_text *)type)->fixed_value,
+                                             strlen(((coda_ascii_text *)type)->fixed_value));
                 ff_printf("\"");
                 html_attr_end();
             }
@@ -366,16 +372,16 @@ static void generate_html_ascii_attributes(const coda_asciiType *type, int first
             html_attr_begin("unit", &first_attribute);
             ff_printf("\"s since 2000-01-01\"");
             html_attr_end();
-            if (((coda_asciiText *)((coda_asciiTime *)type)->base_type)->mappings != NULL)
+            if (((coda_ascii_text *)((coda_ascii_time *)type)->base_type)->mappings != NULL)
             {
-                coda_asciiMappings *mappings = ((coda_asciiText *)((coda_asciiTime *)type)->base_type)->mappings;
+                coda_ascii_mappings *mappings = ((coda_ascii_text *)((coda_ascii_time *)type)->base_type)->mappings;
 
                 for (i = 0; i < mappings->num_mappings; i++)
                 {
                     html_attr_begin("mapping", &first_attribute);
                     ff_printf("\"");
                     generate_escaped_html_string(mappings->mapping[i]->str, mappings->mapping[i]->length);
-                    ff_printf("\"&nbsp;-&gt;&nbsp;%f", ((coda_asciiFloatMapping *)mappings->mapping[i])->value);
+                    ff_printf("\"&nbsp;-&gt;&nbsp;%f", ((coda_ascii_float_mapping *)mappings->mapping[i])->value);
                     html_attr_end();
                 }
             }
@@ -385,21 +391,21 @@ static void generate_html_ascii_attributes(const coda_asciiType *type, int first
     }
 }
 
-static void generate_html_bin_attributes(const coda_binType *type, int first_attribute)
+static void generate_html_bin_attributes(const coda_bin_type *type, int first_attribute)
 {
     switch (type->tag)
     {
         case tag_bin_record:
         case tag_bin_union:
         case tag_bin_array:
-            generate_html_ascbin_attributes((coda_ascbinType *)type, first_attribute);
+            generate_html_ascbin_attributes((coda_ascbin_type *)type, first_attribute);
             break;
         case tag_bin_integer:
         case tag_bin_float:
             {
-                coda_binNumber *number;
+                coda_bin_number *number;
 
-                number = (coda_binNumber *)type;
+                number = (coda_bin_number *)type;
                 if (number->unit != NULL)
                 {
                     html_attr_begin("unit", &first_attribute);
@@ -415,44 +421,44 @@ static void generate_html_bin_attributes(const coda_binType *type, int first_att
                     html_attr_end();
                 }
                 if (type->bit_size > 8 && ((type->tag == tag_bin_integer &&
-                                            ((coda_binInteger *)type)->endianness == coda_little_endian) ||
+                                            ((coda_bin_integer *)type)->endianness == coda_little_endian) ||
                                            (type->tag == tag_bin_float &&
-                                            ((coda_binFloat *)type)->endianness == coda_little_endian)))
+                                            ((coda_bin_float *)type)->endianness == coda_little_endian)))
                 {
                     html_attr_begin("endianness", &first_attribute);
                     ff_printf("little endian");
                     html_attr_end();
                 }
-                if (type->tag == tag_bin_integer && ((coda_binInteger *)type)->bit_size_expr != NULL)
+                if (type->tag == tag_bin_integer && ((coda_bin_integer *)type)->bit_size_expr != NULL)
                 {
                     html_attr_begin("bit&nbsp;size", &first_attribute);
-                    generate_html_expr(((coda_binInteger *)type)->bit_size_expr, 15);
+                    generate_html_expr(((coda_bin_integer *)type)->bit_size_expr, 15);
                     html_attr_end();
                 }
             }
             break;
         case tag_bin_raw:
-            if (((coda_binRaw *)type)->bit_size_expr != NULL)
+            if (((coda_bin_raw *)type)->bit_size_expr != NULL)
             {
                 html_attr_begin("bit&nbsp;size", &first_attribute);
-                generate_html_expr(((coda_binRaw *)type)->bit_size_expr, 15);
+                generate_html_expr(((coda_bin_raw *)type)->bit_size_expr, 15);
                 html_attr_end();
             }
-            if (((coda_binRaw *)type)->fixed_value != NULL)
+            if (((coda_bin_raw *)type)->fixed_value != NULL)
             {
                 html_attr_begin("fixed&nbsp;value", &first_attribute);
                 ff_printf("\"");
-                generate_escaped_html_string(((coda_binRaw *)type)->fixed_value,
-                                             ((coda_binRaw *)type)->fixed_value_length);
+                generate_escaped_html_string(((coda_bin_raw *)type)->fixed_value,
+                                             ((coda_bin_raw *)type)->fixed_value_length);
                 ff_printf("\"");
                 html_attr_end();
             }
             break;
         case tag_bin_vsf_integer:
-            if (((coda_binVSFInteger *)type)->unit != NULL)
+            if (((coda_bin_vsf_integer *)type)->unit != NULL)
             {
                 html_attr_begin("unit", &first_attribute);
-                ff_printf("\"%s\"", ((coda_binVSFInteger *)type)->unit);
+                ff_printf("\"%s\"", ((coda_bin_vsf_integer *)type)->unit);
                 html_attr_end();
             }
             break;
@@ -466,11 +472,11 @@ static void generate_html_bin_attributes(const coda_binType *type, int first_att
     }
 }
 
-static void generate_html_xml_attributes(const coda_xmlType *type, int first_attribute)
+static void generate_html_xml_attributes(const coda_xml_type *type, int first_attribute)
 {
     if (type->tag == tag_xml_record || type->tag == tag_xml_text || type->tag == tag_xml_ascii_type)
     {
-        coda_xmlAttributeRecord *attributes = ((coda_xmlElement *)type)->attributes;
+        coda_xml_attribute_record *attributes = ((coda_xml_element *)type)->attributes;
         int i;
 
         for (i = 0; i < attributes->num_attributes; i++)
@@ -507,7 +513,7 @@ static void generate_html_xml_attributes(const coda_xmlType *type, int first_att
     }
 }
 
-static void generate_html_type(const coda_Type *type, int expand_named_type, int full_width)
+static void generate_html_type(const coda_type *type, int expand_named_type, int full_width)
 {
     coda_special_type special_type;
     coda_native_type read_type;
@@ -550,7 +556,7 @@ static void generate_html_type(const coda_Type *type, int expand_named_type, int
             break;
         case coda_array_class:
             ff_printf("array");
-            if (type->format == coda_format_xml && ((coda_xmlType *)type)->tag == tag_xml_ascii_type)
+            if (type->format == coda_format_xml && ((coda_xml_type *)type)->tag == tag_xml_ascii_type)
             {
                 break;
             }
@@ -580,7 +586,7 @@ static void generate_html_type(const coda_Type *type, int expand_named_type, int
             }
             break;
         case coda_special_class:
-            coda_type_get_special_type((coda_Type *)type, &special_type);
+            coda_type_get_special_type((coda_type *)type, &special_type);
             ff_printf("%s", coda_type_get_special_type_name(special_type));
             break;
         default:
@@ -590,7 +596,7 @@ static void generate_html_type(const coda_Type *type, int expand_named_type, int
             switch (type->format)
             {
                 case coda_format_ascii:
-                    switch (((coda_asciiType *)type)->tag)
+                    switch (((coda_ascii_type *)type)->tag)
                     {
                         case tag_ascii_line_separator:
                             ff_printf(" [line&nbsp;separator]");
@@ -603,7 +609,7 @@ static void generate_html_type(const coda_Type *type, int expand_named_type, int
                             break;
                         case tag_ascii_integer:
                         case tag_ascii_float:
-                            if (((coda_asciiNumber *)type)->conversion != NULL)
+                            if (((coda_ascii_number *)type)->conversion != NULL)
                             {
                                 ff_printf(" (%s)", coda_type_get_native_type_name(coda_native_type_double));
                             }
@@ -613,11 +619,11 @@ static void generate_html_type(const coda_Type *type, int expand_named_type, int
                     }
                     break;
                 case coda_format_binary:
-                    switch (((coda_binType *)type)->tag)
+                    switch (((coda_bin_type *)type)->tag)
                     {
                         case tag_bin_integer:
                         case tag_bin_float:
-                            if (((coda_binNumber *)type)->conversion != NULL)
+                            if (((coda_bin_number *)type)->conversion != NULL)
                             {
                                 ff_printf(" (%s)", coda_type_get_native_type_name(coda_native_type_double));
                             }
@@ -663,20 +669,20 @@ static void generate_html_type(const coda_Type *type, int expand_named_type, int
         if (type->description != NULL)
         {
             indent();
-            generate_xml_string(type->description);
+            generate_xml_string(type->description, -1);
             ff_printf("\n");
             first_attribute = 0;
         }
         switch (type->format)
         {
             case coda_format_ascii:
-                generate_html_ascii_attributes((coda_asciiType *)type, first_attribute);
+                generate_html_ascii_attributes((coda_ascii_type *)type, first_attribute);
                 break;
             case coda_format_binary:
-                generate_html_bin_attributes((coda_binType *)type, first_attribute);
+                generate_html_bin_attributes((coda_bin_type *)type, first_attribute);
                 break;
             case coda_format_xml:
-                generate_html_xml_attributes((coda_xmlType *)type, first_attribute);
+                generate_html_xml_attributes((coda_xml_type *)type, first_attribute);
                 break;
             default:
                 assert(0);
@@ -684,14 +690,14 @@ static void generate_html_type(const coda_Type *type, int expand_named_type, int
         }
 
         /* base types */
-        if (type->format == coda_format_xml && ((coda_xmlType *)type)->tag == tag_xml_ascii_type)
+        if (type->format == coda_format_xml && ((coda_xml_type *)type)->tag == tag_xml_ascii_type)
         {
             if (!first_attribute)
             {
                 fi_printf("<br />\n");
             }
             fi_printf("<blockquote>\n");
-            generate_html_type((coda_Type *)((coda_xmlElement *)type)->ascii_type, 0, 1);
+            generate_html_type((coda_type *)((coda_xml_element *)type)->ascii_type, 0, 1);
             fi_printf("</blockquote>\n");
         }
         else
@@ -716,7 +722,7 @@ static void generate_html_type(const coda_Type *type, int expand_named_type, int
                                   "<th class=\"subhdr\">definition</th></tr>\n");
                         for (i = 0; i < num_fields; i++)
                         {
-                            coda_Type *field_type;
+                            coda_type *field_type;
                             const char *field_name;
                             int first_field_attribute = 1;
                             int hidden;
@@ -748,13 +754,13 @@ static void generate_html_type(const coda_Type *type, int expand_named_type, int
 
                                 first_field_attribute = 0;
                                 fi_printf("<span class=\"attr_key\">xml name</span><span class=\"attr_value\">: <b>");
-                                if (((coda_xmlType *)type)->tag == tag_xml_root)
+                                if (((coda_xml_type *)type)->tag == tag_xml_root)
                                 {
-                                    xml_name = ((coda_xmlRoot *)type)->field->xml_name;
+                                    xml_name = ((coda_xml_root *)type)->field->xml_name;
                                 }
                                 else
                                 {
-                                    xml_name = ((coda_xmlElement *)type)->field[i]->xml_name;
+                                    xml_name = ((coda_xml_element *)type)->field[i]->xml_name;
                                 }
                                 element_name_and_namespace_from_xml_name(xml_name, &element_name, &namespace);
                                 if (namespace != NULL)
@@ -790,7 +796,7 @@ static void generate_html_type(const coda_Type *type, int expand_named_type, int
                                 {
                                     case coda_format_ascii:
                                     case coda_format_binary:
-                                        generate_html_expr(((coda_ascbinRecord *)type)->field[i]->available_expr, 15);
+                                        generate_html_expr(((coda_ascbin_record *)type)->field[i]->available_expr, 15);
                                         break;
                                     default:
                                         ff_printf("optional");
@@ -801,7 +807,7 @@ static void generate_html_type(const coda_Type *type, int expand_named_type, int
                             }
                             if (type->format == coda_format_ascii || type->format == coda_format_binary)
                             {
-                                if (((coda_ascbinRecord *)type)->field[i]->bit_offset_expr != NULL)
+                                if (((coda_ascbin_record *)type)->field[i]->bit_offset_expr != NULL)
                                 {
                                     if (first_field_attribute)
                                     {
@@ -810,7 +816,7 @@ static void generate_html_type(const coda_Type *type, int expand_named_type, int
                                     first_field_attribute = 0;
                                     fi_printf("<span class=\"attr_key\">bit offset</span>"
                                               "<span class=\"attr_value\">: ");
-                                    generate_html_expr(((coda_ascbinRecord *)type)->field[i]->bit_offset_expr, 15);
+                                    generate_html_expr(((coda_ascbin_record *)type)->field[i]->bit_offset_expr, 15);
                                     ff_printf("</span>");
                                     fi_printf("<br /><br />\n");
                                 }
@@ -823,7 +829,7 @@ static void generate_html_type(const coda_Type *type, int expand_named_type, int
                     break;
                 case coda_array_class:
                     {
-                        coda_Type *base_type;
+                        coda_type *base_type;
 
                         if (!first_attribute)
                         {
@@ -837,7 +843,7 @@ static void generate_html_type(const coda_Type *type, int expand_named_type, int
                     break;
                 case coda_special_class:
                     {
-                        coda_Type *base_type;
+                        coda_type *base_type;
 
                         if (!first_attribute)
                         {
@@ -874,7 +880,7 @@ static void generate_html_type(const coda_Type *type, int expand_named_type, int
 10: logical_or
 15: <start>
 */
-static void generate_html_expr(const coda_Expr *expr, int precedence)
+static void generate_html_expr(const coda_expression *expr, int precedence)
 {
     assert(expr != NULL);
 
@@ -882,7 +888,7 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
     {
         case expr_abs:
             ff_printf("<b>abs</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(")");
             break;
         case expr_add:
@@ -890,9 +896,9 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             {
                 ff_printf("(");
             }
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 4);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 4);
             ff_printf(" + ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 4);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 4);
             if (precedence < 4)
             {
                 ff_printf(")");
@@ -900,16 +906,16 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             break;
         case expr_array_add:
             ff_printf("<b>add</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(", ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
             ff_printf(")");
             break;
         case expr_array_all:
             ff_printf("<b>all</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(", ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
             ff_printf(")");
             break;
         case expr_and:
@@ -917,9 +923,9 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             {
                 ff_printf("(");
             }
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 7);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 7);
             ff_printf(" &amp; ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 7);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 7);
             if (precedence < 7)
             {
                 ff_printf(")");
@@ -927,28 +933,28 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             break;
         case expr_ceil:
             ff_printf("<b>ceil</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(")");
             break;
         case expr_array_count:
             ff_printf("<b>count</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(", ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
             ff_printf(")");
             break;
         case expr_array_exists:
             ff_printf("<b>exists</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(", ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
             ff_printf(")");
             break;
         case expr_array_index:
             ff_printf("<b>index</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(", ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
             ff_printf(")");
             break;
         case expr_asciiline:
@@ -956,36 +962,36 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             break;
         case expr_bit_offset:
             ff_printf("<b>bitoffset</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(")");
             break;
         case expr_bit_size:
             ff_printf("<b>bitsize</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(")");
             break;
         case expr_byte_offset:
             ff_printf("<b>byteoffset</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(")");
             break;
         case expr_byte_size:
             ff_printf("<b>bytesize</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(")");
             break;
         case expr_bytes:
             ff_printf("<b>bytes</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
-            if (((coda_ExprOperation *)expr)->operand[0] != NULL)
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
+            if (((coda_expression_operation *)expr)->operand[0] != NULL)
             {
                 ff_printf(",");
-                generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+                generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
             }
             ff_printf(")");
             break;
         case expr_constant_boolean:
-            if (((coda_ExprBoolConstant *)expr)->value)
+            if (((coda_expression_bool_constant *)expr)->value)
             {
                 ff_printf("<b>true</b>");
             }
@@ -994,21 +1000,27 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
                 ff_printf("<b>false</b>");
             }
             break;
-        case expr_constant_double:
-            ff_printf("%f", ((coda_ExprDoubleConstant *)expr)->value);
+        case expr_constant_float:
+            ff_printf("%f", ((coda_expression_float_constant *)expr)->value);
             break;
         case expr_constant_integer:
             {
                 char s[21];
 
-                coda_str64(((coda_ExprIntegerConstant *)expr)->value, s);
+                coda_str64(((coda_expression_integer_constant *)expr)->value, s);
                 ff_printf("%s", s);
             }
             break;
+        case expr_constant_rawstring:
+            ff_printf("\"");
+            generate_xml_string(((coda_expression_string_constant *)expr)->value,
+                                ((coda_expression_string_constant *)expr)->length);
+            ff_printf("\"");
+            break;
         case expr_constant_string:
             ff_printf("\"");
-            generate_escaped_html_string(((coda_ExprStringConstant *)expr)->value,
-                                         ((coda_ExprStringConstant *)expr)->length);
+            generate_escaped_html_string(((coda_expression_string_constant *)expr)->value,
+                                         ((coda_expression_string_constant *)expr)->length);
             ff_printf("\"");
             break;
         case expr_divide:
@@ -1016,9 +1028,9 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             {
                 ff_printf("(");
             }
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 3);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 3);
             ff_printf(" / ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 3);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 3);
             if (precedence < 3)
             {
                 ff_printf(")");
@@ -1029,9 +1041,9 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             {
                 ff_printf("(");
             }
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 6);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 6);
             ff_printf(" == ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 6);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 6);
             if (precedence < 6)
             {
                 ff_printf(")");
@@ -1039,7 +1051,7 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             break;
         case expr_exists:
             ff_printf("<b>exists</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(")");
             break;
         case expr_file_size:
@@ -1050,12 +1062,12 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             break;
         case expr_float:
             ff_printf("<b>float</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(")");
             break;
         case expr_floor:
             ff_printf("<b>floor</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(")");
             break;
         case expr_for_index:
@@ -1063,51 +1075,51 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             break;
         case expr_for:
             ff_printf("<b>for</b> <i>i</i> = ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(" <b>to</b> ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 15);
-            if (((coda_ExprOperation *)expr)->operand[2] != NULL)
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
+            if (((coda_expression_operation *)expr)->operand[2] != NULL)
             {
                 ff_printf(" <b>step</b> ");
-                generate_html_expr(((coda_ExprOperation *)expr)->operand[2], 15);
+                generate_html_expr(((coda_expression_operation *)expr)->operand[2], 15);
             }
             ff_printf(" <b>do</b><br />");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[3], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[3], 15);
             break;
         case expr_goto_array_element:
-            if (((coda_ExprOperation *)expr)->operand[0] != NULL)
+            if (((coda_expression_operation *)expr)->operand[0] != NULL)
             {
-                generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+                generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             }
             ff_printf("[");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
             ff_printf("]");
             break;
         case expr_goto_attribute:
-            if (((coda_ExprOperation *)expr)->operand[0] != NULL)
+            if (((coda_expression_operation *)expr)->operand[0] != NULL)
             {
-                generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+                generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             }
-            ff_printf("@%s", ((coda_ExprOperation *)expr)->identifier);
+            ff_printf("@%s", ((coda_expression_operation *)expr)->identifier);
             break;
         case expr_goto_begin:
             ff_printf(":");
             break;
         case expr_goto_field:
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
-            if (((coda_ExprOperation *)expr)->operand[0]->tag != expr_goto_root)
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
+            if (((coda_expression_operation *)expr)->operand[0]->tag != expr_goto_root)
             {
                 ff_printf("/");
             }
-            ff_printf("%s", ((coda_ExprOperation *)expr)->identifier);
+            ff_printf("%s", ((coda_expression_operation *)expr)->identifier);
             break;
         case expr_goto_here:
             ff_printf(".");
             break;
         case expr_goto_parent:
-            if (((coda_ExprOperation *)expr)->operand[0] != NULL)
+            if (((coda_expression_operation *)expr)->operand[0] != NULL)
             {
-                generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+                generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
                 ff_printf("/");
             }
             ff_printf("..");
@@ -1117,7 +1129,7 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             break;
         case expr_goto:
             ff_printf("<b>goto</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(")");
             break;
         case expr_greater_equal:
@@ -1125,9 +1137,9 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             {
                 ff_printf("(");
             }
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 5);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 5);
             ff_printf(" >= ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 5);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 5);
             if (precedence < 5)
             {
                 ff_printf(")");
@@ -1138,9 +1150,9 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             {
                 ff_printf("(");
             }
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 5);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 5);
             ff_printf(" > ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 5);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 5);
             if (precedence < 5)
             {
                 ff_printf(")");
@@ -1148,46 +1160,46 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             break;
         case expr_if:
             ff_printf("<b>if</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(", ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
             ff_printf(", ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[2], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[2], 15);
             ff_printf(")");
             break;
         case expr_index:
             ff_printf("<b>index</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(")");
             break;
         case expr_integer:
             ff_printf("<b>int</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(")");
             break;
         case expr_isinf:
             ff_printf("<b>isinf</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(")");
             break;
         case expr_ismininf:
             ff_printf("<b>ismininf</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(")");
             break;
         case expr_isnan:
             ff_printf("<b>isnan</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(")");
             break;
         case expr_isplusinf:
             ff_printf("<b>isplusinf</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(")");
             break;
         case expr_length:
             ff_printf("<b>length</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(")");
             break;
         case expr_less_equal:
@@ -1195,9 +1207,9 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             {
                 ff_printf("(");
             }
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 5);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 5);
             ff_printf(" <= ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 5);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 5);
             if (precedence < 5)
             {
                 ff_printf(")");
@@ -1208,9 +1220,9 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             {
                 ff_printf("(");
             }
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 5);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 5);
             ff_printf(" < ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 5);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 5);
             if (precedence < 5)
             {
                 ff_printf(")");
@@ -1221,9 +1233,9 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             {
                 ff_printf("(");
             }
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 9);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 9);
             ff_printf(" <b>and</b> ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 9);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 9);
             if (precedence < 9)
             {
                 ff_printf(")");
@@ -1234,9 +1246,9 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             {
                 ff_printf("(");
             }
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 10);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 10);
             ff_printf(" <b>or</b> ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 10);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 10);
             if (precedence < 10)
             {
                 ff_printf(")");
@@ -1244,21 +1256,21 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             break;
         case expr_ltrim:
             ff_printf("<b>ltrim</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(")");
             break;
         case expr_max:
             ff_printf("<b>max</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(", ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
             ff_printf(")");
             break;
         case expr_min:
             ff_printf("<b>min</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(", ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
             ff_printf(")");
             break;
         case expr_modulo:
@@ -1266,9 +1278,9 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             {
                 ff_printf("(");
             }
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 3);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 3);
             ff_printf(" %% ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 3);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 3);
             if (precedence < 3)
             {
                 ff_printf(")");
@@ -1279,9 +1291,9 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             {
                 ff_printf("(");
             }
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 3);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 3);
             ff_printf(" * ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 3);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 3);
             if (precedence < 3)
             {
                 ff_printf(")");
@@ -1289,16 +1301,16 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             break;
         case expr_neg:
             ff_printf("-");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 1);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 1);
             break;
         case expr_not_equal:
             if (precedence < 6)
             {
                 ff_printf("(");
             }
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 6);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 6);
             ff_printf(" != ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 6);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 6);
             if (precedence < 6)
             {
                 ff_printf(")");
@@ -1306,11 +1318,11 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             break;
         case expr_not:
             ff_printf("!");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 1);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 1);
             break;
         case expr_num_elements:
             ff_printf("<b>numelements</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(")");
             break;
         case expr_or:
@@ -1318,9 +1330,9 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             {
                 ff_printf("(");
             }
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 7);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 7);
             ff_printf(" | ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 7);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 7);
             if (precedence < 7)
             {
                 ff_printf(")");
@@ -1331,9 +1343,9 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             {
                 ff_printf("(");
             }
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 2);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 2);
             ff_printf(" ^ ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 2);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 2);
             if (precedence < 2)
             {
                 ff_printf(")");
@@ -1348,38 +1360,50 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
         case expr_product_version:
             ff_printf("<b>productversion</b>()");
             break;
+        case expr_regex:
+            ff_printf("<b>regex</b>(");
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
+            ff_printf(", ");
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
+            if (((coda_expression_operation *)expr)->operand[2] != NULL)
+            {
+                ff_printf(", ");
+                generate_html_expr(((coda_expression_operation *)expr)->operand[2], 15);
+            }
+            ff_printf(")");
+            break;
         case expr_round:
             ff_printf("<b>round</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(")");
             break;
         case expr_rtrim:
             ff_printf("<b>rtrim</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(")");
             break;
         case expr_sequence:
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(";<br />");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
             break;
         case expr_string:
             ff_printf("<b>string</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
-            if (((coda_ExprOperation *)expr)->operand[1] != NULL)
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
+            if (((coda_expression_operation *)expr)->operand[1] != NULL)
             {
                 ff_printf(", ");
-                generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+                generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
             }
             ff_printf(")");
             break;
         case expr_substr:
             ff_printf("<b>substr</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(", ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
             ff_printf(", ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[2], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[2], 15);
             ff_printf(")");
             break;
         case expr_subtract:
@@ -1387,9 +1411,9 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             {
                 ff_printf("(");
             }
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 4);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 4);
             ff_printf(" - ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 4);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 4);
             if (precedence < 4)
             {
                 ff_printf(")");
@@ -1397,50 +1421,50 @@ static void generate_html_expr(const coda_Expr *expr, int precedence)
             break;
         case expr_trim:
             ff_printf("<b>trim</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(")");
             break;
         case expr_unbound_array_index:
             ff_printf("<b>unboundindex</b>(");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(", ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
             ff_printf(")");
             break;
         case expr_variable_exists:
-            ff_printf("<b>exists</b>(<i>$%s</i>, ", ((coda_ExprOperation *)expr)->identifier);
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            ff_printf("<b>exists</b>(<i>$%s</i>, ", ((coda_expression_operation *)expr)->identifier);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(")");
             break;
         case expr_variable_index:
-            ff_printf("<b>index</b>(<i>$%s</i>, ", ((coda_ExprOperation *)expr)->identifier);
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            ff_printf("<b>index</b>(<i>$%s</i>, ", ((coda_expression_operation *)expr)->identifier);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(")");
             break;
         case expr_variable_set:
-            ff_printf("<i>$%s</i>", ((coda_ExprOperation *)expr)->identifier);
-            if (((coda_ExprOperation *)expr)->operand[0] != NULL)
+            ff_printf("<i>$%s</i>", ((coda_expression_operation *)expr)->identifier);
+            if (((coda_expression_operation *)expr)->operand[0] != NULL)
             {
                 ff_printf("[");
-                generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+                generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
                 ff_printf("]");
             }
             ff_printf(" = ");
-            generate_html_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
             break;
         case expr_variable_value:
-            ff_printf("<i>$%s</i>", ((coda_ExprOperation *)expr)->identifier);
-            if (((coda_ExprOperation *)expr)->operand[0] != NULL)
+            ff_printf("<i>$%s</i>", ((coda_expression_operation *)expr)->identifier);
+            if (((coda_expression_operation *)expr)->operand[0] != NULL)
             {
                 ff_printf("[");
-                generate_html_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+                generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
                 ff_printf("]");
             }
             break;
     }
 }
 
-static void generate_html_named_type(const char *filename, coda_Type *type)
+static void generate_html_named_type(const char *filename, coda_type *type)
 {
 
     assert(type->name != NULL);
@@ -1471,7 +1495,7 @@ static void generate_html_named_type(const char *filename, coda_Type *type)
     fclose(FFILE);
 }
 
-static void generate_html_product_definition(const char *filename, coda_ProductDefinition *product_definition)
+static void generate_html_product_definition(const char *filename, coda_product_definition *product_definition)
 {
     int i;
 
@@ -1496,7 +1520,7 @@ static void generate_html_product_definition(const char *filename, coda_ProductD
     if (product_definition->description != NULL)
     {
         fi_printf("<p>");
-        generate_xml_string(product_definition->description);
+        generate_xml_string(product_definition->description, -1);
         ff_printf("</p>\n");
     }
 
@@ -1521,12 +1545,12 @@ static void generate_html_product_definition(const char *filename, coda_ProductD
         INDENT++;
         for (i = 0; i < product_definition->num_detection_rules; i++)
         {
-            coda_DetectionRule *detection_rule = product_definition->detection_rule[i];
+            coda_detection_rule *detection_rule = product_definition->detection_rule[i];
             int j;
 
             for (j = 0; j < detection_rule->num_entries; j++)
             {
-                coda_DetectionRuleEntry *entry = detection_rule->entry[j];
+                coda_detection_rule_entry *entry = detection_rule->entry[j];
                 char s1[21];
                 char s2[21];
 
@@ -1606,7 +1630,7 @@ static void generate_html_product_definition(const char *filename, coda_ProductD
         fi_printf("<tr><th>name</th><th>size</th><th>initialisation</th></tr>\n");
         for (i = 0; i < product_definition->num_product_variables; i++)
         {
-            coda_ProductVariable *variable;
+            coda_product_variable *variable;
 
             variable = product_definition->product_variable[i];
             fi_printf("<tr><td id=\"%s_%s\">%s</td><td>", product_definition->name, variable->name, variable->name);
@@ -1629,7 +1653,7 @@ static void generate_html_product_definition(const char *filename, coda_ProductD
     fclose(FFILE);
 }
 
-static int type_uses_type(const coda_Type *type1, const coda_Type *type2, int include_self)
+static int type_uses_type(const coda_type *type1, const coda_type *type2, int include_self)
 {
     if (type1 == type2 && include_self)
     {
@@ -1646,7 +1670,7 @@ static int type_uses_type(const coda_Type *type1, const coda_Type *type2, int in
                 coda_type_get_num_record_fields(type1, &num_fields);
                 for (i = 0; i < num_fields; i++)
                 {
-                    coda_Type *field_type;
+                    coda_type *field_type;
 
                     coda_type_get_record_field_type(type1, i, &field_type);
                     if (type_uses_type(field_type, type2, 1))
@@ -1658,14 +1682,14 @@ static int type_uses_type(const coda_Type *type1, const coda_Type *type2, int in
             break;
         case coda_array_class:
             {
-                coda_Type *base_type;
+                coda_type *base_type;
 
                 coda_type_get_array_base_type(type1, &base_type);
                 return type_uses_type(base_type, type2, 1);
             }
         case coda_special_class:
             {
-                coda_Type *base_type;
+                coda_type *base_type;
 
                 coda_type_get_special_base_type(type1, &base_type);
                 return type_uses_type(base_type, type2, 1);
@@ -1679,12 +1703,12 @@ static int type_uses_type(const coda_Type *type1, const coda_Type *type2, int in
 
 static int compare_named_types(const void *t1, const void *t2)
 {
-    return strcasecmp((*(coda_Type **)t1)->name, (*(coda_Type **)t2)->name);
+    return strcasecmp((*(coda_type **)t1)->name, (*(coda_type **)t2)->name);
 }
 
-static void generate_html_named_types_index(const char *filename, coda_ProductClass *product_class)
+static void generate_html_named_types_index(const char *filename, coda_product_class *product_class)
 {
-    coda_Type **sorted_list;
+    coda_type **sorted_list;
     int i, j, k;
 
     FFILE = fopen(filename, "w");
@@ -1707,14 +1731,14 @@ static void generate_html_named_types_index(const char *filename, coda_ProductCl
     fi_printf("<table class=\"top\">\n");
     fi_printf("<tr><th>named&nbsp;type</th><th>used&nbsp;by</th></tr>\n");
 
-    sorted_list = malloc(product_class->num_named_types * sizeof(coda_Type *));
+    sorted_list = malloc(product_class->num_named_types * sizeof(coda_type *));
     assert(sorted_list != NULL);
-    memcpy(sorted_list, product_class->named_type, product_class->num_named_types * sizeof(coda_Type *));
-    qsort(sorted_list, product_class->num_named_types, sizeof(coda_Type *), compare_named_types);
+    memcpy(sorted_list, product_class->named_type, product_class->num_named_types * sizeof(coda_type *));
+    qsort(sorted_list, product_class->num_named_types, sizeof(coda_type *), compare_named_types);
 
     for (i = 0; i < product_class->num_named_types; i++)
     {
-        coda_Type *type;
+        coda_type *type;
         int prod_count;
         int type_count;
 
@@ -1729,11 +1753,11 @@ static void generate_html_named_types_index(const char *filename, coda_ProductCl
         type_count = 0;
         for (j = 0; j < product_class->num_product_types; j++)
         {
-            coda_ProductType *product_type = product_class->product_type[j];
+            coda_product_type *product_type = product_class->product_type[j];
 
             for (k = 0; k < product_type->num_product_definitions; k++)
             {
-                coda_ProductDefinition *product_definition = product_type->product_definition[k];
+                coda_product_definition *product_definition = product_type->product_definition[k];
 
                 if (type_uses_type(product_definition->root_type, type, 1))
                 {
@@ -1795,7 +1819,7 @@ static void generate_html_named_types_index(const char *filename, coda_ProductCl
     fclose(FFILE);
 }
 
-static void generate_html_product_class(const char *filename, coda_ProductClass *product_class)
+static void generate_html_product_class(const char *filename, coda_product_class *product_class)
 {
     int i;
 
@@ -1824,7 +1848,7 @@ static void generate_html_product_class(const char *filename, coda_ProductClass 
     if (product_class->description != NULL)
     {
         fi_printf("<p>");
-        generate_xml_string(product_class->description);
+        generate_xml_string(product_class->description, -1);
         ff_printf("</p>\n");
     }
 
@@ -1843,7 +1867,7 @@ static void generate_html_product_class(const char *filename, coda_ProductClass 
 
     for (i = 0; i < product_class->num_product_types; i++)
     {
-        coda_ProductType *product_type = product_class->product_type[i];
+        coda_product_type *product_type = product_class->product_type[i];
         int j;
 
         if (product_type->num_product_definitions == 0)
@@ -1855,7 +1879,7 @@ static void generate_html_product_class(const char *filename, coda_ProductClass 
                   product_type->name, product_type->num_product_definitions + 1);
         if (product_type->description != NULL)
         {
-            generate_xml_string(product_type->description);
+            generate_xml_string(product_type->description, -1);
         }
         ff_printf
             ("</td><th class=\"subhdr\">version</th><th class=\"subhdr\">format</th><th class=\"subhdr\">definition</th></tr>\n");
@@ -1864,7 +1888,7 @@ static void generate_html_product_class(const char *filename, coda_ProductClass 
         {
             for (j = 0; j < product_type->num_product_definitions; j++)
             {
-                coda_ProductDefinition *product_definition = product_type->product_definition[j];
+                coda_product_definition *product_definition = product_type->product_definition[j];
 
                 fi_printf("<tr><td align=\"center\">%d</td><td>%s</td><td><a href=\"products/%s_v%d.html\">%s</td>"
                           "</tr>\n", product_definition->version, coda_type_get_format_name(product_definition->format),
@@ -1919,9 +1943,9 @@ static void generate_html_index(const char *filename)
     fi_printf("<table class=\"top\">\n");
     fi_printf("<tr><th>product&nbsp;class</th><th>description</th><th>revision</th></tr>\n");
 
-    for (i = 0; i < coda_data_dictionary->num_product_classes; i++)
+    for (i = 0; i < coda_global_data_dictionary->num_product_classes; i++)
     {
-        coda_ProductClass *product_class = coda_data_dictionary->product_class[i];
+        coda_product_class *product_class = coda_global_data_dictionary->product_class[i];
         int has_products;
 
         has_products = 0;
@@ -1941,7 +1965,7 @@ static void generate_html_index(const char *filename)
         fi_printf("<tr><td><a href=\"%s/index.html\">%s</a></td><td>", product_class->name, product_class->name);
         if (product_class->description != NULL)
         {
-            generate_xml_string(product_class->description);
+            generate_xml_string(product_class->description, -1);
         }
         ff_printf("</td><td>%d</td></tr>\n", product_class->revision);
     }
@@ -1967,9 +1991,9 @@ void generate_html(const char *prefixdir)
     sprintf(filename, "%s/index.html", prefixdir);
     generate_html_index(filename);
 
-    for (i = 0; i < coda_data_dictionary->num_product_classes; i++)
+    for (i = 0; i < coda_global_data_dictionary->num_product_classes; i++)
     {
-        coda_ProductClass *product_class = coda_data_dictionary->product_class[i];
+        coda_product_class *product_class = coda_global_data_dictionary->product_class[i];
         int has_products;
 
         has_products = 0;
@@ -1997,7 +2021,7 @@ void generate_html(const char *prefixdir)
 
         for (j = 0; j < product_class->num_product_types; j++)
         {
-            coda_ProductType *product_type = product_class->product_type[j];
+            coda_product_type *product_type = product_class->product_type[j];
 
             for (k = 0; k < product_type->num_product_definitions; k++)
             {

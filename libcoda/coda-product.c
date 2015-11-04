@@ -42,6 +42,7 @@
 #include "coda-bin.h"
 #include "coda-xml.h"
 #include "coda-netcdf.h"
+#include "coda-grib.h"
 #ifdef HAVE_HDF4
 #include "coda-hdf4.h"
 #endif
@@ -50,8 +51,8 @@
 #endif
 #include "coda-definition.h"
 
-/** \defgroup coda_productfile CODA Product File
- * The CODA Product File module contains functions and procedures to open, close and retrieve information about product
+/** \defgroup coda_product CODA Product
+ * The CODA Product module contains functions and procedures to open, close and retrieve information about product
  * files that are supported by CODA.
  *
  * Under the hood CODA uses five different backends to access data from products. There are backends for structured
@@ -89,25 +90,25 @@
  * If CODA can not determine the product class, type, or version of a structured ascii/binary file, the file will not
  * be opened and an error will be returned. For XML, netCDF, HDF4, and HDF5 files CODA will open and interpret the data
  * based on the file contents.
- * If everything was successful, the coda_open() function will provide you a file handle (of type #coda_ProductFile)
+ * If everything was successful, the coda_open() function will provide you a file handle (of type #coda_product)
  * that can be passed to a range of other functions to retrieve information like the product class, type and version,
  * or to read data from the file with the help of CODA cursors (see \link coda_cursor CODA Cursor\endlink).
  * After you are done with a file you should close it with coda_close(). This function will also free the memory
  * that was allocated for the file handle by coda_open().
  * Below is a simple example that opens a file called productfile.dat and closes it again.
  * \code
- * coda_ProductFile *pf;
+ * coda_product *product;
  * if (coda_init() != 0)
  * {
  *   fprintf(stderr, "Error: %s\n", coda_errno_to_string(coda_errno));
  *   exit(1);
  * }
- * if (coda_open("productfile.dat", &pf) != 0)
+ * if (coda_open("productfile.dat", &product) != 0)
  * {
  *   fprintf(stderr, "Error: %s\n", coda_errno_to_string(coda_errno));
  *   exit(1);
  * }
- * coda_close(pf);
+ * coda_close(product);
  * coda_done();
  * \endcode
  *
@@ -118,22 +119,22 @@
  * file handle you already had.
  */
 
-/** \typedef coda_ProductFile
- * CODA Product File handle
- * \ingroup coda_productfile
+/** \typedef coda_product
+ * CODA Product handle
+ * \ingroup coda_product
  */
 
 /** \enum coda_format_enum
  * The data storage formats that are supported by CODA
- * \ingroup coda_productfile
+ * \ingroup coda_product
  */
 
 /** \typedef coda_format
  * The data storage formats that are supported by CODA
- * \ingroup coda_productfile
+ * \ingroup coda_product
  */
 
-/** \addtogroup coda_productfile
+/** \addtogroup coda_product
  * @{
  */
 
@@ -230,6 +231,21 @@ static int get_format_and_size(const char *filename, coda_format *format, int64_
         return 0;
     }
 
+    /* GRIB */
+    if (*file_size >= 8 && memcmp(buffer, "GRIB", 4) == 0)
+    {
+        if (buffer[7] == '\001')
+        {
+            *format = coda_format_grib1;
+            return 0;
+        }
+        if (buffer[7] == '\002')
+        {
+            *format = coda_format_grib2;
+            return 0;
+        }
+    }
+
     /* XML */
     if (*file_size >= 8)
     {
@@ -269,7 +285,6 @@ static int get_format_and_size(const char *filename, coda_format *format, int64_
  * returned.
  * The string pointers that are returned for \a product_class and \a product_type do not have to be freed by the user
  * and will remain valid until coda_done() is called.
- * If the product could not be recognized and is not a self describing product an error will be returned.
  * \param filename Relative or full path to the product file.
  * \param file_size Pointer to the variable where the actual file size in bytes will be stored.
  * \param file_format Pointer to the variable where the file format value will be stored.
@@ -283,7 +298,7 @@ static int get_format_and_size(const char *filename, coda_format *format, int64_
 LIBCODA_API int coda_recognize_file(const char *filename, int64_t *file_size, coda_format *file_format,
                                     const char **product_class, const char **product_type, int *version)
 {
-    coda_ProductDefinition *definition = NULL;
+    coda_product_definition *definition = NULL;
     coda_format format;
     int64_t size;
 
@@ -312,10 +327,12 @@ LIBCODA_API int coda_recognize_file(const char *filename, int64_t *file_size, co
                 return -1;
             }
             break;
-        case coda_format_netcdf:
         case coda_format_hdf4:
-        case coda_format_cdf:
         case coda_format_hdf5:
+        case coda_format_cdf:
+        case coda_format_netcdf:
+        case coda_format_grib1:
+        case coda_format_grib2:
             break;
     }
 
@@ -347,14 +364,14 @@ LIBCODA_API int coda_recognize_file(const char *filename, int64_t *file_size, co
  * This function will try to open the specified file for reading. On success a newly allocated file handle will be
  * returned. The memory for this file handle will be released when coda_close() is called for this handle.
  * \param filename Relative or full path to the product file.
- * \param pf Pointer to the variable where the pointer to the product file handle will be storeed.
+ * \param product Pointer to the variable where the pointer to the product file handle will be storeed.
  * \return
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_open(const char *filename, coda_ProductFile **pf)
+LIBCODA_API int coda_open(const char *filename, coda_product **product)
 {
-    coda_ProductFile *product_file;
+    coda_product *product_file;
     coda_format format;
     int64_t file_size;
 
@@ -363,9 +380,9 @@ LIBCODA_API int coda_open(const char *filename, coda_ProductFile **pf)
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "filename argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
-    if (pf == NULL)
+    if (product == NULL)
     {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "pf argument is NULL (%s:%u)", __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "product argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
 
@@ -391,6 +408,13 @@ LIBCODA_API int coda_open(const char *filename, coda_ProductFile **pf)
             break;
         case coda_format_netcdf:
             if (coda_netcdf_open(filename, file_size, &product_file) != 0)
+            {
+                return -1;
+            }
+            break;
+        case coda_format_grib1:
+        case coda_format_grib2:
+            if (coda_grib_open(filename, file_size, &product_file) != 0)
             {
                 return -1;
             }
@@ -450,7 +474,7 @@ LIBCODA_API int coda_open(const char *filename, coda_ProductFile **pf)
         }
     }
 
-    *pf = product_file;
+    *product = product_file;
 
     return 0;
 }
@@ -458,61 +482,64 @@ LIBCODA_API int coda_open(const char *filename, coda_ProductFile **pf)
 /** Close an open product file.
  * This function will close the file associated with the file handle and release the memory for the handle.
  * The file handle will be released even if unmapping or closing of the product file produced an error.
- * \param pf Pointer to a product file handle. 
+ * \param product Pointer to a product file handle. 
  * \return
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_close(coda_ProductFile *pf)
+LIBCODA_API int coda_close(coda_product *product)
 {
-    if (pf == NULL)
+    if (product == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "product file argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
 
     /* remove product variable information */
-    if (pf->product_variable_size != NULL)
+    if (product->product_variable_size != NULL)
     {
-        free(pf->product_variable_size);
-        pf->product_variable_size = NULL;
+        free(product->product_variable_size);
+        product->product_variable_size = NULL;
     }
-    if (pf->product_variable != NULL)
+    if (product->product_variable != NULL)
     {
         int i;
 
-        for (i = 0; i < pf->product_definition->num_product_variables; i++)
+        for (i = 0; i < product->product_definition->num_product_variables; i++)
         {
-            if (pf->product_variable[i] != NULL)
+            if (product->product_variable[i] != NULL)
             {
-                free(pf->product_variable[i]);
+                free(product->product_variable[i]);
             }
         }
-        free(pf->product_variable);
-        pf->product_variable = NULL;
+        free(product->product_variable);
+        product->product_variable = NULL;
     }
 
-    switch (pf->format)
+    switch (product->format)
     {
         case coda_format_ascii:
-            return coda_ascii_close(pf);
+            return coda_ascii_close(product);
         case coda_format_binary:
-            return coda_bin_close(pf);
+            return coda_bin_close(product);
         case coda_format_xml:
-            return coda_xml_close(pf);
+            return coda_xml_close(product);
         case coda_format_netcdf:
-            return coda_netcdf_close(pf);
+            return coda_netcdf_close(product);
+        case coda_format_grib1:
+        case coda_format_grib2:
+            return coda_grib_close(product);
         case coda_format_hdf4:
         case coda_format_cdf:
 #ifdef HAVE_HDF4
-            return coda_hdf4_close(pf);
+            return coda_hdf4_close(product);
 #else
             coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
             return -1;
 #endif
         case coda_format_hdf5:
 #ifdef HAVE_HDF5
-            return coda_hdf5_close(pf);
+            return coda_hdf5_close(product);
 #else
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
             return -1;
@@ -529,35 +556,35 @@ LIBCODA_API int coda_close(coda_ProductFile *pf)
  * product file the filename string will automatically be removed and the pointer that will be stored in \a filename
  * will become invalid.
  * The name of the product file will be stored in the \a filename parameter and will be 0 terminated.
- * \param pf Pointer to a product file handle. 
+ * \param product Pointer to a product file handle. 
  * \param filename Pointer to the variable where the filename of the product will be stored. 
  * \return
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_get_product_filename(const coda_ProductFile *pf, const char **filename)
+LIBCODA_API int coda_get_product_filename(const coda_product *product, const char **filename)
 {
-    if (pf == NULL)
+    if (product == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "product file argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
 
-    *filename = pf->filename;
+    *filename = product->filename;
 
     return 0;
 }
 
 /** Get the actual file size of a product file.
- * \param pf Pointer to a product file handle. 
+ * \param product Pointer to a product file handle. 
  * \param file_size Pointer to the variable where the actual file size (in bytes) of the product is stored. 
  * \return
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_get_product_file_size(const coda_ProductFile *pf, int64_t *file_size)
+LIBCODA_API int coda_get_product_file_size(const coda_product *product, int64_t *file_size)
 {
-    if (pf == NULL)
+    if (product == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "product file argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
@@ -568,24 +595,24 @@ LIBCODA_API int coda_get_product_file_size(const coda_ProductFile *pf, int64_t *
         return -1;
     }
 
-    *file_size = pf->file_size;
+    *file_size = product->file_size;
 
     return 0;
 }
 
 /** Get the basic file format of the product.
- * Possible formats are ascii, binary, xml, netcdf, hdf4, cdf, and hdf5.
+ * Possible formats are ascii, binary, xml, netcdf, grib, hdf4, cdf, and hdf5.
  * Mind that inside a product different typed data can exist. For instance, both xml and binary products can have
  * part of their content be ascii typed data.
- * \param pf Pointer to a product file handle. 
+ * \param product Pointer to a product file handle. 
  * \param format Pointer to the variable where the format will be stored.
  * \return
  *   \arg \c 0, Success
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_get_product_format(const coda_ProductFile *pf, coda_format *format)
+LIBCODA_API int coda_get_product_format(const coda_product *product, coda_format *format)
 {
-    if (pf == NULL)
+    if (product == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "product file argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
@@ -596,7 +623,7 @@ LIBCODA_API int coda_get_product_format(const coda_ProductFile *pf, coda_format 
         return -1;
     }
 
-    *format = pf->format;
+    *format = product->format;
 
     return 0;
 }
@@ -606,15 +633,15 @@ LIBCODA_API int coda_get_product_format(const coda_ProductFile *pf, coda_format 
  * The name of the product class will be stored in the \a product_class parameter and will be 0 terminated.
  * The string pointer that is returned for \a product_class does not have to be freed by the user and will remain valid
  * until coda_done() is called.
- * \param pf Pointer to a product file handle. 
+ * \param product Pointer to a product file handle. 
  * \param product_class Pointer to the variable where the class name of the product will be stored.
  * \return
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_get_product_class(const coda_ProductFile *pf, const char **product_class)
+LIBCODA_API int coda_get_product_class(const coda_product *product, const char **product_class)
 {
-    if (pf == NULL)
+    if (product == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "product file argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
@@ -625,9 +652,9 @@ LIBCODA_API int coda_get_product_class(const coda_ProductFile *pf, const char **
         return -1;
     }
 
-    if (pf->product_definition != NULL)
+    if (product->product_definition != NULL)
     {
-        *product_class = pf->product_definition->product_type->product_class->name;
+        *product_class = product->product_definition->product_type->product_class->name;
     }
     else
     {
@@ -642,15 +669,15 @@ LIBCODA_API int coda_get_product_class(const coda_ProductFile *pf, const char **
  * The name of the product type will be stored in the \a product_type parameter and will be 0 terminated.
  * The string pointer that is returned for \a product_type does not have to be freed by the user and will remain valid
  * until coda_done() is called.
- * \param pf Pointer to a product file handle. 
+ * \param product Pointer to a product file handle. 
  * \param product_type Pointer to the variable where the product type name of the product will be stored.
  * \return
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_get_product_type(const coda_ProductFile *pf, const char **product_type)
+LIBCODA_API int coda_get_product_type(const coda_product *product, const char **product_type)
 {
-    if (pf == NULL)
+    if (product == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "product file argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
@@ -661,9 +688,9 @@ LIBCODA_API int coda_get_product_type(const coda_ProductFile *pf, const char **p
         return -1;
     }
 
-    if (pf->product_definition != NULL)
+    if (product->product_definition != NULL)
     {
-        *product_type = pf->product_definition->product_type->name;
+        *product_type = product->product_definition->product_type->name;
     }
     else
     {
@@ -676,15 +703,15 @@ LIBCODA_API int coda_get_product_type(const coda_ProductFile *pf, const char **p
 /** Get the product type version of a product file.
  * This function will return the format version number of a product. This version number is a rounded number and newer
  * versions of a format will always have a version number that is higher than that of older formats.
- * \param pf Pointer to a product file handle. 
+ * \param product Pointer to a product file handle. 
  * \param version Pointer to the variable where the product version of the product type of the product will be stored.
  * \return
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_get_product_version(const coda_ProductFile *pf, int *version)
+LIBCODA_API int coda_get_product_version(const coda_product *product, int *version)
 {
-    if (pf == NULL)
+    if (product == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "product file argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
@@ -695,9 +722,9 @@ LIBCODA_API int coda_get_product_version(const coda_ProductFile *pf, int *versio
         return -1;
     }
 
-    if (pf->product_definition != NULL)
+    if (product->product_definition != NULL)
     {
-        *version = pf->product_definition->version;
+        *version = product->product_definition->version;
     }
     else
     {
@@ -708,15 +735,15 @@ LIBCODA_API int coda_get_product_version(const coda_ProductFile *pf, int *versio
 }
 
 /** Get the CODA type of the root of the product.
- * \param pf Pointer to a product file handle. 
+ * \param product Pointer to a product file handle. 
  * \param type Pointer to the variable where the Type handle will be stored.
  * \return
  *   \arg \c 0, Success
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_get_product_root_type(const coda_ProductFile *pf, coda_Type **type)
+LIBCODA_API int coda_get_product_root_type(const coda_product *product, coda_type **type)
 {
-    if (pf == NULL)
+    if (product == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "product file argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
@@ -727,7 +754,7 @@ LIBCODA_API int coda_get_product_root_type(const coda_ProductFile *pf, coda_Type
         return -1;
     }
 
-    return coda_get_type_for_dynamic_type(pf->root_type, type);
+    return coda_get_type_for_dynamic_type(product->root_type, type);
 }
 
 /** Get the value for a product variable.
@@ -738,7 +765,7 @@ LIBCODA_API int coda_get_product_root_type(const coda_ProductFile *pf, coda_Type
  * Product variables can be one dimensional arrays, in which case you will have to pass an array index using the
  * \a index parameter. If the product variable is a scalar you should pass 0 for \a index.
  * The value of a product variable is always a 64-bit integer and will be stored in \a value.
- * \param pf Pointer to a product file handle. 
+ * \param product Pointer to a product file handle. 
  * \param variable The name of the product variable.
  * \param index The array index of the product variable (pass 0 if the variable is a scalar).
  * \param value Pointer to the variable where the product variable value will be stored.
@@ -746,12 +773,12 @@ LIBCODA_API int coda_get_product_root_type(const coda_ProductFile *pf, coda_Type
  *   \arg \c 0, Success
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_get_product_variable_value(coda_ProductFile *pf, const char *variable, long index, int64_t *value)
+LIBCODA_API int coda_get_product_variable_value(coda_product *product, const char *variable, long index, int64_t *value)
 {
     int64_t *variable_ptr;
     long size;
 
-    if (pf == NULL)
+    if (product == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "product file argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
@@ -763,7 +790,7 @@ LIBCODA_API int coda_get_product_variable_value(coda_ProductFile *pf, const char
     }
 
     /* use the size retrieval function to check the existence of the variable */
-    if (coda_product_variable_get_size(pf, variable, &size) != 0)
+    if (coda_product_variable_get_size(product, variable, &size) != 0)
     {
         coda_set_error(CODA_ERROR_INVALID_NAME, "product variable %s not available", variable);
         return -1;
@@ -775,7 +802,7 @@ LIBCODA_API int coda_get_product_variable_value(coda_ProductFile *pf, const char
         return -1;
     }
 
-    if (coda_product_variable_get_pointer(pf, variable, index, &variable_ptr) != 0)
+    if (coda_product_variable_get_pointer(product, variable, index, &variable_ptr) != 0)
     {
         return -1;
     }

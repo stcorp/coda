@@ -29,10 +29,10 @@
 #include <string.h>
 
 #include "coda-definition.h"
+#include "coda-expr.h"
 #include "coda-ascbin-internal.h"
-#include "coda-expr-internal.h"
 
-coda_Type *typestack[CODA_CURSOR_MAXDEPTH];
+coda_type *typestack[CODA_CURSOR_MAXDEPTH];
 long indexstack[CODA_CURSOR_MAXDEPTH + 1];
 
 extern char *ascii_col_sep;
@@ -122,7 +122,7 @@ static void generate_escaped_string(const char *str, int length)
  10: logical_or
  15: <start>
  */
-static void generate_expr(const coda_Expr *expr, int precedence)
+static void generate_expr(const coda_expression *expr, int precedence)
 {
     assert(expr != NULL);
 
@@ -130,7 +130,7 @@ static void generate_expr(const coda_Expr *expr, int precedence)
     {
         case expr_abs:
             printf("abs(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(")");
             break;
         case expr_add:
@@ -138,9 +138,9 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             {
                 printf("(");
             }
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 4);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 4);
             printf(" + ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 4);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 4);
             if (precedence < 4)
             {
                 printf(")");
@@ -148,16 +148,16 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             break;
         case expr_array_add:
             printf("add(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(", ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 15);
             printf(")");
             break;
         case expr_array_all:
             printf("all(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(", ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 15);
             printf(")");
             break;
         case expr_and:
@@ -165,9 +165,9 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             {
                 printf("(");
             }
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 7);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 7);
             printf(" & ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 7);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 7);
             if (precedence < 7)
             {
                 printf(")");
@@ -175,28 +175,28 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             break;
         case expr_ceil:
             printf("ceil(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(")");
             break;
         case expr_array_count:
             printf("count(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(", ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 15);
             printf(")");
             break;
         case expr_array_exists:
             printf("exists(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(", ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 15);
             printf(")");
             break;
         case expr_array_index:
             printf("index(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(", ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 15);
             printf(")");
             break;
         case expr_asciiline:
@@ -204,36 +204,36 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             break;
         case expr_bit_offset:
             printf("bitoffset(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(")");
             break;
         case expr_bit_size:
             printf("bitsize(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(")");
             break;
         case expr_byte_offset:
             printf("byteoffset(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(")");
             break;
         case expr_byte_size:
             printf("bytesize(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(")");
             break;
         case expr_bytes:
             printf("bytes(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
-            if (((coda_ExprOperation *)expr)->operand[0] != NULL)
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
+            if (((coda_expression_operation *)expr)->operand[0] != NULL)
             {
                 printf(",");
-                generate_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+                generate_expr(((coda_expression_operation *)expr)->operand[1], 15);
             }
             printf(")");
             break;
         case expr_constant_boolean:
-            if (((coda_ExprBoolConstant *)expr)->value)
+            if (((coda_expression_bool_constant *)expr)->value)
             {
                 printf("true");
             }
@@ -242,21 +242,33 @@ static void generate_expr(const coda_Expr *expr, int precedence)
                 printf("false");
             }
             break;
-        case expr_constant_double:
-            printf("%f", ((coda_ExprDoubleConstant *)expr)->value);
+        case expr_constant_float:
+            printf("%f", ((coda_expression_float_constant *)expr)->value);
             break;
         case expr_constant_integer:
             {
                 char s[21];
 
-                coda_str64(((coda_ExprIntegerConstant *)expr)->value, s);
+                coda_str64(((coda_expression_integer_constant *)expr)->value, s);
                 printf("%s", s);
+            }
+            break;
+        case expr_constant_rawstring:
+            {
+                int i;
+
+                printf("\"");
+                for (i = 0; i < ((coda_expression_string_constant *)expr)->length; i++)
+                {
+                    printf("%c", ((coda_expression_string_constant *)expr)->value[i]);
+                }
+                printf("\"");
             }
             break;
         case expr_constant_string:
             printf("\"");
-            generate_escaped_string(((coda_ExprStringConstant *)expr)->value,
-                                    ((coda_ExprStringConstant *)expr)->length);
+            generate_escaped_string(((coda_expression_string_constant *)expr)->value,
+                                    ((coda_expression_string_constant *)expr)->length);
             printf("\"");
             break;
         case expr_divide:
@@ -264,9 +276,9 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             {
                 printf("(");
             }
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 3);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 3);
             printf(" / ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 3);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 3);
             if (precedence < 3)
             {
                 printf(")");
@@ -277,9 +289,9 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             {
                 printf("(");
             }
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 6);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 6);
             printf(" == ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 6);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 6);
             if (precedence < 6)
             {
                 printf(")");
@@ -287,7 +299,7 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             break;
         case expr_exists:
             printf("exists(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(")");
             break;
         case expr_file_size:
@@ -298,12 +310,12 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             break;
         case expr_float:
             printf("float(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(")");
             break;
         case expr_floor:
             printf("floor(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(")");
             break;
         case expr_for_index:
@@ -311,51 +323,51 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             break;
         case expr_for:
             printf("for i = ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(" to ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 15);
-            if (((coda_ExprOperation *)expr)->operand[2] != NULL)
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 15);
+            if (((coda_expression_operation *)expr)->operand[2] != NULL)
             {
                 printf(" step ");
-                generate_expr(((coda_ExprOperation *)expr)->operand[2], 15);
+                generate_expr(((coda_expression_operation *)expr)->operand[2], 15);
             }
             printf(" do ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[3], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[3], 15);
             break;
         case expr_goto_array_element:
-            if (((coda_ExprOperation *)expr)->operand[0] != NULL)
+            if (((coda_expression_operation *)expr)->operand[0] != NULL)
             {
-                generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+                generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             }
             printf("[");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 15);
             printf("]");
             break;
         case expr_goto_attribute:
-            if (((coda_ExprOperation *)expr)->operand[0] != NULL)
+            if (((coda_expression_operation *)expr)->operand[0] != NULL)
             {
-                generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+                generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             }
-            printf("@%s", ((coda_ExprOperation *)expr)->identifier);
+            printf("@%s", ((coda_expression_operation *)expr)->identifier);
             break;
         case expr_goto_begin:
             printf(":");
             break;
         case expr_goto_field:
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
-            if (((coda_ExprOperation *)expr)->operand[0]->tag != expr_goto_root)
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
+            if (((coda_expression_operation *)expr)->operand[0]->tag != expr_goto_root)
             {
                 printf("/");
             }
-            printf("%s", ((coda_ExprOperation *)expr)->identifier);
+            printf("%s", ((coda_expression_operation *)expr)->identifier);
             break;
         case expr_goto_here:
             printf(".");
             break;
         case expr_goto_parent:
-            if (((coda_ExprOperation *)expr)->operand[0] != NULL)
+            if (((coda_expression_operation *)expr)->operand[0] != NULL)
             {
-                generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+                generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
                 printf("/");
             }
             printf("..");
@@ -365,7 +377,7 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             break;
         case expr_goto:
             printf("goto(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(")");
             break;
         case expr_greater_equal:
@@ -373,9 +385,9 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             {
                 printf("(");
             }
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 5);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 5);
             printf(" >= ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 5);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 5);
             if (precedence < 5)
             {
                 printf(")");
@@ -386,9 +398,9 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             {
                 printf("(");
             }
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 5);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 5);
             printf(" > ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 5);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 5);
             if (precedence < 5)
             {
                 printf(")");
@@ -396,46 +408,46 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             break;
         case expr_if:
             printf("if(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(", ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 15);
             printf(", ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[2], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[2], 15);
             printf(")");
             break;
         case expr_index:
             printf("index(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(")");
             break;
         case expr_integer:
             printf("int(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(")");
             break;
         case expr_isinf:
             printf("isinf(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(")");
             break;
         case expr_ismininf:
             printf("ismininf(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(")");
             break;
         case expr_isnan:
             printf("isnan(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(")");
             break;
         case expr_isplusinf:
             printf("isplusinf(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(")");
             break;
         case expr_length:
             printf("length(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(")");
             break;
         case expr_less_equal:
@@ -443,9 +455,9 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             {
                 printf("(");
             }
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 5);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 5);
             printf(" <= ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 5);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 5);
             if (precedence < 5)
             {
                 printf(")");
@@ -456,9 +468,9 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             {
                 printf("(");
             }
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 5);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 5);
             printf(" < ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 5);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 5);
             if (precedence < 5)
             {
                 printf(")");
@@ -469,9 +481,9 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             {
                 printf("(");
             }
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 9);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 9);
             printf(" and ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 9);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 9);
             if (precedence < 9)
             {
                 printf(")");
@@ -482,9 +494,9 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             {
                 printf("(");
             }
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 10);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 10);
             printf(" or ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 10);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 10);
             if (precedence < 10)
             {
                 printf(")");
@@ -492,21 +504,21 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             break;
         case expr_ltrim:
             printf("ltrim(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(")");
             break;
         case expr_max:
             printf("max(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(", ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 15);
             printf(")");
             break;
         case expr_min:
             printf("min(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(", ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 15);
             printf(")");
             break;
         case expr_modulo:
@@ -514,9 +526,9 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             {
                 printf("(");
             }
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 3);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 3);
             printf(" %% ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 3);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 3);
             if (precedence < 3)
             {
                 printf(")");
@@ -527,9 +539,9 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             {
                 printf("(");
             }
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 3);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 3);
             printf(" * ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 3);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 3);
             if (precedence < 3)
             {
                 printf(")");
@@ -537,16 +549,16 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             break;
         case expr_neg:
             printf("-");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 1);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 1);
             break;
         case expr_not_equal:
             if (precedence < 6)
             {
                 printf("(");
             }
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 6);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 6);
             printf(" != ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 6);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 6);
             if (precedence < 6)
             {
                 printf(")");
@@ -554,11 +566,11 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             break;
         case expr_not:
             printf("!");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 1);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 1);
             break;
         case expr_num_elements:
             printf("numelements(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(")");
             break;
         case expr_or:
@@ -566,9 +578,9 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             {
                 printf("(");
             }
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 7);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 7);
             printf(" | ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 7);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 7);
             if (precedence < 7)
             {
                 printf(")");
@@ -579,9 +591,9 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             {
                 printf("(");
             }
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 2);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 2);
             printf(" ^ ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 2);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 2);
             if (precedence < 2)
             {
                 printf(")");
@@ -596,38 +608,50 @@ static void generate_expr(const coda_Expr *expr, int precedence)
         case expr_product_version:
             printf("productversion()");
             break;
+        case expr_regex:
+            printf("regex(");
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
+            printf(", ");
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 15);
+            if (((coda_expression_operation *)expr)->operand[2] != NULL)
+            {
+                printf(", ");
+                generate_expr(((coda_expression_operation *)expr)->operand[2], 15);
+            }
+            printf(")");
+            break;
         case expr_round:
             printf("round(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(")");
             break;
         case expr_rtrim:
             printf("rtrim(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(")");
             break;
         case expr_sequence:
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf("; ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 15);
             break;
         case expr_string:
             printf("string(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
-            if (((coda_ExprOperation *)expr)->operand[1] != NULL)
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
+            if (((coda_expression_operation *)expr)->operand[1] != NULL)
             {
                 printf(", ");
-                generate_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+                generate_expr(((coda_expression_operation *)expr)->operand[1], 15);
             }
             printf(")");
             break;
         case expr_substr:
             printf("substr(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(", ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 15);
             printf(", ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[2], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[2], 15);
             printf(")");
             break;
         case expr_subtract:
@@ -635,9 +659,9 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             {
                 printf("(");
             }
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 4);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 4);
             printf(" - ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 4);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 4);
             if (precedence < 4)
             {
                 printf(")");
@@ -645,43 +669,43 @@ static void generate_expr(const coda_Expr *expr, int precedence)
             break;
         case expr_trim:
             printf("trim(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(")");
             break;
         case expr_unbound_array_index:
             printf("unboundindex(");
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(", ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 15);
             printf(")");
             break;
         case expr_variable_exists:
-            printf("exists($%s, ", ((coda_ExprOperation *)expr)->identifier);
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            printf("exists($%s, ", ((coda_expression_operation *)expr)->identifier);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(")");
             break;
         case expr_variable_index:
-            printf("index($%s, ", ((coda_ExprOperation *)expr)->identifier);
-            generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+            printf("index($%s, ", ((coda_expression_operation *)expr)->identifier);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(")");
             break;
         case expr_variable_set:
-            printf("$%s", ((coda_ExprOperation *)expr)->identifier);
-            if (((coda_ExprOperation *)expr)->operand[0] != NULL)
+            printf("$%s", ((coda_expression_operation *)expr)->identifier);
+            if (((coda_expression_operation *)expr)->operand[0] != NULL)
             {
                 printf("[");
-                generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+                generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
                 printf("]");
             }
             printf(" = ");
-            generate_expr(((coda_ExprOperation *)expr)->operand[1], 15);
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 15);
             break;
         case expr_variable_value:
-            printf("$%s", ((coda_ExprOperation *)expr)->identifier);
-            if (((coda_ExprOperation *)expr)->operand[0] != NULL)
+            printf("$%s", ((coda_expression_operation *)expr)->identifier);
+            if (((coda_expression_operation *)expr)->operand[0] != NULL)
             {
                 printf("[");
-                generate_expr(((coda_ExprOperation *)expr)->operand[0], 15);
+                generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
                 printf("]");
             }
             break;
@@ -701,7 +725,7 @@ static void print_path(int depth)
         }
         else
         {
-            coda_Type *type = typestack[i];
+            coda_type *type = typestack[i];
 
             switch (type->type_class)
             {
@@ -736,7 +760,7 @@ static void print_path(int depth)
                                 if (show_expressions &&
                                     (type->format == coda_format_ascii || type->format == coda_format_binary))
                                 {
-                                    generate_expr(((coda_ascbinArray *)type)->dim_expr[j], 15);
+                                    generate_expr(((coda_ascbin_array *)type)->dim_expr[j], 15);
                                 }
                                 else
                                 {
@@ -759,7 +783,7 @@ static void print_path(int depth)
     }
 }
 
-static void print_type(coda_Type *type, int depth)
+static void print_type(coda_type *type, int depth)
 {
     coda_type_class type_class;
 
@@ -783,7 +807,7 @@ static void print_type(coda_Type *type, int depth)
                 coda_type_get_num_record_fields(type, &num_record_fields);
                 for (i = 0; i < num_record_fields; i++)
                 {
-                    coda_Type *field_type;
+                    coda_type *field_type;
 
                     coda_type_get_record_field_type(type, i, &field_type);
 
@@ -804,7 +828,7 @@ static void print_type(coda_Type *type, int depth)
             break;
         case coda_array_class:
             {
-                coda_Type *base_type;
+                coda_type *base_type;
 
                 coda_type_get_array_base_type(type, &base_type);
                 indexstack[depth + 1] = 0;
@@ -814,7 +838,7 @@ static void print_type(coda_Type *type, int depth)
         case coda_special_class:
             if (!use_special_types)
             {
-                coda_Type *base_type;
+                coda_type *base_type;
 
                 coda_type_get_special_base_type(type, &base_type);
                 print_type(base_type, depth);
@@ -884,9 +908,9 @@ static void print_type(coda_Type *type, int depth)
 
 static void generate_field_list(const char *product_class_name, const char *product_type_name, int version)
 {
-    coda_ProductClass *product_class;
-    coda_ProductType *product_type;
-    coda_ProductDefinition *product_definition;
+    coda_product_class *product_class;
+    coda_product_type *product_type;
+    coda_product_definition *product_definition;
 
     product_class = coda_data_dictionary_get_product_class(product_class_name);
     if (product_class == NULL)
@@ -920,49 +944,30 @@ static void generate_product_list(const char *product_class_name, const char *pr
 {
     int i;
 
-    for (i = 0; i < coda_data_dictionary->num_product_classes; i++)
+    for (i = 0; i < coda_global_data_dictionary->num_product_classes; i++)
     {
-        coda_ProductClass *product_class = coda_data_dictionary->product_class[i];
-        int has_products;
+        coda_product_class *product_class = coda_global_data_dictionary->product_class[i];
         int j;
 
         if (product_class_name != NULL && strcmp(product_class->name, product_class_name) != 0)
         {
             continue;
         }
-        has_products = 0;
         for (j = 0; j < product_class->num_product_types; j++)
         {
-            if (product_class->product_type[j]->num_product_definitions > 0)
-            {
-                has_products = 1;
-                break;
-            }
-        }
-        if (!has_products)
-        {
-            continue;
-        }
-
-        for (j = 0; j < product_class->num_product_types; j++)
-        {
-            coda_ProductType *product_type = product_class->product_type[j];
-            int k;
+            coda_product_type *product_type = product_class->product_type[j];
 
             if (product_type_name != NULL && strcmp(product_type->name, product_type_name) != 0)
             {
                 continue;
             }
-            if (product_type->num_product_definitions == 0)
-            {
-                continue;
-            }
-
             if (product_type->num_product_definitions > 0)
             {
+                int k;
+
                 for (k = 0; k < product_type->num_product_definitions; k++)
                 {
-                    coda_ProductDefinition *product_definition = product_type->product_definition[k];
+                    coda_product_definition *product_definition = product_type->product_definition[k];
 
                     printf("%s%s%s%s%d", product_class->name, ascii_col_sep, product_type->name, ascii_col_sep,
                            product_definition->version);

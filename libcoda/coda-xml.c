@@ -30,7 +30,7 @@
 
 #include "coda-definition.h"
 
-int coda_xml_recognize_file(const char *filename, int64_t size, coda_ProductDefinition **definition)
+int coda_xml_recognize_file(const char *filename, int64_t size, coda_product_definition **definition)
 {
     int fd;
     int open_flags;
@@ -58,16 +58,16 @@ int coda_xml_recognize_file(const char *filename, int64_t size, coda_ProductDefi
     return 0;
 }
 
-int coda_xml_open(const char *filename, int64_t file_size, coda_ProductFile **pf)
+int coda_xml_open(const char *filename, int64_t file_size, coda_product **product)
 {
-    coda_xmlProductFile *product_file = (coda_xmlProductFile *)pf;
+    coda_xml_product *product_file = (coda_xml_product *)product;
     int open_flags;
 
-    product_file = (coda_xmlProductFile *)malloc(sizeof(coda_xmlProductFile));
+    product_file = (coda_xml_product *)malloc(sizeof(coda_xml_product));
     if (product_file == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       sizeof(coda_xmlProductFile), __FILE__, __LINE__);
+                       sizeof(coda_xml_product), __FILE__, __LINE__);
         return -1;
     }
     product_file->filename = NULL;
@@ -85,7 +85,7 @@ int coda_xml_open(const char *filename, int64_t file_size, coda_ProductFile **pf
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate filename string) (%s:%u)",
                        __FILE__, __LINE__);
-        coda_xml_close((coda_ProductFile *)product_file);
+        coda_xml_close((coda_product *)product_file);
         return -1;
     }
 
@@ -97,13 +97,13 @@ int coda_xml_open(const char *filename, int64_t file_size, coda_ProductFile **pf
     if (product_file->fd < 0)
     {
         coda_set_error(CODA_ERROR_FILE_OPEN, "could not open file %s (%s)", product_file->filename, strerror(errno));
-        coda_xml_close((coda_ProductFile *)product_file);
+        coda_xml_close((coda_product *)product_file);
         return -1;
     }
 
     if (coda_xml_parse_for_detection(product_file->fd, product_file->filename, &product_file->product_definition) != 0)
     {
-        coda_xml_close((coda_ProductFile *)product_file);
+        coda_xml_close((coda_product *)product_file);
         return -1;
     }
 
@@ -114,13 +114,13 @@ int coda_xml_open(const char *filename, int64_t file_size, coda_ProductFile **pf
         {
             if (coda_read_product_definition(product_file->product_definition) != 0)
             {
-                coda_xml_close((coda_ProductFile *)product_file);
+                coda_xml_close((coda_product *)product_file);
                 return -1;
             }
         }
         if (coda_xml_parse_with_definition(product_file) != 0)
         {
-            coda_xml_close((coda_ProductFile *)product_file);
+            coda_xml_close((coda_product *)product_file);
             return -1;
         }
     }
@@ -128,19 +128,19 @@ int coda_xml_open(const char *filename, int64_t file_size, coda_ProductFile **pf
     {
         if (coda_xml_parse_and_interpret(product_file) != 0)
         {
-            coda_xml_close((coda_ProductFile *)product_file);
+            coda_xml_close((coda_product *)product_file);
             return -1;
         }
     }
 
-    *pf = (coda_ProductFile *)product_file;
+    *product = (coda_product *)product_file;
 
     return 0;
 }
 
-int coda_xml_close(coda_ProductFile *pf)
+int coda_xml_close(coda_product *product)
 {
-    coda_xmlProductFile *product_file = (coda_xmlProductFile *)pf;
+    coda_xml_product *product_file = (coda_xml_product *)product;
 
     if (product_file->filename != NULL)
     {
@@ -160,33 +160,33 @@ int coda_xml_close(coda_ProductFile *pf)
     return 0;
 }
 
-int coda_xml_get_type_for_dynamic_type(coda_DynamicType *dynamic_type, coda_Type **type)
+int coda_xml_get_type_for_dynamic_type(coda_dynamic_type *dynamic_type, coda_type **type)
 {
-    switch (((coda_xmlDynamicType *)dynamic_type)->tag)
+    switch (((coda_xml_dynamic_type *)dynamic_type)->tag)
     {
         case tag_xml_root_dynamic:
-            *type = (coda_Type *)((coda_xmlRootDynamicType *)dynamic_type)->type;
+            *type = (coda_type *)((coda_xml_root_dynamic_type *)dynamic_type)->type;
             break;
         case tag_xml_record_dynamic:
         case tag_xml_text_dynamic:
         case tag_xml_ascii_type_dynamic:
-            *type = (coda_Type *)((coda_xmlElementDynamicType *)dynamic_type)->type;
+            *type = (coda_type *)((coda_xml_element_dynamic_type *)dynamic_type)->type;
             break;
         case tag_xml_array_dynamic:
-            *type = (coda_Type *)((coda_xmlArrayDynamicType *)dynamic_type)->type;
+            *type = (coda_type *)((coda_xml_array_dynamic_type *)dynamic_type)->type;
             break;
         case tag_xml_attribute_dynamic:
-            *type = (coda_Type *)((coda_xmlAttributeDynamicType *)dynamic_type)->type;
+            *type = (coda_type *)((coda_xml_attribute_dynamic_type *)dynamic_type)->type;
             break;
         case tag_xml_attribute_record_dynamic:
-            *type = (coda_Type *)((coda_xmlAttributeRecordDynamicType *)dynamic_type)->type;
+            *type = (coda_type *)((coda_xml_attribute_record_dynamic_type *)dynamic_type)->type;
             break;
     }
 
     return 0;
 }
 
-coda_xmlDetectionNode *coda_xml_get_detection_tree(void)
+coda_xml_detection_node *coda_xml_get_detection_tree(void)
 {
-    return (coda_xmlDetectionNode *)coda_data_dictionary->xml_detection_tree;
+    return (coda_xml_detection_node *)coda_global_data_dictionary->xml_detection_tree;
 }

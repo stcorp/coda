@@ -31,19 +31,20 @@ IF NOT EXIST "coda.sln" GOTO NO_SLN
 
 
 ECHO Setting Visual Studio environment variables
-CALL "C:\Program Files\Microsoft Visual Studio .NET 2003\Common7\Tools\vsvars32.bat"
+CALL "C:\Program Files\Microsoft Visual Studio 9.0\Common7\Tools\vsvars32.bat"
 
 ECHO Remove build directories
-IF EXIST build rmdir /Q /S build
-IF EXIST Release rmdir /Q /S Release
-IF EXIST idl54 rmdir /Q /S idl54
-IF EXIST idl55 rmdir /Q /S idl55
-IF EXIST idl61 rmdir /Q /S idl61
-IF EXIST idl rmdir /Q /S idl
-IF EXIST matlab rmdir /Q /S matlab
+IF EXIST build RMDIR /Q /S build
+IF EXIST Release RMDIR /Q /S Release
+IF EXIST idl54 RMDIR /Q /S idl54
+IF EXIST idl55 RMDIR /Q /S idl55
+IF EXIST idl61 RMDIR /Q /S idl61
+IF EXIST idl RMDIR /Q /S idl
+IF EXIST matlab RMDIR /Q /S matlab
+IF EXIST nl RMDIR /Q /S nl
 
 ECHO Building LIBCODA
-devenv coda.sln /build "Release with HDF"
+vcbuild coda.sln "Release with HDF|Win32"
 
 ECHO Building CODA-JAVA
 CALL coda_java.bat
@@ -58,11 +59,11 @@ MOVE idl idl61
 CALL coda_idl.bat c:\rsi\idl63 6.3
 
 ECHO Building CODA-MATLAB
-CALL coda_matlab.bat c:\MATLAB6p5 R13 no
+CALL coda_matlab.bat
 
 ECHO Copying HDF4 DLLs
-COPY "%HDF4_DLL%\hd424m.dll" Release\withhdf
-COPY "%HDF4_DLL%\hm424m.dll" Release\withhdf
+COPY "%HDF4_DLL%\hd425m.dll" Release\withhdf
+COPY "%HDF4_DLL%\hm425m.dll" Release\withhdf
 
 ECHO Copying HDF5 DLLs
 COPY "%HDF5_DLL%\hdf5dll.dll" Release\withhdf
@@ -83,6 +84,7 @@ RMDIR /Q /S idl55
 RMDIR /Q /S idl61
 RMDIR /Q /S idl
 RMDIR /Q /S matlab
+RMDIR /Q /S nl
 DEL /Q removepath.exe
 
 GOTO END
@@ -126,7 +128,7 @@ GOTO END
 ECHO.
 ECHO Unable to locate coda.sln
 ECHO.
-ECHO You first have to open the coda.dsw file in VS 7.1 and convert it to a
+ECHO You first have to open the coda.dsw file in VS 9.0 and convert it to a
 ECHO solution file.
 ECHO.
 

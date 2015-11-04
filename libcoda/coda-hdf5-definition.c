@@ -26,22 +26,22 @@
 
 #include "coda-hdf5-internal.h"
 
-static coda_hdf5AttributeRecord *empty_attributes_singleton = NULL;
+static coda_hdf5_attribute_record *empty_attributes_singleton = NULL;
 
 
-void coda_hdf5_release_type(coda_Type *T);
+void coda_hdf5_release_type(coda_type *T);
 
-static void delete_hdf5BasicDataType(coda_hdf5BasicDataType *T)
+static void delete_hdf5BasicDataType(coda_hdf5_basic_data_type *T)
 {
     H5Tclose(T->datatype_id);
     free(T);
 }
 
-static void delete_hdf5CompoundDataType(coda_hdf5CompoundDataType *T)
+static void delete_hdf5CompoundDataType(coda_hdf5_compound_data_type *T)
 {
     int i;
 
-    delete_hashtable(T->hash_data);
+    hashtable_delete(T->hash_data);
     if (T->member_type != NULL)
     {
         for (i = 0; i < T->num_members; i++)
@@ -70,7 +70,7 @@ static void delete_hdf5CompoundDataType(coda_hdf5CompoundDataType *T)
         {
             if (T->member[i] != NULL)
             {
-                coda_hdf5_release_type((coda_Type *)T->member[i]);
+                coda_hdf5_release_type((coda_type *)T->member[i]);
             }
         }
         free(T->member);
@@ -79,22 +79,22 @@ static void delete_hdf5CompoundDataType(coda_hdf5CompoundDataType *T)
     free(T);
 }
 
-static void delete_hdf5Attribute(coda_hdf5Attribute *T)
+static void delete_hdf5Attribute(coda_hdf5_attribute *T)
 {
     if (T->base_type != NULL)
     {
-        coda_hdf5_release_type((coda_Type *)T->base_type);
+        coda_hdf5_release_type((coda_type *)T->base_type);
     }
     H5Sclose(T->dataspace_id);
     H5Aclose(T->attribute_id);
     free(T);
 }
 
-static void delete_hdf5AttributeRecord(coda_hdf5AttributeRecord *T)
+static void delete_hdf5AttributeRecord(coda_hdf5_attribute_record *T)
 {
     int i;
 
-    delete_hashtable(T->hash_data);
+    hashtable_delete(T->hash_data);
     if (T->attribute_name != NULL)
     {
         for (i = 0; i < T->num_attributes; i++)
@@ -120,7 +120,7 @@ static void delete_hdf5AttributeRecord(coda_hdf5AttributeRecord *T)
     free(T);
 }
 
-static void delete_hdf5Group(coda_hdf5Group *T)
+static void delete_hdf5Group(coda_hdf5_group *T)
 {
     hsize_t i;
 
@@ -128,7 +128,7 @@ static void delete_hdf5Group(coda_hdf5Group *T)
     {
         delete_hdf5AttributeRecord(T->attributes);
     }
-    delete_hashtable(T->hash_data);
+    hashtable_delete(T->hash_data);
     if (T->object_name != NULL)
     {
         for (i = 0; i < T->num_objects; i++)
@@ -146,7 +146,7 @@ static void delete_hdf5Group(coda_hdf5Group *T)
         {
             if (T->object[i] != NULL)
             {
-                coda_hdf5_release_type((coda_Type *)T->object[i]);
+                coda_hdf5_release_type((coda_type *)T->object[i]);
             }
         }
         free(T->object);
@@ -155,7 +155,7 @@ static void delete_hdf5Group(coda_hdf5Group *T)
     free(T);
 }
 
-static void delete_hdf5DataSet(coda_hdf5DataSet *T)
+static void delete_hdf5DataSet(coda_hdf5_dataset *T)
 {
     if (T->attributes != NULL)
     {
@@ -163,36 +163,36 @@ static void delete_hdf5DataSet(coda_hdf5DataSet *T)
     }
     if (T->base_type != NULL)
     {
-        coda_hdf5_release_type((coda_Type *)T->base_type);
+        coda_hdf5_release_type((coda_type *)T->base_type);
     }
     H5Sclose(T->dataspace_id);
     H5Dclose(T->dataset_id);
     free(T);
 }
 
-void coda_hdf5_release_type(coda_Type *T)
+void coda_hdf5_release_type(coda_type *T)
 {
     if (T != NULL)
     {
-        switch (((coda_hdf5Type *)T)->tag)
+        switch (((coda_hdf5_type *)T)->tag)
         {
             case tag_hdf5_basic_datatype:
-                delete_hdf5BasicDataType((coda_hdf5BasicDataType *)T);
+                delete_hdf5BasicDataType((coda_hdf5_basic_data_type *)T);
                 break;
             case tag_hdf5_compound_datatype:
-                delete_hdf5CompoundDataType((coda_hdf5CompoundDataType *)T);
+                delete_hdf5CompoundDataType((coda_hdf5_compound_data_type *)T);
                 break;
             case tag_hdf5_attribute:
-                delete_hdf5Attribute((coda_hdf5Attribute *)T);
+                delete_hdf5Attribute((coda_hdf5_attribute *)T);
                 break;
             case tag_hdf5_attribute_record:
-                delete_hdf5AttributeRecord((coda_hdf5AttributeRecord *)T);
+                delete_hdf5AttributeRecord((coda_hdf5_attribute_record *)T);
                 break;
             case tag_hdf5_group:
-                delete_hdf5Group((coda_hdf5Group *)T);
+                delete_hdf5Group((coda_hdf5_group *)T);
                 break;
             case tag_hdf5_dataset:
-                delete_hdf5DataSet((coda_hdf5DataSet *)T);
+                delete_hdf5DataSet((coda_hdf5_dataset *)T);
                 break;
             default:
                 assert(0);
@@ -201,22 +201,22 @@ void coda_hdf5_release_type(coda_Type *T)
     }
 }
 
-void coda_hdf5_release_dynamic_type(coda_DynamicType *T)
+void coda_hdf5_release_dynamic_type(coda_dynamic_type *T)
 {
-    coda_hdf5_release_type((coda_Type *)T);
+    coda_hdf5_release_type((coda_type *)T);
 }
 
-static int new_hdf5DataType(hid_t datatype_id, coda_hdf5DataType **type, int allow_vlen_data);
+static int new_hdf5DataType(hid_t datatype_id, coda_hdf5_data_type **type, int allow_vlen_data);
 
-static int new_hdf5BasicDataType(hid_t datatype_id, coda_hdf5DataType **type, int allow_vlen_data)
+static int new_hdf5BasicDataType(hid_t datatype_id, coda_hdf5_data_type **type, int allow_vlen_data)
 {
-    coda_hdf5BasicDataType *basic_type;
+    coda_hdf5_basic_data_type *basic_type;
 
-    basic_type = malloc(sizeof(coda_hdf5BasicDataType));
+    basic_type = malloc(sizeof(coda_hdf5_basic_data_type));
     if (basic_type == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_hdf5BasicDataType), __FILE__, __LINE__);
+                       (long)sizeof(coda_hdf5_basic_data_type), __FILE__, __LINE__);
         H5Tclose(datatype_id);
         return -1;
     }
@@ -341,23 +341,23 @@ static int new_hdf5BasicDataType(hid_t datatype_id, coda_hdf5DataType **type, in
             return 1;
     }
 
-    *type = (coda_hdf5DataType *)basic_type;
+    *type = (coda_hdf5_data_type *)basic_type;
 
     return 0;
 }
 
-static int new_hdf5CompoundDataType(hid_t datatype_id, coda_hdf5DataType **type)
+static int new_hdf5CompoundDataType(hid_t datatype_id, coda_hdf5_data_type **type)
 {
-    coda_hdf5CompoundDataType *compound_type;
+    coda_hdf5_compound_data_type *compound_type;
     int result;
     int index;
     int i;
 
-    compound_type = malloc(sizeof(coda_hdf5CompoundDataType));
+    compound_type = malloc(sizeof(coda_hdf5_compound_data_type));
     if (compound_type == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_hdf5CompoundDataType), __FILE__, __LINE__);
+                       (long)sizeof(coda_hdf5_compound_data_type), __FILE__, __LINE__);
         H5Tclose(datatype_id);
         return -1;
     }
@@ -372,7 +372,7 @@ static int new_hdf5CompoundDataType(hid_t datatype_id, coda_hdf5DataType **type)
     compound_type->member = NULL;
     compound_type->member_name = NULL;
     compound_type->member_type = NULL;
-    compound_type->hash_data = new_hashtable(0);
+    compound_type->hash_data = hashtable_new(0);
     if (compound_type->hash_data == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashdata) (%s:%u)", __FILE__,
@@ -387,11 +387,11 @@ static int new_hdf5CompoundDataType(hid_t datatype_id, coda_hdf5DataType **type)
         delete_hdf5CompoundDataType(compound_type);
         return -1;
     }
-    compound_type->member = malloc(compound_type->num_members * sizeof(coda_hdf5DataType *));
+    compound_type->member = malloc(compound_type->num_members * sizeof(coda_hdf5_data_type *));
     if (compound_type->member == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)compound_type->num_members * sizeof(coda_hdf5DataType *), __FILE__, __LINE__);
+                       (long)compound_type->num_members * sizeof(coda_hdf5_data_type *), __FILE__, __LINE__);
         delete_hdf5CompoundDataType(compound_type);
         return -1;
     }
@@ -495,12 +495,12 @@ static int new_hdf5CompoundDataType(hid_t datatype_id, coda_hdf5DataType **type)
     /* update num_members with the number of members that were accepted */
     compound_type->num_members = index;
 
-    *type = (coda_hdf5DataType *)compound_type;
+    *type = (coda_hdf5_data_type *)compound_type;
 
     return 0;
 }
 
-static int new_hdf5DataType(hid_t datatype_id, coda_hdf5DataType **type, int allow_vlen_data)
+static int new_hdf5DataType(hid_t datatype_id, coda_hdf5_data_type **type, int allow_vlen_data)
 {
     if (datatype_id < 0)
     {
@@ -533,16 +533,16 @@ static int new_hdf5DataType(hid_t datatype_id, coda_hdf5DataType **type, int all
     return 1;
 }
 
-static int new_hdf5Attribute(hid_t attr_id, coda_hdf5Attribute **type)
+static int new_hdf5Attribute(hid_t attr_id, coda_hdf5_attribute **type)
 {
-    coda_hdf5Attribute *attr;
+    coda_hdf5_attribute *attr;
     int result;
 
-    attr = malloc(sizeof(coda_hdf5Attribute));
+    attr = malloc(sizeof(coda_hdf5_attribute));
     if (attr == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_hdf5Attribute), __FILE__, __LINE__);
+                       (long)sizeof(coda_hdf5_attribute), __FILE__, __LINE__);
         H5Aclose(attr_id);
         return -1;
     }
@@ -612,18 +612,18 @@ static int new_hdf5Attribute(hid_t attr_id, coda_hdf5Attribute **type)
     return 0;
 }
 
-static coda_hdf5AttributeRecord *new_hdf5AttributeRecord(hid_t obj_id)
+static coda_hdf5_attribute_record *new_hdf5AttributeRecord(hid_t obj_id)
 {
-    coda_hdf5AttributeRecord *attrs;
+    coda_hdf5_attribute_record *attrs;
     int result;
     int index;
     int i;
 
-    attrs = malloc(sizeof(coda_hdf5AttributeRecord));
+    attrs = malloc(sizeof(coda_hdf5_attribute_record));
     if (attrs == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_hdf5AttributeRecord), __FILE__, __LINE__);
+                       (long)sizeof(coda_hdf5_attribute_record), __FILE__, __LINE__);
         return NULL;
     }
     attrs->retain_count = 0;
@@ -636,7 +636,7 @@ static coda_hdf5AttributeRecord *new_hdf5AttributeRecord(hid_t obj_id)
     attrs->num_attributes = 0;
     attrs->attribute = NULL;
     attrs->attribute_name = NULL;
-    attrs->hash_data = new_hashtable(0);
+    attrs->hash_data = hashtable_new(0);
     if (attrs->hash_data == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashdata) (%s:%u)", __FILE__,
@@ -652,11 +652,11 @@ static coda_hdf5AttributeRecord *new_hdf5AttributeRecord(hid_t obj_id)
         delete_hdf5AttributeRecord(attrs);
         return NULL;
     }
-    attrs->attribute = malloc(attrs->num_attributes * sizeof(coda_hdf5Attribute *));
+    attrs->attribute = malloc(attrs->num_attributes * sizeof(coda_hdf5_attribute *));
     if (attrs->attribute == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)attrs->num_attributes * sizeof(coda_hdf5Attribute *), __FILE__, __LINE__);
+                       (long)attrs->num_attributes * sizeof(coda_hdf5_attribute *), __FILE__, __LINE__);
         delete_hdf5AttributeRecord(attrs);
         return NULL;
     }
@@ -756,7 +756,7 @@ static coda_hdf5AttributeRecord *new_hdf5AttributeRecord(hid_t obj_id)
 }
 
 /* returns: -1 = error, 0 = ok, 1 = ignore object ('type' is not set) */
-static int create_tree(coda_hdf5ProductFile *pf, hid_t loc_id, const char *path, coda_hdf5Object **object)
+static int create_tree(coda_hdf5_product *product, hid_t loc_id, const char *path, coda_hdf5_object **object)
 {
     H5G_stat_t statbuf;
     herr_t status;
@@ -770,11 +770,11 @@ static int create_tree(coda_hdf5ProductFile *pf, hid_t loc_id, const char *path,
     }
 
     /* check if the object does not already exist */
-    for (i = 0; i < pf->num_objects; i++)
+    for (i = 0; i < product->num_objects; i++)
     {
-        coda_hdf5Object *obj;
+        coda_hdf5_object *obj;
 
-        obj = pf->object[i];
+        obj = product->object[i];
         if (obj->fileno[0] == statbuf.fileno[0] && obj->fileno[1] == statbuf.fileno[1] &&
             obj->objno[0] == statbuf.objno[0] && obj->objno[1] == statbuf.objno[1])
         {
@@ -786,13 +786,13 @@ static int create_tree(coda_hdf5ProductFile *pf, hid_t loc_id, const char *path,
     {
         case H5G_GROUP:
             {
-                coda_hdf5Group *group;
+                coda_hdf5_group *group;
 
-                group = (coda_hdf5Group *)malloc(sizeof(coda_hdf5Group));
+                group = (coda_hdf5_group *)malloc(sizeof(coda_hdf5_group));
                 if (group == NULL)
                 {
                     coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                                   (long)sizeof(coda_hdf5Group), __FILE__, __LINE__);
+                                   (long)sizeof(coda_hdf5_group), __FILE__, __LINE__);
                     return -1;
                 }
                 group->retain_count = 0;
@@ -813,7 +813,7 @@ static int create_tree(coda_hdf5ProductFile *pf, hid_t loc_id, const char *path,
                     delete_hdf5Group(group);
                     return -1;
                 }
-                group->hash_data = new_hashtable(0);
+                group->hash_data = hashtable_new(0);
                 if (group->hash_data == NULL)
                 {
                     coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashdata) (%s:%u)",
@@ -830,11 +830,11 @@ static int create_tree(coda_hdf5ProductFile *pf, hid_t loc_id, const char *path,
                     return -1;
                 }
 
-                group->object = malloc((size_t)group->num_objects * sizeof(coda_hdf5Object *));
+                group->object = malloc((size_t)group->num_objects * sizeof(coda_hdf5_object *));
                 if (group->object == NULL)
                 {
                     coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                                   (long)group->num_objects * sizeof(coda_hdf5Object *), __FILE__, __LINE__);
+                                   (long)group->num_objects * sizeof(coda_hdf5_object *), __FILE__, __LINE__);
                     delete_hdf5Group(group);
                     return -1;
                 }
@@ -862,18 +862,18 @@ static int create_tree(coda_hdf5ProductFile *pf, hid_t loc_id, const char *path,
                     return -1;
                 }
 
-                *object = (coda_hdf5Object *)group;
+                *object = (coda_hdf5_object *)group;
             }
             break;
         case H5G_DATASET:
             {
-                coda_hdf5DataSet *dataset;
+                coda_hdf5_dataset *dataset;
 
-                dataset = (coda_hdf5DataSet *)malloc(sizeof(coda_hdf5DataSet));
+                dataset = (coda_hdf5_dataset *)malloc(sizeof(coda_hdf5_dataset));
                 if (dataset == NULL)
                 {
                     coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                                   (long)sizeof(coda_hdf5DataSet), __FILE__, __LINE__);
+                                   (long)sizeof(coda_hdf5_dataset), __FILE__, __LINE__);
                     return -1;
                 }
                 dataset->retain_count = 0;
@@ -952,7 +952,7 @@ static int create_tree(coda_hdf5ProductFile *pf, hid_t loc_id, const char *path,
                     return -1;
                 }
 
-                *object = (coda_hdf5Object *)dataset;
+                *object = (coda_hdf5_object *)dataset;
             }
             break;
         case H5G_LINK:
@@ -968,32 +968,32 @@ static int create_tree(coda_hdf5ProductFile *pf, hid_t loc_id, const char *path,
     (*object)->objno[1] = statbuf.objno[1];
 
     /* add object to the list of hdf5 objects */
-    if (pf->num_objects % BLOCK_SIZE == 0)
+    if (product->num_objects % BLOCK_SIZE == 0)
     {
-        coda_hdf5Object **objects;
+        coda_hdf5_object **objects;
 
-        objects = realloc(pf->object, (size_t)(pf->num_objects + BLOCK_SIZE) * sizeof(coda_hdf5Object *));
+        objects = realloc(product->object, (size_t)(product->num_objects + BLOCK_SIZE) * sizeof(coda_hdf5_object *));
         if (objects == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           (long)(pf->num_objects + BLOCK_SIZE) * sizeof(coda_hdf5Object *), __FILE__, __LINE__);
+                           (long)(product->num_objects + BLOCK_SIZE) * sizeof(coda_hdf5_object *), __FILE__, __LINE__);
             return -1;
         }
-        pf->object = objects;
-        for (i = pf->num_objects; i < pf->num_objects + BLOCK_SIZE; i++)
+        product->object = objects;
+        for (i = product->num_objects; i < product->num_objects + BLOCK_SIZE; i++)
         {
-            pf->object[i] = NULL;
+            product->object[i] = NULL;
         }
     }
-    pf->num_objects++;
-    pf->object[pf->num_objects - 1] = *object;
+    product->num_objects++;
+    product->object[product->num_objects - 1] = *object;
 
     if (statbuf.type == H5G_GROUP)
     {
-        coda_hdf5Group *group;
+        coda_hdf5_group *group;
         hsize_t index;
 
-        group = (coda_hdf5Group *)*object;
+        group = (coda_hdf5_group *)*object;
 
         /* initialize group members */
         index = 0;
@@ -1031,7 +1031,7 @@ static int create_tree(coda_hdf5ProductFile *pf, hid_t loc_id, const char *path,
                 return -1;
             }
 
-            result = create_tree(pf, group->group_id, name, &group->object[index]);
+            result = create_tree(product, group->group_id, name, &group->object[index]);
             if (result == -1)
             {
                 free(name);
@@ -1065,17 +1065,17 @@ static int create_tree(coda_hdf5ProductFile *pf, hid_t loc_id, const char *path,
     return 0;
 }
 
-coda_hdf5AttributeRecord *coda_hdf5_empty_attribute_record()
+coda_hdf5_attribute_record *coda_hdf5_empty_attribute_record()
 {
     if (empty_attributes_singleton == NULL)
     {
-        coda_hdf5AttributeRecord *T;
+        coda_hdf5_attribute_record *T;
 
-        T = (coda_hdf5AttributeRecord *)malloc(sizeof(coda_hdf5AttributeRecord));
+        T = (coda_hdf5_attribute_record *)malloc(sizeof(coda_hdf5_attribute_record));
         if (T == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           (long)sizeof(coda_hdf5AttributeRecord), __FILE__, __LINE__);
+                           (long)sizeof(coda_hdf5_attribute_record), __FILE__, __LINE__);
             return NULL;
         }
         T->retain_count = 0;
@@ -1088,7 +1088,7 @@ coda_hdf5AttributeRecord *coda_hdf5_empty_attribute_record()
         T->num_attributes = 0;
         T->attribute = NULL;
         T->attribute_name = NULL;
-        T->hash_data = new_hashtable(0);
+        T->hash_data = hashtable_new(0);
         if (T->hash_data == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashdata) (%s:%u)", __FILE__,
@@ -1119,16 +1119,16 @@ void coda_hdf5_done()
     }
 }
 
-int coda_hdf5_open(const char *filename, int64_t file_size, coda_ProductFile **pf)
+int coda_hdf5_open(const char *filename, int64_t file_size, coda_product **product)
 {
-    coda_hdf5ProductFile *product_file;
+    coda_hdf5_product *product_file;
     int result;
 
-    product_file = (coda_hdf5ProductFile *)malloc(sizeof(coda_hdf5ProductFile));
+    product_file = (coda_hdf5_product *)malloc(sizeof(coda_hdf5_product));
     if (product_file == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       sizeof(coda_hdf5ProductFile), __FILE__, __LINE__);
+                       sizeof(coda_hdf5_product), __FILE__, __LINE__);
         return -1;
     }
     product_file->filename = NULL;
@@ -1147,7 +1147,7 @@ int coda_hdf5_open(const char *filename, int64_t file_size, coda_ProductFile **p
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate filename string) (%s:%u)",
                        __FILE__, __LINE__);
-        coda_hdf5_close((coda_ProductFile *)product_file);
+        coda_hdf5_close((coda_product *)product_file);
         return -1;
     }
 
@@ -1155,27 +1155,27 @@ int coda_hdf5_open(const char *filename, int64_t file_size, coda_ProductFile **p
     if (product_file->file_id < 0)
     {
         coda_set_error(CODA_ERROR_HDF5, NULL);
-        coda_hdf5_close((coda_ProductFile *)product_file);
+        coda_hdf5_close((coda_product *)product_file);
         return -1;
     }
 
-    result = create_tree(product_file, product_file->file_id, ".", (coda_hdf5Object **)&product_file->root_type);
+    result = create_tree(product_file, product_file->file_id, ".", (coda_hdf5_object **)&product_file->root_type);
     if (result == -1)
     {
-        coda_hdf5_close((coda_ProductFile *)product_file);
+        coda_hdf5_close((coda_product *)product_file);
         return -1;
     }
     /* the root type is a vgroup and it should not be possible to ignore the root vgroup */
     assert(result != 1);
 
-    *pf = (coda_ProductFile *)product_file;
+    *product = (coda_product *)product_file;
 
     return 0;
 }
 
-int coda_hdf5_close(coda_ProductFile *pf)
+int coda_hdf5_close(coda_product *product)
 {
-    coda_hdf5ProductFile *product_file = (coda_hdf5ProductFile *)pf;
+    coda_hdf5_product *product_file = (coda_hdf5_product *)product;
 
     if (product_file->filename != NULL)
     {
@@ -1184,7 +1184,7 @@ int coda_hdf5_close(coda_ProductFile *pf)
 
     if (product_file->root_type != NULL)
     {
-        coda_hdf5_release_type((coda_Type *)product_file->root_type);
+        coda_hdf5_release_type((coda_type *)product_file->root_type);
     }
     if (product_file->object != NULL)
     {
@@ -1204,9 +1204,9 @@ int coda_hdf5_close(coda_ProductFile *pf)
     return 0;
 }
 
-int coda_hdf5_get_type_for_dynamic_type(coda_DynamicType *dynamic_type, coda_Type **type)
+int coda_hdf5_get_type_for_dynamic_type(coda_dynamic_type *dynamic_type, coda_type **type)
 {
-    *type = (coda_Type *)dynamic_type;
+    *type = (coda_type *)dynamic_type;
     return 0;
 }
 

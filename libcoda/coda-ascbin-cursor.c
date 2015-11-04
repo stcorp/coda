@@ -31,38 +31,38 @@
 #include "coda-ascbin-definition.h"
 
 /* replace current type if necessary: use 'no-data' type for missing fields */
-static int eval_current_type(coda_Cursor *cursor)
+static int eval_current_type(coda_cursor *cursor)
 {
     /* check whether this is a missing field */
     if (cursor->n > 1 && (cursor->stack[cursor->n - 2].type->format == coda_format_ascii ||
                           cursor->stack[cursor->n - 2].type->format == coda_format_binary))
     {
-        switch (((coda_ascbinType *)cursor->stack[cursor->n - 2].type)->tag)
+        switch (((coda_ascbin_type *)cursor->stack[cursor->n - 2].type)->tag)
         {
             case tag_ascbin_record:
                 {
-                    coda_ascbinField *field;
+                    coda_ascbin_field *field;
                     long index;
 
                     index = cursor->stack[cursor->n - 1].index;
                     /* if index == -1 we are pointing to the attributes of the record */
                     if (index != -1)
                     {
-                        field = ((coda_ascbinRecord *)cursor->stack[cursor->n - 2].type)->field[index];
+                        field = ((coda_ascbin_record *)cursor->stack[cursor->n - 2].type)->field[index];
                         if (field->available_expr != NULL)
                         {
-                            coda_Cursor record_cursor;
+                            coda_cursor record_cursor;
                             int available;
 
                             record_cursor = *cursor;
                             record_cursor.n--;
-                            if (coda_expr_eval_bool(field->available_expr, &record_cursor, &available) != 0)
+                            if (coda_expression_eval_bool(field->available_expr, &record_cursor, &available) != 0)
                             {
                                 return -1;
                             }
                             if (!available)
                             {
-                                cursor->stack[cursor->n - 1].type = coda_bin_no_data();
+                                cursor->stack[cursor->n - 1].type = coda_bin_no_data_singleton();
                                 return 0;
                             }
                         }
@@ -71,7 +71,7 @@ static int eval_current_type(coda_Cursor *cursor)
                 break;
             case tag_ascbin_union:
                 {
-                    coda_Cursor union_cursor;
+                    coda_cursor union_cursor;
                     long available_index;
                     long index;
 
@@ -88,7 +88,7 @@ static int eval_current_type(coda_Cursor *cursor)
                         }
                         if (index != available_index)
                         {
-                            cursor->stack[cursor->n - 1].type = coda_bin_no_data();
+                            cursor->stack[cursor->n - 1].type = coda_bin_no_data_singleton();
                         }
                     }
                 }
@@ -109,16 +109,16 @@ static int eval_current_type(coda_Cursor *cursor)
 }
 
 /* cursor should point to record for this function */
-static int get_relative_field_bit_offset_by_index(const coda_Cursor *cursor, long field_index, int64_t *rel_bit_offset)
+static int get_relative_field_bit_offset_by_index(const coda_cursor *cursor, long field_index, int64_t *rel_bit_offset)
 {
-    coda_ascbinField *field;
-    coda_ascbinRecord *record;
-    coda_Cursor field_cursor;
+    coda_ascbin_field *field;
+    coda_ascbin_record *record;
+    coda_cursor field_cursor;
     int64_t prev_bit_offset;
     long index;
     long i;
 
-    record = (coda_ascbinRecord *)cursor->stack[cursor->n - 1].type;
+    record = (coda_ascbin_record *)cursor->stack[cursor->n - 1].type;
     field = record->field[field_index];
 
     if (field->bit_offset >= 0)
@@ -134,7 +134,7 @@ static int get_relative_field_bit_offset_by_index(const coda_Cursor *cursor, lon
         {
             int available;
 
-            if (coda_expr_eval_bool(field->available_expr, cursor, &available) != 0)
+            if (coda_expression_eval_bool(field->available_expr, cursor, &available) != 0)
             {
                 return -1;
             }
@@ -155,7 +155,7 @@ static int get_relative_field_bit_offset_by_index(const coda_Cursor *cursor, lon
             }
         }
         /* determine offset using expr */
-        return coda_expr_eval_integer(field->bit_offset_expr, cursor, rel_bit_offset);
+        return coda_expression_eval_integer(field->bit_offset_expr, cursor, rel_bit_offset);
     }
 
     assert(field_index != 0);   /* the first field should either have a fixed bit offset or a bit_offset_expr */
@@ -182,7 +182,7 @@ static int get_relative_field_bit_offset_by_index(const coda_Cursor *cursor, lon
     {
         int64_t bit_size;
 
-        field_cursor.stack[field_cursor.n - 1].type = (coda_DynamicType *)record->field[i]->type;
+        field_cursor.stack[field_cursor.n - 1].type = (coda_dynamic_type *)record->field[i]->type;
         field_cursor.stack[field_cursor.n - 1].index = i;
         if (eval_current_type(&field_cursor) != 0)
         {
@@ -201,16 +201,16 @@ static int get_relative_field_bit_offset_by_index(const coda_Cursor *cursor, lon
 }
 
 /* cursor should point to record field for this function */
-static int get_next_relative_field_bit_offset(const coda_Cursor *cursor, int64_t *rel_bit_offset,
+static int get_next_relative_field_bit_offset(const coda_cursor *cursor, int64_t *rel_bit_offset,
                                               int64_t *current_field_size)
 {
-    coda_ascbinField *field;
-    coda_ascbinRecord *record;
+    coda_ascbin_field *field;
+    coda_ascbin_record *record;
     int64_t prev_bit_offset;
     int64_t bit_size;
     int field_index;
 
-    record = (coda_ascbinRecord *)cursor->stack[cursor->n - 2].type;
+    record = (coda_ascbin_record *)cursor->stack[cursor->n - 2].type;
     field_index = cursor->stack[cursor->n - 1].index + 1;
     assert(field_index < record->num_fields);
     field = record->field[field_index];
@@ -230,7 +230,7 @@ static int get_next_relative_field_bit_offset(const coda_Cursor *cursor, int64_t
 
     if (field->bit_offset_expr != NULL)
     {
-        coda_Cursor record_cursor;
+        coda_cursor record_cursor;
 
         record_cursor = *cursor;
         record_cursor.n--;
@@ -243,7 +243,7 @@ static int get_next_relative_field_bit_offset(const coda_Cursor *cursor, int64_t
         {
             int available;
 
-            if (coda_expr_eval_bool(field->available_expr, &record_cursor, &available) != 0)
+            if (coda_expression_eval_bool(field->available_expr, &record_cursor, &available) != 0)
             {
                 return -1;
             }
@@ -256,7 +256,7 @@ static int get_next_relative_field_bit_offset(const coda_Cursor *cursor, int64_t
             }
         }
         /* determine offset using expr */
-        return coda_expr_eval_integer(field->bit_offset_expr, &record_cursor, rel_bit_offset);
+        return coda_expression_eval_integer(field->bit_offset_expr, &record_cursor, rel_bit_offset);
     }
 
     /* determine offset by using bit_offset of current field and adding its bit size */
@@ -273,30 +273,30 @@ static int get_next_relative_field_bit_offset(const coda_Cursor *cursor, int64_t
     return 0;
 }
 
-int coda_ascbin_cursor_set_product(coda_Cursor *cursor, coda_ProductFile *pf)
+int coda_ascbin_cursor_set_product(coda_cursor *cursor, coda_product *product)
 {
-    cursor->pf = pf;
+    cursor->product = product;
     cursor->n = 1;
-    cursor->stack[0].type = pf->root_type;
+    cursor->stack[0].type = product->root_type;
     cursor->stack[0].index = -1;        /* there is no index for the root of the product */
     cursor->stack[0].bit_offset = 0;
 
     return eval_current_type(cursor);
 }
 
-int coda_ascbin_cursor_goto_record_field_by_index(coda_Cursor *cursor, long index)
+int coda_ascbin_cursor_goto_record_field_by_index(coda_cursor *cursor, long index)
 {
-    coda_ascbinRecord *record;
+    coda_ascbin_record *record;
     int64_t rel_bit_offset;
 
-    if (((coda_ascbinType *)cursor->stack[cursor->n - 1].type)->tag == tag_ascbin_union)
+    if (((coda_ascbin_type *)cursor->stack[cursor->n - 1].type)->tag == tag_ascbin_union)
     {
         /* also allow union traversal with record functions */
         return coda_ascbin_cursor_goto_union_field_by_index(cursor, index);
     }
 
-    assert(((coda_ascbinType *)cursor->stack[cursor->n - 1].type)->tag == tag_ascbin_record);
-    record = (coda_ascbinRecord *)cursor->stack[cursor->n - 1].type;
+    assert(((coda_ascbin_type *)cursor->stack[cursor->n - 1].type)->tag == tag_ascbin_record);
+    record = (coda_ascbin_record *)cursor->stack[cursor->n - 1].type;
 
     if (index < 0 || index >= record->num_fields)
     {
@@ -311,7 +311,7 @@ int coda_ascbin_cursor_goto_record_field_by_index(coda_Cursor *cursor, long inde
     }
 
     cursor->n++;
-    cursor->stack[cursor->n - 1].type = (coda_DynamicType *)record->field[index]->type;
+    cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)record->field[index]->type;
     cursor->stack[cursor->n - 1].index = index;
     cursor->stack[cursor->n - 1].bit_offset = cursor->stack[cursor->n - 2].bit_offset + rel_bit_offset;
     if (eval_current_type(cursor) != 0)
@@ -322,20 +322,20 @@ int coda_ascbin_cursor_goto_record_field_by_index(coda_Cursor *cursor, long inde
     return 0;
 }
 
-int coda_ascbin_cursor_goto_next_record_field(coda_Cursor *cursor)
+int coda_ascbin_cursor_goto_next_record_field(coda_cursor *cursor)
 {
-    coda_ascbinRecord *record;
+    coda_ascbin_record *record;
     int64_t rel_bit_offset;
     long index;
 
-    if (((coda_ascbinType *)cursor->stack[cursor->n - 2].type)->tag == tag_ascbin_union)
+    if (((coda_ascbin_type *)cursor->stack[cursor->n - 2].type)->tag == tag_ascbin_union)
     {
         /* also allow union traversal with record functions */
         return coda_ascbin_cursor_goto_next_union_field(cursor);
     }
 
-    assert(((coda_ascbinType *)cursor->stack[cursor->n - 2].type)->tag == tag_ascbin_record);
-    record = (coda_ascbinRecord *)cursor->stack[cursor->n - 2].type;
+    assert(((coda_ascbin_type *)cursor->stack[cursor->n - 2].type)->tag == tag_ascbin_record);
+    record = (coda_ascbin_record *)cursor->stack[cursor->n - 2].type;
 
     index = cursor->stack[cursor->n - 1].index + 1;
     if (index < 0 || index >= record->num_fields)
@@ -350,7 +350,7 @@ int coda_ascbin_cursor_goto_next_record_field(coda_Cursor *cursor)
         return -1;
     }
 
-    cursor->stack[cursor->n - 1].type = (coda_DynamicType *)record->field[index]->type;
+    cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)record->field[index]->type;
     cursor->stack[cursor->n - 1].index = index;
     cursor->stack[cursor->n - 1].bit_offset = cursor->stack[cursor->n - 2].bit_offset + rel_bit_offset;
     if (eval_current_type(cursor) != 0)
@@ -361,11 +361,11 @@ int coda_ascbin_cursor_goto_next_record_field(coda_Cursor *cursor)
     return 0;
 }
 
-int coda_ascbin_cursor_goto_available_union_field(coda_Cursor *cursor)
+int coda_ascbin_cursor_goto_available_union_field(coda_cursor *cursor)
 {
     long index;
 
-    if (((coda_ascbinType *)cursor->stack[cursor->n - 1].type)->tag != tag_ascbin_union)
+    if (((coda_ascbin_type *)cursor->stack[cursor->n - 1].type)->tag != tag_ascbin_union)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to a union");
         return -1;
@@ -378,12 +378,12 @@ int coda_ascbin_cursor_goto_available_union_field(coda_Cursor *cursor)
     return coda_ascbin_cursor_goto_union_field_by_index(cursor, index);
 }
 
-int coda_ascbin_cursor_goto_union_field_by_index(coda_Cursor *cursor, long index)
+int coda_ascbin_cursor_goto_union_field_by_index(coda_cursor *cursor, long index)
 {
-    coda_ascbinUnion *dd_union;
+    coda_ascbin_union *dd_union;
 
-    assert(((coda_ascbinType *)cursor->stack[cursor->n - 1].type)->tag == tag_ascbin_union);
-    dd_union = (coda_ascbinUnion *)cursor->stack[cursor->n - 1].type;
+    assert(((coda_ascbin_type *)cursor->stack[cursor->n - 1].type)->tag == tag_ascbin_union);
+    dd_union = (coda_ascbin_union *)cursor->stack[cursor->n - 1].type;
 
     if (index < 0 || index >= dd_union->num_fields)
     {
@@ -393,7 +393,7 @@ int coda_ascbin_cursor_goto_union_field_by_index(coda_Cursor *cursor, long index
     }
 
     cursor->n++;
-    cursor->stack[cursor->n - 1].type = (coda_DynamicType *)dd_union->field[index]->type;
+    cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)dd_union->field[index]->type;
     cursor->stack[cursor->n - 1].index = index;
     cursor->stack[cursor->n - 1].bit_offset = cursor->stack[cursor->n - 2].bit_offset;
     if (eval_current_type(cursor) != 0)
@@ -404,13 +404,13 @@ int coda_ascbin_cursor_goto_union_field_by_index(coda_Cursor *cursor, long index
     return 0;
 }
 
-int coda_ascbin_cursor_goto_next_union_field(coda_Cursor *cursor)
+int coda_ascbin_cursor_goto_next_union_field(coda_cursor *cursor)
 {
-    coda_ascbinUnion *dd_union;
+    coda_ascbin_union *dd_union;
     long index;
 
-    assert(((coda_ascbinType *)cursor->stack[cursor->n - 2].type)->tag == tag_ascbin_union);
-    dd_union = (coda_ascbinUnion *)cursor->stack[cursor->n - 2].type;
+    assert(((coda_ascbin_type *)cursor->stack[cursor->n - 2].type)->tag == tag_ascbin_union);
+    dd_union = (coda_ascbin_union *)cursor->stack[cursor->n - 2].type;
 
     index = cursor->stack[cursor->n - 1].index + 1;
     if (index < 0 || index >= dd_union->num_fields)
@@ -420,7 +420,7 @@ int coda_ascbin_cursor_goto_next_union_field(coda_Cursor *cursor)
         return -1;
     }
 
-    cursor->stack[cursor->n - 1].type = (coda_DynamicType *)dd_union->field[index]->type;
+    cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)dd_union->field[index]->type;
     cursor->stack[cursor->n - 1].index = index;
     if (eval_current_type(cursor) != 0)
     {
@@ -430,14 +430,14 @@ int coda_ascbin_cursor_goto_next_union_field(coda_Cursor *cursor)
     return 0;
 }
 
-int coda_ascbin_cursor_goto_array_element(coda_Cursor *cursor, int num_subs, const long subs[])
+int coda_ascbin_cursor_goto_array_element(coda_cursor *cursor, int num_subs, const long subs[])
 {
-    coda_ascbinArray *array;
+    coda_ascbin_array *array;
     long offset_elements;
     long i;
 
-    assert(((coda_ascbinType *)cursor->stack[cursor->n - 1].type)->tag = tag_ascbin_array);
-    array = (coda_ascbinArray *)cursor->stack[cursor->n - 1].type;
+    assert(((coda_ascbin_type *)cursor->stack[cursor->n - 1].type)->tag = tag_ascbin_array);
+    array = (coda_ascbin_array *)cursor->stack[cursor->n - 1].type;
 
     /* check the number of dimensions */
     if (num_subs != array->num_dims)
@@ -458,7 +458,7 @@ int coda_ascbin_cursor_goto_array_element(coda_Cursor *cursor, int num_subs, con
         {
             int64_t var_dim;
 
-            if (coda_expr_eval_integer(array->dim_expr[i], cursor, &var_dim) != 0)
+            if (coda_expression_eval_integer(array->dim_expr[i], cursor, &var_dim) != 0)
             {
                 return -1;
             }
@@ -496,7 +496,7 @@ int coda_ascbin_cursor_goto_array_element(coda_Cursor *cursor, int num_subs, con
         {
             int64_t bit_size;
 
-            cursor->stack[cursor->n - 1].type = (coda_DynamicType *)array->base_type;
+            cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)array->base_type;
             cursor->stack[cursor->n - 1].index = i;
             if (eval_current_type(cursor) != 0)
             {
@@ -510,7 +510,7 @@ int coda_ascbin_cursor_goto_array_element(coda_Cursor *cursor, int num_subs, con
             cursor->stack[cursor->n - 1].bit_offset += bit_size;
         }
     }
-    cursor->stack[cursor->n - 1].type = (coda_DynamicType *)array->base_type;
+    cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)array->base_type;
     cursor->stack[cursor->n - 1].index = offset_elements;
     if (eval_current_type(cursor) != 0)
     {
@@ -520,13 +520,13 @@ int coda_ascbin_cursor_goto_array_element(coda_Cursor *cursor, int num_subs, con
     return 0;
 }
 
-int coda_ascbin_cursor_goto_array_element_by_index(coda_Cursor *cursor, long index)
+int coda_ascbin_cursor_goto_array_element_by_index(coda_cursor *cursor, long index)
 {
-    coda_ascbinArray *array;
+    coda_ascbin_array *array;
     long i;
 
-    assert(((coda_ascbinType *)cursor->stack[cursor->n - 1].type)->tag = tag_ascbin_array);
-    array = (coda_ascbinArray *)cursor->stack[cursor->n - 1].type;
+    assert(((coda_ascbin_type *)cursor->stack[cursor->n - 1].type)->tag = tag_ascbin_array);
+    array = (coda_ascbin_array *)cursor->stack[cursor->n - 1].type;
 
     /* check the range for index */
     if (coda_option_perform_boundary_checks)
@@ -559,7 +559,7 @@ int coda_ascbin_cursor_goto_array_element_by_index(coda_Cursor *cursor, long ind
         {
             int64_t bit_size;
 
-            cursor->stack[cursor->n - 1].type = (coda_DynamicType *)array->base_type;
+            cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)array->base_type;
             cursor->stack[cursor->n - 1].index = i;
             if (eval_current_type(cursor) != 0)
             {
@@ -573,7 +573,7 @@ int coda_ascbin_cursor_goto_array_element_by_index(coda_Cursor *cursor, long ind
             cursor->stack[cursor->n - 1].bit_offset += bit_size;
         }
     }
-    cursor->stack[cursor->n - 1].type = (coda_DynamicType *)array->base_type;
+    cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)array->base_type;
     cursor->stack[cursor->n - 1].index = index;
     if (eval_current_type(cursor) != 0)
     {
@@ -583,14 +583,14 @@ int coda_ascbin_cursor_goto_array_element_by_index(coda_Cursor *cursor, long ind
     return 0;
 }
 
-int coda_ascbin_cursor_goto_next_array_element(coda_Cursor *cursor)
+int coda_ascbin_cursor_goto_next_array_element(coda_cursor *cursor)
 {
-    coda_ascbinArray *array;
+    coda_ascbin_array *array;
     int64_t bit_size;
     long index;
 
-    assert(((coda_ascbinType *)cursor->stack[cursor->n - 2].type)->tag = tag_ascbin_array);
-    array = (coda_ascbinArray *)cursor->stack[cursor->n - 2].type;
+    assert(((coda_ascbin_type *)cursor->stack[cursor->n - 2].type)->tag = tag_ascbin_array);
+    array = (coda_ascbin_array *)cursor->stack[cursor->n - 2].type;
 
     index = cursor->stack[cursor->n - 1].index + 1;
 
@@ -618,7 +618,7 @@ int coda_ascbin_cursor_goto_next_array_element(coda_Cursor *cursor)
     {
         return -1;
     }
-    cursor->stack[cursor->n - 1].type = (coda_DynamicType *)array->base_type;
+    cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)array->base_type;
     cursor->stack[cursor->n - 1].index = index;
     cursor->stack[cursor->n - 1].bit_offset += bit_size;
     if (eval_current_type(cursor) != 0)
@@ -629,7 +629,7 @@ int coda_ascbin_cursor_goto_next_array_element(coda_Cursor *cursor)
     return 0;
 }
 
-int coda_ascbin_cursor_goto_attributes(coda_Cursor *cursor)
+int coda_ascbin_cursor_goto_attributes(coda_cursor *cursor)
 {
     cursor->n++;
     cursor->stack[cursor->n - 1].type = coda_ascbin_empty_record();
@@ -640,24 +640,24 @@ int coda_ascbin_cursor_goto_attributes(coda_Cursor *cursor)
     return eval_current_type(cursor);
 }
 
-int coda_ascbin_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size)
+int coda_ascbin_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size)
 {
-    if (((coda_ascbinType *)cursor->stack[cursor->n - 1].type)->bit_size >= 0)
+    if (((coda_ascbin_type *)cursor->stack[cursor->n - 1].type)->bit_size >= 0)
     {
-        *bit_size = ((coda_ascbinType *)cursor->stack[cursor->n - 1].type)->bit_size;
+        *bit_size = ((coda_ascbin_type *)cursor->stack[cursor->n - 1].type)->bit_size;
     }
     else
     {
-        switch (((coda_ascbinType *)cursor->stack[cursor->n - 1].type)->tag)
+        switch (((coda_ascbin_type *)cursor->stack[cursor->n - 1].type)->tag)
         {
             case tag_ascbin_record:
                 {
-                    coda_ascbinRecord *record;
+                    coda_ascbin_record *record;
 
-                    record = (coda_ascbinRecord *)cursor->stack[cursor->n - 1].type;
+                    record = (coda_ascbin_record *)cursor->stack[cursor->n - 1].type;
                     if (coda_option_use_fast_size_expressions && record->fast_size_expr != NULL)
                     {
-                        if (coda_expr_eval_integer(record->fast_size_expr, cursor, bit_size) != 0)
+                        if (coda_expression_eval_integer(record->fast_size_expr, cursor, bit_size) != 0)
                         {
                             return -1;
                         }
@@ -669,7 +669,7 @@ int coda_ascbin_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size
                         record_bit_size = 0;
                         if (record->num_fields > 0)
                         {
-                            coda_Cursor field_cursor;
+                            coda_cursor field_cursor;
                             long i;
 
                             field_cursor = *cursor;
@@ -702,7 +702,7 @@ int coda_ascbin_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size
                                 if (i < record->num_fields - 1)
                                 {
                                     field_cursor.stack[field_cursor.n - 1].type =
-                                        (coda_DynamicType *)record->field[i + 1]->type;
+                                        (coda_dynamic_type *)record->field[i + 1]->type;
                                     field_cursor.stack[field_cursor.n - 1].index = i + 1;
                                     field_cursor.stack[field_cursor.n - 1].bit_offset =
                                         cursor->stack[cursor->n - 1].bit_offset + rel_bit_offset;
@@ -719,19 +719,19 @@ int coda_ascbin_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size
                 break;
             case tag_ascbin_union:
                 {
-                    coda_ascbinUnion *dd_union;
+                    coda_ascbin_union *dd_union;
 
-                    dd_union = (coda_ascbinUnion *)cursor->stack[cursor->n - 1].type;
+                    dd_union = (coda_ascbin_union *)cursor->stack[cursor->n - 1].type;
                     if (coda_option_use_fast_size_expressions && dd_union->fast_size_expr != NULL)
                     {
-                        if (coda_expr_eval_integer(dd_union->fast_size_expr, cursor, bit_size) != 0)
+                        if (coda_expression_eval_integer(dd_union->fast_size_expr, cursor, bit_size) != 0)
                         {
                             return -1;
                         }
                     }
                     else
                     {
-                        coda_Cursor field_cursor;
+                        coda_cursor field_cursor;
 
                         field_cursor = *cursor;
                         if (coda_ascbin_cursor_goto_available_union_field(&field_cursor) != 0)
@@ -747,10 +747,10 @@ int coda_ascbin_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size
                 break;
             case tag_ascbin_array:
                 {
-                    coda_ascbinArray *array;
+                    coda_ascbin_array *array;
                     long num_elements;
 
-                    array = (coda_ascbinArray *)cursor->stack[cursor->n - 1].type;
+                    array = (coda_ascbin_array *)cursor->stack[cursor->n - 1].type;
 
                     /* get the number of elements in array */
                     if (coda_cursor_get_num_elements(cursor, &num_elements) != 0)
@@ -770,7 +770,7 @@ int coda_ascbin_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size
                     }
                     else
                     {
-                        coda_Cursor array_cursor;
+                        coda_cursor array_cursor;
                         int64_t array_bit_size;
                         long i;
 
@@ -784,7 +784,7 @@ int coda_ascbin_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size
                         {
                             int64_t element_bit_size;
 
-                            array_cursor.stack[array_cursor.n - 1].type = (coda_DynamicType *)array->base_type;
+                            array_cursor.stack[array_cursor.n - 1].type = (coda_dynamic_type *)array->base_type;
                             array_cursor.stack[array_cursor.n - 1].index = i;
                             if (eval_current_type(&array_cursor) != 0)
                             {
@@ -807,19 +807,19 @@ int coda_ascbin_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size
     return 0;
 }
 
-int coda_ascbin_cursor_get_num_elements(const coda_Cursor *cursor, long *num_elements)
+int coda_ascbin_cursor_get_num_elements(const coda_cursor *cursor, long *num_elements)
 {
-    switch (((coda_ascbinType *)cursor->stack[cursor->n - 1].type)->tag)
+    switch (((coda_ascbin_type *)cursor->stack[cursor->n - 1].type)->tag)
     {
         case tag_ascbin_record:
         case tag_ascbin_union:
-            *num_elements = ((coda_ascbinRecord *)cursor->stack[cursor->n - 1].type)->num_fields;
+            *num_elements = ((coda_ascbin_record *)cursor->stack[cursor->n - 1].type)->num_fields;
             break;
         case tag_ascbin_array:
             {
-                coda_ascbinArray *array;
+                coda_ascbin_array *array;
 
-                array = (coda_ascbinArray *)cursor->stack[cursor->n - 1].type;
+                array = (coda_ascbin_array *)cursor->stack[cursor->n - 1].type;
                 if (array->num_elements != -1)
                 {
                     *num_elements = array->num_elements;
@@ -838,7 +838,7 @@ int coda_ascbin_cursor_get_num_elements(const coda_Cursor *cursor, long *num_ele
                         {
                             int64_t var_dim;
 
-                            if (coda_expr_eval_integer(array->dim_expr[i], cursor, &var_dim) != 0)
+                            if (coda_expression_eval_integer(array->dim_expr[i], cursor, &var_dim) != 0)
                             {
                                 return -1;
                             }
@@ -848,7 +848,7 @@ int coda_ascbin_cursor_get_num_elements(const coda_Cursor *cursor, long *num_ele
 
                                 coda_str64(var_dim, s);
                                 coda_set_error(CODA_ERROR_PRODUCT, "product error detected in %s (invalid array size - "
-                                               "calculated array size = %s)", cursor->pf->filename, s);
+                                               "calculated array size = %s)", cursor->product->filename, s);
                                 return -1;
                             }
                             n *= (long)var_dim;
@@ -867,12 +867,12 @@ int coda_ascbin_cursor_get_num_elements(const coda_Cursor *cursor, long *num_ele
     return 0;
 }
 
-int coda_ascbin_cursor_get_record_field_available_status(const coda_Cursor *cursor, long index, int *available)
+int coda_ascbin_cursor_get_record_field_available_status(const coda_cursor *cursor, long index, int *available)
 {
-    coda_ascbinRecord *record;
+    coda_ascbin_record *record;
 
     assert(cursor->stack[cursor->n - 1].type->type_class == coda_record_class);
-    record = (coda_ascbinRecord *)cursor->stack[cursor->n - 1].type;
+    record = (coda_ascbin_record *)cursor->stack[cursor->n - 1].type;
 
     if (index < 0 || index >= record->num_fields)
     {
@@ -893,7 +893,7 @@ int coda_ascbin_cursor_get_record_field_available_status(const coda_Cursor *curs
     }
     else if (record->field[index]->available_expr != NULL)
     {
-        if (coda_expr_eval_bool(record->field[index]->available_expr, cursor, available) != 0)
+        if (coda_expression_eval_bool(record->field[index]->available_expr, cursor, available) != 0)
         {
             return -1;
         }
@@ -906,27 +906,27 @@ int coda_ascbin_cursor_get_record_field_available_status(const coda_Cursor *curs
     return 0;
 }
 
-int coda_ascbin_cursor_get_available_union_field_index(const coda_Cursor *cursor, long *index)
+int coda_ascbin_cursor_get_available_union_field_index(const coda_cursor *cursor, long *index)
 {
-    coda_ascbinUnion *dd_union;
-    coda_Cursor union_cursor;
+    coda_ascbin_union *dd_union;
+    coda_cursor union_cursor;
     int64_t index64;
 
-    if (((coda_ascbinType *)cursor->stack[cursor->n - 1].type)->tag != tag_ascbin_union)
+    if (((coda_ascbin_type *)cursor->stack[cursor->n - 1].type)->tag != tag_ascbin_union)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to a union");
         return -1;
     }
-    dd_union = (coda_ascbinUnion *)cursor->stack[cursor->n - 1].type;
+    dd_union = (coda_ascbin_union *)cursor->stack[cursor->n - 1].type;
     assert(dd_union->num_fields > 0);
 
     /* find field using the type of the first union field to evaluate the expression */
     union_cursor = *cursor;
     union_cursor.n++;
-    union_cursor.stack[union_cursor.n - 1].type = (coda_DynamicType *)dd_union->field[0]->type;
+    union_cursor.stack[union_cursor.n - 1].type = (coda_dynamic_type *)dd_union->field[0]->type;
     union_cursor.stack[union_cursor.n - 1].index = -1;
     union_cursor.stack[union_cursor.n - 1].bit_offset = union_cursor.stack[union_cursor.n - 2].bit_offset;
-    if (coda_expr_eval_integer(dd_union->field_expr, &union_cursor, &index64) != 0)
+    if (coda_expression_eval_integer(dd_union->field_expr, &union_cursor, &index64) != 0)
     {
         return -1;
     }
@@ -939,8 +939,8 @@ int coda_ascbin_cursor_get_available_union_field_index(const coda_Cursor *cursor
         coda_str64((cursor->stack[cursor->n - 1].bit_offset >> 3), s2);
         coda_set_error(CODA_ERROR_PRODUCT,
                        "possible product error detected in %s (invalid result (%s) from union field expression - num "
-                       "fields = %ld - byte:bit offset = %s:%d)", cursor->pf->filename, s1, dd_union->num_fields, s2,
-                       (int)(cursor->stack[cursor->n - 1].bit_offset & 0x7));
+                       "fields = %ld - byte:bit offset = %s:%d)", cursor->product->filename, s1, dd_union->num_fields,
+                       s2, (int)(cursor->stack[cursor->n - 1].bit_offset & 0x7));
         return -1;
     }
     *index = (int)index64;
@@ -948,12 +948,12 @@ int coda_ascbin_cursor_get_available_union_field_index(const coda_Cursor *cursor
     return 0;
 }
 
-int coda_ascbin_cursor_get_array_dim(const coda_Cursor *cursor, int *num_dims, long dim[])
+int coda_ascbin_cursor_get_array_dim(const coda_cursor *cursor, int *num_dims, long dim[])
 {
-    coda_ascbinArray *array;
+    coda_ascbin_array *array;
     int i;
 
-    array = (coda_ascbinArray *)cursor->stack[cursor->n - 1].type;
+    array = (coda_ascbin_array *)cursor->stack[cursor->n - 1].type;
     *num_dims = array->num_dims;
     for (i = 0; i < array->num_dims; i++)
     {
@@ -961,7 +961,7 @@ int coda_ascbin_cursor_get_array_dim(const coda_Cursor *cursor, int *num_dims, l
         {
             int64_t var_dim;
 
-            if (coda_expr_eval_integer(array->dim_expr[i], cursor, &var_dim) != 0)
+            if (coda_expression_eval_integer(array->dim_expr[i], cursor, &var_dim) != 0)
             {
                 return -1;
             }
@@ -971,7 +971,7 @@ int coda_ascbin_cursor_get_array_dim(const coda_Cursor *cursor, int *num_dims, l
 
                 coda_str64(var_dim, s);
                 coda_set_error(CODA_ERROR_PRODUCT, "product error detected in %s (invalid array size (%s))",
-                               cursor->pf->filename, s);
+                               cursor->product->filename, s);
                 return -1;
             }
             dim[i] = (long)var_dim;

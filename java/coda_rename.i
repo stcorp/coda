@@ -31,6 +31,7 @@
 %rename(set_option_use_mmap) coda_set_option_use_mmap;
 %rename(get_option_use_mmap) coda_get_option_use_mmap;
 %rename(set_definition_path) coda_set_definition_path;
+%rename(set_definition_path_conditional) coda_set_definition_path_conditional;
 %rename(NaN) coda_NaN;
 %rename(isNaN) coda_isNaN;
 %rename(PlusInf) coda_PlusInf;
@@ -40,8 +41,11 @@
 %rename(isMinInf) coda_isMinInf;
 %rename(c_index_to_fortran_index) coda_c_index_to_fortran_index;
 %rename(datetime_to_double) coda_datetime_to_double;
+%rename(utcdatetime_to_double) coda_utcdatetime_to_double;
 %rename(double_to_datetime) coda_double_to_datetime;
+%rename(double_to_utcdatetime) coda_double_to_utcdatetime;
 %rename(string_to_time) coda_string_to_time;
+%rename(utcstring_to_time) coda_utcstring_to_time;
 %rename(match_filefilter) coda_match_filefilter;
 %rename(set_error) coda_set_error;
 %rename(errno_to_string) coda_errno_to_string;
@@ -76,6 +80,7 @@
 %rename(type_get_record_field_index_from_name) coda_type_get_record_field_index_from_name;
 %rename(type_get_record_field_type) coda_type_get_record_field_type;
 %rename(type_get_record_field_name) coda_type_get_record_field_name;
+%rename(type_get_record_field_real_name) coda_type_get_record_field_real_name;
 %rename(type_get_record_field_hidden_status) coda_type_get_record_field_hidden_status;
 %rename(type_get_record_field_available_status) coda_type_get_record_field_available_status;
 %rename(type_get_record_union_status) coda_type_get_record_union_status;
@@ -147,3 +152,15 @@
 %rename(cursor_read_complex_double_pairs_array) coda_cursor_read_complex_double_pairs_array;
 %rename(cursor_read_complex_double_split) coda_cursor_read_complex_double_split;
 %rename(cursor_read_complex_double_split_array) coda_cursor_read_complex_double_split_array;
+
+%rename(expression_from_string) coda_expression_from_string;
+%rename(expression_delete) coda_expression_delete;
+%rename(expression_get_type) coda_expression_get_type;
+%rename(expression_is_constant) coda_expression_is_constant;
+
+%rename(expression_eval_bool) coda_expression_eval_bool;
+%rename(expression_eval_integer) coda_expression_eval_integer;
+%rename(expression_eval_float) coda_expression_eval_float;
+%rename(expression_eval_string) coda_expression_eval_string;
+%rename(expression_eval_node) coda_expression_eval_node;
+

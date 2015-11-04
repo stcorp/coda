@@ -62,7 +62,7 @@
 #define MAXBUFFERSIZE 64
 
 
-typedef int (*read_function) (const coda_Cursor *, void *, int64_t);
+typedef int (*read_function) (const coda_cursor *, void *, int64_t);
 
 /* calculates a * 10 ^ b, with a of type double and b of type long */
 static double a_pow10_b(double a, long b)
@@ -82,7 +82,7 @@ static double a_pow10_b(double a, long b)
     return a * val;
 }
 
-static int parse_mapping_size(const char *buffer, long buffer_length, coda_asciiMappings *mappings, int64_t *bit_size)
+static int parse_mapping_size(const char *buffer, long buffer_length, coda_ascii_mappings *mappings, int64_t *bit_size)
 {
     int i;
 
@@ -112,8 +112,8 @@ static int parse_mapping_size(const char *buffer, long buffer_length, coda_ascii
     return 0;
 }
 
-static int parse_integer_mapping(const char *buffer, long buffer_length, coda_asciiMappings *mappings, int dynamic_size,
-                                 int64_t *dst)
+static int parse_integer_mapping(const char *buffer, long buffer_length, coda_ascii_mappings *mappings,
+                                 int dynamic_size, int64_t *dst)
 {
     int i;
 
@@ -123,7 +123,7 @@ static int parse_integer_mapping(const char *buffer, long buffer_length, coda_as
         {
             if (buffer_length == 0)
             {
-                *dst = ((coda_asciiIntegerMapping *)mappings->mapping[i])->value;
+                *dst = ((coda_ascii_integer_mapping *)mappings->mapping[i])->value;
                 return 1;
             }
         }
@@ -135,7 +135,7 @@ static int parse_integer_mapping(const char *buffer, long buffer_length, coda_as
                 coda_set_error(CODA_ERROR_INVALID_FORMAT, "invalid format for ascii integer");
                 return -1;
             }
-            *dst = ((coda_asciiIntegerMapping *)mappings->mapping[i])->value;
+            *dst = ((coda_ascii_integer_mapping *)mappings->mapping[i])->value;
             return 1;
         }
     }
@@ -143,7 +143,7 @@ static int parse_integer_mapping(const char *buffer, long buffer_length, coda_as
     return 0;
 }
 
-static int parse_float_mapping(const char *buffer, long buffer_length, coda_asciiMappings *mappings, int dynamic_size,
+static int parse_float_mapping(const char *buffer, long buffer_length, coda_ascii_mappings *mappings, int dynamic_size,
                                double *dst)
 {
     int i;
@@ -154,7 +154,7 @@ static int parse_float_mapping(const char *buffer, long buffer_length, coda_asci
         {
             if (buffer_length == 0)
             {
-                *dst = ((coda_asciiFloatMapping *)mappings->mapping[i])->value;
+                *dst = ((coda_ascii_float_mapping *)mappings->mapping[i])->value;
                 return 1;
             }
         }
@@ -166,7 +166,7 @@ static int parse_float_mapping(const char *buffer, long buffer_length, coda_asci
                 coda_set_error(CODA_ERROR_INVALID_FORMAT, "invalid format for ascii float");
                 return -1;
             }
-            *dst = ((coda_asciiFloatMapping *)mappings->mapping[i])->value;
+            *dst = ((coda_ascii_float_mapping *)mappings->mapping[i])->value;
             return 1;
         }
     }
@@ -810,9 +810,9 @@ static int parse_ccsds_datetime_utc2(char *buffer, long buffer_length, double *d
     return coda_datetime_to_double(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC, dst);
 }
 
-static int read_bytes_in_bounds(coda_ProductFile *pf, int64_t byte_offset, int64_t length, void *dst)
+static int read_bytes_in_bounds(coda_product *product, int64_t byte_offset, int64_t length, void *dst)
 {
-    coda_ascbinProductFile *product_file = (coda_ascbinProductFile *)pf;
+    coda_ascbin_product *product_file = (coda_ascbin_product *)product;
 
     if (product_file->use_mmap)
     {
@@ -830,8 +830,11 @@ static int read_bytes_in_bounds(coda_ProductFile *pf, int64_t byte_offset, int64
 #else
         if (lseek(product_file->fd, (off_t)byte_offset, SEEK_SET) < 0)
         {
-            coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %f in file %s (%s)",
-                           (double)byte_offset, product_file->filename, strerror(errno));
+            char byte_offset_str[21];
+
+            coda_str64(byte_offset, byte_offset_str);
+            coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %s in file %s (%s)",
+                           byte_offset_str, product_file->filename, strerror(errno));
             return -1;
         }
         if (read(product_file->fd, dst, (size_t)length) < 0)
@@ -846,14 +849,14 @@ static int read_bytes_in_bounds(coda_ProductFile *pf, int64_t byte_offset, int64
     return 0;
 }
 
-static int read_bytes(coda_ProductFile *pf, int64_t byte_offset, int64_t length, void *dst)
+static int read_bytes(coda_product *product, int64_t byte_offset, int64_t length, void *dst)
 {
-    if (((uint64_t)byte_offset + length) > ((uint64_t)pf->file_size))
+    if (((uint64_t)byte_offset + length) > ((uint64_t)product->file_size))
     {
         coda_set_error(CODA_ERROR_OUT_OF_BOUNDS_READ, "trying to read beyond the end of the file");
         return -1;
     }
-    return read_bytes_in_bounds(pf, byte_offset, length, dst);
+    return read_bytes_in_bounds(product, byte_offset, length, dst);
 }
 
 static long get_buffer_size(int64_t bit_size, int64_t size_boundary, int64_t remaining_bits, int *dynamic_size)
@@ -887,13 +890,13 @@ static long get_buffer_size(int64_t bit_size, int64_t size_boundary, int64_t rem
     return MAXBUFFERSIZE;
 }
 
-int coda_ascii_cursor_set_asciilines(coda_Cursor *cursor, coda_ProductFile *pf)
+int coda_ascii_cursor_set_asciilines(coda_cursor *cursor, coda_product *product)
 {
-    coda_ascbinProductFile *product_file = (coda_ascbinProductFile *)pf;
+    coda_ascbin_product *product_file = (coda_ascbin_product *)product;
 
     if (product_file->asciiline_end_offset == NULL)
     {
-        if (coda_ascii_init_asciilines(pf) != 0)
+        if (coda_ascii_init_asciilines(product) != 0)
         {
             return -1;
         }
@@ -901,8 +904,8 @@ int coda_ascii_cursor_set_asciilines(coda_Cursor *cursor, coda_ProductFile *pf)
 
     if (product_file->asciilines == NULL)
     {
-        coda_ascbinArray *array;
-        coda_asciiLine *asciiline;
+        coda_ascbin_array *array;
+        coda_ascii_line *asciiline;
 
         array = coda_ascbin_array_new(coda_format_ascii);
         if (array == NULL)
@@ -911,26 +914,26 @@ int coda_ascii_cursor_set_asciilines(coda_Cursor *cursor, coda_ProductFile *pf)
         }
         if (coda_ascbin_array_add_fixed_dimension(array, product_file->num_asciilines) != 0)
         {
-            coda_release_type((coda_Type *)array);
+            coda_release_type((coda_type *)array);
             return -1;
         }
         asciiline = coda_ascii_line_new(1);
         if (asciiline == NULL)
         {
-            coda_release_type((coda_Type *)array);
+            coda_release_type((coda_type *)array);
             return -1;
         }
-        if (coda_ascbin_array_set_base_type(array, (coda_ascbinType *)asciiline) != 0)
+        if (coda_ascbin_array_set_base_type(array, (coda_ascbin_type *)asciiline) != 0)
         {
-            coda_release_type((coda_Type *)array);
-            coda_release_type((coda_Type *)asciiline);
+            coda_release_type((coda_type *)array);
+            coda_release_type((coda_type *)asciiline);
             return -1;
         }
 
-        product_file->asciilines = (coda_DynamicType *)array;
+        product_file->asciilines = (coda_dynamic_type *)array;
     }
 
-    cursor->pf = pf;
+    cursor->product = product;
     cursor->n = 1;
     cursor->stack[0].type = product_file->asciilines;
     cursor->stack[0].index = -1;        /* there is no index for the root of the product */
@@ -938,17 +941,17 @@ int coda_ascii_cursor_set_asciilines(coda_Cursor *cursor, coda_ProductFile *pf)
     return 0;
 }
 
-int coda_ascii_cursor_use_base_type_of_special_type(coda_Cursor *cursor)
+int coda_ascii_cursor_use_base_type_of_special_type(coda_cursor *cursor)
 {
-    coda_asciiSpecialType *type;
+    coda_ascii_special_type *type;
 
-    type = (coda_asciiSpecialType *)cursor->stack[cursor->n - 1].type;
-    cursor->stack[cursor->n - 1].type = (coda_DynamicType *)type->base_type;
+    type = (coda_ascii_special_type *)cursor->stack[cursor->n - 1].type;
+    cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)type->base_type;
 
     return 0;
 }
 
-int coda_ascii_cursor_get_string_length(const coda_Cursor *cursor, long *length, int64_t size_boundary)
+int coda_ascii_cursor_get_string_length(const coda_cursor *cursor, long *length, int64_t size_boundary)
 {
     int64_t bit_size;
 
@@ -968,9 +971,9 @@ int coda_ascii_cursor_get_string_length(const coda_Cursor *cursor, long *length,
     return 0;
 }
 
-int coda_ascii_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size, int64_t size_boundary)
+int coda_ascii_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size, int64_t size_boundary)
 {
-    coda_asciiType *type = (coda_asciiType *)cursor->stack[cursor->n - 1].type;
+    coda_ascii_type *type = (coda_ascii_type *)cursor->stack[cursor->n - 1].type;
     int64_t bit_offset = cursor->stack[cursor->n - 1].bit_offset;
     char buffer[MAXBUFFERSIZE];
     long buffer_size = -1;
@@ -992,20 +995,20 @@ int coda_ascii_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size,
         case tag_ascii_float:
         case tag_ascii_text:
             {
-                buffer_size = get_buffer_size(-1, size_boundary, (cursor->pf->file_size << 3) - bit_offset,
+                buffer_size = get_buffer_size(-1, size_boundary, (cursor->product->file_size << 3) - bit_offset,
                                               &dynamic_size);
                 if (buffer_size < 0)
                 {
                     return -1;
                 }
-                if (read_bytes_in_bounds(cursor->pf, bit_offset >> 3, buffer_size, buffer) != 0)
+                if (read_bytes_in_bounds(cursor->product, bit_offset >> 3, buffer_size, buffer) != 0)
                 {
                     return -1;
                 }
 
-                if (((coda_asciiMappingsType *)type)->mappings != NULL)
+                if (((coda_ascii_mappings_type *)type)->mappings != NULL)
                 {
-                    if (parse_mapping_size(buffer, buffer_size, ((coda_asciiMappingsType *)type)->mappings, bit_size))
+                    if (parse_mapping_size(buffer, buffer_size, ((coda_ascii_mappings_type *)type)->mappings, bit_size))
                     {
                         return 0;
                     }
@@ -1018,11 +1021,11 @@ int coda_ascii_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size,
             break;
         case tag_ascii_time:
             {
-                coda_Cursor spec_cursor;
+                coda_cursor spec_cursor;
 
                 spec_cursor = *cursor;
                 spec_cursor.stack[spec_cursor.n - 1].type =
-                    (coda_DynamicType *)((coda_asciiSpecialType *)type)->base_type;
+                    (coda_dynamic_type *)((coda_ascii_special_type *)type)->base_type;
                 return coda_ascii_cursor_get_bit_size(&spec_cursor, bit_size, size_boundary);
             }
     }
@@ -1034,7 +1037,7 @@ int coda_ascii_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size,
                 int64_t value;
                 long size;
 
-                switch (((coda_asciiInteger *)type)->read_type)
+                switch (((coda_ascii_integer *)type)->read_type)
                 {
                     case coda_native_type_int8:
                     case coda_native_type_int16:
@@ -1073,7 +1076,7 @@ int coda_ascii_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size,
             }
             break;
         case tag_ascii_text:
-            if (coda_expr_eval_integer(((coda_asciiText *)type)->byte_size_expr, cursor, bit_size) != 0)
+            if (coda_expression_eval_integer(((coda_ascii_text *)type)->byte_size_expr, cursor, bit_size) != 0)
             {
                 return -1;
             }
@@ -1081,7 +1084,7 @@ int coda_ascii_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size,
             *bit_size *= 8;
             break;
         case tag_ascii_line_separator:
-            switch (((coda_ascbinProductFile *)cursor->pf)->end_of_line)
+            switch (((coda_ascbin_product *)cursor->product)->end_of_line)
             {
                 case eol_lf:
                 case eol_cr:
@@ -1112,10 +1115,10 @@ int coda_ascii_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size,
                             case '\n': /* linefeed */
                                 /* just a linefeed -> unix platform convention */
                                 *bit_size = 8;
-                                ((coda_ascbinProductFile *)cursor->pf)->end_of_line = eol_lf;
+                                ((coda_ascbin_product *)cursor->product)->end_of_line = eol_lf;
                                 break;
                             case '\r': /* carriage return */
-                                if (cursor->pf->file_size - (cursor->stack[cursor->n - 1].bit_offset >> 3) >= 2)
+                                if (cursor->product->file_size - (cursor->stack[cursor->n - 1].bit_offset >> 3) >= 2)
                                 {
                                     if (coda_ascii_cursor_read_bytes(cursor, buffer, 1, 1) != 0)
                                     {
@@ -1125,20 +1128,20 @@ int coda_ascii_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size,
                                     {
                                         /* carriage return followed by linefeed -> dos platform convention */
                                         *bit_size = 16;
-                                        ((coda_ascbinProductFile *)cursor->pf)->end_of_line = eol_crlf;
+                                        ((coda_ascbin_product *)cursor->product)->end_of_line = eol_crlf;
                                     }
                                     else
                                     {
                                         /* just a carriage return -> mac platform convention */
                                         *bit_size = 8;
-                                        ((coda_ascbinProductFile *)cursor->pf)->end_of_line = eol_cr;
+                                        ((coda_ascbin_product *)cursor->product)->end_of_line = eol_cr;
                                     }
                                 }
                                 else
                                 {
                                     /* just a carriage return -> mac platform convention */
                                     *bit_size = 8;
-                                    ((coda_ascbinProductFile *)cursor->pf)->end_of_line = eol_cr;
+                                    ((coda_ascbin_product *)cursor->product)->end_of_line = eol_cr;
                                 }
                                 break;
                             default:
@@ -1149,7 +1152,7 @@ int coda_ascii_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size,
                                     coda_set_error(CODA_ERROR_PRODUCT,
                                                    "product error detected in %s (invalid end-of-line sequence - not a "
                                                    "carriage return or linefeed character - byte offset = %s)",
-                                                   cursor->pf->filename, s);
+                                                   cursor->product->filename, s);
                                     return -1;
                                 }
                         }
@@ -1157,7 +1160,7 @@ int coda_ascii_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size,
             }
             break;
         case tag_ascii_line:
-            if (cursor->pf->format == coda_format_ascii)
+            if (cursor->product->format == coda_format_ascii)
             {
                 int64_t byte_offset;
                 long *asciiline_end_offset;
@@ -1171,22 +1174,22 @@ int coda_ascii_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size,
                     return -1;
                 }
 
-                if (((coda_ascbinProductFile *)cursor->pf)->asciiline_end_offset == NULL)
+                if (((coda_ascbin_product *)cursor->product)->asciiline_end_offset == NULL)
                 {
-                    if (coda_ascii_init_asciilines(cursor->pf) != 0)
+                    if (coda_ascii_init_asciilines(cursor->product) != 0)
                     {
                         return -1;
                     }
                 }
-                if (((coda_ascbinProductFile *)cursor->pf)->num_asciilines == 0)
+                if (((coda_ascbin_product *)cursor->product)->num_asciilines == 0)
                 {
                     coda_set_error(CODA_ERROR_OUT_OF_BOUNDS_READ, "trying to read from an empty file");
                     return -1;
                 }
 
                 bottom_index = 0;
-                top_index = ((coda_ascbinProductFile *)cursor->pf)->num_asciilines - 1;
-                asciiline_end_offset = ((coda_ascbinProductFile *)cursor->pf)->asciiline_end_offset;
+                top_index = ((coda_ascbin_product *)cursor->product)->num_asciilines - 1;
+                asciiline_end_offset = ((coda_ascbin_product *)cursor->product)->asciiline_end_offset;
                 byte_offset = cursor->stack[cursor->n - 1].bit_offset >> 3;
 
                 while (top_index != bottom_index)
@@ -1207,13 +1210,13 @@ int coda_ascii_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size,
 
                 /* remove length of eol if eol was not included in the asciiline type */
                 /* and if the line does not end with eof */
-                if (!((coda_asciiLine *)cursor->stack[cursor->n - 1].type)->include_eol)
+                if (!((coda_ascii_line *)cursor->stack[cursor->n - 1].type)->include_eol)
                 {
-                    if (!(top_index == ((coda_ascbinProductFile *)cursor->pf)->num_asciilines - 1 &&
-                          ((coda_ascbinProductFile *)cursor->pf)->lastline_ending == eol_unknown))
+                    if (!(top_index == ((coda_ascbin_product *)cursor->product)->num_asciilines - 1 &&
+                          ((coda_ascbin_product *)cursor->product)->lastline_ending == eol_unknown))
                     {
                         *bit_size -= 8;
-                        if (((coda_ascbinProductFile *)cursor->pf)->end_of_line == eol_crlf)
+                        if (((coda_ascbin_product *)cursor->product)->end_of_line == eol_crlf)
                         {
                             *bit_size -= 8;
                         }
@@ -1236,12 +1239,12 @@ int coda_ascii_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size,
                     return -1;
                 }
                 byte_offset = cursor->stack[cursor->n - 1].bit_offset >> 3;
-                available_bytes = cursor->pf->file_size - byte_offset;
+                available_bytes = cursor->product->file_size - byte_offset;
                 byte_size = 0;
 
                 while (byte_size < available_bytes)
                 {
-                    if (read_bytes_in_bounds(cursor->pf, byte_offset + byte_size, 1, buffer) != 0)
+                    if (read_bytes_in_bounds(cursor->product, byte_offset + byte_size, 1, buffer) != 0)
                     {
                         return -1;
                     }
@@ -1251,7 +1254,7 @@ int coda_ascii_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size,
                     }
                     byte_size++;
                 }
-                if (((coda_asciiLine *)cursor->stack[cursor->n - 1].type)->include_eol)
+                if (((coda_ascii_line *)cursor->stack[cursor->n - 1].type)->include_eol)
                 {
                     if (*buffer == '\r' && byte_size + 1 < available_bytes && buffer[1] == '\n')
                     {
@@ -1276,12 +1279,12 @@ int coda_ascii_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size,
                     return -1;
                 }
                 byte_offset = cursor->stack[cursor->n - 1].bit_offset >> 3;
-                available_bytes = cursor->pf->file_size - byte_offset;
+                available_bytes = cursor->product->file_size - byte_offset;
                 byte_size = 0;
 
                 while (byte_size < available_bytes)
                 {
-                    if (read_bytes_in_bounds(cursor->pf, byte_offset + byte_size, 1, buffer) != 0)
+                    if (read_bytes_in_bounds(cursor->product, byte_offset + byte_size, 1, buffer) != 0)
                     {
                         return -1;
                     }
@@ -1305,7 +1308,7 @@ int coda_ascii_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size,
     return 0;
 }
 
-int coda_ascii_cursor_get_num_elements(const coda_Cursor *cursor, long *num_elements)
+int coda_ascii_cursor_get_num_elements(const coda_cursor *cursor, long *num_elements)
 {
     switch (cursor->stack[cursor->n - 1].type->type_class)
     {
@@ -1320,9 +1323,9 @@ int coda_ascii_cursor_get_num_elements(const coda_Cursor *cursor, long *num_elem
     return 0;
 }
 
-static int read_int64(const coda_Cursor *cursor, int64_t *dst, int64_t size_boundary)
+static int read_int64(const coda_cursor *cursor, int64_t *dst, int64_t size_boundary)
 {
-    coda_asciiInteger *type = (coda_asciiInteger *)cursor->stack[cursor->n - 1].type;
+    coda_ascii_integer *type = (coda_ascii_integer *)cursor->stack[cursor->n - 1].type;
     int64_t bit_offset = cursor->stack[cursor->n - 1].bit_offset;
     char buffer[MAXBUFFERSIZE];
     long buffer_size;
@@ -1333,14 +1336,14 @@ static int read_int64(const coda_Cursor *cursor, int64_t *dst, int64_t size_boun
         coda_set_error(CODA_ERROR_FILE_READ, "reading of ascii data does not start at byte boundary");
         return -1;
     }
-    buffer_size = get_buffer_size(type->bit_size, size_boundary, (cursor->pf->file_size << 3) - bit_offset,
+    buffer_size = get_buffer_size(type->bit_size, size_boundary, (cursor->product->file_size << 3) - bit_offset,
                                   &dynamic_size);
     if (buffer_size < 0)
     {
         return -1;
     }
     assert(buffer_size <= MAXBUFFERSIZE);
-    if (read_bytes_in_bounds(cursor->pf, bit_offset >> 3, buffer_size, buffer) != 0)
+    if (read_bytes_in_bounds(cursor->product, bit_offset >> 3, buffer_size, buffer) != 0)
     {
         return -1;
     }
@@ -1366,9 +1369,9 @@ static int read_int64(const coda_Cursor *cursor, int64_t *dst, int64_t size_boun
     return 0;
 }
 
-static int read_uint64(const coda_Cursor *cursor, uint64_t *dst, int64_t size_boundary)
+static int read_uint64(const coda_cursor *cursor, uint64_t *dst, int64_t size_boundary)
 {
-    coda_asciiInteger *type = (coda_asciiInteger *)cursor->stack[cursor->n - 1].type;
+    coda_ascii_integer *type = (coda_ascii_integer *)cursor->stack[cursor->n - 1].type;
     int64_t bit_offset = cursor->stack[cursor->n - 1].bit_offset;
     char buffer[MAXBUFFERSIZE];
     long buffer_size;
@@ -1379,14 +1382,14 @@ static int read_uint64(const coda_Cursor *cursor, uint64_t *dst, int64_t size_bo
         coda_set_error(CODA_ERROR_FILE_READ, "reading of ascii data does not start at byte boundary");
         return -1;
     }
-    buffer_size = get_buffer_size(type->bit_size, size_boundary, (cursor->pf->file_size << 3) - bit_offset,
+    buffer_size = get_buffer_size(type->bit_size, size_boundary, (cursor->product->file_size << 3) - bit_offset,
                                   &dynamic_size);
     if (buffer_size < 0)
     {
         return -1;
     }
     assert(buffer_size <= MAXBUFFERSIZE);
-    if (read_bytes_in_bounds(cursor->pf, bit_offset >> 3, buffer_size, buffer) != 0)
+    if (read_bytes_in_bounds(cursor->product, bit_offset >> 3, buffer_size, buffer) != 0)
     {
         return -1;
     }
@@ -1412,7 +1415,7 @@ static int read_uint64(const coda_Cursor *cursor, uint64_t *dst, int64_t size_bo
     return 0;
 }
 
-static int read_int8(const coda_Cursor *cursor, int8_t *dst, int64_t size_boundary)
+static int read_int8(const coda_cursor *cursor, int8_t *dst, int64_t size_boundary)
 {
     int64_t value;
 
@@ -1430,7 +1433,7 @@ static int read_int8(const coda_Cursor *cursor, int8_t *dst, int64_t size_bounda
     return 0;
 }
 
-static int read_uint8(const coda_Cursor *cursor, uint8_t *dst, int64_t size_boundary)
+static int read_uint8(const coda_cursor *cursor, uint8_t *dst, int64_t size_boundary)
 {
     uint64_t value;
 
@@ -1448,7 +1451,7 @@ static int read_uint8(const coda_Cursor *cursor, uint8_t *dst, int64_t size_boun
     return 0;
 }
 
-static int read_int16(const coda_Cursor *cursor, int16_t *dst, int64_t size_boundary)
+static int read_int16(const coda_cursor *cursor, int16_t *dst, int64_t size_boundary)
 {
     int64_t value;
 
@@ -1466,7 +1469,7 @@ static int read_int16(const coda_Cursor *cursor, int16_t *dst, int64_t size_boun
     return 0;
 }
 
-static int read_uint16(const coda_Cursor *cursor, uint16_t *dst, int64_t size_boundary)
+static int read_uint16(const coda_cursor *cursor, uint16_t *dst, int64_t size_boundary)
 {
     uint64_t value;
 
@@ -1484,7 +1487,7 @@ static int read_uint16(const coda_Cursor *cursor, uint16_t *dst, int64_t size_bo
     return 0;
 }
 
-static int read_int32(const coda_Cursor *cursor, int32_t *dst, int64_t size_boundary)
+static int read_int32(const coda_cursor *cursor, int32_t *dst, int64_t size_boundary)
 {
     int64_t value;
 
@@ -1502,7 +1505,7 @@ static int read_int32(const coda_Cursor *cursor, int32_t *dst, int64_t size_boun
     return 0;
 }
 
-static int read_uint32(const coda_Cursor *cursor, uint32_t *dst, int64_t size_boundary)
+static int read_uint32(const coda_cursor *cursor, uint32_t *dst, int64_t size_boundary)
 {
     uint64_t value;
 
@@ -1520,9 +1523,9 @@ static int read_uint32(const coda_Cursor *cursor, uint32_t *dst, int64_t size_bo
     return 0;
 }
 
-static int read_double(const coda_Cursor *cursor, double *dst, int64_t size_boundary)
+static int read_double(const coda_cursor *cursor, double *dst, int64_t size_boundary)
 {
-    coda_asciiFloat *type = (coda_asciiFloat *)cursor->stack[cursor->n - 1].type;
+    coda_ascii_float *type = (coda_ascii_float *)cursor->stack[cursor->n - 1].type;
     int64_t bit_offset = cursor->stack[cursor->n - 1].bit_offset;
     char buffer[MAXBUFFERSIZE];
     long buffer_size;
@@ -1533,14 +1536,14 @@ static int read_double(const coda_Cursor *cursor, double *dst, int64_t size_boun
         coda_set_error(CODA_ERROR_FILE_READ, "reading of ascii data does not start at byte boundary");
         return -1;
     }
-    buffer_size = get_buffer_size(type->bit_size, size_boundary, (cursor->pf->file_size << 3) - bit_offset,
+    buffer_size = get_buffer_size(type->bit_size, size_boundary, (cursor->product->file_size << 3) - bit_offset,
                                   &dynamic_size);
     if (buffer_size < 0)
     {
         return -1;
     }
     assert(buffer_size <= MAXBUFFERSIZE);
-    if (read_bytes_in_bounds(cursor->pf, bit_offset >> 3, buffer_size, buffer) != 0)
+    if (read_bytes_in_bounds(cursor->product, bit_offset >> 3, buffer_size, buffer) != 0)
     {
         return -1;
     }
@@ -1566,7 +1569,7 @@ static int read_double(const coda_Cursor *cursor, double *dst, int64_t size_boun
     return 0;
 }
 
-static int read_float(const coda_Cursor *cursor, float *dst, int64_t size_boundary)
+static int read_float(const coda_cursor *cursor, float *dst, int64_t size_boundary)
 {
     double value;
 
@@ -1579,9 +1582,9 @@ static int read_float(const coda_Cursor *cursor, float *dst, int64_t size_bounda
     return 0;
 }
 
-static int read_time(const coda_Cursor *cursor, double *dst, int64_t size_boundary)
+static int read_time(const coda_cursor *cursor, double *dst, int64_t size_boundary)
 {
-    coda_asciiTime *type = (coda_asciiTime *)cursor->stack[cursor->n - 1].type;
+    coda_ascii_time *type = (coda_ascii_time *)cursor->stack[cursor->n - 1].type;
     int64_t bit_offset = cursor->stack[cursor->n - 1].bit_offset;
     char buffer[MAXBUFFERSIZE];
     long buffer_size;
@@ -1592,20 +1595,20 @@ static int read_time(const coda_Cursor *cursor, double *dst, int64_t size_bounda
         coda_set_error(CODA_ERROR_FILE_READ, "reading of ascii data does not start at byte boundary");
         return -1;
     }
-    buffer_size = get_buffer_size(type->bit_size, size_boundary, (cursor->pf->file_size << 3) - bit_offset,
+    buffer_size = get_buffer_size(type->bit_size, size_boundary, (cursor->product->file_size << 3) - bit_offset,
                                   &dynamic_size);
     if (buffer_size < 0)
     {
         return -1;
     }
     assert(buffer_size <= MAXBUFFERSIZE);
-    if (read_bytes_in_bounds(cursor->pf, bit_offset >> 3, buffer_size, buffer) != 0)
+    if (read_bytes_in_bounds(cursor->product, bit_offset >> 3, buffer_size, buffer) != 0)
     {
         return -1;
     }
-    if (((coda_asciiText *)type->base_type)->mappings != 0)
+    if (((coda_ascii_text *)type->base_type)->mappings != 0)
     {
-        switch (parse_float_mapping(buffer, buffer_size, ((coda_asciiText *)type->base_type)->mappings, dynamic_size,
+        switch (parse_float_mapping(buffer, buffer_size, ((coda_ascii_text *)type->base_type)->mappings, dynamic_size,
                                     dst))
         {
             case 0:
@@ -1646,7 +1649,7 @@ static int read_time(const coda_Cursor *cursor, double *dst, int64_t size_bounda
     exit(1);
 }
 
-static int read_char(const coda_Cursor *cursor, char *dst, int64_t size_boundary)
+static int read_char(const coda_cursor *cursor, char *dst, int64_t size_boundary)
 {
     int64_t bit_offset;
     int dynamic_size;
@@ -1657,20 +1660,20 @@ static int read_char(const coda_Cursor *cursor, char *dst, int64_t size_boundary
         coda_set_error(CODA_ERROR_PRODUCT, "product error detected (ascii text does not start at byte boundary)");
         return -1;
     }
-    if (get_buffer_size(8, size_boundary, (cursor->pf->file_size << 3) - bit_offset, &dynamic_size) == -1)
+    if (get_buffer_size(8, size_boundary, (cursor->product->file_size << 3) - bit_offset, &dynamic_size) == -1)
     {
         return -1;
     }
-    return read_bytes_in_bounds(cursor->pf, bit_offset >> 3, 1, dst);
+    return read_bytes_in_bounds(cursor->product, bit_offset >> 3, 1, dst);
 }
 
-static int read_string(const coda_Cursor *cursor, char *dst, long dst_size, int64_t size_boundary)
+static int read_string(const coda_cursor *cursor, char *dst, long dst_size, int64_t size_boundary)
 {
-    coda_asciiType *type;
+    coda_ascii_type *type;
     int64_t bit_offset;
     int64_t read_size = 0;
 
-    type = (coda_asciiType *)cursor->stack[cursor->n - 1].type;
+    type = (coda_ascii_type *)cursor->stack[cursor->n - 1].type;
     bit_offset = cursor->stack[cursor->n - 1].bit_offset;
     if ((bit_offset & 0x7) != 0)
     {
@@ -1707,7 +1710,7 @@ static int read_string(const coda_Cursor *cursor, char *dst, long dst_size, int6
             coda_set_error(CODA_ERROR_OUT_OF_BOUNDS_READ, NULL);
             return -1;
         }
-        if (read_bytes(cursor->pf, bit_offset >> 3, read_size, dst) != 0)
+        if (read_bytes(cursor->product, bit_offset >> 3, read_size, dst) != 0)
         {
             return -1;
         }
@@ -1721,10 +1724,10 @@ static int read_string(const coda_Cursor *cursor, char *dst, long dst_size, int6
     return 0;
 }
 
-static int read_array(const coda_Cursor *cursor, read_function read_basic_type_function, uint8_t *dst,
+static int read_array(const coda_cursor *cursor, read_function read_basic_type_function, uint8_t *dst,
                       int basic_type_size, coda_array_ordering array_ordering, int64_t size_boundary)
 {
-    coda_Cursor array_cursor;
+    coda_cursor array_cursor;
     long dim[CODA_MAX_NUM_DIMS];
     int num_dims;
     long num_elements;
@@ -1841,16 +1844,16 @@ static int read_array(const coda_Cursor *cursor, read_function read_basic_type_f
     return 0;
 }
 
-int coda_ascii_cursor_read_int8(const coda_Cursor *cursor, int8_t *dst, int64_t size_boundary)
+int coda_ascii_cursor_read_int8(const coda_cursor *cursor, int8_t *dst, int64_t size_boundary)
 {
-    switch (((coda_asciiType *)cursor->stack[cursor->n - 1].type)->tag)
+    switch (((coda_ascii_type *)cursor->stack[cursor->n - 1].type)->tag)
     {
         case tag_ascii_integer:
         case tag_ascii_float:
             {
-                coda_asciiNumber *type;
+                coda_ascii_number *type;
 
-                type = (coda_asciiNumber *)cursor->stack[cursor->n - 1].type;
+                type = (coda_ascii_number *)cursor->stack[cursor->n - 1].type;
                 if (coda_option_perform_conversions && type->conversion != NULL)
                 {
                     coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read converted data using a int8 data type");
@@ -1883,16 +1886,16 @@ int coda_ascii_cursor_read_int8(const coda_Cursor *cursor, int8_t *dst, int64_t 
     return 0;
 }
 
-int coda_ascii_cursor_read_uint8(const coda_Cursor *cursor, uint8_t *dst, int64_t size_boundary)
+int coda_ascii_cursor_read_uint8(const coda_cursor *cursor, uint8_t *dst, int64_t size_boundary)
 {
-    switch (((coda_asciiType *)cursor->stack[cursor->n - 1].type)->tag)
+    switch (((coda_ascii_type *)cursor->stack[cursor->n - 1].type)->tag)
     {
         case tag_ascii_integer:
         case tag_ascii_float:
             {
-                coda_asciiNumber *type;
+                coda_ascii_number *type;
 
-                type = (coda_asciiNumber *)cursor->stack[cursor->n - 1].type;
+                type = (coda_ascii_number *)cursor->stack[cursor->n - 1].type;
                 if (coda_option_perform_conversions && type->conversion != NULL)
                 {
                     coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read converted data using a uint16 data type");
@@ -1925,16 +1928,16 @@ int coda_ascii_cursor_read_uint8(const coda_Cursor *cursor, uint8_t *dst, int64_
     return 0;
 }
 
-int coda_ascii_cursor_read_int16(const coda_Cursor *cursor, int16_t *dst, int64_t size_boundary)
+int coda_ascii_cursor_read_int16(const coda_cursor *cursor, int16_t *dst, int64_t size_boundary)
 {
-    switch (((coda_asciiType *)cursor->stack[cursor->n - 1].type)->tag)
+    switch (((coda_ascii_type *)cursor->stack[cursor->n - 1].type)->tag)
     {
         case tag_ascii_integer:
         case tag_ascii_float:
             {
-                coda_asciiNumber *type;
+                coda_ascii_number *type;
 
-                type = (coda_asciiNumber *)cursor->stack[cursor->n - 1].type;
+                type = (coda_ascii_number *)cursor->stack[cursor->n - 1].type;
                 if (coda_option_perform_conversions && type->conversion != NULL)
                 {
                     coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read converted data using a int16 data type");
@@ -1989,16 +1992,16 @@ int coda_ascii_cursor_read_int16(const coda_Cursor *cursor, int16_t *dst, int64_
     return 0;
 }
 
-int coda_ascii_cursor_read_uint16(const coda_Cursor *cursor, uint16_t *dst, int64_t size_boundary)
+int coda_ascii_cursor_read_uint16(const coda_cursor *cursor, uint16_t *dst, int64_t size_boundary)
 {
-    switch (((coda_asciiType *)cursor->stack[cursor->n - 1].type)->tag)
+    switch (((coda_ascii_type *)cursor->stack[cursor->n - 1].type)->tag)
     {
         case tag_ascii_integer:
         case tag_ascii_float:
             {
-                coda_asciiNumber *type;
+                coda_ascii_number *type;
 
-                type = (coda_asciiNumber *)cursor->stack[cursor->n - 1].type;
+                type = (coda_ascii_number *)cursor->stack[cursor->n - 1].type;
                 if (coda_option_perform_conversions && type->conversion != NULL)
                 {
                     coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read converted data using a uint16 data type");
@@ -2042,16 +2045,16 @@ int coda_ascii_cursor_read_uint16(const coda_Cursor *cursor, uint16_t *dst, int6
     return 0;
 }
 
-int coda_ascii_cursor_read_int32(const coda_Cursor *cursor, int32_t *dst, int64_t size_boundary)
+int coda_ascii_cursor_read_int32(const coda_cursor *cursor, int32_t *dst, int64_t size_boundary)
 {
-    switch (((coda_asciiType *)cursor->stack[cursor->n - 1].type)->tag)
+    switch (((coda_ascii_type *)cursor->stack[cursor->n - 1].type)->tag)
     {
         case tag_ascii_integer:
         case tag_ascii_float:
             {
-                coda_asciiNumber *type;
+                coda_ascii_number *type;
 
-                type = (coda_asciiNumber *)cursor->stack[cursor->n - 1].type;
+                type = (coda_ascii_number *)cursor->stack[cursor->n - 1].type;
                 if (coda_option_perform_conversions && type->conversion != NULL)
                 {
                     coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read converted data using a int32 data type");
@@ -2128,16 +2131,16 @@ int coda_ascii_cursor_read_int32(const coda_Cursor *cursor, int32_t *dst, int64_
     return 0;
 }
 
-int coda_ascii_cursor_read_uint32(const coda_Cursor *cursor, uint32_t *dst, int64_t size_boundary)
+int coda_ascii_cursor_read_uint32(const coda_cursor *cursor, uint32_t *dst, int64_t size_boundary)
 {
-    switch (((coda_asciiType *)cursor->stack[cursor->n - 1].type)->tag)
+    switch (((coda_ascii_type *)cursor->stack[cursor->n - 1].type)->tag)
     {
         case tag_ascii_integer:
         case tag_ascii_float:
             {
-                coda_asciiNumber *type;
+                coda_ascii_number *type;
 
-                type = (coda_asciiNumber *)cursor->stack[cursor->n - 1].type;
+                type = (coda_ascii_number *)cursor->stack[cursor->n - 1].type;
                 if (coda_option_perform_conversions && type->conversion != NULL)
                 {
                     coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read converted data using a uint32 data type");
@@ -2192,16 +2195,16 @@ int coda_ascii_cursor_read_uint32(const coda_Cursor *cursor, uint32_t *dst, int6
     return 0;
 }
 
-int coda_ascii_cursor_read_int64(const coda_Cursor *cursor, int64_t *dst, int64_t size_boundary)
+int coda_ascii_cursor_read_int64(const coda_cursor *cursor, int64_t *dst, int64_t size_boundary)
 {
-    switch (((coda_asciiType *)cursor->stack[cursor->n - 1].type)->tag)
+    switch (((coda_ascii_type *)cursor->stack[cursor->n - 1].type)->tag)
     {
         case tag_ascii_integer:
         case tag_ascii_float:
             {
-                coda_asciiNumber *type;
+                coda_ascii_number *type;
 
-                type = (coda_asciiNumber *)cursor->stack[cursor->n - 1].type;
+                type = (coda_ascii_number *)cursor->stack[cursor->n - 1].type;
                 if (coda_option_perform_conversions && type->conversion != NULL)
                 {
                     coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read converted data using a int64 data type");
@@ -2300,16 +2303,16 @@ int coda_ascii_cursor_read_int64(const coda_Cursor *cursor, int64_t *dst, int64_
     return 0;
 }
 
-int coda_ascii_cursor_read_uint64(const coda_Cursor *cursor, uint64_t *dst, int64_t size_boundary)
+int coda_ascii_cursor_read_uint64(const coda_cursor *cursor, uint64_t *dst, int64_t size_boundary)
 {
-    switch (((coda_asciiType *)cursor->stack[cursor->n - 1].type)->tag)
+    switch (((coda_ascii_type *)cursor->stack[cursor->n - 1].type)->tag)
     {
         case tag_ascii_integer:
         case tag_ascii_float:
             {
-                coda_asciiNumber *type;
+                coda_ascii_number *type;
 
-                type = (coda_asciiNumber *)cursor->stack[cursor->n - 1].type;
+                type = (coda_ascii_number *)cursor->stack[cursor->n - 1].type;
                 if (coda_option_perform_conversions && type->conversion != NULL)
                 {
                     coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read converted data using a uint64 data type");
@@ -2375,16 +2378,16 @@ int coda_ascii_cursor_read_uint64(const coda_Cursor *cursor, uint64_t *dst, int6
     return 0;
 }
 
-int coda_ascii_cursor_read_float(const coda_Cursor *cursor, float *dst, int64_t size_boundary)
+int coda_ascii_cursor_read_float(const coda_cursor *cursor, float *dst, int64_t size_boundary)
 {
-    switch (((coda_asciiType *)cursor->stack[cursor->n - 1].type)->tag)
+    switch (((coda_ascii_type *)cursor->stack[cursor->n - 1].type)->tag)
     {
         case tag_ascii_integer:
         case tag_ascii_float:
             {
-                coda_asciiNumber *type;
+                coda_ascii_number *type;
 
-                type = (coda_asciiNumber *)cursor->stack[cursor->n - 1].type;
+                type = (coda_ascii_number *)cursor->stack[cursor->n - 1].type;
                 switch (type->read_type)
                 {
                     case coda_native_type_int8:
@@ -2515,16 +2518,16 @@ int coda_ascii_cursor_read_float(const coda_Cursor *cursor, float *dst, int64_t 
     return 0;
 }
 
-int coda_ascii_cursor_read_double(const coda_Cursor *cursor, double *dst, int64_t size_boundary)
+int coda_ascii_cursor_read_double(const coda_cursor *cursor, double *dst, int64_t size_boundary)
 {
-    switch (((coda_asciiType *)cursor->stack[cursor->n - 1].type)->tag)
+    switch (((coda_ascii_type *)cursor->stack[cursor->n - 1].type)->tag)
     {
         case tag_ascii_integer:
         case tag_ascii_float:
             {
-                coda_asciiNumber *type;
+                coda_ascii_number *type;
 
-                type = (coda_asciiNumber *)cursor->stack[cursor->n - 1].type;
+                type = (coda_ascii_number *)cursor->stack[cursor->n - 1].type;
                 switch (type->read_type)
                 {
                     case coda_native_type_int8:
@@ -2662,11 +2665,11 @@ int coda_ascii_cursor_read_double(const coda_Cursor *cursor, double *dst, int64_
     return 0;
 }
 
-int coda_ascii_cursor_read_char(const coda_Cursor *cursor, char *dst, int64_t size_boundary)
+int coda_ascii_cursor_read_char(const coda_cursor *cursor, char *dst, int64_t size_boundary)
 {
-    coda_asciiType *type;
+    coda_ascii_type *type;
 
-    type = (coda_asciiType *)cursor->stack[cursor->n - 1].type;
+    type = (coda_ascii_type *)cursor->stack[cursor->n - 1].type;
     if (type->tag == tag_ascii_text && type->bit_size == 8)
     {
         return read_char(cursor, dst, size_boundary);
@@ -2675,12 +2678,12 @@ int coda_ascii_cursor_read_char(const coda_Cursor *cursor, char *dst, int64_t si
     return -1;
 }
 
-int coda_ascii_cursor_read_string(const coda_Cursor *cursor, char *dst, long dst_size, int64_t size_boundary)
+int coda_ascii_cursor_read_string(const coda_cursor *cursor, char *dst, long dst_size, int64_t size_boundary)
 {
     return read_string(cursor, dst, dst_size, size_boundary);
 }
 
-int coda_ascii_cursor_read_bits(const coda_Cursor *cursor, uint8_t *dst, int64_t bit_offset, int64_t bit_length)
+int coda_ascii_cursor_read_bits(const coda_cursor *cursor, uint8_t *dst, int64_t bit_offset, int64_t bit_length)
 {
     if (bit_length & 0x7)
     {
@@ -2693,90 +2696,91 @@ int coda_ascii_cursor_read_bits(const coda_Cursor *cursor, uint8_t *dst, int64_t
         coda_set_error(CODA_ERROR_PRODUCT, "product error detected (ascii text does not start at byte boundary)");
         return -1;
     }
-    return read_bytes(cursor->pf, (cursor->stack[cursor->n - 1].bit_offset + bit_offset) >> 3, bit_length >> 3, dst);
+    return read_bytes(cursor->product, (cursor->stack[cursor->n - 1].bit_offset + bit_offset) >> 3, bit_length >> 3,
+                      dst);
 }
 
-int coda_ascii_cursor_read_bytes(const coda_Cursor *cursor, uint8_t *dst, int64_t offset, int64_t length)
+int coda_ascii_cursor_read_bytes(const coda_cursor *cursor, uint8_t *dst, int64_t offset, int64_t length)
 {
     if (cursor->stack[cursor->n - 1].bit_offset & 0x7)
     {
         coda_set_error(CODA_ERROR_PRODUCT, "product error detected (ascii text does not start at byte boundary)");
         return -1;
     }
-    return read_bytes(cursor->pf, (cursor->stack[cursor->n - 1].bit_offset >> 3) + offset, length, dst);
+    return read_bytes(cursor->product, (cursor->stack[cursor->n - 1].bit_offset >> 3) + offset, length, dst);
 }
 
-int coda_ascii_cursor_read_int8_array(const coda_Cursor *cursor, int8_t *dst, coda_array_ordering array_ordering,
+int coda_ascii_cursor_read_int8_array(const coda_cursor *cursor, int8_t *dst, coda_array_ordering array_ordering,
                                       int64_t size_boundary)
 {
     return read_array(cursor, (read_function)&coda_ascii_cursor_read_int8, (uint8_t *)dst, sizeof(int8_t),
                       array_ordering, size_boundary);
 }
 
-int coda_ascii_cursor_read_uint8_array(const coda_Cursor *cursor, uint8_t *dst, coda_array_ordering array_ordering,
+int coda_ascii_cursor_read_uint8_array(const coda_cursor *cursor, uint8_t *dst, coda_array_ordering array_ordering,
                                        int64_t size_boundary)
 {
     return read_array(cursor, (read_function)&coda_ascii_cursor_read_uint8, (uint8_t *)dst, sizeof(uint8_t),
                       array_ordering, size_boundary);
 }
 
-int coda_ascii_cursor_read_int16_array(const coda_Cursor *cursor, int16_t *dst, coda_array_ordering array_ordering,
+int coda_ascii_cursor_read_int16_array(const coda_cursor *cursor, int16_t *dst, coda_array_ordering array_ordering,
                                        int64_t size_boundary)
 {
     return read_array(cursor, (read_function)&coda_ascii_cursor_read_int16, (uint8_t *)dst, sizeof(int16_t),
                       array_ordering, size_boundary);
 }
 
-int coda_ascii_cursor_read_uint16_array(const coda_Cursor *cursor, uint16_t *dst, coda_array_ordering array_ordering,
+int coda_ascii_cursor_read_uint16_array(const coda_cursor *cursor, uint16_t *dst, coda_array_ordering array_ordering,
                                         int64_t size_boundary)
 {
     return read_array(cursor, (read_function)&coda_ascii_cursor_read_uint16, (uint8_t *)dst, sizeof(uint16_t),
                       array_ordering, size_boundary);
 }
 
-int coda_ascii_cursor_read_int32_array(const coda_Cursor *cursor, int32_t *dst, coda_array_ordering array_ordering,
+int coda_ascii_cursor_read_int32_array(const coda_cursor *cursor, int32_t *dst, coda_array_ordering array_ordering,
                                        int64_t size_boundary)
 {
     return read_array(cursor, (read_function)&coda_ascii_cursor_read_int32, (uint8_t *)dst, sizeof(int32_t),
                       array_ordering, size_boundary);
 }
 
-int coda_ascii_cursor_read_uint32_array(const coda_Cursor *cursor, uint32_t *dst, coda_array_ordering array_ordering,
+int coda_ascii_cursor_read_uint32_array(const coda_cursor *cursor, uint32_t *dst, coda_array_ordering array_ordering,
                                         int64_t size_boundary)
 {
     return read_array(cursor, (read_function)&coda_ascii_cursor_read_uint32, (uint8_t *)dst, sizeof(uint32_t),
                       array_ordering, size_boundary);
 }
 
-int coda_ascii_cursor_read_int64_array(const coda_Cursor *cursor, int64_t *dst, coda_array_ordering array_ordering,
+int coda_ascii_cursor_read_int64_array(const coda_cursor *cursor, int64_t *dst, coda_array_ordering array_ordering,
                                        int64_t size_boundary)
 {
     return read_array(cursor, (read_function)&coda_ascii_cursor_read_int64, (uint8_t *)dst, sizeof(int64_t),
                       array_ordering, size_boundary);
 }
 
-int coda_ascii_cursor_read_uint64_array(const coda_Cursor *cursor, uint64_t *dst, coda_array_ordering array_ordering,
+int coda_ascii_cursor_read_uint64_array(const coda_cursor *cursor, uint64_t *dst, coda_array_ordering array_ordering,
                                         int64_t size_boundary)
 {
     return read_array(cursor, (read_function)&coda_ascii_cursor_read_uint64, (uint8_t *)dst, sizeof(uint64_t),
                       array_ordering, size_boundary);
 }
 
-int coda_ascii_cursor_read_float_array(const coda_Cursor *cursor, float *dst, coda_array_ordering array_ordering,
+int coda_ascii_cursor_read_float_array(const coda_cursor *cursor, float *dst, coda_array_ordering array_ordering,
                                        int64_t size_boundary)
 {
     return read_array(cursor, (read_function)&coda_ascii_cursor_read_float, (uint8_t *)dst, sizeof(float),
                       array_ordering, size_boundary);
 }
 
-int coda_ascii_cursor_read_double_array(const coda_Cursor *cursor, double *dst, coda_array_ordering array_ordering,
+int coda_ascii_cursor_read_double_array(const coda_cursor *cursor, double *dst, coda_array_ordering array_ordering,
                                         int64_t size_boundary)
 {
     return read_array(cursor, (read_function)&coda_ascii_cursor_read_double, (uint8_t *)dst, sizeof(double),
                       array_ordering, size_boundary);
 }
 
-int coda_ascii_cursor_read_char_array(const coda_Cursor *cursor, char *dst, coda_array_ordering array_ordering,
+int coda_ascii_cursor_read_char_array(const coda_cursor *cursor, char *dst, coda_array_ordering array_ordering,
                                       int64_t size_boundary)
 {
     return read_array(cursor, (read_function)&coda_ascii_cursor_read_char, (uint8_t *)dst, sizeof(char),

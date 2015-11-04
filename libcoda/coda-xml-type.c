@@ -24,9 +24,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-int coda_xml_type_has_ascii_content(const coda_Type *type, int *has_ascii_content)
+int coda_xml_type_has_ascii_content(const coda_type *type, int *has_ascii_content)
 {
-    switch (((coda_xmlType *)type)->tag)
+    switch (((coda_xml_type *)type)->tag)
     {
         case tag_xml_ascii_type:
             *has_ascii_content = 1;
@@ -48,13 +48,13 @@ int coda_xml_type_has_ascii_content(const coda_Type *type, int *has_ascii_conten
     return 0;
 }
 
-int coda_xml_type_get_read_type(const coda_Type *type, coda_native_type *read_type)
+int coda_xml_type_get_read_type(const coda_type *type, coda_native_type *read_type)
 {
-    switch (((coda_xmlType *)type)->tag)
+    switch (((coda_xml_type *)type)->tag)
     {
         case tag_xml_ascii_type:
             /* the content is defined using an ascii definition */
-            return coda_type_get_read_type((coda_Type *)((coda_xmlElement *)type)->ascii_type, read_type);
+            return coda_type_get_read_type((coda_type *)((coda_xml_element *)type)->ascii_type, read_type);
         case tag_xml_text:
         case tag_xml_attribute:
             *read_type = coda_native_type_string;
@@ -70,13 +70,13 @@ int coda_xml_type_get_read_type(const coda_Type *type, coda_native_type *read_ty
     return 0;
 }
 
-int coda_xml_type_get_string_length(const coda_Type *type, long *length)
+int coda_xml_type_get_string_length(const coda_type *type, long *length)
 {
-    switch (((coda_xmlType *)type)->tag)
+    switch (((coda_xml_type *)type)->tag)
     {
         case tag_xml_ascii_type:
             /* the content is defined using an ascii definition */
-            return coda_ascii_type_get_string_length((coda_Type *)((coda_xmlElement *)type)->ascii_type, length);
+            return coda_ascii_type_get_string_length((coda_type *)((coda_xml_element *)type)->ascii_type, length);
         case tag_xml_root:
         case tag_xml_record:
         case tag_xml_text:
@@ -90,13 +90,13 @@ int coda_xml_type_get_string_length(const coda_Type *type, long *length)
     return 0;
 }
 
-int coda_xml_type_get_bit_size(const coda_Type *type, int64_t *bit_size)
+int coda_xml_type_get_bit_size(const coda_type *type, int64_t *bit_size)
 {
-    switch (((coda_xmlType *)type)->tag)
+    switch (((coda_xml_type *)type)->tag)
     {
         case tag_xml_ascii_type:
             /* the content is defined using an ascii definition */
-            return coda_ascii_type_get_bit_size((coda_Type *)((coda_xmlElement *)type)->ascii_type, bit_size);
+            return coda_ascii_type_get_bit_size((coda_type *)((coda_xml_element *)type)->ascii_type, bit_size);
         default:
             *bit_size = -1;
             break;
@@ -105,13 +105,13 @@ int coda_xml_type_get_bit_size(const coda_Type *type, int64_t *bit_size)
     return 0;
 }
 
-int coda_xml_type_get_unit(const coda_Type *type, const char **unit)
+int coda_xml_type_get_unit(const coda_type *type, const char **unit)
 {
-    switch (((coda_xmlType *)type)->tag)
+    switch (((coda_xml_type *)type)->tag)
     {
         case tag_xml_ascii_type:
             /* the content is defined using an ascii definition */
-            return coda_ascii_type_get_unit((coda_Type *)((coda_xmlElement *)type)->ascii_type, unit);
+            return coda_ascii_type_get_unit((coda_type *)((coda_xml_element *)type)->ascii_type, unit);
         default:
             *unit = NULL;
             break;
@@ -120,16 +120,16 @@ int coda_xml_type_get_unit(const coda_Type *type, const char **unit)
     return 0;
 }
 
-int coda_xml_type_get_fixed_value(const coda_Type *type, const char **fixed_value, long *length)
+int coda_xml_type_get_fixed_value(const coda_type *type, const char **fixed_value, long *length)
 {
-    switch (((coda_xmlType *)type)->tag)
+    switch (((coda_xml_type *)type)->tag)
     {
         case tag_xml_ascii_type:
             /* the content is defined using an ascii definition */
-            return coda_xml_type_get_fixed_value((coda_Type *)((coda_xmlElement *)type)->ascii_type, fixed_value,
+            return coda_xml_type_get_fixed_value((coda_type *)((coda_xml_element *)type)->ascii_type, fixed_value,
                                                  length);
         case tag_xml_attribute:
-            *fixed_value = ((coda_xmlAttribute *)type)->fixed_value;
+            *fixed_value = ((coda_xml_attribute *)type)->fixed_value;
             if (*fixed_value != NULL)
             {
                 *length = strlen(*fixed_value);
@@ -143,22 +143,22 @@ int coda_xml_type_get_fixed_value(const coda_Type *type, const char **fixed_valu
     return 0;
 }
 
-int coda_xml_type_get_num_record_fields(const coda_Type *type, long *num_fields)
+int coda_xml_type_get_num_record_fields(const coda_type *type, long *num_fields)
 {
-    switch (((coda_xmlType *)type)->tag)
+    switch (((coda_xml_type *)type)->tag)
     {
         case tag_xml_root:
             *num_fields = 1;
             break;
         case tag_xml_ascii_type:
             /* the content is defined using an ascii definition */
-            return coda_ascbin_type_get_num_record_fields((coda_Type *)((coda_xmlElement *)type)->ascii_type,
+            return coda_ascbin_type_get_num_record_fields((coda_type *)((coda_xml_element *)type)->ascii_type,
                                                           num_fields);
         case tag_xml_record:
-            *num_fields = ((coda_xmlElement *)type)->num_fields;
+            *num_fields = ((coda_xml_element *)type)->num_fields;
             break;
         case tag_xml_attribute_record:
-            *num_fields = ((coda_xmlAttributeRecord *)type)->num_attributes;
+            *num_fields = ((coda_xml_attribute_record *)type)->num_attributes;
             break;
         default:
             assert(0);
@@ -168,14 +168,14 @@ int coda_xml_type_get_num_record_fields(const coda_Type *type, long *num_fields)
     return 0;
 }
 
-int coda_xml_type_get_record_field_index_from_name(const coda_Type *type, const char *name, long *index)
+int coda_xml_type_get_record_field_index_from_name(const coda_type *type, const char *name, long *index)
 {
     hashtable *hash_data;
 
-    switch (((coda_xmlType *)type)->tag)
+    switch (((coda_xml_type *)type)->tag)
     {
         case tag_xml_root:
-            if (strcasecmp(name, ((coda_xmlRoot *)type)->field->name) == 0)
+            if (strcasecmp(name, ((coda_xml_root *)type)->field->name) == 0)
             {
                 *index = 0;
                 return 0;
@@ -187,13 +187,14 @@ int coda_xml_type_get_record_field_index_from_name(const coda_Type *type, const 
             }
         case tag_xml_ascii_type:
             /* the content is defined using an ascii definition */
-            return coda_ascbin_type_get_record_field_index_from_name((coda_Type *)((coda_xmlElement *)type)->ascii_type,
-                                                                     name, index);
+            return
+                coda_ascbin_type_get_record_field_index_from_name((coda_type *)((coda_xml_element *)type)->ascii_type,
+                                                                  name, index);
         case tag_xml_record:
-            hash_data = ((coda_xmlElement *)type)->name_hash_data;
+            hash_data = ((coda_xml_element *)type)->name_hash_data;
             break;
         case tag_xml_attribute_record:
-            hash_data = ((coda_xmlAttributeRecord *)type)->name_hash_data;
+            hash_data = ((coda_xml_attribute_record *)type)->name_hash_data;
             break;
         default:
             assert(0);
@@ -210,9 +211,9 @@ int coda_xml_type_get_record_field_index_from_name(const coda_Type *type, const 
     return -1;
 }
 
-int coda_xml_type_get_record_field_type(const coda_Type *type, long index, coda_Type **field_type)
+int coda_xml_type_get_record_field_type(const coda_type *type, long index, coda_type **field_type)
 {
-    switch (((coda_xmlType *)type)->tag)
+    switch (((coda_xml_type *)type)->tag)
     {
         case tag_xml_root:
             if (index != 0)
@@ -221,29 +222,29 @@ int coda_xml_type_get_record_field_type(const coda_Type *type, long index, coda_
                                __FILE__, __LINE__);
                 return -1;
             }
-            *field_type = (coda_Type *)((coda_xmlRoot *)type)->field->type;
+            *field_type = (coda_type *)((coda_xml_root *)type)->field->type;
             break;
         case tag_xml_ascii_type:
             /* the content is defined using an ascii definition */
-            return coda_ascbin_type_get_record_field_type((coda_Type *)((coda_xmlElement *)type)->ascii_type, index,
+            return coda_ascbin_type_get_record_field_type((coda_type *)((coda_xml_element *)type)->ascii_type, index,
                                                           field_type);
         case tag_xml_record:
-            if (index < 0 || index >= ((coda_xmlElement *)type)->num_fields)
+            if (index < 0 || index >= ((coda_xml_element *)type)->num_fields)
             {
                 coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%d) (%s:%u)", index,
-                               ((coda_xmlElement *)type)->num_fields, __FILE__, __LINE__);
+                               ((coda_xml_element *)type)->num_fields, __FILE__, __LINE__);
                 return -1;
             }
-            *field_type = (coda_Type *)((coda_xmlElement *)type)->field[index]->type;
+            *field_type = (coda_type *)((coda_xml_element *)type)->field[index]->type;
             break;
         case tag_xml_attribute_record:
-            if (index < 0 || index >= ((coda_xmlAttributeRecord *)type)->num_attributes)
+            if (index < 0 || index >= ((coda_xml_attribute_record *)type)->num_attributes)
             {
                 coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%d) (%s:%u)", index,
-                               ((coda_xmlAttributeRecord *)type)->num_attributes, __FILE__, __LINE__);
+                               ((coda_xml_attribute_record *)type)->num_attributes, __FILE__, __LINE__);
                 return -1;
             }
-            *field_type = (coda_Type *)((coda_xmlAttributeRecord *)type)->attribute[index];
+            *field_type = (coda_type *)((coda_xml_attribute_record *)type)->attribute[index];
             break;
         default:
             assert(0);
@@ -253,9 +254,9 @@ int coda_xml_type_get_record_field_type(const coda_Type *type, long index, coda_
     return 0;
 }
 
-int coda_xml_type_get_record_field_name(const coda_Type *type, long index, const char **name)
+int coda_xml_type_get_record_field_name(const coda_type *type, long index, const char **name)
 {
-    switch (((coda_xmlType *)type)->tag)
+    switch (((coda_xml_type *)type)->tag)
     {
         case tag_xml_root:
             if (index != 0)
@@ -264,29 +265,29 @@ int coda_xml_type_get_record_field_name(const coda_Type *type, long index, const
                                __FILE__, __LINE__);
                 return -1;
             }
-            *name = ((coda_xmlRoot *)type)->field->name;
+            *name = ((coda_xml_root *)type)->field->name;
             break;
         case tag_xml_ascii_type:
             /* the content is defined using an ascii definition */
-            return coda_ascbin_type_get_record_field_name((coda_Type *)((coda_xmlElement *)type)->ascii_type, index,
+            return coda_ascbin_type_get_record_field_name((coda_type *)((coda_xml_element *)type)->ascii_type, index,
                                                           name);
         case tag_xml_record:
-            if (index < 0 || index >= ((coda_xmlElement *)type)->num_fields)
+            if (index < 0 || index >= ((coda_xml_element *)type)->num_fields)
             {
                 coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%d) (%s:%u)", index,
-                               ((coda_xmlElement *)type)->num_fields, __FILE__, __LINE__);
+                               ((coda_xml_element *)type)->num_fields, __FILE__, __LINE__);
                 return -1;
             }
-            *name = ((coda_xmlElement *)type)->field[index]->name;
+            *name = ((coda_xml_element *)type)->field[index]->name;
             break;
         case tag_xml_attribute_record:
-            if (index < 0 || index >= ((coda_xmlAttributeRecord *)type)->num_attributes)
+            if (index < 0 || index >= ((coda_xml_attribute_record *)type)->num_attributes)
             {
                 coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%d) (%s:%u)", index,
-                               ((coda_xmlAttributeRecord *)type)->num_attributes, __FILE__, __LINE__);
+                               ((coda_xml_attribute_record *)type)->num_attributes, __FILE__, __LINE__);
                 return -1;
             }
-            *name = ((coda_xmlAttributeRecord *)type)->attribute[index]->attr_name;
+            *name = ((coda_xml_attribute_record *)type)->attribute[index]->attr_name;
             break;
         default:
             assert(0);
@@ -296,9 +297,9 @@ int coda_xml_type_get_record_field_name(const coda_Type *type, long index, const
     return 0;
 }
 
-int coda_xml_type_get_record_field_hidden_status(const coda_Type *type, long index, int *hidden)
+int coda_xml_type_get_record_field_hidden_status(const coda_type *type, long index, int *hidden)
 {
-    switch (((coda_xmlType *)type)->tag)
+    switch (((coda_xml_type *)type)->tag)
     {
         case tag_xml_root:
             if (index != 0)
@@ -311,22 +312,22 @@ int coda_xml_type_get_record_field_hidden_status(const coda_Type *type, long ind
             break;
         case tag_xml_ascii_type:
             /* the content is defined using an ascii definition */
-            return coda_ascbin_type_get_record_field_hidden_status((coda_Type *)((coda_xmlElement *)type)->ascii_type,
+            return coda_ascbin_type_get_record_field_hidden_status((coda_type *)((coda_xml_element *)type)->ascii_type,
                                                                    index, hidden);
         case tag_xml_record:
-            if (index < 0 || index >= ((coda_xmlElement *)type)->num_fields)
+            if (index < 0 || index >= ((coda_xml_element *)type)->num_fields)
             {
                 coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%d) (%s:%u)", index,
-                               ((coda_xmlElement *)type)->num_fields, __FILE__, __LINE__);
+                               ((coda_xml_element *)type)->num_fields, __FILE__, __LINE__);
                 return -1;
             }
-            *hidden = ((coda_xmlElement *)type)->field[index]->hidden;
+            *hidden = ((coda_xml_element *)type)->field[index]->hidden;
             break;
         case tag_xml_attribute_record:
-            if (index < 0 || index >= ((coda_xmlAttributeRecord *)type)->num_attributes)
+            if (index < 0 || index >= ((coda_xml_attribute_record *)type)->num_attributes)
             {
                 coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%d) (%s:%u)", index,
-                               ((coda_xmlAttributeRecord *)type)->num_attributes, __FILE__, __LINE__);
+                               ((coda_xml_attribute_record *)type)->num_attributes, __FILE__, __LINE__);
                 return -1;
             }
             *hidden = 0;
@@ -339,9 +340,9 @@ int coda_xml_type_get_record_field_hidden_status(const coda_Type *type, long ind
     return 0;
 }
 
-int coda_xml_type_get_record_field_available_status(const coda_Type *type, long index, int *available)
+int coda_xml_type_get_record_field_available_status(const coda_type *type, long index, int *available)
 {
-    switch (((coda_xmlType *)type)->tag)
+    switch (((coda_xml_type *)type)->tag)
     {
         case tag_xml_root:
             if (index != 0)
@@ -354,26 +355,26 @@ int coda_xml_type_get_record_field_available_status(const coda_Type *type, long 
             break;
         case tag_xml_ascii_type:
             /* the content is defined using an ascii definition */
-            return coda_ascbin_type_get_record_field_available_status((coda_Type *)
-                                                                      ((coda_xmlElement *)type)->ascii_type, index,
+            return coda_ascbin_type_get_record_field_available_status((coda_type *)
+                                                                      ((coda_xml_element *)type)->ascii_type, index,
                                                                       available);
         case tag_xml_record:
-            if (index < 0 || index >= ((coda_xmlElement *)type)->num_fields)
+            if (index < 0 || index >= ((coda_xml_element *)type)->num_fields)
             {
                 coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%d) (%s:%u)", index,
-                               ((coda_xmlElement *)type)->num_fields, __FILE__, __LINE__);
+                               ((coda_xml_element *)type)->num_fields, __FILE__, __LINE__);
                 return -1;
             }
-            *available = ((coda_xmlElement *)type)->field[index]->optional ? -1 : 1;
+            *available = ((coda_xml_element *)type)->field[index]->optional ? -1 : 1;
             break;
         case tag_xml_attribute_record:
-            if (index < 0 || index >= ((coda_xmlAttributeRecord *)type)->num_attributes)
+            if (index < 0 || index >= ((coda_xml_attribute_record *)type)->num_attributes)
             {
                 coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%d) (%s:%u)", index,
-                               ((coda_xmlAttributeRecord *)type)->num_attributes, __FILE__, __LINE__);
+                               ((coda_xml_attribute_record *)type)->num_attributes, __FILE__, __LINE__);
                 return -1;
             }
-            *available = ((coda_xmlAttributeRecord *)type)->attribute[index]->optional ? -1 : 1;
+            *available = ((coda_xml_attribute_record *)type)->attribute[index]->optional ? -1 : 1;
             break;
         default:
             assert(0);
@@ -383,13 +384,13 @@ int coda_xml_type_get_record_field_available_status(const coda_Type *type, long 
     return 0;
 }
 
-int coda_xml_type_get_record_union_status(const coda_Type *type, int *is_union)
+int coda_xml_type_get_record_union_status(const coda_type *type, int *is_union)
 {
-    switch (((coda_xmlType *)type)->tag)
+    switch (((coda_xml_type *)type)->tag)
     {
         case tag_xml_ascii_type:
             /* the content is defined using an ascii definition */
-            return coda_ascbin_type_get_record_union_status((coda_Type *)((coda_xmlElement *)type)->ascii_type,
+            return coda_ascbin_type_get_record_union_status((coda_type *)((coda_xml_element *)type)->ascii_type,
                                                             is_union);
         case tag_xml_record:
         case tag_xml_root:
@@ -404,16 +405,16 @@ int coda_xml_type_get_record_union_status(const coda_Type *type, int *is_union)
     return 0;
 }
 
-int coda_xml_type_get_array_num_dims(const coda_Type *type, int *num_dims)
+int coda_xml_type_get_array_num_dims(const coda_type *type, int *num_dims)
 {
-    switch (((coda_xmlType *)type)->tag)
+    switch (((coda_xml_type *)type)->tag)
     {
         case tag_xml_array:
             *num_dims = 1;
             break;
         case tag_xml_ascii_type:
             /* the content is defined using an ascii definition */
-            return coda_ascbin_type_get_array_num_dims((coda_Type *)((coda_xmlElement *)type)->ascii_type, num_dims);
+            return coda_ascbin_type_get_array_num_dims((coda_type *)((coda_xml_element *)type)->ascii_type, num_dims);
         default:
             assert(0);
             exit(1);
@@ -422,9 +423,9 @@ int coda_xml_type_get_array_num_dims(const coda_Type *type, int *num_dims)
     return 0;
 }
 
-int coda_xml_type_get_array_dim(const coda_Type *type, int *num_dims, long dim[])
+int coda_xml_type_get_array_dim(const coda_type *type, int *num_dims, long dim[])
 {
-    switch (((coda_xmlType *)type)->tag)
+    switch (((coda_xml_type *)type)->tag)
     {
         case tag_xml_array:
             *num_dims = 1;
@@ -432,7 +433,7 @@ int coda_xml_type_get_array_dim(const coda_Type *type, int *num_dims, long dim[]
             break;
         case tag_xml_ascii_type:
             /* the content is defined using an ascii definition */
-            return coda_ascbin_type_get_array_dim((coda_Type *)((coda_xmlElement *)type)->ascii_type, num_dims, dim);
+            return coda_ascbin_type_get_array_dim((coda_type *)((coda_xml_element *)type)->ascii_type, num_dims, dim);
         default:
             assert(0);
             exit(1);
@@ -441,16 +442,16 @@ int coda_xml_type_get_array_dim(const coda_Type *type, int *num_dims, long dim[]
     return 0;
 }
 
-int coda_xml_type_get_array_base_type(const coda_Type *type, coda_Type **base_type)
+int coda_xml_type_get_array_base_type(const coda_type *type, coda_type **base_type)
 {
-    switch (((coda_xmlType *)type)->tag)
+    switch (((coda_xml_type *)type)->tag)
     {
         case tag_xml_array:
-            *base_type = (coda_Type *)((coda_xmlArray *)type)->base_type;
+            *base_type = (coda_type *)((coda_xml_array *)type)->base_type;
             break;
         case tag_xml_ascii_type:
             /* the content is defined using an ascii definition */
-            return coda_ascbin_type_get_array_base_type((coda_Type *)((coda_xmlElement *)type)->ascii_type, base_type);
+            return coda_ascbin_type_get_array_base_type((coda_type *)((coda_xml_element *)type)->ascii_type, base_type);
         default:
             assert(0);
             exit(1);
@@ -459,13 +460,13 @@ int coda_xml_type_get_array_base_type(const coda_Type *type, coda_Type **base_ty
     return 0;
 }
 
-int coda_xml_type_get_special_type(const coda_Type *type, coda_special_type *special_type)
+int coda_xml_type_get_special_type(const coda_type *type, coda_special_type *special_type)
 {
-    switch (((coda_xmlType *)type)->tag)
+    switch (((coda_xml_type *)type)->tag)
     {
         case tag_xml_ascii_type:
             /* the content is defined using an ascii definition */
-            return coda_ascii_type_get_special_type((coda_Type *)((coda_xmlElement *)type)->ascii_type, special_type);
+            return coda_ascii_type_get_special_type((coda_type *)((coda_xml_element *)type)->ascii_type, special_type);
         default:
             assert(0);
             exit(1);
@@ -474,13 +475,14 @@ int coda_xml_type_get_special_type(const coda_Type *type, coda_special_type *spe
     return 0;
 }
 
-int coda_xml_type_get_special_base_type(const coda_Type *type, coda_Type **base_type)
+int coda_xml_type_get_special_base_type(const coda_type *type, coda_type **base_type)
 {
-    switch (((coda_xmlType *)type)->tag)
+    switch (((coda_xml_type *)type)->tag)
     {
         case tag_xml_ascii_type:
             /* the content is defined using an ascii definition */
-            return coda_ascii_type_get_special_base_type((coda_Type *)((coda_xmlElement *)type)->ascii_type, base_type);
+            return coda_ascii_type_get_special_base_type((coda_type *)((coda_xml_element *)type)->ascii_type,
+                                                         base_type);
         default:
             assert(0);
             exit(1);

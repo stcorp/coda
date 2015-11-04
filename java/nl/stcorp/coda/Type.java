@@ -35,7 +35,7 @@ package nl.stcorp.coda;
 
 public class Type
 {
-    private final SWIGTYPE_p_coda_Type_struct type;
+    private final SWIGTYPE_p_coda_type_struct type;
 
 
     // Users never need to deal with the opaque SWIG pointer
@@ -44,7 +44,7 @@ public class Type
     /**
      * @param type
      */
-    Type(SWIGTYPE_p_coda_Type_struct type)
+    Type(SWIGTYPE_p_coda_type_struct type)
     {
         this.type = type;
     }
@@ -306,7 +306,7 @@ public class Type
      */
     public Type getRecordFieldType(int index) throws CodaException
     {
-        SWIGTYPE_p_coda_Type_struct field_type = new SWIGTYPE_p_coda_Type_struct();
+        SWIGTYPE_p_coda_type_struct field_type = new SWIGTYPE_p_coda_type_struct();
         codac.type_get_record_field_type(this.type, index, field_type);
         return new Type(field_type);
     }
@@ -326,6 +326,22 @@ public class Type
         String name[] = {""};
         codac.type_get_record_field_name(this.type, index, name);
         return name[0];
+    }
+
+    /**
+     * Get the real name of a record field.
+     * 
+     * @param index
+     *            Field index (0 <= \a index < number of fields).
+     * @return The real name of the record field.
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public String getRecordFieldRealName(int index) throws CodaException
+    {
+        String realName[] = {""};
+        codac.type_get_record_field_real_name(this.type, index, realName);
+        return realName[0];
     }
 
 
@@ -425,7 +441,7 @@ public class Type
      */
     public Type getArrayBaseType() throws CodaException
     {
-        SWIGTYPE_p_coda_Type_struct base_type = new SWIGTYPE_p_coda_Type_struct();
+        SWIGTYPE_p_coda_type_struct base_type = new SWIGTYPE_p_coda_type_struct();
         codac.type_get_array_base_type(this.type, base_type);
         return new Type(base_type);
     }
@@ -455,7 +471,7 @@ public class Type
      */
     public Type getSpecialBaseType() throws CodaException
     {
-        SWIGTYPE_p_coda_Type_struct base_type = new SWIGTYPE_p_coda_Type_struct();
+        SWIGTYPE_p_coda_type_struct base_type = new SWIGTYPE_p_coda_type_struct();
         codac.type_get_special_base_type(this.type, base_type);
         return new Type(base_type);
     }

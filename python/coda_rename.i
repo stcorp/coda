@@ -38,12 +38,15 @@
 %rename(isPlusInf) coda_isPlusInf;
 %rename(isMinInf) coda_isMinInf;
 %rename(c_index_to_fortran_index) coda_c_index_to_fortran_index;
+%rename(match_filefilter) coda_match_filefilter;
 %rename(datetime_to_double) coda_datetime_to_double;
 %rename(double_to_datetime) coda_double_to_datetime;
+// time_to_string is handled in codapython.py
 %rename(string_to_time) coda_string_to_time;
-%rename(match_filefilter) coda_match_filefilter;
-%rename(set_error) coda_set_error;
-%rename(errno_to_string) coda_errno_to_string;
+%rename(utcdatetime_to_double) coda_utcdatetime_to_double;
+%rename(double_to_utcdatetime) coda_double_to_utcdatetime_;
+// time_to_utcstring is handled in codapython.py
+%rename(utcstring_to_time) coda_utcstring_to_time;
 %rename(recognize_file) coda_recognize_file;
 %rename(open) coda_open;
 %rename(close) coda_close;
@@ -54,14 +57,12 @@
 %rename(get_product_type) coda_get_product_type;
 %rename(get_product_version) coda_get_product_version;
 %rename(get_product_root_type) coda_get_product_root_type;
-%rename(get_product_backend) coda_get_product_backend;
 %rename(get_product_variable_value) coda_get_product_variable_value;
 %rename(type_get_format_name) coda_type_get_format_name;
 %rename(type_get_class_name) coda_type_get_class_name;
 %rename(type_get_native_type_name) coda_type_get_native_type_name;
 %rename(type_get_special_type_name) coda_type_get_special_type_name;
 %rename(type_has_ascii_content) coda_type_has_ascii_content;
-%rename(type_has_xml_content) coda_type_has_xml_content;
 %rename(type_get_format) coda_type_get_format;
 %rename(type_get_class) coda_type_get_class;
 %rename(type_get_read_type) coda_type_get_read_type;
@@ -75,6 +76,7 @@
 %rename(type_get_record_field_index_from_name) coda_type_get_record_field_index_from_name;
 %rename(type_get_record_field_type) coda_type_get_record_field_type;
 %rename(type_get_record_field_name) coda_type_get_record_field_name;
+%rename(type_get_record_field_real_name) coda_type_get_record_field_real_name;
 %rename(type_get_record_field_hidden_status) coda_type_get_record_field_hidden_status;
 %rename(type_get_record_field_available_status) coda_type_get_record_field_available_status;
 %rename(type_get_record_union_status) coda_type_get_record_union_status;
@@ -98,7 +100,6 @@
 %rename(cursor_goto_parent) coda_cursor_goto_parent;
 %rename(cursor_use_base_type_of_special_type) coda_cursor_use_base_type_of_special_type;
 %rename(cursor_has_ascii_content) coda_cursor_has_ascii_content;
-%rename(cursor_has_xml_content) coda_cursor_has_xml_content;
 %rename(cursor_get_string_length) coda_cursor_get_string_length;
 %rename(cursor_get_bit_size) coda_cursor_get_bit_size;
 %rename(cursor_get_byte_size) coda_cursor_get_byte_size;
@@ -146,3 +147,13 @@
 %rename(cursor_read_complex_double_pairs_array) coda_cursor_read_complex_double_pairs_array;
 %rename(cursor_read_complex_double_split) coda_cursor_read_complex_double_split;
 %rename(cursor_read_complex_double_split_array) coda_cursor_read_complex_double_split_array;
+%rename(expression_from_string) coda_expression_from_string;
+%rename(expression_delete) coda_expression_delete;
+%rename(expression_get_type) coda_expression_get_type;
+%rename(expression_is_constant) coda_expression_is_constant;
+%rename(expression_eval_bool) coda_expression_eval_bool;
+%rename(expression_eval_integer) coda_expression_eval_integer;
+%rename(expression_eval_float) coda_expression_eval_float;
+%rename(expression_eval_integer) coda_expression_eval_integer;
+%rename(expression_eval_string) coda_expression_eval_string;
+%rename(expression_eval_node) coda_expression_eval_node;

@@ -4,9 +4,9 @@ SETLOCAL
 
 REM User definable settings
 
-SET MATLAB_DIR=C:\MATLAB6p5
-REM Supported releases are: R11, R11.1, R12, R12.1, R13, R14, R2006a, R2006b, R2007a
-SET MATLAB_RELEASE=R13
+SET MATLAB_DIR=C:\Program Files\MATLAB\R2007b
+REM Supported releases are: R2007b
+SET MATLAB_RELEASE=R2007b
 
 REM End of user definable settings
 
@@ -29,36 +29,11 @@ SET MEXFLAGS=-I. -I..\libcoda -I"%CODASRCDIR%" -DWIN32_LEAN_AND_MEAN -DWIN32 -DH
 SET COMMON_CODA_OBJECTS=
 
 
-IF "%MATLAB_RELEASE%"=="R11" GOTO MATLAB_R11
-IF "%MATLAB_RELEASE%"=="R11.1" GOTO MATLAB_R11
-IF "%MATLAB_RELEASE%"=="R12" GOTO MATLAB_R12
-IF "%MATLAB_RELEASE%"=="R12.1" GOTO MATLAB_R12
-IF "%MATLAB_RELEASE%"=="R13" GOTO MATLAB_R13
-IF "%MATLAB_RELEASE%"=="R14" GOTO MATLAB_R13
-IF "%MATLAB_RELEASE%"=="R2006a" GOTO MATLAB_R13
+IF "%MATLAB_RELEASE%"=="R2007b" GOTO MATLAB_R2007b
 
 GOTO UNSUPPORTED_MATLAB_RELEASE
 
-:MATLAB_R11
-
-SET MEX=call "%MATLAB_DIR%\bin\mex.bat"
-SET MEXFLAGS=%MEXFLAGS% -DMATLAB_R11
-SET COMMON_CODA_OBJECTS=%COMMON_CODA_OBJECTS% "%INTDIR%\mxCreateDoubleScalar.obj" "%INTDIR%\mxCreateNumericMatrix.obj"
-SET BUILD_MXCREATEDOUBLESCALAR=1
-SET BUILD_MXCREATENUMERICMATRIX=1
-
-GOTO MATLAB_RELEASE_END
-
-:MATLAB_R12
-
-SET MEX=call "%MATLAB_DIR%\bin\win32\mex.bat"
-SET MEXFLAGS=%MEXFLAGS% -DMATLAB_R12
-SET COMMON_CODA_OBJECTS=%COMMON_CODA_OBJECTS% "%INTDIR%\mxCreateDoubleScalar.obj"
-SET BUILD_MXCREATEDOUBLESCALAR=1
-
-GOTO MATLAB_RELEASE_END
-
-:MATLAB_R13
+:MATLAB_R2007b
 
 SET MEX=call "%MATLAB_DIR%\bin\win32\mex.bat"
 SET MEXFLAGS=%MEXFLAGS% -DMATLAB_R13
@@ -87,7 +62,7 @@ COPY "%CODASRCDIR%\coda-matlab-traverse.c" "%INTDIR%\codatraverse.c" > NUL
 %MEX% %MEXFLAGS% -outdir "%INTDIR%" -c "%INTDIR%\codatraverse.c"
 
 ECHO Creating coda_matlab.dll
-%MEX% %MEXFLAGS% -outdir "%OUTDIR%" "%CODASRCDIR%\coda_matlab.c" "%INTDIR%\codagetdata.obj" "%INTDIR%\codatraverse.obj" %COMMON_CODA_OBJECTS% "%HDF4_LIB%\hd424.lib" "%HDF4_LIB%\hm424.lib" "%JPEG_LIB%\libjpeg.lib" "%SZIP_LIB%\szlib.lib" "%ZLIB_LIB%\zlib.lib" "%HDF5_LIB%\hdf5.lib" "%LIBCODADIR%\withhdf\libcoda.lib" ws2_32.lib
+%MEX% %MEXFLAGS% -outdir "%OUTDIR%" "%CODASRCDIR%\coda_matlab.c" "%INTDIR%\codagetdata.obj" "%INTDIR%\codatraverse.obj" %COMMON_CODA_OBJECTS% "%HDF4_LIB%\hd425.lib" "%HDF4_LIB%\hm425.lib" "%HDF4_LIB%\xdr.lib" "%JPEG_LIB%\libjpeg.lib" "%SZIP_LIB%\szlib.lib" "%ZLIB_LIB%\zlib.lib" "%HDF5_LIB%\hdf5.lib" "%LIBCODADIR%\withhdf\libcoda.lib" ws2_32.lib
 
 ECHO Copying .m files
 COPY "%CODASRCDIR%\*.m" "%OUTDIR%" > NUL

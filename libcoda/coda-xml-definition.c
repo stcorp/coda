@@ -30,10 +30,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-static coda_xmlAttributeRecord *empty_attribute_record_singleton = NULL;
-static coda_xmlAttributeRecordDynamicType *empty_dynamic_attribute_record_singleton = NULL;
+static coda_xml_attribute_record *empty_attribute_record_singleton = NULL;
+static coda_xml_attribute_record_dynamic_type *empty_dynamic_attribute_record_singleton = NULL;
 
-static void delete_xml_attribute(coda_xmlAttribute *attribute)
+static void delete_xml_attribute(coda_xml_attribute *attribute)
 {
     assert(attribute->retain_count == 0);
     if (attribute->name != NULL)
@@ -59,7 +59,7 @@ static void delete_xml_attribute(coda_xmlAttribute *attribute)
     free(attribute);
 }
 
-static void delete_xml_attribute_record(coda_xmlAttributeRecord *attribute_record)
+static void delete_xml_attribute_record(coda_xml_attribute_record *attribute_record)
 {
     assert(attribute_record->retain_count == 0);
     if (attribute_record->name != NULL)
@@ -76,22 +76,22 @@ static void delete_xml_attribute_record(coda_xmlAttributeRecord *attribute_recor
 
         for (i = 0; i < attribute_record->num_attributes; i++)
         {
-            coda_xml_release_type((coda_xmlType *)attribute_record->attribute[i]);
+            coda_xml_release_type((coda_xml_type *)attribute_record->attribute[i]);
         }
         free(attribute_record->attribute);
     }
     if (attribute_record->attribute_name_hash_data != NULL)
     {
-        delete_hashtable(attribute_record->attribute_name_hash_data);
+        hashtable_delete(attribute_record->attribute_name_hash_data);
     }
     if (attribute_record->name_hash_data != NULL)
     {
-        delete_hashtable(attribute_record->name_hash_data);
+        hashtable_delete(attribute_record->name_hash_data);
     }
     free(attribute_record);
 }
 
-void coda_xml_field_delete(coda_xmlField *field)
+void coda_xml_field_delete(coda_xml_field *field)
 {
     if (field->name != NULL)
     {
@@ -104,7 +104,7 @@ void coda_xml_field_delete(coda_xmlField *field)
     free(field);
 }
 
-static void delete_xml_root(coda_xmlRoot *root)
+static void delete_xml_root(coda_xml_root *root)
 {
     assert(root->retain_count == 0);
     if (root->name != NULL)
@@ -122,7 +122,7 @@ static void delete_xml_root(coda_xmlRoot *root)
     free(root);
 }
 
-static void delete_xml_element(coda_xmlElement *element)
+static void delete_xml_element(coda_xml_element *element)
 {
     assert(element->retain_count == 0);
     if (element->name != NULL)
@@ -139,7 +139,7 @@ static void delete_xml_element(coda_xmlElement *element)
     }
     if (element->attributes != NULL)
     {
-        coda_xml_release_type((coda_xmlType *)element->attributes);
+        coda_xml_release_type((coda_xml_type *)element->attributes);
     }
     if (element->field != NULL)
     {
@@ -153,20 +153,20 @@ static void delete_xml_element(coda_xmlElement *element)
     }
     if (element->xml_name_hash_data != NULL)
     {
-        delete_hashtable(element->xml_name_hash_data);
+        hashtable_delete(element->xml_name_hash_data);
     }
     if (element->name_hash_data != NULL)
     {
-        delete_hashtable(element->name_hash_data);
+        hashtable_delete(element->name_hash_data);
     }
     if (element->ascii_type != NULL)
     {
-        coda_release_type((coda_Type *)element->ascii_type);
+        coda_release_type((coda_type *)element->ascii_type);
     }
     free(element);
 }
 
-static void delete_xml_array(coda_xmlArray *array)
+static void delete_xml_array(coda_xml_array *array)
 {
     assert(array->retain_count == 0);
     if (array->name != NULL)
@@ -179,12 +179,12 @@ static void delete_xml_array(coda_xmlArray *array)
     }
     if (array->base_type != NULL)
     {
-        coda_xml_release_type((coda_xmlType *)array->base_type);
+        coda_xml_release_type((coda_xml_type *)array->base_type);
     }
     free(array);
 }
 
-void coda_xml_release_type(coda_xmlType *type)
+void coda_xml_release_type(coda_xml_type *type)
 {
     assert(type != NULL);
 
@@ -197,34 +197,34 @@ void coda_xml_release_type(coda_xmlType *type)
     switch (type->tag)
     {
         case tag_xml_root:
-            delete_xml_root((coda_xmlRoot *)type);
+            delete_xml_root((coda_xml_root *)type);
             break;
         case tag_xml_record:
         case tag_xml_text:
         case tag_xml_ascii_type:
-            delete_xml_element((coda_xmlElement *)type);
+            delete_xml_element((coda_xml_element *)type);
             break;
         case tag_xml_array:
-            delete_xml_array((coda_xmlArray *)type);
+            delete_xml_array((coda_xml_array *)type);
             break;
         case tag_xml_attribute:
-            delete_xml_attribute((coda_xmlAttribute *)type);
+            delete_xml_attribute((coda_xml_attribute *)type);
             break;
         case tag_xml_attribute_record:
-            delete_xml_attribute_record((coda_xmlAttributeRecord *)type);
+            delete_xml_attribute_record((coda_xml_attribute_record *)type);
             break;
     }
 }
 
-static coda_xmlAttributeRecord *attribute_record_new(void)
+static coda_xml_attribute_record *attribute_record_new(void)
 {
-    coda_xmlAttributeRecord *record;
+    coda_xml_attribute_record *record;
 
-    record = malloc(sizeof(coda_xmlAttributeRecord));
+    record = malloc(sizeof(coda_xml_attribute_record));
     if (record == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_xmlAttributeRecord), __FILE__, __LINE__);
+                       (long)sizeof(coda_xml_attribute_record), __FILE__, __LINE__);
         return NULL;
     }
     record->retain_count = 0;
@@ -238,7 +238,7 @@ static coda_xmlAttributeRecord *attribute_record_new(void)
     record->attribute_name_hash_data = NULL;
     record->name_hash_data = NULL;
 
-    record->attribute_name_hash_data = new_hashtable(1);
+    record->attribute_name_hash_data = hashtable_new(1);
     if (record->attribute_name_hash_data == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashtable) (%s:%u)", __FILE__,
@@ -246,7 +246,7 @@ static coda_xmlAttributeRecord *attribute_record_new(void)
         delete_xml_attribute_record(record);
         return NULL;
     }
-    record->name_hash_data = new_hashtable(0);
+    record->name_hash_data = hashtable_new(0);
     if (record->name_hash_data == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashtable) (%s:%u)", __FILE__,
@@ -258,9 +258,9 @@ static coda_xmlAttributeRecord *attribute_record_new(void)
     return record;
 }
 
-static int attribute_record_add_attribute(coda_xmlAttributeRecord *attributes, coda_xmlAttribute *attribute)
+static int attribute_record_add_attribute(coda_xml_attribute_record *attributes, coda_xml_attribute *attribute)
 {
-    coda_xmlAttribute **new_attribute;
+    coda_xml_attribute **new_attribute;
 
     if (hashtable_get_index_from_name(attributes->attribute_name_hash_data, attribute->xml_name) >= 0)
     {
@@ -273,11 +273,11 @@ static int attribute_record_add_attribute(coda_xmlAttributeRecord *attributes, c
         return -1;
     }
 
-    new_attribute = realloc(attributes->attribute, (attributes->num_attributes + 1) * sizeof(coda_xmlAttribute *));
+    new_attribute = realloc(attributes->attribute, (attributes->num_attributes + 1) * sizeof(coda_xml_attribute *));
     if (new_attribute == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (attributes->num_attributes + 1) * sizeof(coda_xmlAttribute *), __FILE__, __LINE__);
+                       (attributes->num_attributes + 1) * sizeof(coda_xml_attribute *), __FILE__, __LINE__);
         return -1;
     }
     attributes->attribute = new_attribute;
@@ -300,20 +300,20 @@ static int attribute_record_add_attribute(coda_xmlAttributeRecord *attributes, c
     return 0;
 }
 
-int coda_xml_element_add_attribute(coda_xmlElement *element, coda_xmlAttribute *attribute)
+int coda_xml_element_add_attribute(coda_xml_element *element, coda_xml_attribute *attribute)
 {
     return attribute_record_add_attribute(element->attributes, attribute);
 }
 
-coda_xmlRoot *coda_xml_root_new(void)
+coda_xml_root *coda_xml_root_new(void)
 {
-    coda_xmlRoot *root;
+    coda_xml_root *root;
 
-    root = malloc(sizeof(coda_xmlRoot));
+    root = malloc(sizeof(coda_xml_root));
     if (root == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_xmlRoot), __FILE__, __LINE__);
+                       (long)sizeof(coda_xml_root), __FILE__, __LINE__);
         return NULL;
     }
     root->retain_count = 0;
@@ -327,7 +327,7 @@ coda_xmlRoot *coda_xml_root_new(void)
     return root;
 }
 
-int coda_xml_root_set_field(coda_xmlRoot *root, coda_xmlField *field)
+int coda_xml_root_set_field(coda_xml_root *root, coda_xml_field *field)
 {
     if (root->field != NULL)
     {
@@ -338,7 +338,7 @@ int coda_xml_root_set_field(coda_xmlRoot *root, coda_xmlField *field)
     return 0;
 }
 
-int coda_xml_root_validate(coda_xmlRoot *root)
+int coda_xml_root_validate(coda_xml_root *root)
 {
     if (root->field != NULL)
     {
@@ -348,17 +348,17 @@ int coda_xml_root_validate(coda_xmlRoot *root)
     return 0;
 }
 
-static coda_xmlElement *new_xml_element(const char *xml_name)
+static coda_xml_element *new_xml_element(const char *xml_name)
 {
-    coda_xmlElement *element;
+    coda_xml_element *element;
 
     assert(xml_name != NULL);
 
-    element = malloc(sizeof(coda_xmlElement));
+    element = malloc(sizeof(coda_xml_element));
     if (element == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_xmlElement), __FILE__, __LINE__);
+                       (long)sizeof(coda_xml_element), __FILE__, __LINE__);
         return NULL;
     }
     element->retain_count = 0;
@@ -392,9 +392,9 @@ static coda_xmlElement *new_xml_element(const char *xml_name)
     return element;
 }
 
-coda_xmlElement *coda_xml_record_new(const char *xml_name)
+coda_xml_element *coda_xml_record_new(const char *xml_name)
 {
-    coda_xmlElement *element;
+    coda_xml_element *element;
 
     element = new_xml_element(xml_name);
     if (element == NULL)
@@ -403,7 +403,7 @@ coda_xmlElement *coda_xml_record_new(const char *xml_name)
     }
     element->type_class = coda_record_class;
     element->tag = tag_xml_record;
-    element->xml_name_hash_data = new_hashtable(1);
+    element->xml_name_hash_data = hashtable_new(1);
     if (element->xml_name_hash_data == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashtable) (%s:%u)", __FILE__,
@@ -411,7 +411,7 @@ coda_xmlElement *coda_xml_record_new(const char *xml_name)
         delete_xml_element(element);
         return NULL;
     }
-    element->name_hash_data = new_hashtable(0);
+    element->name_hash_data = hashtable_new(0);
     if (element->name_hash_data == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashtable) (%s:%u)", __FILE__,
@@ -423,9 +423,9 @@ coda_xmlElement *coda_xml_record_new(const char *xml_name)
     return element;
 }
 
-int coda_xml_record_add_field(coda_xmlElement *element, coda_xmlField *field)
+int coda_xml_record_add_field(coda_xml_element *element, coda_xml_field *field)
 {
-    coda_xmlField **new_field;
+    coda_xml_field **new_field;
 
     assert(element->tag == tag_xml_record);
 
@@ -442,11 +442,11 @@ int coda_xml_record_add_field(coda_xmlElement *element, coda_xmlField *field)
         return -1;
     }
 
-    new_field = realloc(element->field, (element->num_fields + 1) * sizeof(coda_xmlField *));
+    new_field = realloc(element->field, (element->num_fields + 1) * sizeof(coda_xml_field *));
     if (new_field == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)(element->num_fields + 1) * sizeof(coda_xmlField *), __FILE__, __LINE__);
+                       (long)(element->num_fields + 1) * sizeof(coda_xml_field *), __FILE__, __LINE__);
         return -1;
     }
     element->field = new_field;
@@ -467,7 +467,7 @@ int coda_xml_record_add_field(coda_xmlElement *element, coda_xmlField *field)
     return 0;
 }
 
-void coda_xml_record_convert_to_text(coda_xmlElement *element)
+void coda_xml_record_convert_to_text(coda_xml_element *element)
 {
     assert(element->tag == tag_xml_record);
 
@@ -487,19 +487,19 @@ void coda_xml_record_convert_to_text(coda_xmlElement *element)
     element->num_fields = 0;
     if (element->xml_name_hash_data != NULL)
     {
-        delete_hashtable(element->xml_name_hash_data);
+        hashtable_delete(element->xml_name_hash_data);
         element->xml_name_hash_data = NULL;
     }
     if (element->name_hash_data != NULL)
     {
-        delete_hashtable(element->name_hash_data);
+        hashtable_delete(element->name_hash_data);
         element->name_hash_data = NULL;
     }
 }
 
-coda_xmlElement *coda_xml_text_new(const char *xml_name)
+coda_xml_element *coda_xml_text_new(const char *xml_name)
 {
-    coda_xmlElement *element;
+    coda_xml_element *element;
 
     element = new_xml_element(xml_name);
     if (element == NULL)
@@ -512,9 +512,9 @@ coda_xmlElement *coda_xml_text_new(const char *xml_name)
     return element;
 }
 
-coda_xmlElement *coda_xml_ascii_type_new(const char *xml_name)
+coda_xml_element *coda_xml_ascii_type_new(const char *xml_name)
 {
-    coda_xmlElement *element;
+    coda_xml_element *element;
 
     element = new_xml_element(xml_name);
     if (element == NULL)
@@ -527,7 +527,7 @@ coda_xmlElement *coda_xml_ascii_type_new(const char *xml_name)
     return element;
 }
 
-int coda_xml_ascii_type_set_type(coda_xmlElement *element, coda_asciiType *type)
+int coda_xml_ascii_type_set_type(coda_xml_element *element, coda_ascii_type *type)
 {
     if (element->ascii_type != NULL)
     {
@@ -541,7 +541,7 @@ int coda_xml_ascii_type_set_type(coda_xmlElement *element, coda_asciiType *type)
     return 0;
 }
 
-int coda_xml_ascii_type_validate(coda_xmlElement *element)
+int coda_xml_ascii_type_validate(coda_xml_element *element)
 {
     assert(element->tag == tag_xml_ascii_type);
     if (element->ascii_type == NULL)
@@ -552,17 +552,17 @@ int coda_xml_ascii_type_validate(coda_xmlElement *element)
     return 0;
 }
 
-coda_xmlField *coda_xml_field_new(const char *name)
+coda_xml_field *coda_xml_field_new(const char *name)
 {
-    coda_xmlField *field;
+    coda_xml_field *field;
 
     assert(name != NULL);
 
-    field = malloc(sizeof(coda_xmlField));
+    field = malloc(sizeof(coda_xml_field));
     if (field == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_xmlField), __FILE__, __LINE__);
+                       (long)sizeof(coda_xml_field), __FILE__, __LINE__);
         return NULL;
     }
 
@@ -584,7 +584,7 @@ coda_xmlField *coda_xml_field_new(const char *name)
     return field;
 }
 
-int coda_xml_field_set_type(coda_xmlField *field, coda_xmlType *type)
+int coda_xml_field_set_type(coda_xml_field *field, coda_xml_type *type)
 {
     if (field->type != NULL)
     {
@@ -596,10 +596,10 @@ int coda_xml_field_set_type(coda_xmlField *field, coda_xmlType *type)
         case tag_xml_record_dynamic:
         case tag_xml_text_dynamic:
         case tag_xml_ascii_type_dynamic:
-            field->xml_name = ((coda_xmlElement *)type)->xml_name;
+            field->xml_name = ((coda_xml_element *)type)->xml_name;
             break;
         case tag_xml_array_dynamic:
-            field->xml_name = ((coda_xmlArray *)type)->base_type->xml_name;
+            field->xml_name = ((coda_xml_array *)type)->base_type->xml_name;
             break;
         default:
             coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid type for XML field '%s' definition", field->name);
@@ -611,19 +611,19 @@ int coda_xml_field_set_type(coda_xmlField *field, coda_xmlType *type)
     return 0;
 }
 
-int coda_xml_field_set_hidden(coda_xmlField *field)
+int coda_xml_field_set_hidden(coda_xml_field *field)
 {
     field->hidden = 1;
     return 0;
 }
 
-int coda_xml_field_set_optional(coda_xmlField *field)
+int coda_xml_field_set_optional(coda_xml_field *field)
 {
     field->optional = 1;
     return 0;
 }
 
-int coda_xml_field_validate(coda_xmlField *field)
+int coda_xml_field_validate(coda_xml_field *field)
 {
     if (field->type == NULL)
     {
@@ -633,9 +633,9 @@ int coda_xml_field_validate(coda_xmlField *field)
     return 0;
 }
 
-int coda_xml_field_convert_to_array(coda_xmlField *field)
+int coda_xml_field_convert_to_array(coda_xml_field *field)
 {
-    coda_xmlArray *array;
+    coda_xml_array *array;
 
     assert(field->type->tag != tag_xml_array);
 
@@ -644,25 +644,25 @@ int coda_xml_field_convert_to_array(coda_xmlField *field)
     {
         return -1;
     }
-    if (coda_xml_array_set_base_type(array, (coda_xmlElement *)field->type) != 0)
+    if (coda_xml_array_set_base_type(array, (coda_xml_element *)field->type) != 0)
     {
         return -1;
     }
     coda_xml_release_type(field->type);
-    field->type = (coda_xmlType *)array;
+    field->type = (coda_xml_type *)array;
 
     return 0;
 }
 
-coda_xmlArray *coda_xml_array_new(void)
+coda_xml_array *coda_xml_array_new(void)
 {
-    coda_xmlArray *array;
+    coda_xml_array *array;
 
-    array = malloc(sizeof(coda_xmlArray));
+    array = malloc(sizeof(coda_xml_array));
     if (array == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_xmlArray), __FILE__, __LINE__);
+                       (long)sizeof(coda_xml_array), __FILE__, __LINE__);
         return NULL;
     }
     array->retain_count = 0;
@@ -676,7 +676,7 @@ coda_xmlArray *coda_xml_array_new(void)
     return array;
 }
 
-int coda_xml_array_set_base_type(coda_xmlArray *array, coda_xmlElement *base_type)
+int coda_xml_array_set_base_type(coda_xml_array *array, coda_xml_element *base_type)
 {
     if (array->base_type != NULL)
     {
@@ -694,7 +694,7 @@ int coda_xml_array_set_base_type(coda_xmlArray *array, coda_xmlElement *base_typ
     return 0;
 }
 
-int coda_xml_array_validate(coda_xmlArray *array)
+int coda_xml_array_validate(coda_xml_array *array)
 {
     if (array->base_type == NULL)
     {
@@ -704,17 +704,17 @@ int coda_xml_array_validate(coda_xmlArray *array)
     return 0;
 }
 
-coda_xmlAttribute *coda_xml_attribute_new(const char *xml_name)
+coda_xml_attribute *coda_xml_attribute_new(const char *xml_name)
 {
-    coda_xmlAttribute *attribute;
+    coda_xml_attribute *attribute;
 
     assert(xml_name != NULL);
 
-    attribute = malloc(sizeof(coda_xmlAttribute));
+    attribute = malloc(sizeof(coda_xml_attribute));
     if (attribute == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_xmlAttribute), __FILE__, __LINE__);
+                       (long)sizeof(coda_xml_attribute), __FILE__, __LINE__);
         return NULL;
     }
     attribute->retain_count = 0;
@@ -747,7 +747,7 @@ coda_xmlAttribute *coda_xml_attribute_new(const char *xml_name)
     return attribute;
 }
 
-int coda_xml_attribute_set_fixed_value(coda_xmlAttribute *attribute, const char *fixed_value)
+int coda_xml_attribute_set_fixed_value(coda_xml_attribute *attribute, const char *fixed_value)
 {
     if (attribute->fixed_value != NULL)
     {
@@ -769,18 +769,18 @@ int coda_xml_attribute_set_fixed_value(coda_xmlAttribute *attribute, const char 
     return 0;
 }
 
-int coda_xml_attribute_set_optional(coda_xmlAttribute *attribute)
+int coda_xml_attribute_set_optional(coda_xml_attribute *attribute)
 {
     attribute->optional = 1;
     return 0;
 }
 
 
-static void delete_detection_node(coda_xmlDetectionNode *node)
+static void delete_detection_node(coda_xml_detection_node *node)
 {
     int i;
 
-    delete_hashtable(node->hash_data);
+    hashtable_delete(node->hash_data);
     if (node->xml_name != NULL)
     {
         free(node->xml_name);
@@ -801,15 +801,15 @@ static void delete_detection_node(coda_xmlDetectionNode *node)
     free(node);
 }
 
-static coda_xmlDetectionNode *detection_node_new(const char *xml_name, coda_xmlDetectionNode *parent)
+static coda_xml_detection_node *detection_node_new(const char *xml_name, coda_xml_detection_node *parent)
 {
-    coda_xmlDetectionNode *node;
+    coda_xml_detection_node *node;
 
-    node = malloc(sizeof(coda_xmlDetectionNode));
+    node = malloc(sizeof(coda_xml_detection_node));
     if (node == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_xmlDetectionNode), __FILE__, __LINE__);
+                       (long)sizeof(coda_xml_detection_node), __FILE__, __LINE__);
         return NULL;
     }
     node->xml_name = NULL;
@@ -832,7 +832,7 @@ static coda_xmlDetectionNode *detection_node_new(const char *xml_name, coda_xmlD
         }
     }
 
-    node->hash_data = new_hashtable(1);
+    node->hash_data = hashtable_new(1);
     if (node->hash_data == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashtable) (%s:%u)", __FILE__,
@@ -844,7 +844,7 @@ static coda_xmlDetectionNode *detection_node_new(const char *xml_name, coda_xmlD
     return node;
 }
 
-coda_xmlDetectionNode *coda_xml_detection_node_get_subnode(coda_xmlDetectionNode *node, const char *xml_name)
+coda_xml_detection_node *coda_xml_detection_node_get_subnode(coda_xml_detection_node *node, const char *xml_name)
 {
     int index;
 
@@ -856,9 +856,9 @@ coda_xmlDetectionNode *coda_xml_detection_node_get_subnode(coda_xmlDetectionNode
     return NULL;
 }
 
-static int detection_node_add_rule(coda_xmlDetectionNode *node, coda_DetectionRule *detection_rule)
+static int detection_node_add_rule(coda_xml_detection_node *node, coda_detection_rule *detection_rule)
 {
-    coda_DetectionRule **new_detection_rule;
+    coda_detection_rule **new_detection_rule;
 
     assert(node != NULL);
     assert(detection_rule != NULL);
@@ -892,11 +892,11 @@ static int detection_node_add_rule(coda_xmlDetectionNode *node, coda_DetectionRu
         }
     }
 
-    new_detection_rule = realloc(node->detection_rule, (node->num_detection_rules + 1) * sizeof(coda_DetectionRule *));
+    new_detection_rule = realloc(node->detection_rule, (node->num_detection_rules + 1) * sizeof(coda_detection_rule *));
     if (new_detection_rule == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)(node->num_detection_rules + 1) * sizeof(coda_DetectionRule *), __FILE__, __LINE__);
+                       (long)(node->num_detection_rules + 1) * sizeof(coda_detection_rule *), __FILE__, __LINE__);
         return -1;
     }
     node->detection_rule = new_detection_rule;
@@ -906,10 +906,10 @@ static int detection_node_add_rule(coda_xmlDetectionNode *node, coda_DetectionRu
     return 0;
 }
 
-static int detection_node_add_subnode(coda_xmlDetectionNode *node, const char *xml_name)
+static int detection_node_add_subnode(coda_xml_detection_node *node, const char *xml_name)
 {
-    coda_xmlDetectionNode **subnode_list;
-    coda_xmlDetectionNode *subnode;
+    coda_xml_detection_node **subnode_list;
+    coda_xml_detection_node *subnode;
     int result;
 
     assert(node != NULL);
@@ -920,11 +920,11 @@ static int detection_node_add_subnode(coda_xmlDetectionNode *node, const char *x
     {
         return -1;
     }
-    subnode_list = realloc(node->subnode, (node->num_subnodes + 1) * sizeof(coda_xmlDetectionNode *));
+    subnode_list = realloc(node->subnode, (node->num_subnodes + 1) * sizeof(coda_xml_detection_node *));
     if (subnode_list == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)(node->num_subnodes + 1) * sizeof(coda_xmlDetectionNode *), __FILE__, __LINE__);
+                       (long)(node->num_subnodes + 1) * sizeof(coda_xml_detection_node *), __FILE__, __LINE__);
         delete_detection_node(subnode);
         return -1;
     }
@@ -940,12 +940,12 @@ static int detection_node_add_subnode(coda_xmlDetectionNode *node, const char *x
 
 void coda_xml_detection_tree_delete(void *detection_tree)
 {
-    delete_detection_node((coda_xmlDetectionNode *)detection_tree);
+    delete_detection_node((coda_xml_detection_node *)detection_tree);
 }
 
-int coda_xml_detection_tree_add_rule(void *detection_tree, coda_DetectionRule *detection_rule)
+int coda_xml_detection_tree_add_rule(void *detection_tree, coda_detection_rule *detection_rule)
 {
-    coda_xmlDetectionNode *node;
+    coda_xml_detection_node *node;
     const char *xml_name;
     int last_node = 0;
     char *path;
@@ -976,7 +976,7 @@ int coda_xml_detection_tree_add_rule(void *detection_tree, coda_DetectionRule *d
         return -1;
     }
 
-    node = *(coda_xmlDetectionNode **)detection_tree;
+    node = *(coda_xml_detection_node **)detection_tree;
     if (node == NULL)
     {
         node = detection_node_new(NULL, NULL);
@@ -984,7 +984,7 @@ int coda_xml_detection_tree_add_rule(void *detection_tree, coda_DetectionRule *d
         {
             return -1;
         }
-        *(coda_xmlDetectionNode **)detection_tree = node;
+        *(coda_xml_detection_node **)detection_tree = node;
     }
 
     path = strdup(detection_rule->entry[0]->path);
@@ -1001,7 +1001,7 @@ int coda_xml_detection_tree_add_rule(void *detection_tree, coda_DetectionRule *d
     }
     while (!last_node)
     {
-        coda_xmlDetectionNode *subnode;
+        coda_xml_detection_node *subnode;
 
         xml_name = p;
         while (*p != '/' && *p != '\0')
@@ -1067,17 +1067,17 @@ void coda_xml_done()
 {
     if (empty_attribute_record_singleton != NULL)
     {
-        coda_xml_release_type((coda_xmlType *)empty_attribute_record_singleton);
+        coda_xml_release_type((coda_xml_type *)empty_attribute_record_singleton);
         empty_attribute_record_singleton = NULL;
     }
     if (empty_dynamic_attribute_record_singleton != NULL)
     {
-        coda_xml_release_dynamic_type((coda_xmlDynamicType *)empty_dynamic_attribute_record_singleton);
+        coda_xml_release_dynamic_type((coda_xml_dynamic_type *)empty_dynamic_attribute_record_singleton);
         empty_dynamic_attribute_record_singleton = NULL;
     }
 }
 
-coda_xmlDynamicType *coda_xml_empty_dynamic_attribute_record()
+coda_xml_dynamic_type *coda_xml_empty_dynamic_attribute_record()
 {
     if (empty_attribute_record_singleton == NULL)
     {
@@ -1096,5 +1096,5 @@ coda_xmlDynamicType *coda_xml_empty_dynamic_attribute_record()
             return NULL;
         }
     }
-    return (coda_xmlDynamicType *)empty_dynamic_attribute_record_singleton;
+    return (coda_xml_dynamic_type *)empty_dynamic_attribute_record_singleton;
 }

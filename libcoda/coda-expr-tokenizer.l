@@ -21,7 +21,7 @@
 /* *INDENT-OFF* */
 
 %option outfile="lex.yy.c"
-%option prefix="coda_expr_"
+%option prefix="coda_expression_"
 %option noyywrap
 %option nounput
 %option always-interactive
@@ -31,9 +31,9 @@
 /* *INDENT-ON* */
 
 /* This define is to allow more than one yacc file in the program */
-#define yylval coda_expr_lval
+#define yylval coda_expression_lval
 
-#include "coda-expr-internal.h"
+#include "coda-expr.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -73,6 +73,7 @@ WHITESPACE   [[:space:]]+
 "!"                     return NOT;
 ".."                    return GOTO_PARENT;
 
+"r"                     return RAW_PREFIX;
 "asciiline"             return ASCIILINE;
 "do"                    return DO;
 "for"                   return FOR;
@@ -115,6 +116,7 @@ WHITESPACE   [[:space:]]+
 "productclass"          return FUNC_PRODUCTCLASS;
 "producttype"           return FUNC_PRODUCTTYPE;
 "productversion"        return FUNC_PRODUCTVERSION;
+"regex"                 return FUNC_REGEX;
 "round"                 return FUNC_ROUND;
 "rtrim"                 return FUNC_RTRIM;
 "str"                   return FUNC_STR;

@@ -19,7 +19,6 @@
  */
 
 #include "codadump.h"
-#include "coda-path.h"
 
 run_mode_t run_mode;
 dim_info_t dim_info;
@@ -131,35 +130,6 @@ static void print_help()
     printf("    codadump -v, --version\n");
     printf("        Print the version number of CODA and exit\n");
     printf("\n");
-}
-
-static void set_definition_path(const char *argv0)
-{
-    char *location;
-
-    if (coda_path_for_program(argv0, &location) != 0)
-    {
-        printf("  ERROR: %s\n", coda_errno_to_string(coda_errno));
-        exit(1);
-    }
-    if (location != NULL)
-    {
-#ifdef WIN32
-        const char *definition_path = "../definitions";
-#else
-        const char *definition_path = "../share/" PACKAGE "/definitions";
-#endif
-        char *path;
-
-        if (coda_path_from_path(location, 1, definition_path, &path) != 0)
-        {
-            printf("  ERROR: %s\n", coda_errno_to_string(coda_errno));
-            exit(1);
-        }
-        coda_path_free(location);
-        coda_set_definition_path(path);
-        coda_path_free(path);
-    }
 }
 
 void handle_coda_error()
@@ -392,8 +362,6 @@ static void handle_hdf4_run_mode(int argc, char *argv[])
     int own_output_file_name = 0;
     int use_special_types;
     int perform_conversions;
-    clock_t T1, T2;
-    time_t t1, t2;
     int i;
 
     traverse_info.file_name = NULL;
@@ -487,19 +455,7 @@ static void handle_hdf4_run_mode(int argc, char *argv[])
     dim_info_init();
     hdf4_info_init();
 
-    T1 = clock();
-    t1 = time(NULL);
-
     traverse_product();
-
-    T2 = clock();
-    t2 = time(NULL);
-
-    if (verbosity > 0)
-    {
-        printf("Execution time: %li seconds  (CPU time: %5.3f seconds)\n", (long)(t2 - t1),
-               (double)(T2 - T1) / CLOCKS_PER_SEC);
-    }
 
     hdf4_info_done();
     dim_info_done();
@@ -575,6 +531,11 @@ static void handle_debug_run_mode(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
+#ifdef WIN32
+    const char *definition_path = "../definitions";
+#else
+    const char *definition_path = "../share/" PACKAGE "/definitions";
+#endif
     if (argc == 1 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)
     {
         print_help();
@@ -587,9 +548,10 @@ int main(int argc, char *argv[])
         exit(0);
     }
 
-    if (getenv("CODA_DEFINITION") == NULL)
+    if (coda_set_definition_path_conditional(argv[0], NULL, definition_path) != 0)
     {
-        set_definition_path(argv[0]);
+        fprintf(stderr, "ERROR: %s\n", coda_errno_to_string(coda_errno));
+        exit(1);
     }
 
     if (strcmp(argv[1], "list") == 0)

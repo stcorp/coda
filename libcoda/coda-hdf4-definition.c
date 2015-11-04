@@ -34,14 +34,14 @@
 
 #undef DEBUG
 
-static coda_hdf4Attributes *empty_attributes_singleton = NULL;
+static coda_hdf4_attributes *empty_attributes_singleton = NULL;
 
-static void delete_hdf4BasicType(coda_hdf4BasicType *T)
+static void delete_hdf4BasicType(coda_hdf4_basic_type *T)
 {
     free(T);
 }
 
-static void delete_hdf4BasicTypeArray(coda_hdf4BasicTypeArray *T)
+static void delete_hdf4BasicTypeArray(coda_hdf4_basic_type_array *T)
 {
     if (T->basic_type != NULL)
     {
@@ -50,7 +50,7 @@ static void delete_hdf4BasicTypeArray(coda_hdf4BasicTypeArray *T)
     free(T);
 }
 
-static void delete_hdf4Attributes(coda_hdf4Attributes *T)
+static void delete_hdf4Attributes(coda_hdf4_attributes *T)
 {
     int i;
 
@@ -66,11 +66,11 @@ static void delete_hdf4Attributes(coda_hdf4Attributes *T)
             {
                 if (T->attribute[i]->tag == tag_hdf4_basic_type_array)
                 {
-                    delete_hdf4BasicTypeArray((coda_hdf4BasicTypeArray *)T->attribute[i]);
+                    delete_hdf4BasicTypeArray((coda_hdf4_basic_type_array *)T->attribute[i]);
                 }
                 else
                 {
-                    delete_hdf4BasicType((coda_hdf4BasicType *)T->attribute[i]);
+                    delete_hdf4BasicType((coda_hdf4_basic_type *)T->attribute[i]);
                 }
             }
         }
@@ -87,11 +87,11 @@ static void delete_hdf4Attributes(coda_hdf4Attributes *T)
         }
         free(T->attribute_name);
     }
-    delete_hashtable(T->hash_data);
+    hashtable_delete(T->hash_data);
     free(T);
 }
 
-static void delete_hdf4FileAttributes(coda_hdf4FileAttributes *T)
+static void delete_hdf4FileAttributes(coda_hdf4_file_attributes *T)
 {
     int i;
 
@@ -103,11 +103,11 @@ static void delete_hdf4FileAttributes(coda_hdf4FileAttributes *T)
             {
                 if (T->attribute[i]->tag == tag_hdf4_basic_type_array)
                 {
-                    delete_hdf4BasicTypeArray((coda_hdf4BasicTypeArray *)T->attribute[i]);
+                    delete_hdf4BasicTypeArray((coda_hdf4_basic_type_array *)T->attribute[i]);
                 }
                 else
                 {
-                    delete_hdf4BasicType((coda_hdf4BasicType *)T->attribute[i]);
+                    delete_hdf4BasicType((coda_hdf4_basic_type *)T->attribute[i]);
                 }
             }
         }
@@ -124,17 +124,17 @@ static void delete_hdf4FileAttributes(coda_hdf4FileAttributes *T)
         }
         free(T->attribute_name);
     }
-    delete_hashtable(T->hash_data);
+    hashtable_delete(T->hash_data);
     free(T);
 }
 
-static void delete_hdf4Root(coda_hdf4Root *T)
+static void delete_hdf4Root(coda_hdf4_root *T)
 {
     if (T->attributes != NULL)
     {
         delete_hdf4FileAttributes(T->attributes);
     }
-    delete_hashtable(T->hash_data);
+    hashtable_delete(T->hash_data);
     if (T->entry_name != NULL)
     {
         int i;
@@ -155,7 +155,7 @@ static void delete_hdf4Root(coda_hdf4Root *T)
     free(T);
 }
 
-static void delete_hdf4GRImage(coda_hdf4GRImage *T)
+static void delete_hdf4GRImage(coda_hdf4_GRImage *T)
 {
     if (T->attributes != NULL)
     {
@@ -166,7 +166,7 @@ static void delete_hdf4GRImage(coda_hdf4GRImage *T)
     free(T);
 }
 
-static void delete_hdf4SDS(coda_hdf4SDS *T)
+static void delete_hdf4SDS(coda_hdf4_SDS *T)
 {
     if (T->attributes != NULL)
     {
@@ -177,7 +177,7 @@ static void delete_hdf4SDS(coda_hdf4SDS *T)
     free(T);
 }
 
-static void delete_hdf4VdataField(coda_hdf4VdataField *T)
+static void delete_hdf4VdataField(coda_hdf4_Vdata_field *T)
 {
     if (T->attributes != NULL)
     {
@@ -187,7 +187,7 @@ static void delete_hdf4VdataField(coda_hdf4VdataField *T)
     free(T);
 }
 
-static void delete_hdf4Vdata(coda_hdf4Vdata *T)
+static void delete_hdf4Vdata(coda_hdf4_Vdata *T)
 {
     int i;
 
@@ -195,7 +195,7 @@ static void delete_hdf4Vdata(coda_hdf4Vdata *T)
     {
         delete_hdf4Attributes(T->attributes);
     }
-    delete_hashtable(T->hash_data);
+    hashtable_delete(T->hash_data);
     for (i = 0; i < T->num_fields; i++)
     {
         if (T->field[i] != NULL)
@@ -213,13 +213,13 @@ static void delete_hdf4Vdata(coda_hdf4Vdata *T)
     free(T);
 }
 
-static void delete_hdf4Vgroup(coda_hdf4Vgroup *T)
+static void delete_hdf4Vgroup(coda_hdf4_Vgroup *T)
 {
     if (T->attributes != NULL)
     {
         delete_hdf4Attributes(T->attributes);
     }
-    delete_hashtable(T->hash_data);
+    hashtable_delete(T->hash_data);
     if (T->entry_name != NULL)
     {
         int i;
@@ -241,61 +241,61 @@ static void delete_hdf4Vgroup(coda_hdf4Vgroup *T)
     free(T);
 }
 
-void coda_hdf4_release_type(coda_Type *T)
+void coda_hdf4_release_type(coda_type *T)
 {
     if (T != NULL)
     {
-        switch (((coda_hdf4Type *)T)->tag)
+        switch (((coda_hdf4_type *)T)->tag)
         {
             case tag_hdf4_root:
-                delete_hdf4Root((coda_hdf4Root *)T);
+                delete_hdf4Root((coda_hdf4_root *)T);
                 break;
             case tag_hdf4_basic_type:
-                delete_hdf4BasicType((coda_hdf4BasicType *)T);
+                delete_hdf4BasicType((coda_hdf4_basic_type *)T);
                 break;
             case tag_hdf4_basic_type_array:
-                delete_hdf4BasicTypeArray((coda_hdf4BasicTypeArray *)T);
+                delete_hdf4BasicTypeArray((coda_hdf4_basic_type_array *)T);
                 break;
             case tag_hdf4_attributes:
-                delete_hdf4Attributes((coda_hdf4Attributes *)T);
+                delete_hdf4Attributes((coda_hdf4_attributes *)T);
                 break;
             case tag_hdf4_file_attributes:
-                delete_hdf4FileAttributes((coda_hdf4FileAttributes *)T);
+                delete_hdf4FileAttributes((coda_hdf4_file_attributes *)T);
                 break;
             case tag_hdf4_GRImage:
-                delete_hdf4GRImage((coda_hdf4GRImage *)T);
+                delete_hdf4GRImage((coda_hdf4_GRImage *)T);
                 break;
             case tag_hdf4_SDS:
-                delete_hdf4SDS((coda_hdf4SDS *)T);
+                delete_hdf4SDS((coda_hdf4_SDS *)T);
                 break;
             case tag_hdf4_Vdata:
-                delete_hdf4Vdata((coda_hdf4Vdata *)T);
+                delete_hdf4Vdata((coda_hdf4_Vdata *)T);
                 break;
             case tag_hdf4_Vdata_field:
-                delete_hdf4VdataField((coda_hdf4VdataField *)T);
+                delete_hdf4VdataField((coda_hdf4_Vdata_field *)T);
                 break;
             case tag_hdf4_Vgroup:
-                delete_hdf4Vgroup((coda_hdf4Vgroup *)T);
+                delete_hdf4Vgroup((coda_hdf4_Vgroup *)T);
                 break;
         }
     }
 }
 
-void coda_hdf4_release_dynamic_type(coda_DynamicType *T)
+void coda_hdf4_release_dynamic_type(coda_dynamic_type *T)
 {
-    coda_hdf4_release_type((coda_Type *)T);
+    coda_hdf4_release_type((coda_type *)T);
 }
 
-static coda_hdf4BasicType *new_hdf4BasicType(coda_format format, int32 data_type, double scale_factor,
-                                             double add_offset)
+static coda_hdf4_basic_type *new_hdf4BasicType(coda_format format, int32 data_type, double scale_factor,
+                                               double add_offset)
 {
-    coda_hdf4BasicType *T;
+    coda_hdf4_basic_type *T;
 
-    T = (coda_hdf4BasicType *)malloc(sizeof(coda_hdf4BasicType));
+    T = (coda_hdf4_basic_type *)malloc(sizeof(coda_hdf4_basic_type));
     if (T == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_hdf4BasicType), __FILE__, __LINE__);
+                       (long)sizeof(coda_hdf4_basic_type), __FILE__, __LINE__);
         return NULL;
     }
 
@@ -367,16 +367,16 @@ static coda_hdf4BasicType *new_hdf4BasicType(coda_format format, int32 data_type
     return T;
 }
 
-static coda_hdf4BasicTypeArray *new_hdf4BasicTypeArray(coda_format format, int32 data_type, int32 count,
-                                                       double scale_factor, double add_offset)
+static coda_hdf4_basic_type_array *new_hdf4BasicTypeArray(coda_format format, int32 data_type, int32 count,
+                                                          double scale_factor, double add_offset)
 {
-    coda_hdf4BasicTypeArray *T;
+    coda_hdf4_basic_type_array *T;
 
-    T = (coda_hdf4BasicTypeArray *)malloc(sizeof(coda_hdf4BasicTypeArray));
+    T = (coda_hdf4_basic_type_array *)malloc(sizeof(coda_hdf4_basic_type_array));
     if (T == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_hdf4BasicTypeArray), __FILE__, __LINE__);
+                       (long)sizeof(coda_hdf4_basic_type_array), __FILE__, __LINE__);
         return NULL;
     }
 
@@ -397,9 +397,9 @@ static coda_hdf4BasicTypeArray *new_hdf4BasicTypeArray(coda_format format, int32
     return T;
 }
 
-static coda_hdf4Attributes *new_hdf4AttributesForGRImage(coda_hdf4ProductFile *pf, int32 ri_id, int32 num_attributes)
+static coda_hdf4_attributes *new_hdf4AttributesForGRImage(coda_hdf4_product *product, int32 ri_id, int32 num_attributes)
 {
-    coda_hdf4Attributes *T;
+    coda_hdf4_attributes *T;
     char hdf4_name[MAX_HDF4_NAME_LENGTH + 1];
     int32 data_type;
     int32 length;
@@ -407,11 +407,11 @@ static coda_hdf4Attributes *new_hdf4AttributesForGRImage(coda_hdf4ProductFile *p
     int result;
     int i;
 
-    T = (coda_hdf4Attributes *)malloc(sizeof(coda_hdf4Attributes));
+    T = (coda_hdf4_attributes *)malloc(sizeof(coda_hdf4_attributes));
     if (T == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_hdf4Attributes), __FILE__, __LINE__);
+                       (long)sizeof(coda_hdf4_attributes), __FILE__, __LINE__);
         return NULL;
     }
     T->retain_count = 0;
@@ -431,14 +431,14 @@ static coda_hdf4Attributes *new_hdf4AttributesForGRImage(coda_hdf4ProductFile *p
     T->ann_id = NULL;
 
     T->num_obj_attributes = num_attributes;
-    T->num_data_labels = ANnumann(pf->an_id, AN_DATA_LABEL, DFTAG_RI, GRidtoref(ri_id));
+    T->num_data_labels = ANnumann(product->an_id, AN_DATA_LABEL, DFTAG_RI, GRidtoref(ri_id));
     if (T->num_data_labels == -1)
     {
         coda_set_error(CODA_ERROR_HDF4, NULL);
         free(T);
         return NULL;
     }
-    T->num_data_descriptions = ANnumann(pf->an_id, AN_DATA_DESC, DFTAG_RI, GRidtoref(ri_id));
+    T->num_data_descriptions = ANnumann(product->an_id, AN_DATA_DESC, DFTAG_RI, GRidtoref(ri_id));
     if (T->num_data_descriptions == -1)
     {
         coda_set_error(CODA_ERROR_HDF4, NULL);
@@ -449,7 +449,7 @@ static coda_hdf4Attributes *new_hdf4AttributesForGRImage(coda_hdf4ProductFile *p
     /* from here on we use delete_hdf4Attributes to clean up after an error occurred */
 
     T->num_attributes = T->num_obj_attributes + T->num_data_labels + T->num_data_descriptions;
-    T->hash_data = new_hashtable(0);
+    T->hash_data = hashtable_new(0);
     if (T->hash_data == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashdata) (%s:%u)", __FILE__,
@@ -459,11 +459,11 @@ static coda_hdf4Attributes *new_hdf4AttributesForGRImage(coda_hdf4ProductFile *p
     }
     if (T->num_attributes > 0)
     {
-        T->attribute = malloc(T->num_attributes * sizeof(coda_hdf4Type *));
+        T->attribute = malloc(T->num_attributes * sizeof(coda_hdf4_type *));
         if (T->attribute == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           (long)(T->num_attributes * sizeof(coda_hdf4Type *)), __FILE__, __LINE__);
+                           (long)(T->num_attributes * sizeof(coda_hdf4_type *)), __FILE__, __LINE__);
             delete_hdf4Attributes(T);
             return NULL;
         }
@@ -505,12 +505,12 @@ static coda_hdf4Attributes *new_hdf4AttributesForGRImage(coda_hdf4ProductFile *p
         assert(result == 0);
         if (length == 1)
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicType(coda_format_hdf4, data_type, 1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4_type *)new_hdf4BasicType(coda_format_hdf4, data_type, 1, 0);
         }
         else
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, data_type, length,
-                                                                                   1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4_type *)new_hdf4BasicTypeArray(coda_format_hdf4, data_type, length,
+                                                                                    1, 0);
         }
         if (T->attribute[attr_index - 1] == NULL)
         {
@@ -530,7 +530,7 @@ static coda_hdf4Attributes *new_hdf4AttributesForGRImage(coda_hdf4ProductFile *p
         }
         if (T->num_data_labels > 0)
         {
-            if (ANannlist(pf->an_id, AN_DATA_LABEL, DFTAG_RI, GRidtoref(ri_id), T->ann_id) == -1)
+            if (ANannlist(product->an_id, AN_DATA_LABEL, DFTAG_RI, GRidtoref(ri_id), T->ann_id) == -1)
             {
                 coda_set_error(CODA_ERROR_HDF4, NULL);
                 delete_hdf4Attributes(T);
@@ -548,8 +548,8 @@ static coda_hdf4Attributes *new_hdf4AttributesForGRImage(coda_hdf4ProductFile *p
                 result = hashtable_add_name(T->hash_data, T->attribute_name[attr_index - 1]);
                 assert(result == 0);
                 length = ANannlen(T->ann_id[i]);
-                T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, DFNT_CHAR,
-                                                                                       length, 1, 0);
+                T->attribute[attr_index - 1] = (coda_hdf4_type *)new_hdf4BasicTypeArray(coda_format_hdf4, DFNT_CHAR,
+                                                                                        length, 1, 0);
                 if (T->attribute[attr_index - 1] == NULL)
                 {
                     delete_hdf4Attributes(T);
@@ -559,7 +559,8 @@ static coda_hdf4Attributes *new_hdf4AttributesForGRImage(coda_hdf4ProductFile *p
         }
         if (T->num_data_labels > 0)
         {
-            if (ANannlist(pf->an_id, AN_DATA_DESC, DFTAG_RI, GRidtoref(ri_id), &T->ann_id[T->num_data_labels]) == -1)
+            if (ANannlist(product->an_id, AN_DATA_DESC, DFTAG_RI, GRidtoref(ri_id), &T->ann_id[T->num_data_labels]) ==
+                -1)
             {
                 coda_set_error(CODA_ERROR_HDF4, NULL);
                 delete_hdf4Attributes(T);
@@ -577,8 +578,8 @@ static coda_hdf4Attributes *new_hdf4AttributesForGRImage(coda_hdf4ProductFile *p
                 result = hashtable_add_name(T->hash_data, T->attribute_name[attr_index - 1]);
                 assert(result == 0);
                 length = ANannlen(T->ann_id[T->num_data_labels + i]);
-                T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, DFNT_CHAR,
-                                                                                       length, 1, 0);
+                T->attribute[attr_index - 1] = (coda_hdf4_type *)new_hdf4BasicTypeArray(coda_format_hdf4, DFNT_CHAR,
+                                                                                        length, 1, 0);
                 if (T->attribute[attr_index - 1] == NULL)
                 {
                     delete_hdf4Attributes(T);
@@ -591,9 +592,9 @@ static coda_hdf4Attributes *new_hdf4AttributesForGRImage(coda_hdf4ProductFile *p
     return T;
 }
 
-static coda_hdf4Attributes *new_hdf4AttributesForSDS(coda_hdf4ProductFile *pf, int32 sds_id, int32 num_attributes)
+static coda_hdf4_attributes *new_hdf4AttributesForSDS(coda_hdf4_product *product, int32 sds_id, int32 num_attributes)
 {
-    coda_hdf4Attributes *T;
+    coda_hdf4_attributes *T;
     char hdf4_name[MAX_HDF4_NAME_LENGTH + 1];
     int32 data_type;
     int32 length;
@@ -601,15 +602,15 @@ static coda_hdf4Attributes *new_hdf4AttributesForSDS(coda_hdf4ProductFile *pf, i
     int result;
     int i;
 
-    T = (coda_hdf4Attributes *)malloc(sizeof(coda_hdf4Attributes));
+    T = (coda_hdf4_attributes *)malloc(sizeof(coda_hdf4_attributes));
     if (T == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_hdf4Attributes), __FILE__, __LINE__);
+                       (long)sizeof(coda_hdf4_attributes), __FILE__, __LINE__);
         return NULL;
     }
     T->retain_count = 0;
-    T->format = pf->format;
+    T->format = product->format;
     T->type_class = coda_record_class;
     T->name = NULL;
     T->description = NULL;
@@ -625,16 +626,16 @@ static coda_hdf4Attributes *new_hdf4AttributesForSDS(coda_hdf4ProductFile *pf, i
     T->ann_id = NULL;
 
     T->num_obj_attributes = num_attributes;
-    if (pf->is_hdf)
+    if (product->is_hdf)
     {
-        T->num_data_labels = ANnumann(pf->an_id, AN_DATA_LABEL, DFTAG_SD, (uint16)SDidtoref(sds_id));
+        T->num_data_labels = ANnumann(product->an_id, AN_DATA_LABEL, DFTAG_SD, (uint16)SDidtoref(sds_id));
         if (T->num_data_labels == -1)
         {
             coda_set_error(CODA_ERROR_HDF4, NULL);
             free(T);
             return NULL;
         }
-        T->num_data_descriptions = ANnumann(pf->an_id, AN_DATA_DESC, DFTAG_SD, (uint16)SDidtoref(sds_id));
+        T->num_data_descriptions = ANnumann(product->an_id, AN_DATA_DESC, DFTAG_SD, (uint16)SDidtoref(sds_id));
         if (T->num_data_descriptions == -1)
         {
             coda_set_error(CODA_ERROR_HDF4, NULL);
@@ -651,7 +652,7 @@ static coda_hdf4Attributes *new_hdf4AttributesForSDS(coda_hdf4ProductFile *pf, i
     /* from here on we use delete_hdf4Attributes to clean up after an error occurred */
 
     T->num_attributes = T->num_obj_attributes + T->num_data_labels + T->num_data_descriptions;
-    T->hash_data = new_hashtable(0);
+    T->hash_data = hashtable_new(0);
     if (T->hash_data == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashdata) (%s:%u)", __FILE__,
@@ -661,11 +662,11 @@ static coda_hdf4Attributes *new_hdf4AttributesForSDS(coda_hdf4ProductFile *pf, i
     }
     if (T->num_attributes > 0)
     {
-        T->attribute = malloc(T->num_attributes * sizeof(coda_hdf4Type *));
+        T->attribute = malloc(T->num_attributes * sizeof(coda_hdf4_type *));
         if (T->attribute == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           (long)(T->num_attributes * sizeof(coda_hdf4Type *)), __FILE__, __LINE__);
+                           (long)(T->num_attributes * sizeof(coda_hdf4_type *)), __FILE__, __LINE__);
             delete_hdf4Attributes(T);
             return NULL;
         }
@@ -707,11 +708,11 @@ static coda_hdf4Attributes *new_hdf4AttributesForSDS(coda_hdf4ProductFile *pf, i
         assert(result == 0);
         if (length == 1)
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicType(T->format, data_type, 1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4_type *)new_hdf4BasicType(T->format, data_type, 1, 0);
         }
         else
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(T->format, data_type, length, 1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4_type *)new_hdf4BasicTypeArray(T->format, data_type, length, 1, 0);
         }
         if (T->attribute[attr_index - 1] == NULL)
         {
@@ -731,7 +732,7 @@ static coda_hdf4Attributes *new_hdf4AttributesForSDS(coda_hdf4ProductFile *pf, i
         }
         if (T->num_data_labels > 0)
         {
-            if (ANannlist(pf->an_id, AN_DATA_LABEL, DFTAG_SD, (uint16)SDidtoref(sds_id), T->ann_id) == -1)
+            if (ANannlist(product->an_id, AN_DATA_LABEL, DFTAG_SD, (uint16)SDidtoref(sds_id), T->ann_id) == -1)
             {
                 coda_set_error(CODA_ERROR_HDF4, NULL);
                 delete_hdf4Attributes(T);
@@ -749,8 +750,8 @@ static coda_hdf4Attributes *new_hdf4AttributesForSDS(coda_hdf4ProductFile *pf, i
                 result = hashtable_add_name(T->hash_data, T->attribute_name[attr_index - 1]);
                 assert(result == 0);
                 length = ANannlen(T->ann_id[i]);
-                T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(T->format, DFNT_CHAR, length, 1,
-                                                                                       0);
+                T->attribute[attr_index - 1] = (coda_hdf4_type *)new_hdf4BasicTypeArray(T->format, DFNT_CHAR, length, 1,
+                                                                                        0);
                 if (T->attribute[attr_index - 1] == NULL)
                 {
                     delete_hdf4Attributes(T);
@@ -760,7 +761,7 @@ static coda_hdf4Attributes *new_hdf4AttributesForSDS(coda_hdf4ProductFile *pf, i
         }
         if (T->num_data_labels > 0)
         {
-            if (ANannlist(pf->an_id, AN_DATA_DESC, DFTAG_SD, (uint16)SDidtoref(sds_id),
+            if (ANannlist(product->an_id, AN_DATA_DESC, DFTAG_SD, (uint16)SDidtoref(sds_id),
                           &T->ann_id[T->num_data_labels]) == -1)
             {
                 coda_set_error(CODA_ERROR_HDF4, NULL);
@@ -779,8 +780,8 @@ static coda_hdf4Attributes *new_hdf4AttributesForSDS(coda_hdf4ProductFile *pf, i
                 result = hashtable_add_name(T->hash_data, T->attribute_name[attr_index - 1]);
                 assert(result == 0);
                 length = ANannlen(T->ann_id[T->num_data_labels + i]);
-                T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(T->format, DFNT_CHAR, length, 1,
-                                                                                       0);
+                T->attribute[attr_index - 1] = (coda_hdf4_type *)new_hdf4BasicTypeArray(T->format, DFNT_CHAR, length, 1,
+                                                                                        0);
                 if (T->attribute[attr_index - 1] == NULL)
                 {
                     delete_hdf4Attributes(T);
@@ -793,9 +794,9 @@ static coda_hdf4Attributes *new_hdf4AttributesForSDS(coda_hdf4ProductFile *pf, i
     return T;
 }
 
-static coda_hdf4Attributes *new_hdf4AttributesForVdataField(int32 vdata_id, int32 index)
+static coda_hdf4_attributes *new_hdf4AttributesForVdataField(int32 vdata_id, int32 index)
 {
-    coda_hdf4Attributes *T;
+    coda_hdf4_attributes *T;
     char hdf4_name[MAX_HDF4_NAME_LENGTH + 1];
     int32 data_type;
     int32 length;
@@ -803,11 +804,11 @@ static coda_hdf4Attributes *new_hdf4AttributesForVdataField(int32 vdata_id, int3
     int result;
     int i;
 
-    T = (coda_hdf4Attributes *)malloc(sizeof(coda_hdf4Attributes));
+    T = (coda_hdf4_attributes *)malloc(sizeof(coda_hdf4_attributes));
     if (T == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_hdf4Attributes), __FILE__, __LINE__);
+                       (long)sizeof(coda_hdf4_attributes), __FILE__, __LINE__);
         return NULL;
     }
     T->retain_count = 0;
@@ -840,7 +841,7 @@ static coda_hdf4Attributes *new_hdf4AttributesForVdataField(int32 vdata_id, int3
     /* from here on we use delete_hdf4Attributes to clean up after an error occurred */
 
     T->num_attributes = T->num_obj_attributes;
-    T->hash_data = new_hashtable(0);
+    T->hash_data = hashtable_new(0);
     if (T->hash_data == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashdata) (%s:%u)", __FILE__,
@@ -850,11 +851,11 @@ static coda_hdf4Attributes *new_hdf4AttributesForVdataField(int32 vdata_id, int3
     }
     if (T->num_attributes > 0)
     {
-        T->attribute = malloc(T->num_attributes * sizeof(coda_hdf4Type *));
+        T->attribute = malloc(T->num_attributes * sizeof(coda_hdf4_type *));
         if (T->attribute == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           (long)(T->num_attributes * sizeof(coda_hdf4Type *)), __FILE__, __LINE__);
+                           (long)(T->num_attributes * sizeof(coda_hdf4_type *)), __FILE__, __LINE__);
             delete_hdf4Attributes(T);
             return NULL;
         }
@@ -898,12 +899,12 @@ static coda_hdf4Attributes *new_hdf4AttributesForVdataField(int32 vdata_id, int3
         assert(result == 0);
         if (length == 1)
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicType(coda_format_hdf4, data_type, 1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4_type *)new_hdf4BasicType(coda_format_hdf4, data_type, 1, 0);
         }
         else
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, data_type, length,
-                                                                                   1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4_type *)new_hdf4BasicTypeArray(coda_format_hdf4, data_type, length,
+                                                                                    1, 0);
         }
         if (T->attribute[attr_index - 1] == NULL)
         {
@@ -915,9 +916,9 @@ static coda_hdf4Attributes *new_hdf4AttributesForVdataField(int32 vdata_id, int3
     return T;
 }
 
-static coda_hdf4Attributes *new_hdf4AttributesForVdata(coda_hdf4ProductFile *pf, int32 vdata_id, int32 vdata_ref)
+static coda_hdf4_attributes *new_hdf4AttributesForVdata(coda_hdf4_product *product, int32 vdata_id, int32 vdata_ref)
 {
-    coda_hdf4Attributes *T;
+    coda_hdf4_attributes *T;
     char hdf4_name[MAX_HDF4_NAME_LENGTH + 1];
     int32 data_type;
     int32 length;
@@ -925,11 +926,11 @@ static coda_hdf4Attributes *new_hdf4AttributesForVdata(coda_hdf4ProductFile *pf,
     int result;
     int i;
 
-    T = (coda_hdf4Attributes *)malloc(sizeof(coda_hdf4Attributes));
+    T = (coda_hdf4_attributes *)malloc(sizeof(coda_hdf4_attributes));
     if (T == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_hdf4Attributes), __FILE__, __LINE__);
+                       (long)sizeof(coda_hdf4_attributes), __FILE__, __LINE__);
         return NULL;
     }
     T->retain_count = 0;
@@ -962,14 +963,14 @@ static coda_hdf4Attributes *new_hdf4AttributesForVdata(coda_hdf4ProductFile *pf,
         free(T);
         return NULL;
     }
-    T->num_data_labels = ANnumann(pf->an_id, AN_DATA_LABEL, DFTAG_VS, (uint16)vdata_ref);
+    T->num_data_labels = ANnumann(product->an_id, AN_DATA_LABEL, DFTAG_VS, (uint16)vdata_ref);
     if (T->num_data_labels == -1)
     {
         coda_set_error(CODA_ERROR_HDF4, NULL);
         free(T);
         return NULL;
     }
-    T->num_data_descriptions = ANnumann(pf->an_id, AN_DATA_DESC, DFTAG_VS, (uint16)vdata_ref);
+    T->num_data_descriptions = ANnumann(product->an_id, AN_DATA_DESC, DFTAG_VS, (uint16)vdata_ref);
     if (T->num_data_descriptions == -1)
     {
         coda_set_error(CODA_ERROR_HDF4, NULL);
@@ -980,7 +981,7 @@ static coda_hdf4Attributes *new_hdf4AttributesForVdata(coda_hdf4ProductFile *pf,
     /* from here on we use delete_hdf4Attributes to clean up after an error occurred */
 
     T->num_attributes = T->num_obj_attributes + T->num_data_labels + T->num_data_descriptions;
-    T->hash_data = new_hashtable(0);
+    T->hash_data = hashtable_new(0);
     if (T->hash_data == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashdata) (%s:%u)", __FILE__,
@@ -990,11 +991,11 @@ static coda_hdf4Attributes *new_hdf4AttributesForVdata(coda_hdf4ProductFile *pf,
     }
     if (T->num_attributes > 0)
     {
-        T->attribute = malloc(T->num_attributes * sizeof(coda_hdf4Type *));
+        T->attribute = malloc(T->num_attributes * sizeof(coda_hdf4_type *));
         if (T->attribute == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           (long)(T->num_attributes * sizeof(coda_hdf4Type *)), __FILE__, __LINE__);
+                           (long)(T->num_attributes * sizeof(coda_hdf4_type *)), __FILE__, __LINE__);
             delete_hdf4Attributes(T);
             return NULL;
         }
@@ -1038,12 +1039,12 @@ static coda_hdf4Attributes *new_hdf4AttributesForVdata(coda_hdf4ProductFile *pf,
         assert(result == 0);
         if (length == 1)
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicType(coda_format_hdf4, data_type, 1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4_type *)new_hdf4BasicType(coda_format_hdf4, data_type, 1, 0);
         }
         else
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, data_type, length,
-                                                                                   1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4_type *)new_hdf4BasicTypeArray(coda_format_hdf4, data_type, length,
+                                                                                    1, 0);
         }
         if (T->attribute[attr_index - 1] == NULL)
         {
@@ -1063,7 +1064,7 @@ static coda_hdf4Attributes *new_hdf4AttributesForVdata(coda_hdf4ProductFile *pf,
         }
         if (T->num_data_labels > 0)
         {
-            if (ANannlist(pf->an_id, AN_DATA_LABEL, DFTAG_VS, (uint16)vdata_ref, T->ann_id) == -1)
+            if (ANannlist(product->an_id, AN_DATA_LABEL, DFTAG_VS, (uint16)vdata_ref, T->ann_id) == -1)
             {
                 coda_set_error(CODA_ERROR_HDF4, NULL);
                 delete_hdf4Attributes(T);
@@ -1081,8 +1082,8 @@ static coda_hdf4Attributes *new_hdf4AttributesForVdata(coda_hdf4ProductFile *pf,
                 result = hashtable_add_name(T->hash_data, T->attribute_name[attr_index - 1]);
                 assert(result == 0);
                 length = ANannlen(T->ann_id[i]);
-                T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, DFNT_CHAR,
-                                                                                       length, 1, 0);
+                T->attribute[attr_index - 1] = (coda_hdf4_type *)new_hdf4BasicTypeArray(coda_format_hdf4, DFNT_CHAR,
+                                                                                        length, 1, 0);
                 if (T->attribute[attr_index - 1] == NULL)
                 {
                     delete_hdf4Attributes(T);
@@ -1092,7 +1093,8 @@ static coda_hdf4Attributes *new_hdf4AttributesForVdata(coda_hdf4ProductFile *pf,
         }
         if (T->num_data_labels > 0)
         {
-            if (ANannlist(pf->an_id, AN_DATA_DESC, DFTAG_VS, (uint16)vdata_ref, &T->ann_id[T->num_data_labels]) == -1)
+            if (ANannlist(product->an_id, AN_DATA_DESC, DFTAG_VS, (uint16)vdata_ref, &T->ann_id[T->num_data_labels]) ==
+                -1)
             {
                 coda_set_error(CODA_ERROR_HDF4, NULL);
                 delete_hdf4Attributes(T);
@@ -1110,8 +1112,8 @@ static coda_hdf4Attributes *new_hdf4AttributesForVdata(coda_hdf4ProductFile *pf,
                 result = hashtable_add_name(T->hash_data, T->attribute_name[attr_index - 1]);
                 assert(result == 0);
                 length = ANannlen(T->ann_id[T->num_data_labels + i]);
-                T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, DFNT_CHAR,
-                                                                                       length, 1, 0);
+                T->attribute[attr_index - 1] = (coda_hdf4_type *)new_hdf4BasicTypeArray(coda_format_hdf4, DFNT_CHAR,
+                                                                                        length, 1, 0);
                 if (T->attribute[attr_index - 1] == NULL)
                 {
                     delete_hdf4Attributes(T);
@@ -1124,9 +1126,10 @@ static coda_hdf4Attributes *new_hdf4AttributesForVdata(coda_hdf4ProductFile *pf,
     return T;
 }
 
-static coda_hdf4Attributes *new_hdf4AttributesForVgroup(coda_hdf4ProductFile *pf, int32 vgroup_id, int32 num_attributes)
+static coda_hdf4_attributes *new_hdf4AttributesForVgroup(coda_hdf4_product *product, int32 vgroup_id,
+                                                         int32 num_attributes)
 {
-    coda_hdf4Attributes *T;
+    coda_hdf4_attributes *T;
     char hdf4_name[MAX_HDF4_NAME_LENGTH + 1];
     int32 data_type;
     int32 length;
@@ -1134,11 +1137,11 @@ static coda_hdf4Attributes *new_hdf4AttributesForVgroup(coda_hdf4ProductFile *pf
     int result;
     int i;
 
-    T = (coda_hdf4Attributes *)malloc(sizeof(coda_hdf4Attributes));
+    T = (coda_hdf4_attributes *)malloc(sizeof(coda_hdf4_attributes));
     if (T == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_hdf4Attributes), __FILE__, __LINE__);
+                       (long)sizeof(coda_hdf4_attributes), __FILE__, __LINE__);
         return NULL;
     }
     T->retain_count = 0;
@@ -1166,14 +1169,14 @@ static coda_hdf4Attributes *new_hdf4AttributesForVgroup(coda_hdf4ProductFile *pf
     num_attributes = num_attributes;    /* prevent 'unused' warning */
     T->num_obj_attributes = 0;
 #endif
-    T->num_data_labels = ANnumann(pf->an_id, AN_DATA_LABEL, DFTAG_VG, (uint16)VQueryref(vgroup_id));
+    T->num_data_labels = ANnumann(product->an_id, AN_DATA_LABEL, DFTAG_VG, (uint16)VQueryref(vgroup_id));
     if (T->num_data_labels == -1)
     {
         coda_set_error(CODA_ERROR_HDF4, NULL);
         free(T);
         return NULL;
     }
-    T->num_data_descriptions = ANnumann(pf->an_id, AN_DATA_DESC, DFTAG_VG, (uint16)VQueryref(vgroup_id));
+    T->num_data_descriptions = ANnumann(product->an_id, AN_DATA_DESC, DFTAG_VG, (uint16)VQueryref(vgroup_id));
     if (T->num_data_descriptions == -1)
     {
         coda_set_error(CODA_ERROR_HDF4, NULL);
@@ -1184,7 +1187,7 @@ static coda_hdf4Attributes *new_hdf4AttributesForVgroup(coda_hdf4ProductFile *pf
     /* from here on we use delete_hdf4Attributes to clean up after an error occurred */
 
     T->num_attributes = T->num_obj_attributes + T->num_data_labels + T->num_data_descriptions;
-    T->hash_data = new_hashtable(0);
+    T->hash_data = hashtable_new(0);
     if (T->hash_data == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashdata) (%s:%u)", __FILE__,
@@ -1194,11 +1197,11 @@ static coda_hdf4Attributes *new_hdf4AttributesForVgroup(coda_hdf4ProductFile *pf
     }
     if (T->num_attributes > 0)
     {
-        T->attribute = malloc(T->num_attributes * sizeof(coda_hdf4Type *));
+        T->attribute = malloc(T->num_attributes * sizeof(coda_hdf4_type *));
         if (T->attribute == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           (long)(T->num_attributes * sizeof(coda_hdf4Type *)), __FILE__, __LINE__);
+                           (long)(T->num_attributes * sizeof(coda_hdf4_type *)), __FILE__, __LINE__);
             delete_hdf4Attributes(T);
             return NULL;
         }
@@ -1242,12 +1245,12 @@ static coda_hdf4Attributes *new_hdf4AttributesForVgroup(coda_hdf4ProductFile *pf
         assert(result == 0);
         if (length == 1)
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicType(coda_format_hdf4, data_type, 1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4_type *)new_hdf4BasicType(coda_format_hdf4, data_type, 1, 0);
         }
         else
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, data_type, length,
-                                                                                   1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4_type *)new_hdf4BasicTypeArray(coda_format_hdf4, data_type, length,
+                                                                                    1, 0);
         }
         if (T->attribute[attr_index - 1] == NULL)
         {
@@ -1267,7 +1270,7 @@ static coda_hdf4Attributes *new_hdf4AttributesForVgroup(coda_hdf4ProductFile *pf
         }
         if (T->num_data_labels > 0)
         {
-            if (ANannlist(pf->an_id, AN_DATA_LABEL, DFTAG_VG, (uint16)VQueryref(vgroup_id), T->ann_id) == -1)
+            if (ANannlist(product->an_id, AN_DATA_LABEL, DFTAG_VG, (uint16)VQueryref(vgroup_id), T->ann_id) == -1)
             {
                 coda_set_error(CODA_ERROR_HDF4, NULL);
                 delete_hdf4Attributes(T);
@@ -1285,8 +1288,8 @@ static coda_hdf4Attributes *new_hdf4AttributesForVgroup(coda_hdf4ProductFile *pf
                 result = hashtable_add_name(T->hash_data, T->attribute_name[attr_index - 1]);
                 assert(result == 0);
                 length = ANannlen(T->ann_id[i]);
-                T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, DFNT_CHAR,
-                                                                                       length, 1, 0);
+                T->attribute[attr_index - 1] = (coda_hdf4_type *)new_hdf4BasicTypeArray(coda_format_hdf4, DFNT_CHAR,
+                                                                                        length, 1, 0);
                 if (T->attribute[attr_index - 1] == NULL)
                 {
                     delete_hdf4Attributes(T);
@@ -1296,7 +1299,7 @@ static coda_hdf4Attributes *new_hdf4AttributesForVgroup(coda_hdf4ProductFile *pf
         }
         if (T->num_data_labels > 0)
         {
-            if (ANannlist(pf->an_id, AN_DATA_DESC, DFTAG_VG, (uint16)VQueryref(vgroup_id),
+            if (ANannlist(product->an_id, AN_DATA_DESC, DFTAG_VG, (uint16)VQueryref(vgroup_id),
                           &T->ann_id[T->num_data_labels]) == -1)
             {
                 coda_set_error(CODA_ERROR_HDF4, NULL);
@@ -1315,8 +1318,8 @@ static coda_hdf4Attributes *new_hdf4AttributesForVgroup(coda_hdf4ProductFile *pf
                 result = hashtable_add_name(T->hash_data, T->attribute_name[attr_index - 1]);
                 assert(result == 0);
                 length = ANannlen(T->ann_id[T->num_data_labels + i]);
-                T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, DFNT_CHAR,
-                                                                                       length, 1, 0);
+                T->attribute[attr_index - 1] = (coda_hdf4_type *)new_hdf4BasicTypeArray(coda_format_hdf4, DFNT_CHAR,
+                                                                                        length, 1, 0);
                 if (T->attribute[attr_index - 1] == NULL)
                 {
                     delete_hdf4Attributes(T);
@@ -1329,9 +1332,9 @@ static coda_hdf4Attributes *new_hdf4AttributesForVgroup(coda_hdf4ProductFile *pf
     return T;
 }
 
-static coda_hdf4FileAttributes *new_hdf4AttributesForRoot(coda_hdf4ProductFile *pf)
+static coda_hdf4_file_attributes *new_hdf4AttributesForRoot(coda_hdf4_product *product)
 {
-    coda_hdf4FileAttributes *T;
+    coda_hdf4_file_attributes *T;
     char hdf4_name[MAX_HDF4_NAME_LENGTH + 1];
     int32 num_data_labels;
     int32 num_data_descriptions;
@@ -1342,11 +1345,11 @@ static coda_hdf4FileAttributes *new_hdf4AttributesForRoot(coda_hdf4ProductFile *
     int result;
     int i;
 
-    T = (coda_hdf4FileAttributes *)malloc(sizeof(coda_hdf4FileAttributes));
+    T = (coda_hdf4_file_attributes *)malloc(sizeof(coda_hdf4_file_attributes));
     if (T == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_hdf4FileAttributes), __FILE__, __LINE__);
+                       (long)sizeof(coda_hdf4_file_attributes), __FILE__, __LINE__);
         return NULL;
     }
     T->retain_count = 0;
@@ -1357,11 +1360,11 @@ static coda_hdf4FileAttributes *new_hdf4AttributesForRoot(coda_hdf4ProductFile *
     T->tag = tag_hdf4_file_attributes;
     T->parent_tag = tag_hdf4_root;
 
-    T->num_sd_attributes = pf->num_sd_file_attributes;
-    T->num_gr_attributes = pf->num_gr_file_attributes;
-    if (pf->is_hdf)
+    T->num_sd_attributes = product->num_sd_file_attributes;
+    T->num_gr_attributes = product->num_gr_file_attributes;
+    if (product->is_hdf)
     {
-        if (ANfileinfo(pf->an_id, &(T->num_file_labels), &(T->num_file_descriptions), &num_data_labels,
+        if (ANfileinfo(product->an_id, &(T->num_file_labels), &(T->num_file_descriptions), &num_data_labels,
                        &num_data_descriptions) != 0)
         {
             coda_set_error(CODA_ERROR_HDF4, NULL);
@@ -1382,7 +1385,7 @@ static coda_hdf4FileAttributes *new_hdf4AttributesForRoot(coda_hdf4ProductFile *
 
     /* from here on we use delete_hdf4FileAttributes to clean up after an error occurred */
 
-    T->hash_data = new_hashtable(0);
+    T->hash_data = hashtable_new(0);
     if (T->hash_data == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashdata) (%s:%u)", __FILE__,
@@ -1392,12 +1395,12 @@ static coda_hdf4FileAttributes *new_hdf4AttributesForRoot(coda_hdf4ProductFile *
     }
     if (T->num_attributes > 0)
     {
-        T->attribute = malloc(T->num_attributes * sizeof(coda_hdf4Type *));
+        T->attribute = malloc(T->num_attributes * sizeof(coda_hdf4_type *));
         if (T->attribute == NULL)
         {
             delete_hdf4FileAttributes(T);
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           (long)(T->num_attributes * sizeof(coda_hdf4Type *)), __FILE__, __LINE__);
+                           (long)(T->num_attributes * sizeof(coda_hdf4_type *)), __FILE__, __LINE__);
             return NULL;
         }
         for (i = 0; i < T->num_attributes; i++)
@@ -1422,7 +1425,7 @@ static coda_hdf4FileAttributes *new_hdf4AttributesForRoot(coda_hdf4ProductFile *
     for (i = 0; i < T->num_gr_attributes; i++)
     {
         attr_index++;
-        if (GRattrinfo(pf->gr_id, i, hdf4_name, &data_type, &length) != 0)
+        if (GRattrinfo(product->gr_id, i, hdf4_name, &data_type, &length) != 0)
         {
             coda_set_error(CODA_ERROR_HDF4, NULL);
             delete_hdf4FileAttributes(T);
@@ -1438,12 +1441,12 @@ static coda_hdf4FileAttributes *new_hdf4AttributesForRoot(coda_hdf4ProductFile *
         assert(result == 0);
         if (length == 1)
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicType(coda_format_hdf4, data_type, 1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4_type *)new_hdf4BasicType(coda_format_hdf4, data_type, 1, 0);
         }
         else
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, data_type, length,
-                                                                                   1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4_type *)new_hdf4BasicTypeArray(coda_format_hdf4, data_type, length,
+                                                                                    1, 0);
         }
         if (T->attribute[attr_index - 1] == NULL)
         {
@@ -1454,7 +1457,7 @@ static coda_hdf4FileAttributes *new_hdf4AttributesForRoot(coda_hdf4ProductFile *
     for (i = 0; i < T->num_sd_attributes; i++)
     {
         attr_index++;
-        if (SDattrinfo(pf->sd_id, i, hdf4_name, &data_type, &length) != 0)
+        if (SDattrinfo(product->sd_id, i, hdf4_name, &data_type, &length) != 0)
         {
             coda_set_error(CODA_ERROR_HDF4, NULL);
             delete_hdf4FileAttributes(T);
@@ -1470,12 +1473,12 @@ static coda_hdf4FileAttributes *new_hdf4AttributesForRoot(coda_hdf4ProductFile *
         assert(result == 0);
         if (length == 1)
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicType(coda_format_hdf4, data_type, 1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4_type *)new_hdf4BasicType(coda_format_hdf4, data_type, 1, 0);
         }
         else
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, data_type, length,
-                                                                                   1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4_type *)new_hdf4BasicTypeArray(coda_format_hdf4, data_type, length,
+                                                                                    1, 0);
         }
         if (T->attribute[attr_index - 1] == NULL)
         {
@@ -1494,7 +1497,7 @@ static coda_hdf4FileAttributes *new_hdf4AttributesForRoot(coda_hdf4ProductFile *
         }
         result = hashtable_add_name(T->hash_data, T->attribute_name[attr_index - 1]);
         assert(result == 0);
-        ann_id = ANselect(pf->an_id, i, AN_FILE_LABEL);
+        ann_id = ANselect(product->an_id, i, AN_FILE_LABEL);
         if (ann_id == -1)
         {
             coda_set_error(CODA_ERROR_HDF4, NULL);
@@ -1502,8 +1505,8 @@ static coda_hdf4FileAttributes *new_hdf4AttributesForRoot(coda_hdf4ProductFile *
             return NULL;
         }
         length = ANannlen(ann_id);
-        T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, DFNT_CHAR, length, 1,
-                                                                               0);
+        T->attribute[attr_index - 1] = (coda_hdf4_type *)new_hdf4BasicTypeArray(coda_format_hdf4, DFNT_CHAR, length, 1,
+                                                                                0);
         if (T->attribute[attr_index - 1] == NULL)
         {
             delete_hdf4FileAttributes(T);
@@ -1527,7 +1530,7 @@ static coda_hdf4FileAttributes *new_hdf4AttributesForRoot(coda_hdf4ProductFile *
         }
         result = hashtable_add_name(T->hash_data, T->attribute_name[attr_index - 1]);
         assert(result == 0);
-        ann_id = ANselect(pf->an_id, i, AN_FILE_DESC);
+        ann_id = ANselect(product->an_id, i, AN_FILE_DESC);
         if (ann_id == -1)
         {
             coda_set_error(CODA_ERROR_HDF4, NULL);
@@ -1535,8 +1538,8 @@ static coda_hdf4FileAttributes *new_hdf4AttributesForRoot(coda_hdf4ProductFile *
             return NULL;
         }
         length = ANannlen(ann_id);
-        T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, DFNT_CHAR, length, 1,
-                                                                               0);
+        T->attribute[attr_index - 1] = (coda_hdf4_type *)new_hdf4BasicTypeArray(coda_format_hdf4, DFNT_CHAR, length, 1,
+                                                                                0);
         if (T->attribute[attr_index - 1] == NULL)
         {
             delete_hdf4FileAttributes(T);
@@ -1553,18 +1556,18 @@ static coda_hdf4FileAttributes *new_hdf4AttributesForRoot(coda_hdf4ProductFile *
     return T;
 }
 
-static coda_hdf4GRImage *new_hdf4GRImage(coda_hdf4ProductFile *pf, int32 index)
+static coda_hdf4_GRImage *new_hdf4GRImage(coda_hdf4_product *product, int32 index)
 {
-    coda_hdf4GRImage *T;
+    coda_hdf4_GRImage *T;
     double scale_factor;
     double add_offset;
     int32 attr_index;
 
-    T = (coda_hdf4GRImage *)malloc(sizeof(coda_hdf4GRImage));
+    T = (coda_hdf4_GRImage *)malloc(sizeof(coda_hdf4_GRImage));
     if (T == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_hdf4GRImage), __FILE__, __LINE__);
+                       (long)sizeof(coda_hdf4_GRImage), __FILE__, __LINE__);
         return NULL;
     }
     T->retain_count = 0;
@@ -1577,7 +1580,7 @@ static coda_hdf4GRImage *new_hdf4GRImage(coda_hdf4ProductFile *pf, int32 index)
     T->group_count = 0;
 
     T->index = index;
-    T->ri_id = GRselect(pf->gr_id, index);
+    T->ri_id = GRselect(product->gr_id, index);
     if (T->ri_id == -1)
     {
         coda_set_error(CODA_ERROR_HDF4, NULL);
@@ -1653,7 +1656,7 @@ static coda_hdf4GRImage *new_hdf4GRImage(coda_hdf4ProductFile *pf, int32 index)
         return NULL;
     }
 
-    T->attributes = new_hdf4AttributesForGRImage(pf, T->ri_id, T->num_attributes);
+    T->attributes = new_hdf4AttributesForGRImage(product, T->ri_id, T->num_attributes);
     if (T->attributes == NULL)
     {
         delete_hdf4BasicType(T->basic_type);
@@ -1671,23 +1674,23 @@ static coda_hdf4GRImage *new_hdf4GRImage(coda_hdf4ProductFile *pf, int32 index)
     return T;
 }
 
-static coda_hdf4SDS *new_hdf4SDS(coda_hdf4ProductFile *pf, int32 sds_index)
+static coda_hdf4_SDS *new_hdf4SDS(coda_hdf4_product *product, int32 sds_index)
 {
-    coda_hdf4SDS *T;
+    coda_hdf4_SDS *T;
     double scale_factor;
     double add_offset;
     int32 attr_index;
     int i;
 
-    T = (coda_hdf4SDS *)malloc(sizeof(coda_hdf4SDS));
+    T = (coda_hdf4_SDS *)malloc(sizeof(coda_hdf4_SDS));
     if (T == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_hdf4SDS), __FILE__, __LINE__);
+                       (long)sizeof(coda_hdf4_SDS), __FILE__, __LINE__);
         return NULL;
     }
     T->retain_count = 0;
-    T->format = pf->format;
+    T->format = product->format;
     T->type_class = coda_array_class;
     T->name = NULL;
     T->description = NULL;
@@ -1696,7 +1699,7 @@ static coda_hdf4SDS *new_hdf4SDS(coda_hdf4ProductFile *pf, int32 sds_index)
     T->group_count = 0;
 
     T->index = sds_index;
-    T->sds_id = SDselect(pf->sd_id, sds_index);
+    T->sds_id = SDselect(product->sd_id, sds_index);
     if (T->sds_id == -1)
     {
         coda_set_error(CODA_ERROR_HDF4, NULL);
@@ -1704,7 +1707,7 @@ static coda_hdf4SDS *new_hdf4SDS(coda_hdf4ProductFile *pf, int32 sds_index)
         return NULL;
     }
 
-    if (pf->is_hdf)
+    if (product->is_hdf)
     {
         T->ref = SDidtoref(T->sds_id);
         if (T->ref == -1)
@@ -1784,7 +1787,7 @@ static coda_hdf4SDS *new_hdf4SDS(coda_hdf4ProductFile *pf, int32 sds_index)
         return NULL;
     }
 
-    T->attributes = new_hdf4AttributesForSDS(pf, T->sds_id, T->num_attributes);
+    T->attributes = new_hdf4AttributesForSDS(product, T->sds_id, T->num_attributes);
     if (T->attributes == NULL)
     {
         delete_hdf4BasicType(T->basic_type);
@@ -1801,19 +1804,19 @@ static coda_hdf4SDS *new_hdf4SDS(coda_hdf4ProductFile *pf, int32 sds_index)
     return T;
 }
 
-static coda_hdf4VdataField *new_hdf4VdataField(int32 vdata_id, int32 field_index, int32 num_records)
+static coda_hdf4_Vdata_field *new_hdf4VdataField(int32 vdata_id, int32 field_index, int32 num_records)
 {
-    coda_hdf4VdataField *T;
+    coda_hdf4_Vdata_field *T;
     const char *field_name;
     double scale_factor;
     double add_offset;
     int32 attr_index;
 
-    T = malloc(sizeof(coda_hdf4VdataField));
+    T = malloc(sizeof(coda_hdf4_Vdata_field));
     if (T == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_hdf4VdataField), __FILE__, __LINE__);
+                       (long)sizeof(coda_hdf4_Vdata_field), __FILE__, __LINE__);
         return NULL;
     }
     T->retain_count = 0;
@@ -1915,16 +1918,16 @@ static coda_hdf4VdataField *new_hdf4VdataField(int32 vdata_id, int32 field_index
     return T;
 }
 
-static coda_hdf4Vdata *new_hdf4Vdata(coda_hdf4ProductFile *pf, int32 vdata_ref)
+static coda_hdf4_Vdata *new_hdf4Vdata(coda_hdf4_product *product, int32 vdata_ref)
 {
-    coda_hdf4Vdata *T;
+    coda_hdf4_Vdata *T;
     int i;
 
-    T = malloc(sizeof(coda_hdf4Vdata));
+    T = malloc(sizeof(coda_hdf4_Vdata));
     if (T == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_hdf4Vdata), __FILE__, __LINE__);
+                       (long)sizeof(coda_hdf4_Vdata), __FILE__, __LINE__);
         return NULL;
     }
     T->retain_count = 0;
@@ -1936,7 +1939,7 @@ static coda_hdf4Vdata *new_hdf4Vdata(coda_hdf4ProductFile *pf, int32 vdata_ref)
 
     T->group_count = 0;
     T->ref = vdata_ref;
-    T->vdata_id = VSattach(pf->file_id, vdata_ref, "r");
+    T->vdata_id = VSattach(product->file_id, vdata_ref, "r");
     if (T->vdata_id == -1)
     {
         coda_set_error(CODA_ERROR_HDF4, NULL);
@@ -1980,11 +1983,11 @@ static coda_hdf4Vdata *new_hdf4Vdata(coda_hdf4ProductFile *pf, int32 vdata_ref)
 
     T->num_fields = VFnfields(T->vdata_id);
     T->num_records = VSelts(T->vdata_id);
-    T->field = malloc(T->num_fields * sizeof(coda_hdf4VdataField *));
+    T->field = malloc(T->num_fields * sizeof(coda_hdf4_Vdata_field *));
     if (T->field == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)(T->num_fields * sizeof(coda_hdf4VdataField *)), __FILE__, __LINE__);
+                       (long)(T->num_fields * sizeof(coda_hdf4_Vdata_field *)), __FILE__, __LINE__);
         VSdetach(T->vdata_id);
         free(T);
         return NULL;
@@ -2004,7 +2007,7 @@ static coda_hdf4Vdata *new_hdf4Vdata(coda_hdf4ProductFile *pf, int32 vdata_ref)
         T->field[i] = NULL;
         T->field_name[i] = NULL;
     }
-    T->hash_data = new_hashtable(0);
+    T->hash_data = hashtable_new(0);
     if (T->hash_data == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashdata) (%s:%u)", __FILE__,
@@ -2016,10 +2019,10 @@ static coda_hdf4Vdata *new_hdf4Vdata(coda_hdf4ProductFile *pf, int32 vdata_ref)
         return NULL;
     }
 
-    T->attributes = new_hdf4AttributesForVdata(pf, T->vdata_id, T->ref);
+    T->attributes = new_hdf4AttributesForVdata(product, T->vdata_id, T->ref);
     if (T->attributes == NULL)
     {
-        delete_hashtable(T->hash_data);
+        hashtable_delete(T->hash_data);
         VSdetach(T->vdata_id);
         free(T->field_name);
         free(T->field);
@@ -2058,15 +2061,15 @@ static coda_hdf4Vdata *new_hdf4Vdata(coda_hdf4ProductFile *pf, int32 vdata_ref)
     return T;
 }
 
-static coda_hdf4Vgroup *new_hdf4Vgroup(coda_hdf4ProductFile *pf, int32 vgroup_ref)
+static coda_hdf4_Vgroup *new_hdf4Vgroup(coda_hdf4_product *product, int32 vgroup_ref)
 {
-    coda_hdf4Vgroup *T;
+    coda_hdf4_Vgroup *T;
 
-    T = malloc(sizeof(coda_hdf4Vgroup));
+    T = malloc(sizeof(coda_hdf4_Vgroup));
     if (T == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_hdf4Vgroup), __FILE__, __LINE__);
+                       (long)sizeof(coda_hdf4_Vgroup), __FILE__, __LINE__);
         return NULL;
     }
     T->retain_count = 0;
@@ -2083,7 +2086,7 @@ static coda_hdf4Vgroup *new_hdf4Vgroup(coda_hdf4ProductFile *pf, int32 vgroup_re
     T->entry = NULL;
     T->entry_name = NULL;
 
-    T->vgroup_id = Vattach(pf->file_id, vgroup_ref, "r");
+    T->vgroup_id = Vattach(product->file_id, vgroup_ref, "r");
     if (T->vgroup_id == -1)
     {
         coda_set_error(CODA_ERROR_HDF4, NULL);
@@ -2141,7 +2144,7 @@ static coda_hdf4Vgroup *new_hdf4Vgroup(coda_hdf4ProductFile *pf, int32 vgroup_re
         return NULL;
     }
 
-    T->hash_data = new_hashtable(0);
+    T->hash_data = hashtable_new(0);
     if (T->hash_data == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashdata) (%s:%u)", __FILE__,
@@ -2151,10 +2154,10 @@ static coda_hdf4Vgroup *new_hdf4Vgroup(coda_hdf4ProductFile *pf, int32 vgroup_re
         return NULL;
     }
 
-    T->attributes = new_hdf4AttributesForVgroup(pf, T->vgroup_id, T->num_attributes);
+    T->attributes = new_hdf4AttributesForVgroup(product, T->vgroup_id, T->num_attributes);
     if (T->attributes == NULL)
     {
-        delete_hashtable(T->hash_data);
+        hashtable_delete(T->hash_data);
         Vdetach(T->vgroup_id);
         free(T);
         return NULL;
@@ -2169,32 +2172,32 @@ static coda_hdf4Vgroup *new_hdf4Vgroup(coda_hdf4ProductFile *pf, int32 vgroup_re
     return T;
 }
 
-static int init_hdf4GRImages(coda_hdf4ProductFile *pf)
+static int init_hdf4GRImages(coda_hdf4_product *product)
 {
-    if (GRfileinfo(pf->gr_id, &(pf->num_images), &(pf->num_gr_file_attributes)) != 0)
+    if (GRfileinfo(product->gr_id, &(product->num_images), &(product->num_gr_file_attributes)) != 0)
     {
         coda_set_error(CODA_ERROR_HDF4, NULL);
         return -1;
     }
-    if (pf->num_images > 0)
+    if (product->num_images > 0)
     {
         int i;
 
-        pf->gri = malloc(pf->num_images * sizeof(coda_hdf4GRImage *));
-        if (pf->gri == NULL)
+        product->gri = malloc(product->num_images * sizeof(coda_hdf4_GRImage *));
+        if (product->gri == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           (long)pf->num_images * sizeof(coda_hdf4GRImage *), __FILE__, __LINE__);
+                           (long)product->num_images * sizeof(coda_hdf4_GRImage *), __FILE__, __LINE__);
             return -1;
         }
-        for (i = 0; i < pf->num_images; i++)
+        for (i = 0; i < product->num_images; i++)
         {
-            pf->gri[i] = NULL;
+            product->gri[i] = NULL;
         }
-        for (i = 0; i < pf->num_images; i++)
+        for (i = 0; i < product->num_images; i++)
         {
-            pf->gri[i] = new_hdf4GRImage(pf, i);
-            if (pf->gri[i] == NULL)
+            product->gri[i] = new_hdf4GRImage(product, i);
+            if (product->gri[i] == NULL)
             {
                 return -1;
             }
@@ -2204,32 +2207,32 @@ static int init_hdf4GRImages(coda_hdf4ProductFile *pf)
     return 0;
 }
 
-static int init_hdf4SDSs(coda_hdf4ProductFile *pf)
+static int init_hdf4SDSs(coda_hdf4_product *product)
 {
-    if (SDfileinfo(pf->sd_id, &(pf->num_sds), &(pf->num_sd_file_attributes)) != 0)
+    if (SDfileinfo(product->sd_id, &(product->num_sds), &(product->num_sd_file_attributes)) != 0)
     {
         coda_set_error(CODA_ERROR_HDF4, NULL);
         return -1;
     }
-    if (pf->num_sds > 0)
+    if (product->num_sds > 0)
     {
         int i;
 
-        pf->sds = malloc(pf->num_sds * sizeof(coda_hdf4SDS *));
-        if (pf->sds == NULL)
+        product->sds = malloc(product->num_sds * sizeof(coda_hdf4_SDS *));
+        if (product->sds == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           (long)pf->num_sds * sizeof(coda_hdf4SDS *), __FILE__, __LINE__);
+                           (long)product->num_sds * sizeof(coda_hdf4_SDS *), __FILE__, __LINE__);
             return -1;
         }
-        for (i = 0; i < pf->num_sds; i++)
+        for (i = 0; i < product->num_sds; i++)
         {
-            pf->sds[i] = NULL;
+            product->sds[i] = NULL;
         }
-        for (i = 0; i < pf->num_sds; i++)
+        for (i = 0; i < product->num_sds; i++)
         {
-            pf->sds[i] = new_hdf4SDS(pf, i);
-            if (pf->sds[i] == NULL)
+            product->sds[i] = new_hdf4SDS(product, i);
+            if (product->sds[i] == NULL)
             {
                 return -1;
             }
@@ -2239,86 +2242,87 @@ static int init_hdf4SDSs(coda_hdf4ProductFile *pf)
     return 0;
 }
 
-static int init_hdf4Vdatas(coda_hdf4ProductFile *pf)
+static int init_hdf4Vdatas(coda_hdf4_product *product)
 {
     int32 vdata_ref;
 
-    vdata_ref = VSgetid(pf->file_id, -1);
+    vdata_ref = VSgetid(product->file_id, -1);
     while (vdata_ref != -1)
     {
-        if (pf->num_vdata % BLOCK_SIZE == 0)
+        if (product->num_vdata % BLOCK_SIZE == 0)
         {
-            coda_hdf4Vdata **vdata;
+            coda_hdf4_Vdata **vdata;
             int i;
 
-            vdata = realloc(pf->vdata, (pf->num_vdata + BLOCK_SIZE) * sizeof(coda_hdf4Vdata *));
+            vdata = realloc(product->vdata, (product->num_vdata + BLOCK_SIZE) * sizeof(coda_hdf4_Vdata *));
             if (vdata == NULL)
             {
                 coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                               (long)(pf->num_vdata + BLOCK_SIZE) * sizeof(coda_hdf4Vdata *), __FILE__, __LINE__);
+                               (long)(product->num_vdata + BLOCK_SIZE) * sizeof(coda_hdf4_Vdata *), __FILE__, __LINE__);
                 return -1;
             }
-            pf->vdata = vdata;
-            for (i = pf->num_vdata; i < pf->num_vdata + BLOCK_SIZE; i++)
+            product->vdata = vdata;
+            for (i = product->num_vdata; i < product->num_vdata + BLOCK_SIZE; i++)
             {
-                pf->vdata[i] = NULL;
+                product->vdata[i] = NULL;
             }
         }
-        pf->num_vdata++;
-        pf->vdata[pf->num_vdata - 1] = new_hdf4Vdata(pf, vdata_ref);
-        if (pf->vdata[pf->num_vdata - 1] == NULL)
+        product->num_vdata++;
+        product->vdata[product->num_vdata - 1] = new_hdf4Vdata(product, vdata_ref);
+        if (product->vdata[product->num_vdata - 1] == NULL)
         {
             return -1;
         }
-        vdata_ref = VSgetid(pf->file_id, vdata_ref);
+        vdata_ref = VSgetid(product->file_id, vdata_ref);
     }
 
     return 0;
 }
 
-static int init_hdf4Vgroups(coda_hdf4ProductFile *pf)
+static int init_hdf4Vgroups(coda_hdf4_product *product)
 {
     int32 vgroup_ref;
     int result;
     int i;
 
-    vgroup_ref = Vgetid(pf->file_id, -1);
+    vgroup_ref = Vgetid(product->file_id, -1);
     while (vgroup_ref != -1)
     {
-        if (pf->num_vgroup % BLOCK_SIZE == 0)
+        if (product->num_vgroup % BLOCK_SIZE == 0)
         {
-            coda_hdf4Vgroup **vgroup;
+            coda_hdf4_Vgroup **vgroup;
             int i;
 
-            vgroup = realloc(pf->vgroup, (pf->num_vgroup + BLOCK_SIZE) * sizeof(coda_hdf4Vgroup *));
+            vgroup = realloc(product->vgroup, (product->num_vgroup + BLOCK_SIZE) * sizeof(coda_hdf4_Vgroup *));
             if (vgroup == NULL)
             {
                 coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                               (long)(pf->num_vgroup + BLOCK_SIZE) * sizeof(coda_hdf4Vgroup *), __FILE__, __LINE__);
+                               (long)(product->num_vgroup + BLOCK_SIZE) * sizeof(coda_hdf4_Vgroup *), __FILE__,
+                               __LINE__);
                 return -1;
             }
-            pf->vgroup = vgroup;
-            for (i = pf->num_vgroup; i < pf->num_vgroup + BLOCK_SIZE; i++)
+            product->vgroup = vgroup;
+            for (i = product->num_vgroup; i < product->num_vgroup + BLOCK_SIZE; i++)
             {
-                pf->vgroup[i] = NULL;
+                product->vgroup[i] = NULL;
             }
         }
-        pf->num_vgroup++;
+        product->num_vgroup++;
         /* This will not yet create the links to the entries of the Vgroup */
-        pf->vgroup[pf->num_vgroup - 1] = new_hdf4Vgroup(pf, vgroup_ref);
-        if (pf->vgroup[pf->num_vgroup - 1] == NULL)
+        product->vgroup[product->num_vgroup - 1] = new_hdf4Vgroup(product, vgroup_ref);
+        if (product->vgroup[product->num_vgroup - 1] == NULL)
         {
             return -1;
         }
-        vgroup_ref = Vgetid(pf->file_id, vgroup_ref);
+        vgroup_ref = Vgetid(product->file_id, vgroup_ref);
     }
 
     /* Now for each Vgroup create the links to its entries */
-    for (i = 0; i < pf->num_vgroup; i++)
+    for (i = 0; i < product->num_vgroup; i++)
     {
-        coda_hdf4Vgroup *T;
+        coda_hdf4_Vgroup *T;
 
-        T = pf->vgroup[i];
+        T = product->vgroup[i];
 
         if (T->num_entries > 0 && !T->hide)
         {
@@ -2327,11 +2331,11 @@ static int init_hdf4Vgroups(coda_hdf4ProductFile *pf)
             int32 num_entries;
             int j;
 
-            T->entry = malloc(T->num_entries * sizeof(coda_hdf4Type *));
+            T->entry = malloc(T->num_entries * sizeof(coda_hdf4_type *));
             if (T->entry == NULL)
             {
                 coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                               (long)T->num_entries * sizeof(coda_hdf4Type *), __FILE__, __LINE__);
+                               (long)T->num_entries * sizeof(coda_hdf4_type *), __FILE__, __LINE__);
                 return -1;
             }
             T->entry_name = malloc(T->num_entries * sizeof(char *));
@@ -2383,18 +2387,18 @@ static int init_hdf4Vgroups(coda_hdf4ProductFile *pf)
                     case DFTAG_RIG:
                     case DFTAG_RI:
                     case DFTAG_RI8:
-                        index = GRreftoindex(pf->gr_id, (uint16)refs[j]);
+                        index = GRreftoindex(product->gr_id, (uint16)refs[j]);
                         if (index != -1)
                         {
-                            for (k = 0; k < pf->num_images; k++)
+                            for (k = 0; k < product->num_images; k++)
                             {
-                                if (pf->gri[k]->index == index)
+                                if (product->gri[k]->index == index)
                                 {
-                                    pf->gri[k]->group_count++;
+                                    product->gri[k]->group_count++;
                                     T->num_entries++;
-                                    T->entry[T->num_entries - 1] = (coda_hdf4Type *)pf->gri[k];
+                                    T->entry[T->num_entries - 1] = (coda_hdf4_type *)product->gri[k];
                                     T->entry_name[T->num_entries - 1] =
-                                        coda_identifier_from_name(pf->gri[k]->gri_name, T->hash_data);
+                                        coda_identifier_from_name(product->gri[k]->gri_name, T->hash_data);
                                     if (T->entry_name[T->num_entries - 1] == NULL)
                                     {
                                         free(refs);
@@ -2406,7 +2410,7 @@ static int init_hdf4Vgroups(coda_hdf4ProductFile *pf)
                                     break;
                                 }
                             }
-                            /* if k == pf->num_images then the Vgroup links to a non-existent GRImage and
+                            /* if k == product->num_images then the Vgroup links to a non-existent GRImage and
                              * we ignore the entry */
                         }
                         /* if index == -1 then the Vgroup links to a non-existent GRImage and we ignore the entry */
@@ -2414,18 +2418,18 @@ static int init_hdf4Vgroups(coda_hdf4ProductFile *pf)
                     case DFTAG_SD:
                     case DFTAG_SDG:
                     case DFTAG_NDG:
-                        index = SDreftoindex(pf->sd_id, refs[j]);
+                        index = SDreftoindex(product->sd_id, refs[j]);
                         if (index != -1)
                         {
-                            for (k = 0; k < pf->num_sds; k++)
+                            for (k = 0; k < product->num_sds; k++)
                             {
-                                if (pf->sds[k]->index == index)
+                                if (product->sds[k]->index == index)
                                 {
-                                    pf->sds[k]->group_count++;
+                                    product->sds[k]->group_count++;
                                     T->num_entries++;
-                                    T->entry[T->num_entries - 1] = (coda_hdf4Type *)pf->sds[k];
+                                    T->entry[T->num_entries - 1] = (coda_hdf4_type *)product->sds[k];
                                     T->entry_name[T->num_entries - 1] =
-                                        coda_identifier_from_name(pf->sds[k]->sds_name, T->hash_data);
+                                        coda_identifier_from_name(product->sds[k]->sds_name, T->hash_data);
                                     if (T->entry_name[T->num_entries - 1] == NULL)
                                     {
                                         free(refs);
@@ -2437,24 +2441,24 @@ static int init_hdf4Vgroups(coda_hdf4ProductFile *pf)
                                     break;
                                 }
                             }
-                            /* if k == pf->num_sds then the Vgroup links to a non-existent SDS and
+                            /* if k == product->num_sds then the Vgroup links to a non-existent SDS and
                              * we ignore the entry */
                         }
                         /* if index == -1 then the Vgroup links to a non-existent SDS and we ignore the entry */
                         break;
                     case DFTAG_VH:
                     case DFTAG_VS:
-                        for (k = 0; k < pf->num_vdata; k++)
+                        for (k = 0; k < product->num_vdata; k++)
                         {
-                            if (pf->vdata[k]->ref == refs[j])
+                            if (product->vdata[k]->ref == refs[j])
                             {
-                                if (!pf->vdata[k]->hide)
+                                if (!product->vdata[k]->hide)
                                 {
-                                    pf->vdata[k]->group_count++;
+                                    product->vdata[k]->group_count++;
                                     T->num_entries++;
-                                    T->entry[T->num_entries - 1] = (coda_hdf4Type *)pf->vdata[k];
+                                    T->entry[T->num_entries - 1] = (coda_hdf4_type *)product->vdata[k];
                                     T->entry_name[T->num_entries - 1] =
-                                        coda_identifier_from_name(pf->vdata[k]->vdata_name, T->hash_data);
+                                        coda_identifier_from_name(product->vdata[k]->vdata_name, T->hash_data);
                                     if (T->entry_name[T->num_entries - 1] == NULL)
                                     {
                                         free(refs);
@@ -2467,21 +2471,21 @@ static int init_hdf4Vgroups(coda_hdf4ProductFile *pf)
                                 break;
                             }
                         }
-                        /* if k == pf->num_vdata then the Vgroup links to a non-existent Vdata and
+                        /* if k == product->num_vdata then the Vgroup links to a non-existent Vdata and
                          * we ignore the entry */
                         break;
                     case DFTAG_VG:
-                        for (k = 0; k < pf->num_vgroup; k++)
+                        for (k = 0; k < product->num_vgroup; k++)
                         {
-                            if (pf->vgroup[k]->ref == refs[j])
+                            if (product->vgroup[k]->ref == refs[j])
                             {
-                                if (!pf->vgroup[k]->hide)
+                                if (!product->vgroup[k]->hide)
                                 {
-                                    pf->vgroup[k]->group_count++;
+                                    product->vgroup[k]->group_count++;
                                     T->num_entries++;
-                                    T->entry[T->num_entries - 1] = (coda_hdf4Type *)pf->vgroup[k];
+                                    T->entry[T->num_entries - 1] = (coda_hdf4_type *)product->vgroup[k];
                                     T->entry_name[T->num_entries - 1] =
-                                        coda_identifier_from_name(pf->vgroup[k]->vgroup_name, T->hash_data);
+                                        coda_identifier_from_name(product->vgroup[k]->vgroup_name, T->hash_data);
                                     if (T->entry_name[T->num_entries - 1] == NULL)
                                     {
                                         free(refs);
@@ -2494,7 +2498,7 @@ static int init_hdf4Vgroups(coda_hdf4ProductFile *pf)
                                 break;
                             }
                         }
-                        /* if k == pf->num_vgroup then the Vgroup links to a non-existent Vgroup and
+                        /* if k == product->num_vgroup then the Vgroup links to a non-existent Vgroup and
                          * we ignore the entry */
                         break;
                     default:
@@ -2510,18 +2514,18 @@ static int init_hdf4Vgroups(coda_hdf4ProductFile *pf)
     return 0;
 }
 
-static int create_hdf4Root(coda_hdf4ProductFile *pf)
+static int create_hdf4Root(coda_hdf4_product *product)
 {
-    coda_hdf4Root *T;
+    coda_hdf4_root *T;
     int32 num_root_entries;
     int result;
     int i;
 
-    T = (coda_hdf4Root *)malloc(sizeof(coda_hdf4Root));
+    T = (coda_hdf4_root *)malloc(sizeof(coda_hdf4_root));
     if (T == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_hdf4Root), __FILE__, __LINE__);
+                       (long)sizeof(coda_hdf4_root), __FILE__, __LINE__);
         return -1;
     }
     T->retain_count = 0;
@@ -2535,7 +2539,7 @@ static int create_hdf4Root(coda_hdf4ProductFile *pf)
     T->entry = NULL;
     T->entry_name = NULL;
     T->attributes = NULL;
-    T->hash_data = new_hashtable(0);
+    T->hash_data = hashtable_new(0);
     if (T->hash_data == NULL)
     {
         free(T);
@@ -2544,33 +2548,33 @@ static int create_hdf4Root(coda_hdf4ProductFile *pf)
         return -1;
     }
 
-    pf->root_type = (coda_DynamicType *)T;
+    product->root_type = (coda_dynamic_type *)T;
 
     num_root_entries = 0;
-    for (i = 0; i < pf->num_vgroup; i++)
+    for (i = 0; i < product->num_vgroup; i++)
     {
-        if (pf->vgroup[i]->group_count == 0 && !pf->vgroup[i]->hide)
+        if (product->vgroup[i]->group_count == 0 && !product->vgroup[i]->hide)
         {
             num_root_entries++;
         }
     }
-    for (i = 0; i < pf->num_images; i++)
+    for (i = 0; i < product->num_images; i++)
     {
-        if (pf->gri[i]->group_count == 0)
+        if (product->gri[i]->group_count == 0)
         {
             num_root_entries++;
         }
     }
-    for (i = 0; i < pf->num_sds; i++)
+    for (i = 0; i < product->num_sds; i++)
     {
-        if (pf->sds[i]->group_count == 0)
+        if (product->sds[i]->group_count == 0)
         {
             num_root_entries++;
         }
     }
-    for (i = 0; i < pf->num_vdata; i++)
+    for (i = 0; i < product->num_vdata; i++)
     {
-        if (pf->vdata[i]->group_count == 0 && !pf->vdata[i]->hide)
+        if (product->vdata[i]->group_count == 0 && !product->vdata[i]->hide)
         {
             num_root_entries++;
         }
@@ -2578,31 +2582,32 @@ static int create_hdf4Root(coda_hdf4ProductFile *pf)
 
     if (num_root_entries > 0)
     {
-        T->entry = malloc(num_root_entries * sizeof(coda_hdf4Type *));
+        T->entry = malloc(num_root_entries * sizeof(coda_hdf4_type *));
         if (T->entry == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           (long)T->num_entries * sizeof(coda_hdf4Type *), __FILE__, __LINE__);
+                           (long)T->num_entries * sizeof(coda_hdf4_type *), __FILE__, __LINE__);
             return -1;
         }
-        T->entry_name = malloc(num_root_entries * sizeof(coda_hdf4Type *));
+        T->entry_name = malloc(num_root_entries * sizeof(coda_hdf4_type *));
         if (T->entry_name == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           (long)T->num_entries * sizeof(coda_hdf4Type *), __FILE__, __LINE__);
+                           (long)T->num_entries * sizeof(coda_hdf4_type *), __FILE__, __LINE__);
             return -1;
         }
 
         /* We add the entries to the root group in the same order as the hdfview application does */
 
-        for (i = 0; i < pf->num_vgroup; i++)
+        for (i = 0; i < product->num_vgroup; i++)
         {
-            if (pf->vgroup[i]->group_count == 0 && !pf->vgroup[i]->hide)
+            if (product->vgroup[i]->group_count == 0 && !product->vgroup[i]->hide)
             {
-                pf->vgroup[i]->group_count++;
+                product->vgroup[i]->group_count++;
                 T->num_entries++;
-                T->entry[T->num_entries - 1] = (coda_hdf4Type *)pf->vgroup[i];
-                T->entry_name[T->num_entries - 1] = coda_identifier_from_name(pf->vgroup[i]->vgroup_name, T->hash_data);
+                T->entry[T->num_entries - 1] = (coda_hdf4_type *)product->vgroup[i];
+                T->entry_name[T->num_entries - 1] =
+                    coda_identifier_from_name(product->vgroup[i]->vgroup_name, T->hash_data);
                 if (T->entry_name[T->num_entries - 1] == NULL)
                 {
                     return -1;
@@ -2611,14 +2616,14 @@ static int create_hdf4Root(coda_hdf4ProductFile *pf)
                 assert(result == 0);
             }
         }
-        for (i = 0; i < pf->num_images; i++)
+        for (i = 0; i < product->num_images; i++)
         {
-            if (pf->gri[i]->group_count == 0)
+            if (product->gri[i]->group_count == 0)
             {
-                pf->gri[i]->group_count++;
+                product->gri[i]->group_count++;
                 T->num_entries++;
-                T->entry[T->num_entries - 1] = (coda_hdf4Type *)pf->gri[i];
-                T->entry_name[T->num_entries - 1] = coda_identifier_from_name(pf->gri[i]->gri_name, T->hash_data);
+                T->entry[T->num_entries - 1] = (coda_hdf4_type *)product->gri[i];
+                T->entry_name[T->num_entries - 1] = coda_identifier_from_name(product->gri[i]->gri_name, T->hash_data);
                 if (T->entry_name[T->num_entries - 1] == NULL)
                 {
                     return -1;
@@ -2627,14 +2632,14 @@ static int create_hdf4Root(coda_hdf4ProductFile *pf)
                 assert(result == 0);
             }
         }
-        for (i = 0; i < pf->num_sds; i++)
+        for (i = 0; i < product->num_sds; i++)
         {
-            if (pf->sds[i]->group_count == 0)
+            if (product->sds[i]->group_count == 0)
             {
-                pf->sds[i]->group_count++;
+                product->sds[i]->group_count++;
                 T->num_entries++;
-                T->entry[T->num_entries - 1] = (coda_hdf4Type *)pf->sds[i];
-                T->entry_name[T->num_entries - 1] = coda_identifier_from_name(pf->sds[i]->sds_name, T->hash_data);
+                T->entry[T->num_entries - 1] = (coda_hdf4_type *)product->sds[i];
+                T->entry_name[T->num_entries - 1] = coda_identifier_from_name(product->sds[i]->sds_name, T->hash_data);
                 if (T->entry_name[T->num_entries - 1] == NULL)
                 {
                     return -1;
@@ -2643,14 +2648,15 @@ static int create_hdf4Root(coda_hdf4ProductFile *pf)
                 assert(result == 0);
             }
         }
-        for (i = 0; i < pf->num_vdata; i++)
+        for (i = 0; i < product->num_vdata; i++)
         {
-            if (pf->vdata[i]->group_count == 0 && !pf->vdata[i]->hide)
+            if (product->vdata[i]->group_count == 0 && !product->vdata[i]->hide)
             {
-                pf->vdata[i]->group_count++;
+                product->vdata[i]->group_count++;
                 T->num_entries++;
-                T->entry[T->num_entries - 1] = (coda_hdf4Type *)pf->vdata[i];
-                T->entry_name[T->num_entries - 1] = coda_identifier_from_name(pf->vdata[i]->vdata_name, T->hash_data);
+                T->entry[T->num_entries - 1] = (coda_hdf4_type *)product->vdata[i];
+                T->entry_name[T->num_entries - 1] =
+                    coda_identifier_from_name(product->vdata[i]->vdata_name, T->hash_data);
                 if (T->entry_name[T->num_entries - 1] == NULL)
                 {
                     return -1;
@@ -2661,7 +2667,7 @@ static int create_hdf4Root(coda_hdf4ProductFile *pf)
         }
     }
 
-    T->attributes = new_hdf4AttributesForRoot(pf);
+    T->attributes = new_hdf4AttributesForRoot(product);
     if (T->attributes == NULL)
     {
         return -1;
@@ -2675,17 +2681,17 @@ static int create_hdf4Root(coda_hdf4ProductFile *pf)
     return 0;
 }
 
-coda_hdf4Attributes *coda_hdf4_empty_attributes()
+coda_hdf4_attributes *coda_hdf4_empty_attributes()
 {
     if (empty_attributes_singleton == NULL)
     {
-        coda_hdf4Attributes *T;
+        coda_hdf4_attributes *T;
 
-        T = (coda_hdf4Attributes *)malloc(sizeof(coda_hdf4Attributes));
+        T = (coda_hdf4_attributes *)malloc(sizeof(coda_hdf4_attributes));
         if (T == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           (long)sizeof(coda_hdf4Attributes), __FILE__, __LINE__);
+                           (long)sizeof(coda_hdf4_attributes), __FILE__, __LINE__);
             return NULL;
         }
         T->retain_count = 0;
@@ -2704,7 +2710,7 @@ coda_hdf4Attributes *coda_hdf4_empty_attributes()
         T->attribute_name = NULL;
         T->ann_id = NULL;
 
-        T->hash_data = new_hashtable(0);
+        T->hash_data = hashtable_new(0);
         if (T->hash_data == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashdata) (%s:%u)", __FILE__,
@@ -2728,9 +2734,9 @@ void coda_hdf4_done(void)
     }
 }
 
-int coda_hdf4_close(coda_ProductFile *pf)
+int coda_hdf4_close(coda_product *product)
 {
-    coda_hdf4ProductFile *product_file = (coda_hdf4ProductFile *)pf;
+    coda_hdf4_product *product_file = (coda_hdf4_product *)product;
     int i;
 
     if (product_file->filename != NULL)
@@ -2740,7 +2746,7 @@ int coda_hdf4_close(coda_ProductFile *pf)
 
     if (product_file->root_type != NULL)
     {
-        delete_hdf4Root((coda_hdf4Root *)product_file->root_type);
+        delete_hdf4Root((coda_hdf4_root *)product_file->root_type);
     }
 
     if (product_file->vgroup != NULL)
@@ -2814,15 +2820,15 @@ int coda_hdf4_close(coda_ProductFile *pf)
     return 0;
 }
 
-int coda_hdf4_open(const char *filename, int64_t file_size, coda_format format, coda_ProductFile **pf)
+int coda_hdf4_open(const char *filename, int64_t file_size, coda_format format, coda_product **product)
 {
-    coda_hdf4ProductFile *product_file;
+    coda_hdf4_product *product_file;
 
-    product_file = (coda_hdf4ProductFile *)malloc(sizeof(coda_hdf4ProductFile));
+    product_file = (coda_hdf4_product *)malloc(sizeof(coda_hdf4_product));
     if (product_file == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       sizeof(coda_hdf4ProductFile), __FILE__, __LINE__);
+                       sizeof(coda_hdf4_product), __FILE__, __LINE__);
         return -1;
     }
     product_file->filename = NULL;
@@ -2853,7 +2859,7 @@ int coda_hdf4_open(const char *filename, int64_t file_size, coda_format format, 
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate filename string) (%s:%u)",
                        __FILE__, __LINE__);
-        coda_hdf4_close((coda_ProductFile *)product_file);
+        coda_hdf4_close((coda_product *)product_file);
         return -1;
     }
 
@@ -2869,21 +2875,21 @@ int coda_hdf4_open(const char *filename, int64_t file_size, coda_format format, 
         if (Vstart(product_file->file_id) != 0)
         {
             coda_set_error(CODA_ERROR_HDF4, NULL);
-            coda_hdf4_close((coda_ProductFile *)product_file);
+            coda_hdf4_close((coda_product *)product_file);
             return -1;
         }
         product_file->gr_id = GRstart(product_file->file_id);
         if (product_file->gr_id == -1)
         {
             coda_set_error(CODA_ERROR_HDF4, NULL);
-            coda_hdf4_close((coda_ProductFile *)product_file);
+            coda_hdf4_close((coda_product *)product_file);
             return -1;
         }
         product_file->an_id = ANstart(product_file->file_id);
         if (product_file->an_id == -1)
         {
             coda_set_error(CODA_ERROR_HDF4, NULL);
-            coda_hdf4_close((coda_ProductFile *)product_file);
+            coda_hdf4_close((coda_product *)product_file);
             return -1;
         }
     }
@@ -2891,50 +2897,50 @@ int coda_hdf4_open(const char *filename, int64_t file_size, coda_format format, 
     if (product_file->sd_id == -1)
     {
         coda_set_error(CODA_ERROR_HDF4, NULL);
-        coda_hdf4_close((coda_ProductFile *)product_file);
+        coda_hdf4_close((coda_product *)product_file);
         return -1;
     }
     product_file->root_type = NULL;
 
     if (init_hdf4SDSs(product_file) != 0)
     {
-        coda_hdf4_close((coda_ProductFile *)product_file);
+        coda_hdf4_close((coda_product *)product_file);
         return -1;
     }
     if (product_file->is_hdf)
     {
         if (init_hdf4GRImages(product_file) != 0)
         {
-            coda_hdf4_close((coda_ProductFile *)product_file);
+            coda_hdf4_close((coda_product *)product_file);
             return -1;
         }
         if (init_hdf4Vdatas(product_file) != 0)
         {
-            coda_hdf4_close((coda_ProductFile *)product_file);
+            coda_hdf4_close((coda_product *)product_file);
             return -1;
         }
         /* initialization of Vgroup entries should happen last, so we can build the structural tree */
         if (init_hdf4Vgroups(product_file) != 0)
         {
-            coda_hdf4_close((coda_ProductFile *)product_file);
+            coda_hdf4_close((coda_product *)product_file);
             return -1;
         }
     }
 
     if (create_hdf4Root(product_file) != 0)
     {
-        coda_hdf4_close((coda_ProductFile *)product_file);
+        coda_hdf4_close((coda_product *)product_file);
         return -1;
     }
 
-    *pf = (coda_ProductFile *)product_file;
+    *product = (coda_product *)product_file;
 
     return 0;
 }
 
-int coda_hdf4_get_type_for_dynamic_type(coda_DynamicType *dynamic_type, coda_Type **type)
+int coda_hdf4_get_type_for_dynamic_type(coda_dynamic_type *dynamic_type, coda_type **type)
 {
-    *type = (coda_Type *)dynamic_type;
+    *type = (coda_type *)dynamic_type;
     return 0;
 }
 

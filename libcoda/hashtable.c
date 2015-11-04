@@ -71,7 +71,7 @@ static unsigned long strhash(const char *str)
     return hash;
 }
 
-hashtable *new_hashtable(int case_sensitive)
+hashtable *hashtable_new(int case_sensitive)
 {
     hashtable *table;
 
@@ -244,7 +244,7 @@ long hashtable_get_index_from_name(hashtable *table, const char *name)
     return -1;
 }
 
-void delete_hashtable(hashtable *table)
+void hashtable_delete(hashtable *table)
 {
     if (table != NULL)
     {

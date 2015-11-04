@@ -25,12 +25,12 @@
 
 #include "coda-hdf5-internal.h"
 
-int coda_hdf5_type_get_read_type(const coda_Type *type, coda_native_type *read_type)
+int coda_hdf5_type_get_read_type(const coda_type *type, coda_native_type *read_type)
 {
-    switch (((coda_hdf5Type *)type)->tag)
+    switch (((coda_hdf5_type *)type)->tag)
     {
         case tag_hdf5_basic_datatype:
-            *read_type = ((coda_hdf5BasicDataType *)type)->read_type;
+            *read_type = ((coda_hdf5_basic_data_type *)type)->read_type;
             break;
         case tag_hdf5_compound_datatype:
         case tag_hdf5_attribute:
@@ -47,32 +47,32 @@ int coda_hdf5_type_get_read_type(const coda_Type *type, coda_native_type *read_t
     return 0;
 }
 
-int coda_hdf5_type_get_string_length(const coda_Type *type, long *length)
+int coda_hdf5_type_get_string_length(const coda_type *type, long *length)
 {
-    if (((coda_hdf5BasicDataType *)type)->is_variable_string)
+    if (((coda_hdf5_basic_data_type *)type)->is_variable_string)
     {
         *length = -1;
     }
     else
     {
-        *length = H5Tget_size(((coda_hdf5BasicDataType *)type)->datatype_id);
+        *length = H5Tget_size(((coda_hdf5_basic_data_type *)type)->datatype_id);
     }
 
     return 0;
 }
 
-int coda_hdf5_type_get_num_record_fields(const coda_Type *type, long *num_fields)
+int coda_hdf5_type_get_num_record_fields(const coda_type *type, long *num_fields)
 {
-    switch (((coda_hdf5Type *)type)->tag)
+    switch (((coda_hdf5_type *)type)->tag)
     {
         case tag_hdf5_compound_datatype:
-            *num_fields = ((coda_hdf5CompoundDataType *)type)->num_members;
+            *num_fields = ((coda_hdf5_compound_data_type *)type)->num_members;
             break;
         case tag_hdf5_attribute_record:
-            *num_fields = ((coda_hdf5AttributeRecord *)type)->num_attributes;
+            *num_fields = ((coda_hdf5_attribute_record *)type)->num_attributes;
             break;
         case tag_hdf5_group:
-            *num_fields = (int)((coda_hdf5Group *)type)->num_objects;
+            *num_fields = (int)((coda_hdf5_group *)type)->num_objects;
             break;
         default:
             assert(0);
@@ -81,20 +81,20 @@ int coda_hdf5_type_get_num_record_fields(const coda_Type *type, long *num_fields
     return 0;
 }
 
-int coda_hdf5_type_get_record_field_index_from_name(const coda_Type *type, const char *name, long *index)
+int coda_hdf5_type_get_record_field_index_from_name(const coda_type *type, const char *name, long *index)
 {
     hashtable *hash_data;
 
-    switch (((coda_hdf5Type *)type)->tag)
+    switch (((coda_hdf5_type *)type)->tag)
     {
         case tag_hdf5_compound_datatype:
-            hash_data = ((coda_hdf5CompoundDataType *)type)->hash_data;
+            hash_data = ((coda_hdf5_compound_data_type *)type)->hash_data;
             break;
         case tag_hdf5_attribute_record:
-            hash_data = ((coda_hdf5AttributeRecord *)type)->hash_data;
+            hash_data = ((coda_hdf5_attribute_record *)type)->hash_data;
             break;
         case tag_hdf5_group:
-            hash_data = ((coda_hdf5Group *)type)->hash_data;
+            hash_data = ((coda_hdf5_group *)type)->hash_data;
             break;
         default:
             assert(0);
@@ -111,36 +111,36 @@ int coda_hdf5_type_get_record_field_index_from_name(const coda_Type *type, const
     return -1;
 }
 
-int coda_hdf5_type_get_record_field_type(const coda_Type *type, long index, coda_Type **field_type)
+int coda_hdf5_type_get_record_field_type(const coda_type *type, long index, coda_type **field_type)
 {
-    switch (((coda_hdf5Type *)type)->tag)
+    switch (((coda_hdf5_type *)type)->tag)
     {
         case tag_hdf5_compound_datatype:
-            if (index < 0 || index >= ((coda_hdf5CompoundDataType *)type)->num_members)
+            if (index < 0 || index >= ((coda_hdf5_compound_data_type *)type)->num_members)
             {
                 coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%d) (%s:%u)", index,
-                               ((coda_hdf5CompoundDataType *)type)->num_members, __FILE__, __LINE__);
+                               ((coda_hdf5_compound_data_type *)type)->num_members, __FILE__, __LINE__);
                 return -1;
             }
-            *field_type = (coda_Type *)((coda_hdf5CompoundDataType *)type)->member[index];
+            *field_type = (coda_type *)((coda_hdf5_compound_data_type *)type)->member[index];
             break;
         case tag_hdf5_attribute_record:
-            if (index < 0 || index >= ((coda_hdf5AttributeRecord *)type)->num_attributes)
+            if (index < 0 || index >= ((coda_hdf5_attribute_record *)type)->num_attributes)
             {
                 coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%d) (%s:%u)", index,
-                               ((coda_hdf5AttributeRecord *)type)->num_attributes, __FILE__, __LINE__);
+                               ((coda_hdf5_attribute_record *)type)->num_attributes, __FILE__, __LINE__);
                 return -1;
             }
-            *field_type = (coda_Type *)((coda_hdf5AttributeRecord *)type)->attribute[index];
+            *field_type = (coda_type *)((coda_hdf5_attribute_record *)type)->attribute[index];
             break;
         case tag_hdf5_group:
-            if (index < 0 || (hsize_t)index >= ((coda_hdf5Group *)type)->num_objects)
+            if (index < 0 || (hsize_t)index >= ((coda_hdf5_group *)type)->num_objects)
             {
                 coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
-                               (long)((coda_hdf5Group *)type)->num_objects, __FILE__, __LINE__);
+                               (long)((coda_hdf5_group *)type)->num_objects, __FILE__, __LINE__);
                 return -1;
             }
-            *field_type = (coda_Type *)((coda_hdf5Group *)type)->object[index];
+            *field_type = (coda_type *)((coda_hdf5_group *)type)->object[index];
             break;
         default:
             assert(0);
@@ -150,36 +150,36 @@ int coda_hdf5_type_get_record_field_type(const coda_Type *type, long index, coda
     return 0;
 }
 
-int coda_hdf5_type_get_record_field_name(const coda_Type *type, long index, const char **name)
+int coda_hdf5_type_get_record_field_name(const coda_type *type, long index, const char **name)
 {
-    switch (((coda_hdf5Type *)type)->tag)
+    switch (((coda_hdf5_type *)type)->tag)
     {
         case tag_hdf5_compound_datatype:
-            if (index < 0 || index >= ((coda_hdf5CompoundDataType *)type)->num_members)
+            if (index < 0 || index >= ((coda_hdf5_compound_data_type *)type)->num_members)
             {
                 coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%d) (%s:%u)", index,
-                               ((coda_hdf5CompoundDataType *)type)->num_members, __FILE__, __LINE__);
+                               ((coda_hdf5_compound_data_type *)type)->num_members, __FILE__, __LINE__);
                 return -1;
             }
-            *name = ((coda_hdf5CompoundDataType *)type)->member_name[index];
+            *name = ((coda_hdf5_compound_data_type *)type)->member_name[index];
             break;
         case tag_hdf5_attribute_record:
-            if (index < 0 || index >= ((coda_hdf5AttributeRecord *)type)->num_attributes)
+            if (index < 0 || index >= ((coda_hdf5_attribute_record *)type)->num_attributes)
             {
                 coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%d) (%s:%u)", index,
-                               ((coda_hdf5AttributeRecord *)type)->num_attributes, __FILE__, __LINE__);
+                               ((coda_hdf5_attribute_record *)type)->num_attributes, __FILE__, __LINE__);
                 return -1;
             }
-            *name = ((coda_hdf5AttributeRecord *)type)->attribute_name[index];
+            *name = ((coda_hdf5_attribute_record *)type)->attribute_name[index];
             break;
         case tag_hdf5_group:
-            if (index < 0 || (hsize_t)index >= ((coda_hdf5Group *)type)->num_objects)
+            if (index < 0 || (hsize_t)index >= ((coda_hdf5_group *)type)->num_objects)
             {
                 coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
-                               (long)((coda_hdf5Group *)type)->num_objects, __FILE__, __LINE__);
+                               (long)((coda_hdf5_group *)type)->num_objects, __FILE__, __LINE__);
                 return -1;
             }
-            *name = ((coda_hdf5Group *)type)->object_name[index];
+            *name = ((coda_hdf5_group *)type)->object_name[index];
             break;
         default:
             assert(0);
@@ -189,15 +189,15 @@ int coda_hdf5_type_get_record_field_name(const coda_Type *type, long index, cons
     return 0;
 }
 
-int coda_hdf5_type_get_array_num_dims(const coda_Type *type, int *num_dims)
+int coda_hdf5_type_get_array_num_dims(const coda_type *type, int *num_dims)
 {
-    switch (((coda_hdf5Type *)type)->tag)
+    switch (((coda_hdf5_type *)type)->tag)
     {
         case tag_hdf5_attribute:
-            *num_dims = ((coda_hdf5Attribute *)type)->ndims;
+            *num_dims = ((coda_hdf5_attribute *)type)->ndims;
             break;
         case tag_hdf5_dataset:
-            *num_dims = ((coda_hdf5DataSet *)type)->ndims;
+            *num_dims = ((coda_hdf5_dataset *)type)->ndims;
             break;
         default:
             assert(0);
@@ -207,24 +207,24 @@ int coda_hdf5_type_get_array_num_dims(const coda_Type *type, int *num_dims)
     return 0;
 }
 
-int coda_hdf5_type_get_array_dim(const coda_Type *type, int *num_dims, long dim[])
+int coda_hdf5_type_get_array_dim(const coda_type *type, int *num_dims, long dim[])
 {
     int i;
 
-    switch (((coda_hdf5Type *)type)->tag)
+    switch (((coda_hdf5_type *)type)->tag)
     {
         case tag_hdf5_attribute:
-            *num_dims = ((coda_hdf5Attribute *)type)->ndims;
-            for (i = 0; i < ((coda_hdf5Attribute *)type)->ndims; i++)
+            *num_dims = ((coda_hdf5_attribute *)type)->ndims;
+            for (i = 0; i < ((coda_hdf5_attribute *)type)->ndims; i++)
             {
-                dim[i] = (long)((coda_hdf5Attribute *)type)->dims[i];
+                dim[i] = (long)((coda_hdf5_attribute *)type)->dims[i];
             }
             break;
         case tag_hdf5_dataset:
-            *num_dims = ((coda_hdf5DataSet *)type)->ndims;
-            for (i = 0; i < ((coda_hdf5DataSet *)type)->ndims; i++)
+            *num_dims = ((coda_hdf5_dataset *)type)->ndims;
+            for (i = 0; i < ((coda_hdf5_dataset *)type)->ndims; i++)
             {
-                dim[i] = (long)((coda_hdf5DataSet *)type)->dims[i];
+                dim[i] = (long)((coda_hdf5_dataset *)type)->dims[i];
             }
             break;
         default:
@@ -235,15 +235,15 @@ int coda_hdf5_type_get_array_dim(const coda_Type *type, int *num_dims, long dim[
     return 0;
 }
 
-int coda_hdf5_type_get_array_base_type(const coda_Type *type, coda_Type **base_type)
+int coda_hdf5_type_get_array_base_type(const coda_type *type, coda_type **base_type)
 {
-    switch (((coda_hdf5Type *)type)->tag)
+    switch (((coda_hdf5_type *)type)->tag)
     {
         case tag_hdf5_attribute:
-            *base_type = (coda_Type *)((coda_hdf5Attribute *)type)->base_type;
+            *base_type = (coda_type *)((coda_hdf5_attribute *)type)->base_type;
             break;
         case tag_hdf5_dataset:
-            *base_type = (coda_Type *)((coda_hdf5DataSet *)type)->base_type;
+            *base_type = (coda_type *)((coda_hdf5_dataset *)type)->base_type;
             break;
         default:
             assert(0);

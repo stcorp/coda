@@ -142,6 +142,11 @@ LIBCODA_API extern const char *libcoda_version;
 /** Maximum number of dimensions of a multidimensional array */
 #define CODA_MAX_NUM_DIMS         8
 
+/* Defines for backward compatibility with CODA 1.x interface */
+#define coda_ProductFile coda_product
+#define coda_Cursor coda_cursor
+#define coda_Type coda_type
+
 LIBCODA_API extern int coda_errno;
 
 #define CODA_SUCCESS                                          (0)
@@ -196,10 +201,12 @@ enum coda_format_enum
     coda_format_ascii,                      /**< Data stored in structured ASCII format */
     coda_format_binary,                     /**< Data stored in structured binary format */
     coda_format_xml,                        /**< Data stored in XML format */
-    coda_format_hdf4,                       /**< Data stored in HDF4 (or netCDF) format */
+    coda_format_hdf4,                       /**< Data stored in HDF4 format */
     coda_format_hdf5,                       /**< Data stored in HDF5 format */
     coda_format_cdf,                        /**< Data stored in (NASA) CDF format */
-    coda_format_netcdf                      /**< Data stored in NetCDF format */
+    coda_format_netcdf,                     /**< Data stored in NetCDF format */
+    coda_format_grib1,                      /**< Data stored in GRIB1 format */
+    coda_format_grib2                       /**< Data stored in GRIB2 format */
 };
 
 enum coda_type_class_enum
@@ -240,16 +247,28 @@ enum coda_native_type_enum
     coda_native_type_bytes                  /**< series of uninterpreted bytes (#coda_raw_class) */
 };
 
+enum coda_expression_type_enum
+{
+    coda_expression_boolean,
+    coda_expression_integer,
+    coda_expression_float,
+    coda_expression_string,
+    coda_expression_node,
+    coda_expression_void
+};
+
 typedef enum coda_array_ordering_enum coda_array_ordering;
 typedef enum coda_filefilter_status_enum coda_filefilter_status;
 typedef enum coda_format_enum coda_format;
 typedef enum coda_type_class_enum coda_type_class;
 typedef enum coda_special_type_enum coda_special_type;
 typedef enum coda_native_type_enum coda_native_type;
+typedef enum coda_expression_type_enum coda_expression_type;
 
-typedef struct coda_ProductFile_struct coda_ProductFile;
-typedef struct coda_Cursor_struct coda_Cursor;
-typedef struct coda_Type_struct coda_Type;
+typedef struct coda_product_struct coda_product;
+typedef struct coda_cursor_struct coda_cursor;
+typedef struct coda_type_struct coda_type;
+typedef struct coda_expression_struct coda_expression;
 
 /* CODA General */
 
@@ -257,6 +276,8 @@ LIBCODA_API int coda_init(void);
 LIBCODA_API void coda_done(void);
 
 LIBCODA_API int coda_set_definition_path(const char *path);
+LIBCODA_API int coda_set_definition_path_conditional(const char *file, const char *searchpath,
+                                                     const char *relative_location);
 
 LIBCODA_API int coda_set_option_bypass_special_types(int enable);
 LIBCODA_API int coda_get_option_bypass_special_types(void);
@@ -268,6 +289,8 @@ LIBCODA_API int coda_set_option_use_fast_size_expressions(int enable);
 LIBCODA_API int coda_get_option_use_fast_size_expressions(void);
 LIBCODA_API int coda_set_option_use_mmap(int enable);
 LIBCODA_API int coda_get_option_use_mmap(void);
+
+LIBCODA_API void coda_free(void *ptr);
 
 LIBCODA_API double coda_NaN(void);
 LIBCODA_API int coda_isNaN(double x);
@@ -282,6 +305,12 @@ LIBCODA_API void coda_str64u(uint64_t a, char *s);
 
 LIBCODA_API long coda_c_index_to_fortran_index(int num_dims, const long dim[], long index);
 
+LIBCODA_API int coda_match_filefilter(const char *filefilter, int num_filepaths, const char **filepaths,
+                                      int (*callbackfunc) (const char *, coda_filefilter_status, const char *, void *),
+                                      void *userdata);
+
+/* CODA Time */
+
 LIBCODA_API int coda_datetime_to_double(int YEAR, int MONTH, int DAY, int HOUR, int MINUTE, int SECOND, int MUSEC,
                                         double *datetime);
 LIBCODA_API int coda_double_to_datetime(double datetime, int *YEAR, int *MONTH, int *DAY, int *HOUR, int *MINUTE,
@@ -289,9 +318,12 @@ LIBCODA_API int coda_double_to_datetime(double datetime, int *YEAR, int *MONTH, 
 LIBCODA_API int coda_time_to_string(double datetime, char *str);
 LIBCODA_API int coda_string_to_time(const char *str, double *datetime);
 
-LIBCODA_API int coda_match_filefilter(const char *filefilter, int num_filepaths, const char **filepaths,
-                                      int (*callbackfunc) (const char *, coda_filefilter_status, const char *, void *),
-                                      void *userdata);
+LIBCODA_API int coda_utcdatetime_to_double(int YEAR, int MONTH, int DAY, int HOUR, int MINUTE, int SECOND, int MUSEC,
+                                           double *datetime);
+LIBCODA_API int coda_double_to_utcdatetime(double datetime, int *YEAR, int *MONTH, int *DAY, int *HOUR, int *MINUTE,
+                                           int *SECOND, int *MUSEC);
+LIBCODA_API int coda_time_to_utcstring(double datetime, char *str);
+LIBCODA_API int coda_utcstring_to_time(const char *str, double *datetime);
 
 /* CODA Error */
 
@@ -305,18 +337,19 @@ LIBCODA_API const char *coda_errno_to_string(int err);
 LIBCODA_API int coda_recognize_file(const char *filename, int64_t *file_size, coda_format *file_format,
                                     const char **product_class, const char **product_type, int *version);
 
-LIBCODA_API int coda_open(const char *filename, coda_ProductFile **pf);
-LIBCODA_API int coda_close(coda_ProductFile *pf);
+LIBCODA_API int coda_open(const char *filename, coda_product **product);
+LIBCODA_API int coda_close(coda_product *product);
 
-LIBCODA_API int coda_get_product_filename(const coda_ProductFile *pf, const char **filename);
-LIBCODA_API int coda_get_product_file_size(const coda_ProductFile *pf, int64_t *file_size);
-LIBCODA_API int coda_get_product_format(const coda_ProductFile *pf, coda_format *format);
-LIBCODA_API int coda_get_product_class(const coda_ProductFile *pf, const char **product_class);
-LIBCODA_API int coda_get_product_type(const coda_ProductFile *pf, const char **product_type);
-LIBCODA_API int coda_get_product_version(const coda_ProductFile *pf, int *version);
-LIBCODA_API int coda_get_product_root_type(const coda_ProductFile *pf, coda_Type **type);
+LIBCODA_API int coda_get_product_filename(const coda_product *product, const char **filename);
+LIBCODA_API int coda_get_product_file_size(const coda_product *product, int64_t *file_size);
+LIBCODA_API int coda_get_product_format(const coda_product *product, coda_format *format);
+LIBCODA_API int coda_get_product_class(const coda_product *product, const char **product_class);
+LIBCODA_API int coda_get_product_type(const coda_product *product, const char **product_type);
+LIBCODA_API int coda_get_product_version(const coda_product *product, int *version);
+LIBCODA_API int coda_get_product_root_type(const coda_product *product, coda_type **type);
 
-LIBCODA_API int coda_get_product_variable_value(coda_ProductFile *pf, const char *variable, long index, int64_t *value);
+LIBCODA_API int coda_get_product_variable_value(coda_product *product, const char *variable, long index,
+                                                int64_t *value);
 
 /* CODA Types */
 
@@ -325,132 +358,149 @@ LIBCODA_API const char *coda_type_get_class_name(coda_type_class type_class);
 LIBCODA_API const char *coda_type_get_native_type_name(coda_native_type native_type);
 LIBCODA_API const char *coda_type_get_special_type_name(coda_special_type special_type);
 
-LIBCODA_API int coda_type_has_ascii_content(const coda_Type *type, int *has_ascii_content);
+LIBCODA_API int coda_type_has_ascii_content(const coda_type *type, int *has_ascii_content);
 
-LIBCODA_API int coda_type_get_format(const coda_Type *type, coda_format *format);
-LIBCODA_API int coda_type_get_class(const coda_Type *type, coda_type_class *type_class);
-LIBCODA_API int coda_type_get_read_type(const coda_Type *type, coda_native_type *read_type);
-LIBCODA_API int coda_type_get_string_length(const coda_Type *type, long *length);
-LIBCODA_API int coda_type_get_bit_size(const coda_Type *type, int64_t *bit_size);
-LIBCODA_API int coda_type_get_name(const coda_Type *type, const char **name);
-LIBCODA_API int coda_type_get_description(const coda_Type *type, const char **description);
-LIBCODA_API int coda_type_get_unit(const coda_Type *type, const char **unit);
-LIBCODA_API int coda_type_get_fixed_value(const coda_Type *type, const char **fixed_value, long *length);
+LIBCODA_API int coda_type_get_format(const coda_type *type, coda_format *format);
+LIBCODA_API int coda_type_get_class(const coda_type *type, coda_type_class *type_class);
+LIBCODA_API int coda_type_get_read_type(const coda_type *type, coda_native_type *read_type);
+LIBCODA_API int coda_type_get_string_length(const coda_type *type, long *length);
+LIBCODA_API int coda_type_get_bit_size(const coda_type *type, int64_t *bit_size);
+LIBCODA_API int coda_type_get_name(const coda_type *type, const char **name);
+LIBCODA_API int coda_type_get_description(const coda_type *type, const char **description);
+LIBCODA_API int coda_type_get_unit(const coda_type *type, const char **unit);
+LIBCODA_API int coda_type_get_fixed_value(const coda_type *type, const char **fixed_value, long *length);
 
-LIBCODA_API int coda_type_get_num_record_fields(const coda_Type *type, long *num_fields);
-LIBCODA_API int coda_type_get_record_field_index_from_name(const coda_Type *type, const char *name, long *index);
-LIBCODA_API int coda_type_get_record_field_type(const coda_Type *type, long index, coda_Type **field_type);
-LIBCODA_API int coda_type_get_record_field_name(const coda_Type *type, long index, const char **name);
-LIBCODA_API int coda_type_get_record_field_hidden_status(const coda_Type *type, long index, int *hidden);
-LIBCODA_API int coda_type_get_record_field_available_status(const coda_Type *type, long index, int *available);
-LIBCODA_API int coda_type_get_record_union_status(const coda_Type *type, int *is_union);
+LIBCODA_API int coda_type_get_num_record_fields(const coda_type *type, long *num_fields);
+LIBCODA_API int coda_type_get_record_field_index_from_name(const coda_type *type, const char *name, long *index);
+LIBCODA_API int coda_type_get_record_field_type(const coda_type *type, long index, coda_type **field_type);
+LIBCODA_API int coda_type_get_record_field_name(const coda_type *type, long index, const char **name);
+LIBCODA_API int coda_type_get_record_field_real_name(const coda_type *type, long index, const char **real_name);
+LIBCODA_API int coda_type_get_record_field_hidden_status(const coda_type *type, long index, int *hidden);
+LIBCODA_API int coda_type_get_record_field_available_status(const coda_type *type, long index, int *available);
+LIBCODA_API int coda_type_get_record_union_status(const coda_type *type, int *is_union);
 
-LIBCODA_API int coda_type_get_array_num_dims(const coda_Type *type, int *num_dims);
-LIBCODA_API int coda_type_get_array_dim(const coda_Type *type, int *num_dims, long dim[]);
-LIBCODA_API int coda_type_get_array_base_type(const coda_Type *type, coda_Type **base_type);
+LIBCODA_API int coda_type_get_array_num_dims(const coda_type *type, int *num_dims);
+LIBCODA_API int coda_type_get_array_dim(const coda_type *type, int *num_dims, long dim[]);
+LIBCODA_API int coda_type_get_array_base_type(const coda_type *type, coda_type **base_type);
 
-LIBCODA_API int coda_type_get_special_type(const coda_Type *type, coda_special_type *special_type);
-LIBCODA_API int coda_type_get_special_base_type(const coda_Type *type, coda_Type **base_type);
+LIBCODA_API int coda_type_get_special_type(const coda_type *type, coda_special_type *special_type);
+LIBCODA_API int coda_type_get_special_base_type(const coda_type *type, coda_type **base_type);
 
 /* CODA Cursor */
 
-LIBCODA_API int coda_cursor_set_product(coda_Cursor *cursor, coda_ProductFile *pf);
+LIBCODA_API int coda_cursor_set_product(coda_cursor *cursor, coda_product *product);
 
-LIBCODA_API int coda_cursor_goto_first_record_field(coda_Cursor *cursor);
-LIBCODA_API int coda_cursor_goto_next_record_field(coda_Cursor *cursor);
-LIBCODA_API int coda_cursor_goto_record_field_by_index(coda_Cursor *cursor, long index);
-LIBCODA_API int coda_cursor_goto_record_field_by_name(coda_Cursor *cursor, const char *name);
-LIBCODA_API int coda_cursor_goto_available_union_field(coda_Cursor *cursor);
+LIBCODA_API int coda_cursor_goto_first_record_field(coda_cursor *cursor);
+LIBCODA_API int coda_cursor_goto_next_record_field(coda_cursor *cursor);
+LIBCODA_API int coda_cursor_goto_record_field_by_index(coda_cursor *cursor, long index);
+LIBCODA_API int coda_cursor_goto_record_field_by_name(coda_cursor *cursor, const char *name);
+LIBCODA_API int coda_cursor_goto_available_union_field(coda_cursor *cursor);
 
-LIBCODA_API int coda_cursor_goto_first_array_element(coda_Cursor *cursor);
-LIBCODA_API int coda_cursor_goto_next_array_element(coda_Cursor *cursor);
-LIBCODA_API int coda_cursor_goto_array_element(coda_Cursor *cursor, int num_subs, const long subs[]);
-LIBCODA_API int coda_cursor_goto_array_element_by_index(coda_Cursor *cursor, long index);
+LIBCODA_API int coda_cursor_goto_first_array_element(coda_cursor *cursor);
+LIBCODA_API int coda_cursor_goto_next_array_element(coda_cursor *cursor);
+LIBCODA_API int coda_cursor_goto_array_element(coda_cursor *cursor, int num_subs, const long subs[]);
+LIBCODA_API int coda_cursor_goto_array_element_by_index(coda_cursor *cursor, long index);
 
-LIBCODA_API int coda_cursor_goto_attributes(coda_Cursor *cursor);
+LIBCODA_API int coda_cursor_goto_attributes(coda_cursor *cursor);
 
-LIBCODA_API int coda_cursor_goto_root(coda_Cursor *cursor);
-LIBCODA_API int coda_cursor_goto_parent(coda_Cursor *cursor);
+LIBCODA_API int coda_cursor_goto_root(coda_cursor *cursor);
+LIBCODA_API int coda_cursor_goto_parent(coda_cursor *cursor);
 
-LIBCODA_API int coda_cursor_use_base_type_of_special_type(coda_Cursor *cursor);
+LIBCODA_API int coda_cursor_use_base_type_of_special_type(coda_cursor *cursor);
 
-LIBCODA_API int coda_cursor_has_ascii_content(const coda_Cursor *cursor, int *has_ascii_content);
+LIBCODA_API int coda_cursor_has_ascii_content(const coda_cursor *cursor, int *has_ascii_content);
 
-LIBCODA_API int coda_cursor_get_string_length(const coda_Cursor *cursor, long *length);
-LIBCODA_API int coda_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size);
-LIBCODA_API int coda_cursor_get_byte_size(const coda_Cursor *cursor, int64_t *byte_size);
-LIBCODA_API int coda_cursor_get_num_elements(const coda_Cursor *cursor, long *num_elements);
+LIBCODA_API int coda_cursor_get_string_length(const coda_cursor *cursor, long *length);
+LIBCODA_API int coda_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size);
+LIBCODA_API int coda_cursor_get_byte_size(const coda_cursor *cursor, int64_t *byte_size);
+LIBCODA_API int coda_cursor_get_num_elements(const coda_cursor *cursor, long *num_elements);
 
-LIBCODA_API int coda_cursor_get_product_file(const coda_Cursor *cursor, coda_ProductFile **pf);
+LIBCODA_API int coda_cursor_get_product_file(const coda_cursor *cursor, coda_product **product);
 
-LIBCODA_API int coda_cursor_get_depth(const coda_Cursor *cursor, int *depth);
-LIBCODA_API int coda_cursor_get_index(const coda_Cursor *cursor, long *index);
+LIBCODA_API int coda_cursor_get_depth(const coda_cursor *cursor, int *depth);
+LIBCODA_API int coda_cursor_get_index(const coda_cursor *cursor, long *index);
 
-LIBCODA_API int coda_cursor_get_file_bit_offset(const coda_Cursor *cursor, int64_t *bit_offset);
-LIBCODA_API int coda_cursor_get_file_byte_offset(const coda_Cursor *cursor, int64_t *byte_offset);
+LIBCODA_API int coda_cursor_get_file_bit_offset(const coda_cursor *cursor, int64_t *bit_offset);
+LIBCODA_API int coda_cursor_get_file_byte_offset(const coda_cursor *cursor, int64_t *byte_offset);
 
-LIBCODA_API int coda_cursor_get_format(const coda_Cursor *cursor, coda_format *format);
-LIBCODA_API int coda_cursor_get_type_class(const coda_Cursor *cursor, coda_type_class *type_class);
-LIBCODA_API int coda_cursor_get_read_type(const coda_Cursor *cursor, coda_native_type *read_type);
-LIBCODA_API int coda_cursor_get_special_type(const coda_Cursor *cursor, coda_special_type *special_type);
-LIBCODA_API int coda_cursor_get_type(const coda_Cursor *cursor, coda_Type **type);
+LIBCODA_API int coda_cursor_get_format(const coda_cursor *cursor, coda_format *format);
+LIBCODA_API int coda_cursor_get_type_class(const coda_cursor *cursor, coda_type_class *type_class);
+LIBCODA_API int coda_cursor_get_read_type(const coda_cursor *cursor, coda_native_type *read_type);
+LIBCODA_API int coda_cursor_get_special_type(const coda_cursor *cursor, coda_special_type *special_type);
+LIBCODA_API int coda_cursor_get_type(const coda_cursor *cursor, coda_type **type);
 
-LIBCODA_API int coda_cursor_get_record_field_index_from_name(const coda_Cursor *cursor, const char *name, long *index);
-LIBCODA_API int coda_cursor_get_record_field_available_status(const coda_Cursor *cursor, long index, int *available);
-LIBCODA_API int coda_cursor_get_available_union_field_index(const coda_Cursor *cursor, long *index);
+LIBCODA_API int coda_cursor_get_record_field_index_from_name(const coda_cursor *cursor, const char *name, long *index);
+LIBCODA_API int coda_cursor_get_record_field_available_status(const coda_cursor *cursor, long index, int *available);
+LIBCODA_API int coda_cursor_get_available_union_field_index(const coda_cursor *cursor, long *index);
 
-LIBCODA_API int coda_cursor_get_array_dim(const coda_Cursor *cursor, int *num_dims, long dim[]);
+LIBCODA_API int coda_cursor_get_array_dim(const coda_cursor *cursor, int *num_dims, long dim[]);
 
 /* read simple-type scalars */
 
-LIBCODA_API int coda_cursor_read_int8(const coda_Cursor *cursor, int8_t *dst);
-LIBCODA_API int coda_cursor_read_uint8(const coda_Cursor *cursor, uint8_t *dst);
-LIBCODA_API int coda_cursor_read_int16(const coda_Cursor *cursor, int16_t *dst);
-LIBCODA_API int coda_cursor_read_uint16(const coda_Cursor *cursor, uint16_t *dst);
-LIBCODA_API int coda_cursor_read_int32(const coda_Cursor *cursor, int32_t *dst);
-LIBCODA_API int coda_cursor_read_uint32(const coda_Cursor *cursor, uint32_t *dst);
-LIBCODA_API int coda_cursor_read_int64(const coda_Cursor *cursor, int64_t *dst);
-LIBCODA_API int coda_cursor_read_uint64(const coda_Cursor *cursor, uint64_t *dst);
+LIBCODA_API int coda_cursor_read_int8(const coda_cursor *cursor, int8_t *dst);
+LIBCODA_API int coda_cursor_read_uint8(const coda_cursor *cursor, uint8_t *dst);
+LIBCODA_API int coda_cursor_read_int16(const coda_cursor *cursor, int16_t *dst);
+LIBCODA_API int coda_cursor_read_uint16(const coda_cursor *cursor, uint16_t *dst);
+LIBCODA_API int coda_cursor_read_int32(const coda_cursor *cursor, int32_t *dst);
+LIBCODA_API int coda_cursor_read_uint32(const coda_cursor *cursor, uint32_t *dst);
+LIBCODA_API int coda_cursor_read_int64(const coda_cursor *cursor, int64_t *dst);
+LIBCODA_API int coda_cursor_read_uint64(const coda_cursor *cursor, uint64_t *dst);
 
-LIBCODA_API int coda_cursor_read_float(const coda_Cursor *cursor, float *dst);
-LIBCODA_API int coda_cursor_read_double(const coda_Cursor *cursor, double *dst);
+LIBCODA_API int coda_cursor_read_float(const coda_cursor *cursor, float *dst);
+LIBCODA_API int coda_cursor_read_double(const coda_cursor *cursor, double *dst);
 
-LIBCODA_API int coda_cursor_read_char(const coda_Cursor *cursor, char *dst);
-LIBCODA_API int coda_cursor_read_string(const coda_Cursor *cursor, char *dst, long dst_size);
+LIBCODA_API int coda_cursor_read_char(const coda_cursor *cursor, char *dst);
+LIBCODA_API int coda_cursor_read_string(const coda_cursor *cursor, char *dst, long dst_size);
 
-LIBCODA_API int coda_cursor_read_bits(const coda_Cursor *cursor, uint8_t *dst, int64_t bit_offset, int64_t bit_length);
-LIBCODA_API int coda_cursor_read_bytes(const coda_Cursor *cursor, uint8_t *dst, int64_t offset, int64_t length);
+LIBCODA_API int coda_cursor_read_bits(const coda_cursor *cursor, uint8_t *dst, int64_t bit_offset, int64_t bit_length);
+LIBCODA_API int coda_cursor_read_bytes(const coda_cursor *cursor, uint8_t *dst, int64_t offset, int64_t length);
 
 /* read simple-type arrays */
 
-LIBCODA_API int coda_cursor_read_int8_array(const coda_Cursor *cursor, int8_t *dst, coda_array_ordering array_ordering);
-LIBCODA_API int coda_cursor_read_uint8_array(const coda_Cursor *cursor, uint8_t *dst,
+LIBCODA_API int coda_cursor_read_int8_array(const coda_cursor *cursor, int8_t *dst, coda_array_ordering array_ordering);
+LIBCODA_API int coda_cursor_read_uint8_array(const coda_cursor *cursor, uint8_t *dst,
                                              coda_array_ordering array_ordering);
-LIBCODA_API int coda_cursor_read_int16_array(const coda_Cursor *cursor, int16_t *dst,
+LIBCODA_API int coda_cursor_read_int16_array(const coda_cursor *cursor, int16_t *dst,
                                              coda_array_ordering array_ordering);
-LIBCODA_API int coda_cursor_read_uint16_array(const coda_Cursor *cursor, uint16_t *dst,
+LIBCODA_API int coda_cursor_read_uint16_array(const coda_cursor *cursor, uint16_t *dst,
                                               coda_array_ordering array_ordering);
-LIBCODA_API int coda_cursor_read_int32_array(const coda_Cursor *cursor, int32_t *dst,
+LIBCODA_API int coda_cursor_read_int32_array(const coda_cursor *cursor, int32_t *dst,
                                              coda_array_ordering array_ordering);
-LIBCODA_API int coda_cursor_read_uint32_array(const coda_Cursor *cursor, uint32_t *dst,
+LIBCODA_API int coda_cursor_read_uint32_array(const coda_cursor *cursor, uint32_t *dst,
                                               coda_array_ordering array_ordering);
-LIBCODA_API int coda_cursor_read_int64_array(const coda_Cursor *cursor, int64_t *dst,
+LIBCODA_API int coda_cursor_read_int64_array(const coda_cursor *cursor, int64_t *dst,
                                              coda_array_ordering array_ordering);
-LIBCODA_API int coda_cursor_read_uint64_array(const coda_Cursor *cursor, uint64_t *dst,
+LIBCODA_API int coda_cursor_read_uint64_array(const coda_cursor *cursor, uint64_t *dst,
                                               coda_array_ordering array_ordering);
-LIBCODA_API int coda_cursor_read_float_array(const coda_Cursor *cursor, float *dst, coda_array_ordering array_ordering);
-LIBCODA_API int coda_cursor_read_double_array(const coda_Cursor *cursor, double *dst,
+LIBCODA_API int coda_cursor_read_float_array(const coda_cursor *cursor, float *dst, coda_array_ordering array_ordering);
+LIBCODA_API int coda_cursor_read_double_array(const coda_cursor *cursor, double *dst,
                                               coda_array_ordering array_ordering);
-LIBCODA_API int coda_cursor_read_char_array(const coda_Cursor *cursor, char *dst, coda_array_ordering array_ordering);
+LIBCODA_API int coda_cursor_read_char_array(const coda_cursor *cursor, char *dst, coda_array_ordering array_ordering);
 
 /* read complex values */
 
-LIBCODA_API int coda_cursor_read_complex_double_pair(const coda_Cursor *cursor, double *dst);
-LIBCODA_API int coda_cursor_read_complex_double_pairs_array(const coda_Cursor *cursor, double *dst,
+LIBCODA_API int coda_cursor_read_complex_double_pair(const coda_cursor *cursor, double *dst);
+LIBCODA_API int coda_cursor_read_complex_double_pairs_array(const coda_cursor *cursor, double *dst,
                                                             coda_array_ordering array_ordering);
-LIBCODA_API int coda_cursor_read_complex_double_split(const coda_Cursor *cursor, double *dst_re, double *dst_im);
-LIBCODA_API int coda_cursor_read_complex_double_split_array(const coda_Cursor *cursor, double *dst_re,
+LIBCODA_API int coda_cursor_read_complex_double_split(const coda_cursor *cursor, double *dst_re, double *dst_im);
+LIBCODA_API int coda_cursor_read_complex_double_split_array(const coda_cursor *cursor, double *dst_re,
                                                             double *dst_im, coda_array_ordering array_ordering);
+
+
+/* CODA Expression */
+
+LIBCODA_API int coda_expression_from_string(const char *exprstring, coda_expression **expr);
+LIBCODA_API void coda_expression_delete(coda_expression *expr);
+LIBCODA_API int coda_expression_get_type(const coda_expression *expr, coda_expression_type *type);
+LIBCODA_API int coda_expression_is_constant(const coda_expression *expr);
+
+LIBCODA_API int coda_expression_eval_bool(const coda_expression *expr, const coda_cursor *cursor, int *value);
+LIBCODA_API int coda_expression_eval_integer(const coda_expression *expr, const coda_cursor *cursor, int64_t *value);
+LIBCODA_API int coda_expression_eval_float(const coda_expression *expr, const coda_cursor *cursor, double *value);
+LIBCODA_API int coda_expression_eval_string(const coda_expression *expr, const coda_cursor *cursor, char **value,
+                                            long *length);
+LIBCODA_API int coda_expression_eval_node(const coda_expression *expr, coda_cursor *cursor);
+
 
 /* DO NOT USE ANY OF THE FIELDS CONTAINED IN THE RECORDS BELOW! */
 
@@ -464,13 +514,13 @@ LIBCODA_API int coda_cursor_read_complex_double_split_array(const coda_Cursor *c
 
 #define CODA_CURSOR_MAXDEPTH 32
 
-struct coda_Cursor_struct
+struct coda_cursor_struct
 {
-    struct coda_ProductFile_struct *CODA_PRIVATE_FIELD(pf);
+    struct coda_product_struct *CODA_PRIVATE_FIELD(product);
     int CODA_PRIVATE_FIELD(n);
     struct
     {
-        struct coda_DynamicType_struct *type;
+        struct coda_dynamic_type_struct *type;
         long index;
         int64_t bit_offset;
     } CODA_PRIVATE_FIELD(stack)[CODA_CURSOR_MAXDEPTH];

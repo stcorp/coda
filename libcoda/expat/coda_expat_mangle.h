@@ -14,6 +14,8 @@
  *
  */
 
+#ifdef CODA_EXPAT_NAME_MANGLE
+
 #define XML_DefaultCurrent coda_XML_DefaultCurrent
 #define XML_ErrorString coda_XML_ErrorString
 #define XML_ExpatVersion coda_XML_ExpatVersion
@@ -94,5 +96,7 @@
 #define XmlSizeOfUnknownEncoding coda_XmlSizeOfUnknownEncoding
 #define XmlUtf16Encode coda_XmlUtf16Encode
 #define XmlUtf8Encode coda_XmlUtf8Encode
+
+#endif
 
 #endif

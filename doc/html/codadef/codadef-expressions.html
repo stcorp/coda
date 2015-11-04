@@ -73,7 +73,7 @@
 
       <h3>operators</h3>
       
-      <p>There are three logical operators that operate on boolean values: AND, OR, and NOT ('<code>&&</code>', '<code>||</code>', and '<code>!</code>'). Boolean expressions can be put between braces ( '<code>(</code>' and '<code>)</code>' ) in order to guide the evaluation order.</p>
+      <p>There are three logical operators that operate on boolean values: AND, OR, and NOT ('<code>&amp;&amp;</code>', '<code>||</code>', and '<code>!</code>'). Boolean expressions can be put between braces ( '<code>(</code>' and '<code>)</code>' ) in order to guide the evaluation order.</p>
       
       <p>The AND and OR expressions are lazy evaluated. This means that the second argument to AND will not be evaluated if the first argument already evaluated to false, and for OR similarly if the first argument already evaluated to true.</p>
 
@@ -99,6 +99,14 @@
       
       <p>Returns true if (and only if) the floating point value is +Inf (plus infinity).</p>
 
+      <h5>regex(string, string)</h5>
+      
+      <p>Matches a string against a regular expression pattern. The first parameter is the pattern and the second parameter is the string that it should match against.</p>
+
+      <p>Note that if you want to use '\' characters in your pattern you should either provide the pattern as a 'raw string' (using the 'r' prefix) or use double escaping. For example, if you want to match for a "word" character (\w) you should either use 'r"\w"' or '"\\w"'</p>
+
+      <p>The regular expression engine that is used is <a href="http://www.pcre.org/">PCRE</a>. Please refer to the manual of this software package for an overview of the syntax and options for constructing a pattern. Note that the version of PCRE that ships with CODA has been build using default options. The pattern is <i>compiled</i> with the <code>PCRE_DOTALL</code> and <code>PCRE_DOLLAR_ENDONLY</code> options.</p>
+      
       <h5>exists(node)</h5>
 
       <p>Some product types will have certain data elements defined as optional. For instance, a calibration data set may be available for one product, but not for another, even though both products are of the same product type. With the '<code>exists</code>' function it is possible to check for the availability of this optional data. Note that this function only works on nodes that refer to data that is actually defined as being optional. Providing a node to a location that could never exist will result in an error.</p>
@@ -260,7 +268,7 @@
       <p>If the boolean expression evaluates to true the second argument is evaluated and its result returned, otherwise the third argument is evaluated and its result returned.</p>
 
       <p>Example:</p>
-      <div class="fragment"><code><b>if</b>(<b>float</b>(/calibration/value[0]) < 0.0, -1, 1)</code></div>
+      <div class="fragment"><code><b>if</b>(<b>float</b>(/calibration/value[0]) &lt; 0.0, -1, 1)</code></div>
       <p>This will return the sign of the first array element.</p>
 
       <h5>unboundindex(node, boolean)</h5>
@@ -391,7 +399,7 @@ inf
         <tr><td align="center">\\</td><td>\</td><td align="right">92</td></tr>
         <tr><td align="center">\nnn</td><td>A byte value equal to the octal number 'nnn'</td><td align="right">&nbsp;</td></tr>
       </table>
-
+      
       <p>Examples:</p>
 
 <div class="fragment"><code><pre>
@@ -401,6 +409,8 @@ inf
 "A string with a \000 character"
 "How to quote a '\"'?"
 </pre></code></div>
+
+      <p>By default all escaped characters are interpreted and turned into their single character equivalents. However, if you precede a string constant by the letter 'r' this translation will not be performed and you will get the raw string value. For instance, '"abc \\ \" "' will be translated to 'abc \ " ', whereas 'r"abc \\ \" "' will remain as 'abc \\ \" '.</p>
 
       <h3>operators</h3>
       
@@ -454,6 +464,28 @@ inf
 
       <p>This function only works if node points to an array in the product. It will then walk the elements of the array (in ascending order), evaluate the string expression for each element and return the concatenated string of the results.</p>
 
+      <h5>regex(string, string, integer)</h5>
+      
+      <p>Matches a string against a regular expression pattern. The first parameter is the pattern, the second parameter is the string that it should match against and the third parameter is the index of the substring whos value should be returned.</p>
+      
+      <p>Note that an index value of 0 will give the full match of the pattern, and indices 1..n are the indices for the substrings.</p>
+
+      <p>If no match for the specified substring was found an empty string will be returned.</p>
+
+      <p>The regular expression engine that is used is <a href="http://www.pcre.org/">PCRE</a>. Please refer to the manual of this software package for an overview of the syntax and options for constructing a pattern and for an explanation of the concept of 'substrings'. Note that the version of PCRE that ships with CODA has been build using default options. The pattern is <i>compiled</i> with the <code>PCRE_DOTALL</code> and <code>PCRE_DOLLAR_ENDONLY</code> options.</p>
+      
+      <p>For example, <code>regex(r"a+(\d+)", "aaa1234aaa", 0)</code> will return <code>"aaa1234"</code> and <code>regex(r"a+(\d+)", "aaa1234aaa", 1)</code> will return <code>"1234"</code>.</p>
+
+      <h5>regex(string, string, string)</h5>
+      
+      <p>Matches a string against a regular expression pattern. The first parameter is the pattern, the second parameter is the string that it should match against and the third parameter is the name of the substring whos value should be returned.</p>
+
+      <p>If no match for the specified substring was found an empty string will be returned.</p>
+      
+      <p>The regular expression engine that is used is <a href="http://www.pcre.org/">PCRE</a>. Please refer to the manual of this software package for an overview of the syntax and options for constructing a pattern and for an explanation of the concept of 'substrings'. Note that the version of PCRE that ships with CODA has been build using default options. The pattern is <i>compiled</i> with the <code>PCRE_DOTALL</code> and <code>PCRE_DOLLAR_ENDONLY</code> options.</p>
+      
+      <p>For example, <code>regex(r"a+(?'foo'\d+)", "aaa1234aaa", "foo")</code> will return <code>"1234"</code>.</p>
+      
       <h5>productclass()</h5>
 
       <p>Returns the name of the productclass of the file. If the file does not have a productclass an empty string will be returned.</p>
@@ -478,7 +510,7 @@ inf
 
       <p>Within CODA the format of field names is restricted to identifiers, which means that the first character should be a-z or A-Z and all subsequent characters should be a-z, A-Z, 0-9, or _.</p>
 
-      <p>Array indices are 0-based indices on the flattened view of an array. This means that if an array is defined as having more than one dimension the index as used in a node expression should be between 0 and the total number of array elements (exclusive). For example, for a [10,8] array, the index should be >= 0 and <= 79. The CODA product format definition document will always show the dimension order in such a way that the last dimension is the fastest running dimension.</p>
+      <p>Array indices are 0-based indices on the flattened view of an array. This means that if an array is defined as having more than one dimension the index as used in a node expression should be between 0 and the total number of array elements (exclusive). For example, for a [10,8] array, the index should be &gt;= 0 and &lt;= 79. The CODA product format definition document will always show the dimension order in such a way that the last dimension is the fastest running dimension.</p>
 
       <p>A node can be specified as a relative or absolute path. An absolute path starts at the root of the product and the expression starts with either '<code>/</code>', '<code>[</code> (start of a top-level index reference), or '<code>@</code> (start of a top-level attribute reference). Relative paths start with either '<code>.</code>', '<code>..</code>', or '<code>:</code>'. When a node starts with '<code>..</code>' this is just a shorthand for '<code>./..</code>', which refers to the parent node of the current node. The relative paths '<code>.</code>' and '<code>:</code>' both refer to the current node position but with a slightly different meaning. The '<code>:</code>' node will always refer to the node with which the evaluation was started, whereas the location of '<code>.</code>' will depend on where the expression is used (for instance, if it used within the evaluation of the second argument of a  '<code>count(node, boolean)</code>' expression it will refer to the array element in '<code>node</code>' that is being evaluated). The node position with which the evaluation is started is either equal to the node to which the expression is attached or, if the expression is not attached to a specific product parameter, it is the root of the product.</p>
 
@@ -494,8 +526,8 @@ alpha =
 	'N'|'O'|'P'|'Q'|'R'|'S'|'T'|'U'|'V'|'W'|'X'|'Y'|'Z' ;
 
 character = alpha | digit |
-	' '|'!'|'"'|'#'|'$'|'%'|'&'|"'"|'('|')'|'*'|'+'|','|
-	'-'|'.'|'/'|':'|';'|'<'|'='|'>'|'?'|'@'|'['|'\'|']'|
+	' '|'!'|'"'|'#'|'$'|'%'|'&amp;'|"'"|'('|')'|'*'|'+'|','|
+	'-'|'.'|'/'|':'|';'|'&lt;'|'='|'&gt;'|'?'|'@'|'['|'\'|']'|
 	'^'|'_'|'`'|'{'|'|'|'}'|'~' ;
 
 identifier = alpha, [{alpha | digit | '_'}] ;
@@ -507,7 +539,7 @@ intvalue = {digit} ;
 
 floatvalue = (intvalue, '.', [intvalue] | '.', intvalue), [('E' | 'e' | 'D' | 'd'), [sign], intvalue] ;
 
-stringvalue = '"', [{character-'"' | ('\', '"')}], '"' ;
+stringvalue = '"', [{character-('\', '"') | '\' character}], '"' ;
 
 voidexpr =
 	'$' identifier '=' intexpr |
@@ -521,40 +553,41 @@ voidexpr =
 boolexpr =
 	'true' |
 	'false' |
-	boolexpr, '&&', boolexpr |
+	boolexpr, '&amp;&amp;', boolexpr |
 	boolexpr, '||', boolexpr |
 	'!', boolexpr |
 	intexpr, '==', intexpr |
 	intexpr, '!=', intexpr |
-	intexpr, '>', intexpr |
-	intexpr, '>=', intexpr |
-	intexpr, '<', intexpr |
-	intexpr, '<=', intexpr |
+	intexpr, '&gt;', intexpr |
+	intexpr, '&gt;=', intexpr |
+	intexpr, '&lt;', intexpr |
+	intexpr, '&lt;=', intexpr |
 	floatexpr, '==', floatexpr |
 	floatexpr, '==', intexpr |
 	intexpr, '==', floatexpr |
 	floatexpr, '!=', floatexpr |
 	floatexpr, '!=', intexpr |
 	intexpr, '!=', floatexpr |
-	floatexpr, '>', floatexpr |
-	floatexpr, '>', intexpr |
-	intexpr, '>', floatexpr |
-	floatexpr, '>=', floatexpr |
-	floatexpr, '>=', intexpr |
-	intexpr, '>=', floatexpr |
-	floatexpr, '<', floatexpr |
-	floatexpr, '<', intexpr |
-	intexpr, '<', floatexpr |
-	floatexpr, '<=', floatexpr |
-	floatexpr, '<=', intexpr |
-	intexpr, '<=', floatexpr |
+	floatexpr, '&gt;', floatexpr |
+	floatexpr, '&gt;', intexpr |
+	intexpr, '&gt;', floatexpr |
+	floatexpr, '&gt;=', floatexpr |
+	floatexpr, '&gt;=', intexpr |
+	intexpr, '&gt;=', floatexpr |
+	floatexpr, '&lt;', floatexpr |
+	floatexpr, '&lt;', intexpr |
+	intexpr, '&lt;', floatexpr |
+	floatexpr, '&lt;=', floatexpr |
+	floatexpr, '&lt;=', intexpr |
+	intexpr, '&lt;=', floatexpr |
 	stringexpr, '==', stringexpr |
 	stringexpr, '!=', stringexpr |
-	stringexpr, '>', stringexpr |
-	stringexpr, '>=', stringexpr |
-	stringexpr, '<', stringexpr |
-	stringexpr, '<=', stringexpr |
+	stringexpr, '&gt;', stringexpr |
+	stringexpr, '&gt;=', stringexpr |
+	stringexpr, '&lt;', stringexpr |
+	stringexpr, '&lt;=', stringexpr |
 	'(', boolexpr, ')' |
+	'regex', '(', stringexpr, ',', stringexpr ')' |
 	'exists', '(', node, ')' |
 	'exists', '(', node, ',', boolexpr, ')' |
 	'all', '(', node, ',', boolexpr, ')' ;
@@ -576,7 +609,7 @@ intexpr =
 	intexpr, '/', intexpr |
 	intexpr, '%', intexpr |
 	intexpr, '^', intexpr |
-	intexpr, '&', intexpr |
+	intexpr, '&amp;', intexpr |
 	intexpr, '|', intexpr |
 	'(', intexpr, ')' |
 	'abs', '(', intexpr, ')' |
@@ -649,6 +682,7 @@ floatexpr =
 
 stringexpr = 
 	stringvalue |
+	'r', stringvalue |
 	'str', '(', stringexpr, ')' |
 	'str', '(', node, ')' |
 	'str', '(', node, ',', intexpr, ')' |
@@ -660,6 +694,8 @@ stringexpr =
 	'rtrim', '(', stringexpr, ')' |
 	'trim', '(', stringexpr, ')' |
 	'add', '(', node, ',', stringexpr, ')' |
+	'regex', '(', stringexpr, ',', stringexpr, ',', intexpr ')' |
+	'regex', '(', stringexpr, ',', stringexpr, ',', stringexpr ')' |
 	'productclass', '(', ')' |
 	'producttype', '(', ')' |
 	'filename', '(', ')' |

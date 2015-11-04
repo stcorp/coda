@@ -27,12 +27,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-static void delete_xml_dynamic_attribute(coda_xmlAttributeDynamicType *attribute)
+static void delete_xml_dynamic_attribute(coda_xml_attribute_dynamic_type *attribute)
 {
     assert(attribute->retain_count == 0);
     if (attribute->type != NULL)
     {
-        coda_xml_release_type((coda_xmlType *)attribute->type);
+        coda_xml_release_type((coda_xml_type *)attribute->type);
     }
     if (attribute->value != NULL)
     {
@@ -41,12 +41,12 @@ static void delete_xml_dynamic_attribute(coda_xmlAttributeDynamicType *attribute
     free(attribute);
 }
 
-static void delete_xml_dynamic_attribute_record(coda_xmlAttributeRecordDynamicType *attributes)
+static void delete_xml_dynamic_attribute_record(coda_xml_attribute_record_dynamic_type *attributes)
 {
     assert(attributes->retain_count == 0);
     if (attributes->type != NULL)
     {
-        coda_xml_release_type((coda_xmlType *)attributes->type);
+        coda_xml_release_type((coda_xml_type *)attributes->type);
     }
     if (attributes->attribute != NULL)
     {
@@ -56,7 +56,7 @@ static void delete_xml_dynamic_attribute_record(coda_xmlAttributeRecordDynamicTy
         {
             if (attributes->attribute[i] != NULL)
             {
-                coda_xml_release_dynamic_type((coda_xmlDynamicType *)attributes->attribute[i]);
+                coda_xml_release_dynamic_type((coda_xml_dynamic_type *)attributes->attribute[i]);
             }
         }
         free(attributes->attribute);
@@ -64,16 +64,16 @@ static void delete_xml_dynamic_attribute_record(coda_xmlAttributeRecordDynamicTy
     free(attributes);
 }
 
-static void delete_xml_dynamic_element(coda_xmlElementDynamicType *element)
+static void delete_xml_dynamic_element(coda_xml_element_dynamic_type *element)
 {
     assert(element->retain_count == 0);
     if (element->type != NULL)
     {
-        coda_xml_release_type((coda_xmlType *)element->type);
+        coda_xml_release_type((coda_xml_type *)element->type);
     }
     if (element->attributes != NULL)
     {
-        coda_xml_release_dynamic_type((coda_xmlDynamicType *)element->attributes);
+        coda_xml_release_dynamic_type((coda_xml_dynamic_type *)element->attributes);
     }
     if (element->element != NULL)
     {
@@ -91,12 +91,12 @@ static void delete_xml_dynamic_element(coda_xmlElementDynamicType *element)
     free(element);
 }
 
-static void delete_xml_dynamic_array(coda_xmlArrayDynamicType *array)
+static void delete_xml_dynamic_array(coda_xml_array_dynamic_type *array)
 {
     assert(array->retain_count == 0);
     if (array->type != NULL)
     {
-        coda_xml_release_type((coda_xmlType *)array->type);
+        coda_xml_release_type((coda_xml_type *)array->type);
     }
     if (array->element != NULL)
     {
@@ -106,7 +106,7 @@ static void delete_xml_dynamic_array(coda_xmlArrayDynamicType *array)
         {
             if (array->element[i] != NULL)
             {
-                coda_xml_release_dynamic_type((coda_xmlDynamicType *)array->element[i]);
+                coda_xml_release_dynamic_type((coda_xml_dynamic_type *)array->element[i]);
             }
         }
         free(array->element);
@@ -114,21 +114,21 @@ static void delete_xml_dynamic_array(coda_xmlArrayDynamicType *array)
     free(array);
 }
 
-void delete_xml_dynamic_root(coda_xmlRootDynamicType *root)
+static void delete_xml_dynamic_root(coda_xml_root_dynamic_type *root)
 {
     assert(root->retain_count == 0);
     if (root->type != NULL)
     {
-        coda_xml_release_type((coda_xmlType *)root->type);
+        coda_xml_release_type((coda_xml_type *)root->type);
     }
     if (root->element != NULL)
     {
-        coda_xml_release_dynamic_type((coda_xmlDynamicType *)root->element);
+        coda_xml_release_dynamic_type((coda_xml_dynamic_type *)root->element);
     }
     free(root);
 }
 
-void coda_xml_release_dynamic_type(coda_xmlDynamicType *type)
+void coda_xml_release_dynamic_type(coda_xml_dynamic_type *type)
 {
     assert(type != NULL);
 
@@ -141,34 +141,34 @@ void coda_xml_release_dynamic_type(coda_xmlDynamicType *type)
     switch (type->tag)
     {
         case tag_xml_root_dynamic:
-            delete_xml_dynamic_root((coda_xmlRootDynamicType *)type);
+            delete_xml_dynamic_root((coda_xml_root_dynamic_type *)type);
             break;
         case tag_xml_record_dynamic:
         case tag_xml_text_dynamic:
         case tag_xml_ascii_type_dynamic:
-            delete_xml_dynamic_element((coda_xmlElementDynamicType *)type);
+            delete_xml_dynamic_element((coda_xml_element_dynamic_type *)type);
             break;
         case tag_xml_array_dynamic:
-            delete_xml_dynamic_array((coda_xmlArrayDynamicType *)type);
+            delete_xml_dynamic_array((coda_xml_array_dynamic_type *)type);
             break;
         case tag_xml_attribute_dynamic:
-            delete_xml_dynamic_attribute((coda_xmlAttributeDynamicType *)type);
+            delete_xml_dynamic_attribute((coda_xml_attribute_dynamic_type *)type);
             break;
         case tag_xml_attribute_record_dynamic:
-            delete_xml_dynamic_attribute_record((coda_xmlAttributeRecordDynamicType *)type);
+            delete_xml_dynamic_attribute_record((coda_xml_attribute_record_dynamic_type *)type);
             break;
     }
 }
 
-coda_xmlRootDynamicType *coda_xml_dynamic_root_new(coda_xmlRoot *type)
+coda_xml_root_dynamic_type *coda_xml_dynamic_root_new(coda_xml_root *type)
 {
-    coda_xmlRootDynamicType *root;
+    coda_xml_root_dynamic_type *root;
 
-    root = malloc(sizeof(coda_xmlRootDynamicType));
+    root = malloc(sizeof(coda_xml_root_dynamic_type));
     if (root == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       sizeof(coda_xmlRootDynamicType), __FILE__, __LINE__);
+                       sizeof(coda_xml_root_dynamic_type), __FILE__, __LINE__);
         return NULL;
     }
     root->retain_count = 0;
@@ -182,17 +182,17 @@ coda_xmlRootDynamicType *coda_xml_dynamic_root_new(coda_xmlRoot *type)
     return root;
 }
 
-static coda_xmlAttributeDynamicType *coda_xml_dynamic_attribute_new(coda_xmlAttribute *type, const char *value)
+static coda_xml_attribute_dynamic_type *coda_xml_dynamic_attribute_new(coda_xml_attribute *type, const char *value)
 {
-    coda_xmlAttributeDynamicType *attribute;
+    coda_xml_attribute_dynamic_type *attribute;
 
     assert(value != NULL);
 
-    attribute = malloc(sizeof(coda_xmlAttributeDynamicType));
+    attribute = malloc(sizeof(coda_xml_attribute_dynamic_type));
     if (attribute == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       sizeof(coda_xmlAttributeDynamicType), __FILE__, __LINE__);
+                       sizeof(coda_xml_attribute_dynamic_type), __FILE__, __LINE__);
         return NULL;
     }
     attribute->retain_count = 0;
@@ -215,18 +215,18 @@ static coda_xmlAttributeDynamicType *coda_xml_dynamic_attribute_new(coda_xmlAttr
     return attribute;
 }
 
-coda_xmlAttributeRecordDynamicType *coda_xml_dynamic_attribute_record_new(coda_xmlAttributeRecord *type,
-                                                                          const char **attr)
+coda_xml_attribute_record_dynamic_type *coda_xml_dynamic_attribute_record_new(coda_xml_attribute_record *type,
+                                                                              const char **attr)
 {
-    coda_xmlAttributeRecordDynamicType *attributes;
+    coda_xml_attribute_record_dynamic_type *attributes;
     int attribute_index;
     int i;
 
-    attributes = malloc(sizeof(coda_xmlAttributeRecordDynamicType));
+    attributes = malloc(sizeof(coda_xml_attribute_record_dynamic_type));
     if (attributes == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       sizeof(coda_xmlAttributeRecordDynamicType), __FILE__, __LINE__);
+                       sizeof(coda_xml_attribute_record_dynamic_type), __FILE__, __LINE__);
         return NULL;
     }
     attributes->retain_count = 0;
@@ -239,11 +239,11 @@ coda_xmlAttributeRecordDynamicType *coda_xml_dynamic_attribute_record_new(coda_x
     attributes->attribute = NULL;
 
     /* construct an empty attribute list from the definition */
-    attributes->attribute = malloc(type->num_attributes * sizeof(coda_xmlAttributeDynamicType *));
+    attributes->attribute = malloc(type->num_attributes * sizeof(coda_xml_attribute_dynamic_type *));
     if (attributes->attribute == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       type->num_attributes * sizeof(coda_xmlAttributeDynamicType *), __FILE__, __LINE__);
+                       type->num_attributes * sizeof(coda_xml_attribute_dynamic_type *), __FILE__, __LINE__);
         delete_xml_dynamic_attribute_record(attributes);
         return NULL;
     }
@@ -299,19 +299,19 @@ coda_xmlAttributeRecordDynamicType *coda_xml_dynamic_attribute_record_new(coda_x
     return attributes;
 }
 
-static int coda_xml_dynamic_attribute_record_update(coda_xmlAttributeRecordDynamicType *attributes)
+static int coda_xml_dynamic_attribute_record_update(coda_xml_attribute_record_dynamic_type *attributes)
 {
     /* update size of attribute list */
     if (attributes->type->num_attributes > attributes->num_attributes)
     {
-        coda_xmlAttributeDynamicType **new_attribute;
+        coda_xml_attribute_dynamic_type **new_attribute;
         int i;
 
-        new_attribute = realloc(attributes->attribute, attributes->type->num_attributes * sizeof(coda_xmlAttribute *));
+        new_attribute = realloc(attributes->attribute, attributes->type->num_attributes * sizeof(coda_xml_attribute *));
         if (new_attribute == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           attributes->type->num_attributes * sizeof(coda_xmlAttributeDynamicType *), __FILE__,
+                           attributes->type->num_attributes * sizeof(coda_xml_attribute_dynamic_type *), __FILE__,
                            __LINE__);
             return -1;
         }
@@ -326,17 +326,17 @@ static int coda_xml_dynamic_attribute_record_update(coda_xmlAttributeRecordDynam
     return 0;
 }
 
-coda_xmlArrayDynamicType *coda_xml_dynamic_array_new(coda_xmlArray *type)
+coda_xml_array_dynamic_type *coda_xml_dynamic_array_new(coda_xml_array *type)
 {
-    coda_xmlArrayDynamicType *array;
+    coda_xml_array_dynamic_type *array;
 
     assert(type != NULL);
 
-    array = malloc(sizeof(coda_xmlArrayDynamicType));
+    array = malloc(sizeof(coda_xml_array_dynamic_type));
     if (array == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_xmlArrayDynamicType), __FILE__, __LINE__);
+                       (long)sizeof(coda_xml_array_dynamic_type), __FILE__, __LINE__);
         return NULL;
     }
     array->retain_count = 0;
@@ -351,19 +351,19 @@ coda_xmlArrayDynamicType *coda_xml_dynamic_array_new(coda_xmlArray *type)
     return array;
 }
 
-int coda_xml_dynamic_array_add_element(coda_xmlArrayDynamicType *array, coda_xmlElementDynamicType *element)
+int coda_xml_dynamic_array_add_element(coda_xml_array_dynamic_type *array, coda_xml_element_dynamic_type *element)
 {
-    coda_xmlElementDynamicType **elementarray;
+    coda_xml_element_dynamic_type **elementarray;
 
     assert(array != NULL);
     assert(element != NULL);
     assert(element->type == array->type->base_type);
 
-    elementarray = realloc(array->element, (array->num_elements + 1) * sizeof(coda_xmlElementDynamicType *));
+    elementarray = realloc(array->element, (array->num_elements + 1) * sizeof(coda_xml_element_dynamic_type *));
     if (elementarray == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (array->num_elements + 1) * sizeof(coda_xmlElementDynamicType *), __FILE__, __LINE__);
+                       (array->num_elements + 1) * sizeof(coda_xml_element_dynamic_type *), __FILE__, __LINE__);
         return -1;
     }
     array->element = elementarray;
@@ -374,18 +374,18 @@ int coda_xml_dynamic_array_add_element(coda_xmlArrayDynamicType *array, coda_xml
     return 0;
 }
 
-coda_xmlElementDynamicType *coda_xml_dynamic_element_new(coda_xmlElement *type, const char **attr)
+coda_xml_element_dynamic_type *coda_xml_dynamic_element_new(coda_xml_element *type, const char **attr)
 {
-    coda_xmlElementDynamicType *element;
+    coda_xml_element_dynamic_type *element;
 
     assert(type != NULL);
     assert(attr != NULL);
 
-    element = malloc(sizeof(coda_xmlElementDynamicType));
+    element = malloc(sizeof(coda_xml_element_dynamic_type));
     if (element == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_xmlElementDynamicType), __FILE__, __LINE__);
+                       (long)sizeof(coda_xml_element_dynamic_type), __FILE__, __LINE__);
         return NULL;
     }
     element->retain_count = 0;
@@ -425,11 +425,11 @@ coda_xmlElementDynamicType *coda_xml_dynamic_element_new(coda_xmlElement *type, 
 
         /* construct the sub element list from the definition */
 
-        element->element = malloc(type->num_fields * sizeof(coda_xmlDynamicType *));
+        element->element = malloc(type->num_fields * sizeof(coda_xml_dynamic_type *));
         if (element->element == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           (long)type->num_fields * sizeof(coda_xmlDynamicType *), __FILE__, __LINE__);
+                           (long)type->num_fields * sizeof(coda_xml_dynamic_type *), __FILE__, __LINE__);
             delete_xml_dynamic_element(element);
             return NULL;
         }
@@ -445,7 +445,7 @@ coda_xmlElementDynamicType *coda_xml_dynamic_element_new(coda_xmlElement *type, 
             if (type->field[i]->type->tag == tag_xml_array)
             {
                 element->element[i] =
-                    (coda_xmlDynamicType *)coda_xml_dynamic_array_new((coda_xmlArray *)type->field[i]->type);
+                    (coda_xml_dynamic_type *)coda_xml_dynamic_array_new((coda_xml_array *)type->field[i]->type);
                 if (element->element[i] == NULL)
                 {
                     delete_xml_dynamic_element(element);
@@ -465,7 +465,8 @@ coda_xmlElementDynamicType *coda_xml_dynamic_element_new(coda_xmlElement *type, 
     return element;
 }
 
-int coda_xml_dynamic_element_add_element(coda_xmlElementDynamicType *element, coda_xmlElementDynamicType *sub_element)
+int coda_xml_dynamic_element_add_element(coda_xml_element_dynamic_type *element,
+                                         coda_xml_element_dynamic_type *sub_element)
 {
     int element_index;
 
@@ -479,7 +480,7 @@ int coda_xml_dynamic_element_add_element(coda_xmlElementDynamicType *element, co
         if (element->element[element_index]->tag == tag_xml_array_dynamic)
         {
             /* add the child element to the array */
-            if (coda_xml_dynamic_array_add_element((coda_xmlArrayDynamicType *)element->element[element_index],
+            if (coda_xml_dynamic_array_add_element((coda_xml_array_dynamic_type *)element->element[element_index],
                                                    sub_element) != 0)
             {
                 return -1;
@@ -494,7 +495,7 @@ int coda_xml_dynamic_element_add_element(coda_xmlElementDynamicType *element, co
     }
     else
     {
-        element->element[element_index] = (coda_xmlDynamicType *)sub_element;
+        element->element[element_index] = (coda_xml_dynamic_type *)sub_element;
         sub_element->retain_count++;
     }
 
@@ -504,7 +505,7 @@ int coda_xml_dynamic_element_add_element(coda_xmlElementDynamicType *element, co
     return 0;
 }
 
-int coda_xml_dynamic_element_update(coda_xmlElementDynamicType *element)
+int coda_xml_dynamic_element_update(coda_xml_element_dynamic_type *element)
 {
     int i;
 
@@ -532,14 +533,14 @@ int coda_xml_dynamic_element_update(coda_xmlElementDynamicType *element)
     {
         if (element->type->num_fields > element->num_elements)
         {
-            coda_xmlDynamicType **new_element;
+            coda_xml_dynamic_type **new_element;
 
             /* increase the size for the child elements array until it matches the size in the definition */
-            new_element = realloc(element->element, element->type->num_fields * sizeof(coda_xmlDynamicType *));
+            new_element = realloc(element->element, element->type->num_fields * sizeof(coda_xml_dynamic_type *));
             if (new_element == NULL)
             {
                 coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                               element->type->num_fields * sizeof(coda_xmlDynamicType *), __FILE__, __LINE__);
+                               element->type->num_fields * sizeof(coda_xml_dynamic_type *), __FILE__, __LINE__);
                 return -1;
             }
             element->element = new_element;
@@ -555,34 +556,34 @@ int coda_xml_dynamic_element_update(coda_xmlElementDynamicType *element)
         {
             if (element->type->field[i]->type->tag == tag_xml_array)
             {
-                coda_xmlArrayDynamicType *array;
+                coda_xml_array_dynamic_type *array;
 
                 if (element->element[i] == NULL)
                 {
                     /* create an empty array */
-                    array = coda_xml_dynamic_array_new((coda_xmlArray *)element->type->field[i]->type);
+                    array = coda_xml_dynamic_array_new((coda_xml_array *)element->type->field[i]->type);
                     if (array == NULL)
                     {
                         return -1;
                     }
-                    element->element[i] = (coda_xmlDynamicType *)array;
+                    element->element[i] = (coda_xml_dynamic_type *)array;
                 }
                 else if (element->element[i]->tag != tag_xml_array_dynamic)
                 {
                     /* convert the single element into an array of a single element */
-                    array = coda_xml_dynamic_array_new((coda_xmlArray *)element->type->field[i]->type);
+                    array = coda_xml_dynamic_array_new((coda_xml_array *)element->type->field[i]->type);
                     if (array == NULL)
                     {
                         return -1;
                     }
-                    if (coda_xml_dynamic_array_add_element(array, (coda_xmlElementDynamicType *)element->element[i]) !=
-                        0)
+                    if (coda_xml_dynamic_array_add_element(array, (coda_xml_element_dynamic_type *)element->element[i])
+                        != 0)
                     {
-                        coda_xml_release_dynamic_type((coda_xmlDynamicType *)array);
+                        coda_xml_release_dynamic_type((coda_xml_dynamic_type *)array);
                         return -1;
                     }
                     coda_xml_release_dynamic_type(element->element[i]);
-                    element->element[i] = (coda_xmlDynamicType *)array;
+                    element->element[i] = (coda_xml_dynamic_type *)array;
                 }
             }
         }
@@ -591,7 +592,7 @@ int coda_xml_dynamic_element_update(coda_xmlElementDynamicType *element)
     return coda_xml_dynamic_attribute_record_update(element->attributes);
 }
 
-int coda_xml_dynamic_element_validate(coda_xmlElementDynamicType *element)
+int coda_xml_dynamic_element_validate(coda_xml_element_dynamic_type *element)
 {
     if (element->tag == tag_xml_record_dynamic)
     {

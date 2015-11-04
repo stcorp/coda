@@ -31,8 +31,6 @@
 #include <dirent.h>
 #endif
 
-#include "coda-expr.h"
-
 /** \file */
 
 #define NAME_BLOCK_SIZE 1024
@@ -46,7 +44,7 @@ typedef struct NameBuffer_struct
 
 ff_expr *coda_filefilter_tree;
 
-static int coda_match_filepath(int ignore_other_file_types, coda_Expr *expr, NameBuffer *path_name,
+static int coda_match_filepath(int ignore_other_file_types, coda_expression *expr, NameBuffer *path_name,
                                int (*callback) (const char *, coda_filefilter_status, const char *, void *),
                                void *userdata);
 
@@ -100,22 +98,22 @@ static void append_string_to_name_buffer(NameBuffer *name, const char *str)
     name->length += length;
 }
 
-static int coda_match_file(coda_Expr *expr, NameBuffer *path_name,
+static int coda_match_file(coda_expression *expr, NameBuffer *path_name,
                            int (*callback) (const char *, coda_filefilter_status, const char *, void *), void *userdata)
 {
-    coda_ProductFile *pf;
-    coda_Cursor cursor;
+    coda_product *product;
+    coda_cursor cursor;
     int filter_result;
     int result;
 
-    result = coda_open(path_name->buffer, &pf);
+    result = coda_open(path_name->buffer, &product);
     if (result != 0 && coda_errno == CODA_ERROR_FILE_OPEN)
     {
         /* maybe not enough memory space to map the file in memory =>
          * temporarily disable memory mapping of files and try again
          */
         coda_set_option_use_mmap(0);
-        result = coda_open(path_name->buffer, &pf);
+        result = coda_open(path_name->buffer, &product);
         coda_set_option_use_mmap(1);
     }
     if (result != 0)
@@ -131,22 +129,22 @@ static int coda_match_file(coda_Expr *expr, NameBuffer *path_name,
         }
     }
 
-    if (coda_cursor_set_product(&cursor, pf) != 0)
+    if (coda_cursor_set_product(&cursor, product) != 0)
     {
-        coda_close(pf);
+        coda_close(product);
         return callback(path_name->buffer, coda_ffs_error, coda_errno_to_string(coda_errno), userdata);
     }
-    if (coda_expr_eval_bool(expr, &cursor, &filter_result) != 0)
+    if (coda_expression_eval_bool(expr, &cursor, &filter_result) != 0)
     {
         return callback(path_name->buffer, coda_ffs_error, coda_errno_to_string(coda_errno), userdata);
     }
-    coda_close(pf);
+    coda_close(product);
 
 
     return callback(path_name->buffer, filter_result ? coda_ffs_match : coda_ffs_no_match, NULL, userdata);
 }
 
-static int coda_match_dir(coda_Expr *expr, NameBuffer *path_name,
+static int coda_match_dir(coda_expression *expr, NameBuffer *path_name,
                           int (*callback) (const char *, coda_filefilter_status, const char *, void *), void *userdata)
 {
 #ifdef WIN32
@@ -269,7 +267,7 @@ static int coda_match_dir(coda_Expr *expr, NameBuffer *path_name,
     return 0;
 }
 
-static int coda_match_filepath(int ignore_other_file_types, coda_Expr *expr, NameBuffer *path_name,
+static int coda_match_filepath(int ignore_other_file_types, coda_expression *expr, NameBuffer *path_name,
                                int (*callback) (const char *, coda_filefilter_status, const char *, void *),
                                void *userdata)
 {
@@ -368,8 +366,8 @@ LIBCODA_API int coda_match_filefilter(const char *filefilter, int num_filepaths,
                                       void *userdata)
 {
     NameBuffer path_name;
-    coda_native_type result_type;
-    coda_Expr *expr;
+    coda_expression_type result_type;
+    coda_expression *expr;
     int result;
     int i;
 
@@ -384,19 +382,19 @@ LIBCODA_API int coda_match_filefilter(const char *filefilter, int num_filepaths,
         filefilter = "true";
     }
 
-    if (coda_expr_from_string(filefilter, &expr) != 0)
+    if (coda_expression_from_string(filefilter, &expr) != 0)
     {
         return -1;
     }
-    if (coda_expr_get_result_type(expr, &result_type) != 0)
+    if (coda_expression_get_type(expr, &result_type) != 0)
     {
-        coda_expr_delete(expr);
+        coda_expression_delete(expr);
         return -1;
     }
-    if (result_type != coda_native_type_uint8)
+    if (result_type != coda_expression_boolean)
     {
         coda_set_error(CODA_ERROR_EXPRESSION, "expression does not result in a boolean value");
-        coda_expr_delete(expr);
+        coda_expression_delete(expr);
         return -1;
     }
 
@@ -408,7 +406,7 @@ LIBCODA_API int coda_match_filefilter(const char *filefilter, int num_filepaths,
         if (result != 0)
         {
             name_buffer_done(&path_name);
-            coda_expr_delete(expr);
+            coda_expression_delete(expr);
             return result;
         }
         path_name.length = 0;
@@ -416,7 +414,7 @@ LIBCODA_API int coda_match_filefilter(const char *filefilter, int num_filepaths,
     }
 
     name_buffer_done(&path_name);
-    coda_expr_delete(expr);
+    coda_expression_delete(expr);
 
     return 0;
 }

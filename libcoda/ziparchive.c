@@ -44,7 +44,7 @@
 
 #define BUFFSIZE 8192
 
-void default_error_handler(const char *message, ...)
+static void default_error_handler(const char *message, ...)
 {
     va_list ap;
 
@@ -55,7 +55,7 @@ void default_error_handler(const char *message, ...)
     fprintf(stderr, "\n");
 }
 
-struct zaEntry_struct
+struct za_entry_struct
 {
     uint32_t localheader_offset;
     uint16_t compression;
@@ -74,15 +74,15 @@ struct zaEntry_struct
 
     char *filename;
 
-    struct zaFile_struct *zf;
+    struct za_file_struct *zf;
 };
 
-struct zaFile_struct
+struct za_file_struct
 {
     int fd;
     int num_entries;
     char *filename;
-    zaEntry *entry;
+    za_entry *entry;
     hashtable *hash_data;
     void (*handle_error) (const char *, ...);
 };
@@ -123,7 +123,7 @@ static void swap4(uint32_t *value)
 }
 #endif
 
-static int get_entries(zaFile *zf)
+static int get_entries(za_file *zf)
 {
     char buffer[46];
     uint32_t signature;
@@ -168,10 +168,10 @@ static int get_entries(zaFile *zf)
 #endif
 
     zf->num_entries = num_entries;
-    zf->entry = malloc(num_entries * sizeof(zaEntry));
+    zf->entry = malloc(num_entries * sizeof(za_entry));
     if (zf->entry == NULL)
     {
-        zf->handle_error("could not allocate %ld bytes", num_entries * sizeof(zaEntry));
+        zf->handle_error("could not allocate %ld bytes", num_entries * sizeof(za_entry));
         return -1;
     }
     for (i = 0; i < num_entries; i++)
@@ -193,7 +193,7 @@ static int get_entries(zaFile *zf)
         uint16_t version2;
         uint16_t bitflag;
         uint16_t internal_attributes;
-        zaEntry *entry;
+        za_entry *entry;
 
         entry = &zf->entry[i];
 
@@ -331,10 +331,10 @@ static int get_entries(zaFile *zf)
     return 0;
 }
 
-zaFile *za_open(const char *filename, void (*error_handler) (const char *, ...))
+za_file *za_open(const char *filename, void (*error_handler) (const char *, ...))
 {
     struct stat statbuf;
-    zaFile *zf;
+    za_file *zf;
     char buffer[2];
     int open_flags;
 
@@ -361,12 +361,12 @@ zaFile *za_open(const char *filename, void (*error_handler) (const char *, ...))
         return NULL;
     }
 
-    zf = malloc(sizeof(zaFile));
+    zf = malloc(sizeof(za_file));
     if (zf == NULL)
     {
         if (error_handler != NULL)
         {
-            error_handler("could not allocate %ld bytes", sizeof(zaFile));
+            error_handler("could not allocate %ld bytes", sizeof(za_file));
         }
         return NULL;
     }
@@ -416,7 +416,7 @@ zaFile *za_open(const char *filename, void (*error_handler) (const char *, ...))
         return NULL;
     }
 
-    zf->hash_data = new_hashtable(1);
+    zf->hash_data = hashtable_new(1);
     if (get_entries(zf) != 0)
     {
         za_close(zf);
@@ -426,17 +426,17 @@ zaFile *za_open(const char *filename, void (*error_handler) (const char *, ...))
     return zf;
 }
 
-long za_get_num_entries(zaFile *zf)
+long za_get_num_entries(za_file *zf)
 {
     return zf->num_entries;
 }
 
-const char *za_get_filename(zaFile *zf)
+const char *za_get_filename(za_file *zf)
 {
     return zf->filename;
 }
 
-zaEntry *za_get_entry_by_index(zaFile *zf, long index)
+za_entry *za_get_entry_by_index(za_file *zf, long index)
 {
     if (index < 0 || index >= zf->num_entries)
     {
@@ -445,7 +445,7 @@ zaEntry *za_get_entry_by_index(zaFile *zf, long index)
     return &zf->entry[index];
 }
 
-zaEntry *za_get_entry_by_name(zaFile *zf, const char *name)
+za_entry *za_get_entry_by_name(za_file *zf, const char *name)
 {
     long index;
 
@@ -458,17 +458,17 @@ zaEntry *za_get_entry_by_name(zaFile *zf, const char *name)
     return &zf->entry[index];
 }
 
-long za_get_entry_size(zaEntry *entry)
+long za_get_entry_size(za_entry *entry)
 {
     return entry->uncompressed_size;
 }
 
-const char *za_get_entry_name(zaEntry *entry)
+const char *za_get_entry_name(za_entry *entry)
 {
     return entry->filename;
 }
 
-int za_read_entry(zaEntry *entry, char *out_buffer)
+int za_read_entry(za_entry *entry, char *out_buffer)
 {
     char buffer[30];
     uint32_t signature;
@@ -696,7 +696,7 @@ int za_read_entry(zaEntry *entry, char *out_buffer)
     return 0;
 }
 
-void za_close(zaFile *zf)
+void za_close(za_file *zf)
 {
     close(zf->fd);
     if (zf->entry != NULL)
@@ -718,7 +718,7 @@ void za_close(zaFile *zf)
     }
     if (zf->hash_data != NULL)
     {
-        delete_hashtable(zf->hash_data);
+        hashtable_delete(zf->hash_data);
     }
     free(zf);
 }

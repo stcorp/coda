@@ -57,6 +57,21 @@ Package=<4>
 
 ###############################################################################
 
+Project: "codadd"=".\codadd.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name codalib
+    End Project Dependency
+}}}
+
+###############################################################################
+
 Project: "codadump"=".\codadump.dsp" - Package Owner=<4>
 
 Package=<5>
@@ -72,7 +87,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "codafind"=".\codafind.dsp" - Package Owner=<4>
+Project: "codaeval"=".\codaeval.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -87,7 +102,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "codadd"=".\codadd.dsp" - Package Owner=<4>
+Project: "codafind"=".\codafind.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{

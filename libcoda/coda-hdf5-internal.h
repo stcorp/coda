@@ -42,19 +42,19 @@ typedef enum hdf5_type_tag_enum
 } hdf5_type_tag;
 
 /* Inheritance tree:
- * coda_Type
- * \ -- coda_hdf5Type
- *      \ -- coda_hdf5DataType
- *           \ -- coda_hdf5BasicDataType
- *            |-- coda_hdf5CompoundDataType
- *       |-- coda_hdf5Attribute
- *       |-- coda_hdf5AttributeRecord
- *       |-- coda_hdf5Object
- *           \ -- coda_hdf5Group
- *            |-- coda_hdf5DataSet
+ * coda_type
+ * \ -- coda_hdf5_type
+ *      \ -- coda_hdf5_data_type
+ *           \ -- coda_hdf5_basic_data_type
+ *            |-- coda_hdf5_compound_data_type
+ *       |-- coda_hdf5_attribute
+ *       |-- coda_hdf5_attribute_record
+ *       |-- coda_hdf5_object
+ *           \ -- coda_hdf5_group
+ *            |-- coda_hdf5_dataset
  */
 
-typedef struct coda_hdf5Type_struct
+typedef struct coda_hdf5_type_struct
 {
     int retain_count;
     coda_format format;
@@ -63,9 +63,9 @@ typedef struct coda_hdf5Type_struct
     char *description;
 
     hdf5_type_tag tag;
-} coda_hdf5Type;
+} coda_hdf5_type;
 
-typedef struct coda_hdf5Object_struct
+typedef struct coda_hdf5_object_struct
 {
     int retain_count;
     coda_format format;
@@ -76,9 +76,9 @@ typedef struct coda_hdf5Object_struct
     hdf5_type_tag tag;
     unsigned long fileno[2];
     unsigned long objno[2];
-} coda_hdf5Object;
+} coda_hdf5_object;
 
-typedef struct coda_hdf5DataType_struct
+typedef struct coda_hdf5_data_type_struct
 {
     int retain_count;
     coda_format format;
@@ -88,9 +88,9 @@ typedef struct coda_hdf5DataType_struct
 
     hdf5_type_tag tag;
     hid_t datatype_id;
-} coda_hdf5DataType;
+} coda_hdf5_data_type;
 
-typedef struct coda_hdf5BasicDataType_struct
+typedef struct coda_hdf5_basic_data_type_struct
 {
     int retain_count;
     coda_format format;
@@ -102,9 +102,9 @@ typedef struct coda_hdf5BasicDataType_struct
     hid_t datatype_id;
     coda_native_type read_type;
     int is_variable_string;
-} coda_hdf5BasicDataType;
+} coda_hdf5_basic_data_type;
 
-typedef struct coda_hdf5CompoundDataType_struct
+typedef struct coda_hdf5_compound_data_type_struct
 {
     int retain_count;
     coda_format format;
@@ -115,13 +115,13 @@ typedef struct coda_hdf5CompoundDataType_struct
     hdf5_type_tag tag;
     hid_t datatype_id;
     int num_members;
-    coda_hdf5DataType **member;
+    coda_hdf5_data_type **member;
     char **member_name;
     hid_t *member_type;
     hashtable *hash_data;
-} coda_hdf5CompoundDataType;
+} coda_hdf5_compound_data_type;
 
-typedef struct coda_hdf5Attribute_struct
+typedef struct coda_hdf5_attribute_struct
 {
     int retain_count;
     coda_format format;
@@ -135,10 +135,10 @@ typedef struct coda_hdf5Attribute_struct
     hsize_t num_elements;
     int ndims;
     hsize_t dims[CODA_MAX_NUM_DIMS];
-    coda_hdf5DataType *base_type;
-} coda_hdf5Attribute;
+    coda_hdf5_data_type *base_type;
+} coda_hdf5_attribute;
 
-typedef struct coda_hdf5AttributeRecord_struct
+typedef struct coda_hdf5_attribute_record_struct
 {
     int retain_count;
     coda_format format;
@@ -149,12 +149,12 @@ typedef struct coda_hdf5AttributeRecord_struct
     hdf5_type_tag tag;
     hid_t obj_id;       /* id of object to which the attributes are attached */
     int num_attributes;
-    coda_hdf5Attribute **attribute;
+    coda_hdf5_attribute **attribute;
     char **attribute_name;
     hashtable *hash_data;
-} coda_hdf5AttributeRecord;
+} coda_hdf5_attribute_record;
 
-typedef struct coda_hdf5Group_struct
+typedef struct coda_hdf5_group_struct
 {
     int retain_count;
     coda_format format;
@@ -167,13 +167,13 @@ typedef struct coda_hdf5Group_struct
     unsigned long objno[2];
     hid_t group_id;
     hsize_t num_objects;
-    struct coda_hdf5Object_struct **object;
+    struct coda_hdf5_object_struct **object;
     char **object_name;
     hashtable *hash_data;
-    struct coda_hdf5AttributeRecord_struct *attributes;
-} coda_hdf5Group;
+    struct coda_hdf5_attribute_record_struct *attributes;
+} coda_hdf5_group;
 
-typedef struct coda_hdf5DataSet_struct
+typedef struct coda_hdf5_dataset_struct
 {
     int retain_count;
     coda_format format;
@@ -189,27 +189,27 @@ typedef struct coda_hdf5DataSet_struct
     hsize_t num_elements;
     int ndims;
     hsize_t dims[CODA_MAX_NUM_DIMS];
-    coda_hdf5DataType *base_type;
-    struct coda_hdf5AttributeRecord_struct *attributes;
-} coda_hdf5DataSet;
+    coda_hdf5_data_type *base_type;
+    struct coda_hdf5_attribute_record_struct *attributes;
+} coda_hdf5_dataset;
 
-coda_hdf5AttributeRecord *coda_hdf5_empty_attribute_record();
+coda_hdf5_attribute_record *coda_hdf5_empty_attribute_record();
 
-struct coda_hdf5ProductFile_struct
+struct coda_hdf5_product_struct
 {
     /* general fields (shared between all supported product types) */
     char *filename;
     int64_t file_size;
     coda_format format;
-    coda_DynamicType *root_type;
-    coda_ProductDefinition *product_definition;
+    coda_dynamic_type *root_type;
+    coda_product_definition *product_definition;
     long *product_variable_size;
     int64_t **product_variable;
 
     hid_t file_id;
     hsize_t num_objects;
-    struct coda_hdf5Object_struct **object;
+    struct coda_hdf5_object_struct **object;
 };
-typedef struct coda_hdf5ProductFile_struct coda_hdf5ProductFile;
+typedef struct coda_hdf5_product_struct coda_hdf5_product;
 
 #endif

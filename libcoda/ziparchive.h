@@ -21,20 +21,20 @@
 #ifndef ZIPARCHIVE_H
 #define ZIPARCHIVE_H
 
-typedef struct zaEntry_struct zaEntry;
-typedef struct zaFile_struct zaFile;
+typedef struct za_entry_struct za_entry;
+typedef struct za_file_struct za_file;
 
-zaFile *za_open(const char *filename, void (*error_handler) (const char *, ...));
+za_file *za_open(const char *filename, void (*error_handler) (const char *, ...));
 
-const char *za_get_filename(zaFile *zf);
-long za_get_num_entries(zaFile *zf);
-zaEntry *za_get_entry_by_index(zaFile *zf, long index);
-zaEntry *za_get_entry_by_name(zaFile *zf, const char *name);
+const char *za_get_filename(za_file *zf);
+long za_get_num_entries(za_file *zf);
+za_entry *za_get_entry_by_index(za_file *zf, long index);
+za_entry *za_get_entry_by_name(za_file *zf, const char *name);
 
-long za_get_entry_size(zaEntry *entry);
-const char *za_get_entry_name(zaEntry *entry);
-int za_read_entry(zaEntry *entry, char *buffer);
+long za_get_entry_size(za_entry *entry);
+const char *za_get_entry_name(za_entry *entry);
+int za_read_entry(za_entry *entry, char *buffer);
 
-void za_close(zaFile *zf);
+void za_close(za_file *zf);
 
 #endif

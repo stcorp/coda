@@ -22,21 +22,20 @@
 #define CODA_DEFINITION_H
 
 #include "coda-internal.h"
-#include "coda-expr.h"
 
-struct coda_ProductVariable_struct
+struct coda_product_variable_struct
 {
     char *name;
-    coda_Expr *size_expr;
-    coda_Expr *init_expr;
+    coda_expression *size_expr;
+    coda_expression *init_expr;
 };
-typedef struct coda_ProductVariable_struct coda_ProductVariable;
+typedef struct coda_product_variable_struct coda_product_variable;
 
-struct coda_DetectionRuleEntry_struct
+struct coda_detection_rule_entry_struct
 {
     /* if 'use_filename' is set, it is a filename match and both 'offset' and 'value/length' should be provided */
     /* if only 'offset' is provided, it is a file size test (in bytes); ascii/binary only */
-    /* if only 'path' is provided, it is existence test; xml only */
+    /* if only 'path' is provided, it is an existence test; xml only */
     /* if only 'value/length' is provided, it is a string match on the 4096 detection block; ascii only */
     /* if both 'offset' and 'value/length' are provided, it is a string match on the detection block; ascii/binary only */
     /* if both 'path' and 'value/length' are provided, it is a string match on the element pointed to by path; xml only */
@@ -47,18 +46,18 @@ struct coda_DetectionRuleEntry_struct
     char *value;        /* NULL if not set */
     long value_length;  /* 0 if not set */
 };
-typedef struct coda_DetectionRuleEntry_struct coda_DetectionRuleEntry;
+typedef struct coda_detection_rule_entry_struct coda_detection_rule_entry;
 
-struct coda_DetectionRule_struct
+struct coda_detection_rule_struct
 {
     int num_entries;
-    coda_DetectionRuleEntry **entry;
+    coda_detection_rule_entry **entry;
 
-    struct coda_ProductDefinition_struct *product_definition;
+    struct coda_product_definition_struct *product_definition;
 };
-typedef struct coda_DetectionRule_struct coda_DetectionRule;
+typedef struct coda_detection_rule_struct coda_detection_rule;
 
-struct coda_ProductDefinition_struct
+struct coda_product_definition_struct
 {
     coda_format format;
     int version;
@@ -66,31 +65,31 @@ struct coda_ProductDefinition_struct
     char *description;
 
     int num_detection_rules;
-    coda_DetectionRule **detection_rule;
+    coda_detection_rule **detection_rule;
 
-    coda_Type *root_type;
+    coda_type *root_type;
 
     int num_product_variables;
-    coda_ProductVariable **product_variable;
+    coda_product_variable **product_variable;
     hashtable *hash_data;
 
-    struct coda_ProductType_struct *product_type;
+    struct coda_product_type_struct *product_type;
 };
 
-struct coda_ProductType_struct
+struct coda_product_type_struct
 {
     char *name;
     char *description;
 
     int num_product_definitions;
-    coda_ProductDefinition **product_definition;
+    coda_product_definition **product_definition;
     hashtable *hash_data;
 
-    struct coda_ProductClass_struct *product_class;
+    struct coda_product_class_struct *product_class;
 };
-typedef struct coda_ProductType_struct coda_ProductType;
+typedef struct coda_product_type_struct coda_product_type;
 
-struct coda_ProductClass_struct
+struct coda_product_class_struct
 {
     char *name;
     char *description;
@@ -99,84 +98,84 @@ struct coda_ProductClass_struct
     int revision;
 
     int num_named_types;
-    coda_Type **named_type;
+    coda_type **named_type;
     hashtable *named_type_hash_data;
 
     int num_product_types;
-    coda_ProductType **product_type;
+    coda_product_type **product_type;
     hashtable *product_type_hash_data;
 };
-typedef struct coda_ProductClass_struct coda_ProductClass;
+typedef struct coda_product_class_struct coda_product_class;
 
-struct coda_DataDictionary_struct
+struct coda_data_dictionary_struct
 {
     int num_product_classes;
-    coda_ProductClass **product_class;
+    coda_product_class **product_class;
     hashtable *hash_data;
 
     void *ascbin_detection_tree;
     void *xml_detection_tree;
 };
-typedef struct coda_DataDictionary_struct coda_DataDictionary;
+typedef struct coda_data_dictionary_struct coda_data_dictionary;
 
-extern coda_DataDictionary *coda_data_dictionary;
+extern coda_data_dictionary *coda_global_data_dictionary;
 
-int coda_type_set_name(coda_Type *type, const char *name);
-int coda_type_set_description(coda_Type *type, const char *description);
+int coda_type_set_name(coda_type *type, const char *name);
+int coda_type_set_description(coda_type *type, const char *description);
 
-coda_DetectionRuleEntry *coda_detection_rule_entry_with_offset_new(int64_t offset, int use_filename);
-coda_DetectionRuleEntry *coda_detection_rule_entry_with_path_new(const char *path);
-coda_DetectionRuleEntry *coda_detection_rule_entry_with_size_new(int64_t size);
-int coda_detection_rule_entry_set_value(coda_DetectionRuleEntry *match_rule, const char *value, long value_length);
-int coda_detection_rule_entry_validate(coda_DetectionRuleEntry *match_rule);
-void coda_detection_rule_entry_delete(coda_DetectionRuleEntry *entry);
+coda_detection_rule_entry *coda_detection_rule_entry_with_offset_new(int64_t offset, int use_filename);
+coda_detection_rule_entry *coda_detection_rule_entry_with_path_new(const char *path);
+coda_detection_rule_entry *coda_detection_rule_entry_with_size_new(int64_t size);
+int coda_detection_rule_entry_set_value(coda_detection_rule_entry *match_rule, const char *value, long value_length);
+int coda_detection_rule_entry_validate(coda_detection_rule_entry *match_rule);
+void coda_detection_rule_entry_delete(coda_detection_rule_entry *entry);
 
-coda_DetectionRule *coda_detection_rule_new(void);
-int coda_detection_rule_add_entry(coda_DetectionRule *detection_rule, coda_DetectionRuleEntry *entry);
-void coda_detection_rule_delete(coda_DetectionRule *detection_rule);
+coda_detection_rule *coda_detection_rule_new(void);
+int coda_detection_rule_add_entry(coda_detection_rule *detection_rule, coda_detection_rule_entry *entry);
+void coda_detection_rule_delete(coda_detection_rule *detection_rule);
 
-coda_ProductVariable *coda_product_variable_new(const char *name);
-int coda_product_variable_set_size_expression(coda_ProductVariable *product_variable, coda_Expr *size_expr);
-int coda_product_variable_set_init_expression(coda_ProductVariable *product_variable, coda_Expr *init_expr);
-int coda_product_variable_validate(coda_ProductVariable *product_variable);
-void coda_product_variable_delete(coda_ProductVariable *product_variable);
+coda_product_variable *coda_product_variable_new(const char *name);
+int coda_product_variable_set_size_expression(coda_product_variable *product_variable, coda_expression *size_expr);
+int coda_product_variable_set_init_expression(coda_product_variable *product_variable, coda_expression *init_expr);
+int coda_product_variable_validate(coda_product_variable *product_variable);
+void coda_product_variable_delete(coda_product_variable *product_variable);
 
-coda_ProductDefinition *coda_product_definition_new(const char *name, coda_format format, int version);
-int coda_product_definition_set_description(coda_ProductDefinition *product_definition, const char *description);
-int coda_product_definition_add_detection_rule(coda_ProductDefinition *product_definition,
-                                               coda_DetectionRule *detection_rule);
-int coda_product_definition_set_root_type(coda_ProductDefinition *product_definition, coda_Type *root_type);
-int coda_product_definition_add_product_variable(coda_ProductDefinition *product_definition,
-                                                 coda_ProductVariable *product_variable);
-int coda_product_definition_validate(coda_ProductDefinition *product_definition);
-void coda_product_definition_delete(coda_ProductDefinition *product_definition);
+coda_product_definition *coda_product_definition_new(const char *name, coda_format format, int version);
+int coda_product_definition_set_description(coda_product_definition *product_definition, const char *description);
+int coda_product_definition_add_detection_rule(coda_product_definition *product_definition,
+                                               coda_detection_rule *detection_rule);
+int coda_product_definition_set_root_type(coda_product_definition *product_definition, coda_type *root_type);
+int coda_product_definition_add_product_variable(coda_product_definition *product_definition,
+                                                 coda_product_variable *product_variable);
+int coda_product_definition_validate(coda_product_definition *product_definition);
+void coda_product_definition_delete(coda_product_definition *product_definition);
 
-coda_ProductType *coda_product_type_new(const char *name);
-int coda_product_type_set_description(coda_ProductType *product_type, const char *description);
-int coda_product_type_add_product_definition(coda_ProductType *product_type,
-                                             coda_ProductDefinition *product_definition);
-coda_ProductDefinition *coda_product_type_get_product_definition_by_version(coda_ProductType *product_type,
-                                                                            int version);
-void coda_product_type_delete(coda_ProductType *product_type);
+coda_product_type *coda_product_type_new(const char *name);
+int coda_product_type_set_description(coda_product_type *product_type, const char *description);
+int coda_product_type_add_product_definition(coda_product_type *product_type,
+                                             coda_product_definition *product_definition);
+coda_product_definition *coda_product_type_get_product_definition_by_version(coda_product_type *product_type,
+                                                                             int version);
+void coda_product_type_delete(coda_product_type *product_type);
 
-coda_ProductClass *coda_product_class_new(const char *name);
-int coda_product_class_set_description(coda_ProductClass *product_class, const char *description);
-int coda_product_class_set_definition_file(coda_ProductClass *product_class, const char *filepath);
-int coda_product_class_set_revision(coda_ProductClass *product_class, int revision);
-int coda_product_class_add_named_type(coda_ProductClass *product_class, coda_Type *type);
-int coda_product_class_add_product_type(coda_ProductClass *product_class, coda_ProductType *product_type);
-coda_Type *coda_product_class_get_named_type(const coda_ProductClass *product_class, const char *name);
-int coda_product_class_has_named_type(const coda_ProductClass *product_class, const char *name);
-coda_ProductType *coda_product_class_get_product_type(const coda_ProductClass *product_class, const char *name);
-int coda_product_class_has_product_type(const coda_ProductClass *product_class, const char *name);
-int coda_product_class_get_revision(const coda_ProductClass *product_class);
-void coda_product_class_delete(coda_ProductClass *product_class);
+coda_product_class *coda_product_class_new(const char *name);
+int coda_product_class_set_description(coda_product_class *product_class, const char *description);
+int coda_product_class_set_definition_file(coda_product_class *product_class, const char *filepath);
+int coda_product_class_set_revision(coda_product_class *product_class, int revision);
+int coda_product_class_add_named_type(coda_product_class *product_class, coda_type *type);
+int coda_product_class_add_product_type(coda_product_class *product_class, coda_product_type *product_type);
+coda_type *coda_product_class_get_named_type(const coda_product_class *product_class, const char *name);
+int coda_product_class_has_named_type(const coda_product_class *product_class, const char *name);
+coda_product_type *coda_product_class_get_product_type(const coda_product_class *product_class, const char *name);
+int coda_product_class_has_product_type(const coda_product_class *product_class, const char *name);
+int coda_product_class_get_revision(const coda_product_class *product_class);
+void coda_product_class_delete(coda_product_class *product_class);
 
 int coda_data_dictionary_init(void);
-int coda_data_dictionary_add_product_class(coda_ProductClass *product_class);
-coda_ProductClass *coda_data_dictionary_get_product_class(const char *name);
+int coda_data_dictionary_add_product_class(coda_product_class *product_class);
+coda_product_class *coda_data_dictionary_get_product_class(const char *name);
 int coda_data_dictionary_has_product_class(const char *name);
-int coda_data_dictionary_remove_product_class(coda_ProductClass *product_class);
+int coda_data_dictionary_remove_product_class(coda_product_class *product_class);
 void coda_data_dictionary_done(void);
 
 

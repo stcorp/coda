@@ -32,17 +32,16 @@
 /*
     handle opaque pointer output arguments, i.e. arguments of the
     general form type**, where type* is a pointer to an opaque type.
-    (e.g. coda_ProductFile** in coda_open())
+    (e.g. coda_product** in coda_open())
 */
-%typemap(in, numinputs=0) opaque_pointer **OUTPUT ($*1_type tmp = NULL)
+%typemap(in, numinputs = 0) opaque_pointer **OUTPUT ($*1_type tmp = NULL)
 {
     $1 = &tmp;
 }
 
 %typemap(argout, fragment="t_output_helper") opaque_pointer **OUTPUT
 {
-    $result = t_output_helper($result,
-                              SWIG_NewPointerObj(*$1, $*1_descriptor, 0));
+    $result = t_output_helper($result, SWIG_NewPointerObj(*$1, $*1_descriptor, 0));
 }
 
 
@@ -56,12 +55,12 @@
     if (PyString_Check($input))
     {
         $1 = 1;
-        $2 = (char**) malloc($1*sizeof(char*));
+        $2 = (char **)malloc($1 * sizeof(char *));
         if($2 == NULL)
         {
             return PyErr_NoMemory();
         }
-        
+
         $2[0] = PyString_AsString($input);
     }
     else if (PySequence_Check($input))
@@ -76,16 +75,16 @@
         */
         if ($1 > 0)
         {
-            $2 = (char**) malloc($1*sizeof(char*));
+            $2 = (char **)malloc($1 * sizeof(char *));
             if ($2 == NULL)
             {
                 return PyErr_NoMemory();
             }
         }
-        
+
         for (i = 0; i < $1; i++)
         {
-            PyObject *o = PySequence_GetItem($input,i);
+            PyObject *o = PySequence_GetItem($input, i);
             if (PyString_Check(o))
             {
                 $2[i] = PyString_AsString(o);
@@ -93,25 +92,24 @@
             else
             {
                 $cleanup
-                PyErr_SetString(PyExc_ValueError,"expected a sequence of strings");
+                PyErr_SetString(PyExc_ValueError, "expected a sequence of strings");
                 return NULL;
             }
         }
     }
     else
     {
-        PyErr_SetString(PyExc_TypeError,"expected either a string or a sequence of strings");
+        PyErr_SetString(PyExc_TypeError, "expected either a string or a sequence of strings");
         return NULL;
     }
 }
 
 %typemap(freearg) (int COUNT, const char **INPUT_ARRAY)
 {
-    /*
-        Note: this assumes calling free() on a NULL-pointer is
-        not considered an error.
-    */
-    free((char*) $2);
+    if ($2 != NULL)
+    {
+        free($2);
+    }
 }
 
 
@@ -145,7 +143,7 @@
             return PyErr_NoMemory();
         }
 
-        $2[0] = (int) PyInt_AsLong($input);
+        $2[0] = (int)PyInt_AsLong($input);
     }
     else if (PySequence_Check($input))
     {
@@ -153,10 +151,7 @@
 
         $1 = PySequence_Size($input);
 
-        /*
-            malloc(0) may not work as expected on every
-            platform.
-        */
+        /* malloc(0) may not work as expected on every platform. */
         if ($1 > 0)
         {
             $2 = (long *)malloc($1 * sizeof(long));
@@ -165,7 +160,7 @@
                 return PyErr_NoMemory();
             }
         }
-        
+
         for (i = 0; i < $1; i++)
         {
             PyObject *o = PySequence_GetItem($input,i);
@@ -176,14 +171,14 @@
             else
             {
                 $cleanup
-                PyErr_SetString(PyExc_ValueError,"expected a sequence of integers");
+                PyErr_SetString(PyExc_ValueError, "expected a sequence of integers");
                 return NULL;
             }
         }
     }
     else
     {
-        PyErr_SetString(PyExc_TypeError,"expected either a plain integer or a sequence of plain integers");
+        PyErr_SetString(PyExc_TypeError, "expected either a plain integer or a sequence of plain integers");
         return NULL;
     }
 }
@@ -191,11 +186,10 @@
 %typemap(freearg) (int COUNT, const long INPUT_ARRAY[]),
                   (int COUNT, const long *INPUT_ARRAY )
 {
-    /*
-        Note: this assumes calling free() on a NULL-pointer is
-        not considered an error.
-    */
-    free((long *)$2);
+    if ($2 != NULL)
+    {
+        free($2);
+    }
 }
 
 
@@ -203,28 +197,28 @@
     typemaps to convert a C array of int's and a length to a
     Python list of plain integers.
 */
-%typemap(in,numinputs=0) (int *COUNT, long OUTPUT_ARRAY[]) (int tmp_count, long tmp_array[CODA_MAX_NUM_DIMS]),
-                         (int *COUNT, long *OUTPUT_ARRAY ) (int tmp_count, long tmp_array[CODA_MAX_NUM_DIMS])
+%typemap(in, numinputs = 0) (int *COUNT, long OUTPUT_ARRAY[]) (int tmp_count, long tmp_array[CODA_MAX_NUM_DIMS]),
+                            (int *COUNT, long *OUTPUT_ARRAY ) (int tmp_count, long tmp_array[CODA_MAX_NUM_DIMS])
 {
     $1 = &tmp_count;
     $2 = tmp_array;
 }
 
-%typemap(argout,fragment="t_output_helper") (int *COUNT, long OUTPUT_ARRAY[]),
-                                            (int *COUNT, long *OUTPUT_ARRAY )
+%typemap(argout, fragment = "t_output_helper") (int *COUNT, long OUTPUT_ARRAY[]),
+                                               (int *COUNT, long *OUTPUT_ARRAY )
 {
     long i;
-    
+
     PyObject *tmp = PyList_New(*$1);
     if (tmp == NULL)
     {
         return PyErr_NoMemory();
     }
-    
+
     for (i = 0; i < (*$1); i++)
     {
-        PyObject *o = PyInt_FromLong((long) $2[i]);
-        PyList_SET_ITEM(tmp,i,o);
+        PyObject *o = PyInt_FromLong((long)$2[i]);
+        PyList_SET_ITEM(tmp, i, o);
     }
     $result = t_output_helper($result, tmp);
 }
@@ -234,13 +228,13 @@
     'generic' typemap to convert output POSIX scalar arguments
     (e.g. int8_t *) to corresponding Python scalars.
 */
-%define POSIX_SCALAR_OUTPUT_HELPER(__posix_type,__Python_from_method)
-%typemap(in,numinputs=0) __posix_type *OUTPUT ($*1_ltype tmp)
+%define POSIX_SCALAR_OUTPUT_HELPER(__posix_type, __Python_from_method)
+%typemap(in, numinputs = 0) __posix_type *OUTPUT ($*1_ltype tmp)
 {
     $1 = &tmp;
 }
 
-%typemap(argout,fragment="t_output_helper") __posix_type *OUTPUT
+%typemap(argout, fragment = "t_output_helper") __posix_type *OUTPUT
 {
     $result = t_output_helper($result, __Python_from_method(*$1));
 }
@@ -251,7 +245,7 @@
     handle output "const char **" arguments. This snippet was
     taken from the SWIG files used by the Subversion project.
 */
-%typemap(in, numinputs=0) const char **OUTPUT (const char *tmp = NULL)
+%typemap(in, numinputs = 0) const char **OUTPUT (const char *tmp = NULL)
 {
     $1 = (char **)&tmp;
 }
@@ -282,13 +276,13 @@
     type 'long'. this wrapper is able to return strings with
     \0 characters (e.g. binary data).
 */
-%typemap(in, numinputs=0) (const char **BINARY_OUTPUT, long *LENGTH) (const char *tmp = NULL, long tmp_length)
+%typemap(in, numinputs = 0) (const char **BINARY_OUTPUT, long *LENGTH) (const char *tmp = NULL, long tmp_length)
 {
     $1 = (char **)&tmp;
     $2 = &tmp_length;
 }
 
-%typemap(argout,fragment="t_output_helper") (const char **BINARY_OUTPUT, long *LENGTH)
+%typemap(argout, fragment = "t_output_helper") (const char **BINARY_OUTPUT, long *LENGTH)
 {
     PyObject *tmp_result;
 
@@ -299,17 +293,7 @@
     }
     else
     {
-        /*
-            throw an exception if tmp_length > INT_MAX, because PyString_FromStringAndSize() does
-            not support larger string sizes.
-        */
-        if (*$2 > INT_MAX)
-        {
-            PyErr_SetString(PyExc_ValueError,"the length of the fixed value should not exceed the maximum size of an int.");
-            return NULL;
-        }
-
-        tmp_result = PyString_FromStringAndSize(*$1, (int) (*$2));
+        tmp_result = PyString_FromStringAndSize(*$1, *$2);
         if (tmp_result == NULL)
         {
             return NULL;
@@ -328,10 +312,10 @@
     'generic' helper function to read C arrays of a specific type
     (e.g. int8) into a numpy object of equivalent type.
 */
-%define NUMPY_OUTPUT_HELPER(__helper_name,__function_name,__native_type,__numpy_type)
+%define NUMPY_OUTPUT_HELPER(__helper_name, __function_name, __native_type, __numpy_type)
 %inline
 %{
-    PyObject * ## __helper_name ## (const coda_Cursor *cursor)
+    PyObject * ## __helper_name ## (const coda_cursor *cursor)
     {
         int tmp_result, tmp_num_dims;
         npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
@@ -339,7 +323,7 @@
         PyObject *tmp;
         int i;
 
-        tmp_result = coda_cursor_get_array_dim(cursor,&tmp_num_dims,tmp_dims_long);
+        tmp_result = coda_cursor_get_array_dim(cursor, &tmp_num_dims, tmp_dims_long);
         if (tmp_result != 0)
         {
             return PyErr_Format(codacError, #__function_name"(): %s", coda_errno_to_string(coda_errno));
@@ -350,28 +334,25 @@
             tmp_dims_int[i] = tmp_dims_long[i];
         }
 
-        /*
-            convert a rank-0 array to a rank-1 array of size 1.
-        */
-        if (tmp_num_dims==0)
+        /* convert a rank-0 array to a rank-1 array of size 1. */
+        if (tmp_num_dims == 0)
         {
             tmp_dims_int[tmp_num_dims++] = 1;
         }
 
-        tmp = PyArray_SimpleNew(tmp_num_dims,tmp_dims_int,__numpy_type);
-        if (tmp==NULL)
+        tmp = PyArray_SimpleNew(tmp_num_dims, tmp_dims_int, __numpy_type);
+        if (tmp == NULL)
         {
             return PyErr_NoMemory();
         }
- 
+
         tmp_result = __function_name(cursor, (__native_type*)PyArray_DATA(tmp), coda_array_ordering_c);
-    
-        if (tmp_result<0)
+        if (tmp_result < 0)
         {
             Py_DECREF(tmp);
             return PyErr_Format(codacError, #__function_name"(): %s", coda_errno_to_string(coda_errno));
         }
-        
+
         return tmp;
     }        
 %}
@@ -383,10 +364,10 @@
     'generic' helper function to read C arrays of special types
     (e.g. complex) into two numpy objects ('split' representation).
 */
-%define SPLIT_NUMPY_OUTPUT_HELPER(__helper_name,__function_name,__native_type,__numpy_type)
+%define SPLIT_NUMPY_OUTPUT_HELPER(__helper_name, __function_name, __native_type, __numpy_type)
 %inline
 %{
-    PyObject * ## __helper_name ## (const coda_Cursor *cursor)
+    PyObject * ## __helper_name ## (const coda_cursor *cursor)
     {
         int tmp_result, tmp_num_dims;
         npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
@@ -395,7 +376,7 @@
         PyObject *result_list;
         int i;
 
-        tmp_result = coda_cursor_get_array_dim(cursor,&tmp_num_dims,tmp_dims_long);
+        tmp_result = coda_cursor_get_array_dim(cursor, &tmp_num_dims, tmp_dims_long);
         if (tmp_result != 0)
         {
             return PyErr_Format(codacError, #__function_name"(): %s", coda_errno_to_string(coda_errno));
@@ -406,38 +387,35 @@
             tmp_dims_int[i] = tmp_dims_long[i];
         }
 
-        /*
-            convert a rank-0 array to a rank-1 array of size 1.
-        */
+        /* convert a rank-0 array to a rank-1 array of size 1 */
         if (tmp_num_dims==0)
         {
             tmp_dims_int[tmp_num_dims++] = 1;
         }
 
-        tmp[0] = PyArray_SimpleNew(tmp_num_dims,tmp_dims_int,__numpy_type);
-        if (tmp==NULL)
-        {
-            return PyErr_NoMemory();
-        }
- 
-        tmp[1] = PyArray_SimpleNew(tmp_num_dims,tmp_dims_int,__numpy_type);
-        if (tmp==NULL)
+        tmp[0] = PyArray_SimpleNew(tmp_num_dims, tmp_dims_int, __numpy_type);
+        if (tmp == NULL)
         {
             return PyErr_NoMemory();
         }
 
-        tmp_result = __function_name(cursor,(__native_type*)PyArray_DATA(tmp[0]), (__native_type*)PyArray_DATA(tmp[1]),
-                                     coda_array_ordering_c);
-    
-        if (tmp_result<0)
+        tmp[1] = PyArray_SimpleNew(tmp_num_dims, tmp_dims_int, __numpy_type);
+        if (tmp == NULL)
+        {
+            return PyErr_NoMemory();
+        }
+
+        tmp_result = __function_name(cursor, (__native_type *)PyArray_DATA(tmp[0]),
+                                     (__native_type *)PyArray_DATA(tmp[1]), coda_array_ordering_c);
+        if (tmp_result < 0)
         {
             Py_DECREF(tmp[0]);
             Py_DECREF(tmp[1]);
             return PyErr_Format(codacError, #__function_name"(): %s", coda_errno_to_string(coda_errno));
         }
-        
+
         result_list = PyList_New(2);
-        if (result_list==NULL)        
+        if (result_list == NULL)        
         {
             Py_DECREF(tmp[0]);
             Py_DECREF(tmp[1]);
@@ -446,7 +424,7 @@
 
         PyList_SET_ITEM(result_list, 0, tmp[0]);
         PyList_SET_ITEM(result_list, 1, tmp[1]);
-        
+
         return result_list;
     }        
 %}
@@ -457,29 +435,28 @@
     'generic' helper function to read a pair of doubles as a 1x2 numpy
     object (e.g. complex).
 */
-%define DOUBLE_PAIR_NUMPY_OUTPUT_HELPER(__helper_name,__function_name)
+%define DOUBLE_PAIR_NUMPY_OUTPUT_HELPER(__helper_name, __function_name)
 %inline
 %{
-    PyObject * ## __helper_name ## (const coda_Cursor *cursor)
+    PyObject * ## __helper_name ## (const coda_cursor *cursor)
     {
         npy_intp tmp_dims[1] = {2};
         int tmp_result;
         PyObject *tmp;
-    
-        tmp = PyArray_SimpleNew(1,tmp_dims,NPY_FLOAT64);
-        if (tmp==NULL)
+
+        tmp = PyArray_SimpleNew(1, tmp_dims, NPY_FLOAT64);
+        if (tmp == NULL)
         {
             return PyErr_NoMemory();
         }
 
-        tmp_result = __function_name(cursor, (double*)PyArray_DATA(tmp));
-    
-        if (tmp_result<0)
+        tmp_result = __function_name(cursor, (double *)PyArray_DATA(tmp));
+        if (tmp_result < 0)
         {
             Py_DECREF(tmp);
             return PyErr_Format(codacError, #__function_name"(): %s", coda_errno_to_string(coda_errno));
         }
-        
+
         return tmp;
     }        
 %}
@@ -492,10 +469,10 @@
     complex), which will be returned as a numpy with an added
     dimension of size 2.
 */
-%define DOUBLE_PAIR_ARRAY_NUMPY_OUTPUT_HELPER(__helper_name,__function_name)
+%define DOUBLE_PAIR_ARRAY_NUMPY_OUTPUT_HELPER(__helper_name, __function_name)
 %inline
 %{
-    PyObject * ## __helper_name ## (const coda_Cursor *cursor)
+    PyObject * ## __helper_name ## (const coda_cursor *cursor)
     {
         int tmp_result, tmp_num_dims;
         npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS+1];
@@ -503,7 +480,7 @@
         PyObject *tmp;
         int i;
 
-        tmp_result = coda_cursor_get_array_dim(cursor,&tmp_num_dims,tmp_dims_long);
+        tmp_result = coda_cursor_get_array_dim(cursor, &tmp_num_dims, tmp_dims_long);
         if (tmp_result != 0)
         {
             return PyErr_Format(codacError, #__function_name"(): %s", coda_errno_to_string(coda_errno));
@@ -514,29 +491,26 @@
             tmp_dims_int[i] = tmp_dims_long[i];
         }
 
-        /*
-            convert a rank-0 array to a rank-1 array of size 1.
-        */
-        if (tmp_num_dims==0)
+        /* convert a rank-0 array to a rank-1 array of size 1 */
+        if (tmp_num_dims == 0)
         {
             tmp_dims_int[tmp_num_dims++] = 1;
         }
         tmp_dims_int[tmp_num_dims++] = 2;
 
-        tmp = PyArray_SimpleNew(tmp_num_dims,tmp_dims_int,NPY_FLOAT64);
-        if (tmp==NULL)
+        tmp = PyArray_SimpleNew(tmp_num_dims, tmp_dims_int, NPY_FLOAT64);
+        if (tmp == NULL)
         {
             return PyErr_NoMemory();
         }
 
-        tmp_result = __function_name(cursor, (double*)PyArray_DATA(tmp), coda_array_ordering_c);
-    
-        if (tmp_result<0)
+        tmp_result = __function_name(cursor, (double *)PyArray_DATA(tmp), coda_array_ordering_c);
+        if (tmp_result < 0)
         {
             Py_DECREF(tmp);
             return PyErr_Format(codacError, #__function_name"(): %s", coda_errno_to_string(coda_errno));
         }
-        
+
         return (PyObject*) tmp;
     }        
 %}

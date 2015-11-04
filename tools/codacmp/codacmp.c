@@ -28,7 +28,6 @@
 #include <string.h>
 
 #include "coda.h"
-#include "coda-path.h"
 
 const char *pre[] = { "< ", "> " };
 
@@ -108,36 +107,7 @@ static void print_escaped(const char *data, long length)
     }
 }
 
-static void set_definition_path(const char *argv0)
-{
-    char *location;
-
-    if (coda_path_for_program(argv0, &location) != 0)
-    {
-        printf("  ERROR: %s\n", coda_errno_to_string(coda_errno));
-        exit(1);
-    }
-    if (location != NULL)
-    {
-#ifdef WIN32
-        const char *definition_path = "../definitions";
-#else
-        const char *definition_path = "../share/" PACKAGE "/definitions";
-#endif
-        char *path;
-
-        if (coda_path_from_path(location, 1, definition_path, &path) != 0)
-        {
-            printf("  ERROR: %s\n", coda_errno_to_string(coda_errno));
-            exit(1);
-        }
-        coda_path_free(location);
-        coda_set_definition_path(path);
-        coda_path_free(path);
-    }
-}
-
-static int print_cursor_position(const coda_Cursor *cursor)
+static int print_cursor_position(const coda_cursor *cursor)
 {
     int depth;
 
@@ -148,7 +118,7 @@ static int print_cursor_position(const coda_Cursor *cursor)
     if (depth > 0)
     {
         coda_type_class type_class;
-        coda_Cursor parent_cursor;
+        coda_cursor parent_cursor;
         long index;
 
         /* print parent */
@@ -217,7 +187,7 @@ static int print_cursor_position(const coda_Cursor *cursor)
                 case coda_record_class:
                     {
                         const char *name;
-                        coda_Type *type;
+                        coda_type *type;
 
                         if (coda_cursor_get_type(&parent_cursor, &type) != 0)
                         {
@@ -244,7 +214,7 @@ static int print_cursor_position(const coda_Cursor *cursor)
     return 0;
 }
 
-static void print_error_with_cursor(coda_Cursor *cursor, int file_id, int err)
+static void print_error_with_cursor(coda_cursor *cursor, int file_id, int err)
 {
     printf("%sERROR: %s at ", pre[file_id - 1], coda_errno_to_string(err));
     if (print_cursor_position(cursor) != 0)
@@ -254,7 +224,7 @@ static void print_error_with_cursor(coda_Cursor *cursor, int file_id, int err)
     printf("\n");
 }
 
-static int compare_data(coda_Cursor *cursor1, coda_Cursor *cursor2)
+static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
 {
     coda_type_class type_class1;
     coda_type_class type_class2;
@@ -352,8 +322,8 @@ static int compare_data(coda_Cursor *cursor1, coda_Cursor *cursor2)
             break;
         case coda_record_class:
             {
-                coda_Type *record_type1;
-                coda_Type *record_type2;
+                coda_type *record_type1;
+                coda_type *record_type2;
                 int first_definition_mismatch;
                 long num_elements1;
                 long num_elements2;
@@ -447,7 +417,7 @@ static int compare_data(coda_Cursor *cursor1, coda_Cursor *cursor2)
                 /* perform content and availability comparison */
                 if (num_elements1 > 0)
                 {
-                    coda_Cursor record_cursor1;
+                    coda_cursor record_cursor1;
 
                     record_cursor1 = *cursor1;
                     if (coda_cursor_goto_first_record_field(cursor1) != 0)
@@ -943,10 +913,10 @@ static int compare_data(coda_Cursor *cursor1, coda_Cursor *cursor2)
 
 static int compare_files(char *filename1, char *filename2)
 {
-    coda_ProductFile *pf1;
-    coda_ProductFile *pf2;
-    coda_Cursor cursor1;
-    coda_Cursor cursor2;
+    coda_product *pf1;
+    coda_product *pf2;
+    coda_cursor cursor1;
+    coda_cursor cursor2;
     int result;
 
     result = coda_open(filename1, &pf1);
@@ -1003,6 +973,11 @@ static int compare_files(char *filename1, char *filename2)
 
 int main(int argc, char **argv)
 {
+#ifdef WIN32
+    const char *definition_path = "../definitions";
+#else
+    const char *definition_path = "../share/" PACKAGE "/definitions";
+#endif
     int perform_conversions;
     int result;
     int i;
@@ -1053,9 +1028,10 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    if (getenv("CODA_DEFINITION") == NULL)
+    if (coda_set_definition_path_conditional(argv[0], NULL, definition_path) != 0)
     {
-        set_definition_path(argv[0]);
+        fprintf(stderr, "ERROR: %s\n", coda_errno_to_string(coda_errno));
+        exit(1);
     }
 
     if (coda_init() != 0)

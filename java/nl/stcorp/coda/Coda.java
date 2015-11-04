@@ -431,6 +431,25 @@ public class Coda
 
 
     /**
+     * Set the location of CODA product definition file(s) based on the location of another file.
+     * 
+     * @param file
+     *            Filename of the file to search for
+     * @param searchpath
+     *            Search path where to look for the file
+     * @param relativeLocation
+     *            Filepath relative to the directory from searchpath where file was found that should be used to
+     *            determine the CODA definition path
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public static void setDefinitionPathConditional(String file, String searchpath, String relativeLocation) throws CodaException
+    {
+        codac.set_definition_path_conditional(file, searchpath, relativeLocation);
+    }
+    
+
+    /**
      * Initializes CODA. /**
      * 
      * @throws CodaException

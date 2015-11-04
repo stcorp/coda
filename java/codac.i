@@ -1,22 +1,22 @@
-//
-// Copyright (C) 2007-2010 S[&]T, The Netherlands.
-//
-// This file is part of CODA.
-//
-// CODA is free software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
-//
-// CODA is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with CODA; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
+/*
+ * Copyright (C) 2007-2010 S[&]T, The Netherlands.
+ *
+ * This file is part of CODA.
+ *
+ * CODA is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * CODA is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with CODA; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
 
 %module codac
 
@@ -70,6 +70,7 @@ typedef long long int	uint64_t;
 %rename(NativeTypeEnum) coda_native_type_enum;
 %rename(SpecialTypeEnum) coda_special_type_enum;
 %rename(TypeClassEnum) coda_type_class_enum;
+%rename(ExpressionTypeEnum) coda_expression_type_enum;
 
 
 /*
@@ -108,8 +109,7 @@ typedef long long int	uint64_t;
 %ignore cursor_read_complex_double_split_array;
 
 /*
-  Not investigated yet due to lack of time and difficulty with
-  callback function.
+  Not yet implemented due to difficulty with callback function.
  */
 %ignore coda_match_filefilter;
 
@@ -137,14 +137,14 @@ typedef long long int	uint64_t;
 
 /*
   Helper functions for creating, deleting, and copying
-  coda_Cursor structs. These structs are treated as an opaque
+  coda_cursor structs. These structs are treated as an opaque
   pointer type (i.e. the underlying C implementation is
   unreachable from Java, and you can only pass references to
   binary blobs around).
 
   The handwritten nl.stcorp.coda.Cursor class will wrap such a
-  coda_Cursor opaque object, provide constructors, and expose all
-  CODA functions that act on a coda_Cursor struct as methods of
+  coda_cursor opaque object, provide constructors, and expose all
+  CODA functions that act on a coda_cursor struct as methods of
   the Cursor object.
 
   Product and Type structs are also opaque objects wrapped by
@@ -155,33 +155,33 @@ typedef long long int	uint64_t;
   
 */
 %{
-    coda_Cursor *new_coda_Cursor()
+    coda_cursor *new_coda_cursor()
     {
-        return (coda_Cursor *)malloc(sizeof(coda_Cursor));
+        return (coda_cursor *)malloc(sizeof(coda_cursor));
     }
 
-    void delete_coda_Cursor(coda_Cursor *self)
+    void delete_coda_cursor(coda_cursor *self)
     {
         free(self);
     }
 
-    coda_Cursor *deepcopy_coda_Cursor(coda_Cursor *self)
+    coda_cursor *deepcopy_coda_cursor(coda_cursor *self)
     {
-        coda_Cursor *new_cursor;
+        coda_cursor *new_cursor;
 
-        new_cursor = (coda_Cursor *)malloc(sizeof(coda_Cursor));
+        new_cursor = (coda_cursor *)malloc(sizeof(coda_cursor));
         if( new_cursor != NULL )
         {
-            memcpy(new_cursor, self, sizeof(coda_Cursor));
+            memcpy(new_cursor, self, sizeof(coda_cursor));
         }
         return new_cursor;
     }
 
 %};
 
-coda_Cursor *new_coda_Cursor();
-void delete_coda_Cursor(coda_Cursor *self);
-coda_Cursor *deepcopy_coda_Cursor(coda_Cursor *self);
+coda_cursor *new_coda_cursor();
+void delete_coda_cursor(coda_cursor *self);
+coda_cursor *deepcopy_coda_cursor(coda_cursor *self);
 
 
 /*
@@ -193,11 +193,11 @@ coda_Cursor *deepcopy_coda_Cursor(coda_Cursor *self);
   the underlying CODA equivalents. The latter must therefore also
   be ignored afterwards.
 */
-  
-%newobject helper_coda_cursor_read_string; // make sure free() will be called
+
+%newobject helper_coda_cursor_read_string; /* make sure free() will be called */
 %inline
 %{
-    char *helper_coda_cursor_read_string(const coda_Cursor *cursor)
+    char *helper_coda_cursor_read_string(const coda_cursor *cursor)
     {
         long dst_size;
         char *dst;
@@ -208,7 +208,7 @@ coda_Cursor *deepcopy_coda_Cursor(coda_Cursor *self);
         return dst;
     }
 %}
-%ignore coda_cursor_read_string; // ignore the real method being wrapped
+%ignore coda_cursor_read_string; /* ignore the real method being wrapped */
 
 
 %newobject helper_coda_time_to_string;
@@ -221,7 +221,19 @@ coda_Cursor *deepcopy_coda_Cursor(coda_Cursor *self);
         return dst;
     }
 %}
-%ignore coda_time_to_string; // ignore the real method being wrapped
+%ignore coda_time_to_string; /* ignore the real method being wrapped */
+
+%newobject helper_coda_time_to_utcstring;
+%inline
+%{
+    char *helper_coda_time_to_utcstring(double datetime)
+    {
+        char *dst = (char *)malloc(27);
+        coda_time_to_utcstring(datetime, dst);
+        return dst;
+    }
+%}
+%ignore coda_time_to_utcstring; /* ignore the real method being wrapped */
     
 
 /*
@@ -252,6 +264,7 @@ const char *coda_type_get_format_name(coda_format format);
 const char *coda_type_get_class_name(coda_type_class type_class);
 const char *coda_type_get_native_type_name(coda_native_type native_type);
 const char *coda_type_get_special_type_name(coda_special_type special_type);
+void coda_expression_delete(coda_expression *expr);
 %ignore coda_done;
 %ignore coda_NaN;
 %ignore coda_PlusInf;
@@ -260,7 +273,8 @@ const char *coda_type_get_special_type_name(coda_special_type special_type);
 %ignore coda_type_get_class_name;
 %ignore coda_type_get_native_type_name;
 %ignore coda_type_get_special_type_name;
-                 
+%ignore coda_expression_delete;
+
                  
 /*
   Functions that return an int that represents a return value
@@ -275,6 +289,7 @@ int coda_isNaN(const double x);
 int coda_isInf(const double x);
 int coda_isPlusInf(const double x);
 int coda_isMinInf(const double x);
+int coda_expression_is_constant(const coda_expression *expr);
 %ignore coda_get_option_bypass_special_types;
 %ignore coda_get_option_perform_boundary_checks;
 %ignore coda_get_option_perform_conversions;
@@ -284,6 +299,8 @@ int coda_isMinInf(const double x);
 %ignore coda_isInf;
 %ignore coda_isPlusInf;
 %ignore coda_isMinInf;
+%ignore coda_expression_is_constant;
+
 
 
 /*
@@ -344,6 +361,8 @@ int coda_isMinInf(const double x);
 
   coda_double_to_datetime()::int *YEAR, int *MONTH, int *DAY,
                              int *HOUR, int *MINUTE, int *SECOND, int *MUSEC
+  coda_double_to_utcdatetime()::int *YEAR, int *MONTH, int *DAY,
+                                int *HOUR, int *MINUTE, int *SECOND, int *MUSEC
   coda_get_product_version()::int *version
   coda_type_has_ascii_content::int *has_ascii_content
   coda_type_get_record_field_hidden_status()::int *hidden
@@ -354,6 +373,7 @@ int coda_isMinInf(const double x);
   coda_cursor_get_depth()::int *depth
   coda_cursor_get_record_field_available_status()::int *available
   coda_recognize_file()::int *product_version
+  coda_expression_eval_boolean()::int *value
 */
 %apply int *OUTPUT { int *YEAR, int *MONTH, int *DAY,
          int *HOUR, int *MINUTE, int *SECOND, int *MUSEC,
@@ -364,7 +384,8 @@ int coda_isMinInf(const double x);
          int *is_union,
          int *num_dims,
          int *depth,
-         int *product_version };
+         int *product_version,
+         int *value};
 
 
 /*
@@ -396,6 +417,9 @@ int coda_isMinInf(const double x);
   coda_cursor_get_file_bit_offset()::int64_t *bit_size
   coda_cursor_get_file_byte_offset()::int64_t *byte_size
   coda_recognize_file()::int64_t *file_size
+
+  coda_expression_eval_integer()::int64_t *value
+
 */
 %apply int64_t *OUTPUT { int64_t *file_size,
                          int64_t *bit_size,
@@ -417,18 +441,21 @@ int coda_isMinInf(const double x);
 
   coda_cursor_read_complex_double_split()::double *dst_re, double *dst_im
   coda_datetime_to_double()::double *datetime
+  coda_expression_eval_float()::double *value
+  coda_utcdatetime_to_double()::double *datetime
   coda_string_to_time()::double *datetime
+  coda_utcstring_to_time()::double *datetime
 */
 %apply double *OUTPUT { double *dst_re, double *dst_im,
-         double *datetime };
+         double *datetime, double *value };
 
 
 %apply double *OUTPUT { double *dst };
-int coda_cursor_read_double(const coda_Cursor *cursor, double *dst);
+int coda_cursor_read_double(const coda_cursor *cursor, double *dst);
 %ignore coda_cursor_read_double;
 
 %apply uint64_t *OUTPUT { uint64_t *dst };
-int coda_cursor_read_uint64(const coda_Cursor *cursor, uint64_t *dst);
+int coda_cursor_read_uint64(const coda_cursor *cursor, uint64_t *dst);
 %ignore coda_cursor_read_uint64;
 
 
@@ -438,7 +465,7 @@ int coda_cursor_read_uint64(const coda_Cursor *cursor, uint64_t *dst);
    (it generates the scalar code instead.
    
 %apply unsigned long long[] { uint64_t *dst };
-int coda_cursor_read_uint64_array(const coda_Cursor *cursor, uint64_t *dst, coda_array_ordering array_ordering);
+int coda_cursor_read_uint64_array(const coda_cursor *cursor, uint64_t *dst, coda_array_ordering array_ordering);
 %ignore coda_cursor_read_uint64_array;
 
 So for now we just ignore the array case.
@@ -472,7 +499,7 @@ So for now we just ignore the array case.
 %apply int32_t[]  { int32_t *dst };
 %apply uint32_t[] { uint32_t *dst };
 %apply int64_t[]  { int64_t *dst };
-//%apply uint64_t[]  { int64_t *dst };
+/* %apply uint64_t[]  { int64_t *dst }; */
 
 
 /*
@@ -492,11 +519,11 @@ So for now we just ignore the array case.
   
 */
 %apply int8_t *OUTPUT { char *dst };
-int coda_cursor_read_char(const coda_Cursor *cursor, char *dst);
+int coda_cursor_read_char(const coda_cursor *cursor, char *dst);
 %ignore coda_cursor_read_char;
 
 %apply int8_t[] { char *dst };
-int coda_cursor_read_char_array(const coda_Cursor *cursor, char *dst, coda_array_ordering array_ordering);
+int coda_cursor_read_char_array(const coda_cursor *cursor, char *dst, coda_array_ordering array_ordering);
 %ignore coda_cursor_read_char_array;
 
 
@@ -513,6 +540,10 @@ int coda_cursor_read_char_array(const coda_Cursor *cursor, char *dst, coda_array
    coda_type_get_unit()::const char **unit
    coda_type_get_fixed_value()::const char **fixed_value
    coda_type_get_record_field_name()::const char **name
+   coda_type_get_record_field_real_name()::const char **real_name
+
+   coda_expression_eval_string()::char **value
+   
 */
 %apply char **STRING_OUT { const char **product_class,
          const char **product_type,
@@ -521,7 +552,8 @@ int coda_cursor_read_char_array(const coda_Cursor *cursor, char *dst, coda_array
          const char **description,
          const char **unit,
          const char **fixed_value,
-         const char **name };
+         const char **real_name,
+         char **value};
 
 /*
   Typemap for enum output arguments.
@@ -533,11 +565,11 @@ int coda_cursor_read_char_array(const coda_Cursor *cursor, char *dst, coda_array
 
 
 /*
-  Typemap for coda_ProductFile ** output arguments that are
+  Typemap for coda_product ** output arguments that are
   memory-managed by CODA itself:
 
-  coda_open()::coda_ProductFile **pf;
-  coda_cursor_get_product_file()::coda_ProductFile **pf;
+  coda_open()::coda_product **pf;
+  coda_cursor_get_product_file()::coda_product **pf;
 
   Code adapted from the Java section of the SWIG manual.
 
@@ -545,37 +577,37 @@ int coda_cursor_read_char_array(const coda_Cursor *cursor, char *dst, coda_array
   and Types into a single macro.
 */
 
-%typemap(jni) coda_ProductFile ** "jobject"
-%typemap(jtype) coda_ProductFile ** "SWIGTYPE_p_coda_ProductFile_struct"
-%typemap(jstype) coda_ProductFile ** "SWIGTYPE_p_coda_ProductFile_struct"
+%typemap(jni) coda_product ** "jobject"
+%typemap(jtype) coda_product ** "SWIGTYPE_p_coda_product_struct"
+%typemap(jstype) coda_product ** "SWIGTYPE_p_coda_product_struct"
 
-%typemap(in) coda_ProductFile ** (coda_ProductFile *ppcoda_ProductFile = 0)
+%typemap(in) coda_product ** (coda_product *ppcoda_product = 0)
 %{
-    $1 = &ppcoda_ProductFile;
+    $1 = &ppcoda_product;
 %}
 
-%typemap(argout) coda_ProductFile **
+%typemap(argout) coda_product **
 {
-        // Give Java proxy the C pointer (of newly created object)
-    jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/SWIGTYPE_p_coda_ProductFile_struct");
+    /* Give Java proxy the C pointer (of newly created object) */
+    jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/SWIGTYPE_p_coda_product_struct");
     jfieldID fid = (*jenv)->GetFieldID(jenv, clazz, "swigCPtr", "J");
     jlong cPtr = 0;
-    *(coda_ProductFile **)&cPtr = *$1;
+    *(coda_product **)&cPtr = *$1;
     (*jenv)->SetLongField(jenv, $input, fid, cPtr);
 }
 
-%typemap(javain) coda_ProductFile ** "$javainput"
+%typemap(javain) coda_product ** "$javainput"
 
 
 /*
-  Typemap for coda_ProductFile ** output arguments that are
+  Typemap for coda_type ** output arguments that are
   memory-managed by CODA itself:
 
-  coda_get_product_root_type()::coda_Type **type
-  coda_type_get_record_field_type()::coda_Type **field_type
-  coda_type_get_array_base_type()::coda_Type **base_type
-  coda_type_get_special_base_type()::coda_Type **base_type
-  coda_cursor_get_type()::coda_Type **type
+  coda_get_product_root_type()::coda_type **type
+  coda_type_get_record_field_type()::coda_type **field_type
+  coda_type_get_array_base_type()::coda_type **base_type
+  coda_type_get_special_base_type()::coda_type **base_type
+  coda_cursor_get_type()::coda_type **type
 
   Code adapted from the Java section of the SWIG manual.
 
@@ -583,27 +615,75 @@ int coda_cursor_read_char_array(const coda_Cursor *cursor, char *dst, coda_array
   and Types into a single macro.
 */
 
-%typemap(jni) coda_Type ** "jobject"
-%typemap(jtype) coda_Type ** "SWIGTYPE_p_coda_Type_struct"
-%typemap(jstype) coda_Type ** "SWIGTYPE_p_coda_Type_struct"
+%typemap(jni) coda_type ** "jobject"
+%typemap(jtype) coda_type ** "SWIGTYPE_p_coda_type_struct"
+%typemap(jstype) coda_type ** "SWIGTYPE_p_coda_type_struct"
 
-%typemap(in) coda_Type ** (coda_Type *ppcoda_Type = 0)
+%typemap(in) coda_type ** (coda_type *ppcoda_type = 0)
 %{
-    $1 = &ppcoda_Type;
+    $1 = &ppcoda_type;
 %}
 
-%typemap(argout) coda_Type **
+%typemap(argout) coda_type **
 {
-        // Give Java proxy the C pointer (of newly created object)
-    jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/SWIGTYPE_p_coda_Type_struct");
+    /* Give Java proxy the C pointer (of newly created object) */
+    jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/SWIGTYPE_p_coda_type_struct");
     jfieldID fid = (*jenv)->GetFieldID(jenv, clazz, "swigCPtr", "J");
     jlong cPtr = 0;
-    *(coda_Type **)&cPtr = *$1;
+    *(coda_type **)&cPtr = *$1;
     (*jenv)->SetLongField(jenv, $input, fid, cPtr);
 }
 
-%typemap(javain) coda_Type ** "$javainput"
+%typemap(javain) coda_type ** "$javainput"
 
+
+
+
+/*
+  Typemap for coda_expression ** output arguments that are
+  memory-managed by CODA itself:
+
+  coda_expression_from_string()::coda_expression **expr
+
+  Code adapted from the Java section of the SWIG manual.
+
+  TODO: Refactor the duplicate use of these typemaps for Products
+  and Types Expressions into a single macro.
+*/
+
+%typemap(jni) coda_expression ** "jobject"
+%typemap(jtype) coda_expression ** "SWIGTYPE_p_coda_expression_struct"
+%typemap(jstype) coda_expression ** "SWIGTYPE_p_coda_expression_struct"
+
+%typemap(in) coda_expression ** (coda_expression *ppcoda_expression = 0)
+%{
+    $1 = &ppcoda_expression;
+%}
+
+%typemap(argout) coda_expression **
+{
+    /* Give Java proxy the C pointer (of newly created object) */
+    jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/SWIGTYPE_p_coda_expression_struct");
+    jfieldID fid = (*jenv)->GetFieldID(jenv, clazz, "swigCPtr", "J");
+    jlong cPtr = 0;
+    *(coda_expression **)&cPtr = *$1;
+    (*jenv)->SetLongField(jenv, $input, fid, cPtr);
+}
+
+%typemap(javain) coda_expression ** "$javainput"
+
+
+
+ /* This typemap is used to ensure that the **value string
+   allocated by CODA for the coda_expression_eval_string() method
+   (see also the STRING_OUT typemaps below) is properly freed
+   using coda_free.
+ */   
+%typemap(freearg) char **value 
+{
+        coda_free(*$1);
+}
+ 
 
 /*
 ----------------------------------------------------------------------------------------

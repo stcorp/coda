@@ -26,19 +26,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-int coda_bin_type_get_read_type(const coda_Type *type, coda_native_type *read_type)
+int coda_bin_type_get_read_type(const coda_type *type, coda_native_type *read_type)
 {
-    switch (((coda_binType *)type)->tag)
+    switch (((coda_bin_type *)type)->tag)
     {
         case tag_bin_integer:
         case tag_bin_float:
-            if (coda_option_perform_conversions && ((coda_binNumber *)type)->conversion != NULL)
+            if (coda_option_perform_conversions && ((coda_bin_number *)type)->conversion != NULL)
             {
                 *read_type = coda_native_type_double;
             }
             else
             {
-                *read_type = ((coda_binNumber *)type)->read_type;
+                *read_type = ((coda_bin_number *)type)->read_type;
             }
             break;
         case tag_bin_record:
@@ -60,22 +60,22 @@ int coda_bin_type_get_read_type(const coda_Type *type, coda_native_type *read_ty
     return 0;
 }
 
-int coda_bin_type_get_bit_size(const coda_Type *type, int64_t *bit_size)
+int coda_bin_type_get_bit_size(const coda_type *type, int64_t *bit_size)
 {
-    *bit_size = ((coda_binType *)type)->bit_size;
+    *bit_size = ((coda_bin_type *)type)->bit_size;
     return 0;
 }
 
-int coda_bin_type_get_unit(const coda_Type *type, const char **unit)
+int coda_bin_type_get_unit(const coda_type *type, const char **unit)
 {
-    switch (((coda_binType *)type)->tag)
+    switch (((coda_bin_type *)type)->tag)
     {
         case tag_bin_integer:
         case tag_bin_float:
             {
                 if (coda_option_perform_conversions)
                 {
-                    coda_Conversion *conversion = ((coda_binNumber *)type)->conversion;
+                    coda_conversion *conversion = ((coda_bin_number *)type)->conversion;
 
                     if (conversion != NULL)
                     {
@@ -83,19 +83,19 @@ int coda_bin_type_get_unit(const coda_Type *type, const char **unit)
                         return 0;
                     }
                 }
-                *unit = ((coda_binNumber *)type)->unit;
+                *unit = ((coda_bin_number *)type)->unit;
             }
             break;
         case tag_bin_vsf_integer:
-            *unit = ((coda_binVSFInteger *)type)->unit;
+            *unit = ((coda_bin_vsf_integer *)type)->unit;
             break;
         case tag_bin_time:
             *unit = "s since 2000-01-01";
             break;
         case tag_bin_complex:
             /* use unit of element type */
-            return coda_bin_type_get_unit((coda_Type *)
-                                          ((coda_ascbinRecord *)((coda_binComplex *)type)->base_type)->field[0]->type,
+            return coda_bin_type_get_unit((coda_type *)
+                                          ((coda_ascbin_record *)((coda_bin_complex *)type)->base_type)->field[0]->type,
                                           unit);
         default:
             /* no number -> no unit */
@@ -106,15 +106,15 @@ int coda_bin_type_get_unit(const coda_Type *type, const char **unit)
     return 0;
 }
 
-int coda_bin_type_get_fixed_value(const coda_Type *type, const char **fixed_value, long *length)
+int coda_bin_type_get_fixed_value(const coda_type *type, const char **fixed_value, long *length)
 {
-    switch (((coda_binType *)type)->tag)
+    switch (((coda_bin_type *)type)->tag)
     {
         case tag_bin_raw:
-            *fixed_value = ((coda_binRaw *)type)->fixed_value;
+            *fixed_value = ((coda_bin_raw *)type)->fixed_value;
             if (length != NULL)
             {
-                *length = ((*fixed_value == NULL) ? 0 : ((coda_binRaw *)type)->fixed_value_length);
+                *length = ((*fixed_value == NULL) ? 0 : ((coda_bin_raw *)type)->fixed_value_length);
             }
             break;
         default:
@@ -126,9 +126,9 @@ int coda_bin_type_get_fixed_value(const coda_Type *type, const char **fixed_valu
     return 0;
 }
 
-int coda_bin_type_get_special_type(const coda_Type *type, coda_special_type *special_type)
+int coda_bin_type_get_special_type(const coda_type *type, coda_special_type *special_type)
 {
-    switch (((coda_binType *)type)->tag)
+    switch (((coda_bin_type *)type)->tag)
     {
         case tag_bin_no_data:
             *special_type = coda_special_no_data;
@@ -150,8 +150,8 @@ int coda_bin_type_get_special_type(const coda_Type *type, coda_special_type *spe
     return 0;
 }
 
-int coda_bin_type_get_special_base_type(const coda_Type *type, coda_Type **base_type)
+int coda_bin_type_get_special_base_type(const coda_type *type, coda_type **base_type)
 {
-    *base_type = (coda_Type *)((coda_binSpecialType *)type)->base_type;
+    *base_type = (coda_type *)((coda_bin_special_type *)type)->base_type;
     return 0;
 }

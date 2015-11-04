@@ -97,7 +97,7 @@ static void coda_matlab_parse_arg(const mxArray *arg, int *arg_type, long *index
     }
 }
 
-void coda_matlab_traverse_data(int nrhs, const mxArray *prhs[], coda_Cursor *cursor, coda_MatlabCursorInfo *info)
+void coda_matlab_traverse_data(int nrhs, const mxArray *prhs[], coda_cursor *cursor, coda_MatlabCursorInfo *info)
 {
     int arg_idx;
     long index[CODA_MAX_NUM_DIMS];
@@ -164,7 +164,7 @@ void coda_matlab_traverse_data(int nrhs, const mxArray *prhs[], coda_Cursor *cur
 
                     if (length == 1 && index[0] == 0)
                     {
-                        coda_Type *type;
+                        coda_type *type;
                         int num_dims;
 
                         /* convert to zero dimensional index if needed */
@@ -244,7 +244,7 @@ void coda_matlab_traverse_data(int nrhs, const mxArray *prhs[], coda_Cursor *cur
     }
 }
 
-void coda_matlab_traverse_product(coda_ProductFile *pf, int nrhs, const mxArray *prhs[], coda_Cursor *cursor,
+void coda_matlab_traverse_product(coda_product *pf, int nrhs, const mxArray *prhs[], coda_cursor *cursor,
                                   coda_MatlabCursorInfo *info)
 {
     mxAssert(pf != NULL, "Productfile pointer is zero");

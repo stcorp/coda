@@ -99,12 +99,12 @@ typedef struct array_info
 typedef struct traverse_info
 {
     char *file_name;
-    coda_ProductFile *pf;
+    coda_product *pf;
 
     /* properties regarding position in product */
-    coda_Type *type[CODA_CURSOR_MAXDEPTH];      /* data type */
+    coda_type *type[CODA_CURSOR_MAXDEPTH];      /* data type */
     int current_depth;  /* current depth in product */
-    coda_Cursor cursor; /* cursor positioned at root point */
+    coda_cursor cursor; /* cursor positioned at root point */
 
     /* filter properties */
     codadump_filter *filter[CODA_CURSOR_MAXDEPTH + 1];  /* applicable filter at each cursor depth */

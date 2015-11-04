@@ -53,10 +53,6 @@ int coda_path_find_file(const char *searchpath, const char *filename, char **loc
  */
 int coda_path_from_path(const char *initialpath, int is_filepath, const char *appendpath, char **resultpath);
 
-/* we need to provide this function because several interfaces require that the library that performs the malloc
- * is also the one that performs the free */
-void coda_path_free(char *path);
-
 /* *INDENT-OFF* */
 #ifdef __cplusplus
 }

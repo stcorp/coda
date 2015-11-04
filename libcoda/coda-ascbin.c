@@ -42,8 +42,8 @@
 
 #define DETECTION_BLOCK_SIZE 4096
 
-static coda_ProductDefinition *evaluate_detection_node(char *buffer, int blocksize, const char *filename,
-                                                       int64_t filesize, coda_ascbinDetectionNode *node)
+static coda_product_definition *evaluate_detection_node(char *buffer, int blocksize, const char *filename,
+                                                        int64_t filesize, coda_ascbin_detection_node *node)
 {
     int i;
 
@@ -53,7 +53,7 @@ static coda_ProductDefinition *evaluate_detection_node(char *buffer, int blocksi
     }
     if (node->entry != NULL)
     {
-        coda_DetectionRuleEntry *entry;
+        coda_detection_rule_entry *entry;
 
         entry = node->entry;
         if (entry->use_filename)
@@ -114,7 +114,7 @@ static coda_ProductDefinition *evaluate_detection_node(char *buffer, int blocksi
 
     for (i = 0; i < node->num_subnodes; i++)
     {
-        coda_ProductDefinition *definition;
+        coda_product_definition *definition;
 
         definition = evaluate_detection_node(buffer, blocksize, filename, filesize, node->subnode[i]);
         if (definition != NULL)
@@ -131,11 +131,11 @@ static coda_ProductDefinition *evaluate_detection_node(char *buffer, int blocksi
     return NULL;
 }
 
-int coda_ascbin_recognize_file(const char *filename, int64_t size, coda_ProductDefinition **definition)
+int coda_ascbin_recognize_file(const char *filename, int64_t size, coda_product_definition **definition)
 {
     char buffer[DETECTION_BLOCK_SIZE + 1];
     const char *basefilename;
-    coda_ascbinDetectionNode *node;
+    coda_ascbin_detection_node *node;
     int64_t blocksize;
     int open_flags;
     int fd;
@@ -183,10 +183,10 @@ int coda_ascbin_recognize_file(const char *filename, int64_t size, coda_ProductD
     return 0;
 }
 
-int coda_ascbin_open(const char *filename, int64_t file_size, coda_ProductFile **pf)
+int coda_ascbin_open(const char *filename, int64_t file_size, coda_product **product)
 {
-    coda_ascbinProductFile *product_file;
-    coda_ProductDefinition *product_definition;
+    coda_ascbin_product *product_file;
+    coda_product_definition *product_definition;
 
     if (coda_ascbin_recognize_file(filename, file_size, &product_definition) != 0)
     {
@@ -205,17 +205,17 @@ int coda_ascbin_open(const char *filename, int64_t file_size, coda_ProductFile *
         }
     }
 
-    product_file = (coda_ascbinProductFile *)malloc(sizeof(coda_ascbinProductFile));
+    product_file = (coda_ascbin_product *)malloc(sizeof(coda_ascbin_product));
     if (product_file == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       sizeof(coda_ascbinProductFile), __FILE__, __LINE__);
+                       sizeof(coda_ascbin_product), __FILE__, __LINE__);
         return -1;
     }
     product_file->filename = NULL;
     product_file->file_size = file_size;
     product_file->format = product_definition->format;
-    product_file->root_type = (coda_DynamicType *)product_definition->root_type;
+    product_file->root_type = (coda_dynamic_type *)product_definition->root_type;
     product_file->product_definition = product_definition;
     product_file->product_variable_size = NULL;
     product_file->product_variable = NULL;
@@ -237,17 +237,17 @@ int coda_ascbin_open(const char *filename, int64_t file_size, coda_ProductFile *
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate filename string) (%s:%u)",
                        __FILE__, __LINE__);
-        coda_ascbin_close((coda_ProductFile *)product_file);
+        coda_ascbin_close((coda_product *)product_file);
         return -1;
     }
 
     if (coda_option_use_mmap)
     {
         /* Perform an mmap() of the file, filling the following fields:
-         *   pf->use_mmap = 1
-         *   pf->file         (windows only )
-         *   pf->file_mapping (windows only )
-         *   pf->mmap_ptr     (windows, *nix)
+         *   product->use_mmap = 1
+         *   product->file         (windows only )
+         *   product->file_mapping (windows only )
+         *   product->mmap_ptr     (windows, *nix)
          */
 #ifdef WIN32
         product_file->use_mmap = 1;
@@ -277,7 +277,7 @@ int coda_ascbin_open(const char *filename, int64_t file_size, coda_ProductFile *
                     LocalFree(lpMsgBuf);
                 }
             }
-            coda_ascbin_close((coda_ProductFile *)product_file);
+            coda_ascbin_close((coda_product *)product_file);
             return -1;  /* indicate failure */
         }
 
@@ -301,7 +301,7 @@ int coda_ascbin_open(const char *filename, int64_t file_size, coda_ProductFile *
                                (LPCTSTR) lpMsgBuf);
                 LocalFree(lpMsgBuf);
             }
-            coda_ascbin_close((coda_ProductFile *)product_file);
+            coda_ascbin_close((coda_product *)product_file);
             return -1;
         }
 
@@ -323,7 +323,7 @@ int coda_ascbin_open(const char *filename, int64_t file_size, coda_ProductFile *
                                (LPCTSTR) lpMsgBuf);
                 LocalFree(lpMsgBuf);
             }
-            coda_ascbin_close((coda_ProductFile *)product_file);
+            coda_ascbin_close((coda_product *)product_file);
             return -1;
         }
 #else
@@ -335,7 +335,7 @@ int coda_ascbin_open(const char *filename, int64_t file_size, coda_ProductFile *
         {
             coda_set_error(CODA_ERROR_FILE_OPEN, "could not open file %s (%s)", product_file->filename,
                            strerror(errno));
-            coda_ascbin_close((coda_ProductFile *)product_file);
+            coda_ascbin_close((coda_product *)product_file);
             return -1;
         }
 
@@ -346,7 +346,7 @@ int coda_ascbin_open(const char *filename, int64_t file_size, coda_ProductFile *
                            strerror(errno));
             product_file->mmap_ptr = NULL;
             close(fd);
-            coda_ascbin_close((coda_ProductFile *)product_file);
+            coda_ascbin_close((coda_product *)product_file);
             return -1;
         }
 
@@ -359,8 +359,8 @@ int coda_ascbin_open(const char *filename, int64_t file_size, coda_ProductFile *
         int open_flags;
 
         /* Perform a normal open of the file, filling the following fields:
-         *   pf->use_mmap = 0
-         *   pf->fd             (windows, *nix)
+         *   product->use_mmap = 0
+         *   product->fd             (windows, *nix)
          */
         open_flags = O_RDONLY;
 #ifdef WIN32
@@ -371,19 +371,19 @@ int coda_ascbin_open(const char *filename, int64_t file_size, coda_ProductFile *
         {
             coda_set_error(CODA_ERROR_FILE_OPEN, "could not open file %s (%s)", product_file->filename,
                            strerror(errno));
-            coda_ascbin_close((coda_ProductFile *)product_file);
+            coda_ascbin_close((coda_product *)product_file);
             return -1;
         }
     }
 
-    *pf = (coda_ProductFile *)product_file;
+    *product = (coda_product *)product_file;
 
     return 0;
 }
 
-int coda_ascbin_close(coda_ProductFile *pf)
+int coda_ascbin_close(coda_product *product)
 {
-    coda_ascbinProductFile *product_file = (coda_ascbinProductFile *)pf;
+    coda_ascbin_product *product_file = (coda_ascbin_product *)product;
 
     if (product_file->filename != NULL)
     {
@@ -434,7 +434,7 @@ int coda_ascbin_close(coda_ProductFile *pf)
     return 0;
 }
 
-coda_ascbinDetectionNode *coda_ascbin_get_detection_tree(void)
+coda_ascbin_detection_node *coda_ascbin_get_detection_tree(void)
 {
-    return (coda_ascbinDetectionNode *)coda_data_dictionary->ascbin_detection_tree;
+    return (coda_ascbin_detection_node *)coda_global_data_dictionary->ascbin_detection_tree;
 }

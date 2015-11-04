@@ -33,7 +33,7 @@
 
 #define ASCII_PARSE_BLOCK_SIZE 4096
 
-const char *eol_type_to_string(eol_type end_of_line)
+static char *eol_type_to_string(eol_type end_of_line)
 {
     switch (end_of_line)
     {
@@ -51,7 +51,7 @@ const char *eol_type_to_string(eol_type end_of_line)
     exit(1);
 }
 
-static int verify_eol_type(coda_ascbinProductFile *product_file, eol_type end_of_line)
+static int verify_eol_type(coda_ascbin_product *product_file, eol_type end_of_line)
 {
     assert(end_of_line != eol_unknown);
 
@@ -73,10 +73,10 @@ static int verify_eol_type(coda_ascbinProductFile *product_file, eol_type end_of
     return 0;
 }
 
-int coda_ascii_init_asciilines(coda_ProductFile *pf)
+int coda_ascii_init_asciilines(coda_product *product)
 {
     char buffer[ASCII_PARSE_BLOCK_SIZE + 1];
-    coda_ascbinProductFile *product_file = (coda_ascbinProductFile *)pf;
+    coda_ascbin_product *product_file = (coda_ascbin_product *)product;
     long num_asciilines = 0;
     long *asciiline_end_offset = NULL;
     int64_t byte_offset = 0;
@@ -225,13 +225,13 @@ int coda_ascii_init_asciilines(coda_ProductFile *pf)
     return 0;
 }
 
-int coda_ascii_close(coda_ProductFile *pf)
+int coda_ascii_close(coda_product *product)
 {
-    return coda_ascbin_close(pf);
+    return coda_ascbin_close(product);
 }
 
-int coda_ascii_get_type_for_dynamic_type(coda_DynamicType *dynamic_type, coda_Type **type)
+int coda_ascii_get_type_for_dynamic_type(coda_dynamic_type *dynamic_type, coda_type **type)
 {
-    *type = (coda_Type *)dynamic_type;
+    *type = (coda_type *)dynamic_type;
     return 0;
 }

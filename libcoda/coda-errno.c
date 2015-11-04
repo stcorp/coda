@@ -150,6 +150,7 @@ LIBCODA_API int coda_errno = CODA_SUCCESS;
 
 void coda_add_error_message_vargs(const char *message, va_list ap)
 {
+    char message_buffer[MAX_ERROR_INFO_LENGTH + 1];
     int current_length;
 
     if (message == NULL)
@@ -162,8 +163,10 @@ void coda_add_error_message_vargs(const char *message, va_list ap)
     {
         return;
     }
-    vsnprintf(&coda_error_message_buffer[current_length], MAX_ERROR_INFO_LENGTH - current_length, message, ap);
-    coda_error_message_buffer[MAX_ERROR_INFO_LENGTH] = '\0';
+    /* write to local buffer first in order to allow using the result of coda_errno_to_string inside the va_list */
+    vsnprintf(message_buffer, MAX_ERROR_INFO_LENGTH - current_length, message, ap);
+    message_buffer[MAX_ERROR_INFO_LENGTH - current_length] = '\0';
+    strcat(coda_error_message_buffer, message_buffer);
 }
 
 void coda_add_error_message(const char *message, ...)
@@ -183,8 +186,12 @@ void coda_set_error_message_vargs(const char *message, va_list ap)
     }
     else
     {
-        vsnprintf(coda_error_message_buffer, MAX_ERROR_INFO_LENGTH, message, ap);
-        coda_error_message_buffer[MAX_ERROR_INFO_LENGTH] = '\0';
+        char message_buffer[MAX_ERROR_INFO_LENGTH + 1];
+
+        /* write to local buffer first in order to allow using the result of coda_errno_to_string inside the va_list */
+        vsnprintf(message_buffer, MAX_ERROR_INFO_LENGTH, message, ap);
+        message_buffer[MAX_ERROR_INFO_LENGTH] = '\0';
+        strcpy(coda_error_message_buffer, message_buffer);
     }
 }
 

@@ -28,9 +28,8 @@
 
 #include "coda-definition.h"
 #include "coda-ascii-definition.h"
-#include "coda-expr-internal.h"
 
-static void delete_mapping(coda_asciiMapping *mapping)
+static void delete_mapping(coda_ascii_mapping *mapping)
 {
     if (mapping->str != NULL)
     {
@@ -39,7 +38,7 @@ static void delete_mapping(coda_asciiMapping *mapping)
     free(mapping);
 }
 
-static void delete_mappings(coda_asciiMappings *mappings)
+static void delete_mappings(coda_ascii_mappings *mappings)
 {
     if (mappings->mapping != NULL)
     {
@@ -57,7 +56,7 @@ static void delete_mappings(coda_asciiMappings *mappings)
     free(mappings);
 }
 
-static void delete_ascii_integer(coda_asciiInteger *integer)
+static void delete_ascii_integer(coda_ascii_integer *integer)
 {
     if (integer->name != NULL)
     {
@@ -82,7 +81,7 @@ static void delete_ascii_integer(coda_asciiInteger *integer)
     free(integer);
 }
 
-static void delete_ascii_float(coda_asciiFloat *fl)
+static void delete_ascii_float(coda_ascii_float *fl)
 {
     if (fl->name != NULL)
     {
@@ -107,7 +106,7 @@ static void delete_ascii_float(coda_asciiFloat *fl)
     free(fl);
 }
 
-static void delete_ascii_text(coda_asciiText *text)
+static void delete_ascii_text(coda_ascii_text *text)
 {
     if (text->name != NULL)
     {
@@ -119,7 +118,7 @@ static void delete_ascii_text(coda_asciiText *text)
     }
     if (text->byte_size_expr != NULL)
     {
-        coda_expr_delete(text->byte_size_expr);
+        coda_expression_delete(text->byte_size_expr);
     }
     if (text->fixed_value != NULL)
     {
@@ -132,7 +131,7 @@ static void delete_ascii_text(coda_asciiText *text)
     free(text);
 }
 
-static void delete_ascii_line_separator(coda_asciiLineSeparator *text)
+static void delete_ascii_line_separator(coda_ascii_line_separator *text)
 {
     if (text->name != NULL)
     {
@@ -145,7 +144,7 @@ static void delete_ascii_line_separator(coda_asciiLineSeparator *text)
     free(text);
 }
 
-static void delete_ascii_line(coda_asciiLine *text)
+static void delete_ascii_line(coda_ascii_line *text)
 {
     if (text->name != NULL)
     {
@@ -158,7 +157,7 @@ static void delete_ascii_line(coda_asciiLine *text)
     free(text);
 }
 
-static void delete_ascii_white_space(coda_asciiWhiteSpace *text)
+static void delete_ascii_white_space(coda_ascii_white_space *text)
 {
     if (text->name != NULL)
     {
@@ -171,7 +170,7 @@ static void delete_ascii_white_space(coda_asciiWhiteSpace *text)
     free(text);
 }
 
-static void delete_ascii_time(coda_asciiTime *time)
+static void delete_ascii_time(coda_ascii_time *time)
 {
     if (time->name != NULL)
     {
@@ -188,7 +187,7 @@ static void delete_ascii_time(coda_asciiTime *time)
     free(time);
 }
 
-void coda_ascii_release_type(coda_asciiType *type)
+void coda_ascii_release_type(coda_ascii_type *type)
 {
     assert(type != NULL);
 
@@ -198,47 +197,47 @@ void coda_ascii_release_type(coda_asciiType *type)
         return;
     }
 
-    switch (((coda_asciiType *)type)->tag)
+    switch (((coda_ascii_type *)type)->tag)
     {
         case tag_ascii_record:
-            coda_ascbin_record_delete((coda_ascbinRecord *)type);
+            coda_ascbin_record_delete((coda_ascbin_record *)type);
             break;
         case tag_ascii_union:
-            coda_ascbin_union_delete((coda_ascbinUnion *)type);
+            coda_ascbin_union_delete((coda_ascbin_union *)type);
             break;
         case tag_ascii_array:
-            coda_ascbin_array_delete((coda_ascbinArray *)type);
+            coda_ascbin_array_delete((coda_ascbin_array *)type);
             break;
         case tag_ascii_integer:
-            delete_ascii_integer((coda_asciiInteger *)type);
+            delete_ascii_integer((coda_ascii_integer *)type);
             break;
         case tag_ascii_float:
-            delete_ascii_float((coda_asciiFloat *)type);
+            delete_ascii_float((coda_ascii_float *)type);
             break;
         case tag_ascii_text:
-            delete_ascii_text((coda_asciiText *)type);
+            delete_ascii_text((coda_ascii_text *)type);
             break;
         case tag_ascii_line_separator:
-            delete_ascii_line_separator((coda_asciiLineSeparator *)type);
+            delete_ascii_line_separator((coda_ascii_line_separator *)type);
             break;
         case tag_ascii_line:
-            delete_ascii_line((coda_asciiLine *)type);
+            delete_ascii_line((coda_ascii_line *)type);
             break;
         case tag_ascii_white_space:
-            delete_ascii_white_space((coda_asciiWhiteSpace *)type);
+            delete_ascii_white_space((coda_ascii_white_space *)type);
             break;
         case tag_ascii_time:
-            delete_ascii_time((coda_asciiTime *)type);
+            delete_ascii_time((coda_ascii_time *)type);
             break;
     }
 }
 
-void coda_ascii_release_dynamic_type(coda_DynamicType *type)
+void coda_ascii_release_dynamic_type(coda_dynamic_type *type)
 {
-    coda_ascii_release_type((coda_asciiType *)type);
+    coda_ascii_release_type((coda_ascii_type *)type);
 }
 
-static int number_set_unit(coda_asciiNumber *number, const char *unit)
+static int number_set_unit(coda_ascii_number *number, const char *unit)
 {
     char *new_unit = NULL;
 
@@ -262,7 +261,7 @@ static int number_set_unit(coda_asciiNumber *number, const char *unit)
     return 0;
 }
 
-static int mapping_type_add_mapping(coda_asciiMappingsType *type, coda_asciiMapping *mapping)
+static int mapping_type_add_mapping(coda_ascii_mappings_type *type, coda_ascii_mapping *mapping)
 {
     if (mapping == NULL)
     {
@@ -272,11 +271,11 @@ static int mapping_type_add_mapping(coda_asciiMappingsType *type, coda_asciiMapp
 
     if (type->mappings == NULL)
     {
-        type->mappings = malloc(sizeof(coda_asciiMappings));
+        type->mappings = malloc(sizeof(coda_ascii_mappings));
         if (type->mappings == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           sizeof(coda_asciiMappings), __FILE__, __LINE__);
+                           sizeof(coda_ascii_mappings), __FILE__, __LINE__);
             return -1;
         }
         type->mappings->default_bit_size = type->bit_size;
@@ -287,14 +286,14 @@ static int mapping_type_add_mapping(coda_asciiMappingsType *type, coda_asciiMapp
 
     if (type->mappings->num_mappings % BLOCK_SIZE == 0)
     {
-        coda_asciiMapping **new_mapping;
+        coda_ascii_mapping **new_mapping;
 
         new_mapping = realloc(type->mappings->mapping,
-                              (type->mappings->num_mappings + BLOCK_SIZE) * sizeof(coda_asciiMapping *));
+                              (type->mappings->num_mappings + BLOCK_SIZE) * sizeof(coda_ascii_mapping *));
         if (new_mapping == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           (type->mappings->num_mappings + BLOCK_SIZE) * sizeof(coda_asciiMapping *), __FILE__,
+                           (type->mappings->num_mappings + BLOCK_SIZE) * sizeof(coda_ascii_mapping *), __FILE__,
                            __LINE__);
             return -1;
         }
@@ -311,7 +310,7 @@ static int mapping_type_add_mapping(coda_asciiMappingsType *type, coda_asciiMapp
     return 0;
 }
 
-static int mapping_type_set_bit_size(coda_asciiMappingsType *type, int64_t bit_size)
+static int mapping_type_set_bit_size(coda_ascii_mappings_type *type, int64_t bit_size)
 {
     if (type->mappings != NULL)
     {
@@ -347,15 +346,15 @@ static int mapping_type_set_bit_size(coda_asciiMappingsType *type, int64_t bit_s
 }
 
 
-coda_asciiInteger *coda_ascii_integer_new(void)
+coda_ascii_integer *coda_ascii_integer_new(void)
 {
-    coda_asciiInteger *integer;
+    coda_ascii_integer *integer;
 
-    integer = (coda_asciiInteger *)malloc(sizeof(coda_asciiInteger));
+    integer = (coda_ascii_integer *)malloc(sizeof(coda_ascii_integer));
     if (integer == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_asciiInteger), __FILE__, __LINE__);
+                       (long)sizeof(coda_ascii_integer), __FILE__, __LINE__);
         return NULL;
     }
     integer->retain_count = 0;
@@ -373,22 +372,22 @@ coda_asciiInteger *coda_ascii_integer_new(void)
     return integer;
 }
 
-int coda_ascii_integer_set_unit(coda_asciiInteger *integer, const char *unit)
+int coda_ascii_integer_set_unit(coda_ascii_integer *integer, const char *unit)
 {
-    return number_set_unit((coda_asciiNumber *)integer, unit);
+    return number_set_unit((coda_ascii_number *)integer, unit);
 }
 
-int coda_ascii_integer_set_byte_size(coda_asciiInteger *integer, long byte_size)
+int coda_ascii_integer_set_byte_size(coda_ascii_integer *integer, long byte_size)
 {
     if (byte_size <= 0)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "byte size may not be <= 0 for ascii integer definition");
         return -1;
     }
-    return mapping_type_set_bit_size((coda_asciiMappingsType *)integer, byte_size << 3);
+    return mapping_type_set_bit_size((coda_ascii_mappings_type *)integer, byte_size << 3);
 }
 
-int coda_ascii_integer_set_read_type(coda_asciiInteger *integer, coda_native_type read_type)
+int coda_ascii_integer_set_read_type(coda_ascii_integer *integer, coda_native_type read_type)
 {
     if (integer->read_type != coda_native_type_not_available)
     {
@@ -408,7 +407,7 @@ int coda_ascii_integer_set_read_type(coda_asciiInteger *integer, coda_native_typ
     return 0;
 }
 
-int coda_ascii_integer_set_conversion(coda_asciiInteger *integer, coda_Conversion *conversion)
+int coda_ascii_integer_set_conversion(coda_ascii_integer *integer, coda_conversion *conversion)
 {
     if (integer->conversion != NULL)
     {
@@ -419,12 +418,12 @@ int coda_ascii_integer_set_conversion(coda_asciiInteger *integer, coda_Conversio
     return 0;
 }
 
-int coda_ascii_integer_add_mapping(coda_asciiInteger *integer, coda_asciiIntegerMapping *mapping)
+int coda_ascii_integer_add_mapping(coda_ascii_integer *integer, coda_ascii_integer_mapping *mapping)
 {
-    return mapping_type_add_mapping((coda_asciiMappingsType *)integer, (coda_asciiMapping *)mapping);
+    return mapping_type_add_mapping((coda_ascii_mappings_type *)integer, (coda_ascii_mapping *)mapping);
 }
 
-int coda_ascii_integer_validate(coda_asciiInteger *integer)
+int coda_ascii_integer_validate(coda_ascii_integer *integer)
 {
     if (integer->read_type == coda_native_type_not_available)
     {
@@ -434,15 +433,15 @@ int coda_ascii_integer_validate(coda_asciiInteger *integer)
     return 0;
 }
 
-coda_asciiFloat *coda_ascii_float_new(void)
+coda_ascii_float *coda_ascii_float_new(void)
 {
-    coda_asciiFloat *fl;
+    coda_ascii_float *fl;
 
-    fl = (coda_asciiFloat *)malloc(sizeof(coda_asciiFloat));
+    fl = (coda_ascii_float *)malloc(sizeof(coda_ascii_float));
     if (fl == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_asciiFloat), __FILE__, __LINE__);
+                       (long)sizeof(coda_ascii_float), __FILE__, __LINE__);
         return NULL;
     }
     fl->retain_count = 0;
@@ -460,22 +459,22 @@ coda_asciiFloat *coda_ascii_float_new(void)
     return fl;
 }
 
-int coda_ascii_float_set_unit(coda_asciiFloat *fl, const char *unit)
+int coda_ascii_float_set_unit(coda_ascii_float *fl, const char *unit)
 {
-    return number_set_unit((coda_asciiNumber *)fl, unit);
+    return number_set_unit((coda_ascii_number *)fl, unit);
 }
 
-int coda_ascii_float_set_byte_size(coda_asciiFloat *fl, long byte_size)
+int coda_ascii_float_set_byte_size(coda_ascii_float *fl, long byte_size)
 {
     if (byte_size <= 0)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "byte size may not be <= 0 for ascii float definition");
         return -1;
     }
-    return mapping_type_set_bit_size((coda_asciiMappingsType *)fl, byte_size << 3);
+    return mapping_type_set_bit_size((coda_ascii_mappings_type *)fl, byte_size << 3);
 }
 
-int coda_ascii_float_set_read_type(coda_asciiFloat *fl, coda_native_type read_type)
+int coda_ascii_float_set_read_type(coda_ascii_float *fl, coda_native_type read_type)
 {
     if (fl->read_type != coda_native_type_not_available)
     {
@@ -492,7 +491,7 @@ int coda_ascii_float_set_read_type(coda_asciiFloat *fl, coda_native_type read_ty
     return 0;
 }
 
-int coda_ascii_float_set_conversion(coda_asciiFloat *fl, coda_Conversion *conversion)
+int coda_ascii_float_set_conversion(coda_ascii_float *fl, coda_conversion *conversion)
 {
     if (fl->conversion != NULL)
     {
@@ -503,12 +502,12 @@ int coda_ascii_float_set_conversion(coda_asciiFloat *fl, coda_Conversion *conver
     return 0;
 }
 
-int coda_ascii_float_add_mapping(coda_asciiFloat *fl, coda_asciiFloatMapping *mapping)
+int coda_ascii_float_add_mapping(coda_ascii_float *fl, coda_ascii_float_mapping *mapping)
 {
-    return mapping_type_add_mapping((coda_asciiMappingsType *)fl, (coda_asciiMapping *)mapping);
+    return mapping_type_add_mapping((coda_ascii_mappings_type *)fl, (coda_ascii_mapping *)mapping);
 }
 
-int coda_ascii_float_validate(coda_asciiFloat *fl)
+int coda_ascii_float_validate(coda_ascii_float *fl)
 {
     if (fl->read_type == coda_native_type_not_available)
     {
@@ -518,15 +517,15 @@ int coda_ascii_float_validate(coda_asciiFloat *fl)
     return 0;
 }
 
-coda_asciiText *coda_ascii_text_new(void)
+coda_ascii_text *coda_ascii_text_new(void)
 {
-    coda_asciiText *text;
+    coda_ascii_text *text;
 
-    text = (coda_asciiText *)malloc(sizeof(coda_asciiText));
+    text = (coda_ascii_text *)malloc(sizeof(coda_ascii_text));
     if (text == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_asciiText), __FILE__, __LINE__);
+                       (long)sizeof(coda_ascii_text), __FILE__, __LINE__);
         return NULL;
     }
     text->retain_count = 0;
@@ -544,7 +543,7 @@ coda_asciiText *coda_ascii_text_new(void)
     return text;
 }
 
-int coda_ascii_text_set_byte_size(coda_asciiText *text, int64_t byte_size)
+int coda_ascii_text_set_byte_size(coda_ascii_text *text, int64_t byte_size)
 {
     if (text->byte_size_expr != NULL || text->bit_size != -1)
     {
@@ -560,7 +559,7 @@ int coda_ascii_text_set_byte_size(coda_asciiText *text, int64_t byte_size)
     return 0;
 }
 
-int coda_ascii_text_set_byte_size_expression(coda_asciiText *text, coda_Expr *byte_size_expr)
+int coda_ascii_text_set_byte_size_expression(coda_ascii_text *text, coda_expression *byte_size_expr)
 {
     if (text->byte_size_expr != NULL || text->bit_size != -1)
     {
@@ -572,7 +571,7 @@ int coda_ascii_text_set_byte_size_expression(coda_asciiText *text, coda_Expr *by
     return 0;
 }
 
-int coda_ascii_text_set_read_type(coda_asciiText *text, coda_native_type read_type)
+int coda_ascii_text_set_read_type(coda_ascii_text *text, coda_native_type read_type)
 {
     if (text->read_type != coda_native_type_not_available)
     {
@@ -589,7 +588,7 @@ int coda_ascii_text_set_read_type(coda_asciiText *text, coda_native_type read_ty
     return 0;
 }
 
-int coda_ascii_text_set_fixed_value(coda_asciiText *text, const char *fixed_value)
+int coda_ascii_text_set_fixed_value(coda_ascii_text *text, const char *fixed_value)
 {
     char *new_fixed_value = NULL;
 
@@ -613,7 +612,7 @@ int coda_ascii_text_set_fixed_value(coda_asciiText *text, const char *fixed_valu
     return 0;
 }
 
-int coda_ascii_text_validate(coda_asciiText *text)
+int coda_ascii_text_validate(coda_ascii_text *text)
 {
     if (text->byte_size_expr == NULL && text->bit_size == -1)
     {
@@ -645,15 +644,15 @@ int coda_ascii_text_validate(coda_asciiText *text)
     return 0;
 }
 
-coda_asciiLineSeparator *coda_ascii_line_separator_new(void)
+coda_ascii_line_separator *coda_ascii_line_separator_new(void)
 {
-    coda_asciiLineSeparator *text;
+    coda_ascii_line_separator *text;
 
-    text = (coda_asciiLineSeparator *)malloc(sizeof(coda_asciiLineSeparator));
+    text = (coda_ascii_line_separator *)malloc(sizeof(coda_ascii_line_separator));
     if (text == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_asciiLineSeparator), __FILE__, __LINE__);
+                       (long)sizeof(coda_ascii_line_separator), __FILE__, __LINE__);
         return NULL;
     }
     text->retain_count = 0;
@@ -667,15 +666,15 @@ coda_asciiLineSeparator *coda_ascii_line_separator_new(void)
     return text;
 }
 
-coda_asciiLine *coda_ascii_line_new(int include_eol)
+coda_ascii_line *coda_ascii_line_new(int include_eol)
 {
-    coda_asciiLine *text;
+    coda_ascii_line *text;
 
-    text = (coda_asciiLine *)malloc(sizeof(coda_asciiLine));
+    text = (coda_ascii_line *)malloc(sizeof(coda_ascii_line));
     if (text == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_asciiLine), __FILE__, __LINE__);
+                       (long)sizeof(coda_ascii_line), __FILE__, __LINE__);
         return NULL;
     }
     text->retain_count = 0;
@@ -690,15 +689,15 @@ coda_asciiLine *coda_ascii_line_new(int include_eol)
     return text;
 }
 
-coda_asciiWhiteSpace *coda_ascii_white_space_new(void)
+coda_ascii_white_space *coda_ascii_white_space_new(void)
 {
-    coda_asciiWhiteSpace *text;
+    coda_ascii_white_space *text;
 
-    text = (coda_asciiWhiteSpace *)malloc(sizeof(coda_asciiWhiteSpace));
+    text = (coda_ascii_white_space *)malloc(sizeof(coda_ascii_white_space));
     if (text == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_asciiWhiteSpace), __FILE__, __LINE__);
+                       (long)sizeof(coda_ascii_white_space), __FILE__, __LINE__);
         return NULL;
     }
     text->retain_count = 0;
@@ -712,16 +711,16 @@ coda_asciiWhiteSpace *coda_ascii_white_space_new(void)
     return text;
 }
 
-coda_asciiTime *coda_ascii_time_new(const char *format)
+coda_ascii_time *coda_ascii_time_new(const char *format)
 {
-    coda_asciiTime *time;
-    coda_asciiText *type;
+    coda_ascii_time *time;
+    coda_ascii_text *type;
 
-    time = (coda_asciiTime *)malloc(sizeof(coda_asciiTime));
+    time = (coda_ascii_time *)malloc(sizeof(coda_ascii_time));
     if (time == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_asciiTime), __FILE__, __LINE__);
+                       (long)sizeof(coda_ascii_time), __FILE__, __LINE__);
         return NULL;
     }
     time->retain_count = 0;
@@ -738,37 +737,37 @@ coda_asciiTime *coda_ascii_time_new(const char *format)
     if (strcmp(format, "ascii_envisat_datetime") == 0)
     {
         time->time_type = ascii_envisat_datetime;
-        coda_type_set_description((coda_Type *)type, "ENVISAT ASCII datetime \"DD-MMM-YYYY hh:mm:ss.uuuuuu\".");
+        coda_type_set_description((coda_type *)type, "ENVISAT ASCII datetime \"DD-MMM-YYYY hh:mm:ss.uuuuuu\".");
         coda_ascii_text_set_byte_size(type, 27);
     }
     else if (strcmp(format, "ascii_gome_datetime") == 0)
     {
         time->time_type = ascii_gome_datetime;
-        coda_type_set_description((coda_Type *)type, "GOME ASCII datetime \"DD-MMM-YYYY hh:mm:ss.uuu\".");
+        coda_type_set_description((coda_type *)type, "GOME ASCII datetime \"DD-MMM-YYYY hh:mm:ss.uuu\".");
         coda_ascii_text_set_byte_size(type, 24);
     }
     else if (strcmp(format, "ascii_eps_datetime") == 0)
     {
         time->time_type = ascii_eps_datetime;
-        coda_type_set_description((coda_Type *)type, "EPS generalised time \"YYYYMMDDHHMMSSZ\".");
+        coda_type_set_description((coda_type *)type, "EPS generalised time \"YYYYMMDDHHMMSSZ\".");
         coda_ascii_text_set_byte_size(type, 15);
     }
     else if (strcmp(format, "ascii_eps_datetime_long") == 0)
     {
         time->time_type = ascii_eps_datetime_long;
-        coda_type_set_description((coda_Type *)type, "EPS long generalised time \"YYYYMMDDHHMMSSmmmZ\".");
+        coda_type_set_description((coda_type *)type, "EPS long generalised time \"YYYYMMDDHHMMSSmmmZ\".");
         coda_ascii_text_set_byte_size(type, 18);
     }
     else if (strcmp(format, "ascii_ccsds_datetime_ymd1") == 0)
     {
         time->time_type = ascii_ccsds_datetime_ymd1;
-        coda_type_set_description((coda_Type *)type, "CCSDS ASCII datetime \"YYYY-MM-DDThh:mm:ss\".");
+        coda_type_set_description((coda_type *)type, "CCSDS ASCII datetime \"YYYY-MM-DDThh:mm:ss\".");
         coda_ascii_text_set_byte_size(type, 19);
     }
     else if (strcmp(format, "ascii_ccsds_datetime_ymd1_with_ref") == 0)
     {
         time->time_type = ascii_ccsds_datetime_ymd1_with_ref;
-        coda_type_set_description((coda_Type *)type, "CCSDS ASCII datetime with time reference "
+        coda_type_set_description((coda_type *)type, "CCSDS ASCII datetime with time reference "
                                   "\"RRR=YYYY-MM-DDThh:mm:ss\". The reference RRR can be any of \"UT1\", \"UTC\", "
                                   "\"TAI\", or \"GPS\".");
         coda_ascii_text_set_byte_size(type, 23);
@@ -776,13 +775,13 @@ coda_asciiTime *coda_ascii_time_new(const char *format)
     else if (strcmp(format, "ascii_ccsds_datetime_ymd2") == 0)
     {
         time->time_type = ascii_ccsds_datetime_ymd2;
-        coda_type_set_description((coda_Type *)type, "CCSDS ASCII datetime \"YYYY-MM-DDThh:mm:ss.uuuuuu\".");
+        coda_type_set_description((coda_type *)type, "CCSDS ASCII datetime \"YYYY-MM-DDThh:mm:ss.uuuuuu\".");
         coda_ascii_text_set_byte_size(type, 26);
     }
     else if (strcmp(format, "ascii_ccsds_datetime_ymd2_with_ref") == 0)
     {
         time->time_type = ascii_ccsds_datetime_ymd2_with_ref;
-        coda_type_set_description((coda_Type *)type, "CCSDS ASCII datetime with time reference "
+        coda_type_set_description((coda_type *)type, "CCSDS ASCII datetime with time reference "
                                   "\"RRR=YYYY-MM-DDThh:mm:ss.uuuuuu\". The reference RRR can be any of \"UT1\", "
                                   "\"UTC\", \"TAI\", or \"GPS\".");
         coda_ascii_text_set_byte_size(type, 30);
@@ -790,13 +789,13 @@ coda_asciiTime *coda_ascii_time_new(const char *format)
     else if (strcmp(format, "ascii_ccsds_datetime_utc1") == 0)
     {
         time->time_type = ascii_ccsds_datetime_utc1;
-        coda_type_set_description((coda_Type *)type, "CCSDS ASCII datetime \"YYYY-DDDThh:mm:ss\".");
+        coda_type_set_description((coda_type *)type, "CCSDS ASCII datetime \"YYYY-DDDThh:mm:ss\".");
         coda_ascii_text_set_byte_size(type, 17);
     }
     else if (strcmp(format, "ascii_ccsds_datetime_utc2") == 0)
     {
         time->time_type = ascii_ccsds_datetime_utc2;
-        coda_type_set_description((coda_Type *)type, "CCSDS ASCII datetime \"YYYY-DDDThh:mm:ss.uuuuuu\". "
+        coda_type_set_description((coda_type *)type, "CCSDS ASCII datetime \"YYYY-DDDThh:mm:ss.uuuuuu\". "
                                   "Microseconds can be written using less digits (1-6 digits): e.g.: "
                                   "\"YYYY-DDDThh:mm:ss.u     \"");
         coda_ascii_text_set_byte_size(type, 24);
@@ -807,7 +806,7 @@ coda_asciiTime *coda_ascii_time_new(const char *format)
         delete_ascii_time(time);
         return NULL;
     }
-    time->base_type = (coda_asciiType *)type;
+    time->base_type = (coda_ascii_type *)type;
 
     /* set bit_size */
     time->bit_size = time->base_type->bit_size;
@@ -815,9 +814,9 @@ coda_asciiTime *coda_ascii_time_new(const char *format)
     return time;
 }
 
-int coda_ascii_time_add_mapping(coda_asciiTime *time, coda_asciiFloatMapping *mapping)
+int coda_ascii_time_add_mapping(coda_ascii_time *time, coda_ascii_float_mapping *mapping)
 {
-    if (mapping_type_add_mapping((coda_asciiMappingsType *)time->base_type, (coda_asciiMapping *)mapping) != 0)
+    if (mapping_type_add_mapping((coda_ascii_mappings_type *)time->base_type, (coda_ascii_mapping *)mapping) != 0)
     {
         return -1;
     }
@@ -828,9 +827,9 @@ int coda_ascii_time_add_mapping(coda_asciiTime *time, coda_asciiFloatMapping *ma
     return 0;
 }
 
-coda_asciiIntegerMapping *coda_ascii_integer_mapping_new(const char *str, int64_t value)
+coda_ascii_integer_mapping *coda_ascii_integer_mapping_new(const char *str, int64_t value)
 {
-    coda_asciiIntegerMapping *mapping;
+    coda_ascii_integer_mapping *mapping;
 
     if (str == NULL)
     {
@@ -838,11 +837,11 @@ coda_asciiIntegerMapping *coda_ascii_integer_mapping_new(const char *str, int64_
         return NULL;
     }
 
-    mapping = (coda_asciiIntegerMapping *)malloc(sizeof(coda_asciiIntegerMapping));
+    mapping = (coda_ascii_integer_mapping *)malloc(sizeof(coda_ascii_integer_mapping));
     if (mapping == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_asciiIntegerMapping), __FILE__, __LINE__);
+                       (long)sizeof(coda_ascii_integer_mapping), __FILE__, __LINE__);
         return NULL;
     }
     mapping->length = 0;
@@ -862,14 +861,14 @@ coda_asciiIntegerMapping *coda_ascii_integer_mapping_new(const char *str, int64_
     return mapping;
 }
 
-void coda_ascii_integer_mapping_delete(coda_asciiIntegerMapping *mapping)
+void coda_ascii_integer_mapping_delete(coda_ascii_integer_mapping *mapping)
 {
-    delete_mapping((coda_asciiMapping *)mapping);
+    delete_mapping((coda_ascii_mapping *)mapping);
 }
 
-coda_asciiFloatMapping *coda_ascii_float_mapping_new(const char *str, double value)
+coda_ascii_float_mapping *coda_ascii_float_mapping_new(const char *str, double value)
 {
-    coda_asciiFloatMapping *mapping;
+    coda_ascii_float_mapping *mapping;
 
     if (str == NULL)
     {
@@ -877,11 +876,11 @@ coda_asciiFloatMapping *coda_ascii_float_mapping_new(const char *str, double val
         return NULL;
     }
 
-    mapping = (coda_asciiFloatMapping *)malloc(sizeof(coda_asciiFloatMapping));
+    mapping = (coda_ascii_float_mapping *)malloc(sizeof(coda_ascii_float_mapping));
     if (mapping == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_asciiFloatMapping), __FILE__, __LINE__);
+                       (long)sizeof(coda_ascii_float_mapping), __FILE__, __LINE__);
         return NULL;
     }
     mapping->length = 0;
@@ -901,9 +900,9 @@ coda_asciiFloatMapping *coda_ascii_float_mapping_new(const char *str, double val
     return mapping;
 }
 
-void coda_ascii_float_mapping_delete(coda_asciiFloatMapping *mapping)
+void coda_ascii_float_mapping_delete(coda_ascii_float_mapping *mapping)
 {
-    delete_mapping((coda_asciiMapping *)mapping);
+    delete_mapping((coda_ascii_mapping *)mapping);
 }
 
 void coda_ascii_done(void)

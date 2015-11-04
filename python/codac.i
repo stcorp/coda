@@ -99,16 +99,6 @@
 %include "coda_ignore.i"
 
 /*
-    declarations _not_ included in coda_ignore.i that nevertheless
-    should be ignored. these declarations are related to error reporting,
-    but this is handled through exceptions in Python.
-*/
-%ignore coda_errno;
-%ignore coda_set_error;
-%ignore coda_errno_to_string;
-
-
-/*
 ----------------------------------------------------------------------------------------
 - CUSTOM WRAPPERS AND HELPER FUNCTIONS THAT DO NOT NEED THE GLOBAL EXCEPTION MECHANISM -
 ----------------------------------------------------------------------------------------
@@ -201,7 +191,7 @@ const char *_libcoda_version()
 
 
 /*
-    custom wrapper for coda_Cursor. pointers to coda_Cursor structs are
+    custom wrapper for coda_cursor. pointers to coda_cursor structs are
     treated as pointers to an opaque type. the definitions below create
     a Cursor proxy class that has no attributes (i.e. the underlying C
     implementation is unreachable from Python). the proxy class allows
@@ -209,17 +199,17 @@ const char *_libcoda_version()
     
         import codac
     
-        #create new coda_Cursor
+        #create new coda_cursor
         cursor = codac.Cursor()  
         
         #make a deep copy of cursor
         import copy
         cursor2 = copy.deepcopy(cursor)
         
-        #delete cursor (NOTE: also frees underlying coda_Cursor struct)
+        #delete cursor (NOTE: also frees underlying coda_cursor struct)
         del cursor
         
-    Python takes ownership of the underlying coda_Cursor structs created
+    Python takes ownership of the underlying coda_cursor structs created
     through the constructor Cursor.__init__(), copy.copy(), or
     copy.deepcopy().
 */
@@ -227,13 +217,13 @@ const char *_libcoda_version()
     %newobject ensures that Python will take ownership of the underlying
     C struct returned by __deepcopy__().
 */
-%newobject coda_Cursor_struct::__deepcopy__;
-%feature("shadow") coda_Cursor_struct::__deepcopy__
+%newobject coda_cursor_struct::__deepcopy__;
+%feature("shadow") coda_cursor_struct::__deepcopy__
 {
     def __deepcopy__(self,memo):
         return _codac.Cursor___deepcopy__(self)
 }
-%exception coda_Cursor_struct::__deepcopy__
+%exception coda_cursor_struct::__deepcopy__
 {
     $action
     
@@ -242,29 +232,29 @@ const char *_libcoda_version()
         return PyErr_NoMemory();
     }
 }
-%rename(Cursor) coda_Cursor_struct;
-struct coda_Cursor_struct
+%rename(Cursor) coda_cursor_struct;
+struct coda_cursor_struct
 {
     %extend
     {
-        coda_Cursor_struct()
+        coda_cursor_struct()
         {
-            return (coda_Cursor *)malloc(sizeof(coda_Cursor));
+            return (coda_cursor *)malloc(sizeof(coda_cursor));
         }
         
-        ~coda_Cursor_struct()
+        ~coda_cursor_struct()
         {
             free(self);
         }
         
-        coda_Cursor *__deepcopy__()
+        coda_cursor *__deepcopy__()
         {
-            coda_Cursor *new_cursor;
+            coda_cursor *new_cursor;
 
-            new_cursor = (coda_Cursor *)malloc(sizeof(coda_Cursor));
+            new_cursor = (coda_cursor *)malloc(sizeof(coda_cursor));
             if( new_cursor != NULL )
             {
-                memcpy(new_cursor, self, sizeof(coda_Cursor));
+                memcpy(new_cursor, self, sizeof(coda_cursor));
             }
             return new_cursor;
         }
@@ -276,7 +266,6 @@ struct coda_Cursor_struct
             return _codac.Cursor___deepcopy__(self)
     %}
 };
-
 
 /*
 ----------------------------------------------------------------------------------------
@@ -314,6 +303,7 @@ POSIX_SCALAR_OUTPUT_HELPER(uint64_t, PyLong_FromUnsignedLongLong)
     coda_cursor_get_file_bit_offset()::int64_t *bit_size
     coda_cursor_get_file_byte_offset()::int64_t *byte_size
     coda_recognize_file()::int64_t *file_size
+    coda_expression_eval_integer()::int64_t *value
 */
 %apply int64_t *OUTPUT { int64_t *dst,
                          int64_t *file_size,
@@ -331,6 +321,9 @@ POSIX_SCALAR_OUTPUT_HELPER(uint64_t, PyLong_FromUnsignedLongLong)
 /*
     coda_double_to_datetime()::int *YEAR, int *MONTH, int *DAY, 
                                int *HOUR, int *MINUTE, int *SECOND, int *MUSEC
+    coda_double_to_utcdatetime()::int *YEAR, int *MONTH, int *DAY, 
+                                  int *HOUR, int *MINUTE, int *SECOND,
+                                  int *MUSEC
     coda_get_product_version()::int *version
     coda_type_has_ascii_content::int *has_ascii_content
     coda_type_get_record_field_hidden_status()::int *hidden
@@ -341,6 +334,7 @@ POSIX_SCALAR_OUTPUT_HELPER(uint64_t, PyLong_FromUnsignedLongLong)
     coda_cursor_get_depth()::int *depth
     coda_cursor_get_record_field_available_status()::int *available
     coda_recognize_file()::int *product_version
+    coda_expression_eval_bool():int *value
 */
 %apply int *OUTPUT { int *YEAR, int *MONTH, int *DAY, 
                      int *HOUR, int *MINUTE, int *SECOND, int *MUSEC,
@@ -351,7 +345,8 @@ POSIX_SCALAR_OUTPUT_HELPER(uint64_t, PyLong_FromUnsignedLongLong)
                      int *is_union,
                      int *num_dims,
                      int *depth,
-                     int *product_version };
+                     int *product_version,
+                     int *value };
 
 
 /*    
@@ -377,11 +372,15 @@ POSIX_SCALAR_OUTPUT_HELPER(uint64_t, PyLong_FromUnsignedLongLong)
 /*
     coda_cursor_read_complex_double_split()::double *dst_re, double *dst_im
     coda_datetime_to_double()::double *datetime
+    coda_utcdatetime_to_double()::double *datetime
     coda_string_to_time()::double *datetime
+    coda_utcstring_to_time()::double *datetime
+    coda_expression_eval_float()::double *value
 */
 %apply double *OUTPUT { double *dst,
                         double *dst_re, double *dst_im,
-                        double *datetime };
+                        double *datetime,
+                        double *value };
 
 
 /*
@@ -407,6 +406,7 @@ POSIX_SCALAR_OUTPUT_HELPER(uint64_t, PyLong_FromUnsignedLongLong)
 */
 /*
     coda_time_to_string()::char *str
+    coda_utctime_to_string()::char *str
 */
 %cstring_bounded_output(char *str, 26);
 
@@ -420,14 +420,15 @@ POSIX_SCALAR_OUTPUT_HELPER(uint64_t, PyLong_FromUnsignedLongLong)
 /*
     coda_type_get_fixed_value()::(const char **fixed_value, long *bit_size)
 */
-%apply (const char **BINARY_OUTPUT, long *LENGTH) { (const char **fixed_value, long *length) };
+%apply (const char **BINARY_OUTPUT, long *LENGTH) { (const char **fixed_value, long *length),
+                                                    (char **value, long *length)};
 
 
 /*
     special string handling for the user-allocated output string
     argument of coda_cursor_read_string().
 */
-%typemap(in, numinputs=1) (const coda_Cursor *cursor, char *dst, long dst_size)
+%typemap(in, numinputs=1) (const coda_cursor *cursor, char *dst, long dst_size)
 {
     SWIG_Python_ConvertPtr($input, (void **)&$1,
                            $1_descriptor,
@@ -445,14 +446,22 @@ POSIX_SCALAR_OUTPUT_HELPER(uint64_t, PyLong_FromUnsignedLongLong)
     $2[0] = '\0';
 }
 
-%typemap(argout,fragment="t_output_helper") (const coda_Cursor *cursor, char *dst, long dst_size)
+%typemap(argout,fragment="t_output_helper") (const coda_cursor *cursor, char *dst, long dst_size)
 {
     $result = t_output_helper($result, PyString_FromString($2));
 }
 
-%typemap(freearg) (const coda_Cursor *cursor, char *dst, long dst_size)
+%typemap(freearg) (const coda_cursor *cursor, char *dst, long dst_size)
 {
     free($2);
+}
+
+%typemap(freearg) (char **value, long *length)
+{
+    if (*($1) != NULL)
+    {
+        coda_free(*($1));
+    }
 }
 
 
@@ -464,18 +473,23 @@ POSIX_SCALAR_OUTPUT_HELPER(uint64_t, PyLong_FromUnsignedLongLong)
 
 
 /*
-    handle output "coda_ProductFile **" argument to coda_open()
+    handle output "coda_product **" argument to coda_open()
 */
-%apply opaque_pointer **OUTPUT { coda_ProductFile ** }
+%apply opaque_pointer **OUTPUT { coda_product ** }
 
 
 /*
-    handle output "coda_Type **" arguments to
+    handle output "coda_type **" arguments to
     coda_get_product_root_type(), coda_type_get_record_field_type(),
     coda_type_get_array_base_type(), coda_type_get_special_base_type(),
     coda_cursor_get_type()
 */
-%apply opaque_pointer **OUTPUT { coda_Type ** }
+%apply opaque_pointer **OUTPUT { coda_type ** }
+
+/*
+ handle output "coda_expression **" argument to coda_expression_from_string()
+ */
+%apply opaque_pointer **OUTPUT { coda_expression ** }
 
 
 /*
@@ -558,7 +572,7 @@ DOUBLE_PAIR_ARRAY_NUMPY_OUTPUT_HELPER(cursor_read_complex_double_pairs_array,cod
 */
 %inline
 %{
-    PyObject * cursor_read_complex(const coda_Cursor *cursor)
+    PyObject * cursor_read_complex(const coda_cursor *cursor)
     {
         int tmp_result;
         double complex_number[2];
@@ -606,7 +620,7 @@ NUMPY_OUTPUT_HELPER(cursor_read_complex_array,coda_cursor_read_complex_double_pa
 */
 %inline
 %{
-    PyObject *cursor_read_bits(const coda_Cursor *cursor, int64_t bit_offset, int64_t bit_length)
+    PyObject *cursor_read_bits(const coda_cursor *cursor, int64_t bit_offset, int64_t bit_length)
     {
         int64_t byte_length;
         npy_intp tmp_byte_length;
@@ -615,17 +629,14 @@ NUMPY_OUTPUT_HELPER(cursor_read_complex_array,coda_cursor_read_complex_double_pa
     
         byte_length = (bit_length >> 3) + ((bit_length & 0x7) != 0 ? 1 : 0);
 
-        /*
-            throw an exception if byte_length > INT_MAX, because PyArray_SimpleNew
-            does not support larger array sizes.
-        */
-        if (byte_length > INT_MAX)
-        {
-            PyErr_SetString(PyExc_ValueError,"bit_length converted to bytes should not exceed the maximum size of an int.");
-            return NULL;
-        }
         
         tmp_byte_length = (npy_intp)byte_length;
+        if (((int64_t)byte_length) < byte_length)
+        {
+            PyErr_SetString(PyExc_ValueError,
+                            "bit_length converted to bytes should not exceed the maximum allowed size of an integer.");
+            return NULL;
+        }
         tmp = PyArray_SimpleNew(1, &tmp_byte_length, NPY_UINT8);
         if (tmp == NULL)
         {
@@ -651,23 +662,18 @@ NUMPY_OUTPUT_HELPER(cursor_read_complex_array,coda_cursor_read_complex_double_pa
 */
 %inline
 %{
-    PyObject *cursor_read_bytes(const coda_Cursor *cursor, int64_t offset, int64_t length)
+    PyObject *cursor_read_bytes(const coda_cursor *cursor, int64_t offset, int64_t length)
     {
         npy_intp tmp_length;
         int tmp_result;
         PyObject *tmp;
     
-        /*
-            throw an exception if length > INT_MAX, because PyArray_SimpleNew does not
-            support larger array sizes.
-        */
-        if( length > INT_MAX )
+        tmp_length = (npy_intp)length;
+        if (((int64_t)tmp_length) < length)
         {
-            PyErr_SetString(PyExc_ValueError, "length should not exceed the maximum size of an int.");
+            PyErr_SetString(PyExc_ValueError, "length should not exceed the maximum allowed size of an integer.");
             return NULL;
         }
-        
-        tmp_length = (npy_intp)length;
         tmp = PyArray_SimpleNew(1, &tmp_length, NPY_UINT8);
         if (tmp == NULL)
         {
@@ -686,7 +692,6 @@ NUMPY_OUTPUT_HELPER(cursor_read_complex_array,coda_cursor_read_complex_double_pa
     }
 %}
 %ignore coda_cursor_read_bytes;
-
 
 /*
 ----------------------------------------------------------------------------------------
@@ -715,6 +720,7 @@ const char *coda_type_get_class_name(coda_type_class type_class);
 const char *coda_type_get_native_type_name(coda_native_type native_type);
 const char *coda_type_get_special_type_name(coda_special_type special_type);
 long coda_c_index_to_fortran_index(int num_dims, const long dim[], long index);
+void coda_expression_delete(coda_expression *expr);
 %ignore coda_done;
 %ignore coda_NaN;
 %ignore coda_PlusInf;
@@ -724,6 +730,7 @@ long coda_c_index_to_fortran_index(int num_dims, const long dim[], long index);
 %ignore coda_type_get_native_type_name;
 %ignore coda_type_get_special_type_name;
 %ignore coda_c_index_to_fortran_index;
+%ignore coda_expression_delete;
 
 /*
     functions that return an int that represents a
@@ -738,6 +745,7 @@ int coda_isNaN(const double x);
 int coda_isInf(const double x);
 int coda_isPlusInf(const double x);
 int coda_isMinInf(const double x);
+int coda_expression_is_constant(const coda_expression *expr);
 %ignore coda_get_option_bypass_special_types;
 %ignore coda_get_option_perform_boundary_checks;
 %ignore coda_get_option_perform_conversions;
@@ -770,6 +778,15 @@ int coda_isMinInf(const double x);
 %typemap(out) int;
 %typemap(out) int = void;
 
+/*
+ specially handle coda_(utc)string_to_time, since the first argument should
+ not be handled as output argument (see coda_time_to_string rule further on)
+ */
+int coda_string_to_time(const char *INPUT, double *OUTPUT);
+%ignore coda_string_to_time;
+int coda_utcstring_to_time(const char *INPUT, double *OUTPUT);
+%ignore coda_utcstring_to_time;
+
 
 /*
  specially handle coda_string_to_time, since the first argument should not
@@ -788,3 +805,17 @@ int coda_string_to_time(const char *INPUT, double *OUTPUT);
     wrap everything in coda.h
 */
 %include "coda.h"
+
+%pythoncode %{
+
+# wrap expression eval functions such that the cursor argument becomes optional
+def expression_eval_bool(expr, cursor=None):
+    return _codac.expression_eval_bool(expr, cursor)
+def expression_eval_integer(expr, cursor=None):
+    return _codac.expression_eval_integer(expr, cursor)
+def expression_eval_double(expr, cursor=None):
+    return _codac.expression_eval_double(expr, cursor)
+def expression_eval_string(expr, cursor=None):
+    return _codac.expression_eval_string(expr, cursor)
+%}
+

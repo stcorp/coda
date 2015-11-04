@@ -76,34 +76,34 @@ static void get_hdf5_type_and_size(coda_native_type read_type, hid_t *type_id, i
     }
 }
 
-int coda_hdf5_cursor_set_product(coda_Cursor *cursor, coda_ProductFile *pf)
+int coda_hdf5_cursor_set_product(coda_cursor *cursor, coda_product *product)
 {
-    cursor->pf = pf;
+    cursor->product = product;
     cursor->n = 1;
-    cursor->stack[0].type = pf->root_type;
+    cursor->stack[0].type = product->root_type;
     cursor->stack[0].index = -1;        /* there is no index for the root of the product */
     cursor->stack[0].bit_offset = -1;   /* not applicable for HDF5 backend */
 
     return 0;
 }
 
-int coda_hdf5_cursor_goto_record_field_by_index(coda_Cursor *cursor, long index)
+int coda_hdf5_cursor_goto_record_field_by_index(coda_cursor *cursor, long index)
 {
-    coda_Type *field_type;
+    coda_type *field_type;
 
-    if (coda_hdf5_type_get_record_field_type((coda_Type *)cursor->stack[cursor->n - 1].type, index, &field_type) != 0)
+    if (coda_hdf5_type_get_record_field_type((coda_type *)cursor->stack[cursor->n - 1].type, index, &field_type) != 0)
     {
         return -1;
     }
 
     cursor->n++;
-    cursor->stack[cursor->n - 1].type = (coda_DynamicType *)field_type;
+    cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)field_type;
     cursor->stack[cursor->n - 1].index = index;
     cursor->stack[cursor->n - 1].bit_offset = -1;       /* not applicable for HDF5 backend */
     return 0;
 }
 
-int coda_hdf5_cursor_goto_next_record_field(coda_Cursor *cursor)
+int coda_hdf5_cursor_goto_next_record_field(coda_cursor *cursor)
 {
     cursor->n--;
     if (coda_hdf5_cursor_goto_record_field_by_index(cursor, cursor->stack[cursor->n].index + 1) != 0)
@@ -114,15 +114,15 @@ int coda_hdf5_cursor_goto_next_record_field(coda_Cursor *cursor)
     return 0;
 }
 
-int coda_hdf5_cursor_goto_array_element(coda_Cursor *cursor, int num_subs, const long subs[])
+int coda_hdf5_cursor_goto_array_element(coda_cursor *cursor, int num_subs, const long subs[])
 {
-    coda_Type *base_type;
+    coda_type *base_type;
     long offset_elements;
     int num_dims;
     long dim[CODA_MAX_NUM_DIMS];
     long i;
 
-    if (coda_hdf5_type_get_array_dim((coda_Type *)cursor->stack[cursor->n - 1].type, &num_dims, dim) != 0)
+    if (coda_hdf5_type_get_array_dim((coda_type *)cursor->stack[cursor->n - 1].type, &num_dims, dim) != 0)
     {
         return -1;
     }
@@ -153,22 +153,22 @@ int coda_hdf5_cursor_goto_array_element(coda_Cursor *cursor, int num_subs, const
         offset_elements += subs[i];
     }
 
-    if (coda_hdf5_type_get_array_base_type((coda_Type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
+    if (coda_hdf5_type_get_array_base_type((coda_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
     {
         return -1;
     }
 
     cursor->n++;
-    cursor->stack[cursor->n - 1].type = (coda_DynamicType *)base_type;
+    cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)base_type;
     cursor->stack[cursor->n - 1].index = offset_elements;
     cursor->stack[cursor->n - 1].bit_offset = -1;       /* not applicable for HDF5 backend */
 
     return 0;
 }
 
-int coda_hdf5_cursor_goto_array_element_by_index(coda_Cursor *cursor, long index)
+int coda_hdf5_cursor_goto_array_element_by_index(coda_cursor *cursor, long index)
 {
-    coda_Type *base_type;
+    coda_type *base_type;
 
     /* check the range for index */
     if (coda_option_perform_boundary_checks)
@@ -187,20 +187,20 @@ int coda_hdf5_cursor_goto_array_element_by_index(coda_Cursor *cursor, long index
         }
     }
 
-    if (coda_hdf5_type_get_array_base_type((coda_Type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
+    if (coda_hdf5_type_get_array_base_type((coda_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
     {
         return -1;
     }
 
     cursor->n++;
-    cursor->stack[cursor->n - 1].type = (coda_DynamicType *)base_type;
+    cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)base_type;
     cursor->stack[cursor->n - 1].index = index;
     cursor->stack[cursor->n - 1].bit_offset = -1;       /* not applicable for HDF5 backend */
 
     return 0;
 }
 
-int coda_hdf5_cursor_goto_next_array_element(coda_Cursor *cursor)
+int coda_hdf5_cursor_goto_next_array_element(coda_cursor *cursor)
 {
     if (coda_option_perform_boundary_checks)
     {
@@ -230,11 +230,11 @@ int coda_hdf5_cursor_goto_next_array_element(coda_Cursor *cursor)
     return 0;
 }
 
-int coda_hdf5_cursor_goto_attributes(coda_Cursor *cursor)
+int coda_hdf5_cursor_goto_attributes(coda_cursor *cursor)
 {
-    coda_hdf5Type *type;
+    coda_hdf5_type *type;
 
-    type = (coda_hdf5Type *)cursor->stack[cursor->n - 1].type;
+    type = (coda_hdf5_type *)cursor->stack[cursor->n - 1].type;
     cursor->n++;
     switch (type->tag)
     {
@@ -242,13 +242,13 @@ int coda_hdf5_cursor_goto_attributes(coda_Cursor *cursor)
         case tag_hdf5_compound_datatype:
         case tag_hdf5_attribute:
         case tag_hdf5_attribute_record:
-            cursor->stack[cursor->n - 1].type = (coda_DynamicType *)coda_hdf5_empty_attribute_record();
+            cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)coda_hdf5_empty_attribute_record();
             break;
         case tag_hdf5_group:
-            cursor->stack[cursor->n - 1].type = (coda_DynamicType *)((coda_hdf5Group *)type)->attributes;
+            cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)((coda_hdf5_group *)type)->attributes;
             break;
         case tag_hdf5_dataset:
-            cursor->stack[cursor->n - 1].type = (coda_DynamicType *)((coda_hdf5DataSet *)type)->attributes;
+            cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)((coda_hdf5_dataset *)type)->attributes;
             break;
         default:
             assert(0);
@@ -262,30 +262,30 @@ int coda_hdf5_cursor_goto_attributes(coda_Cursor *cursor)
     return 0;
 }
 
-int coda_hdf5_cursor_get_num_elements(const coda_Cursor *cursor, long *num_elements)
+int coda_hdf5_cursor_get_num_elements(const coda_cursor *cursor, long *num_elements)
 {
-    coda_hdf5Type *type;
+    coda_hdf5_type *type;
 
-    type = (coda_hdf5Type *)cursor->stack[cursor->n - 1].type;
+    type = (coda_hdf5_type *)cursor->stack[cursor->n - 1].type;
     switch (type->tag)
     {
         case tag_hdf5_basic_datatype:
             *num_elements = 1;
             break;
         case tag_hdf5_compound_datatype:
-            *num_elements = (long)((coda_hdf5CompoundDataType *)type)->num_members;
+            *num_elements = (long)((coda_hdf5_compound_data_type *)type)->num_members;
             break;
         case tag_hdf5_attribute:
-            *num_elements = (long)((coda_hdf5Attribute *)type)->num_elements;
+            *num_elements = (long)((coda_hdf5_attribute *)type)->num_elements;
             break;
         case tag_hdf5_attribute_record:
-            *num_elements = ((coda_hdf5AttributeRecord *)type)->num_attributes;
+            *num_elements = ((coda_hdf5_attribute_record *)type)->num_attributes;
             break;
         case tag_hdf5_group:
-            *num_elements = (long)((coda_hdf5Group *)type)->num_objects;
+            *num_elements = (long)((coda_hdf5_group *)type)->num_objects;
             break;
         case tag_hdf5_dataset:
-            *num_elements = (long)((coda_hdf5DataSet *)type)->num_elements;
+            *num_elements = (long)((coda_hdf5_dataset *)type)->num_elements;
             break;
         default:
             assert(0);
@@ -295,19 +295,19 @@ int coda_hdf5_cursor_get_num_elements(const coda_Cursor *cursor, long *num_eleme
     return 0;
 }
 
-int coda_hdf5_cursor_get_string_length(const coda_Cursor *cursor, long *length)
+int coda_hdf5_cursor_get_string_length(const coda_cursor *cursor, long *length)
 {
-    coda_hdf5BasicDataType *base_type;
+    coda_hdf5_basic_data_type *base_type;
 
-    base_type = (coda_hdf5BasicDataType *)cursor->stack[cursor->n - 1].type;
+    base_type = (coda_hdf5_basic_data_type *)cursor->stack[cursor->n - 1].type;
     if (base_type->is_variable_string)
     {
-        coda_hdf5DataSet *dataset;
+        coda_hdf5_dataset *dataset;
         long array_index;
         hsize_t size;
 
         /* in CODA, variable strings should only exist when the parent is a dataset */
-        dataset = (coda_hdf5DataSet *)cursor->stack[cursor->n - 2].type;
+        dataset = (coda_hdf5_dataset *)cursor->stack[cursor->n - 2].type;
         assert(dataset->tag == tag_hdf5_dataset);
         array_index = cursor->stack[cursor->n - 1].index;
         if (dataset->ndims > 0)
@@ -349,22 +349,22 @@ int coda_hdf5_cursor_get_string_length(const coda_Cursor *cursor, long *length)
 
         return 0;
     }
-    return coda_hdf5_type_get_string_length((coda_Type *)cursor->stack[cursor->n - 1].type, length);
+    return coda_hdf5_type_get_string_length((coda_type *)cursor->stack[cursor->n - 1].type, length);
 }
 
-int coda_hdf5_cursor_get_array_dim(const coda_Cursor *cursor, int *num_dims, long dim[])
+int coda_hdf5_cursor_get_array_dim(const coda_cursor *cursor, int *num_dims, long dim[])
 {
-    return coda_hdf5_type_get_array_dim((coda_Type *)cursor->stack[cursor->n - 1].type, num_dims, dim);
+    return coda_hdf5_type_get_array_dim((coda_type *)cursor->stack[cursor->n - 1].type, num_dims, dim);
 }
 
 /* since hdf5 also provides some type conversions of its own we pass a value for 'from_type' that matches
  * 'to_type' as closely as possible. The 'from_type' parameter does therefore not have to match the real storage
  * type of the data.
  */
-static int coda_hdf5_read_array(const coda_Cursor *cursor, void *dst, coda_native_type from_type,
+static int coda_hdf5_read_array(const coda_cursor *cursor, void *dst, coda_native_type from_type,
                                 coda_native_type to_type, coda_array_ordering array_ordering)
 {
-    coda_hdf5DataType *base_type;
+    coda_hdf5_data_type *base_type;
     hid_t mem_type_id;
     char *buffer;
     int conversion_needed;
@@ -385,18 +385,18 @@ static int coda_hdf5_read_array(const coda_Cursor *cursor, void *dst, coda_nativ
         /* no data to be read */
         return 0;
     }
-    if (coda_hdf5_type_get_array_dim((coda_Type *)cursor->stack[cursor->n - 1].type, &num_dims, dim) != 0)
+    if (coda_hdf5_type_get_array_dim((coda_type *)cursor->stack[cursor->n - 1].type, &num_dims, dim) != 0)
     {
         return -1;
     }
 
-    if (((coda_hdf5Type *)cursor->stack[cursor->n - 1].type)->tag == tag_hdf5_attribute)
+    if (((coda_hdf5_type *)cursor->stack[cursor->n - 1].type)->tag == tag_hdf5_attribute)
     {
-        base_type = ((coda_hdf5Attribute *)cursor->stack[cursor->n - 1].type)->base_type;
+        base_type = ((coda_hdf5_attribute *)cursor->stack[cursor->n - 1].type)->base_type;
     }
     else
     {
-        base_type = ((coda_hdf5DataSet *)cursor->stack[cursor->n - 1].type)->base_type;
+        base_type = ((coda_hdf5_dataset *)cursor->stack[cursor->n - 1].type)->base_type;
     }
 
     if (H5Tget_class(base_type->datatype_id) == H5T_ENUM)
@@ -433,9 +433,9 @@ static int coda_hdf5_read_array(const coda_Cursor *cursor, void *dst, coda_nativ
         buffer = (char *)dst;
     }
 
-    if (((coda_hdf5Type *)cursor->stack[cursor->n - 1].type)->tag == tag_hdf5_attribute)
+    if (((coda_hdf5_type *)cursor->stack[cursor->n - 1].type)->tag == tag_hdf5_attribute)
     {
-        if (H5Aread(((coda_hdf5Attribute *)cursor->stack[cursor->n - 1].type)->attribute_id, mem_type_id, buffer) < 0)
+        if (H5Aread(((coda_hdf5_attribute *)cursor->stack[cursor->n - 1].type)->attribute_id, mem_type_id, buffer) < 0)
         {
             coda_set_error(CODA_ERROR_HDF5, NULL);
             if (conversion_needed)
@@ -448,7 +448,7 @@ static int coda_hdf5_read_array(const coda_Cursor *cursor, void *dst, coda_nativ
     }
     else
     {
-        if (H5Dread(((coda_hdf5DataSet *)cursor->stack[cursor->n - 1].type)->dataset_id, mem_type_id, H5S_ALL, H5S_ALL,
+        if (H5Dread(((coda_hdf5_dataset *)cursor->stack[cursor->n - 1].type)->dataset_id, mem_type_id, H5S_ALL, H5S_ALL,
                     H5P_DEFAULT, buffer) < 0)
         {
             coda_set_error(CODA_ERROR_HDF5, NULL);
@@ -733,10 +733,10 @@ static int coda_hdf5_read_array(const coda_Cursor *cursor, void *dst, coda_nativ
     return 0;
 }
 
-static int coda_hdf5_read_basic_type(const coda_Cursor *cursor, coda_native_type to_type, void *dst, long dst_size)
+static int coda_hdf5_read_basic_type(const coda_cursor *cursor, coda_native_type to_type, void *dst, long dst_size)
 {
-    coda_hdf5BasicDataType *base_type;
-    coda_hdf5CompoundDataType *compound_type = NULL;
+    coda_hdf5_basic_data_type *base_type;
+    coda_hdf5_compound_data_type *compound_type = NULL;
     hid_t datatype_to;
     char *buffer = NULL;
     char *buffer_offset;        /* position in buffer where our value is stored */
@@ -747,15 +747,15 @@ static int coda_hdf5_read_basic_type(const coda_Cursor *cursor, coda_native_type
     long size = -1;
 
     assert(cursor->n > 1);
-    base_type = (coda_hdf5BasicDataType *)cursor->stack[cursor->n - 1].type;
+    base_type = (coda_hdf5_basic_data_type *)cursor->stack[cursor->n - 1].type;
 
     /* if the parent is a compound data type then this is a compound member */
-    is_compound_member = (((coda_hdf5Type *)cursor->stack[cursor->n - 2].type)->tag == tag_hdf5_compound_datatype);
+    is_compound_member = (((coda_hdf5_type *)cursor->stack[cursor->n - 2].type)->tag == tag_hdf5_compound_datatype);
     if (is_compound_member)
     {
         assert(cursor->n > 2);
         compound_index = cursor->stack[cursor->n - 1].index;
-        compound_type = (coda_hdf5CompoundDataType *)cursor->stack[cursor->n - 2].type;
+        compound_type = (coda_hdf5_compound_data_type *)cursor->stack[cursor->n - 2].type;
         /* the parent of the compound data type should be the dataset or attribute */
         array_depth = cursor->n - 3;
         datatype_to = compound_type->member_type[compound_index];
@@ -766,8 +766,8 @@ static int coda_hdf5_read_basic_type(const coda_Cursor *cursor, coda_native_type
         array_depth = cursor->n - 2;
         datatype_to = base_type->datatype_id;
     }
-    assert(((coda_hdf5Type *)cursor->stack[array_depth].type)->tag == tag_hdf5_attribute ||
-           ((coda_hdf5Type *)cursor->stack[array_depth].type)->tag == tag_hdf5_dataset);
+    assert(((coda_hdf5_type *)cursor->stack[array_depth].type)->tag == tag_hdf5_attribute ||
+           ((coda_hdf5_type *)cursor->stack[array_depth].type)->tag == tag_hdf5_dataset);
 
     array_index = cursor->stack[array_depth + 1].index;
 
@@ -776,13 +776,13 @@ static int coda_hdf5_read_basic_type(const coda_Cursor *cursor, coda_native_type
         size = H5Tget_size(datatype_to);
     }
 
-    if (((coda_hdf5Type *)cursor->stack[array_depth].type)->tag == tag_hdf5_attribute)
+    if (((coda_hdf5_type *)cursor->stack[array_depth].type)->tag == tag_hdf5_attribute)
     {
-        coda_hdf5Attribute *attribute;
+        coda_hdf5_attribute *attribute;
 
         /* for attributes only the full array can be read (i.e. there is no data space that can be set) */
 
-        attribute = (coda_hdf5Attribute *)cursor->stack[array_depth].type;
+        attribute = (coda_hdf5_attribute *)cursor->stack[array_depth].type;
 
         buffer = malloc((size_t)attribute->num_elements * size);
         if (buffer == NULL)
@@ -803,10 +803,10 @@ static int coda_hdf5_read_basic_type(const coda_Cursor *cursor, coda_native_type
     }
     else
     {
-        coda_hdf5DataSet *dataset;
+        coda_hdf5_dataset *dataset;
         hid_t mem_space_id;
 
-        dataset = (coda_hdf5DataSet *)cursor->stack[array_depth].type;
+        dataset = (coda_hdf5_dataset *)cursor->stack[array_depth].type;
 
         if (dataset->ndims > 0)
         {
@@ -972,17 +972,17 @@ static int coda_hdf5_read_basic_type(const coda_Cursor *cursor, coda_native_type
     return 0;
 }
 
-int coda_hdf5_cursor_read_int8(const coda_Cursor *cursor, int8_t *dst)
+int coda_hdf5_cursor_read_int8(const coda_cursor *cursor, int8_t *dst)
 {
-    coda_hdf5BasicDataType *type;
+    coda_hdf5_basic_data_type *type;
 
-    if (((coda_hdf5Type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf5_basic_datatype)
+    if (((coda_hdf5_type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf5_basic_datatype)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a int8 data type");
         return -1;
     }
 
-    type = (coda_hdf5BasicDataType *)cursor->stack[cursor->n - 1].type;
+    type = (coda_hdf5_basic_data_type *)cursor->stack[cursor->n - 1].type;
     switch (type->read_type)
     {
         case coda_native_type_int8:
@@ -996,17 +996,17 @@ int coda_hdf5_cursor_read_int8(const coda_Cursor *cursor, int8_t *dst)
     return -1;
 }
 
-int coda_hdf5_cursor_read_uint8(const coda_Cursor *cursor, uint8_t *dst)
+int coda_hdf5_cursor_read_uint8(const coda_cursor *cursor, uint8_t *dst)
 {
-    coda_hdf5BasicDataType *type;
+    coda_hdf5_basic_data_type *type;
 
-    if (((coda_hdf5Type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf5_basic_datatype)
+    if (((coda_hdf5_type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf5_basic_datatype)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a uint8 data type");
         return -1;
     }
 
-    type = (coda_hdf5BasicDataType *)cursor->stack[cursor->n - 1].type;
+    type = (coda_hdf5_basic_data_type *)cursor->stack[cursor->n - 1].type;
     switch (type->read_type)
     {
         case coda_native_type_uint8:
@@ -1020,17 +1020,17 @@ int coda_hdf5_cursor_read_uint8(const coda_Cursor *cursor, uint8_t *dst)
     return -1;
 }
 
-int coda_hdf5_cursor_read_int16(const coda_Cursor *cursor, int16_t *dst)
+int coda_hdf5_cursor_read_int16(const coda_cursor *cursor, int16_t *dst)
 {
-    coda_hdf5BasicDataType *type;
+    coda_hdf5_basic_data_type *type;
 
-    if (((coda_hdf5Type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf5_basic_datatype)
+    if (((coda_hdf5_type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf5_basic_datatype)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a int16 data type");
         return -1;
     }
 
-    type = (coda_hdf5BasicDataType *)cursor->stack[cursor->n - 1].type;
+    type = (coda_hdf5_basic_data_type *)cursor->stack[cursor->n - 1].type;
     switch (type->read_type)
     {
         case coda_native_type_int8:
@@ -1046,17 +1046,17 @@ int coda_hdf5_cursor_read_int16(const coda_Cursor *cursor, int16_t *dst)
     return -1;
 }
 
-int coda_hdf5_cursor_read_uint16(const coda_Cursor *cursor, uint16_t *dst)
+int coda_hdf5_cursor_read_uint16(const coda_cursor *cursor, uint16_t *dst)
 {
-    coda_hdf5BasicDataType *type;
+    coda_hdf5_basic_data_type *type;
 
-    if (((coda_hdf5Type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf5_basic_datatype)
+    if (((coda_hdf5_type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf5_basic_datatype)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a uint16 data type");
         return -1;
     }
 
-    type = (coda_hdf5BasicDataType *)cursor->stack[cursor->n - 1].type;
+    type = (coda_hdf5_basic_data_type *)cursor->stack[cursor->n - 1].type;
     switch (type->read_type)
     {
         case coda_native_type_uint8:
@@ -1071,17 +1071,17 @@ int coda_hdf5_cursor_read_uint16(const coda_Cursor *cursor, uint16_t *dst)
     return -1;
 }
 
-int coda_hdf5_cursor_read_int32(const coda_Cursor *cursor, int32_t *dst)
+int coda_hdf5_cursor_read_int32(const coda_cursor *cursor, int32_t *dst)
 {
-    coda_hdf5BasicDataType *type;
+    coda_hdf5_basic_data_type *type;
 
-    if (((coda_hdf5Type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf5_basic_datatype)
+    if (((coda_hdf5_type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf5_basic_datatype)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a int32 data type");
         return -1;
     }
 
-    type = (coda_hdf5BasicDataType *)cursor->stack[cursor->n - 1].type;
+    type = (coda_hdf5_basic_data_type *)cursor->stack[cursor->n - 1].type;
     switch (type->read_type)
     {
         case coda_native_type_int8:
@@ -1099,17 +1099,17 @@ int coda_hdf5_cursor_read_int32(const coda_Cursor *cursor, int32_t *dst)
     return -1;
 }
 
-int coda_hdf5_cursor_read_uint32(const coda_Cursor *cursor, uint32_t *dst)
+int coda_hdf5_cursor_read_uint32(const coda_cursor *cursor, uint32_t *dst)
 {
-    coda_hdf5BasicDataType *type;
+    coda_hdf5_basic_data_type *type;
 
-    if (((coda_hdf5Type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf5_basic_datatype)
+    if (((coda_hdf5_type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf5_basic_datatype)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a uint32 data type");
         return -1;
     }
 
-    type = (coda_hdf5BasicDataType *)cursor->stack[cursor->n - 1].type;
+    type = (coda_hdf5_basic_data_type *)cursor->stack[cursor->n - 1].type;
     switch (type->read_type)
     {
         case coda_native_type_uint8:
@@ -1125,17 +1125,17 @@ int coda_hdf5_cursor_read_uint32(const coda_Cursor *cursor, uint32_t *dst)
     return -1;
 }
 
-int coda_hdf5_cursor_read_int64(const coda_Cursor *cursor, int64_t *dst)
+int coda_hdf5_cursor_read_int64(const coda_cursor *cursor, int64_t *dst)
 {
-    coda_hdf5BasicDataType *type;
+    coda_hdf5_basic_data_type *type;
 
-    if (((coda_hdf5Type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf5_basic_datatype)
+    if (((coda_hdf5_type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf5_basic_datatype)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a int64 data type");
         return -1;
     }
 
-    type = (coda_hdf5BasicDataType *)cursor->stack[cursor->n - 1].type;
+    type = (coda_hdf5_basic_data_type *)cursor->stack[cursor->n - 1].type;
     switch (type->read_type)
     {
         case coda_native_type_int8:
@@ -1155,17 +1155,17 @@ int coda_hdf5_cursor_read_int64(const coda_Cursor *cursor, int64_t *dst)
     return -1;
 }
 
-int coda_hdf5_cursor_read_uint64(const coda_Cursor *cursor, uint64_t *dst)
+int coda_hdf5_cursor_read_uint64(const coda_cursor *cursor, uint64_t *dst)
 {
-    coda_hdf5BasicDataType *type;
+    coda_hdf5_basic_data_type *type;
 
-    if (((coda_hdf5Type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf5_basic_datatype)
+    if (((coda_hdf5_type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf5_basic_datatype)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a uint64 data type");
         return -1;
     }
 
-    type = (coda_hdf5BasicDataType *)cursor->stack[cursor->n - 1].type;
+    type = (coda_hdf5_basic_data_type *)cursor->stack[cursor->n - 1].type;
     switch (type->read_type)
     {
         case coda_native_type_uint8:
@@ -1182,17 +1182,17 @@ int coda_hdf5_cursor_read_uint64(const coda_Cursor *cursor, uint64_t *dst)
     return -1;
 }
 
-int coda_hdf5_cursor_read_float(const coda_Cursor *cursor, float *dst)
+int coda_hdf5_cursor_read_float(const coda_cursor *cursor, float *dst)
 {
-    coda_hdf5BasicDataType *type;
+    coda_hdf5_basic_data_type *type;
 
-    if (((coda_hdf5Type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf5_basic_datatype)
+    if (((coda_hdf5_type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf5_basic_datatype)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a float data type");
         return -1;
     }
 
-    type = (coda_hdf5BasicDataType *)cursor->stack[cursor->n - 1].type;
+    type = (coda_hdf5_basic_data_type *)cursor->stack[cursor->n - 1].type;
     switch (type->read_type)
     {
         case coda_native_type_int8:
@@ -1295,17 +1295,17 @@ int coda_hdf5_cursor_read_float(const coda_Cursor *cursor, float *dst)
     return 0;
 }
 
-int coda_hdf5_cursor_read_double(const coda_Cursor *cursor, double *dst)
+int coda_hdf5_cursor_read_double(const coda_cursor *cursor, double *dst)
 {
-    coda_hdf5BasicDataType *type;
+    coda_hdf5_basic_data_type *type;
 
-    if (((coda_hdf5Type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf5_basic_datatype)
+    if (((coda_hdf5_type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf5_basic_datatype)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a double data type");
         return -1;
     }
 
-    type = (coda_hdf5BasicDataType *)cursor->stack[cursor->n - 1].type;
+    type = (coda_hdf5_basic_data_type *)cursor->stack[cursor->n - 1].type;
     switch (type->read_type)
     {
         case coda_native_type_int8:
@@ -1408,7 +1408,7 @@ int coda_hdf5_cursor_read_double(const coda_Cursor *cursor, double *dst)
     return 0;
 }
 
-int coda_hdf5_cursor_read_char(const coda_Cursor *cursor, char *dst)
+int coda_hdf5_cursor_read_char(const coda_cursor *cursor, char *dst)
 {
     cursor = cursor;
     dst = dst;
@@ -1418,18 +1418,18 @@ int coda_hdf5_cursor_read_char(const coda_Cursor *cursor, char *dst)
     return -1;
 }
 
-int coda_hdf5_cursor_read_string(const coda_Cursor *cursor, char *dst, long dst_size)
+int coda_hdf5_cursor_read_string(const coda_cursor *cursor, char *dst, long dst_size)
 {
-    if (((coda_hdf5Type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf5_basic_datatype)
+    if (((coda_hdf5_type *)cursor->stack[cursor->n - 1].type)->tag != tag_hdf5_basic_datatype)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a string data type");
         return -1;
     }
 
-    if (((coda_hdf5BasicDataType *)cursor->stack[cursor->n - 1].type)->read_type != coda_native_type_string)
+    if (((coda_hdf5_basic_data_type *)cursor->stack[cursor->n - 1].type)->read_type != coda_native_type_string)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a string data type",
-                       coda_type_get_native_type_name(((coda_hdf5BasicDataType *)cursor->stack[cursor->n - 1].type)->
+                       coda_type_get_native_type_name(((coda_hdf5_basic_data_type *)cursor->stack[cursor->n - 1].type)->
                                                       read_type));
         return -1;
     }
@@ -1437,21 +1437,21 @@ int coda_hdf5_cursor_read_string(const coda_Cursor *cursor, char *dst, long dst_
     return coda_hdf5_read_basic_type(cursor, coda_native_type_string, dst, dst_size);
 }
 
-int coda_hdf5_cursor_read_int8_array(const coda_Cursor *cursor, int8_t *dst, coda_array_ordering array_ordering)
+int coda_hdf5_cursor_read_int8_array(const coda_cursor *cursor, int8_t *dst, coda_array_ordering array_ordering)
 {
-    coda_Type *base_type;
+    coda_type *base_type;
 
-    if (coda_hdf5_type_get_array_base_type((coda_Type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
+    if (coda_hdf5_type_get_array_base_type((coda_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
     {
         return -1;
     }
-    if (((coda_hdf5Type *)base_type)->tag != tag_hdf5_basic_datatype)
+    if (((coda_hdf5_type *)base_type)->tag != tag_hdf5_basic_datatype)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a int8 data type");
         return -1;
     }
 
-    switch (((coda_hdf5BasicDataType *)base_type)->read_type)
+    switch (((coda_hdf5_basic_data_type *)base_type)->read_type)
     {
         case coda_native_type_int8:
             return coda_hdf5_read_array(cursor, dst, coda_native_type_int8, coda_native_type_int8, array_ordering);
@@ -1460,25 +1460,25 @@ int coda_hdf5_cursor_read_int8_array(const coda_Cursor *cursor, int8_t *dst, cod
     }
 
     coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a int8 data type",
-                   coda_type_get_native_type_name(((coda_hdf5BasicDataType *)base_type)->read_type));
+                   coda_type_get_native_type_name(((coda_hdf5_basic_data_type *)base_type)->read_type));
     return -1;
 }
 
-int coda_hdf5_cursor_read_uint8_array(const coda_Cursor *cursor, uint8_t *dst, coda_array_ordering array_ordering)
+int coda_hdf5_cursor_read_uint8_array(const coda_cursor *cursor, uint8_t *dst, coda_array_ordering array_ordering)
 {
-    coda_Type *base_type;
+    coda_type *base_type;
 
-    if (coda_hdf5_type_get_array_base_type((coda_Type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
+    if (coda_hdf5_type_get_array_base_type((coda_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
     {
         return -1;
     }
-    if (((coda_hdf5Type *)base_type)->tag != tag_hdf5_basic_datatype)
+    if (((coda_hdf5_type *)base_type)->tag != tag_hdf5_basic_datatype)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a uint8 data type");
         return -1;
     }
 
-    switch (((coda_hdf5BasicDataType *)base_type)->read_type)
+    switch (((coda_hdf5_basic_data_type *)base_type)->read_type)
     {
         case coda_native_type_uint8:
             return coda_hdf5_read_array(cursor, dst, coda_native_type_uint8, coda_native_type_uint8, array_ordering);
@@ -1487,25 +1487,25 @@ int coda_hdf5_cursor_read_uint8_array(const coda_Cursor *cursor, uint8_t *dst, c
     }
 
     coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a uint8 data type",
-                   coda_type_get_native_type_name(((coda_hdf5BasicDataType *)base_type)->read_type));
+                   coda_type_get_native_type_name(((coda_hdf5_basic_data_type *)base_type)->read_type));
     return -1;
 }
 
-int coda_hdf5_cursor_read_int16_array(const coda_Cursor *cursor, int16_t *dst, coda_array_ordering array_ordering)
+int coda_hdf5_cursor_read_int16_array(const coda_cursor *cursor, int16_t *dst, coda_array_ordering array_ordering)
 {
-    coda_Type *base_type;
+    coda_type *base_type;
 
-    if (coda_hdf5_type_get_array_base_type((coda_Type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
+    if (coda_hdf5_type_get_array_base_type((coda_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
     {
         return -1;
     }
-    if (((coda_hdf5Type *)base_type)->tag != tag_hdf5_basic_datatype)
+    if (((coda_hdf5_type *)base_type)->tag != tag_hdf5_basic_datatype)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a int16 data type");
         return -1;
     }
 
-    switch (((coda_hdf5BasicDataType *)base_type)->read_type)
+    switch (((coda_hdf5_basic_data_type *)base_type)->read_type)
     {
         case coda_native_type_int8:
         case coda_native_type_uint8:
@@ -1516,25 +1516,25 @@ int coda_hdf5_cursor_read_int16_array(const coda_Cursor *cursor, int16_t *dst, c
     }
 
     coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a int16 data type",
-                   coda_type_get_native_type_name(((coda_hdf5BasicDataType *)base_type)->read_type));
+                   coda_type_get_native_type_name(((coda_hdf5_basic_data_type *)base_type)->read_type));
     return -1;
 }
 
-int coda_hdf5_cursor_read_uint16_array(const coda_Cursor *cursor, uint16_t *dst, coda_array_ordering array_ordering)
+int coda_hdf5_cursor_read_uint16_array(const coda_cursor *cursor, uint16_t *dst, coda_array_ordering array_ordering)
 {
-    coda_Type *base_type;
+    coda_type *base_type;
 
-    if (coda_hdf5_type_get_array_base_type((coda_Type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
+    if (coda_hdf5_type_get_array_base_type((coda_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
     {
         return -1;
     }
-    if (((coda_hdf5Type *)base_type)->tag != tag_hdf5_basic_datatype)
+    if (((coda_hdf5_type *)base_type)->tag != tag_hdf5_basic_datatype)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a uint16 data type");
         return -1;
     }
 
-    switch (((coda_hdf5BasicDataType *)base_type)->read_type)
+    switch (((coda_hdf5_basic_data_type *)base_type)->read_type)
     {
         case coda_native_type_uint8:
         case coda_native_type_uint16:
@@ -1544,25 +1544,25 @@ int coda_hdf5_cursor_read_uint16_array(const coda_Cursor *cursor, uint16_t *dst,
     }
 
     coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a uint16 data type",
-                   coda_type_get_native_type_name(((coda_hdf5BasicDataType *)base_type)->read_type));
+                   coda_type_get_native_type_name(((coda_hdf5_basic_data_type *)base_type)->read_type));
     return -1;
 }
 
-int coda_hdf5_cursor_read_int32_array(const coda_Cursor *cursor, int32_t *dst, coda_array_ordering array_ordering)
+int coda_hdf5_cursor_read_int32_array(const coda_cursor *cursor, int32_t *dst, coda_array_ordering array_ordering)
 {
-    coda_Type *base_type;
+    coda_type *base_type;
 
-    if (coda_hdf5_type_get_array_base_type((coda_Type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
+    if (coda_hdf5_type_get_array_base_type((coda_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
     {
         return -1;
     }
-    if (((coda_hdf5Type *)base_type)->tag != tag_hdf5_basic_datatype)
+    if (((coda_hdf5_type *)base_type)->tag != tag_hdf5_basic_datatype)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a int32 data type");
         return -1;
     }
 
-    switch (((coda_hdf5BasicDataType *)base_type)->read_type)
+    switch (((coda_hdf5_basic_data_type *)base_type)->read_type)
     {
         case coda_native_type_int8:
         case coda_native_type_uint8:
@@ -1575,25 +1575,25 @@ int coda_hdf5_cursor_read_int32_array(const coda_Cursor *cursor, int32_t *dst, c
     }
 
     coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a int32 data type",
-                   coda_type_get_native_type_name(((coda_hdf5BasicDataType *)base_type)->read_type));
+                   coda_type_get_native_type_name(((coda_hdf5_basic_data_type *)base_type)->read_type));
     return -1;
 }
 
-int coda_hdf5_cursor_read_uint32_array(const coda_Cursor *cursor, uint32_t *dst, coda_array_ordering array_ordering)
+int coda_hdf5_cursor_read_uint32_array(const coda_cursor *cursor, uint32_t *dst, coda_array_ordering array_ordering)
 {
-    coda_Type *base_type;
+    coda_type *base_type;
 
-    if (coda_hdf5_type_get_array_base_type((coda_Type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
+    if (coda_hdf5_type_get_array_base_type((coda_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
     {
         return -1;
     }
-    if (((coda_hdf5Type *)base_type)->tag != tag_hdf5_basic_datatype)
+    if (((coda_hdf5_type *)base_type)->tag != tag_hdf5_basic_datatype)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a uint32 data type");
         return -1;
     }
 
-    switch (((coda_hdf5BasicDataType *)base_type)->read_type)
+    switch (((coda_hdf5_basic_data_type *)base_type)->read_type)
     {
         case coda_native_type_uint8:
         case coda_native_type_uint16:
@@ -1604,25 +1604,25 @@ int coda_hdf5_cursor_read_uint32_array(const coda_Cursor *cursor, uint32_t *dst,
     }
 
     coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a uint32 data type",
-                   coda_type_get_native_type_name(((coda_hdf5BasicDataType *)base_type)->read_type));
+                   coda_type_get_native_type_name(((coda_hdf5_basic_data_type *)base_type)->read_type));
     return -1;
 }
 
-int coda_hdf5_cursor_read_int64_array(const coda_Cursor *cursor, int64_t *dst, coda_array_ordering array_ordering)
+int coda_hdf5_cursor_read_int64_array(const coda_cursor *cursor, int64_t *dst, coda_array_ordering array_ordering)
 {
-    coda_Type *base_type;
+    coda_type *base_type;
 
-    if (coda_hdf5_type_get_array_base_type((coda_Type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
+    if (coda_hdf5_type_get_array_base_type((coda_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
     {
         return -1;
     }
-    if (((coda_hdf5Type *)base_type)->tag != tag_hdf5_basic_datatype)
+    if (((coda_hdf5_type *)base_type)->tag != tag_hdf5_basic_datatype)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a int64 data type");
         return -1;
     }
 
-    switch (((coda_hdf5BasicDataType *)base_type)->read_type)
+    switch (((coda_hdf5_basic_data_type *)base_type)->read_type)
     {
         case coda_native_type_int8:
         case coda_native_type_uint8:
@@ -1637,25 +1637,25 @@ int coda_hdf5_cursor_read_int64_array(const coda_Cursor *cursor, int64_t *dst, c
     }
 
     coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a int64 data type",
-                   coda_type_get_native_type_name(((coda_hdf5BasicDataType *)base_type)->read_type));
+                   coda_type_get_native_type_name(((coda_hdf5_basic_data_type *)base_type)->read_type));
     return -1;
 }
 
-int coda_hdf5_cursor_read_uint64_array(const coda_Cursor *cursor, uint64_t *dst, coda_array_ordering array_ordering)
+int coda_hdf5_cursor_read_uint64_array(const coda_cursor *cursor, uint64_t *dst, coda_array_ordering array_ordering)
 {
-    coda_Type *base_type;
+    coda_type *base_type;
 
-    if (coda_hdf5_type_get_array_base_type((coda_Type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
+    if (coda_hdf5_type_get_array_base_type((coda_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
     {
         return -1;
     }
-    if (((coda_hdf5Type *)base_type)->tag != tag_hdf5_basic_datatype)
+    if (((coda_hdf5_type *)base_type)->tag != tag_hdf5_basic_datatype)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a uint64 data type");
         return -1;
     }
 
-    switch (((coda_hdf5BasicDataType *)base_type)->read_type)
+    switch (((coda_hdf5_basic_data_type *)base_type)->read_type)
     {
         case coda_native_type_uint8:
         case coda_native_type_uint16:
@@ -1667,25 +1667,25 @@ int coda_hdf5_cursor_read_uint64_array(const coda_Cursor *cursor, uint64_t *dst,
     }
 
     coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a uint64 data type",
-                   coda_type_get_native_type_name(((coda_hdf5BasicDataType *)base_type)->read_type));
+                   coda_type_get_native_type_name(((coda_hdf5_basic_data_type *)base_type)->read_type));
     return -1;
 }
 
-int coda_hdf5_cursor_read_float_array(const coda_Cursor *cursor, float *dst, coda_array_ordering array_ordering)
+int coda_hdf5_cursor_read_float_array(const coda_cursor *cursor, float *dst, coda_array_ordering array_ordering)
 {
-    coda_Type *base_type;
+    coda_type *base_type;
 
-    if (coda_hdf5_type_get_array_base_type((coda_Type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
+    if (coda_hdf5_type_get_array_base_type((coda_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
     {
         return -1;
     }
-    if (((coda_hdf5Type *)base_type)->tag != tag_hdf5_basic_datatype)
+    if (((coda_hdf5_type *)base_type)->tag != tag_hdf5_basic_datatype)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a float data type");
         return -1;
     }
 
-    switch (((coda_hdf5BasicDataType *)base_type)->read_type)
+    switch (((coda_hdf5_basic_data_type *)base_type)->read_type)
     {
         case coda_native_type_int8:
             return coda_hdf5_read_array(cursor, dst, coda_native_type_int8, coda_native_type_float, array_ordering);
@@ -1711,25 +1711,25 @@ int coda_hdf5_cursor_read_float_array(const coda_Cursor *cursor, float *dst, cod
     }
 
     coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a float data type",
-                   coda_type_get_native_type_name(((coda_hdf5BasicDataType *)base_type)->read_type));
+                   coda_type_get_native_type_name(((coda_hdf5_basic_data_type *)base_type)->read_type));
     return -1;
 }
 
-int coda_hdf5_cursor_read_double_array(const coda_Cursor *cursor, double *dst, coda_array_ordering array_ordering)
+int coda_hdf5_cursor_read_double_array(const coda_cursor *cursor, double *dst, coda_array_ordering array_ordering)
 {
-    coda_Type *base_type;
+    coda_type *base_type;
 
-    if (coda_hdf5_type_get_array_base_type((coda_Type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
+    if (coda_hdf5_type_get_array_base_type((coda_type *)cursor->stack[cursor->n - 1].type, &base_type) != 0)
     {
         return -1;
     }
-    if (((coda_hdf5Type *)base_type)->tag != tag_hdf5_basic_datatype)
+    if (((coda_hdf5_type *)base_type)->tag != tag_hdf5_basic_datatype)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a double data type");
         return -1;
     }
 
-    switch (((coda_hdf5BasicDataType *)base_type)->read_type)
+    switch (((coda_hdf5_basic_data_type *)base_type)->read_type)
     {
         case coda_native_type_int8:
             return coda_hdf5_read_array(cursor, dst, coda_native_type_int8, coda_native_type_double, array_ordering);
@@ -1755,11 +1755,11 @@ int coda_hdf5_cursor_read_double_array(const coda_Cursor *cursor, double *dst, c
     }
 
     coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a double data type",
-                   coda_type_get_native_type_name(((coda_hdf5BasicDataType *)base_type)->read_type));
+                   coda_type_get_native_type_name(((coda_hdf5_basic_data_type *)base_type)->read_type));
     return -1;
 }
 
-int coda_hdf5_cursor_read_char_array(const coda_Cursor *cursor, char *dst, coda_array_ordering array_ordering)
+int coda_hdf5_cursor_read_char_array(const coda_cursor *cursor, char *dst, coda_array_ordering array_ordering)
 {
     cursor = cursor;
     dst = dst;

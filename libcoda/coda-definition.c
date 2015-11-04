@@ -25,42 +25,44 @@
 #include <stdlib.h>
 #include <string.h>
 
-coda_DataDictionary *coda_data_dictionary = NULL;
+coda_data_dictionary *coda_global_data_dictionary = NULL;
 
-void coda_ascii_release_type(coda_Type *type);
-void coda_bin_release_type(coda_Type *type);
-void coda_xml_release_type(coda_Type *type);
-void coda_netcdf_release_type(coda_Type *type);
-
-#ifdef HAVE_HDF4
-void coda_hdf4_release_type(coda_Type *type);
-#endif
-#ifdef HAVE_HDF5
-void coda_hdf5_release_type(coda_Type *type);
-#endif
-
-void coda_ascii_release_dynamic_type(coda_DynamicType *type);
-void coda_bin_release_dynamic_type(coda_DynamicType *type);
-void coda_xml_release_dynamic_type(coda_DynamicType *type);
-void coda_netcdf_release_dynamic_type(coda_DynamicType *type);
+void coda_ascii_release_type(coda_type *type);
+void coda_bin_release_type(coda_type *type);
+void coda_xml_release_type(coda_type *type);
+void coda_netcdf_release_type(coda_type *type);
+void coda_grib_release_type(coda_type *type);
 
 #ifdef HAVE_HDF4
-void coda_hdf4_release_dynamic_type(coda_DynamicType *type);
+void coda_hdf4_release_type(coda_type *type);
 #endif
 #ifdef HAVE_HDF5
-void coda_hdf5_release_dynamic_type(coda_DynamicType *type);
+void coda_hdf5_release_type(coda_type *type);
+#endif
+
+void coda_ascii_release_dynamic_type(coda_dynamic_type *type);
+void coda_bin_release_dynamic_type(coda_dynamic_type *type);
+void coda_xml_release_dynamic_type(coda_dynamic_type *type);
+void coda_netcdf_release_dynamic_type(coda_dynamic_type *type);
+void coda_grib_release_dynamic_type(coda_dynamic_type *type);
+
+#ifdef HAVE_HDF4
+void coda_hdf4_release_dynamic_type(coda_dynamic_type *type);
+#endif
+#ifdef HAVE_HDF5
+void coda_hdf5_release_dynamic_type(coda_dynamic_type *type);
 #endif
 
 void coda_ascbin_detection_tree_delete(void *detection_tree);
-int coda_ascbin_detection_tree_add_rule(void *detection_tree, coda_DetectionRule *detection_rule);
+int coda_ascbin_detection_tree_add_rule(void *detection_tree, coda_detection_rule *detection_rule);
 
 void coda_xml_detection_tree_delete(void *detection_tree);
-int coda_xml_detection_tree_add_rule(void *detection_tree, coda_DetectionRule *detection_rule);
+int coda_xml_detection_tree_add_rule(void *detection_tree, coda_detection_rule *detection_rule);
 
-static int data_dictionary_add_detection_rule(coda_DetectionRule *detection_rule);
+static int data_dictionary_add_detection_rule(coda_detection_rule *detection_rule);
 static int data_dictionary_rebuild_detection_tree(void);
 
-void coda_release_type(coda_Type *type)
+void coda_release_type(coda_type *type)
 {
     switch (type->format)
     {
@@ -76,6 +78,10 @@ void coda_release_type(coda_Type *type)
         case coda_format_netcdf:
             coda_netcdf_release_type(type);
             break;
+        case coda_format_grib1:
+        case coda_format_grib2:
+            coda_grib_release_type(type);
+            break;
         case coda_format_cdf:
         case coda_format_hdf4:
 #ifdef HAVE_HDF4
@@ -90,7 +96,7 @@ void coda_release_type(coda_Type *type)
     }
 }
 
-void coda_release_dynamic_type(coda_DynamicType *type)
+void coda_release_dynamic_type(coda_dynamic_type *type)
 {
     switch (type->format)
     {
@@ -106,6 +112,10 @@ void coda_release_dynamic_type(coda_DynamicType *type)
         case coda_format_netcdf:
             coda_netcdf_release_dynamic_type(type);
             break;
+        case coda_format_grib1:
+        case coda_format_grib2:
+            coda_grib_release_dynamic_type(type);
+            break;
         case coda_format_cdf:
         case coda_format_hdf4:
 #ifdef HAVE_HDF4
@@ -120,7 +130,7 @@ void coda_release_dynamic_type(coda_DynamicType *type)
     }
 }
 
-int coda_type_set_name(coda_Type *type, const char *name)
+int coda_type_set_name(coda_type *type, const char *name)
 {
     char *new_name = NULL;
 
@@ -149,7 +159,7 @@ int coda_type_set_name(coda_Type *type, const char *name)
     return 0;
 }
 
-int coda_type_set_description(coda_Type *type, const char *description)
+int coda_type_set_description(coda_type *type, const char *description)
 {
     char *new_description = NULL;
 
@@ -173,7 +183,7 @@ int coda_type_set_description(coda_Type *type, const char *description)
     return 0;
 }
 
-void coda_detection_rule_entry_delete(coda_DetectionRuleEntry *entry)
+void coda_detection_rule_entry_delete(coda_detection_rule_entry *entry)
 {
     if (entry->path != NULL)
     {
@@ -186,15 +196,15 @@ void coda_detection_rule_entry_delete(coda_DetectionRuleEntry *entry)
     free(entry);
 }
 
-static coda_DetectionRuleEntry *detection_rule_entry_new(int64_t offset, const char *path, int use_filename)
+static coda_detection_rule_entry *detection_rule_entry_new(int64_t offset, const char *path, int use_filename)
 {
-    coda_DetectionRuleEntry *entry;
+    coda_detection_rule_entry *entry;
 
-    entry = malloc(sizeof(coda_DetectionRuleEntry));
+    entry = malloc(sizeof(coda_detection_rule_entry));
     if (entry == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_DetectionRuleEntry), __FILE__, __LINE__);
+                       (long)sizeof(coda_detection_rule_entry), __FILE__, __LINE__);
         return NULL;
     }
     entry->use_filename = use_filename;
@@ -218,22 +228,22 @@ static coda_DetectionRuleEntry *detection_rule_entry_new(int64_t offset, const c
     return entry;
 }
 
-coda_DetectionRuleEntry *coda_detection_rule_entry_with_offset_new(int64_t offset, int use_filename)
+coda_detection_rule_entry *coda_detection_rule_entry_with_offset_new(int64_t offset, int use_filename)
 {
     return detection_rule_entry_new(offset, NULL, use_filename);
 }
 
-coda_DetectionRuleEntry *coda_detection_rule_entry_with_path_new(const char *path)
+coda_detection_rule_entry *coda_detection_rule_entry_with_path_new(const char *path)
 {
     return detection_rule_entry_new(-1, path, 0);
 }
 
-coda_DetectionRuleEntry *coda_detection_rule_entry_with_size_new(int64_t size)
+coda_detection_rule_entry *coda_detection_rule_entry_with_size_new(int64_t size)
 {
     return detection_rule_entry_new(size, NULL, 0);
 }
 
-int coda_detection_rule_entry_set_value(coda_DetectionRuleEntry *entry, const char *value, long value_length)
+int coda_detection_rule_entry_set_value(coda_detection_rule_entry *entry, const char *value, long value_length)
 {
     char *new_value = NULL;
 
@@ -265,7 +275,7 @@ int coda_detection_rule_entry_set_value(coda_DetectionRuleEntry *entry, const ch
     return 0;
 }
 
-void coda_detection_rule_delete(coda_DetectionRule *detection_rule)
+void coda_detection_rule_delete(coda_detection_rule *detection_rule)
 {
     if (detection_rule->entry != NULL)
     {
@@ -283,15 +293,15 @@ void coda_detection_rule_delete(coda_DetectionRule *detection_rule)
     free(detection_rule);
 }
 
-coda_DetectionRule *coda_detection_rule_new(void)
+coda_detection_rule *coda_detection_rule_new(void)
 {
-    coda_DetectionRule *detection_rule;
+    coda_detection_rule *detection_rule;
 
-    detection_rule = malloc(sizeof(coda_DetectionRule));
+    detection_rule = malloc(sizeof(coda_detection_rule));
     if (detection_rule == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_DetectionRule), __FILE__, __LINE__);
+                       (long)sizeof(coda_detection_rule), __FILE__, __LINE__);
         return NULL;
     }
     detection_rule->num_entries = 0;
@@ -301,15 +311,15 @@ coda_DetectionRule *coda_detection_rule_new(void)
     return detection_rule;
 }
 
-int coda_detection_rule_add_entry(coda_DetectionRule *detection_rule, coda_DetectionRuleEntry *entry)
+int coda_detection_rule_add_entry(coda_detection_rule *detection_rule, coda_detection_rule_entry *entry)
 {
-    coda_DetectionRuleEntry **new_entry;
+    coda_detection_rule_entry **new_entry;
 
-    new_entry = realloc(detection_rule->entry, (detection_rule->num_entries + 1) * sizeof(coda_DetectionRuleEntry *));
+    new_entry = realloc(detection_rule->entry, (detection_rule->num_entries + 1) * sizeof(coda_detection_rule_entry *));
     if (new_entry == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (detection_rule->num_entries + 1) * sizeof(coda_DetectionRuleEntry *), __FILE__, __LINE__);
+                       (detection_rule->num_entries + 1) * sizeof(coda_detection_rule_entry *), __FILE__, __LINE__);
         return -1;
     }
     detection_rule->entry = new_entry;
@@ -319,7 +329,7 @@ int coda_detection_rule_add_entry(coda_DetectionRule *detection_rule, coda_Detec
     return 0;
 }
 
-void coda_product_variable_delete(coda_ProductVariable *product_variable)
+void coda_product_variable_delete(coda_product_variable *product_variable)
 {
     assert(product_variable != NULL);
 
@@ -329,19 +339,19 @@ void coda_product_variable_delete(coda_ProductVariable *product_variable)
     }
     if (product_variable->size_expr != NULL)
     {
-        coda_expr_delete(product_variable->size_expr);
+        coda_expression_delete(product_variable->size_expr);
     }
     if (product_variable->init_expr != NULL)
     {
-        coda_expr_delete(product_variable->init_expr);
+        coda_expression_delete(product_variable->init_expr);
     }
 
     free(product_variable);
 }
 
-coda_ProductVariable *coda_product_variable_new(const char *name)
+coda_product_variable *coda_product_variable_new(const char *name)
 {
-    coda_ProductVariable *product_variable;
+    coda_product_variable *product_variable;
 
     if (!coda_is_identifier(name))
     {
@@ -350,11 +360,11 @@ coda_ProductVariable *coda_product_variable_new(const char *name)
         return NULL;
     }
 
-    product_variable = (coda_ProductVariable *)malloc(sizeof(coda_ProductVariable));
+    product_variable = (coda_product_variable *)malloc(sizeof(coda_product_variable));
     if (product_variable == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_ProductVariable), __FILE__, __LINE__);
+                       (long)sizeof(coda_product_variable), __FILE__, __LINE__);
         return NULL;
     }
     product_variable->name = NULL;
@@ -373,7 +383,7 @@ coda_ProductVariable *coda_product_variable_new(const char *name)
     return product_variable;
 }
 
-int coda_product_variable_set_size_expression(coda_ProductVariable *product_variable, coda_Expr *size_expr)
+int coda_product_variable_set_size_expression(coda_product_variable *product_variable, coda_expression *size_expr)
 {
     assert(size_expr != NULL);
     if (product_variable->size_expr != NULL)
@@ -385,7 +395,7 @@ int coda_product_variable_set_size_expression(coda_ProductVariable *product_vari
     return 0;
 }
 
-int coda_product_variable_set_init_expression(coda_ProductVariable *product_variable, coda_Expr *init_expr)
+int coda_product_variable_set_init_expression(coda_product_variable *product_variable, coda_expression *init_expr)
 {
     assert(init_expr != NULL);
     if (product_variable->init_expr != NULL)
@@ -397,7 +407,7 @@ int coda_product_variable_set_init_expression(coda_ProductVariable *product_vari
     return 0;
 }
 
-int coda_product_variable_validate(coda_ProductVariable *product_variable)
+int coda_product_variable_validate(coda_product_variable *product_variable)
 {
     if (product_variable->init_expr == NULL)
     {
@@ -407,34 +417,35 @@ int coda_product_variable_validate(coda_ProductVariable *product_variable)
     return 0;
 }
 
-static int init_product_variable(coda_ProductFile *pf, int index)
+static int init_product_variable(coda_product *product, int index)
 {
-    coda_Cursor cursor;
+    coda_cursor cursor;
     int64_t value = 1;
 
     /* initialize the product variable */
 
-    if (coda_cursor_set_product(&cursor, pf) != 0)
+    if (coda_cursor_set_product(&cursor, product) != 0)
     {
         return -1;
     }
-    if (pf->product_definition->product_variable[index]->size_expr != NULL)
+    if (product->product_definition->product_variable[index]->size_expr != NULL)
     {
-        if (coda_expr_eval_integer(pf->product_definition->product_variable[index]->size_expr, &cursor, &value) != 0)
+        if (coda_expression_eval_integer
+            (product->product_definition->product_variable[index]->size_expr, &cursor, &value) != 0)
         {
             return -1;
         }
     }
 
-    pf->product_variable_size[index] = (int)value;
-    pf->product_variable[index] = (int64_t *)malloc((size_t)value * sizeof(int64_t));
-    if (pf->product_variable[index] == NULL)
+    product->product_variable_size[index] = (int)value;
+    product->product_variable[index] = (int64_t *)malloc((size_t)value * sizeof(int64_t));
+    if (product->product_variable[index] == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
                        (long)value * sizeof(int64_t), __FILE__, __LINE__);
         return -1;
     }
-    if (coda_expr_eval(pf->product_definition->product_variable[index]->init_expr, &cursor) != 0)
+    if (coda_expression_eval_void(product->product_definition->product_variable[index]->init_expr, &cursor) != 0)
     {
         return -1;
     }
@@ -442,69 +453,69 @@ static int init_product_variable(coda_ProductFile *pf, int index)
     return 0;
 }
 
-int coda_product_variable_get_size(coda_ProductFile *pf, const char *name, long *size)
+int coda_product_variable_get_size(coda_product *product, const char *name, long *size)
 {
     long index;
 
-    assert(pf != NULL && name != NULL && size != NULL);
-    assert(pf->product_variable != NULL);
+    assert(product != NULL && name != NULL && size != NULL);
+    assert(product->product_variable != NULL);
 
-    index = hashtable_get_index_from_name(pf->product_definition->hash_data, name);
+    index = hashtable_get_index_from_name(product->product_definition->hash_data, name);
     if (index == -1)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION,
                        "product type %s (version %d) does not contain a product variable with name %s",
-                       pf->product_definition->product_type->name, pf->product_definition->version, name);
+                       product->product_definition->product_type->name, product->product_definition->version, name);
         return -1;
     }
 
-    if (pf->product_variable[index] == NULL)
+    if (product->product_variable[index] == NULL)
     {
-        if (init_product_variable(pf, index) != 0)
+        if (init_product_variable(product, index) != 0)
         {
             return -1;
         }
     }
-    *size = pf->product_variable_size[index];
+    *size = product->product_variable_size[index];
 
     return 0;
 }
 
-int coda_product_variable_get_pointer(coda_ProductFile *pf, const char *name, long i, int64_t **ptr)
+int coda_product_variable_get_pointer(coda_product *product, const char *name, long i, int64_t **ptr)
 {
     long index;
 
-    assert(pf != NULL && name != NULL && ptr != NULL);
+    assert(product != NULL && name != NULL && ptr != NULL);
 
-    index = hashtable_get_index_from_name(pf->product_definition->hash_data, name);
+    index = hashtable_get_index_from_name(product->product_definition->hash_data, name);
     if (index == -1)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION,
                        "product type %s (version %d) does not contain a product variable with name %s",
-                       pf->product_definition->product_type->name, pf->product_definition->version, name);
+                       product->product_definition->product_type->name, product->product_definition->version, name);
         return -1;
     }
 
-    if (pf->product_variable[index] == NULL)
+    if (product->product_variable[index] == NULL)
     {
-        if (init_product_variable(pf, index) != 0)
+        if (init_product_variable(product, index) != 0)
         {
             return -1;
         }
     }
-    if (i < 0 || i >= pf->product_variable_size[index])
+    if (i < 0 || i >= product->product_variable_size[index])
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "request for index (%ld) exceeds size of product variable %s",
                        i, name);
         return -1;
     }
 
-    *ptr = &(pf->product_variable[index][i]);
+    *ptr = &(product->product_variable[index][i]);
 
     return 0;
 }
 
-void coda_product_definition_delete(coda_ProductDefinition *product_definition)
+void coda_product_definition_delete(coda_product_definition *product_definition)
 {
     int i;
 
@@ -530,7 +541,7 @@ void coda_product_definition_delete(coda_ProductDefinition *product_definition)
     }
     if (product_definition->hash_data != NULL)
     {
-        delete_hashtable(product_definition->hash_data);
+        hashtable_delete(product_definition->hash_data);
     }
     if (product_definition->product_variable != NULL)
     {
@@ -543,15 +554,15 @@ void coda_product_definition_delete(coda_ProductDefinition *product_definition)
     free(product_definition);
 }
 
-coda_ProductDefinition *coda_product_definition_new(const char *name, coda_format format, int version)
+coda_product_definition *coda_product_definition_new(const char *name, coda_format format, int version)
 {
-    coda_ProductDefinition *product_definition;
+    coda_product_definition *product_definition;
 
-    product_definition = malloc(sizeof(coda_ProductDefinition));
+    product_definition = malloc(sizeof(coda_product_definition));
     if (product_definition == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_ProductDefinition), __FILE__, __LINE__);
+                       (long)sizeof(coda_product_definition), __FILE__, __LINE__);
         return NULL;
     }
     product_definition->format = format;
@@ -575,7 +586,7 @@ coda_ProductDefinition *coda_product_definition_new(const char *name, coda_forma
         return NULL;
     }
 
-    product_definition->hash_data = new_hashtable(1);
+    product_definition->hash_data = hashtable_new(1);
     if (product_definition->hash_data == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashtable) (%s:%u)", __FILE__,
@@ -587,7 +598,7 @@ coda_ProductDefinition *coda_product_definition_new(const char *name, coda_forma
     return product_definition;
 }
 
-int coda_product_definition_set_description(coda_ProductDefinition *product_definition, const char *description)
+int coda_product_definition_set_description(coda_product_definition *product_definition, const char *description)
 {
     char *new_description = NULL;
 
@@ -611,7 +622,7 @@ int coda_product_definition_set_description(coda_ProductDefinition *product_defi
     return 0;
 }
 
-int coda_product_definition_set_root_type(coda_ProductDefinition *product_definition, coda_Type *root_type)
+int coda_product_definition_set_root_type(coda_product_definition *product_definition, coda_type *root_type)
 {
     assert(root_type != NULL);
     if (product_definition->root_type != NULL)
@@ -624,10 +635,10 @@ int coda_product_definition_set_root_type(coda_ProductDefinition *product_defini
     return 0;
 }
 
-int coda_product_definition_add_detection_rule(coda_ProductDefinition *product_definition,
-                                               coda_DetectionRule *detection_rule)
+int coda_product_definition_add_detection_rule(coda_product_definition *product_definition,
+                                               coda_detection_rule *detection_rule)
 {
-    coda_DetectionRule **new_detection_rule;
+    coda_detection_rule **new_detection_rule;
 
     if (detection_rule->num_entries == 0)
     {
@@ -644,11 +655,11 @@ int coda_product_definition_add_detection_rule(coda_ProductDefinition *product_d
     }
 
     new_detection_rule = realloc(product_definition->detection_rule,
-                                 (product_definition->num_detection_rules + 1) * sizeof(coda_DetectionRule *));
+                                 (product_definition->num_detection_rules + 1) * sizeof(coda_detection_rule *));
     if (new_detection_rule == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (product_definition->num_detection_rules + 1) * sizeof(coda_DetectionRule *), __FILE__,
+                       (product_definition->num_detection_rules + 1) * sizeof(coda_detection_rule *), __FILE__,
                        __LINE__);
         return -1;
     }
@@ -659,8 +670,8 @@ int coda_product_definition_add_detection_rule(coda_ProductDefinition *product_d
     return 0;
 }
 
-int coda_product_definition_add_product_variable(coda_ProductDefinition *product_definition,
-                                                 coda_ProductVariable *product_variable)
+int coda_product_definition_add_product_variable(coda_product_definition *product_definition,
+                                                 coda_product_variable *product_variable)
 {
     if (hashtable_add_name(product_definition->hash_data, product_variable->name) != 0)
     {
@@ -670,16 +681,16 @@ int coda_product_definition_add_product_variable(coda_ProductDefinition *product
     }
     if (product_definition->num_product_variables % BLOCK_SIZE == 0)
     {
-        coda_ProductVariable **new_product_variable;
+        coda_product_variable **new_product_variable;
 
         new_product_variable = realloc(product_definition->product_variable,
                                        (product_definition->num_product_variables + BLOCK_SIZE) *
-                                       sizeof(coda_ProductVariable *));
+                                       sizeof(coda_product_variable *));
         if (new_product_variable == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
                            (product_definition->num_product_variables + BLOCK_SIZE) *
-                           sizeof(coda_ProductVariable *), __FILE__, __LINE__);
+                           sizeof(coda_product_variable *), __FILE__, __LINE__);
             return -1;
         }
         product_definition->product_variable = new_product_variable;
@@ -690,7 +701,7 @@ int coda_product_definition_add_product_variable(coda_ProductDefinition *product
     return 0;
 }
 
-int coda_product_definition_validate(coda_ProductDefinition *product_definition)
+int coda_product_definition_validate(coda_product_definition *product_definition)
 {
     if (product_definition->root_type == NULL)
     {
@@ -700,7 +711,7 @@ int coda_product_definition_validate(coda_ProductDefinition *product_definition)
     return 0;
 }
 
-void coda_product_type_delete(coda_ProductType *product_type)
+void coda_product_type_delete(coda_product_type *product_type)
 {
     int i;
 
@@ -714,7 +725,7 @@ void coda_product_type_delete(coda_ProductType *product_type)
     }
     if (product_type->hash_data != NULL)
     {
-        delete_hashtable(product_type->hash_data);
+        hashtable_delete(product_type->hash_data);
     }
     if (product_type->product_definition != NULL)
     {
@@ -727,9 +738,9 @@ void coda_product_type_delete(coda_ProductType *product_type)
     free(product_type);
 }
 
-coda_ProductType *coda_product_type_new(const char *name)
+coda_product_type *coda_product_type_new(const char *name)
 {
-    coda_ProductType *product_type;
+    coda_product_type *product_type;
 
     if (!coda_is_identifier(name))
     {
@@ -738,11 +749,11 @@ coda_ProductType *coda_product_type_new(const char *name)
         return NULL;
     }
 
-    product_type = malloc(sizeof(coda_ProductType));
+    product_type = malloc(sizeof(coda_product_type));
     if (product_type == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_ProductType), __FILE__, __LINE__);
+                       (long)sizeof(coda_product_type), __FILE__, __LINE__);
         return NULL;
     }
     product_type->name = NULL;
@@ -760,7 +771,7 @@ coda_ProductType *coda_product_type_new(const char *name)
         return NULL;
     }
 
-    product_type->hash_data = new_hashtable(1);
+    product_type->hash_data = hashtable_new(1);
     if (product_type->hash_data == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashtable) (%s:%u)", __FILE__,
@@ -772,7 +783,7 @@ coda_ProductType *coda_product_type_new(const char *name)
     return product_type;
 }
 
-int coda_product_type_set_description(coda_ProductType *product_type, const char *description)
+int coda_product_type_set_description(coda_product_type *product_type, const char *description)
 {
     char *new_description = NULL;
 
@@ -796,7 +807,8 @@ int coda_product_type_set_description(coda_ProductType *product_type, const char
     return 0;
 }
 
-int coda_product_type_add_product_definition(coda_ProductType *product_type, coda_ProductDefinition *product_definition)
+int coda_product_type_add_product_definition(coda_product_type *product_type,
+                                             coda_product_definition *product_definition)
 {
     int i;
 
@@ -824,16 +836,16 @@ int coda_product_type_add_product_definition(coda_ProductType *product_type, cod
     }
     if (product_type->num_product_definitions % BLOCK_SIZE == 0)
     {
-        coda_ProductDefinition **new_product_definition;
+        coda_product_definition **new_product_definition;
 
         new_product_definition = realloc(product_type->product_definition,
                                          (product_type->num_product_definitions + BLOCK_SIZE) *
-                                         sizeof(coda_ProductDefinition *));
+                                         sizeof(coda_product_definition *));
         if (new_product_definition == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
                            (product_type->num_product_definitions + BLOCK_SIZE) *
-                           sizeof(coda_ProductDefinition *), __FILE__, __LINE__);
+                           sizeof(coda_product_definition *), __FILE__, __LINE__);
             return -1;
         }
         product_type->product_definition = new_product_definition;
@@ -846,7 +858,8 @@ int coda_product_type_add_product_definition(coda_ProductType *product_type, cod
     return 0;
 }
 
-coda_ProductDefinition *coda_product_type_get_product_definition_by_version(coda_ProductType *product_type, int version)
+coda_product_definition *coda_product_type_get_product_definition_by_version(coda_product_type *product_type,
+                                                                             int version)
 {
     int i;
 
@@ -863,7 +876,7 @@ coda_ProductDefinition *coda_product_type_get_product_definition_by_version(coda
     return NULL;
 }
 
-void coda_product_class_delete(coda_ProductClass *product_class)
+void coda_product_class_delete(coda_product_class *product_class)
 {
     int i;
 
@@ -881,11 +894,11 @@ void coda_product_class_delete(coda_ProductClass *product_class)
     }
     if (product_class->named_type_hash_data != NULL)
     {
-        delete_hashtable(product_class->named_type_hash_data);
+        hashtable_delete(product_class->named_type_hash_data);
     }
     if (product_class->product_type_hash_data != NULL)
     {
-        delete_hashtable(product_class->product_type_hash_data);
+        hashtable_delete(product_class->product_type_hash_data);
     }
     if (product_class->named_type != NULL)
     {
@@ -906,9 +919,9 @@ void coda_product_class_delete(coda_ProductClass *product_class)
     free(product_class);
 }
 
-coda_ProductClass *coda_product_class_new(const char *name)
+coda_product_class *coda_product_class_new(const char *name)
 {
-    coda_ProductClass *product_class;
+    coda_product_class *product_class;
 
     if (!coda_is_identifier(name))
     {
@@ -917,7 +930,7 @@ coda_ProductClass *coda_product_class_new(const char *name)
         return NULL;
     }
 
-    product_class = malloc(sizeof(coda_ProductClass));
+    product_class = malloc(sizeof(coda_product_class));
     assert(product_class != NULL);
     product_class->name = NULL;
     product_class->description = NULL;
@@ -939,7 +952,7 @@ coda_ProductClass *coda_product_class_new(const char *name)
         return NULL;
     }
 
-    product_class->named_type_hash_data = new_hashtable(1);
+    product_class->named_type_hash_data = hashtable_new(1);
     if (product_class->named_type_hash_data == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashtable) (%s:%u)", __FILE__,
@@ -948,7 +961,7 @@ coda_ProductClass *coda_product_class_new(const char *name)
         return NULL;
     }
 
-    product_class->product_type_hash_data = new_hashtable(1);
+    product_class->product_type_hash_data = hashtable_new(1);
     if (product_class->product_type_hash_data == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashtable) (%s:%u)", __FILE__,
@@ -960,7 +973,7 @@ coda_ProductClass *coda_product_class_new(const char *name)
     return product_class;
 }
 
-int coda_product_class_set_description(coda_ProductClass *product_class, const char *description)
+int coda_product_class_set_description(coda_product_class *product_class, const char *description)
 {
     char *new_description = NULL;
 
@@ -984,7 +997,7 @@ int coda_product_class_set_description(coda_ProductClass *product_class, const c
     return 0;
 }
 
-int coda_product_class_set_definition_file(coda_ProductClass *product_class, const char *filepath)
+int coda_product_class_set_definition_file(coda_product_class *product_class, const char *filepath)
 {
     char *new_definition_file = NULL;
 
@@ -1008,13 +1021,13 @@ int coda_product_class_set_definition_file(coda_ProductClass *product_class, con
     return 0;
 }
 
-int coda_product_class_set_revision(coda_ProductClass *product_class, int revision)
+int coda_product_class_set_revision(coda_product_class *product_class, int revision)
 {
     product_class->revision = revision;
     return 0;
 }
 
-int coda_product_class_add_product_type(coda_ProductClass *product_class, coda_ProductType *product_type)
+int coda_product_class_add_product_type(coda_product_class *product_class, coda_product_type *product_type)
 {
     if (hashtable_add_name(product_class->product_type_hash_data, product_type->name) != 0)
     {
@@ -1024,14 +1037,14 @@ int coda_product_class_add_product_type(coda_ProductClass *product_class, coda_P
     }
     if (product_class->num_product_types % BLOCK_SIZE == 0)
     {
-        coda_ProductType **new_product_type;
+        coda_product_type **new_product_type;
 
         new_product_type = realloc(product_class->product_type, (product_class->num_product_types + BLOCK_SIZE) *
-                                   sizeof(coda_ProductType *));
+                                   sizeof(coda_product_type *));
         if (new_product_type == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           (product_class->num_product_types + BLOCK_SIZE) * sizeof(coda_ProductType *), __FILE__,
+                           (product_class->num_product_types + BLOCK_SIZE) * sizeof(coda_product_type *), __FILE__,
                            __LINE__);
             return -1;
         }
@@ -1045,7 +1058,7 @@ int coda_product_class_add_product_type(coda_ProductClass *product_class, coda_P
     return 0;
 }
 
-coda_ProductType *coda_product_class_get_product_type(const coda_ProductClass *product_class, const char *name)
+coda_product_type *coda_product_class_get_product_type(const coda_product_class *product_class, const char *name)
 {
     int index;
 
@@ -1060,13 +1073,13 @@ coda_ProductType *coda_product_class_get_product_type(const coda_ProductClass *p
     return product_class->product_type[index];
 }
 
-int coda_product_class_has_product_type(const coda_ProductClass *product_class, const char *name)
+int coda_product_class_has_product_type(const coda_product_class *product_class, const char *name)
 {
     return (hashtable_get_index_from_name(product_class->product_type_hash_data, name) != -1);
 }
 
 
-int coda_product_class_add_named_type(coda_ProductClass *product_class, coda_Type *type)
+int coda_product_class_add_named_type(coda_product_class *product_class, coda_type *type)
 {
     if (hashtable_add_name(product_class->named_type_hash_data, type->name) != 0)
     {
@@ -1076,10 +1089,10 @@ int coda_product_class_add_named_type(coda_ProductClass *product_class, coda_Typ
     }
     if (product_class->num_named_types % BLOCK_SIZE == 0)
     {
-        coda_Type **new_named_type;
+        coda_type **new_named_type;
 
         new_named_type = realloc(product_class->named_type, (product_class->num_named_types + BLOCK_SIZE) *
-                                 sizeof(coda_Type *));
+                                 sizeof(coda_type *));
         assert(new_named_type != NULL);
         product_class->named_type = new_named_type;
     }
@@ -1090,7 +1103,7 @@ int coda_product_class_add_named_type(coda_ProductClass *product_class, coda_Typ
     return 0;
 }
 
-coda_Type *coda_product_class_get_named_type(const coda_ProductClass *product_class, const char *name)
+coda_type *coda_product_class_get_named_type(const coda_product_class *product_class, const char *name)
 {
     int index;
 
@@ -1105,24 +1118,24 @@ coda_Type *coda_product_class_get_named_type(const coda_ProductClass *product_cl
     return product_class->named_type[index];
 }
 
-int coda_product_class_has_named_type(const coda_ProductClass *product_class, const char *name)
+int coda_product_class_has_named_type(const coda_product_class *product_class, const char *name)
 {
     return (hashtable_get_index_from_name(product_class->named_type_hash_data, name) != -1);
 }
 
-int coda_product_class_get_revision(const coda_ProductClass *product_class)
+int coda_product_class_get_revision(const coda_product_class *product_class)
 {
     return product_class->revision;
 }
 
-static void delete_data_dictionary(coda_DataDictionary *data_dictionary)
+static void delete_data_dictionary(coda_data_dictionary *data_dictionary)
 {
     int i;
 
     assert(data_dictionary != NULL);
     if (data_dictionary->hash_data != NULL)
     {
-        delete_hashtable(data_dictionary->hash_data);
+        hashtable_delete(data_dictionary->hash_data);
     }
     if (data_dictionary->product_class != NULL)
     {
@@ -1144,15 +1157,15 @@ static void delete_data_dictionary(coda_DataDictionary *data_dictionary)
     free(data_dictionary);
 }
 
-static coda_DataDictionary *coda_data_dictionary_new(void)
+static coda_data_dictionary *coda_data_dictionary_new(void)
 {
-    coda_DataDictionary *data_dictionary;
+    coda_data_dictionary *data_dictionary;
 
-    data_dictionary = malloc(sizeof(coda_DataDictionary));
+    data_dictionary = malloc(sizeof(coda_data_dictionary));
     if (data_dictionary == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       sizeof(coda_DataDictionary), __FILE__, __LINE__);
+                       sizeof(coda_data_dictionary), __FILE__, __LINE__);
         return NULL;
     }
     data_dictionary->num_product_classes = 0;
@@ -1161,7 +1174,7 @@ static coda_DataDictionary *coda_data_dictionary_new(void)
     data_dictionary->ascbin_detection_tree = NULL;
     data_dictionary->xml_detection_tree = NULL;
 
-    data_dictionary->hash_data = new_hashtable(1);
+    data_dictionary->hash_data = hashtable_new(1);
     if (data_dictionary->hash_data == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashtable) (%s:%u)", __FILE__,
@@ -1173,52 +1186,52 @@ static coda_DataDictionary *coda_data_dictionary_new(void)
     return data_dictionary;
 }
 
-int coda_data_dictionary_add_product_class(coda_ProductClass *product_class)
+int coda_data_dictionary_add_product_class(coda_product_class *product_class)
 {
-    if (coda_data_dictionary == NULL)
+    if (coda_global_data_dictionary == NULL)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "coda has not been initialized");
         return -1;
     }
 
-    if (hashtable_add_name(coda_data_dictionary->hash_data, product_class->name) != 0)
+    if (hashtable_add_name(coda_global_data_dictionary->hash_data, product_class->name) != 0)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "duplicate product class %s", product_class->name);
         return -1;
     }
-    if (coda_data_dictionary->num_product_classes % BLOCK_SIZE == 0)
+    if (coda_global_data_dictionary->num_product_classes % BLOCK_SIZE == 0)
     {
-        coda_ProductClass **new_product_class;
+        coda_product_class **new_product_class;
 
-        new_product_class = realloc(coda_data_dictionary->product_class,
-                                    (coda_data_dictionary->num_product_classes + BLOCK_SIZE) *
-                                    sizeof(coda_ProductClass *));
+        new_product_class = realloc(coda_global_data_dictionary->product_class,
+                                    (coda_global_data_dictionary->num_product_classes + BLOCK_SIZE) *
+                                    sizeof(coda_product_class *));
         if (new_product_class == NULL)
         {
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           (coda_data_dictionary->num_product_classes + BLOCK_SIZE) *
-                           sizeof(coda_ProductClass *), __FILE__, __LINE__);
+                           (coda_global_data_dictionary->num_product_classes + BLOCK_SIZE) *
+                           sizeof(coda_product_class *), __FILE__, __LINE__);
             return -1;
         }
-        coda_data_dictionary->product_class = new_product_class;
+        coda_global_data_dictionary->product_class = new_product_class;
     }
-    coda_data_dictionary->num_product_classes++;
-    coda_data_dictionary->product_class[coda_data_dictionary->num_product_classes - 1] = product_class;
+    coda_global_data_dictionary->num_product_classes++;
+    coda_global_data_dictionary->product_class[coda_global_data_dictionary->num_product_classes - 1] = product_class;
 
     return 0;
 }
 
-coda_ProductClass *coda_data_dictionary_get_product_class(const char *name)
+coda_product_class *coda_data_dictionary_get_product_class(const char *name)
 {
     int index;
 
-    if (coda_data_dictionary == NULL)
+    if (coda_global_data_dictionary == NULL)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "coda has not been initialized");
         return NULL;
     }
 
-    index = hashtable_get_index_from_name(coda_data_dictionary->hash_data, name);
+    index = hashtable_get_index_from_name(coda_global_data_dictionary->hash_data, name);
     if (index == -1)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "data dictionary does not contain a product class with name %s",
@@ -1226,55 +1239,56 @@ coda_ProductClass *coda_data_dictionary_get_product_class(const char *name)
         return NULL;
     }
 
-    return coda_data_dictionary->product_class[index];
+    return coda_global_data_dictionary->product_class[index];
 }
 
 int coda_data_dictionary_has_product_class(const char *name)
 {
-    if (coda_data_dictionary == NULL)
+    if (coda_global_data_dictionary == NULL)
     {
         return 0;
     }
-    return (hashtable_get_index_from_name(coda_data_dictionary->hash_data, name) != -1);
+    return (hashtable_get_index_from_name(coda_global_data_dictionary->hash_data, name) != -1);
 }
 
-int coda_data_dictionary_remove_product_class(coda_ProductClass *product_class)
+int coda_data_dictionary_remove_product_class(coda_product_class *product_class)
 {
     int index;
     int i;
 
-    if (coda_data_dictionary == NULL)
+    if (coda_global_data_dictionary == NULL)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "coda has not been initialized");
         return -1;
     }
 
-    index = hashtable_get_index_from_name(coda_data_dictionary->hash_data, product_class->name);
+    index = hashtable_get_index_from_name(coda_global_data_dictionary->hash_data, product_class->name);
     if (index == -1)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "data dictionary does not contain a product class with name %s",
                        product_class->name);
         return -1;
     }
-    for (i = index + 1; i < coda_data_dictionary->num_product_classes; i++)
+    for (i = index + 1; i < coda_global_data_dictionary->num_product_classes; i++)
     {
-        coda_data_dictionary->product_class[i - 1] = coda_data_dictionary->product_class[i];
+        coda_global_data_dictionary->product_class[i - 1] = coda_global_data_dictionary->product_class[i];
     }
-    coda_data_dictionary->num_product_classes--;
+    coda_global_data_dictionary->num_product_classes--;
     coda_product_class_delete(product_class);
 
     /* rebuild hashtable */
-    delete_hashtable(coda_data_dictionary->hash_data);
-    coda_data_dictionary->hash_data = new_hashtable(1);
-    if (coda_data_dictionary->hash_data == NULL)
+    hashtable_delete(coda_global_data_dictionary->hash_data);
+    coda_global_data_dictionary->hash_data = hashtable_new(1);
+    if (coda_global_data_dictionary->hash_data == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashtable) (%s:%u)", __FILE__,
                        __LINE__);
         return -1;
     }
-    for (i = 0; i < coda_data_dictionary->num_product_classes; i++)
+    for (i = 0; i < coda_global_data_dictionary->num_product_classes; i++)
     {
-        if (hashtable_add_name(coda_data_dictionary->hash_data, coda_data_dictionary->product_class[i]->name) != 0)
+        if (hashtable_add_name
+            (coda_global_data_dictionary->hash_data, coda_global_data_dictionary->product_class[i]->name) != 0)
         {
             assert(0);
             exit(1);
@@ -1290,19 +1304,20 @@ int coda_data_dictionary_remove_product_class(coda_ProductClass *product_class)
     return 0;
 }
 
-static int data_dictionary_add_detection_rule(coda_DetectionRule *detection_rule)
+static int data_dictionary_add_detection_rule(coda_detection_rule *detection_rule)
 {
     switch (detection_rule->product_definition->format)
     {
         case coda_format_ascii:
         case coda_format_binary:
-            if (coda_ascbin_detection_tree_add_rule(&coda_data_dictionary->ascbin_detection_tree, detection_rule) != 0)
+            if (coda_ascbin_detection_tree_add_rule(&coda_global_data_dictionary->ascbin_detection_tree, detection_rule)
+                != 0)
             {
                 return -1;
             }
             break;
         case coda_format_xml:
-            if (coda_xml_detection_tree_add_rule(&coda_data_dictionary->xml_detection_tree, detection_rule) != 0)
+            if (coda_xml_detection_tree_add_rule(&coda_global_data_dictionary->xml_detection_tree, detection_rule) != 0)
             {
                 return -1;
             }
@@ -1311,6 +1326,8 @@ static int data_dictionary_add_detection_rule(coda_DetectionRule *detection_rule
         case coda_format_hdf5:
         case coda_format_cdf:
         case coda_format_netcdf:
+        case coda_format_grib1:
+        case coda_format_grib2:
             assert(0);
             exit(1);
     }
@@ -1321,28 +1338,28 @@ static int data_dictionary_rebuild_detection_tree(void)
 {
     int i, j, k, l;
 
-    if (coda_data_dictionary->ascbin_detection_tree != NULL)
+    if (coda_global_data_dictionary->ascbin_detection_tree != NULL)
     {
-        coda_ascbin_detection_tree_delete(coda_data_dictionary->ascbin_detection_tree);
-        coda_data_dictionary->ascbin_detection_tree = NULL;
+        coda_ascbin_detection_tree_delete(coda_global_data_dictionary->ascbin_detection_tree);
+        coda_global_data_dictionary->ascbin_detection_tree = NULL;
     }
-    if (coda_data_dictionary->xml_detection_tree != NULL)
+    if (coda_global_data_dictionary->xml_detection_tree != NULL)
     {
-        coda_xml_detection_tree_delete(coda_data_dictionary->xml_detection_tree);
-        coda_data_dictionary->xml_detection_tree = NULL;
+        coda_xml_detection_tree_delete(coda_global_data_dictionary->xml_detection_tree);
+        coda_global_data_dictionary->xml_detection_tree = NULL;
     }
 
-    for (i = 0; i < coda_data_dictionary->num_product_classes; i++)
+    for (i = 0; i < coda_global_data_dictionary->num_product_classes; i++)
     {
-        coda_ProductClass *product_class = coda_data_dictionary->product_class[i];
+        coda_product_class *product_class = coda_global_data_dictionary->product_class[i];
 
         for (j = 0; j < product_class->num_product_types; j++)
         {
-            coda_ProductType *product_type = product_class->product_type[j];
+            coda_product_type *product_type = product_class->product_type[j];
 
             for (k = 0; k < product_type->num_product_definitions; k++)
             {
-                coda_ProductDefinition *product_definition = product_type->product_definition[k];
+                coda_product_definition *product_definition = product_type->product_definition[k];
 
                 for (l = 0; l < product_definition->num_detection_rules; l++)
                 {
@@ -1360,10 +1377,10 @@ static int data_dictionary_rebuild_detection_tree(void)
 
 int coda_data_dictionary_init(void)
 {
-    assert(coda_data_dictionary == NULL);
+    assert(coda_global_data_dictionary == NULL);
 
-    coda_data_dictionary = coda_data_dictionary_new();
-    if (coda_data_dictionary == NULL)
+    coda_global_data_dictionary = coda_data_dictionary_new();
+    if (coda_global_data_dictionary == NULL)
     {
         return -1;
     }
@@ -1373,7 +1390,7 @@ int coda_data_dictionary_init(void)
 
 void coda_data_dictionary_done(void)
 {
-    assert(coda_data_dictionary != NULL);
-    delete_data_dictionary(coda_data_dictionary);
-    coda_data_dictionary = NULL;
+    assert(coda_global_data_dictionary != NULL);
+    delete_data_dictionary(coda_global_data_dictionary);
+    coda_global_data_dictionary = NULL;
 }

@@ -26,20 +26,20 @@
 
 #include "coda-netcdf-internal.h"
 
-void coda_netcdf_release_type(coda_Type *type);
+void coda_netcdf_release_type(coda_type *type);
 
-static void delete_netcdfAttributeRecord(coda_netcdfAttributeRecord *type)
+static void delete_netcdfAttributeRecord(coda_netcdf_attribute_record *type)
 {
     int i;
 
-    delete_hashtable(type->hash_data);
+    hashtable_delete(type->hash_data);
     if (type->attribute != NULL)
     {
         for (i = 0; i < type->num_attributes; i++)
         {
             if (type->attribute[i] != NULL)
             {
-                coda_netcdf_release_type((coda_Type *)type->attribute[i]);
+                coda_netcdf_release_type((coda_type *)type->attribute[i]);
             }
         }
         free(type->attribute);
@@ -69,7 +69,7 @@ static void delete_netcdfAttributeRecord(coda_netcdfAttributeRecord *type)
     free(type);
 }
 
-static void delete_netcdfBasicType(coda_netcdfBasicType *type)
+static void delete_netcdfBasicType(coda_netcdf_basic_type *type)
 {
     if (type->attributes != NULL)
     {
@@ -78,16 +78,16 @@ static void delete_netcdfBasicType(coda_netcdfBasicType *type)
     free(type);
 }
 
-static void delete_netcdfRoot(coda_netcdfRoot *type)
+static void delete_netcdfRoot(coda_netcdf_root *type)
 {
     int i;
 
-    delete_hashtable(type->hash_data);
+    hashtable_delete(type->hash_data);
     if (type->variable != NULL)
     {
         for (i = 0; i < type->num_variables; i++)
         {
-            coda_netcdf_release_type((coda_Type *)type->variable[i]);
+            coda_netcdf_release_type((coda_type *)type->variable[i]);
         }
         free(type->variable);
     }
@@ -114,33 +114,33 @@ static void delete_netcdfRoot(coda_netcdfRoot *type)
     free(type);
 }
 
-static void delete_netcdfArray(coda_netcdfArray *type)
+static void delete_netcdfArray(coda_netcdf_array *type)
 {
     if (type->attributes != NULL)
     {
         delete_netcdfAttributeRecord(type->attributes);
     }
-    coda_netcdf_release_type((coda_Type *)type->base_type);
+    coda_netcdf_release_type((coda_type *)type->base_type);
     free(type);
 }
 
-void coda_netcdf_release_type(coda_Type *type)
+void coda_netcdf_release_type(coda_type *type)
 {
     if (type != NULL)
     {
-        switch (((coda_netcdfType *)type)->tag)
+        switch (((coda_netcdf_type *)type)->tag)
         {
             case tag_netcdf_root:
-                delete_netcdfRoot((coda_netcdfRoot *)type);
+                delete_netcdfRoot((coda_netcdf_root *)type);
                 break;
             case tag_netcdf_array:
-                delete_netcdfArray((coda_netcdfArray *)type);
+                delete_netcdfArray((coda_netcdf_array *)type);
                 break;
             case tag_netcdf_basic_type:
-                delete_netcdfBasicType((coda_netcdfBasicType *)type);
+                delete_netcdfBasicType((coda_netcdf_basic_type *)type);
                 break;
             case tag_netcdf_attribute_record:
-                delete_netcdfAttributeRecord((coda_netcdfAttributeRecord *)type);
+                delete_netcdfAttributeRecord((coda_netcdf_attribute_record *)type);
                 break;
             default:
                 assert(0);
@@ -149,20 +149,20 @@ void coda_netcdf_release_type(coda_Type *type)
     }
 }
 
-void coda_netcdf_release_dynamic_type(coda_DynamicType *type)
+void coda_netcdf_release_dynamic_type(coda_dynamic_type *type)
 {
-    coda_netcdf_release_type((coda_Type *)type);
+    coda_netcdf_release_type((coda_type *)type);
 }
 
-coda_netcdfRoot *coda_netcdf_root_new(void)
+coda_netcdf_root *coda_netcdf_root_new(void)
 {
-    coda_netcdfRoot *type;
+    coda_netcdf_root *type;
 
-    type = malloc(sizeof(coda_netcdfRoot));
+    type = malloc(sizeof(coda_netcdf_root));
     if (type == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_netcdfRoot), __FILE__, __LINE__);
+                       (long)sizeof(coda_netcdf_root), __FILE__, __LINE__);
         return NULL;
     }
     type->retain_count = 0;
@@ -175,7 +175,7 @@ coda_netcdfRoot *coda_netcdf_root_new(void)
     type->variable = NULL;
     type->variable_name = NULL;
     type->variable_real_name = NULL;
-    type->hash_data = new_hashtable(0);
+    type->hash_data = hashtable_new(0);
     type->attributes = NULL;
     if (type->hash_data == NULL)
     {
@@ -188,7 +188,7 @@ coda_netcdfRoot *coda_netcdf_root_new(void)
     return type;
 }
 
-int coda_netcdf_root_add_variable(coda_netcdfRoot *type, const char *name, coda_netcdfType *variable)
+int coda_netcdf_root_add_variable(coda_netcdf_root *type, const char *name, coda_netcdf_type *variable)
 {
     char *variable_name;
 
@@ -204,15 +204,15 @@ int coda_netcdf_root_add_variable(coda_netcdfRoot *type, const char *name, coda_
     }
     if (type->num_variables % BLOCK_SIZE == 0)
     {
-        coda_netcdfType **new_variable;
+        coda_netcdf_type **new_variable;
         char **new_name;
 
-        new_variable = realloc(type->variable, (type->num_variables + BLOCK_SIZE) * sizeof(coda_netcdfType *));
+        new_variable = realloc(type->variable, (type->num_variables + BLOCK_SIZE) * sizeof(coda_netcdf_type *));
         if (new_variable == NULL)
         {
             free(variable_name);
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           (type->num_variables + BLOCK_SIZE) * sizeof(coda_netcdfType *), __FILE__, __LINE__);
+                           (type->num_variables + BLOCK_SIZE) * sizeof(coda_netcdf_type *), __FILE__, __LINE__);
             return -1;
         }
         type->variable = new_variable;
@@ -249,7 +249,7 @@ int coda_netcdf_root_add_variable(coda_netcdfRoot *type, const char *name, coda_
     return 0;
 }
 
-int coda_netcdf_root_add_attributes(coda_netcdfRoot *type, coda_netcdfAttributeRecord *attributes)
+int coda_netcdf_root_add_attributes(coda_netcdf_root *type, coda_netcdf_attribute_record *attributes)
 {
     assert(type->attributes == NULL);
     type->attributes = attributes;
@@ -257,16 +257,16 @@ int coda_netcdf_root_add_attributes(coda_netcdfRoot *type, coda_netcdfAttributeR
     return 0;
 }
 
-coda_netcdfArray *coda_netcdf_array_new(int num_dims, long dim[CODA_MAX_NUM_DIMS], coda_netcdfBasicType *base_type)
+coda_netcdf_array *coda_netcdf_array_new(int num_dims, long dim[CODA_MAX_NUM_DIMS], coda_netcdf_basic_type *base_type)
 {
-    coda_netcdfArray *type;
+    coda_netcdf_array *type;
     int i;
 
-    type = malloc(sizeof(coda_netcdfArray));
+    type = malloc(sizeof(coda_netcdf_array));
     if (type == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_netcdfArray), __FILE__, __LINE__);
+                       (long)sizeof(coda_netcdf_array), __FILE__, __LINE__);
         return NULL;
     }
     type->retain_count = 0;
@@ -288,7 +288,7 @@ coda_netcdfArray *coda_netcdf_array_new(int num_dims, long dim[CODA_MAX_NUM_DIMS
     return type;
 }
 
-int coda_netcdf_array_add_attributes(coda_netcdfArray *type, coda_netcdfAttributeRecord *attributes)
+int coda_netcdf_array_add_attributes(coda_netcdf_array *type, coda_netcdf_attribute_record *attributes)
 {
     assert(type->attributes == NULL);
     type->attributes = attributes;
@@ -296,15 +296,15 @@ int coda_netcdf_array_add_attributes(coda_netcdfArray *type, coda_netcdfAttribut
     return 0;
 }
 
-coda_netcdfBasicType *coda_netcdf_basic_type_new(int nc_type, int64_t offset, int record_var, int length)
+coda_netcdf_basic_type *coda_netcdf_basic_type_new(int nc_type, int64_t offset, int record_var, int length)
 {
-    coda_netcdfBasicType *type;
+    coda_netcdf_basic_type *type;
 
-    type = malloc(sizeof(coda_netcdfBasicType));
+    type = malloc(sizeof(coda_netcdf_basic_type));
     if (type == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_netcdfBasicType), __FILE__, __LINE__);
+                       (long)sizeof(coda_netcdf_basic_type), __FILE__, __LINE__);
         return NULL;
     }
     type->retain_count = 0;
@@ -360,7 +360,7 @@ coda_netcdfBasicType *coda_netcdf_basic_type_new(int nc_type, int64_t offset, in
     return type;
 }
 
-int coda_netcdf_basic_type_add_attributes(coda_netcdfBasicType *type, coda_netcdfAttributeRecord *attributes)
+int coda_netcdf_basic_type_add_attributes(coda_netcdf_basic_type *type, coda_netcdf_attribute_record *attributes)
 {
     assert(type->attributes == NULL);
     type->attributes = attributes;
@@ -368,15 +368,15 @@ int coda_netcdf_basic_type_add_attributes(coda_netcdfBasicType *type, coda_netcd
     return 0;
 }
 
-coda_netcdfAttributeRecord *coda_netcdf_attribute_record_new(void)
+coda_netcdf_attribute_record *coda_netcdf_attribute_record_new(void)
 {
-    coda_netcdfAttributeRecord *type;
+    coda_netcdf_attribute_record *type;
 
-    type = malloc(sizeof(coda_netcdfAttributeRecord));
+    type = malloc(sizeof(coda_netcdf_attribute_record));
     if (type == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)sizeof(coda_netcdfAttributeRecord), __FILE__, __LINE__);
+                       (long)sizeof(coda_netcdf_attribute_record), __FILE__, __LINE__);
         return NULL;
     }
     type->retain_count = 0;
@@ -389,7 +389,7 @@ coda_netcdfAttributeRecord *coda_netcdf_attribute_record_new(void)
     type->attribute = NULL;
     type->attribute_name = NULL;
     type->attribute_real_name = NULL;
-    type->hash_data = new_hashtable(0);
+    type->hash_data = hashtable_new(0);
     if (type->hash_data == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashdata) (%s:%u)", __FILE__,
@@ -401,8 +401,8 @@ coda_netcdfAttributeRecord *coda_netcdf_attribute_record_new(void)
     return type;
 }
 
-int coda_netcdf_attribute_record_add_attribute(coda_netcdfAttributeRecord *type, const char *name,
-                                               coda_netcdfType *attribute)
+int coda_netcdf_attribute_record_add_attribute(coda_netcdf_attribute_record *type, const char *name,
+                                               coda_netcdf_type *attribute)
 {
     char *attribute_name;
 
@@ -418,15 +418,15 @@ int coda_netcdf_attribute_record_add_attribute(coda_netcdfAttributeRecord *type,
     }
     if (type->num_attributes % BLOCK_SIZE == 0)
     {
-        coda_netcdfType **new_attribute;
+        coda_netcdf_type **new_attribute;
         char **new_name;
 
-        new_attribute = realloc(type->attribute, (type->num_attributes + BLOCK_SIZE) * sizeof(coda_netcdfType *));
+        new_attribute = realloc(type->attribute, (type->num_attributes + BLOCK_SIZE) * sizeof(coda_netcdf_type *));
         if (new_attribute == NULL)
         {
             free(attribute_name);
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           (type->num_attributes + BLOCK_SIZE) * sizeof(coda_netcdfType *), __FILE__, __LINE__);
+                           (type->num_attributes + BLOCK_SIZE) * sizeof(coda_netcdf_type *), __FILE__, __LINE__);
             return -1;
         }
         type->attribute = new_attribute;

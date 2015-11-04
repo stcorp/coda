@@ -23,7 +23,6 @@
 
 #include "coda-ascbin-internal.h"
 #include "coda-ascii.h"
-#include "coda-expr.h"
 #include "coda-ascii-definition.h"
 #include "coda-definition.h"
 
@@ -67,37 +66,37 @@ enum coda_ascii_time_type_enum
 };
 typedef enum coda_ascii_time_type_enum coda_ascii_time_type;
 
-struct coda_asciiMapping_struct
+struct coda_ascii_mapping_struct
 {
     int length;
     char *str;
 };
-typedef struct coda_asciiMapping_struct coda_asciiMapping;
+typedef struct coda_ascii_mapping_struct coda_ascii_mapping;
 
-struct coda_asciiIntegerMapping_struct
+struct coda_ascii_integer_mapping_struct
 {
     int length;
     char *str;
     int64_t value;
 };
 
-struct coda_asciiFloatMapping_struct
+struct coda_ascii_float_mapping_struct
 {
     int length;
     char *str;
     double value;
 };
 
-struct coda_asciiMappings_struct
+struct coda_ascii_mappings_struct
 {
     int64_t default_bit_size;   /* bit_size if none of the mappings apply */
     int num_mappings;
-    coda_asciiMapping **mapping;
+    coda_ascii_mapping **mapping;
 };
-typedef struct coda_asciiMappings_struct coda_asciiMappings;
+typedef struct coda_ascii_mappings_struct coda_ascii_mappings;
 
 
-struct coda_asciiType_struct
+struct coda_ascii_type_struct
 {
     int retain_count;
     coda_format format;
@@ -109,7 +108,7 @@ struct coda_asciiType_struct
     int64_t bit_size;   /* -1 means it's variable and needs to be calculated */
 };
 
-struct coda_asciiMappingsType_struct
+struct coda_ascii_mappings_type_struct
 {
     int retain_count;
     coda_format format;
@@ -119,11 +118,11 @@ struct coda_asciiMappingsType_struct
 
     ascii_type_tag tag;
     int64_t bit_size;   /* -1 means it's variable and needs to be calculated */
-    coda_asciiMappings *mappings;
+    coda_ascii_mappings *mappings;
 };
-typedef struct coda_asciiMappingsType_struct coda_asciiMappingsType;
+typedef struct coda_ascii_mappings_type_struct coda_ascii_mappings_type;
 
-struct coda_asciiNumber_struct
+struct coda_ascii_number_struct
 {
     int retain_count;
     coda_format format;
@@ -133,14 +132,14 @@ struct coda_asciiNumber_struct
 
     ascii_type_tag tag;
     int64_t bit_size;
-    coda_asciiMappings *mappings;
+    coda_ascii_mappings *mappings;
     char *unit;
     coda_native_type read_type;
-    coda_Conversion *conversion;
+    coda_conversion *conversion;
 };
-typedef struct coda_asciiNumber_struct coda_asciiNumber;
+typedef struct coda_ascii_number_struct coda_ascii_number;
 
-struct coda_asciiSpecialType_struct
+struct coda_ascii_special_type_struct
 {
     int retain_count;
     coda_format format;
@@ -150,11 +149,11 @@ struct coda_asciiSpecialType_struct
 
     ascii_type_tag tag;
     int64_t bit_size;   /* same as bit_size of base_type */
-    coda_asciiType *base_type;
+    coda_ascii_type *base_type;
 };
-typedef struct coda_asciiSpecialType_struct coda_asciiSpecialType;
+typedef struct coda_ascii_special_type_struct coda_ascii_special_type;
 
-struct coda_asciiInteger_struct
+struct coda_ascii_integer_struct
 {
     int retain_count;
     coda_format format;
@@ -164,13 +163,13 @@ struct coda_asciiInteger_struct
 
     ascii_type_tag tag;
     int64_t bit_size;   /* if -1 than no fixed length, size determined by reading */
-    coda_asciiMappings *mappings;
+    coda_ascii_mappings *mappings;
     char *unit;
     coda_native_type read_type;
-    coda_Conversion *conversion;
+    coda_conversion *conversion;
 };
 
-struct coda_asciiFloat_struct
+struct coda_ascii_float_struct
 {
     int retain_count;
     coda_format format;
@@ -180,13 +179,13 @@ struct coda_asciiFloat_struct
 
     ascii_type_tag tag;
     int64_t bit_size;   /* if -1 than no fixed length, size determined by reading */
-    coda_asciiMappings *mappings;
+    coda_ascii_mappings *mappings;
     char *unit;
     coda_native_type read_type;
-    coda_Conversion *conversion;
+    coda_conversion *conversion;
 };
 
-struct coda_asciiText_struct
+struct coda_ascii_text_struct
 {
     int retain_count;
     coda_format format;
@@ -196,13 +195,13 @@ struct coda_asciiText_struct
 
     ascii_type_tag tag;
     int64_t bit_size;
-    coda_asciiMappings *mappings;
+    coda_ascii_mappings *mappings;
     coda_native_type read_type;
-    coda_Expr *byte_size_expr;
+    coda_expression *byte_size_expr;
     char *fixed_value;
 };
 
-struct coda_asciiLineSeparator_struct
+struct coda_ascii_line_separator_struct
 {
     int retain_count;
     coda_format format;
@@ -214,7 +213,7 @@ struct coda_asciiLineSeparator_struct
     int64_t bit_size;   /* always -1 */
 };
 
-struct coda_asciiLine_struct
+struct coda_ascii_line_struct
 {
     int retain_count;
     coda_format format;
@@ -228,7 +227,7 @@ struct coda_asciiLine_struct
     int include_eol;
 };
 
-struct coda_asciiWhiteSpace_struct
+struct coda_ascii_white_space_struct
 {
     int retain_count;
     coda_format format;
@@ -240,7 +239,7 @@ struct coda_asciiWhiteSpace_struct
     int64_t bit_size;   /* always -1 */
 };
 
-struct coda_asciiTime_struct
+struct coda_ascii_time_struct
 {
     int retain_count;
     coda_format format;
@@ -251,10 +250,10 @@ struct coda_asciiTime_struct
     ascii_type_tag tag;
     int64_t bit_size;   /* same as bit_size of base_type */
 
-    coda_asciiType *base_type;
+    coda_ascii_type *base_type;
     coda_ascii_time_type time_type;
 };
 
-int coda_ascii_init_asciilines(coda_ProductFile *pf);
+int coda_ascii_init_asciilines(coda_product *product);
 
 #endif

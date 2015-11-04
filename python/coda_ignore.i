@@ -46,9 +46,16 @@
 %ignore CODA_ERROR_PRODUCT;
 %ignore CODA_ERROR_OUT_OF_BOUNDS_READ;
 %ignore CODA_ERROR_DATA_DEFINITION;
+%ignore CODA_ERROR_EXPRESSION;
 %ignore CODA_PRIVATE_FIELD(name);
 %ignore CODA_CURSOR_MAXDEPTH;
 
+%ignore coda_errno;
+
 %ignore coda_set_definition_path;
+%ignore coda_set_definition_path_conditional;
+%ignore coda_free;
 %ignore coda_str64;
 %ignore coda_str64u;
+%ignore coda_set_error;
+%ignore coda_errno_to_string;

@@ -24,28 +24,29 @@
 #include "coda-internal.h"
 #include "coda-xml-definition.h"
 
-typedef struct coda_xmlDynamicType_struct coda_xmlDynamicType;
-typedef struct coda_xmlRootDynamicType_struct coda_xmlRootDynamicType;
-typedef struct coda_xmlElementDynamicType_struct coda_xmlElementDynamicType;
-typedef struct coda_xmlArrayDynamicType_struct coda_xmlArrayDynamicType;
-typedef struct coda_xmlAttributeDynamicType_struct coda_xmlAttributeDynamicType;
-typedef struct coda_xmlAttributeRecordDynamicType_struct coda_xmlAttributeRecordDynamicType;
+typedef struct coda_xml_dynamic_type_struct coda_xml_dynamic_type;
+typedef struct coda_xml_root_dynamic_type_struct coda_xml_root_dynamic_type;
+typedef struct coda_xml_element_dynamic_type_struct coda_xml_element_dynamic_type;
+typedef struct coda_xml_array_dynamic_type_struct coda_xml_array_dynamic_type;
+typedef struct coda_xml_attribute_dynamic_type_struct coda_xml_attribute_dynamic_type;
+typedef struct coda_xml_attribute_record_dynamic_type_struct coda_xml_attribute_record_dynamic_type;
 
-void coda_xml_release_dynamic_type(coda_xmlDynamicType *type);
+void coda_xml_release_dynamic_type(coda_xml_dynamic_type *type);
 
-coda_xmlRootDynamicType *coda_xml_dynamic_root_new(coda_xmlRoot *type);
+coda_xml_root_dynamic_type *coda_xml_dynamic_root_new(coda_xml_root *type);
 
-coda_xmlElementDynamicType *coda_xml_dynamic_element_new(coda_xmlElement *type, const char **attr);
-int coda_xml_dynamic_element_add_element(coda_xmlElementDynamicType *element, coda_xmlElementDynamicType *sub_element);
-int coda_xml_dynamic_element_update(coda_xmlElementDynamicType *element);
-int coda_xml_dynamic_element_validate(coda_xmlElementDynamicType *element);
+coda_xml_element_dynamic_type *coda_xml_dynamic_element_new(coda_xml_element *type, const char **attr);
+int coda_xml_dynamic_element_add_element(coda_xml_element_dynamic_type *element,
+                                         coda_xml_element_dynamic_type *sub_element);
+int coda_xml_dynamic_element_update(coda_xml_element_dynamic_type *element);
+int coda_xml_dynamic_element_validate(coda_xml_element_dynamic_type *element);
 
-coda_xmlArrayDynamicType *coda_xml_dynamic_array_new(coda_xmlArray *type);
-int coda_xml_dynamic_array_add_element(coda_xmlArrayDynamicType *array, coda_xmlElementDynamicType *element);
+coda_xml_array_dynamic_type *coda_xml_dynamic_array_new(coda_xml_array *type);
+int coda_xml_dynamic_array_add_element(coda_xml_array_dynamic_type *array, coda_xml_element_dynamic_type *element);
 
-coda_xmlAttributeRecordDynamicType *coda_xml_dynamic_attribute_record_new(coda_xmlAttributeRecord *type,
-                                                                          const char **attr);
+coda_xml_attribute_record_dynamic_type *coda_xml_dynamic_attribute_record_new(coda_xml_attribute_record *type,
+                                                                              const char **attr);
 
-coda_xmlDynamicType *coda_xml_empty_dynamic_attribute_record(void);
+coda_xml_dynamic_type *coda_xml_empty_dynamic_attribute_record(void);
 
 #endif

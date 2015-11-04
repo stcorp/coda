@@ -111,7 +111,7 @@ static void print_escaped(const char *data, long length)
     }
 }
 
-static void print_data(coda_Cursor *cursor)
+static void print_data(coda_cursor *cursor)
 {
     coda_type_class type_class;
     long num_attributes;
@@ -150,7 +150,7 @@ static void print_data(coda_Cursor *cursor)
                 }
                 if (num_fields > 0)
                 {
-                    coda_Type *record_type;
+                    coda_type *record_type;
                     int is_union;
                     long i;
 
@@ -539,8 +539,8 @@ static void print_data(coda_Cursor *cursor)
 
 void print_debug_data()
 {
-    coda_ProductFile *pf;
-    coda_Cursor cursor;
+    coda_product *pf;
+    coda_cursor cursor;
     coda_format format;
     int result;
 

@@ -38,10 +38,10 @@ extern "C"
 
 typedef struct hashtable_struct hashtable;
 
-hashtable *new_hashtable(int case_sensitive);
+hashtable *hashtable_new(int case_sensitive);
 int hashtable_add_name(hashtable *table, const char *name);
 long hashtable_get_index_from_name(hashtable *table, const char *name);
-void delete_hashtable(hashtable *table);
+void hashtable_delete(hashtable *table);
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus

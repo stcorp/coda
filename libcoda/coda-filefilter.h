@@ -84,7 +84,7 @@ typedef struct ff_result_struct
 } ff_result;
 
 /* expression evaluation declarations */
-ff_result coda_filefilter_eval_expr(coda_Cursor *cursor, ff_expr *expr);
+ff_result coda_filefilter_eval_expr(coda_cursor *cursor, ff_expr *expr);
 
 /* parser declarations */
 int coda_filefilter_parse(void);

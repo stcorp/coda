@@ -29,7 +29,7 @@ package nl.stcorp.coda;
  */
 public class Product
 {
-    private SWIGTYPE_p_coda_ProductFile_struct product;
+    private SWIGTYPE_p_coda_product_struct product;
 
 
     // Constructor used instead of explicit coda_open().
@@ -47,7 +47,7 @@ public class Product
      */
     public Product(String filename) throws CodaException
     {
-        this.product = new SWIGTYPE_p_coda_ProductFile_struct();
+        this.product = new SWIGTYPE_p_coda_product_struct();
         codac.open(filename, this.product);
     }
 
@@ -55,14 +55,14 @@ public class Product
     // Users never need to deal with the opaque SWIG pointer
     // themselves, so this Constructur only has internal
     // package access.
-    Product(SWIGTYPE_p_coda_ProductFile_struct product)
+    Product(SWIGTYPE_p_coda_product_struct product)
     {
         this.product = product;
     }
 
 
     // Internal package access only.
-    SWIGTYPE_p_coda_ProductFile_struct getSwigRepresentation()
+    SWIGTYPE_p_coda_product_struct getSwigRepresentation()
     {
         return this.product;
     }
@@ -191,7 +191,7 @@ public class Product
      */
     public Type getRootType() throws CodaException
     {
-        SWIGTYPE_p_coda_Type_struct rootType = new SWIGTYPE_p_coda_Type_struct();
+        SWIGTYPE_p_coda_type_struct rootType = new SWIGTYPE_p_coda_type_struct();
         codac.get_product_root_type(this.product, rootType);
         return new Type(rootType);
     }

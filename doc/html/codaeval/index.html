@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html>
+
+  <head>
+    <title>codaeval</title>
+    <link rel="stylesheet" href="../css/codadoc.css" type="text/css" />
+  </head>
+
+  <body>
+
+    <div class="main">
+
+      <h1>codaeval</h1>
+
+      <p>This documentation describes the functionality of the codaeval tool which is part of CODA.</p>
+    
+      <h2 id="general">General description</h2>
+
+      <p>CODA contains an expression language that can be used to perform calculations on parameters inside a data product. The codaeval tool can be used to evaluate such an expression, either with on one or more product files or without (in case it is a constant expression). Alternatively, using the -c option, the tool will just verify if the expression is syntactically and grammatically correct.</p>
+
+<pre>
+Usage:
+    codaeval [&lt;options&gt;] expression [&lt;files|directories&gt;]
+        Evaluate a CODA expression on a series of files and/or recursively on
+        all contents of directories
+        If no files or directories are provided then codaeval should be a
+        'constant' expression (i.e. it may not contain node expressions or
+        functions that rely on product content)
+
+        Options:
+            -c, --check
+                    only check the syntax of the expression, without evaluating
+                    it; any remaining options (including files) will be ignored
+            -d, --disable_conversions
+                    do not perform unit/value conversions
+            -p '&lt;path&gt;'
+                    a path (in the form of a CODA node expression) to the
+                    location in the product where the expression should be
+                    evaluated
+                    if no path is provided the expression will be evaluated
+                    at the root of the product
+
+    A description of the syntax of CODA expression language can be found in the
+    CODA documentation
+
+    codaeval h, --help
+        Show help (this text)
+
+    codaeval -v, --version
+        Print the version number of CODA and exit
+
+</pre>
+
+      <div class="footer">
+        <hr />
+        <p>Copyright &copy; 2007-2010 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+      </div>
+
+    </div>
+
+  </body>
+
+</html>

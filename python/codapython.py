@@ -847,11 +847,11 @@ def get_size(start, *path):
 
 def time_to_string(times):
     """
-    Convert a number of seconds since 1-1-2000 to a human readable
+    Convert a number of seconds since 2000-01-01 (TAI) to a human readable
     form.
 
     This function turns a double value specifying a number of seconds
-    since 1-1-2000 into a string containing the date and time in a human
+    since 2000-01-01 into a string containing the date and time in a human
     readable form. For example:
 
     time_to_string(68260079.0)
@@ -866,6 +866,30 @@ def time_to_string(times):
         return [coda_time_to_string(t) for t in times]
     else:
         return coda_time_to_string(times)
+
+
+def time_to_utcstring(times):
+    """
+    Convert a TAI number of seconds since 2000-01-01 (TAI) to a human readable
+    form in UTC format.
+
+    This function turns a double value specifying a number of TAI seconds
+    since 2000-01-01 into a string containing the UTC date and time in a human
+    readable form (using proper leap second correction in the conversion).
+    For example:
+
+    time_to_utcstring(68260111.0)
+
+    would return the string '2002-03-01 01:07:59.000000'.
+
+    It is possible to input a list or tuple of doubles, in which case a
+    list of strings will be returned.
+    """
+
+    if _isIterable(times):
+        return [coda_time_to_utcstring(t) for t in times]
+    else:
+        return coda_time_to_utcstring(times)
 
 
 def get_unit(start, *path):

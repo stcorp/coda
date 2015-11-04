@@ -28,7 +28,6 @@
 #include <string.h>
 
 #include "coda.h"
-#include "coda-path.h"
 
 static int verbosity;
 
@@ -62,35 +61,6 @@ static void print_help()
     printf("    codafind -v, --version\n");
     printf("        Print the version number of CODA and exit\n");
     printf("\n");
-}
-
-static void set_definition_path(const char *argv0)
-{
-    char *location;
-
-    if (coda_path_for_program(argv0, &location) != 0)
-    {
-        printf("  ERROR: %s\n", coda_errno_to_string(coda_errno));
-        exit(1);
-    }
-    if (location != NULL)
-    {
-#ifdef WIN32
-        const char *definition_path = "../definitions";
-#else
-        const char *definition_path = "../share/" PACKAGE "/definitions";
-#endif
-        char *path;
-
-        if (coda_path_from_path(location, 1, definition_path, &path) != 0)
-        {
-            printf("  ERROR: %s\n", coda_errno_to_string(coda_errno));
-            exit(1);
-        }
-        coda_path_free(location);
-        coda_set_definition_path(path);
-        coda_path_free(path);
-    }
 }
 
 int callback(const char *filepath, coda_filefilter_status status, const char *error, void *userdata)
@@ -144,6 +114,11 @@ int callback(const char *filepath, coda_filefilter_status status, const char *er
 
 int main(int argc, char *argv[])
 {
+#ifdef WIN32
+    const char *definition_path = "../definitions";
+#else
+    const char *definition_path = "../share/" PACKAGE "/definitions";
+#endif
     char *filter = NULL;
     int perform_conversions;
     int i;
@@ -200,9 +175,10 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    if (getenv("CODA_DEFINITION") == NULL)
+    if (coda_set_definition_path_conditional(argv[0], NULL, definition_path) != 0)
     {
-        set_definition_path(argv[0]);
+        fprintf(stderr, "ERROR: %s\n", coda_errno_to_string(coda_errno));
+        exit(1);
     }
 
     if (coda_init() != 0)

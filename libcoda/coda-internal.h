@@ -43,19 +43,19 @@ enum coda_endianness_enum
 typedef enum coda_endianness_enum coda_endianness;
 
 /* type 'base class' that describes the dynamic (i.e. instance specific) type information of a data element */
-/* this is the type that is used within coda_ProductFile for the root type and within coda_Cursor */
-/* depending on the backend a coda_DynamicType instance can also be a coda_Type (or vice versa) */
-struct coda_DynamicType_struct
+/* this is the type that is used within coda_product for the root type and within coda_cursor */
+/* depending on the backend a coda_dynamic_type instance can also be a coda_type (or vice versa) */
+struct coda_dynamic_type_struct
 {
     int retain_count;
     coda_format format;
     coda_type_class type_class;
 };
-typedef struct coda_DynamicType_struct coda_DynamicType;
+typedef struct coda_dynamic_type_struct coda_dynamic_type;
 
 /* type 'base class' that describes the definition of a data element */
 /* this is the type that is used throughout the CODA Types module */
-struct coda_Type_struct
+struct coda_type_struct
 {
     int retain_count;
     coda_format format;
@@ -64,17 +64,17 @@ struct coda_Type_struct
     char *description;
 };
 
-typedef struct coda_ProductDefinition_struct coda_ProductDefinition;
+typedef struct coda_product_definition_struct coda_product_definition;
 
-struct coda_ProductFile_struct
+struct coda_product_struct
 {
     /* general fields (shared between all supported product types) */
 
     char *filename;
     int64_t file_size;
     coda_format format;
-    coda_DynamicType *root_type;
-    coda_ProductDefinition *product_definition;
+    coda_dynamic_type *root_type;
+    coda_product_definition *product_definition;
     long *product_variable_size;
     int64_t **product_variable;
 };
@@ -92,18 +92,20 @@ void coda_set_error_message(const char *message, ...);
 void coda_add_error_message_vargs(const char *message, va_list ap);
 void coda_set_error_message_vargs(const char *message, va_list ap);
 
-void coda_release_type(coda_Type *type);
-void coda_release_dynamic_type(coda_DynamicType *type);
+void coda_release_type(coda_type *type);
+void coda_release_dynamic_type(coda_dynamic_type *type);
 
 int coda_data_dictionary_init(void);
 void coda_data_dictionary_done(void);
 int coda_read_definitions(const char *path);
-int coda_read_product_definition(coda_ProductDefinition *product_definition);
+int coda_read_product_definition(coda_product_definition *product_definition);
 
-int coda_get_type_for_dynamic_type(coda_DynamicType *dynamic_type, coda_Type **type);
+int coda_get_type_for_dynamic_type(coda_dynamic_type *dynamic_type, coda_type **type);
 
-int coda_product_variable_get_size(coda_ProductFile *pf, const char *name, long *size);
-int coda_product_variable_get_pointer(coda_ProductFile *pf, const char *name, long i, int64_t **ptr);
+int coda_product_variable_get_size(coda_product *product, const char *name, long *size);
+int coda_product_variable_get_pointer(coda_product *product, const char *name, long i, int64_t **ptr);
+
+int coda_expression_eval_void(const coda_expression *expr, const coda_cursor *cursor);
 
 const char *coda_element_name_from_xml_name(const char *xml_name);
 int coda_is_identifier(const char *name);
@@ -114,5 +116,8 @@ int coda_array_transpose(void *array, int num_dims, const long dim[], int elemen
 
 int coda_dayofyear_to_month_day(int year, int day_of_year, int *month, int *day_of_month);
 int coda_month_to_integer(const char month[3]);
+
+int coda_leap_second_table_init(void);
+void coda_leap_second_table_done(void);
 
 #endif

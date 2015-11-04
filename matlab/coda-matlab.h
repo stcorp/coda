@@ -39,7 +39,7 @@ mxArray *mxCreateNumericMatrix(int m, int n, mxClassID classid, int cmplx_flag);
 typedef struct coda_MatlabFileHandle_struct
 {
     int handle_id;
-    coda_ProductFile *pf;
+    coda_product *pf;
     struct coda_MatlabFileHandle_struct *next;
 } coda_MatlabFileHandle;
 
@@ -71,13 +71,13 @@ extern const char *coda_matlab_options[];
 extern coda_MatlabEnvironment coda_env;
 
 /* coda-traverse functions */
-void coda_matlab_traverse_data(int nrhs, const mxArray *prhs[], coda_Cursor *cursor, coda_MatlabCursorInfo *info);
-void coda_matlab_traverse_product(coda_ProductFile *pf, int nrhs, const mxArray *prhs[], coda_Cursor *cursor,
+void coda_matlab_traverse_data(int nrhs, const mxArray *prhs[], coda_cursor *cursor, coda_MatlabCursorInfo *info);
+void coda_matlab_traverse_product(coda_product *pf, int nrhs, const mxArray *prhs[], coda_cursor *cursor,
                                   coda_MatlabCursorInfo *info);
 
 /* coda-getdata functions */
-mxArray *coda_matlab_get_data(coda_ProductFile *pf, int nrhs, const mxArray *prhs[]);
-mxArray *coda_matlab_read_data(coda_Cursor *cursor);
+mxArray *coda_matlab_get_data(coda_product *pf, int nrhs, const mxArray *prhs[]);
+mxArray *coda_matlab_read_data(coda_cursor *cursor);
 
 /* coda-matlab functions */
 void coda_matlab_coda_error(void);

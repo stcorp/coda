@@ -50,24 +50,24 @@ typedef enum xml_dynamic_tag_enum
     tag_xml_attribute_record_dynamic
 } xml_dynamic_tag;
 
-/* coda_Type
- * \ -- coda_xmlType
- *      \ -- coda_xmlRoot
- *       |-- coda_xmlElement (record, text, ascii_type)
- *       |-- coda_xmlArray
- *       |-- coda_xmlAttribute
- *       |-- coda_xmlAttributeRecord
- * coda_DynamicType
- * \ -- coda_xmlDynamicType
- *      \ -- coda_xmlRootDynamicType
- *       |-- coda_xmlElementDynamicType (record, text, ascii_type)
- *       |-- coda_xmlArrayDynamicType
- *       |-- coda_xmlAttributeDynamicType
- *       |-- coda_xmlAttributeRecordDynamicType
- * coda_xmlField
+/* coda_type
+ * \ -- coda_xml_type
+ *      \ -- coda_xml_root
+ *       |-- coda_xml_element (record, text, ascii_type)
+ *       |-- coda_xml_array
+ *       |-- coda_xml_attribute
+ *       |-- coda_xml_attribute_record
+ * coda_dynamic_type
+ * \ -- coda_xml_dynamic_type
+ *      \ -- coda_xml_root_dynamic_type
+ *       |-- coda_xml_element_dynamic_type (record, text, ascii_type)
+ *       |-- coda_xml_array_dynamic_type
+ *       |-- coda_xml_attribute_dynamic_type
+ *       |-- coda_xml_attribute_record_dynamic_type
+ * coda_xml_field
  */
 
-struct coda_xmlType_struct
+struct coda_xml_type_struct
 {
     int retain_count;
     coda_format format;
@@ -78,7 +78,7 @@ struct coda_xmlType_struct
     xml_type_tag tag;
 };
 
-struct coda_xmlRoot_struct
+struct coda_xml_root_struct
 {
     int retain_count;
     coda_format format;
@@ -87,21 +87,21 @@ struct coda_xmlRoot_struct
     char *description;
 
     xml_type_tag tag;
-    coda_xmlField *field;
+    coda_xml_field *field;
 };
 
-struct coda_xmlField_struct
+struct coda_xml_field_struct
 {
-    const char *xml_name;       /* this is a reference to the xml_name from a coda_xmlElement */
+    const char *xml_name;       /* this is a reference to the xml_name from a coda_xml_element */
     char *name; /* the field name */
 
-    coda_xmlType *type; /* xmlArray or xmlElement */
+    coda_xml_type *type;        /* xmlArray or xmlElement */
 
     uint8_t optional;
     uint8_t hidden;
 };
 
-struct coda_xmlElement_struct
+struct coda_xml_element_struct
 {
     int retain_count;
     coda_format format;
@@ -112,19 +112,19 @@ struct coda_xmlElement_struct
     xml_type_tag tag;
     char *xml_name;     /* the xml name is a concatenation of namespace and element name, separated by a ' ' */
 
-    struct coda_xmlAttributeRecord_struct *attributes;
+    struct coda_xml_attribute_record_struct *attributes;
 
     /* data for record */
     int num_fields;
-    coda_xmlField **field;
+    coda_xml_field **field;
     hashtable *xml_name_hash_data;
     hashtable *name_hash_data;
 
     /* data for ascii type */
-    coda_asciiType *ascii_type;
+    coda_ascii_type *ascii_type;
 };
 
-struct coda_xmlArray_struct
+struct coda_xml_array_struct
 {
     int retain_count;
     coda_format format;
@@ -133,10 +133,10 @@ struct coda_xmlArray_struct
     char *description;
 
     xml_type_tag tag;
-    coda_xmlElement *base_type;
+    coda_xml_element *base_type;
 };
 
-struct coda_xmlAttribute_struct
+struct coda_xml_attribute_struct
 {
     int retain_count;
     coda_format format;
@@ -151,7 +151,7 @@ struct coda_xmlAttribute_struct
     uint8_t optional;
 };
 
-struct coda_xmlAttributeRecord_struct
+struct coda_xml_attribute_record_struct
 {
     int retain_count;
     coda_format format;
@@ -161,13 +161,13 @@ struct coda_xmlAttributeRecord_struct
 
     xml_type_tag tag;
     int num_attributes;
-    coda_xmlAttribute **attribute;
+    coda_xml_attribute **attribute;
     hashtable *attribute_name_hash_data;
     hashtable *name_hash_data;
 };
 
 
-struct coda_xmlDynamicType_struct
+struct coda_xml_dynamic_type_struct
 {
     int retain_count;
     coda_format format;
@@ -176,26 +176,26 @@ struct coda_xmlDynamicType_struct
     xml_dynamic_tag tag;
 };
 
-struct coda_xmlRootDynamicType_struct
+struct coda_xml_root_dynamic_type_struct
 {
     int retain_count;
     coda_format format;
     coda_type_class type_class;
 
     xml_dynamic_tag tag;
-    coda_xmlRoot *type; /* reference to definition for this element */
+    coda_xml_root *type;        /* reference to definition for this element */
 
-    struct coda_xmlElementDynamicType_struct *element;  /* root xml element */
+    struct coda_xml_element_dynamic_type_struct *element;       /* root xml element */
 };
 
-struct coda_xmlElementDynamicType_struct
+struct coda_xml_element_dynamic_type_struct
 {
     int retain_count;
     coda_format format;
     coda_type_class type_class;
 
     xml_dynamic_tag tag;
-    coda_xmlElement *type;      /* reference to definition for this element */
+    coda_xml_element *type;     /* reference to definition for this element */
 
     int64_t outer_bit_offset;   /* absolute bit offset in file of the start of this element */
     int64_t inner_bit_offset;   /* absolute bit offset in file of the start of the content of this element */
@@ -204,92 +204,92 @@ struct coda_xmlElementDynamicType_struct
     int32_t cdata_delta_offset; /* delta on bit offset if the content consists of a single CDATA element */
     int32_t cdata_delta_size;   /* delta on bit size if the content consists of a single CDATA element */
 
-    struct coda_xmlAttributeRecordDynamicType_struct *attributes;
+    struct coda_xml_attribute_record_dynamic_type_struct *attributes;
 
     long num_elements;
-    coda_xmlDynamicType **element;      /* xmlArrayDynamicType or xmlElementDynamicType */
+    coda_xml_dynamic_type **element;    /* xmlArrayDynamicType or xmlElementDynamicType */
 
     /* pointer to parent element (only used during xml parsing) */
-    struct coda_xmlElementDynamicType_struct *parent;
+    struct coda_xml_element_dynamic_type_struct *parent;
 };
 
-struct coda_xmlArrayDynamicType_struct
+struct coda_xml_array_dynamic_type_struct
 {
     int retain_count;
     coda_format format;
     coda_type_class type_class;
 
     xml_dynamic_tag tag;
-    coda_xmlArray *type;        /* reference to definition for this element */
+    coda_xml_array *type;       /* reference to definition for this element */
 
     long num_elements;
-    coda_xmlElementDynamicType **element;
+    coda_xml_element_dynamic_type **element;
 };
 
-struct coda_xmlAttributeDynamicType_struct
+struct coda_xml_attribute_dynamic_type_struct
 {
     int retain_count;
     coda_format format;
     coda_type_class type_class;
 
     xml_type_tag tag;
-    coda_xmlAttribute *type;    /* reference to definition for this element */
+    coda_xml_attribute *type;   /* reference to definition for this element */
 
     char *value;
 };
 
-struct coda_xmlAttributeRecordDynamicType_struct
+struct coda_xml_attribute_record_dynamic_type_struct
 {
     int retain_count;
     coda_format format;
     coda_type_class type_class;
 
     xml_dynamic_tag tag;
-    coda_xmlAttributeRecord *type;      /* reference to definition for this element */
+    coda_xml_attribute_record *type;    /* reference to definition for this element */
 
     long num_attributes;
-    coda_xmlAttributeDynamicType **attribute;
+    coda_xml_attribute_dynamic_type **attribute;
 };
 
-struct coda_xmlDetectionNode_struct
+struct coda_xml_detection_node_struct
 {
     /* xml name of this node */
     char *xml_name;
 
     /* detection rules at this node */
     int num_detection_rules;
-    coda_DetectionRule **detection_rule;
+    coda_detection_rule **detection_rule;
 
     /* sub nodes of this node */
     int num_subnodes;
-    struct coda_xmlDetectionNode_struct **subnode;
+    struct coda_xml_detection_node_struct **subnode;
     hashtable *hash_data;
 
-    struct coda_xmlDetectionNode_struct *parent;
+    struct coda_xml_detection_node_struct *parent;
 };
-typedef struct coda_xmlDetectionNode_struct coda_xmlDetectionNode;
+typedef struct coda_xml_detection_node_struct coda_xml_detection_node;
 
-coda_xmlDetectionNode *coda_xml_get_detection_tree(void);
-coda_xmlDetectionNode *coda_xml_detection_node_get_subnode(coda_xmlDetectionNode *node, const char *xml_name);
+coda_xml_detection_node *coda_xml_get_detection_tree(void);
+coda_xml_detection_node *coda_xml_detection_node_get_subnode(coda_xml_detection_node *node, const char *xml_name);
 
-struct coda_xmlProductFile_struct
+struct coda_xml_product_struct
 {
     /* general fields (shared between all supported product types) */
     char *filename;
     int64_t file_size;
     coda_format format;
-    coda_DynamicType *root_type;
-    coda_ProductDefinition *product_definition;
+    coda_dynamic_type *root_type;
+    coda_product_definition *product_definition;
     long *product_variable_size;
     int64_t **product_variable;
 
     int use_mmap;       /* this field is needed for when the ascii backend wants to read data - the value is always 0 */
     int fd;
 };
-typedef struct coda_xmlProductFile_struct coda_xmlProductFile;
+typedef struct coda_xml_product_struct coda_xml_product;
 
-int coda_xml_parse_and_interpret(coda_xmlProductFile *pf);
-int coda_xml_parse_with_definition(coda_xmlProductFile *pf);
-int coda_xml_parse_for_detection(int fd, const char *filename, coda_ProductDefinition **definition);
+int coda_xml_parse_and_interpret(coda_xml_product *product);
+int coda_xml_parse_with_definition(coda_xml_product *product);
+int coda_xml_parse_for_detection(int fd, const char *filename, coda_product_definition **definition);
 
 #endif

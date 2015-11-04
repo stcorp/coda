@@ -31,7 +31,6 @@
 
 #include "export.h"
 #include "coda.h"
-#include "coda-path.h"
 
 static int coda_idl_option_filter_record_fields = 1;
 static int coda_idl_option_verbose = 1;
@@ -53,19 +52,19 @@ struct IDL_CodaNoData
 };
 
 /* this array holds all currently opened product files. Product files are represented in IDL by a positive ULONG64;
- * internally, product #pf_id will reside in slot pf_id % NUM_PF_SLOTS.
+ * internally, product #product_id will reside in slot product_id % NUM_PF_SLOTS.
  */
 
 struct
 {
-    coda_ProductFile *pf;
-    int64_t pf_id;      /* used to check if the productfile in slot [pf_id] still matches */
-} pf_slot[NUM_PF_SLOTS];
+    coda_product *product;
+    int64_t product_id; /* used to check if the product in slot [product_id] still matches */
+} product_slot[NUM_PF_SLOTS];
 
 struct IDL_CodaDataHandle
 {
-    coda_Cursor cursor;
-    int64_t pf_id;      /* used to check if the productfile in slot [pf_id] still matches */
+    coda_cursor cursor;
+    int64_t product_id; /* used to check if the product in slot [product_id] still matches */
 };
 
 static int64_t unique_id_counter;       /* incremented each time a product is succesfully opened */
@@ -77,33 +76,14 @@ IDL_StructDefPtr coda_no_data_sdef;
 
 static void idl_coda_set_definition_path(void)
 {
-    if (getenv("CODA_DEFINITION") == NULL && getenv("IDL_DLM_PATH") != NULL)
+    if (getenv("IDL_DLM_PATH") != NULL)
     {
 #ifdef CODA_DEFINITION_IDL
-        const char *definition_path = CODA_DEFINITION_IDL;
+        coda_set_definition_path_conditional("coda-idl.dlm", getenv("IDL_DLM_PATH"), CODA_DEFINITION_IDL);
 #else
-        const char *definition_path = "../../../share/" PACKAGE "/definitions";
+        coda_set_definition_path_conditional("coda-idl.dlm", getenv("IDL_DLM_PATH"),
+                                             "../../../share/" PACKAGE "/definitions");
 #endif
-        char *path;
-
-        if (coda_path_find_file(getenv("IDL_DLM_PATH"), "coda-idl.dlm", &path) != 0)
-        {
-            return;
-        }
-        if (path != NULL)
-        {
-            char *location;
-
-            if (coda_path_from_path(path, 1, definition_path, &location) == 0)
-            {
-                if (location != NULL)
-                {
-                    coda_set_definition_path(location);
-                    coda_path_free(location);
-                }
-            }
-            coda_path_free(path);
-        }
     }
 }
 
@@ -206,7 +186,7 @@ static void fill_error(struct IDL_CodaError *fill, int err)
                 message = "maximum number of simultaneously opened product files reached";
                 break;
             case CODA_IDL_ERR_PROD_ID_NONPOSITIVE:
-                message = "the productfile-id must be a positive integer";
+                message = "the product-id must be a positive integer";
                 break;
             case CODA_IDL_ERR_PROD_ID_NOGOOD:
                 message = "the LONG64 product ID specified does not refer to a currently opened file";
@@ -325,7 +305,7 @@ static IDL_VPTR x_coda_open(int argc, IDL_VPTR *argv)
 {
     IDL_VPTR retval;
     const char *fname;
-    int pf_index;
+    int product_index;
 
     assert(argc == 1);
     if (idl_coda_init() != 0)
@@ -336,21 +316,21 @@ static IDL_VPTR x_coda_open(int argc, IDL_VPTR *argv)
     IDL_ENSURE_STRING(argv[0]);
 
     /* find first free slot */
-    for (pf_index = 0; pf_index < NUM_PF_SLOTS; pf_index++)
+    for (product_index = 0; product_index < NUM_PF_SLOTS; product_index++)
     {
-        if (pf_slot[pf_index].pf == NULL)
+        if (product_slot[product_index].product == NULL)
         {
             break;
         }
     }
 
-    if (pf_index == NUM_PF_SLOTS)       /* all slots in use! */
+    if (product_index == NUM_PF_SLOTS)  /* all slots in use! */
     {
         return mk_coda_error(CODA_IDL_ERR_MAX_OPEN_FILES);
     }
 
     fname = IDL_STRING_STR(&argv[0]->value.str);
-    if (coda_open(fname, &pf_slot[pf_index].pf) != 0)
+    if (coda_open(fname, &product_slot[product_index].product) != 0)
     {
         return mk_coda_error(coda_errno);
     }
@@ -360,9 +340,9 @@ static IDL_VPTR x_coda_open(int argc, IDL_VPTR *argv)
     do
     {
         unique_id_counter++;
-    } while ((unique_id_counter - 1) % NUM_PF_SLOTS != pf_index);
+    } while ((unique_id_counter - 1) % NUM_PF_SLOTS != product_index);
 
-    pf_slot[pf_index].pf_id = unique_id_counter;
+    product_slot[product_index].product_id = unique_id_counter;
 
     retval = IDL_Gettmp();
     retval->type = IDL_TYP_ULONG64;
@@ -373,8 +353,8 @@ static IDL_VPTR x_coda_open(int argc, IDL_VPTR *argv)
 
 static IDL_VPTR x_coda_close(int argc, IDL_VPTR *argv)
 {
-    int64_t pf_id;
-    int pf_index;
+    int64_t product_id;
+    int product_index;
 
     assert(argc == 1);
     if (idl_coda_init() != 0)
@@ -382,27 +362,27 @@ static IDL_VPTR x_coda_close(int argc, IDL_VPTR *argv)
         return mk_coda_error(coda_errno);
     }
 
-    pf_id = IDL_LongScalar(argv[0]);
-    if (pf_id <= 0)
+    product_id = IDL_LongScalar(argv[0]);
+    if (product_id <= 0)
     {
         return mk_coda_error(CODA_IDL_ERR_PROD_ID_NONPOSITIVE); /* product file id must be a positive integer */
     }
 
-    pf_index = (int)((pf_id - 1) % NUM_PF_SLOTS);
+    product_index = (int)((product_id - 1) % NUM_PF_SLOTS);
 
     /* check that the product file id specifies an open product file */
-    if (pf_slot[pf_index].pf_id != pf_id)
+    if (product_slot[product_index].product_id != product_id)
     {
         return mk_coda_error(CODA_IDL_ERR_PROD_ID_NOGOOD);
     }
 
-    if (coda_close(pf_slot[pf_index].pf) != 0)
+    if (coda_close(product_slot[product_index].product) != 0)
     {
         return mk_coda_error(coda_errno);
     }
 
-    pf_slot[pf_index].pf = 0;   /* remove product file from slots */
-    pf_slot[pf_index].pf_id = 0;
+    product_slot[product_index].product = 0;    /* remove product file from slots */
+    product_slot[product_index].product_id = 0;
 
     coda_set_error(CODA_SUCCESS, NULL);
     return mk_coda_error(coda_errno);
@@ -423,8 +403,8 @@ static IDL_VPTR x_coda_version(int argc, IDL_VPTR *argv)
 static IDL_VPTR x_coda_product_class(int argc, IDL_VPTR *argv)
 {
     const char *product_class;
-    int pf_index;
-    int64_t pf_id;
+    int product_index;
+    int64_t product_id;
 
     assert(argc == 1);
     if (idl_coda_init() != 0)
@@ -432,21 +412,21 @@ static IDL_VPTR x_coda_product_class(int argc, IDL_VPTR *argv)
         return mk_coda_error(coda_errno);
     }
 
-    pf_id = IDL_LongScalar(argv[0]);
-    if (pf_id <= 0)
+    product_id = IDL_LongScalar(argv[0]);
+    if (product_id <= 0)
     {
-        return mk_coda_error(CODA_IDL_ERR_PROD_ID_NONPOSITIVE); /* product file pf_id must be a positive integer */
+        return mk_coda_error(CODA_IDL_ERR_PROD_ID_NONPOSITIVE); /* product file product_id must be a positive integer */
     }
 
-    pf_index = (int)((pf_id - 1) % NUM_PF_SLOTS);
+    product_index = (int)((product_id - 1) % NUM_PF_SLOTS);
 
-    /* check that the product file pf_id specifies an open product file */
-    if (pf_slot[pf_index].pf_id != pf_id)
+    /* check that the product file product_id specifies an open product file */
+    if (product_slot[product_index].product_id != product_id)
     {
         return mk_coda_error(CODA_IDL_ERR_PROD_ID_NOGOOD);
     }
 
-    if (coda_get_product_class(pf_slot[pf_index].pf, &product_class) != 0)
+    if (coda_get_product_class(product_slot[product_index].product, &product_class) != 0)
     {
         return mk_coda_error(coda_errno);
     }
@@ -457,8 +437,8 @@ static IDL_VPTR x_coda_product_class(int argc, IDL_VPTR *argv)
 static IDL_VPTR x_coda_product_type(int argc, IDL_VPTR *argv)
 {
     const char *product_type;
-    int pf_index;
-    int64_t pf_id;
+    int product_index;
+    int64_t product_id;
 
     assert(argc == 1);
     if (idl_coda_init() != 0)
@@ -466,21 +446,21 @@ static IDL_VPTR x_coda_product_type(int argc, IDL_VPTR *argv)
         return mk_coda_error(coda_errno);
     }
 
-    pf_id = IDL_LongScalar(argv[0]);
-    if (pf_id <= 0)
+    product_id = IDL_LongScalar(argv[0]);
+    if (product_id <= 0)
     {
-        return mk_coda_error(CODA_IDL_ERR_PROD_ID_NONPOSITIVE); /* product file pf_id must be a positive integer */
+        return mk_coda_error(CODA_IDL_ERR_PROD_ID_NONPOSITIVE); /* product file product_id must be a positive integer */
     }
 
-    pf_index = (int)((pf_id - 1) % NUM_PF_SLOTS);
+    product_index = (int)((product_id - 1) % NUM_PF_SLOTS);
 
-    /* check that the product file pf_id specifies an open product file */
-    if (pf_slot[pf_index].pf_id != pf_id)
+    /* check that the product file product_id specifies an open product file */
+    if (product_slot[product_index].product_id != product_id)
     {
         return mk_coda_error(CODA_IDL_ERR_PROD_ID_NOGOOD);
     }
 
-    if (coda_get_product_type(pf_slot[pf_index].pf, &product_type) != 0)
+    if (coda_get_product_type(product_slot[product_index].product, &product_type) != 0)
     {
         return mk_coda_error(coda_errno);
     }
@@ -491,8 +471,8 @@ static IDL_VPTR x_coda_product_type(int argc, IDL_VPTR *argv)
 static IDL_VPTR x_coda_product_version(int argc, IDL_VPTR *argv)
 {
     int version;
-    int pf_index;
-    int64_t pf_id;
+    int product_index;
+    int64_t product_id;
     IDL_VPTR retval;
 
     assert(argc == 1);
@@ -501,21 +481,21 @@ static IDL_VPTR x_coda_product_version(int argc, IDL_VPTR *argv)
         return mk_coda_error(coda_errno);
     }
 
-    pf_id = IDL_LongScalar(argv[0]);
-    if (pf_id <= 0)
+    product_id = IDL_LongScalar(argv[0]);
+    if (product_id <= 0)
     {
-        return mk_coda_error(CODA_IDL_ERR_PROD_ID_NONPOSITIVE); /* product file pf_id must be a positive integer */
+        return mk_coda_error(CODA_IDL_ERR_PROD_ID_NONPOSITIVE); /* product file product_id must be a positive integer */
     }
 
-    pf_index = (int)((pf_id - 1) % NUM_PF_SLOTS);
+    product_index = (int)((product_id - 1) % NUM_PF_SLOTS);
 
-    /* check that the product file pf_id specifies an open product file */
-    if (pf_slot[pf_index].pf_id != pf_id)
+    /* check that the product file product_id specifies an open product file */
+    if (product_slot[product_index].product_id != product_id)
     {
         return mk_coda_error(CODA_IDL_ERR_PROD_ID_NOGOOD);
     }
 
-    if (coda_get_product_version(pf_slot[pf_index].pf, &version))
+    if (coda_get_product_version(product_slot[product_index].product, &version))
     {
         return mk_coda_error(coda_errno);
     }
@@ -541,12 +521,12 @@ static void x_coda_unload(int argc, IDL_VPTR *argv)
     /* close all currently opened product files */
     for (i = 0; i < NUM_PF_SLOTS; i++)
     {
-        if (pf_slot[i].pf)
+        if (product_slot[i].product)
         {
-            coda_close(pf_slot[i].pf);
+            coda_close(product_slot[i].product);
 
-            pf_slot[i].pf = 0;
-            pf_slot[i].pf_id = 0;
+            product_slot[i].product = 0;
+            product_slot[i].product_id = 0;
         }
     }
 
@@ -600,7 +580,7 @@ static IDL_VPTR x_coda_time_to_string(int argc, IDL_VPTR *argv)
 }
 
 static int idl_coda_fetch_datahandle_array_filldata(struct IDL_CodaDataHandle *datahandle, const char *fill,
-                                                    int num_dims, const long dim[], coda_Type *basetype,
+                                                    int num_dims, const long dim[], coda_type *basetype,
                                                     long number_of_elements)
 {
     coda_type_class type_class;
@@ -880,7 +860,7 @@ static int idl_coda_fetch_datahandle_array_filldata(struct IDL_CodaDataHandle *d
     return 0;
 }
 
-static int idl_coda_fetch_datahandle_get_array_type(coda_Type *type, int *idl_type, IDL_StructDefPtr *sdef)
+static int idl_coda_fetch_datahandle_get_array_type(coda_type *type, int *idl_type, IDL_StructDefPtr *sdef)
 {
     coda_type_class type_class;
 
@@ -996,8 +976,8 @@ static int idl_coda_fetch_datahandle_get_array_type(coda_Type *type, int *idl_ty
 
 static int idl_coda_fetch_datahandle_array_to_VPTR(struct IDL_CodaDataHandle *datahandle, IDL_VPTR *retval)
 {
-    coda_Type *type;
-    coda_Type *basetype;
+    coda_type *type;
+    coda_type *basetype;
     IDL_MEMINT idl_dimspec[IDL_MAX_ARRAY_DIM];
     IDL_StructDefPtr sdef;
     IDL_VPTR tmpval;
@@ -1059,11 +1039,11 @@ static int idl_coda_fetch_datahandle_array_to_VPTR(struct IDL_CodaDataHandle *da
     return 0;
 }
 
-static int idl_coda_fetch_cursor_to_StructDefPtr(coda_Cursor *cursor, IDL_StructDefPtr *sdef)
+static int idl_coda_fetch_cursor_to_StructDefPtr(coda_cursor *cursor, IDL_StructDefPtr *sdef)
 {
     IDL_STRUCT_TAG_DEF *record_tags;
-    coda_Cursor record_cursor;
-    coda_Type *record_type;
+    coda_cursor record_cursor;
+    coda_type *record_type;
     long field_index;
     long num_fields;
     int result = 0;
@@ -1129,7 +1109,7 @@ static int idl_coda_fetch_cursor_to_StructDefPtr(coda_Cursor *cursor, IDL_Struct
             if (include_field)
             {
                 coda_type_class type_class;
-                coda_Type *field_type;
+                coda_type *field_type;
                 const char *field_name;
                 int k;
 
@@ -1193,7 +1173,7 @@ static int idl_coda_fetch_cursor_to_StructDefPtr(coda_Cursor *cursor, IDL_Struct
                     case coda_array_class:
                         {
                             long num_elements;
-                            coda_Type *basetype;
+                            coda_type *basetype;
                             int idl_type;
                             IDL_StructDefPtr sdef;
                             long dims[IDL_MAX_ARRAY_DIM];
@@ -1422,7 +1402,7 @@ static int idl_coda_fetch_cursor_to_StructDefPtr(coda_Cursor *cursor, IDL_Struct
     return result;
 }
 
-static int idl_coda_fetch_datahandle_scalar_filldata(struct IDL_CodaDataHandle *datahandle, coda_Type *field_type,
+static int idl_coda_fetch_datahandle_scalar_filldata(struct IDL_CodaDataHandle *datahandle, coda_type *field_type,
                                                      char *data)
 {
     coda_type_class type_class;
@@ -1591,7 +1571,7 @@ static int idl_coda_fetch_datahandle_scalar_filldata(struct IDL_CodaDataHandle *
 static int idl_coda_fetch_datahandle_record_filldata(struct IDL_CodaDataHandle *datahandle, IDL_STRUCT_TAG_DEF *sdef,
                                                      char *data)
 {
-    coda_Type *record_type;
+    coda_type *record_type;
     long num_fields;
     long i;
 
@@ -1610,7 +1590,7 @@ static int idl_coda_fetch_datahandle_record_filldata(struct IDL_CodaDataHandle *
     }
     else
     {
-        coda_Cursor record_cursor;
+        coda_cursor record_cursor;
         long field_index;
 
         record_cursor = datahandle->cursor;
@@ -1651,7 +1631,7 @@ static int idl_coda_fetch_datahandle_record_filldata(struct IDL_CodaDataHandle *
             if (include_field)
             {
                 coda_type_class type_class;
-                coda_Type *field_type;
+                coda_type *field_type;
                 IDL_VPTR field_info;
                 char *fill;
 
@@ -1693,7 +1673,7 @@ static int idl_coda_fetch_datahandle_record_filldata(struct IDL_CodaDataHandle *
                             long num_elements;
                             long dim[IDL_MAX_ARRAY_DIM];
                             int num_dims;
-                            coda_Type *basetype;
+                            coda_type *basetype;
 
                             if (coda_type_get_array_base_type(field_type, &basetype) != 0)
                             {
@@ -2214,7 +2194,7 @@ static int idl_coda_do_fetchspec_to_datahandle(int argc, IDL_VPTR *argv, struct 
                     num_dims = 1;
                     if (index == 0)
                     {
-                        coda_Type *type;
+                        coda_type *type;
 
                         /* use zero dimensions if needed */
                         if (coda_cursor_get_type(&datahandle->cursor, &type) != 0)
@@ -2337,8 +2317,8 @@ static int idl_coda_fetchspec_to_datahandle(int argc, IDL_VPTR *argv, struct IDL
      *
      * coda_fetch(CODA_DATAHANDLE, ...)
      *
-     * coda_fetch(pf_id)
-     * coda_fetch(pf_id, 'DSD', ...)
+     * coda_fetch(product_id)
+     * coda_fetch(product_id, 'DSD', ...)
      *
      */
 
@@ -2348,7 +2328,7 @@ static int idl_coda_fetchspec_to_datahandle(int argc, IDL_VPTR *argv, struct IDL
 
     if (argv[0]->flags & IDL_V_STRUCT)  /* ok, it's a struct. */
     {
-        int pf_index;
+        int product_index;
 
         /* only a single CODA_DATAHANDLE structure is acceptable */
 
@@ -2367,16 +2347,16 @@ static int idl_coda_fetchspec_to_datahandle(int argc, IDL_VPTR *argv, struct IDL
         *datahandle = *(struct IDL_CodaDataHandle *)argv[0]->value.s.arr->data;
 
         /* product file id must be a positive integer */
-        if (datahandle->pf_id <= 0)
+        if (datahandle->product_id <= 0)
         {
             coda_set_error(CODA_IDL_ERR_PROD_ID_NONPOSITIVE, NULL);
             return -1;
         }
 
-        pf_index = (int)((datahandle->pf_id - 1) % NUM_PF_SLOTS);
+        product_index = (int)((datahandle->product_id - 1) % NUM_PF_SLOTS);
 
         /* check that the product file id specifies an open product file */
-        if (pf_slot[pf_index].pf_id != datahandle->pf_id)
+        if (product_slot[product_index].product_id != datahandle->product_id)
         {
             coda_set_error(CODA_IDL_ERR_PROD_ID_NOGOOD, NULL);
             return -1;
@@ -2385,7 +2365,7 @@ static int idl_coda_fetchspec_to_datahandle(int argc, IDL_VPTR *argv, struct IDL
     }
     else        /* handle case #2: the first argument should be a SCALAR INTEGER (product file id) */
     {
-        int pf_index;
+        int product_index;
 
         /* the first argument is a product file id.
          *
@@ -2394,24 +2374,24 @@ static int idl_coda_fetchspec_to_datahandle(int argc, IDL_VPTR *argv, struct IDL
          * type STRING or INT.
          */
 
-        datahandle->pf_id = IDL_LongScalar(argv[0]);
-        /* product file pf_id must be a positive integer */
-        if (datahandle->pf_id <= 0)
+        datahandle->product_id = IDL_LongScalar(argv[0]);
+        /* product file product_id must be a positive integer */
+        if (datahandle->product_id <= 0)
         {
             coda_set_error(CODA_IDL_ERR_PROD_ID_NONPOSITIVE, NULL);
             return -1;
         }
 
-        pf_index = (int)((datahandle->pf_id - 1) % NUM_PF_SLOTS);
+        product_index = (int)((datahandle->product_id - 1) % NUM_PF_SLOTS);
 
-        /* check that the product file pf_id specifies an open product file */
-        if (pf_slot[pf_index].pf_id != datahandle->pf_id)
+        /* check that the product file product_id specifies an open product file */
+        if (product_slot[product_index].product_id != datahandle->product_id)
         {
             coda_set_error(CODA_IDL_ERR_PROD_ID_NOGOOD, NULL);
             return -1;
         }
 
-        if (coda_cursor_set_product(&datahandle->cursor, pf_slot[pf_index].pf) != 0)
+        if (coda_cursor_set_product(&datahandle->cursor, product_slot[product_index].product) != 0)
         {
             return -1;
         }
@@ -2425,7 +2405,7 @@ static int idl_coda_fetch_datahandle_create_multi_VPTR(struct IDL_CodaDataHandle
 {
     IDL_MEMINT idl_dimspec[CODA_MAX_NUM_DIMS];
     IDL_StructDefPtr sdef;
-    coda_Type *type;
+    coda_type *type;
     char *fill;
     int idl_type;
     int i;
@@ -2571,7 +2551,7 @@ static int idl_coda_fetch_datahandle_fill_multi_VPTR(int argc, IDL_VPTR *argv, I
         if (read_array_element)
         {
             struct IDL_CodaDataHandle datahandle;
-            coda_Type *type;
+            coda_type *type;
             coda_type_class type_class;
 
             /* Set datahandle to base datahandle */
@@ -2825,7 +2805,7 @@ static IDL_VPTR x_coda_size(int argc, IDL_VPTR *argv)
 static IDL_VPTR x_coda_unit(int argc, IDL_VPTR *argv)
 {
     struct IDL_CodaDataHandle datahandle;
-    coda_Type *type;
+    coda_type *type;
     const char *unit;
 
     assert(argc > 0);   /* this is guaranteed by the limits set in 'coda-idl.dlm' */
@@ -2855,7 +2835,7 @@ static IDL_VPTR x_coda_unit(int argc, IDL_VPTR *argv)
 static IDL_VPTR x_coda_description(int argc, IDL_VPTR *argv)
 {
     struct IDL_CodaDataHandle datahandle;
-    coda_Type *type;
+    coda_type *type;
     const char *description;
 
     assert(argc > 0);   /* this is guaranteed by the limits set in 'coda-idl.dlm' */
@@ -3085,7 +3065,7 @@ static IDL_VPTR x_coda_fieldcount(int argc, IDL_VPTR *argv)
 {
     struct IDL_CodaDataHandle datahandle;
     coda_type_class type_class;
-    coda_Type *record_type;
+    coda_type *record_type;
     IDL_VPTR retval;
     long num_fields;
     int num_fields_create;
@@ -3167,7 +3147,7 @@ static IDL_VPTR x_coda_fieldnames(int argc, IDL_VPTR *argv)
 {
     struct IDL_CodaDataHandle datahandle;
     coda_type_class type_class;
-    coda_Type *record_type;
+    coda_type *record_type;
     const char **field_name;
     IDL_STRING *data;
     IDL_VPTR retval;
@@ -3291,7 +3271,7 @@ static void register_idl_struct_types(void)
 {
     /* define the CODA_DATAHANDLE structure type */
 
-    static IDL_MEMINT coda_datahandle_opaque_dim[] = { 1, sizeof(coda_Cursor) };
+    static IDL_MEMINT coda_datahandle_opaque_dim[] = { 1, sizeof(coda_cursor) };
     static IDL_STRUCT_TAG_DEF coda_datahandle_tags[] = {
         {"OPAQUE", coda_datahandle_opaque_dim, (void *)IDL_TYP_BYTE, 0},
         {"PF_ID", 0, (void *)IDL_TYP_ULONG64, 0},
@@ -3447,8 +3427,8 @@ void init_dlm_state(void)
 
     for (i = 0; i < NUM_PF_SLOTS; i++)  /* erase all slots */
     {
-        pf_slot[i].pf = NULL;
-        pf_slot[i].pf_id = 0;
+        product_slot[i].product = NULL;
+        product_slot[i].product_id = 0;
     }
 }
 

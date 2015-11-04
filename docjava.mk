@@ -7,6 +7,8 @@ JAVA_DOCFILES = \
 	doc/html/java/classnl_1_1stcorp_1_1coda_1_1_coda_exception.html \
 	doc/html/java/classnl_1_1stcorp_1_1coda_1_1_cursor-members.html \
 	doc/html/java/classnl_1_1stcorp_1_1coda_1_1_cursor.html \
+	doc/html/java/classnl_1_1stcorp_1_1coda_1_1_expression-members.html \
+	doc/html/java/classnl_1_1stcorp_1_1coda_1_1_expression.html \
 	doc/html/java/classnl_1_1stcorp_1_1coda_1_1_product-members.html \
 	doc/html/java/classnl_1_1stcorp_1_1coda_1_1_product.html \
 	doc/html/java/classnl_1_1stcorp_1_1coda_1_1_type-members.html \
@@ -29,6 +31,10 @@ doc/html/java/classnl_1_1stcorp_1_1coda_1_1_coda_exception.html:
 doc/html/java/classnl_1_1stcorp_1_1coda_1_1_cursor-members.html:
 	$(MAKE) java_doc
 doc/html/java/classnl_1_1stcorp_1_1coda_1_1_cursor.html:
+	$(MAKE) java_doc
+doc/html/java/classnl_1_1stcorp_1_1coda_1_1_expression-members.html:
+	$(MAKE) java_doc
+doc/html/java/classnl_1_1stcorp_1_1coda_1_1_expression.html:
 	$(MAKE) java_doc
 doc/html/java/classnl_1_1stcorp_1_1coda_1_1_product-members.html:
 	$(MAKE) java_doc

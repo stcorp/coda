@@ -41,21 +41,21 @@
 struct element_dictionary_struct
 {
     int num_elements;
-    coda_xmlElement **element;
+    coda_xml_element **element;
     hashtable *hash_data;
 };
 typedef struct element_dictionary_struct element_dictionary;
 
 static void delete_element_dictionary(element_dictionary *dictionary)
 {
-    delete_hashtable(dictionary->hash_data);
+    hashtable_delete(dictionary->hash_data);
     if (dictionary->element != NULL)
     {
         int i;
 
         for (i = 0; i < dictionary->num_elements; i++)
         {
-            coda_xml_release_type((coda_xmlType *)dictionary->element[i]);
+            coda_xml_release_type((coda_xml_type *)dictionary->element[i]);
         }
         free(dictionary->element);
     }
@@ -75,7 +75,7 @@ static element_dictionary *new_element_dictionary(void)
     }
     dictionary->num_elements = 0;
     dictionary->element = NULL;
-    dictionary->hash_data = new_hashtable(0);
+    dictionary->hash_data = hashtable_new(0);
     if (dictionary->hash_data == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashdata) (%s:%u)", __FILE__,
@@ -87,15 +87,15 @@ static element_dictionary *new_element_dictionary(void)
     return dictionary;
 }
 
-static int element_dictionary_add_element(element_dictionary *dictionary, coda_xmlElement *element)
+static int element_dictionary_add_element(element_dictionary *dictionary, coda_xml_element *element)
 {
-    coda_xmlElement **new_element;
+    coda_xml_element **new_element;
 
-    new_element = realloc(dictionary->element, (dictionary->num_elements + 1) * sizeof(coda_xmlElement *));
+    new_element = realloc(dictionary->element, (dictionary->num_elements + 1) * sizeof(coda_xml_element *));
     if (new_element == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (dictionary->num_elements + 1) * sizeof(coda_xmlElement *), __FILE__, __LINE__);
+                       (dictionary->num_elements + 1) * sizeof(coda_xml_element *), __FILE__, __LINE__);
         return -1;
     }
     dictionary->element = new_element;
@@ -112,7 +112,7 @@ static int element_dictionary_add_element(element_dictionary *dictionary, coda_x
     return 0;
 }
 
-static coda_xmlElement *get_element_definition(element_dictionary *dictionary, const char *xml_name)
+static coda_xml_element *get_element_definition(element_dictionary *dictionary, const char *xml_name)
 {
     long index;
 
@@ -146,9 +146,9 @@ struct parser_info_struct
 {
     XML_Parser parser;
     int abort_parser;
-    coda_xmlProductFile *pf;
-    coda_xmlRootDynamicType *root;
-    coda_xmlElementDynamicType *element;
+    coda_xml_product *product;
+    coda_xml_root_dynamic_type *root;
+    coda_xml_element_dynamic_type *element;
     int unparsed_depth; /* keep track of how deep we are in an XML element that we interpret as text */
     element_dictionary *dictionary;
 };
@@ -165,8 +165,8 @@ static void abort_parser(parser_info *info)
 static void XMLCALL interpret_start_element_handler(void *data, const char *el, const char **attr)
 {
     parser_info *info;
-    coda_xmlElement *definition;
-    coda_xmlElementDynamicType *element;
+    coda_xml_element *definition;
+    coda_xml_element_dynamic_type *element;
     int i;
 
     info = (parser_info *)data;
@@ -191,7 +191,7 @@ static void XMLCALL interpret_start_element_handler(void *data, const char *el, 
         /* add definition to element dictionary */
         if (element_dictionary_add_element(info->dictionary, definition) != 0)
         {
-            coda_xml_release_type((coda_xmlType *)definition);
+            coda_xml_release_type((coda_xml_type *)definition);
             abort_parser(info);
             return;
         }
@@ -215,7 +215,7 @@ static void XMLCALL interpret_start_element_handler(void *data, const char *el, 
             /* if there is already another attribute with the same identifier then we ignore this attribute! */
             if (hashtable_get_index_from_name(definition->attributes->name_hash_data, name) < 0)
             {
-                coda_xmlAttribute *attribute;
+                coda_xml_attribute *attribute;
 
                 /* add attribute to definition */
                 attribute = coda_xml_attribute_new(attr[2 * i]);
@@ -230,17 +230,17 @@ static void XMLCALL interpret_start_element_handler(void *data, const char *el, 
                 {
                     abort_parser(info);
                     free(name);
-                    coda_xml_release_type((coda_xmlType *)attribute);
+                    coda_xml_release_type((coda_xml_type *)attribute);
                     return;
                 }
                 if (coda_xml_element_add_attribute(definition, attribute) != 0)
                 {
                     abort_parser(info);
                     free(name);
-                    coda_xml_release_type((coda_xmlType *)attribute);
+                    coda_xml_release_type((coda_xml_type *)attribute);
                     return;
                 }
-                coda_xml_release_type((coda_xmlType *)attribute);
+                coda_xml_release_type((coda_xml_type *)attribute);
             }
         }
         free(name);
@@ -248,7 +248,7 @@ static void XMLCALL interpret_start_element_handler(void *data, const char *el, 
 
     if (info->element != NULL)
     {
-        coda_xmlElement *type;
+        coda_xml_element *type;
         int element_index;
 
         type = info->element->type;
@@ -264,7 +264,7 @@ static void XMLCALL interpret_start_element_handler(void *data, const char *el, 
         element_index = hashtable_get_index_from_name(type->xml_name_hash_data, definition->xml_name);
         if (element_index < 0)
         {
-            coda_xmlField *field;
+            coda_xml_field *field;
             char *name;
 
             name = coda_identifier_from_name(coda_element_name_from_xml_name(definition->xml_name), NULL);
@@ -285,7 +285,7 @@ static void XMLCALL interpret_start_element_handler(void *data, const char *el, 
                 return;
             }
             free(name);
-            if (coda_xml_field_set_type(field, (coda_xmlType *)definition) != 0)
+            if (coda_xml_field_set_type(field, (coda_xml_type *)definition) != 0)
             {
                 abort_parser(info);
                 coda_xml_field_delete(field);
@@ -331,7 +331,7 @@ static void XMLCALL interpret_start_element_handler(void *data, const char *el, 
 
         if (type->type_class == coda_record_class)
         {
-            coda_xmlElementDynamicType *ancestor;
+            coda_xml_element_dynamic_type *ancestor;
 
             /* CODA does not allow elements that contain itself, so we turn such elements into text elements.
              * we check recursion for the child element here.
@@ -381,7 +381,7 @@ static void XMLCALL interpret_start_element_handler(void *data, const char *el, 
             abort_parser(info);
             return;
         }
-        coda_release_type((coda_Type *)element);
+        coda_release_type((coda_type *)element);
     }
     else
     {
@@ -393,7 +393,7 @@ static void XMLCALL interpret_start_element_handler(void *data, const char *el, 
 
 static void XMLCALL interpret_end_element_handler(void *data, const char *el)
 {
-    coda_xmlElementDynamicType *element;
+    coda_xml_element_dynamic_type *element;
     parser_info *info;
 
     el = el;
@@ -420,7 +420,7 @@ static void XMLCALL interpret_end_element_handler(void *data, const char *el)
 
         /* this element was ignored because an element with a similar name already existed -> we delete it here */
         element->retain_count = 0;
-        coda_xml_release_dynamic_type((coda_xmlDynamicType *)element);
+        coda_xml_release_dynamic_type((coda_xml_dynamic_type *)element);
     }
     else
     {
@@ -577,7 +577,7 @@ static int XMLCALL not_standalone_handler(void *data)
     return XML_STATUS_ERROR;
 }
 
-static int update_elements(coda_xmlElementDynamicType *element)
+static int update_elements(coda_xml_element_dynamic_type *element)
 {
     int i;
 
@@ -593,17 +593,17 @@ static int update_elements(coda_xmlElementDynamicType *element)
             {
                 case tag_xml_record_dynamic:
                 case tag_xml_text_dynamic:
-                    if (update_elements((coda_xmlElementDynamicType *)element->element[i]) != 0)
+                    if (update_elements((coda_xml_element_dynamic_type *)element->element[i]) != 0)
                     {
                         return -1;
                     }
                     break;
                 case tag_xml_array_dynamic:
                     {
-                        coda_xmlArrayDynamicType *array;
+                        coda_xml_array_dynamic_type *array;
                         int j;
 
-                        array = (coda_xmlArrayDynamicType *)element->element[i];
+                        array = (coda_xml_array_dynamic_type *)element->element[i];
                         for (j = 0; j < array->num_elements; j++)
                         {
                             if (update_elements(array->element[j]) != 0)
@@ -623,12 +623,12 @@ static int update_elements(coda_xmlElementDynamicType *element)
     return 0;
 }
 
-int coda_xml_parse_and_interpret(coda_xmlProductFile *pf)
+int coda_xml_parse_and_interpret(coda_xml_product *product)
 {
     char buff[BUFFSIZE];
     parser_info info;
-    coda_xmlRoot *root;
-    coda_xmlField *root_field;
+    coda_xml_root *root;
+    coda_xml_field *root_field;
     char *field_name;
 
     info.parser = XML_ParserCreateNS(NULL, ' ');
@@ -638,7 +638,7 @@ int coda_xml_parse_and_interpret(coda_xmlProductFile *pf)
         return -1;
     }
     info.abort_parser = 0;
-    info.pf = pf;
+    info.product = product;
     root = coda_xml_root_new();
     if (root == NULL)
     {
@@ -646,7 +646,7 @@ int coda_xml_parse_and_interpret(coda_xmlProductFile *pf)
         return -1;
     }
     info.root = coda_xml_dynamic_root_new(root);
-    coda_xml_release_type((coda_xmlType *)root);
+    coda_xml_release_type((coda_xml_type *)root);
     if (info.root == NULL)
     {
         XML_ParserFree(info.parser);
@@ -658,7 +658,7 @@ int coda_xml_parse_and_interpret(coda_xmlProductFile *pf)
     if (info.dictionary == NULL)
     {
         XML_ParserFree(info.parser);
-        coda_xml_release_dynamic_type((coda_xmlDynamicType *)info.root);
+        coda_xml_release_dynamic_type((coda_xml_dynamic_type *)info.root);
         return -1;
     }
 
@@ -675,12 +675,13 @@ int coda_xml_parse_and_interpret(coda_xmlProductFile *pf)
         int length;
         int result;
 
-        length = read(pf->fd, buff, BUFFSIZE);
+        length = read(product->fd, buff, BUFFSIZE);
         if (length < 0)
         {
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", pf->filename, strerror(errno));
+            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
+                           strerror(errno));
             XML_ParserFree(info.parser);
-            coda_xml_release_dynamic_type((coda_xmlDynamicType *)info.root);
+            coda_xml_release_dynamic_type((coda_xml_dynamic_type *)info.root);
             delete_element_dictionary(info.dictionary);
             return -1;
         }
@@ -698,7 +699,7 @@ int coda_xml_parse_and_interpret(coda_xmlProductFile *pf)
             coda_str64(XML_GetCurrentByteIndex(info.parser), s);
             coda_add_error_message(" (line: %lu, byte offset: %s)", (long)XML_GetCurrentLineNumber(info.parser), s);
             XML_ParserFree(info.parser);
-            coda_xml_release_dynamic_type((coda_xmlDynamicType *)info.root);
+            coda_xml_release_dynamic_type((coda_xml_dynamic_type *)info.root);
             delete_element_dictionary(info.dictionary);
             return -1;
         }
@@ -715,7 +716,7 @@ int coda_xml_parse_and_interpret(coda_xmlProductFile *pf)
 
     if (update_elements(info.root->element) != 0)
     {
-        coda_xml_release_dynamic_type((coda_xmlDynamicType *)info.root);
+        coda_xml_release_dynamic_type((coda_xml_dynamic_type *)info.root);
         return -1;
     }
     /* link definition of root type to definition of first element */
@@ -723,25 +724,25 @@ int coda_xml_parse_and_interpret(coda_xmlProductFile *pf)
     root_field = coda_xml_field_new(field_name);
     if (root_field == NULL)
     {
-        coda_xml_release_dynamic_type((coda_xmlDynamicType *)info.root);
+        coda_xml_release_dynamic_type((coda_xml_dynamic_type *)info.root);
         free(field_name);
         return -1;
     }
     free(field_name);
-    if (coda_xml_field_set_type(root_field, (coda_xmlType *)info.root->element->type) != 0)
+    if (coda_xml_field_set_type(root_field, (coda_xml_type *)info.root->element->type) != 0)
     {
         coda_xml_field_delete(root_field);
-        coda_xml_release_dynamic_type((coda_xmlDynamicType *)info.root);
+        coda_xml_release_dynamic_type((coda_xml_dynamic_type *)info.root);
         return -1;
     }
     if (coda_xml_root_set_field(root, root_field) != 0)
     {
         coda_xml_field_delete(root_field);
-        coda_xml_release_dynamic_type((coda_xmlDynamicType *)info.root);
+        coda_xml_release_dynamic_type((coda_xml_dynamic_type *)info.root);
         return -1;
     }
 
-    pf->root_type = (coda_DynamicType *)info.root;
+    product->root_type = (coda_dynamic_type *)info.root;
 
     return 0;
 }
@@ -750,8 +751,8 @@ int coda_xml_parse_and_interpret(coda_xmlProductFile *pf)
 static void XMLCALL definition_start_element_handler(void *data, const char *el, const char **attr)
 {
     parser_info *info;
-    coda_xmlElement *definition;
-    coda_xmlElementDynamicType *element;
+    coda_xml_element *definition;
+    coda_xml_element_dynamic_type *element;
 
     info = (parser_info *)data;
 
@@ -763,7 +764,7 @@ static void XMLCALL definition_start_element_handler(void *data, const char *el,
 
     if (info->element != NULL)
     {
-        coda_xmlType *type;
+        coda_xml_type *type;
         int element_index;
 
         if (info->element->type->type_class != coda_record_class)
@@ -791,17 +792,17 @@ static void XMLCALL definition_start_element_handler(void *data, const char *el,
         if (type->tag == tag_xml_array)
         {
             /* take the array element definition */
-            definition = ((coda_xmlArray *)type)->base_type;
+            definition = ((coda_xml_array *)type)->base_type;
         }
         else
         {
-            definition = (coda_xmlElement *)type;
+            definition = (coda_xml_element *)type;
         }
     }
     else
     {
         /* use the root definition from the product type  */
-        definition = (coda_xmlElement *)info->root->type->field->type;
+        definition = (coda_xml_element *)info->root->type->field->type;
 
         /* check if the current element equals the root element from the definition */
         if (strcmp(definition->xml_name, coda_element_name_from_xml_name(el)) != 0)
@@ -840,7 +841,7 @@ static void XMLCALL definition_start_element_handler(void *data, const char *el,
 
 static void XMLCALL definition_end_element_handler(void *data, const char *el)
 {
-    coda_xmlElementDynamicType *element;
+    coda_xml_element_dynamic_type *element;
     parser_info *info;
 
     el = el;
@@ -1012,7 +1013,7 @@ static void XMLCALL definition_skipped_entity_handler(void *data, const char *en
     }
 }
 
-int coda_xml_parse_with_definition(coda_xmlProductFile *pf)
+int coda_xml_parse_with_definition(coda_xml_product *product)
 {
     char buff[BUFFSIZE];
     parser_info info;
@@ -1024,8 +1025,8 @@ int coda_xml_parse_with_definition(coda_xmlProductFile *pf)
         return -1;
     }
     info.abort_parser = 0;
-    info.pf = pf;
-    info.root = coda_xml_dynamic_root_new((coda_xmlRoot *)pf->product_definition->root_type);
+    info.product = product;
+    info.root = coda_xml_dynamic_root_new((coda_xml_root *)product->product_definition->root_type);
     if (info.root == NULL)
     {
         XML_ParserFree(info.parser);
@@ -1049,12 +1050,13 @@ int coda_xml_parse_with_definition(coda_xmlProductFile *pf)
         int length;
         int result;
 
-        length = read(pf->fd, buff, BUFFSIZE);
+        length = read(product->fd, buff, BUFFSIZE);
         if (length < 0)
         {
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", pf->filename, strerror(errno));
+            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
+                           strerror(errno));
             XML_ParserFree(info.parser);
-            coda_xml_release_dynamic_type((coda_xmlDynamicType *)info.root);
+            coda_xml_release_dynamic_type((coda_xml_dynamic_type *)info.root);
             return -1;
         }
 
@@ -1071,7 +1073,7 @@ int coda_xml_parse_with_definition(coda_xmlProductFile *pf)
             coda_str64(XML_GetCurrentByteIndex(info.parser), s);
             coda_add_error_message(" (line: %lu, byte offset: %s)", (long)XML_GetCurrentLineNumber(info.parser), s);
             XML_ParserFree(info.parser);
-            coda_xml_release_dynamic_type((coda_xmlDynamicType *)info.root);
+            coda_xml_release_dynamic_type((coda_xml_dynamic_type *)info.root);
             return -1;
         }
 
@@ -1084,7 +1086,7 @@ int coda_xml_parse_with_definition(coda_xmlProductFile *pf)
 
     XML_ParserFree(info.parser);
 
-    pf->root_type = (coda_DynamicType *)info.root;
+    product->root_type = (coda_dynamic_type *)info.root;
 
     return 0;
 }
@@ -1097,8 +1099,8 @@ struct detection_parser_info_struct
     int is_root_element;        /* do we have the xml root element? */
     int unparsed_depth; /* keep track of how deep we are in the XML hierarchy after leaving the detection tree */
     char *matchvalue;
-    coda_xmlDetectionNode *detection_tree;
-    coda_ProductDefinition *product_definition;
+    coda_xml_detection_node *detection_tree;
+    coda_product_definition *product_definition;
 };
 typedef struct detection_parser_info_struct detection_parser_info;
 
@@ -1160,7 +1162,7 @@ static void XMLCALL detection_start_element_handler(void *data, const char *el, 
     info = (detection_parser_info *)data;
     if (info->unparsed_depth == 0)
     {
-        coda_xmlDetectionNode *subnode;
+        coda_xml_detection_node *subnode;
 
         subnode = coda_xml_detection_node_get_subnode(info->detection_tree, el);
         if (subnode != NULL)
@@ -1252,7 +1254,7 @@ static void XMLCALL detection_end_element_handler(void *data, const char *el)
     }
 }
 
-int coda_xml_parse_for_detection(int fd, const char *filename, coda_ProductDefinition **definition)
+int coda_xml_parse_for_detection(int fd, const char *filename, coda_product_definition **definition)
 {
     detection_parser_info info;
     char buff[BUFFSIZE];

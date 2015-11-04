@@ -9,6 +9,10 @@
 /* Define if building universal (internal helper macro) */
 #cmakedefine AC_APPLE_UNIVERSAL_BUILD ${AC_APPLE_UNIVERSAL_BUILD}
 
+/* Define to enable name mangling of symbols for the built-in expat library.
+   */
+#cmakedefine CODA_EXPAT_NAME_MANGLE ${CODA_EXPAT_NAME_MANGLE}
+
 /* This is the current version of coda */
 #cmakedefine CODA_VERSION ${CODA_VERSION}
 
@@ -360,6 +364,9 @@ int vsnprintf(const char *, size_t, const char *, va_list ap);
 #define XML_LARGE_SIZE 1
 #define XML_CONTEXT_BYTES 1024
 #define XML_BUILDING_EXPAT 1
+
+/* some defines that are needed for pcre */
+#define PCRE_STATIC
 
 /* redefines for special string handling functions */
 #define strcasecmp _stricmp

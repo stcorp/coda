@@ -20,18 +20,18 @@
 
 #include "coda-matlab.h"
 
-static mxArray *coda_matlab_get_multi_index_data(coda_Cursor *base_cursor, int nrhs, const mxArray *prhs[],
+static mxArray *coda_matlab_get_multi_index_data(coda_cursor *base_cursor, int nrhs, const mxArray *prhs[],
                                                  int num_dims, int *index);
-static int coda_matlab_read_data_direct(coda_Cursor *cursor, mxArray *mx_data, int index);
-static mxArray *coda_matlab_read_array(coda_Cursor *cursor, int num_dims, const long *dim, int num_elements);
-static void coda_matlab_get_cursor_info(coda_Cursor *cursor, mxClassID *class, mxComplexity *complex_flag,
+static int coda_matlab_read_data_direct(coda_cursor *cursor, mxArray *mx_data, int index);
+static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const long *dim, int num_elements);
+static void coda_matlab_get_cursor_info(coda_cursor *cursor, mxClassID *class, mxComplexity *complex_flag,
                                         int *is_scalar);
 
 
-mxArray *coda_matlab_get_data(coda_ProductFile *pf, int nrhs, const mxArray *prhs[])
+mxArray *coda_matlab_get_data(coda_product *pf, int nrhs, const mxArray *prhs[])
 {
     mxArray *mx_data = NULL;
-    coda_Cursor cursor;
+    coda_cursor cursor;
     coda_MatlabCursorInfo info;
 
     mxAssert(pf != NULL, "Productfile pointer is zero");
@@ -58,7 +58,7 @@ mxArray *coda_matlab_get_data(coda_ProductFile *pf, int nrhs, const mxArray *prh
     return mx_data;
 }
 
-static mxArray *coda_matlab_get_multi_index_data(coda_Cursor *base_cursor, int nrhs, const mxArray *prhs[],
+static mxArray *coda_matlab_get_multi_index_data(coda_cursor *base_cursor, int nrhs, const mxArray *prhs[],
                                                  int num_dims, int *index)
 {
     mxArray *mx_array = NULL;
@@ -141,7 +141,7 @@ static mxArray *coda_matlab_get_multi_index_data(coda_Cursor *base_cursor, int n
         if (read_array_element)
         {
             coda_MatlabCursorInfo info;
-            coda_Cursor cursor;
+            coda_cursor cursor;
 
             /* Copy base cursor */
             cursor = *base_cursor;
@@ -228,7 +228,7 @@ static mxArray *coda_matlab_get_multi_index_data(coda_Cursor *base_cursor, int n
     return mx_array;
 }
 
-mxArray *coda_matlab_read_data(coda_Cursor *cursor)
+mxArray *coda_matlab_read_data(coda_cursor *cursor)
 {
     mxArray *mx_data = NULL;
     coda_type_class type_class;
@@ -272,7 +272,7 @@ mxArray *coda_matlab_read_data(coda_Cursor *cursor)
                 int mx_num_fields;
                 char **field_name;
                 int *skip;
-                coda_Type *record_type;
+                coda_type *record_type;
 
                 if (coda_cursor_get_num_elements(cursor, &num_fields) != 0)
                 {
@@ -630,7 +630,7 @@ mxArray *coda_matlab_read_data(coda_Cursor *cursor)
     return mx_data;
 }
 
-static int coda_matlab_read_data_direct(coda_Cursor *cursor, mxArray *mx_data, int index)
+static int coda_matlab_read_data_direct(coda_cursor *cursor, mxArray *mx_data, int index)
 {
     coda_type_class type_class;
 
@@ -856,13 +856,13 @@ static int coda_matlab_read_data_direct(coda_Cursor *cursor, mxArray *mx_data, i
 /*
  * PRE: num_dims >= 0 and num_elements > 0 (i.e. no empty array traversal)
  */
-static mxArray *coda_matlab_read_array(coda_Cursor *cursor, int num_dims, const long *dim, int num_elements)
+static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const long *dim, int num_elements)
 {
     int matlab_dim[CODA_MAX_NUM_DIMS];
     long temp_dim[1];
     mxArray *mx_data = NULL;
-    coda_Type *array_type;
-    coda_Type *type;
+    coda_type *array_type;
+    coda_type *type;
     coda_type_class type_class;
     int i;
 
@@ -1031,7 +1031,7 @@ static mxArray *coda_matlab_read_array(coda_Cursor *cursor, int num_dims, const 
                 }
                 while (index < num_elements)
                 {
-                    coda_Cursor record_cursor;
+                    coda_cursor record_cursor;
 
                     mx_field_index = 0;
 
@@ -1422,7 +1422,7 @@ static mxArray *coda_matlab_read_array(coda_Cursor *cursor, int num_dims, const 
     return mx_data;
 }
 
-static void coda_matlab_get_cursor_info(coda_Cursor *cursor, mxClassID *class, mxComplexity *complex_flag,
+static void coda_matlab_get_cursor_info(coda_cursor *cursor, mxClassID *class, mxComplexity *complex_flag,
                                         int *is_scalar)
 {
     coda_type_class type_class;

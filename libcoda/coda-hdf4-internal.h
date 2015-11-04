@@ -44,21 +44,21 @@ typedef enum hdf4_type_tag_enum
 } hdf4_type_tag;
 
 /* Inheritance tree:
- * coda_Type
- * \ -- coda_hdf4Type
- *      \ -- coda_hdf4Root
- *       |-- coda_hdf4BasicType
- *       |-- coda_hdf4BasicTypeArray
- *       |-- coda_hdf4Attributes
- *       |-- coda_hdf4FileAttributes
- *       |-- coda_hdf4GRImage
- *       |-- coda_hdf4SDS
- *       |-- coda_hdf4Vdata
- *       |-- coda_hdf4VdataField
- *       |-- coda_hdf4Vgroup
+ * coda_type
+ * \ -- coda_hdf4_type
+ *      \ -- coda_hdf4_root
+ *       |-- coda_hdf4_basic_type
+ *       |-- coda_hdf4_basic_type_array
+ *       |-- coda_hdf4_attributes
+ *       |-- coda_hdf4_file_attributes
+ *       |-- coda_hdf4_GRImage
+ *       |-- coda_hdf4_SDS
+ *       |-- coda_hdf4_Vdata
+ *       |-- coda_hdf4_Vdata_field
+ *       |-- coda_hdf4_Vgroup
  */
 
-typedef struct coda_hdf4Type_struct
+typedef struct coda_hdf4_type_struct
 {
     int retain_count;
     coda_format format;
@@ -67,9 +67,9 @@ typedef struct coda_hdf4Type_struct
     char *description;
 
     hdf4_type_tag tag;
-} coda_hdf4Type;
+} coda_hdf4_type;
 
-typedef struct coda_hdf4Root_struct
+typedef struct coda_hdf4_root_struct
 {
     int retain_count;
     coda_format format;
@@ -79,13 +79,13 @@ typedef struct coda_hdf4Root_struct
 
     hdf4_type_tag tag;
     int32 num_entries;
-    struct coda_hdf4Type_struct **entry;
+    struct coda_hdf4_type_struct **entry;
     char **entry_name;
     hashtable *hash_data;
-    struct coda_hdf4FileAttributes_struct *attributes;
-} coda_hdf4Root;
+    struct coda_hdf4_file_attributes_struct *attributes;
+} coda_hdf4_root;
 
-typedef struct coda_hdf4BasicType_struct
+typedef struct coda_hdf4_basic_type_struct
 {
     int retain_count;
     coda_format format;
@@ -98,7 +98,7 @@ typedef struct coda_hdf4BasicType_struct
     int has_conversion;
     double add_offset;
     double scale_factor;
-} coda_hdf4BasicType;
+} coda_hdf4_basic_type;
 
 /* We only use this type for attribute data.
  * Although other types, such as GRImage, and Vdata objects also have a properties such as 'ncomp' and 'order'
@@ -107,7 +107,7 @@ typedef struct coda_hdf4BasicType_struct
  * We therefore only use the basic_type_array if the parent compound type is a record (which is only when the parent
  * type is a tag_hdf4_attributes or tag_hdf4_file_attributes type).
  */
-typedef struct coda_hdf4BasicTypeArray_struct
+typedef struct coda_hdf4_basic_type_array_struct
 {
     int retain_count;
     coda_format format;
@@ -117,10 +117,10 @@ typedef struct coda_hdf4BasicTypeArray_struct
 
     hdf4_type_tag tag;
     int32 count;        /* number of basic types */
-    coda_hdf4BasicType *basic_type;
-} coda_hdf4BasicTypeArray;
+    coda_hdf4_basic_type *basic_type;
+} coda_hdf4_basic_type_array;
 
-typedef struct coda_hdf4Attributes_struct
+typedef struct coda_hdf4_attributes_struct
 {
     int retain_count;
     coda_format format;
@@ -134,7 +134,7 @@ typedef struct coda_hdf4Attributes_struct
     int32 field_index;  /* only for Vdata */
     /* total number of attributes = num_obj_attributes + num_data_labels + num_data_descriptions */
     int32 num_attributes;
-    coda_hdf4Type **attribute;  /* basic types for each of the attributes */
+    coda_hdf4_type **attribute; /* basic types for each of the attributes */
     char **attribute_name;
     hashtable *hash_data;
 
@@ -142,9 +142,9 @@ typedef struct coda_hdf4Attributes_struct
     int32 num_data_labels;
     int32 num_data_descriptions;
     int32 *ann_id;
-} coda_hdf4Attributes;
+} coda_hdf4_attributes;
 
-typedef struct coda_hdf4FileAttributes_struct
+typedef struct coda_hdf4_file_attributes_struct
 {
     int retain_count;
     coda_format format;
@@ -156,7 +156,7 @@ typedef struct coda_hdf4FileAttributes_struct
     hdf4_type_tag parent_tag;
     /* total number of attributes = num_gr_attributes + num_sd_attributes + num_file_labels + num_file_descriptions */
     int32 num_attributes;
-    coda_hdf4Type **attribute;  /* basic types for each of the attributes */
+    coda_hdf4_type **attribute; /* basic types for each of the attributes */
     char **attribute_name;
     hashtable *hash_data;
 
@@ -164,9 +164,9 @@ typedef struct coda_hdf4FileAttributes_struct
     int32 num_sd_attributes;
     int32 num_file_labels;
     int32 num_file_descriptions;
-} coda_hdf4FileAttributes;
+} coda_hdf4_file_attributes;
 
-typedef struct coda_hdf4GRImage_struct
+typedef struct coda_hdf4_GRImage_struct
 {
     int retain_count;
     coda_format format;
@@ -186,11 +186,11 @@ typedef struct coda_hdf4GRImage_struct
     int32 dim_sizes[2];
     int num_elements;
     int32 num_attributes;
-    coda_hdf4BasicType *basic_type;
-    coda_hdf4Attributes *attributes;
-} coda_hdf4GRImage;
+    coda_hdf4_basic_type *basic_type;
+    coda_hdf4_attributes *attributes;
+} coda_hdf4_GRImage;
 
-typedef struct coda_hdf4SDS_struct
+typedef struct coda_hdf4_SDS_struct
 {
     int retain_count;
     coda_format format;
@@ -209,11 +209,11 @@ typedef struct coda_hdf4SDS_struct
     int num_elements;
     int32 data_type;
     int32 num_attributes;
-    coda_hdf4BasicType *basic_type;
-    coda_hdf4Attributes *attributes;
-} coda_hdf4SDS;
+    coda_hdf4_basic_type *basic_type;
+    coda_hdf4_attributes *attributes;
+} coda_hdf4_SDS;
 
-typedef struct coda_hdf4Vdata_struct
+typedef struct coda_hdf4_Vdata_struct
 {
     int retain_count;
     coda_format format;
@@ -230,13 +230,13 @@ typedef struct coda_hdf4Vdata_struct
     char classname[MAX_HDF4_NAME_LENGTH + 1];
     int32 num_fields;
     int32 num_records;
-    struct coda_hdf4VdataField_struct **field;
+    struct coda_hdf4_Vdata_field_struct **field;
     char **field_name;
     hashtable *hash_data;
-    coda_hdf4Attributes *attributes;
-} coda_hdf4Vdata;
+    coda_hdf4_attributes *attributes;
+} coda_hdf4_Vdata;
 
-typedef struct coda_hdf4VdataField_struct
+typedef struct coda_hdf4_Vdata_field_struct
 {
     int retain_count;
     coda_format format;
@@ -250,11 +250,11 @@ typedef struct coda_hdf4VdataField_struct
     int32 order;
     int num_elements;
     int32 data_type;
-    coda_hdf4BasicType *basic_type;
-    coda_hdf4Attributes *attributes;
-} coda_hdf4VdataField;
+    coda_hdf4_basic_type *basic_type;
+    coda_hdf4_attributes *attributes;
+} coda_hdf4_Vdata_field;
 
-typedef struct coda_hdf4Vgroup_struct
+typedef struct coda_hdf4_Vgroup_struct
 {
     int retain_count;
     coda_format format;
@@ -272,22 +272,22 @@ typedef struct coda_hdf4Vgroup_struct
     int32 version;
     int32 num_attributes;
     int32 num_entries;
-    struct coda_hdf4Type_struct **entry;
+    struct coda_hdf4_type_struct **entry;
     char **entry_name;
     hashtable *hash_data;
-    coda_hdf4Attributes *attributes;
-} coda_hdf4Vgroup;
+    coda_hdf4_attributes *attributes;
+} coda_hdf4_Vgroup;
 
-coda_hdf4Attributes *coda_hdf4_empty_attributes();
+coda_hdf4_attributes *coda_hdf4_empty_attributes();
 
-struct coda_hdf4ProductFile_struct
+struct coda_hdf4_product_struct
 {
     /* general fields (shared between all supported product types) */
     char *filename;
     int64_t file_size;
     coda_format format;
-    coda_DynamicType *root_type;
-    coda_ProductDefinition *product_definition;
+    coda_dynamic_type *root_type;
+    coda_product_definition *product_definition;
     long *product_variable_size;
     int64_t **product_variable;
 
@@ -302,17 +302,17 @@ struct coda_hdf4ProductFile_struct
     int32 num_gr_file_attributes;
 
     int32 num_sds;
-    struct coda_hdf4SDS_struct **sds;
+    struct coda_hdf4_SDS_struct **sds;
 
     int32 num_images;
-    struct coda_hdf4GRImage_struct **gri;
+    struct coda_hdf4_GRImage_struct **gri;
 
     int32 num_vgroup;
-    struct coda_hdf4Vgroup_struct **vgroup;
+    struct coda_hdf4_Vgroup_struct **vgroup;
 
     int32 num_vdata;
-    struct coda_hdf4Vdata_struct **vdata;
+    struct coda_hdf4_Vdata_struct **vdata;
 };
-typedef struct coda_hdf4ProductFile_struct coda_hdf4ProductFile;
+typedef struct coda_hdf4_product_struct coda_hdf4_product;
 
 #endif

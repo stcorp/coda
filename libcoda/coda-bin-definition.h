@@ -23,51 +23,50 @@
 
 #include "coda-ascbin-definition.h"
 #include "coda-internal.h"
-#include "coda-expr.h"
 
-typedef struct coda_binType_struct coda_binType;
-typedef struct coda_binInteger_struct coda_binInteger;
-typedef struct coda_binFloat_struct coda_binFloat;
-typedef struct coda_binRaw_struct coda_binRaw;
-typedef struct coda_binVSFInteger_struct coda_binVSFInteger;
-typedef struct coda_binTime_struct coda_binTime;
-typedef struct coda_binComplex_struct coda_binComplex;
+typedef struct coda_bin_type_struct coda_bin_type;
+typedef struct coda_bin_integer_struct coda_bin_integer;
+typedef struct coda_bin_float_struct coda_bin_float;
+typedef struct coda_bin_raw_struct coda_bin_raw;
+typedef struct coda_bin_vsf_integer_struct coda_bin_vsf_integer;
+typedef struct coda_bin_time_struct coda_bin_time;
+typedef struct coda_bin_complex_struct coda_bin_complex;
 
-void coda_bin_release_type(coda_binType *type);
+void coda_bin_release_type(coda_bin_type *type);
 
-coda_binInteger *coda_bin_integer_new(void);
-int coda_bin_integer_set_unit(coda_binInteger *integer, const char *unit);
-int coda_bin_integer_set_bit_size(coda_binInteger *integer, long bit_size);
-int coda_bin_integer_set_bit_size_expression(coda_binInteger *integer, coda_Expr *bit_size_expr);
-int coda_bin_integer_set_read_type(coda_binInteger *integer, coda_native_type read_type);
-int coda_bin_integer_set_conversion(coda_binInteger *integer, coda_Conversion *conversion);
-int coda_bin_integer_set_endianness(coda_binInteger *integer, coda_endianness endianness);
-int coda_bin_integer_validate(coda_binInteger *integer);
+coda_bin_integer *coda_bin_integer_new(void);
+int coda_bin_integer_set_unit(coda_bin_integer *integer, const char *unit);
+int coda_bin_integer_set_bit_size(coda_bin_integer *integer, long bit_size);
+int coda_bin_integer_set_bit_size_expression(coda_bin_integer *integer, coda_expression *bit_size_expr);
+int coda_bin_integer_set_read_type(coda_bin_integer *integer, coda_native_type read_type);
+int coda_bin_integer_set_conversion(coda_bin_integer *integer, coda_conversion *conversion);
+int coda_bin_integer_set_endianness(coda_bin_integer *integer, coda_endianness endianness);
+int coda_bin_integer_validate(coda_bin_integer *integer);
 
-coda_binFloat *coda_bin_float_new(void);
-int coda_bin_float_set_unit(coda_binFloat *fl, const char *unit);
-int coda_bin_float_set_bit_size(coda_binFloat *fl, long bit_size);
-int coda_bin_float_set_read_type(coda_binFloat *fl, coda_native_type read_type);
-int coda_bin_float_set_conversion(coda_binFloat *fl, coda_Conversion *conversion);
-int coda_bin_float_set_endianness(coda_binFloat *integer, coda_endianness endianness);
-int coda_bin_float_validate(coda_binFloat *fl);
+coda_bin_float *coda_bin_float_new(void);
+int coda_bin_float_set_unit(coda_bin_float *fl, const char *unit);
+int coda_bin_float_set_bit_size(coda_bin_float *fl, long bit_size);
+int coda_bin_float_set_read_type(coda_bin_float *fl, coda_native_type read_type);
+int coda_bin_float_set_conversion(coda_bin_float *fl, coda_conversion *conversion);
+int coda_bin_float_set_endianness(coda_bin_float *integer, coda_endianness endianness);
+int coda_bin_float_validate(coda_bin_float *fl);
 
-coda_binRaw *coda_bin_raw_new(void);
-int coda_bin_raw_set_bit_size(coda_binRaw *raw, int64_t bit_size);
-int coda_bin_raw_set_bit_size_expression(coda_binRaw *raw, coda_Expr *bit_size_expr);
-int coda_bin_raw_set_fixed_value(coda_binRaw *raw, long length, char *fixed_value);
-int coda_bin_raw_validate(coda_binRaw *raw);
+coda_bin_raw *coda_bin_raw_new(void);
+int coda_bin_raw_set_bit_size(coda_bin_raw *raw, int64_t bit_size);
+int coda_bin_raw_set_bit_size_expression(coda_bin_raw *raw, coda_expression *bit_size_expr);
+int coda_bin_raw_set_fixed_value(coda_bin_raw *raw, long length, char *fixed_value);
+int coda_bin_raw_validate(coda_bin_raw *raw);
 
-coda_binVSFInteger *coda_bin_vsf_integer_new(void);
-int coda_bin_vsf_integer_set_type(coda_binVSFInteger *integer, coda_binType *base_type);
-int coda_bin_vsf_integer_set_scale_factor(coda_binVSFInteger *integer, coda_binType *scale_factor);
-int coda_bin_vsf_integer_set_unit(coda_binVSFInteger *integer, const char *unit);
-int coda_bin_vsf_integer_validate(coda_binVSFInteger *integer);
+coda_bin_vsf_integer *coda_bin_vsf_integer_new(void);
+int coda_bin_vsf_integer_set_type(coda_bin_vsf_integer *integer, coda_bin_type *base_type);
+int coda_bin_vsf_integer_set_scale_factor(coda_bin_vsf_integer *integer, coda_bin_type *scale_factor);
+int coda_bin_vsf_integer_set_unit(coda_bin_vsf_integer *integer, const char *unit);
+int coda_bin_vsf_integer_validate(coda_bin_vsf_integer *integer);
 
-coda_binTime *coda_bin_time_new(const char *format);
+coda_bin_time *coda_bin_time_new(const char *format);
 
-coda_binComplex *coda_bin_complex_new(void);
-int coda_bin_complex_set_type(coda_binComplex *compl, coda_binType *type);
-int coda_bin_complex_validate(coda_binComplex *compl);
+coda_bin_complex *coda_bin_complex_new(void);
+int coda_bin_complex_set_type(coda_bin_complex *compl, coda_bin_type *type);
+int coda_bin_complex_validate(coda_bin_complex *compl);
 
 #endif

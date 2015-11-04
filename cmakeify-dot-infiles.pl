@@ -65,6 +65,9 @@ sub CopyFile($$)
 #define XML_CONTEXT_BYTES 1024
 #define XML_BUILDING_EXPAT 1
 
+/* some defines that are needed for pcre */
+#define PCRE_STATIC
+
 /* redefines for special string handling functions */
 #define strcasecmp _stricmp
 #define strncasecmp _strnicmp

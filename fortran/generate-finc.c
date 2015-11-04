@@ -261,6 +261,10 @@ static void print_function_definitions(void)
     PRINT_FUNCDEF(coda_double_to_datetime, int);
     PRINT_FUNCDEF(coda_time_to_string, int);
     PRINT_FUNCDEF(coda_string_to_time, int);
+    PRINT_FUNCDEF(coda_utcdatetime_to_double, int);
+    PRINT_FUNCDEF(coda_double_to_utcdatetime, int);
+    PRINT_FUNCDEF(coda_time_to_utcstring, int);
+    PRINT_FUNCDEF(coda_utcstring_to_time, int);
 
     PRINT_EMPTY;
 
@@ -307,6 +311,7 @@ static void print_function_definitions(void)
     PRINT_FUNCDEF(coda_type_get_record_field_index_from_name, int);
     PRINT_FUNCDEF(coda_type_get_record_field_type, int);
     PRINT_FUNCDEF(coda_type_get_record_field_name, int);
+    PRINT_FUNCDEF(coda_type_get_record_field_real_name, int);
     PRINT_FUNCDEF(coda_type_get_record_field_hidden_status, int);
     PRINT_FUNCDEF(coda_type_get_record_field_available_status, int);
     PRINT_FUNCDEF(coda_type_get_record_union_status, int);
