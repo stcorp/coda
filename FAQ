@@ -1,4 +1,4 @@
-Copyright (C) 2007-2008 S&T, The Netherlands
+Copyright (C) 2007-2009 S&T, The Netherlands
 
                 CODA Frequently Asked Questions
 
@@ -40,17 +40,17 @@ you whether you want to remove CODA, click yes and all CODA components will be
 removed.
 Also, don't forget to remove any IDL and MATLAB settings you might have made
 regarding CODA (since CODA is now removed, these settings have become invalid).
-If you accidentally installed a new version of BEAT over a previous
-installation then the BEAT directory (which you provided during installation;
-'C:\BEAT' by default) might still contain some files and is thus not removed.
-If the BEAT directory is still there, check whether this directory contains
+If you accidentally installed a new version of CODA over a previous
+installation then the CODA directory (which you provided during installation;
+'C:\CODA' by default) might still contain some files and is thus not removed.
+If the CODA directory is still there, check whether this directory contains
 files you might have put there yourself and still want to keep, otherwise you
 can safely delete this directory.
 
-If you use a UNIX system, you may try a 'make uninstall' in the unpacked BEAT
+If you use a UNIX system, you may try a 'make uninstall' in the unpacked CODA
 source directory (if you still have this directory available). However, this is
 not guaranteed to always work and especially if you have installed a new
-version of BEAT over a previous BEAT installation the best thing to do is to
+version of CODA over a previous CODA installation the best thing to do is to
 remove the following files and directories by hand ($(PREFIX) equals the
 directory you gave with the --prefix option to ./configure during installation.
 If you did not provide a --prefix option then $(PREFIX) equals '/usr/local'):
@@ -62,12 +62,12 @@ If you did not provide a --prefix option then $(PREFIX) equals '/usr/local'):
    $(PREFIX)/include/coda.h
    $(PREFIX)/lib/libcoda.*
    $(PREFIX)/lib/coda/          (remove the directory and its contents)
-   $(PREFIX)/lib/python2.4/site-packages/coda/
+   $(PREFIX)/lib/python2.5/site-packages/coda/
                                 (remove the directory and its contents)
    $(PREFIX)/share/coda/        (remove the directory and its contents)
    
 If you used a different version of Python you will have to use a different path
-for $(PREFIX)/lib/python2.4/site-packages.
+for $(PREFIX)/lib/python2.5/site-packages.
 
  * Can I provide my own compiler optimisation flags for building CODA?
 
@@ -100,4 +100,11 @@ mapped into memory at any one point in time. This means that if you use files
 that are about 250MB apiece, you can probably use 5 simultaneously opened
 files, but not 50. So a remedy to this situation is to close some product-files
 before you open a new one.
+
+ * When I call a CODA function using MATLAB R14 on Linux, MATLAB returns an
+   error message, and then crashes with an "Abort" message.
+
+Make sure you are using MATLAB R14 service pack 3 (= MATLAB 7.1).
+MATLAB 7.0, 7.0.1, and 7.0.4 are known to give issues. If upgrading to 7.1
+does not solve the problem, please contact us for further assistance.
 

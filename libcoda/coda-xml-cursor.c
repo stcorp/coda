@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -72,7 +72,7 @@ int coda_xml_cursor_goto_record_field_by_index(coda_Cursor *cursor, long index)
                 int result;
                 int depth;
 
-                /* use the data dictionary base type */
+                /* use the ascii base type */
                 depth = cursor->n - 1;
                 cursor->stack[depth].type = (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
                 result = coda_ascbin_cursor_goto_record_field_by_index(cursor, index);
@@ -128,7 +128,7 @@ int coda_xml_cursor_goto_next_record_field(coda_Cursor *cursor)
         int depth;
         int result;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         depth = cursor->n - 2;
         cursor->stack[depth].type = (coda_DynamicType *)((coda_xmlElementDynamicType *)record_type)->type->ascii_type;
         result = coda_ascbin_cursor_goto_next_record_field(cursor);
@@ -156,7 +156,7 @@ int coda_xml_cursor_goto_available_union_field(coda_Cursor *cursor)
     {
         int depth;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         depth = cursor->n - 1;
         cursor->stack[depth].type = (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
         result = coda_ascbin_cursor_goto_available_union_field(cursor);
@@ -178,7 +178,7 @@ int coda_xml_cursor_goto_array_element(coda_Cursor *cursor, int num_subs, const 
     {
         int depth;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         depth = cursor->n - 1;
         cursor->stack[depth].type = (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
         result = coda_ascbin_cursor_goto_array_element(cursor, num_subs, subs);
@@ -209,7 +209,7 @@ int coda_xml_cursor_goto_array_element_by_index(coda_Cursor *cursor, long index)
     {
         int depth;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         depth = cursor->n - 1;
         cursor->stack[depth].type = (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
         result = coda_ascbin_cursor_goto_array_element_by_index(cursor, index);
@@ -247,7 +247,7 @@ int coda_xml_cursor_goto_next_array_element(coda_Cursor *cursor)
     {
         int depth;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         depth = cursor->n - 2;
         cursor->stack[depth].type = (coda_DynamicType *)((coda_xmlElementDynamicType *)array_type)->type->ascii_type;
         result = coda_ascbin_cursor_goto_next_array_element(cursor);
@@ -302,7 +302,7 @@ int coda_xml_cursor_use_base_type_of_special_type(coda_Cursor *cursor)
 
     assert(type->tag == tag_xml_ascii_type_dynamic);
 
-    /* use the data dictionary base type */
+    /* use the ascii base type */
     cursor->stack[cursor->n - 1].type = (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
     return coda_ascii_cursor_use_base_type_of_special_type(cursor);
 }
@@ -318,7 +318,7 @@ int coda_xml_cursor_get_string_length(const coda_Cursor *cursor, long *length)
             {
                 coda_Cursor dd_cursor;
 
-                /* use the data dictionary base type */
+                /* use the ascii base type */
                 dd_cursor = *cursor;
                 dd_cursor.stack[cursor->n - 1].type =
                     (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -361,7 +361,7 @@ int coda_xml_cursor_get_bit_size(const coda_Cursor *cursor, int64_t *bit_size)
             {
                 coda_Cursor dd_cursor;
 
-                /* use the data dictionary base type */
+                /* use the ascii base type */
                 dd_cursor = *cursor;
                 dd_cursor.stack[cursor->n - 1].type =
                     (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -395,7 +395,7 @@ int coda_xml_cursor_get_num_elements(const coda_Cursor *cursor, long *num_elemen
             {
                 coda_Cursor dd_cursor;
 
-                /* use the data dictionary base type */
+                /* use the ascii base type */
                 dd_cursor = *cursor;
                 dd_cursor.stack[cursor->n - 1].type =
                     (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -442,7 +442,7 @@ int coda_xml_cursor_get_record_field_available_status(const coda_Cursor *cursor,
             {
                 coda_Cursor dd_cursor;
 
-                /* use the data dictionary base type */
+                /* use the ascii base type */
                 dd_cursor = *cursor;
                 dd_cursor.stack[cursor->n - 1].type =
                     (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -484,7 +484,7 @@ int coda_xml_cursor_get_available_union_field_index(const coda_Cursor *cursor, l
     {
         coda_Cursor dd_cursor;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         dd_cursor = *cursor;
         dd_cursor.stack[cursor->n - 1].type =
             (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -510,7 +510,7 @@ int coda_xml_cursor_get_array_dim(const coda_Cursor *cursor, int *num_dims, long
             {
                 coda_Cursor dd_cursor;
 
-                /* use the data dictionary base type */
+                /* use the ascii base type */
                 dd_cursor = *cursor;
                 dd_cursor.stack[cursor->n - 1].type =
                     (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -533,7 +533,7 @@ int coda_xml_cursor_read_int8(const coda_Cursor *cursor, int8_t *dst)
     {
         coda_Cursor dd_cursor;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         dd_cursor = *cursor;
         dd_cursor.stack[cursor->n - 1].type =
             (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -553,7 +553,7 @@ int coda_xml_cursor_read_uint8(const coda_Cursor *cursor, uint8_t *dst)
     {
         coda_Cursor dd_cursor;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         dd_cursor = *cursor;
         dd_cursor.stack[cursor->n - 1].type =
             (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -573,7 +573,7 @@ int coda_xml_cursor_read_int16(const coda_Cursor *cursor, int16_t *dst)
     {
         coda_Cursor dd_cursor;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         dd_cursor = *cursor;
         dd_cursor.stack[cursor->n - 1].type =
             (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -593,7 +593,7 @@ int coda_xml_cursor_read_uint16(const coda_Cursor *cursor, uint16_t *dst)
     {
         coda_Cursor dd_cursor;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         dd_cursor = *cursor;
         dd_cursor.stack[cursor->n - 1].type =
             (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -613,7 +613,7 @@ int coda_xml_cursor_read_int32(const coda_Cursor *cursor, int32_t *dst)
     {
         coda_Cursor dd_cursor;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         dd_cursor = *cursor;
         dd_cursor.stack[cursor->n - 1].type =
             (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -633,7 +633,7 @@ int coda_xml_cursor_read_uint32(const coda_Cursor *cursor, uint32_t *dst)
     {
         coda_Cursor dd_cursor;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         dd_cursor = *cursor;
         dd_cursor.stack[cursor->n - 1].type =
             (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -653,7 +653,7 @@ int coda_xml_cursor_read_int64(const coda_Cursor *cursor, int64_t *dst)
     {
         coda_Cursor dd_cursor;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         dd_cursor = *cursor;
         dd_cursor.stack[cursor->n - 1].type =
             (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -673,7 +673,7 @@ int coda_xml_cursor_read_uint64(const coda_Cursor *cursor, uint64_t *dst)
     {
         coda_Cursor dd_cursor;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         dd_cursor = *cursor;
         dd_cursor.stack[cursor->n - 1].type =
             (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -693,7 +693,7 @@ int coda_xml_cursor_read_float(const coda_Cursor *cursor, float *dst)
     {
         coda_Cursor dd_cursor;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         dd_cursor = *cursor;
         dd_cursor.stack[cursor->n - 1].type =
             (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -713,7 +713,7 @@ int coda_xml_cursor_read_double(const coda_Cursor *cursor, double *dst)
     {
         coda_Cursor dd_cursor;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         dd_cursor = *cursor;
         dd_cursor.stack[cursor->n - 1].type =
             (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -733,7 +733,7 @@ int coda_xml_cursor_read_char(const coda_Cursor *cursor, char *dst)
     {
         coda_Cursor dd_cursor;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         dd_cursor = *cursor;
         dd_cursor.stack[cursor->n - 1].type =
             (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -756,7 +756,7 @@ int coda_xml_cursor_read_string(const coda_Cursor *cursor, char *dst, long dst_s
             {
                 coda_Cursor dd_cursor;
 
-                /* use the data dictionary base type */
+                /* use the ascii base type */
                 dd_cursor = *cursor;
                 dd_cursor.stack[cursor->n - 1].type =
                     (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -872,7 +872,7 @@ int coda_xml_cursor_read_int8_array(const coda_Cursor *cursor, int8_t *dst, coda
     {
         coda_Cursor dd_cursor;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         dd_cursor = *cursor;
         dd_cursor.stack[cursor->n - 1].type =
             (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -893,7 +893,7 @@ int coda_xml_cursor_read_uint8_array(const coda_Cursor *cursor, uint8_t *dst, co
     {
         coda_Cursor dd_cursor;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         dd_cursor = *cursor;
         dd_cursor.stack[cursor->n - 1].type =
             (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -914,7 +914,7 @@ int coda_xml_cursor_read_int16_array(const coda_Cursor *cursor, int16_t *dst, co
     {
         coda_Cursor dd_cursor;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         dd_cursor = *cursor;
         dd_cursor.stack[cursor->n - 1].type =
             (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -935,7 +935,7 @@ int coda_xml_cursor_read_uint16_array(const coda_Cursor *cursor, uint16_t *dst, 
     {
         coda_Cursor dd_cursor;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         dd_cursor = *cursor;
         dd_cursor.stack[cursor->n - 1].type =
             (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -956,7 +956,7 @@ int coda_xml_cursor_read_int32_array(const coda_Cursor *cursor, int32_t *dst, co
     {
         coda_Cursor dd_cursor;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         dd_cursor = *cursor;
         dd_cursor.stack[cursor->n - 1].type =
             (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -977,7 +977,7 @@ int coda_xml_cursor_read_uint32_array(const coda_Cursor *cursor, uint32_t *dst, 
     {
         coda_Cursor dd_cursor;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         dd_cursor = *cursor;
         dd_cursor.stack[cursor->n - 1].type =
             (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -998,7 +998,7 @@ int coda_xml_cursor_read_int64_array(const coda_Cursor *cursor, int64_t *dst, co
     {
         coda_Cursor dd_cursor;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         dd_cursor = *cursor;
         dd_cursor.stack[cursor->n - 1].type =
             (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -1019,7 +1019,7 @@ int coda_xml_cursor_read_uint64_array(const coda_Cursor *cursor, uint64_t *dst, 
     {
         coda_Cursor dd_cursor;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         dd_cursor = *cursor;
         dd_cursor.stack[cursor->n - 1].type =
             (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -1040,7 +1040,7 @@ int coda_xml_cursor_read_float_array(const coda_Cursor *cursor, float *dst, coda
     {
         coda_Cursor dd_cursor;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         dd_cursor = *cursor;
         dd_cursor.stack[cursor->n - 1].type =
             (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -1061,7 +1061,7 @@ int coda_xml_cursor_read_double_array(const coda_Cursor *cursor, double *dst, co
     {
         coda_Cursor dd_cursor;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         dd_cursor = *cursor;
         dd_cursor.stack[cursor->n - 1].type =
             (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;
@@ -1082,7 +1082,7 @@ int coda_xml_cursor_read_char_array(const coda_Cursor *cursor, char *dst, coda_a
     {
         coda_Cursor dd_cursor;
 
-        /* use the data dictionary base type */
+        /* use the ascii base type */
         dd_cursor = *cursor;
         dd_cursor.stack[cursor->n - 1].type =
             (coda_DynamicType *)((coda_xmlElementDynamicType *)type)->type->ascii_type;

@@ -1,3 +1,4 @@
+
 # Find the HDF4 library
 #
 # This module defines
@@ -12,7 +13,7 @@
 if (NOT HDF4_INCLUDE_DIR)
   if ($ENV{HDF4_INCLUDE} MATCHES ".+")
     file(TO_CMAKE_PATH $ENV{HDF4_INCLUDE} HDF4_INCLUDE)
-    message(STATUS "HDF4_INCLUDE from environment: ${HDF4_INCLUDE}")
+    message(STATUS "Using HDF4_INCLUDE environment variable: ${HDF4_INCLUDE}")
     set(CMAKE_REQUIRED_INCLUDES ${HDF4_INCLUDE})
   endif ($ENV{HDF4_INCLUDE} MATCHES ".+")
 endif (NOT HDF4_INCLUDE_DIR)
@@ -20,7 +21,7 @@ endif (NOT HDF4_INCLUDE_DIR)
 if (NOT HDF4_LIBRARIES)
   if ($ENV{HDF4_LIB} MATCHES ".+")
     file(TO_CMAKE_PATH $ENV{HDF4_LIB} HDF4_LIB)
-    message(STATUS "HDF4_LIB from environment: ${HDF4_LIB}")
+    message(STATUS "Using HDF4_LIB environment variable: ${HDF4_LIB}")
   endif ($ENV{HDF4_LIB} MATCHES ".+")
 endif (NOT HDF4_LIBRARIES)
 
@@ -32,7 +33,7 @@ check_include_file(hdf.h HAVE_HDF_H)
 check_include_file(netcdf.h HAVE_NETCDF_H)
 check_include_file(mfhdf.h HAVE_MFHDF_H)
 
-set(DF_NAMES df hd423)
+set(DF_NAMES df hd423m)
 find_library(DF_LIBRARY 
   NAMES ${DF_NAMES}
   PATHS ${HDF4_LIB} ENV HDF4_LIB)
@@ -53,7 +54,7 @@ if (DF_LIBRARY)
   endif(HAVE_DF)
 endif (DF_LIBRARY)
 
-set(MFHDF_NAMES mfhdf hm423)
+set(MFHDF_NAMES mfhdf hm423m)
 find_library(MFHDF_LIBRARY 
   NAMES ${MFHDF_NAMES}
   PATHS ${HDF4_LIB} ENV HDF4_LIB)

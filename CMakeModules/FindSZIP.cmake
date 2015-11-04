@@ -24,8 +24,9 @@ if (SZIP_LIBRARY)
   endif(HAVE_SZIP)
 endif (SZIP_LIBRARY)
 
-# handle the QUIETLY and REQUIRED arguments and set SZIP_FOUND to TRUE if
-# all listed variables are TRUE
+# handle the QUIETLY and REQUIRED arguments and set SZIP_FOUND to
+# TRUE if all listed variables are TRUE
+#
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(SZIP DEFAULT_MSG SZIP_LIBRARIES SZIP_INCLUDE_DIR)
 

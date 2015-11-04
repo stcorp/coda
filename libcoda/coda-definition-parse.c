@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -259,8 +259,10 @@ static void handle_ziparchive_error(const char *message, ...)
 
     coda_errno = CODA_ERROR_DATA_DEFINITION;
 
+    coda_set_error_message("could not read data from definition file: ");
+
     va_start(ap, message);
-    coda_set_error_message_vargs(message, ap);
+    coda_add_error_message_vargs(message, ap);
     va_end(ap);
 }
 
@@ -1018,7 +1020,7 @@ static int cd_array_ascbin_finalise(parser_info *info)
 
 static int cd_array_xml_set_type(parser_info *info)
 {
-    if (((coda_Type *)info->node->data)->type_class == coda_array_class)
+    if (((coda_Type *)info->node->data)->type_class == coda_array_class && info->node->tag != element_cd_type)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "Arrays of arrays are not allowed for xml format");
         return -1;
@@ -1261,6 +1263,7 @@ static int cd_complex_init(parser_info *info, const char **attr)
         case coda_format_binary:
             info->node->data = coda_bin_complex_new();
             register_sub_element(info->node, element_cd_float, cd_float_init, cd_complex_binary_set_type);
+            register_sub_element(info->node, element_cd_integer, cd_integer_init, cd_complex_binary_set_type);
             info->node->finalise_element = cd_complex_binary_finalise;
             break;
         case coda_format_xml:
@@ -1307,12 +1310,12 @@ static int cd_conversion_init(parser_info *info, const char **attr)
     {
         return -1;
     }
-    if (sscanf(numerator_string, "%lf", &numerator) != 1)
+    if (coda_ascii_parse_double(numerator_string, strlen(numerator_string), &numerator, 1) < 0)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid value '%s' for numerator", numerator_string);
         return -1;
     }
-    if (sscanf(denominator_string, "%lf", &denominator) != 1)
+    if (coda_ascii_parse_double(denominator_string, strlen(denominator_string), &denominator, 1) < 0)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid value '%s' for denominator", denominator_string);
         return -1;
@@ -2086,7 +2089,6 @@ static int get_product_class_revision(parser_info *info, int *revision)
     }
     if (za_read_entry(entry, buffer) != 0)
     {
-        coda_set_error(CODA_ERROR_DATA_DEFINITION, "could not read data from definition file");
         free(buffer);
         return -1;
     }
@@ -3160,13 +3162,15 @@ static void XMLCALL start_element_handler(void *data, const char *el, const char
 
     if (info->unparsed_depth > 0)
     {
+        /* We are inside an element of another namespace -> ignore this element */
         info->unparsed_depth++;
+        return;
     }
 
     tag = (xml_element_tag)hashtable_get_index_from_name(info->hash_data, el);
     if (tag < 0 && strncmp(el, CODA_DEFINITION_NAMESPACE, strlen(CODA_DEFINITION_NAMESPACE)) != 0)
     {
-        /* ignore elements of other namespaces */
+        /* start of a branch from some other namespace */
         info->unparsed_depth = 1;
         return;
     }
@@ -3354,7 +3358,6 @@ static int parse_entry(zaFile *zf, zip_entry_type type, const char *name, coda_P
     }
     if (za_read_entry(entry, info.buffer) != 0)
     {
-        coda_set_error(CODA_ERROR_DATA_DEFINITION, "could not read data from definition file");
         parser_info_delete(&info);
         return -1;
     }

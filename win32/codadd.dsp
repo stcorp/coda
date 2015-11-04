@@ -141,6 +141,14 @@ LINK32=link.exe
 
 SOURCE="..\tools\codadd\codadd.c"
 # End Source File
+# Begin Source File
+
+SOURCE="..\tools\codadd\codadd-doc.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\tools\codadd\codadd-list.c"
+# End Source File
 # End Group
 # End Target
 # End Project

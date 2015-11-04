@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -27,7 +27,7 @@ void coda_hdf4_done(void);
 
 void coda_hdf4_add_error_message(void);
 
-int coda_hdf4_open(const char *filename, int64_t file_size, coda_ProductFile **pf);
+int coda_hdf4_open(const char *filename, int64_t file_size, coda_format format, coda_ProductFile **pf);
 int coda_hdf4_close(coda_ProductFile *pf);
 
 int coda_hdf4_get_type_for_dynamic_type(coda_DynamicType *dynamic_type, coda_Type **type);

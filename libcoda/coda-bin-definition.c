@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -834,6 +834,7 @@ coda_binTime *coda_bin_time_new(const char *format)
 
         type = coda_bin_integer_new();
         coda_type_set_description((coda_Type *)type, "days since January 1st, 2000 (may be negative)");
+        coda_bin_integer_set_unit(type, "days since 2000-01-01");
         coda_bin_integer_set_bit_size(type, 32);
         coda_bin_integer_set_read_type(type, coda_native_type_int32);
         field = coda_ascbin_field_new("days");
@@ -843,6 +844,7 @@ coda_binTime *coda_bin_time_new(const char *format)
 
         type = coda_bin_integer_new();
         coda_type_set_description((coda_Type *)type, "seconds since start of day");
+        coda_bin_integer_set_unit(type, "s");
         coda_bin_integer_set_bit_size(type, 32);
         coda_bin_integer_set_read_type(type, coda_native_type_uint32);
         field = coda_ascbin_field_new("seconds");
@@ -852,6 +854,7 @@ coda_binTime *coda_bin_time_new(const char *format)
 
         type = coda_bin_integer_new();
         coda_type_set_description((coda_Type *)type, "microseconds since start of second");
+        coda_bin_integer_set_unit(type, "1e-6 s");
         coda_bin_integer_set_bit_size(type, 32);
         coda_bin_integer_set_read_type(type, coda_native_type_uint32);
         field = coda_ascbin_field_new("microseconds");
@@ -866,6 +869,7 @@ coda_binTime *coda_bin_time_new(const char *format)
 
         type = coda_bin_integer_new();
         coda_type_set_description((coda_Type *)type, "days since January 1st, 1950 (may be negative)");
+        coda_bin_integer_set_unit(type, "days since 1950-01-01");
         coda_bin_integer_set_bit_size(type, 32);
         coda_bin_integer_set_read_type(type, coda_native_type_int32);
         field = coda_ascbin_field_new("days");
@@ -875,6 +879,7 @@ coda_binTime *coda_bin_time_new(const char *format)
 
         type = coda_bin_integer_new();
         coda_type_set_description((coda_Type *)type, "milliseconds since start of day");
+        coda_bin_integer_set_unit(type, "1e-3 s");
         coda_bin_integer_set_bit_size(type, 32);
         coda_bin_integer_set_read_type(type, coda_native_type_uint32);
         field = coda_ascbin_field_new("milliseconds");
@@ -889,6 +894,7 @@ coda_binTime *coda_bin_time_new(const char *format)
 
         type = coda_bin_integer_new();
         coda_type_set_description((coda_Type *)type, "days since January 1st, 2000 (must be positive)");
+        coda_bin_integer_set_unit(type, "days since 2000-01-01");
         coda_bin_integer_set_bit_size(type, 16);
         coda_bin_integer_set_read_type(type, coda_native_type_uint16);
         field = coda_ascbin_field_new("days");
@@ -898,6 +904,7 @@ coda_binTime *coda_bin_time_new(const char *format)
 
         type = coda_bin_integer_new();
         coda_type_set_description((coda_Type *)type, "milliseconds since start of day");
+        coda_bin_integer_set_unit(type, "1e-3 s");
         coda_bin_integer_set_bit_size(type, 32);
         coda_bin_integer_set_read_type(type, coda_native_type_uint32);
         field = coda_ascbin_field_new("milliseconds");
@@ -912,6 +919,7 @@ coda_binTime *coda_bin_time_new(const char *format)
 
         type = coda_bin_integer_new();
         coda_type_set_description((coda_Type *)type, "days since January 1st, 2000 (must be positive)");
+        coda_bin_integer_set_unit(type, "days since 2000-01-01");
         coda_bin_integer_set_bit_size(type, 16);
         coda_bin_integer_set_read_type(type, coda_native_type_uint16);
         field = coda_ascbin_field_new("days");
@@ -921,6 +929,7 @@ coda_binTime *coda_bin_time_new(const char *format)
 
         type = coda_bin_integer_new();
         coda_type_set_description((coda_Type *)type, "milliseconds since start of day");
+        coda_bin_integer_set_unit(type, "1e-3 s");
         coda_bin_integer_set_bit_size(type, 32);
         coda_bin_integer_set_read_type(type, coda_native_type_uint32);
         field = coda_ascbin_field_new("milliseconds");
@@ -930,6 +939,7 @@ coda_binTime *coda_bin_time_new(const char *format)
 
         type = coda_bin_integer_new();
         coda_type_set_description((coda_Type *)type, "microseconds since start of millisecond");
+        coda_bin_integer_set_unit(type, "1e-6 s");
         coda_bin_integer_set_bit_size(type, 16);
         coda_bin_integer_set_read_type(type, coda_native_type_uint16);
         field = coda_ascbin_field_new("microseconds");

@@ -15,10 +15,10 @@
 #include <sys/stat.h>
 
 /* This is the current version of libcoda */
-#define CODA_VERSION "1.0"
+#cmakedefine CODA_VERSION ${CODA_VERSION}
 
 /* Version number of package */
-#define VERSION "1.0"
+#cmakedefine VERSION ${VERSION}
 
 /* some defines that are needed to configure expat */
 #define HAVE_MEMMOVE 1
@@ -50,6 +50,9 @@
    CODA is linked against HDF4 library version 4.2r2 or higher). */
 #define ENABLE_HDF4_VDATA_ATTRIBUTES 1
 #endif
+
+/* Make sure we use the 1.6 compatibility API for HDF 1.8 */
+#define H5_USE_16_API
 
 #define YYMALLOC malloc
 #define YYFREE free

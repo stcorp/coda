@@ -2537,8 +2537,7 @@ static swig_module_info swig_module = {swig_types, 25, 0, 0, 0, 0};
 #include "config.h"
 #endif
 
-#include "numarray/libnumarray.h"
-#include "numarray/arrayobject.h"
+#include "numpy/arrayobject.h"
 #include "coda.h"
 
 
@@ -2863,9 +2862,9 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
     PyObject *cursor_read_int8_array(const coda_Cursor *cursor)
     {
         int tmp_result, tmp_num_dims;
-        int tmp_dims_int[CODA_MAX_NUM_DIMS];
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
         long tmp_dims_long[CODA_MAX_NUM_DIMS];
-        PyArrayObject *tmp;
+        PyObject *tmp;
         int i;
 
         tmp_result = coda_cursor_get_array_dim(cursor,&tmp_num_dims,tmp_dims_long);
@@ -2887,13 +2886,13 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             tmp_dims_int[tmp_num_dims++] = 1;
         }
 
-        tmp = (PyArrayObject*) PyArray_FromDims(tmp_num_dims,tmp_dims_int,tInt8);
+        tmp = PyArray_SimpleNew(tmp_num_dims,tmp_dims_int,NPY_INT8);
         if (tmp==NULL)
         {
             return PyErr_NoMemory();
         }
  
-        tmp_result = coda_cursor_read_int8_array(cursor, (int8_t*) tmp->data, coda_array_ordering_c);
+        tmp_result = coda_cursor_read_int8_array(cursor, (int8_t*)PyArray_DATA(tmp), coda_array_ordering_c);
     
         if (tmp_result<0)
         {
@@ -2901,16 +2900,16 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             return PyErr_Format(codacError,"coda_cursor_read_int8_array""(): %s", coda_errno_to_string(coda_errno));
         }
         
-        return (PyObject*) tmp;
+        return tmp;
     }        
 
 
     PyObject *cursor_read_uint8_array(const coda_Cursor *cursor)
     {
         int tmp_result, tmp_num_dims;
-        int tmp_dims_int[CODA_MAX_NUM_DIMS];
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
         long tmp_dims_long[CODA_MAX_NUM_DIMS];
-        PyArrayObject *tmp;
+        PyObject *tmp;
         int i;
 
         tmp_result = coda_cursor_get_array_dim(cursor,&tmp_num_dims,tmp_dims_long);
@@ -2932,13 +2931,13 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             tmp_dims_int[tmp_num_dims++] = 1;
         }
 
-        tmp = (PyArrayObject*) PyArray_FromDims(tmp_num_dims,tmp_dims_int,tUInt8);
+        tmp = PyArray_SimpleNew(tmp_num_dims,tmp_dims_int,NPY_UINT8);
         if (tmp==NULL)
         {
             return PyErr_NoMemory();
         }
  
-        tmp_result = coda_cursor_read_uint8_array(cursor, (uint8_t*) tmp->data, coda_array_ordering_c);
+        tmp_result = coda_cursor_read_uint8_array(cursor, (uint8_t*)PyArray_DATA(tmp), coda_array_ordering_c);
     
         if (tmp_result<0)
         {
@@ -2946,16 +2945,16 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             return PyErr_Format(codacError,"coda_cursor_read_uint8_array""(): %s", coda_errno_to_string(coda_errno));
         }
         
-        return (PyObject*) tmp;
+        return tmp;
     }        
 
 
     PyObject *cursor_read_int16_array(const coda_Cursor *cursor)
     {
         int tmp_result, tmp_num_dims;
-        int tmp_dims_int[CODA_MAX_NUM_DIMS];
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
         long tmp_dims_long[CODA_MAX_NUM_DIMS];
-        PyArrayObject *tmp;
+        PyObject *tmp;
         int i;
 
         tmp_result = coda_cursor_get_array_dim(cursor,&tmp_num_dims,tmp_dims_long);
@@ -2977,13 +2976,13 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             tmp_dims_int[tmp_num_dims++] = 1;
         }
 
-        tmp = (PyArrayObject*) PyArray_FromDims(tmp_num_dims,tmp_dims_int,tInt16);
+        tmp = PyArray_SimpleNew(tmp_num_dims,tmp_dims_int,NPY_INT16);
         if (tmp==NULL)
         {
             return PyErr_NoMemory();
         }
  
-        tmp_result = coda_cursor_read_int16_array(cursor, (int16_t*) tmp->data, coda_array_ordering_c);
+        tmp_result = coda_cursor_read_int16_array(cursor, (int16_t*)PyArray_DATA(tmp), coda_array_ordering_c);
     
         if (tmp_result<0)
         {
@@ -2991,16 +2990,16 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             return PyErr_Format(codacError,"coda_cursor_read_int16_array""(): %s", coda_errno_to_string(coda_errno));
         }
         
-        return (PyObject*) tmp;
+        return tmp;
     }        
 
 
     PyObject *cursor_read_uint16_array(const coda_Cursor *cursor)
     {
         int tmp_result, tmp_num_dims;
-        int tmp_dims_int[CODA_MAX_NUM_DIMS];
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
         long tmp_dims_long[CODA_MAX_NUM_DIMS];
-        PyArrayObject *tmp;
+        PyObject *tmp;
         int i;
 
         tmp_result = coda_cursor_get_array_dim(cursor,&tmp_num_dims,tmp_dims_long);
@@ -3022,13 +3021,13 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             tmp_dims_int[tmp_num_dims++] = 1;
         }
 
-        tmp = (PyArrayObject*) PyArray_FromDims(tmp_num_dims,tmp_dims_int,tUInt16);
+        tmp = PyArray_SimpleNew(tmp_num_dims,tmp_dims_int,NPY_UINT16);
         if (tmp==NULL)
         {
             return PyErr_NoMemory();
         }
  
-        tmp_result = coda_cursor_read_uint16_array(cursor, (uint16_t*) tmp->data, coda_array_ordering_c);
+        tmp_result = coda_cursor_read_uint16_array(cursor, (uint16_t*)PyArray_DATA(tmp), coda_array_ordering_c);
     
         if (tmp_result<0)
         {
@@ -3036,16 +3035,16 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             return PyErr_Format(codacError,"coda_cursor_read_uint16_array""(): %s", coda_errno_to_string(coda_errno));
         }
         
-        return (PyObject*) tmp;
+        return tmp;
     }        
 
 
     PyObject *cursor_read_int32_array(const coda_Cursor *cursor)
     {
         int tmp_result, tmp_num_dims;
-        int tmp_dims_int[CODA_MAX_NUM_DIMS];
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
         long tmp_dims_long[CODA_MAX_NUM_DIMS];
-        PyArrayObject *tmp;
+        PyObject *tmp;
         int i;
 
         tmp_result = coda_cursor_get_array_dim(cursor,&tmp_num_dims,tmp_dims_long);
@@ -3067,13 +3066,13 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             tmp_dims_int[tmp_num_dims++] = 1;
         }
 
-        tmp = (PyArrayObject*) PyArray_FromDims(tmp_num_dims,tmp_dims_int,tInt32);
+        tmp = PyArray_SimpleNew(tmp_num_dims,tmp_dims_int,NPY_INT32);
         if (tmp==NULL)
         {
             return PyErr_NoMemory();
         }
  
-        tmp_result = coda_cursor_read_int32_array(cursor, (int32_t*) tmp->data, coda_array_ordering_c);
+        tmp_result = coda_cursor_read_int32_array(cursor, (int32_t*)PyArray_DATA(tmp), coda_array_ordering_c);
     
         if (tmp_result<0)
         {
@@ -3081,16 +3080,16 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             return PyErr_Format(codacError,"coda_cursor_read_int32_array""(): %s", coda_errno_to_string(coda_errno));
         }
         
-        return (PyObject*) tmp;
+        return tmp;
     }        
 
 
     PyObject *cursor_read_uint32_array(const coda_Cursor *cursor)
     {
         int tmp_result, tmp_num_dims;
-        int tmp_dims_int[CODA_MAX_NUM_DIMS];
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
         long tmp_dims_long[CODA_MAX_NUM_DIMS];
-        PyArrayObject *tmp;
+        PyObject *tmp;
         int i;
 
         tmp_result = coda_cursor_get_array_dim(cursor,&tmp_num_dims,tmp_dims_long);
@@ -3112,13 +3111,13 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             tmp_dims_int[tmp_num_dims++] = 1;
         }
 
-        tmp = (PyArrayObject*) PyArray_FromDims(tmp_num_dims,tmp_dims_int,tUInt32);
+        tmp = PyArray_SimpleNew(tmp_num_dims,tmp_dims_int,NPY_UINT32);
         if (tmp==NULL)
         {
             return PyErr_NoMemory();
         }
  
-        tmp_result = coda_cursor_read_uint32_array(cursor, (uint32_t*) tmp->data, coda_array_ordering_c);
+        tmp_result = coda_cursor_read_uint32_array(cursor, (uint32_t*)PyArray_DATA(tmp), coda_array_ordering_c);
     
         if (tmp_result<0)
         {
@@ -3126,16 +3125,16 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             return PyErr_Format(codacError,"coda_cursor_read_uint32_array""(): %s", coda_errno_to_string(coda_errno));
         }
         
-        return (PyObject*) tmp;
+        return tmp;
     }        
 
 
     PyObject *cursor_read_int64_array(const coda_Cursor *cursor)
     {
         int tmp_result, tmp_num_dims;
-        int tmp_dims_int[CODA_MAX_NUM_DIMS];
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
         long tmp_dims_long[CODA_MAX_NUM_DIMS];
-        PyArrayObject *tmp;
+        PyObject *tmp;
         int i;
 
         tmp_result = coda_cursor_get_array_dim(cursor,&tmp_num_dims,tmp_dims_long);
@@ -3157,13 +3156,13 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             tmp_dims_int[tmp_num_dims++] = 1;
         }
 
-        tmp = (PyArrayObject*) PyArray_FromDims(tmp_num_dims,tmp_dims_int,tInt64);
+        tmp = PyArray_SimpleNew(tmp_num_dims,tmp_dims_int,NPY_INT64);
         if (tmp==NULL)
         {
             return PyErr_NoMemory();
         }
  
-        tmp_result = coda_cursor_read_int64_array(cursor, (int64_t*) tmp->data, coda_array_ordering_c);
+        tmp_result = coda_cursor_read_int64_array(cursor, (int64_t*)PyArray_DATA(tmp), coda_array_ordering_c);
     
         if (tmp_result<0)
         {
@@ -3171,16 +3170,16 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             return PyErr_Format(codacError,"coda_cursor_read_int64_array""(): %s", coda_errno_to_string(coda_errno));
         }
         
-        return (PyObject*) tmp;
+        return tmp;
     }        
 
 
     PyObject *cursor_read_uint64_array(const coda_Cursor *cursor)
     {
         int tmp_result, tmp_num_dims;
-        int tmp_dims_int[CODA_MAX_NUM_DIMS];
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
         long tmp_dims_long[CODA_MAX_NUM_DIMS];
-        PyArrayObject *tmp;
+        PyObject *tmp;
         int i;
 
         tmp_result = coda_cursor_get_array_dim(cursor,&tmp_num_dims,tmp_dims_long);
@@ -3202,13 +3201,13 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             tmp_dims_int[tmp_num_dims++] = 1;
         }
 
-        tmp = (PyArrayObject*) PyArray_FromDims(tmp_num_dims,tmp_dims_int,tUInt64);
+        tmp = PyArray_SimpleNew(tmp_num_dims,tmp_dims_int,NPY_UINT64);
         if (tmp==NULL)
         {
             return PyErr_NoMemory();
         }
  
-        tmp_result = coda_cursor_read_uint64_array(cursor, (uint64_t*) tmp->data, coda_array_ordering_c);
+        tmp_result = coda_cursor_read_uint64_array(cursor, (uint64_t*)PyArray_DATA(tmp), coda_array_ordering_c);
     
         if (tmp_result<0)
         {
@@ -3216,16 +3215,16 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             return PyErr_Format(codacError,"coda_cursor_read_uint64_array""(): %s", coda_errno_to_string(coda_errno));
         }
         
-        return (PyObject*) tmp;
+        return tmp;
     }        
 
 
     PyObject *cursor_read_float_array(const coda_Cursor *cursor)
     {
         int tmp_result, tmp_num_dims;
-        int tmp_dims_int[CODA_MAX_NUM_DIMS];
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
         long tmp_dims_long[CODA_MAX_NUM_DIMS];
-        PyArrayObject *tmp;
+        PyObject *tmp;
         int i;
 
         tmp_result = coda_cursor_get_array_dim(cursor,&tmp_num_dims,tmp_dims_long);
@@ -3247,13 +3246,13 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             tmp_dims_int[tmp_num_dims++] = 1;
         }
 
-        tmp = (PyArrayObject*) PyArray_FromDims(tmp_num_dims,tmp_dims_int,tFloat32);
+        tmp = PyArray_SimpleNew(tmp_num_dims,tmp_dims_int,NPY_FLOAT32);
         if (tmp==NULL)
         {
             return PyErr_NoMemory();
         }
  
-        tmp_result = coda_cursor_read_float_array(cursor, (float*) tmp->data, coda_array_ordering_c);
+        tmp_result = coda_cursor_read_float_array(cursor, (float*)PyArray_DATA(tmp), coda_array_ordering_c);
     
         if (tmp_result<0)
         {
@@ -3261,16 +3260,16 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             return PyErr_Format(codacError,"coda_cursor_read_float_array""(): %s", coda_errno_to_string(coda_errno));
         }
         
-        return (PyObject*) tmp;
+        return tmp;
     }        
 
 
     PyObject *cursor_read_double_array(const coda_Cursor *cursor)
     {
         int tmp_result, tmp_num_dims;
-        int tmp_dims_int[CODA_MAX_NUM_DIMS];
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
         long tmp_dims_long[CODA_MAX_NUM_DIMS];
-        PyArrayObject *tmp;
+        PyObject *tmp;
         int i;
 
         tmp_result = coda_cursor_get_array_dim(cursor,&tmp_num_dims,tmp_dims_long);
@@ -3292,13 +3291,13 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             tmp_dims_int[tmp_num_dims++] = 1;
         }
 
-        tmp = (PyArrayObject*) PyArray_FromDims(tmp_num_dims,tmp_dims_int,tFloat64);
+        tmp = PyArray_SimpleNew(tmp_num_dims,tmp_dims_int,NPY_FLOAT64);
         if (tmp==NULL)
         {
             return PyErr_NoMemory();
         }
  
-        tmp_result = coda_cursor_read_double_array(cursor, (double*) tmp->data, coda_array_ordering_c);
+        tmp_result = coda_cursor_read_double_array(cursor, (double*)PyArray_DATA(tmp), coda_array_ordering_c);
     
         if (tmp_result<0)
         {
@@ -3306,16 +3305,16 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             return PyErr_Format(codacError,"coda_cursor_read_double_array""(): %s", coda_errno_to_string(coda_errno));
         }
         
-        return (PyObject*) tmp;
+        return tmp;
     }        
 
 
     PyObject *cursor_read_char_array(const coda_Cursor *cursor)
     {
         int tmp_result, tmp_num_dims;
-        int tmp_dims_int[CODA_MAX_NUM_DIMS];
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
         long tmp_dims_long[CODA_MAX_NUM_DIMS];
-        PyArrayObject *tmp;
+        PyObject *tmp;
         int i;
 
         tmp_result = coda_cursor_get_array_dim(cursor,&tmp_num_dims,tmp_dims_long);
@@ -3337,13 +3336,13 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             tmp_dims_int[tmp_num_dims++] = 1;
         }
 
-        tmp = (PyArrayObject*) PyArray_FromDims(tmp_num_dims,tmp_dims_int,tInt8);
+        tmp = PyArray_SimpleNew(tmp_num_dims,tmp_dims_int,NPY_INT8);
         if (tmp==NULL)
         {
             return PyErr_NoMemory();
         }
  
-        tmp_result = coda_cursor_read_char_array(cursor, (char*) tmp->data, coda_array_ordering_c);
+        tmp_result = coda_cursor_read_char_array(cursor, (char*)PyArray_DATA(tmp), coda_array_ordering_c);
     
         if (tmp_result<0)
         {
@@ -3351,23 +3350,23 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             return PyErr_Format(codacError,"coda_cursor_read_char_array""(): %s", coda_errno_to_string(coda_errno));
         }
         
-        return (PyObject*) tmp;
+        return tmp;
     }        
 
 
     PyObject *cursor_read_complex_double_pair(const coda_Cursor *cursor)
     {
-        int tmp_dims[1] = {2};
+        npy_intp tmp_dims[1] = {2};
         int tmp_result;
-        PyArrayObject *tmp;
+        PyObject *tmp;
     
-        tmp = (PyArrayObject*) PyArray_FromDims(1,tmp_dims,tFloat64);
+        tmp = PyArray_SimpleNew(1,tmp_dims,NPY_FLOAT64);
         if (tmp==NULL)
         {
             return PyErr_NoMemory();
         }
 
-        tmp_result = coda_cursor_read_complex_double_pair(cursor,(double*) tmp->data);
+        tmp_result = coda_cursor_read_complex_double_pair(cursor, (double*)PyArray_DATA(tmp));
     
         if (tmp_result<0)
         {
@@ -3375,16 +3374,16 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             return PyErr_Format(codacError,"coda_cursor_read_complex_double_pair""(): %s", coda_errno_to_string(coda_errno));
         }
         
-        return (PyObject*) tmp;
+        return tmp;
     }        
 
 
     PyObject *cursor_read_complex_double_split_array(const coda_Cursor *cursor)
     {
         int tmp_result, tmp_num_dims;
-        int tmp_dims_int[CODA_MAX_NUM_DIMS];
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
         long tmp_dims_long[CODA_MAX_NUM_DIMS];
-        PyArrayObject *tmp[2];
+        PyObject *tmp[2];
         PyObject *result_list;
         int i;
 
@@ -3407,19 +3406,19 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             tmp_dims_int[tmp_num_dims++] = 1;
         }
 
-        tmp[0] = (PyArrayObject*) PyArray_FromDims(tmp_num_dims,tmp_dims_int,tFloat64);
+        tmp[0] = PyArray_SimpleNew(tmp_num_dims,tmp_dims_int,NPY_FLOAT64);
         if (tmp==NULL)
         {
             return PyErr_NoMemory();
         }
  
-        tmp[1] = (PyArrayObject*) PyArray_FromDims(tmp_num_dims,tmp_dims_int,tFloat64);
+        tmp[1] = PyArray_SimpleNew(tmp_num_dims,tmp_dims_int,NPY_FLOAT64);
         if (tmp==NULL)
         {
             return PyErr_NoMemory();
         }
 
-        tmp_result = coda_cursor_read_complex_double_split_array(cursor,(double*) tmp[0]->data,(double*) tmp[1]->data,
+        tmp_result = coda_cursor_read_complex_double_split_array(cursor,(double*)PyArray_DATA(tmp[0]), (double*)PyArray_DATA(tmp[1]),
                                      coda_array_ordering_c);
     
         if (tmp_result<0)
@@ -3437,8 +3436,8 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             return PyErr_NoMemory();
         }
 
-        PyList_SET_ITEM(result_list,0,(PyObject*) tmp[0]);
-        PyList_SET_ITEM(result_list,1,(PyObject*) tmp[1]);
+        PyList_SET_ITEM(result_list, 0, tmp[0]);
+        PyList_SET_ITEM(result_list, 1, tmp[1]);
         
         return result_list;
     }        
@@ -3447,9 +3446,9 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
     PyObject *cursor_read_complex_double_pairs_array(const coda_Cursor *cursor)
     {
         int tmp_result, tmp_num_dims;
-        int tmp_dims_int[CODA_MAX_NUM_DIMS+1];
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS+1];
         long tmp_dims_long[CODA_MAX_NUM_DIMS+1];
-        PyArrayObject *tmp;
+        PyObject *tmp;
         int i;
 
         tmp_result = coda_cursor_get_array_dim(cursor,&tmp_num_dims,tmp_dims_long);
@@ -3472,13 +3471,13 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
         }
         tmp_dims_int[tmp_num_dims++] = 2;
 
-        tmp = (PyArrayObject*) PyArray_FromDims(tmp_num_dims,tmp_dims_int,tFloat64);
+        tmp = PyArray_SimpleNew(tmp_num_dims,tmp_dims_int,NPY_FLOAT64);
         if (tmp==NULL)
         {
             return PyErr_NoMemory();
         }
 
-        tmp_result = coda_cursor_read_complex_double_pairs_array(cursor,(double*) tmp->data, coda_array_ordering_c);
+        tmp_result = coda_cursor_read_complex_double_pairs_array(cursor, (double*)PyArray_DATA(tmp), coda_array_ordering_c);
     
         if (tmp_result<0)
         {
@@ -3509,9 +3508,9 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
     PyObject *cursor_read_complex_array(const coda_Cursor *cursor)
     {
         int tmp_result, tmp_num_dims;
-        int tmp_dims_int[CODA_MAX_NUM_DIMS];
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
         long tmp_dims_long[CODA_MAX_NUM_DIMS];
-        PyArrayObject *tmp;
+        PyObject *tmp;
         int i;
 
         tmp_result = coda_cursor_get_array_dim(cursor,&tmp_num_dims,tmp_dims_long);
@@ -3533,13 +3532,13 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             tmp_dims_int[tmp_num_dims++] = 1;
         }
 
-        tmp = (PyArrayObject*) PyArray_FromDims(tmp_num_dims,tmp_dims_int,tComplex64);
+        tmp = PyArray_SimpleNew(tmp_num_dims,tmp_dims_int,NPY_COMPLEX64);
         if (tmp==NULL)
         {
             return PyErr_NoMemory();
         }
  
-        tmp_result = coda_cursor_read_complex_double_pairs_array(cursor, (double*) tmp->data, coda_array_ordering_c);
+        tmp_result = coda_cursor_read_complex_double_pairs_array(cursor, (double*)PyArray_DATA(tmp), coda_array_ordering_c);
     
         if (tmp_result<0)
         {
@@ -3547,21 +3546,21 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             return PyErr_Format(codacError,"coda_cursor_read_complex_double_pairs_array""(): %s", coda_errno_to_string(coda_errno));
         }
         
-        return (PyObject*) tmp;
+        return tmp;
     }        
 
 
     PyObject *cursor_read_bits(const coda_Cursor *cursor, int64_t bit_offset, int64_t bit_length)
     {
         int64_t byte_length;
-        int tmp_byte_length;
+        npy_intp tmp_byte_length;
         int tmp_result;
-        PyArrayObject *tmp;
+        PyObject *tmp;
     
         byte_length = (bit_length >> 3) + ((bit_length & 0x7) != 0 ? 1 : 0);
 
         /*
-            throw an exception if byte_length > INT_MAX, because PyArray_FromDims
+            throw an exception if byte_length > INT_MAX, because PyArray_SimpleNew
             does not support larger array sizes.
         */
         if (byte_length > INT_MAX)
@@ -3570,14 +3569,14 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             return NULL;
         }
         
-        tmp_byte_length = (int)byte_length;
-        tmp = (PyArrayObject*)PyArray_FromDims(1, &tmp_byte_length, tUInt8);
+        tmp_byte_length = (npy_intp)byte_length;
+        tmp = PyArray_SimpleNew(1, &tmp_byte_length, NPY_UINT8);
         if (tmp == NULL)
         {
             return PyErr_NoMemory();
         }
     
-        tmp_result = coda_cursor_read_bits(cursor, (uint8_t *)tmp->data, bit_offset, bit_length);
+        tmp_result = coda_cursor_read_bits(cursor, (uint8_t *)PyArray_DATA(tmp), bit_offset, bit_length);
     
         if (tmp_result < 0)
         {
@@ -3585,18 +3584,18 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             return PyErr_Format(codacError, "coda_cursor_read_bits(): %s", coda_errno_to_string(coda_errno));
         }
         
-        return (PyObject*) tmp;
+        return tmp;
     }
 
 
     PyObject *cursor_read_bytes(const coda_Cursor *cursor, int64_t offset, int64_t length)
     {
-        int tmp_length;
+        npy_intp tmp_length;
         int tmp_result;
-        PyArrayObject *tmp;
+        PyObject *tmp;
     
         /*
-            throw an exception if length > INT_MAX, because PyArray_FromDims does not
+            throw an exception if length > INT_MAX, because PyArray_SimpleNew does not
             support larger array sizes.
         */
         if( length > INT_MAX )
@@ -3605,14 +3604,14 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             return NULL;
         }
         
-        tmp_length = (int)length;
-        tmp = (PyArrayObject *)PyArray_FromDims(1, &tmp_length, tUInt8);
+        tmp_length = (npy_intp)length;
+        tmp = PyArray_SimpleNew(1, &tmp_length, NPY_UINT8);
         if (tmp == NULL)
         {
             return PyErr_NoMemory();
         }
     
-        tmp_result = coda_cursor_read_bytes(cursor, (uint8_t *)tmp->data, offset, length);
+        tmp_result = coda_cursor_read_bytes(cursor, (uint8_t *)PyArray_DATA(tmp), offset, length);
     
         if (tmp_result < 0)
         {
@@ -3620,7 +3619,7 @@ SWIGINTERN coda_Cursor *coda_Cursor_struct___deepcopy__(struct coda_Cursor_struc
             return PyErr_Format(codacError, "coda_cursor_read_bytes(): %s", coda_errno_to_string(coda_errno));
         }
         
-        return (PyObject*) tmp;
+        return tmp;
     }
 
 
@@ -9264,8 +9263,7 @@ SWIGEXPORT void SWIG_init(void) {
   
   
   
-  import_libnumeric();
-  import_libnumarray();
+  import_array();
   
   
   codacError = PyErr_NewException("codac.CodacError",NULL,NULL);
@@ -9290,6 +9288,8 @@ SWIGEXPORT void SWIG_init(void) {
   SWIG_Python_SetConstant(d, "coda_format_xml",SWIG_From_int((int)(coda_format_xml)));
   SWIG_Python_SetConstant(d, "coda_format_hdf4",SWIG_From_int((int)(coda_format_hdf4)));
   SWIG_Python_SetConstant(d, "coda_format_hdf5",SWIG_From_int((int)(coda_format_hdf5)));
+  SWIG_Python_SetConstant(d, "coda_format_cdf",SWIG_From_int((int)(coda_format_cdf)));
+  SWIG_Python_SetConstant(d, "coda_format_netcdf",SWIG_From_int((int)(coda_format_netcdf)));
   SWIG_Python_SetConstant(d, "coda_record_class",SWIG_From_int((int)(coda_record_class)));
   SWIG_Python_SetConstant(d, "coda_array_class",SWIG_From_int((int)(coda_array_class)));
   SWIG_Python_SetConstant(d, "coda_integer_class",SWIG_From_int((int)(coda_integer_class)));

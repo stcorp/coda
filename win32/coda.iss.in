@@ -41,7 +41,7 @@ Source: "idl\*.*"; DestDir: "{app}\idl";
 Source: "matlab\*.*"; DestDir: "{app}\matlab";
 Source: "setup.py"; DestDir: "{app}\python";
 Source: "..\python\*.py"; DestDir: "{app}\python\coda";
-Source: "Release\withhdf\_codac.dll"; DestDir: "{app}\python\coda";
+Source: "Release\withhdf\_codac.pyd"; DestDir: "{app}\python\coda";
 Source: "..\doc\*.*"; DestDir: "{app}\doc"; Flags: recursesubdirs
 Source: "Release\withhdf\hd*.dll"; DestDir: "{app}\bin";
 Source: "Release\withhdf\hm*.dll"; DestDir: "{app}\bin";

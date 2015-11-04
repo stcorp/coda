@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -35,7 +35,7 @@ static int verbosity;
 static void print_version()
 {
     printf("codafind %s\n", libcoda_version);
-    printf("Copyright (C) 2007-2008 S&T, The Netherlands\n");
+    printf("Copyright (C) 2007-2009 S&T, The Netherlands\n");
     printf("\n");
 }
 
@@ -67,7 +67,7 @@ static void print_help()
 static void set_definition_path(const char *argv0)
 {
     char *location;
-    
+
     if (coda_path_for_program(argv0, &location) != 0)
     {
         printf("  ERROR: %s\n", coda_errno_to_string(coda_errno));
@@ -78,10 +78,10 @@ static void set_definition_path(const char *argv0)
 #ifdef WIN32
         const char *definition_path = "../definitions";
 #else
-        const char *definition_path = "../share/"PACKAGE"/definitions";
+        const char *definition_path = "../share/" PACKAGE "/definitions";
 #endif
         char *path;
-        
+
         if (coda_path_from_path(location, 1, definition_path, &path) != 0)
         {
             printf("  ERROR: %s\n", coda_errno_to_string(coda_errno));
@@ -95,7 +95,7 @@ static void set_definition_path(const char *argv0)
 
 int callback(const char *filepath, coda_filefilter_status status, const char *error, void *userdata)
 {
-    userdata = userdata; /* prevent unused warnings from the compiler */
+    userdata = userdata;        /* prevent unused warnings from the compiler */
 
     if (status == coda_ffs_error)
     {
@@ -210,7 +210,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "ERROR: %s\n", coda_errno_to_string(coda_errno));
         exit(1);
     }
-    
+
     coda_set_option_perform_conversions(perform_conversions);
 
     if (coda_match_filefilter(filter, argc - i, (const char **)&argv[i], &callback, NULL) != 0)

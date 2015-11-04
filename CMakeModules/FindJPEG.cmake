@@ -25,7 +25,8 @@ if (JPEG_LIBRARY)
 endif (JPEG_LIBRARY)
 
 
-# handle the QUIETLY and REQUIRED arguments and set JPEG_FOUND to TRUE if
-# all listed variables are TRUE
+# handle the QUIETLY and REQUIRED arguments and set JPEG_FOUND to
+# TRUE if all listed variables are TRUE
+#
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(JPEG DEFAULT_MSG JPEG_LIBRARIES JPEG_INCLUDE_DIR)

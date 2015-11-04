@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -37,8 +37,17 @@ void coda_expr_delete(coda_Expr *expr);
 int coda_expr_from_string(const char *exprstring, coda_Expr **expr);
 
 int coda_expr_eval(const coda_Expr *expr, coda_Cursor *cursor);
+
+/* NOTE: If you pass a cursor=NULL the functions below will try to evaluate the expression as a constant expression.
+ * If this succeeds you will get the value and a return value 0. If the expression depends on data from a file you will
+ * not get the value and a return value 1. You will get a return value -1 on error.
+ */
 int coda_expr_eval_bool(const coda_Expr *expr, const coda_Cursor *cursor, int *value);
 int coda_expr_eval_integer(const coda_Expr *expr, const coda_Cursor *cursor, int64_t *value);
+int coda_expr_eval_double(const coda_Expr *expr, const coda_Cursor *cursor, double *value);
+
+/* NOTE: this function will allocate the string value, but the caller should free it */
+int coda_expr_eval_string(const coda_Expr *expr, const coda_Cursor *cursor, long *length, char **value);
 
 int coda_expr_get_result_type(const coda_Expr *expr, coda_native_type *result_type);
 

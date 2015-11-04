@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -352,6 +352,12 @@ static void traverse_data()
                 long num_fields;
                 long index;
 
+                if (traverse_info.current_depth >= CODA_CURSOR_MAXDEPTH - 1)
+                {
+                    /* don't traverse further, since we can't navigate to it with a CODA cursor */
+                    break;
+                }
+
 #ifdef HAVE_HDF4
                 if (run_mode == RUN_MODE_HDF4)
                 {
@@ -415,6 +421,12 @@ static void traverse_data()
             break;
         case coda_array_class:
             {
+                if (traverse_info.current_depth >= CODA_CURSOR_MAXDEPTH - 1)
+                {
+                    /* don't traverse further, since we can't navigate to it with a CODA cursor */
+                    break;
+                }
+
                 dim_enter_array();
 #ifdef HAVE_HDF4
                 if (run_mode == RUN_MODE_HDF4)

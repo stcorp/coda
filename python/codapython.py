@@ -1,5 +1,5 @@
 """
-Copyright (C) 2007-2008 S&T, The Netherlands.
+Copyright (C) 2007-2009 S&T, The Netherlands.
 
 This file is part of CODA.
 
@@ -20,8 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 """
 
 from codac import *
-import numarray
-import numarray.objects
+import numpy
 import copy
 import StringIO
 
@@ -68,19 +67,20 @@ class Record(object):
     the name of the attribute, and its value is read from the product file.
     """
 
-    # dictionary to convert from numarray types to
+    # dictionary to convert from numpy types to
     # a string representation of the corresponding CODA type.
     _typeToString = {
-        numarray.Int8:   "int8",
-        numarray.UInt8:  "uint8",
-        numarray.Int16:  "int16",
-        numarray.UInt16: "uint16",
-        numarray.Int32:  "int32",
-        numarray.UInt32: "uint32",
-        numarray.Int64:  "int64",
-        numarray.Float32: "float",
-        numarray.Float64: "double",
-        numarray.Complex64: "complex" }
+        numpy.int8:   "int8",
+        numpy.uint8:  "uint8",
+        numpy.int16:  "int16",
+        numpy.uint16: "uint16",
+        numpy.int32:  "int32",
+        numpy.uint32: "uint32",
+        numpy.int64:  "int64",
+        numpy.float32: "float",
+        numpy.float64: "double",
+        numpy.complex64: "complex",
+        numpy.object_: "object" }
 
     def __init__(self):
         self._registeredFields = []
@@ -138,21 +138,13 @@ class Record(object):
             if isinstance(data,Record):
                 print >> out, "record (%i fields)" % (len(data),)
 
-            elif isinstance(data,numarray.NumArray):
-                dim = data.getshape()
+            elif isinstance(data,numpy.ndarray):
+                dim = data.shape
                 dimString = ""
                 for d in dim[:-1]:
                     dimString += "%ix" % (d,)
                 dimString += "%i" % (dim[-1],)
-                print >> out, "[%s %s]" % (dimString,self._typeToString[data.type()])
-
-            elif isinstance(data,numarray.objects.ObjectArray):
-                dim = data.getshape()
-                dimString = ""
-                for d in dim[:-1]:
-                    dimString += "%ix" % (d,)
-                dimString += "%i" % (dim[-1],)
-                print >> out, "[%s object]" % (dimString,)
+                print >> out, "[%s %s]" % (dimString,self._typeToString[data.dtype.type])
 
             elif isinstance(data,basestring):
                 print >> out, "\"%s\"" % (data,)
@@ -309,14 +301,13 @@ def _fetch_intermediate_array(cursor,path,pathIndex=0):
     # create an index.
     fetchIndex = [0] * len(fetchShape)
 
-    # flag array and flatArray as uninitialized. the result array is created after traversing
+    # flag array as uninitialized. the result array is created after traversing
     # the path to the first array element. note that we are fetching an intermediate array,
     # which implies that the end of the path has not been reached yet. therefore, the
     # 'basetype' of the intermediate array can only be determined after traversing the path
     # to a (i.e. the first) array element.
     array = None
-    flatArray = None
-
+    
     # currentElementIndex represents an index into the flattened array from which elements
     # will be _read_. however, iteration is performed over the flattened array into which
     # elements will be _stored_. at the beginning of each iteration, (nextElementIndex -
@@ -337,7 +328,9 @@ def _fetch_intermediate_array(cursor,path,pathIndex=0):
         (intermediateNode,copiedPathIndex) = _traverse_path(copiedCursor,path,pathIndex+1)
 
         # create the result array by examining the type of the first element.
+        # This is equivalent to i == 0
         if array is None:
+            assert i == 0 
             # everything is an object until proven a scalar. :-)
             scalar = False
 
@@ -360,37 +353,36 @@ def _fetch_intermediate_array(cursor,path,pathIndex=0):
                 if nodeReadType == coda_native_type_not_available:
                     raise FetchError, "Can not read array, not all elements are available."
                 else:
-                    (scalar,numarrayType) = _numarrayNativeTypeDictionary[nodeReadType]
+                    (scalar,numpyType) = _numpyNativeTypeDictionary[nodeReadType]
 
             elif nodeClass == coda_special_class:
                 nodeSpecialType = type_get_special_type(nodeType)
-                (scalar,numarrayType) = _numarraySpecialTypeDictionary[nodeSpecialType]
+                (scalar,numpyType) = _numpySpecialTypeDictionary[nodeSpecialType]
 
             # for convenience, fetchShape is constructed in reverse order. however,
-            # numarray's array creation functions expect a shape argument in regular
+            # numpy's array creation functions expect a shape argument in regular
             # order.
             tmpShape = copy.copy(fetchShape)
             tmpShape.reverse()
 
             # instantiate the required array class.
             if scalar:
-                array = numarray.array(typecode=numarrayType,shape=tmpShape)
+                array = numpy.empty(dtype=numpyType,shape=tmpShape)
             else:
-                array = numarray.objects.array(None,shape=tmpShape)
+                #element_dtype = numpy.dtype(first_element)
+                array = numpy.empty(dtype=object,shape=tmpShape)
 
-            # get an array descriptor that acts as if the array is
-            # 1D (of rank 1). note that no data is copied.
-            flatArray = array.getflat()
-
-        # when this point is reached, a result array has been allocated.
-        # the required element will now be read and stored.
+        # when this point is reached, a result array has been allocated
+        # and the flatArrayIter is set.
+        # The required element will now be read, the iterator incremented and the
+        # result stored.
         if intermediateNode:
             # an intermediate array was encountered.
-            flatArray[i] = _fetch_intermediate_array(copiedCursor,path,copiedPathIndex)
+            array.flat[i] = _fetch_intermediate_array(copiedCursor,path,copiedPathIndex)
         else:
             # the end of the path was reached. from this point on,
             # the entire subtree is fetched.
-            flatArray[i] = _fetch_subtree(copiedCursor)
+            array.flat[i] = _fetch_subtree(copiedCursor)
 
         # clean up the copied cursor
         del copiedCursor
@@ -423,24 +415,20 @@ def _fetch_object_array(cursor):
     if len(arrayShape) == 0:
         arrayShape.append(1)
 
-    # create an numarray.objects array of required shape
-    array = numarray.objects.array(None,shape=arrayShape)
-
-    # get an array descriptor that acts as if the array was
-    # 1D (of rank 1). note that no data is copied.
-    flatArray = array.getflat()
-
+    # now create the (empty) array of the correct type and shape
+    array = numpy.empty(dtype=object,shape=arrayShape)
+    
+    # goto the first element
     cursor_goto_first_array_element(cursor)
 
-    for i in range(0,flatArray.size()-1):
-        flatArray[i] = _fetch_subtree(cursor)
+    # loop over all elements excluding the last one
+    arraySizeMinOne = array.size - 1
+    for i in xrange(arraySizeMinOne):
+        array.flat[i] = _fetch_subtree(cursor)
         cursor_goto_next_array_element(cursor)
 
-    # fetch the final element outside the loop. this avoids a call to
-    # cursor_goto_next_array_element() after reading the final element, which would
-    # position the cursor outside the array.
-    flatArray[flatArray.size()-1] = _fetch_subtree(cursor)
-
+    # final element then back tp parent scope
+    array.flat[arraySizeMinOne] = _fetch_subtree(cursor)
     cursor_goto_parent(cursor)
 
     return array
@@ -508,9 +496,9 @@ def _fetch_subtree(cursor):
 
         if ((arrayBaseClass == coda_array_class)
             or (arrayBaseClass == coda_record_class)):
-                # an array of arrays nor an array of records can be read directly.
+                # neither an array of arrays nor an array of records can be read directly.
                 # therefore, the elements of the array are read one at a time and stored
-                # in a numarray.objects array.
+                # in a numpy array.
                 return _fetch_object_array(cursor)
 
         elif ((arrayBaseClass == coda_integer_class)
@@ -536,7 +524,7 @@ def _fetch_subtree(cursor):
                 if len(arrayShape) == 0:
                     arrayShape.append(1)
 
-                return numarray.objects.array(None,shape=arrayShape)
+                return numpy.empty(None,shape=arrayShape)
             else:
                 return _readSpecialTypeArrayFunctionDictionary[arrayBaseSpecialType](cursor)
 
@@ -632,7 +620,7 @@ def get_description(start, *path):
     Retrieve the description of a field.
 
     This function returns a string containing the description in the
-    data dictionary of the specified data item. 
+    product format definition of the specified data item. 
 
     The start argument must be a valid CODA file handle that was
     retrieved with coda.open() _or_ a valid CODA cursor. If the start
@@ -885,7 +873,7 @@ def get_unit(start, *path):
     Retrieve unit information.
 
     This function returns a string containing the unit information
-    which is stored in the data dictionary for the specified data
+    which is stored in the product format definition for the specified data
     item.
 
     The start argument must be a valid CODA file handle that was
@@ -964,19 +952,19 @@ _readSpecialTypeArrayFunctionDictionary = {
 
 # dictionary used as a 'typemap'. a tuple is returned, of which the first element is a
 # boolean that indicates if the type is considered to be scalar. if so, the second
-# element gives the numarray type that matches the specified CODA type. otherwise the second
+# element gives the numpy type that matches the specified CODA type. otherwise the second
 # element is None.
-_numarrayNativeTypeDictionary = {
-    coda_native_type_int8:   (True,numarray.Int8),
-    coda_native_type_uint8:  (True,numarray.UInt8),
-    coda_native_type_int16:  (True,numarray.Int16),
-    coda_native_type_uint16: (True,numarray.UInt16),
-    coda_native_type_int32:  (True,numarray.Int32),
-    coda_native_type_uint32: (True,numarray.UInt32),
-    coda_native_type_int64:  (True,numarray.Int64),
-    coda_native_type_uint64: (True,numarray.UInt64),
-    coda_native_type_float:  (True,numarray.Float32),
-    coda_native_type_double: (True,numarray.Float64),
+_numpyNativeTypeDictionary = {
+    coda_native_type_int8:   (True,numpy.int8),
+    coda_native_type_uint8:  (True,numpy.uint8),
+    coda_native_type_int16:  (True,numpy.int16),
+    coda_native_type_uint16: (True,numpy.uint16),
+    coda_native_type_int32:  (True,numpy.int32),
+    coda_native_type_uint32: (True,numpy.uint32),
+    coda_native_type_int64:  (True,numpy.int64),
+    coda_native_type_uint64: (True,numpy.uint64),
+    coda_native_type_float:  (True,numpy.float32),
+    coda_native_type_double: (True,numpy.float64),
     coda_native_type_char:   (False,None),
     coda_native_type_string: (False,None),
     coda_native_type_bytes:  (False,None) }
@@ -984,13 +972,13 @@ _numarrayNativeTypeDictionary = {
 
 # dictionary used as a 'typemap'. a tuple is returned, of which the first element is a
 # boolean that indicates if the type is considered to be scalar. if so, the second
-# element gives the numarray type that matches the specified CODA type. otherwise the second
+# element gives the numpy type that matches the specified CODA type. otherwise the second
 # element is None.
-_numarraySpecialTypeDictionary = {
+_numpySpecialTypeDictionary = {
     coda_special_no_data:     (False,None),
-    coda_special_vsf_integer: (True,numarray.Float64),
-    coda_special_time:        (True,numarray.Float64),
-    coda_special_complex:     (True,numarray.Complex64) }
+    coda_special_vsf_integer: (True,numpy.float64),
+    coda_special_time:        (True,numpy.float64),
+    coda_special_complex:     (True,numpy.complex64) }
 
 #
 # MODULE OPTIONS

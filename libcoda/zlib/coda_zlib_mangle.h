@@ -13,8 +13,10 @@
 #define adler32 coda_adler32
 #define adler32_combine coda_adler32_combine
 #define crc32 coda_crc32
+#define crc32_combine coda_crc32_combine
 #define get_crc_table coda_get_crc_table
 #define inflate coda_inflate
+#define inflate_copyright coda_inflate_copyright
 #define inflate_fast coda_inflate_fast
 #define inflate_table coda_inflate_table
 #define inflateCopy coda_inflateCopy

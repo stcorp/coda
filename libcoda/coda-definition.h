@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -155,6 +155,8 @@ coda_ProductType *coda_product_type_new(const char *name);
 int coda_product_type_set_description(coda_ProductType *product_type, const char *description);
 int coda_product_type_add_product_definition(coda_ProductType *product_type,
                                              coda_ProductDefinition *product_definition);
+coda_ProductDefinition *coda_product_type_get_product_definition_by_version(coda_ProductType *product_type,
+                                                                            int version);
 void coda_product_type_delete(coda_ProductType *product_type);
 
 coda_ProductClass *coda_product_class_new(const char *name);
@@ -165,6 +167,8 @@ int coda_product_class_add_named_type(coda_ProductClass *product_class, coda_Typ
 int coda_product_class_add_product_type(coda_ProductClass *product_class, coda_ProductType *product_type);
 coda_Type *coda_product_class_get_named_type(const coda_ProductClass *product_class, const char *name);
 int coda_product_class_has_named_type(const coda_ProductClass *product_class, const char *name);
+coda_ProductType *coda_product_class_get_product_type(const coda_ProductClass *product_class, const char *name);
+int coda_product_class_has_product_type(const coda_ProductClass *product_class, const char *name);
 int coda_product_class_get_revision(const coda_ProductClass *product_class);
 void coda_product_class_delete(coda_ProductClass *product_class);
 

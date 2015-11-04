@@ -8,8 +8,6 @@
 #
 # This script:
 # + Changes #define lines to #cmakedefine lines
-# + Performs custom #define substitutions on some lines (this may be refactored
-#   down to the CMake level itself in the future.
 # + Is a modified version of the CLS perl code for cmakeifying brathll.
 #
 
@@ -17,30 +15,12 @@ use strict;
 use warnings;
 use File::Basename;
 
-my %ConfVars	= (
-    PACKAGE             => "\"coda\"",
-	PACKAGE_NAME		=> "\"CODA\"",
-	PACKAGE_VERSION		=> "\"1.0\"",
-	PACKAGE_STRING		=> "\"CODA 1.0\"",
-	PACKAGE_TARNAME		=> "\"coda\"",
-	PACKAGE_BUGREPORT	=> "\"\"",
-    CODA_VERSION     => "\"1.0\"",
-    VERSION             => "\"1.0\""
-	);
-
-
 sub CopyFile($$)
 {
     local $_;
     my ($Source, $Dest)	= @_;
     my $Model;
 
-    if ($Source !~ m/\.(in|c|h)$/)
-    {# Source file is not a model
-        print "-- Copying $Source to $Dest\n";
-        copy $Source, $Dest or die "Problem copying file: $!\n";
-        return;
-    }
     $Model	= substr($Source, -3, 3) eq '.in';
 
     print "-- Expanding $Source into $Dest\n";
@@ -56,24 +36,69 @@ sub CopyFile($$)
     {
         if ($Model)
         {
-            if ($SourceBase eq "Doxyfile.in")
-            {
-                s/(OUTPUT_DIRECTORY\s*=).*/$1 \@CODA_DOC_DIRECTORY\@/ig and next SOURCE_LINE;
-                s/(HTML_OUTPUT\s*=).*/$1 bratll-html\/libbrat/ig and next SOURCE_LINE;
-                s/(LATEX_OUTPUT\s*=).*/$1 bratll-latex\/libbrat/ig and next SOURCE_LINE;
-                s/\@VERSION\@/\@CODA_VERSION\@/ig;
-                s/\@top_builddir\@/\@CODA_SOURCE_DIR\@\/libbrat/ig;
-                s/\@top_srcdir\@/\@CODA_SOURCE_DIR\@/ig;
-                s/\@srcdir\@/\@CMAKE_CURRENT_SOURCE_DIR\@/ig;
-                next SOURCE_LINE;
-            }
-
             if (($SourceBase eq "config.h.in") &&
                 m@#endif /\* !defined\(CODA_CONFIG_H\) \*/@)
             {
                 $_ = <<'EOF' . $_;
 #ifdef WIN32
-#include "../win32/config.h"
+/* include windows specific headers */
+#include <windows.h>
+#include <io.h>
+#include <direct.h>
+
+/* include sys/stat.h because we are going to override stat */
+#include <sys/stat.h>
+
+/* we need to redefine ELEMENT_TYPE because it conflicts with io.h contents */
+#define ELEMENT_TYPE ELEMENT_TYPE_RENAMED
+#define XML_NS 1
+#define XML_DTD 1
+#define XML_LARGE_SIZE 1
+#define XML_CONTEXT_BYTES 1024
+#define XML_BUILDING_EXPAT 1
+
+/* redefines for special string handling functions */
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
+#define snprintf _snprintf
+#define vsnprintf _vsnprintf
+
+/* redefines for file handling functions */
+#define open(arg1,arg2) _open(arg1,arg2)
+#define close(arg1) _close(arg1)
+#define read(arg1,arg2,arg3) _read(arg1,arg2,arg3)
+#define lseek(arg1,arg2,arg3) _lseeki64(arg1,arg2,arg3)
+#define off_t __int64
+#define stat _stati64
+#define S_IFREG _S_IFREG
+
+#define YYMALLOC malloc
+#define YYFREE free
+
+/* coda-idl defines */
+
+#ifdef IDL_V5_3
+#define HAVE_IDL_SYSFUN_DEF2 1
+#endif
+
+#ifdef IDL_V5_4
+#define HAVE_IDL_SYSFUN_DEF2 1
+#define HAVE_IDL_SYSRTN_UNION 1
+#endif
+
+/* coda-matlab defines */
+
+#if defined(MATLAB_R11) || defined(MATLAB_R12)
+#define mxCreateDoubleScalar replacement_mxCreateDoubleScalar
+#else
+#define HAVE_MXCREATEDOUBLESCALAR 1
+#endif
+
+#ifdef MATLAB_R11
+#define mxCreateNumericMatrix replacement_mxCreateNumericMatrix
+#else
+#define HAVE_MXCREATENUMERICMATRIX 1
+#endif
 #endif
 
 EOF
@@ -83,23 +108,11 @@ EOF
 
             if (m/^(\s*)(#undef)\s+(\w+)/)
             {
-                if (exists $ConfVars{$3})
-                {
-                    $_	= "$1#define $3 ".$ConfVars{$3}.$';
-                }
-                else
-                {
-                    $_	= "$1#cmakedefine $3 ".'$'."{$3}$'";
-                }
+                $_	= "$1#cmakedefine $3 ".'$'."{$3}$'";
+
                 # Move comment of end of line to preceding line
                 s/^(.*)(\/\*.*\*\/)/$2\n$1$'/;
-#                if (m/(uchar|ssize_t|ptrdiff_t|off_t|size_t)/)
-#                {
-#                    $_	= "#cmakedefine HAVE_".uc($1).' ${HAVE_'.uc($1)."}\n".
-#                    "#if !defined(HAVE_".uc($1).")\n".
-#                    "#define $1 @".uc($1)."@\n".
-#                    "#endif\n";
-#                }
+                
                 if (m/define.*HAVE_ALLOCA_H/)
                 {
                     $_	.= <<'EOF'

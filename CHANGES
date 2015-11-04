@@ -1,3 +1,34 @@
+1.2.0 2009-02-20
+~~~~~~~~~~~~~~~~
+
+* The Python interface of CODA now uses numpy instead of numarray.
+
+* The codadd command line tool now has a 'list' mode to inspect available
+  format definitions.
+
+* Fixed support for HDF5 datasets containing variable length strings.
+
+* Added support for coda_format_netcdf and coda_format_cdf as official formats.
+  CODA will however (still) use the HDF4 backend to read data from these files.
+  Note that coda_format_netcdf only referes to pre-4.0 NetCDF formatted files.
+  NetCDF 4.0 files are in HDF5 format and will thus have coda_format_hdf5.
+
+* Fixed issue with reading of rank-0 SDS data from HDF4 and NetCDF files.
+
+* Fixed issue where all fieldnames in HDF4 files got called 'unnamed' and where
+  reading of VData data failed.
+
+* Changed maximum cursor depth (CODA_CURSOR_MAXDEPTH) from 16 to 32.
+
+* Added ceil(), floor(), round(), isnan(), isinf(), ismininf(), isplusinf(),
+  ltrim(), rtrim(), trim(), and unboundindex() functions and bitwise
+  AND '&' and OR '|' operators to CODA expressions.
+
+* CODA expressions now accept floating point constants in FORTRAN format
+  (using a 'D' for specifying the exponent: e.g. .133000D+03)
+
+* Various improvements to reading of .codadef files.
+
 1.1.1 2008-10-21
 ~~~~~~~~~~~~~~~~
 
@@ -16,9 +47,9 @@
   in a floating point expression (e.g. compare integer against float, or add
   float to integer) without the need to explicitly cast the integer to a float.
 
-* Added abs() function to CODA expressions
+* Added abs() function to CODA expressions.
 
-* Upgraded to expat 2.0.1
+* Upgraded to expat 2.0.1.
 
 * Files with an ASCII definition are now properly marked as files with an ASCII
   format.

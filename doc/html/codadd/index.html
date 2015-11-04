@@ -18,17 +18,41 @@
     
       <h2 id="general">General description</h2>
       
-      <p>The codadd tool is a support tool for the CODA Product Format Definition (.codadef) files. It is able to verify the .codadef contents and allows generation of HTML documentation for the product format definitions.</p>
+      <p>The codadd tool is a support tool for the CODA Product Format Definition (.codadef) files. It is able to verify and inspect the .codadef contents and it allows generation of HTML documentation for the product format definitions.</p>
 
 
 <pre>
     codadd
-        Read all .codadef Product Format Specifications in the CODA definition
-        search path and report any problems that may occur in these files.
+        Try to read all product definitions and report any problems
 
-    codadd doc &lt;location&gt;
-        Generate HTML documentation for the .codadef Product Format
-        Specifications in the CODA definition search path.
+    codadd [-D definitionpath] doc &lt;directory&gt;
+        Generate HTML product format documentation in the specified directory
+
+    codadd [-D definitionpath] list [&lt;list options&gt;]
+                               [&lt;product class&gt; [&lt;product type&gt; [&lt;version&gt;]]]
+        Gives an overview of available product definitions
+        When all of product class, product type, and format version are provided
+        an overview of the product content for the specified product definition
+        is given
+        List options:
+            -e, --expr
+                    show expressions for dynamic array sizes
+            -q, --quote_strings
+                    put "" around string data and '' around character data
+            -s, --column_separator '&lt;separator string&gt;'
+                    use the given string as column separator (default: ' ')
+            -t, --type
+                    show basic data type
+            -u, --unit
+                    show unit information
+            --description
+                    show description information
+            --hidden
+                    show record fields with 'hidden' property
+            --no_special_types
+                    bypass special data types from the CODA format definition -
+                    data with a special type is treated using its non-special
+                    base type
 
     codadd -h, --help
         Show help (this text)
@@ -39,7 +63,7 @@
 
       <div class="footer">
         <hr />
-        <p>Copyright &copy; 2007-2008 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+        <p>Copyright &copy; 2007-2009 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
       </div>
 
     </div>

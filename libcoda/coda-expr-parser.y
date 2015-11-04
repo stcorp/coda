@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -102,9 +102,10 @@ static void coda_expr_error(const char *error)
 %token    <stringval> FLOAT_VALUE
 %token    <stringval> STRING_VALUE
 %token    <stringval> NAME
-%left                 AND OR
+%left                 LOGICAL_AND LOGICAL_OR
 %nonassoc             NOT
 %left                 GREATER_EQUAL LESS_EQUAL EQUAL NOT_EQUAL '>' '<'
+%left                 AND OR
 %left                 '+' '-'
 %left                 '*' '/' '%'
 %nonassoc             '^'
@@ -130,24 +131,35 @@ static void coda_expr_error(const char *error)
 %token                FUNC_BYTES
 %token                FUNC_BYTEOFFSET
 %token                FUNC_BYTESIZE
+%token                FUNC_CEIL
 %token                FUNC_COUNT
 %token                FUNC_EXISTS
 %token                FUNC_FILENAME
 %token                FUNC_FILESIZE
 %token                FUNC_FLOAT
+%token                FUNC_FLOOR
 %token                FUNC_GOTO
 %token                FUNC_IF
 %token                FUNC_INDEX
 %token                FUNC_INT
+%token                FUNC_ISNAN
+%token                FUNC_ISINF
+%token                FUNC_ISPLUSINF
+%token                FUNC_ISMININF
 %token                FUNC_LENGTH
+%token                FUNC_LTRIM
 %token                FUNC_NUMELEMENTS
 %token                FUNC_MAX
 %token                FUNC_MIN
 %token                FUNC_PRODUCTCLASS
 %token                FUNC_PRODUCTTYPE
 %token                FUNC_PRODUCTVERSION
+%token                FUNC_ROUND
+%token                FUNC_RTRIM
 %token                FUNC_STR
 %token                FUNC_SUBSTR
+%token                FUNC_TRIM
+%token                FUNC_UNBOUNDINDEX
 
 %type     <expr>      node
 %type     <expr>      rootnode
@@ -173,6 +185,7 @@ input:
     | boolexpr { parsed_expression = $1; }
     | intexpr { parsed_expression = $1; }
     | floatexpr { parsed_expression = $1; }
+    | stringexpr { parsed_expression = $1; }
 
 identifier:
       ASCIILINE { $$ = "asciiline"; }
@@ -193,24 +206,35 @@ identifier:
     | FUNC_BYTES { $$ = "bytes"; }
     | FUNC_BYTEOFFSET { $$ = "byteoffset"; }
     | FUNC_BYTESIZE { $$ = "bytesize"; }
+    | FUNC_CEIL { $$ = "ceil"; }
     | FUNC_COUNT { $$ = "count"; }
     | FUNC_EXISTS { $$ = "exists"; }
     | FUNC_FILENAME { $$ = "filename"; }
     | FUNC_FILESIZE { $$ = "filesize"; }
     | FUNC_FLOAT { $$ = "float"; }
+    | FUNC_FLOOR { $$ = "floor"; }
     | FUNC_GOTO { $$ = "goto"; }
     | FUNC_IF { $$ = "if"; }
     | FUNC_INDEX { $$ = "index"; }
     | FUNC_INT { $$ = "int"; }
+    | FUNC_ISNAN { $$ = "isnan"; }
+    | FUNC_ISINF { $$ = "isinf"; }
+    | FUNC_ISPLUSINF { $$ = "isplusinf"; }
+    | FUNC_ISMININF { $$ = "ismininf"; }
     | FUNC_LENGTH { $$ = "length"; }
+    | FUNC_LTRIM { $$ = "ltrim"; }
     | FUNC_NUMELEMENTS { $$ = "numelements"; }
     | FUNC_MAX { $$ = "max"; }
     | FUNC_MIN { $$ = "min"; }
     | FUNC_PRODUCTCLASS { $$ = "productclass"; }
     | FUNC_PRODUCTTYPE { $$ = "producttype"; }
     | FUNC_PRODUCTVERSION { $$ = "productversion"; }
+    | FUNC_ROUND { $$ = "round"; }
+    | FUNC_RTRIM { $$ = "rtrim"; }
     | FUNC_STR { $$ = "str"; }
     | FUNC_SUBSTR { $$ = "substr"; }
+    | FUNC_TRIM { $$ = "trim"; }
+    | FUNC_UNBOUNDINDEX { $$ = "unboundindex"; }
     ;
 
 voidexpr:
@@ -257,12 +281,12 @@ boolexpr:
             $$ = coda_expr_new(expr_constant_boolean, strdup("false"), NULL, NULL, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
-    | boolexpr AND boolexpr {
-            $$ = coda_expr_new(expr_and, NULL, $1, $3, NULL, NULL);
+    | boolexpr LOGICAL_AND boolexpr {
+            $$ = coda_expr_new(expr_logical_and, NULL, $1, $3, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
-    | boolexpr OR boolexpr {
-            $$ = coda_expr_new(expr_or, NULL, $1, $3, NULL, NULL);
+    | boolexpr LOGICAL_OR boolexpr {
+            $$ = coda_expr_new(expr_logical_or, NULL, $1, $3, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
     | NOT boolexpr {
@@ -390,6 +414,22 @@ boolexpr:
             if ($$ == NULL) YYERROR;
         }
     | '(' boolexpr ')' { $$ = $2; }
+    | FUNC_ISNAN '(' floatexpr ')' {
+            $$ = coda_expr_new(expr_isnan, NULL, $3, NULL, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_ISINF '(' floatexpr ')' {
+            $$ = coda_expr_new(expr_isinf, NULL, $3, NULL, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_ISPLUSINF '(' floatexpr ')' {
+            $$ = coda_expr_new(expr_isplusinf, NULL, $3, NULL, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_ISMININF '(' floatexpr ')' {
+            $$ = coda_expr_new(expr_ismininf, NULL, $3, NULL, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
     | FUNC_EXISTS '(' node ')' {
             $$ = coda_expr_new(expr_exists, NULL, $3, NULL, NULL, NULL);
             if ($$ == NULL) YYERROR;
@@ -474,6 +514,14 @@ intexpr:
             $$ = coda_expr_new(expr_power, NULL, $1, $3, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
+    | intexpr LOGICAL_AND intexpr {
+            $$ = coda_expr_new(expr_and, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | intexpr LOGICAL_OR intexpr {
+            $$ = coda_expr_new(expr_or, NULL, $1, $3, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
     | '(' intexpr ')' { $$ = $2; }
     | FUNC_ABS '(' intexpr ')' {
             $$ = coda_expr_new(expr_abs, NULL, $3, NULL, NULL, NULL);
@@ -545,6 +593,10 @@ intexpr:
         }
     | FUNC_IF '(' boolexpr ',' intexpr ',' intexpr ')' {
             $$ = coda_expr_new(expr_if, NULL, $3, $5, $7, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_UNBOUNDINDEX '(' node ',' boolexpr ')' {
+            $$ = coda_expr_new(expr_unbound_array_index, NULL, $3, $5, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
     ;
@@ -652,6 +704,22 @@ floatexpr:
             if ($$ == NULL) YYERROR;
         }
     | '(' floatexpr ')' { $$ = $2; }
+    | FUNC_ABS '(' floatexpr ')' {
+            $$ = coda_expr_new(expr_abs, NULL, $3, NULL, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_CEIL '(' floatexpr ')' {
+            $$ = coda_expr_new(expr_ceil, NULL, $3, NULL, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_FLOOR '(' floatexpr ')' {
+            $$ = coda_expr_new(expr_floor, NULL, $3, NULL, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_ROUND '(' floatexpr ')' {
+            $$ = coda_expr_new(expr_round, NULL, $3, NULL, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
     | FUNC_MAX '(' floatexpr ',' floatexpr ')' {
             $$ = coda_expr_new(expr_max, NULL, $3, $5, NULL, NULL);
             if ($$ == NULL) YYERROR;
@@ -721,6 +789,18 @@ stringexpr:
         }
     | FUNC_SUBSTR '(' intexpr ',' intexpr ',' stringexpr ')' {
             $$ = coda_expr_new(expr_substr, NULL, $3, $5, $7, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_LTRIM '(' stringexpr ')' {
+            $$ = coda_expr_new(expr_ltrim, NULL, $3, NULL, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_RTRIM '(' stringexpr ')' {
+            $$ = coda_expr_new(expr_rtrim, NULL, $3, NULL, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_TRIM '(' stringexpr ')' {
+            $$ = coda_expr_new(expr_trim, NULL, $3, NULL, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
     | FUNC_ADD '(' node ',' stringexpr ')' {

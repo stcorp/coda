@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -28,6 +28,11 @@
 #include <string.h>
 
 #include "coda-ascii.h"
+
+static int iswhitespace(char a)
+{
+    return (a == ' ' || a == '\t' || a == '\n' || a == '\r');
+}
 
 /* Gives a ^ b where both a and b are integers */
 static int64_t ipow(int64_t a, int64_t b)
@@ -321,24 +326,32 @@ coda_Expr *coda_expr_new(coda_exprType tag, char *string_value, coda_Expr *op1, 
 
     switch (tag)
     {
-        case expr_and:
         case expr_array_all:
         case expr_array_exists:
         case expr_equal:
         case expr_exists:
         case expr_greater_equal:
         case expr_greater:
+        case expr_isinf:
+        case expr_ismininf:
+        case expr_isnan:
+        case expr_isplusinf:
         case expr_less_equal:
         case expr_less:
+        case expr_logical_and:
+        case expr_logical_or:
         case expr_not_equal:
         case expr_not:
-        case expr_or:
         case expr_variable_exists:
             expr->result_type = expr_result_boolean;
             break;
+        case expr_ceil:
         case expr_float:
+        case expr_floor:
+        case expr_round:
             expr->result_type = expr_result_double;
             break;
+        case expr_and:
         case expr_array_count:
         case expr_array_index:
         case expr_bit_offset:
@@ -351,17 +364,22 @@ coda_Expr *coda_expr_new(coda_exprType tag, char *string_value, coda_Expr *op1, 
         case expr_integer:
         case expr_length:
         case expr_num_elements:
+        case expr_or:
         case expr_product_version:
+        case expr_unbound_array_index:
         case expr_variable_index:
         case expr_variable_value:
             expr->result_type = expr_result_integer;
             break;
         case expr_bytes:
         case expr_filename:
+        case expr_ltrim:
         case expr_product_class:
         case expr_product_type:
+        case expr_rtrim:
         case expr_string:
         case expr_substr:
+        case expr_trim:
             expr->result_type = expr_result_string;
             break;
         case expr_for:
@@ -884,7 +902,7 @@ static int eval_boolean(eval_info *info, const coda_Expr *expr, int *value)
             }
             *value = !(*value);
             break;
-        case expr_and:
+        case expr_logical_and:
             if (eval_boolean(info, opexpr->operand[0], value) != 0)
             {
                 return -1;
@@ -898,7 +916,7 @@ static int eval_boolean(eval_info *info, const coda_Expr *expr, int *value)
                 return -1;
             }
             break;
-        case expr_or:
+        case expr_logical_or:
             if (eval_boolean(info, opexpr->operand[0], value) != 0)
             {
                 return -1;
@@ -910,6 +928,50 @@ static int eval_boolean(eval_info *info, const coda_Expr *expr, int *value)
             if (eval_boolean(info, opexpr->operand[1], value) != 0)
             {
                 return -1;
+            }
+            break;
+        case expr_isnan:
+            {
+                double a;
+
+                if (eval_double(info, opexpr->operand[0], &a) != 0)
+                {
+                    return -1;
+                }
+                *value = coda_isNaN(a);
+            }
+            break;
+        case expr_isinf:
+            {
+                double a;
+
+                if (eval_double(info, opexpr->operand[0], &a) != 0)
+                {
+                    return -1;
+                }
+                *value = coda_isInf(a);
+            }
+            break;
+        case expr_isplusinf:
+            {
+                double a;
+
+                if (eval_double(info, opexpr->operand[0], &a) != 0)
+                {
+                    return -1;
+                }
+                *value = coda_isPlusInf(a);
+            }
+            break;
+        case expr_ismininf:
+            {
+                double a;
+
+                if (eval_double(info, opexpr->operand[0], &a) != 0)
+                {
+                    return -1;
+                }
+                *value = coda_isMinInf(a);
             }
             break;
         case expr_exists:
@@ -1171,6 +1233,34 @@ static int eval_double(eval_info *info, const coda_Expr *expr, double *value)
                 return -1;
             }
             *value = ((*value) >= 0 ? *value : -(*value));
+            break;
+        case expr_ceil:
+            if (eval_double(info, opexpr->operand[0], value) != 0)
+            {
+                return -1;
+            }
+            *value = ceil(*value);
+            break;
+        case expr_floor:
+            if (eval_double(info, opexpr->operand[0], value) != 0)
+            {
+                return -1;
+            }
+            *value = floor(*value);
+            break;
+        case expr_round:
+            if (eval_double(info, opexpr->operand[0], value) != 0)
+            {
+                return -1;
+            }
+            if (*value < 0)
+            {
+                *value = floor(*value - 0.5);
+            }
+            else
+            {
+                *value = floor(*value + 0.5);
+            }
             break;
         case expr_add:
             {
@@ -1581,6 +1671,36 @@ static int eval_integer(eval_info *info, const coda_Expr *expr, int64_t *value)
                 *value = ipow(a, b);
             }
             break;
+        case expr_and:
+            {
+                int64_t a, b;
+
+                if (eval_integer(info, opexpr->operand[0], &a) != 0)
+                {
+                    return -1;
+                }
+                if (eval_integer(info, opexpr->operand[1], &b) != 0)
+                {
+                    return -1;
+                }
+                *value = a & b;
+            }
+            break;
+        case expr_or:
+            {
+                int64_t a, b;
+
+                if (eval_integer(info, opexpr->operand[0], &a) != 0)
+                {
+                    return -1;
+                }
+                if (eval_integer(info, opexpr->operand[1], &b) != 0)
+                {
+                    return -1;
+                }
+                *value = a | b;
+            }
+            break;
         case expr_max:
             {
                 int64_t a, b;
@@ -1788,6 +1908,51 @@ static int eval_integer(eval_info *info, const coda_Expr *expr, int64_t *value)
                     }
                 }
                 *value = -1;
+                info->cursor = prev_cursor;
+            }
+            break;
+        case expr_unbound_array_index:
+            {
+                coda_Cursor prev_cursor;
+                int prev_option;
+                int condition = 0;
+
+                if (info->orig_cursor == NULL)
+                {
+                    info->not_constant = 1;
+                    return -1;
+                }
+                prev_cursor = info->cursor;
+                if (eval_cursor(info, opexpr->operand[0]) != 0)
+                {
+                    return -1;
+                }
+                prev_option = coda_option_perform_boundary_checks;
+                coda_option_perform_boundary_checks = 0;
+                if (coda_cursor_goto_first_array_element(&info->cursor) != 0)
+                {
+                    coda_option_perform_boundary_checks = prev_option;
+                    return -1;
+                }
+                *value = 0;
+                while (!condition)
+                {
+                    if (eval_boolean(info, opexpr->operand[1], &condition) != 0)
+                    {
+                        coda_option_perform_boundary_checks = prev_option;
+                        return -1;
+                    }
+                    if (!condition)
+                    {
+                        (*value)++;
+                        if (coda_cursor_goto_next_array_element(&info->cursor) != 0)
+                        {
+                            coda_option_perform_boundary_checks = prev_option;
+                            return -1;
+                        }
+                    }
+                }
+                coda_option_perform_boundary_checks = prev_option;
                 info->cursor = prev_cursor;
             }
             break;
@@ -2297,6 +2462,48 @@ static int eval_string(eval_info *info, const coda_Expr *expr, long *offset, lon
                 if (new_length < *length)
                 {
                     *length = (long)new_length;
+                }
+            }
+            break;
+        case expr_ltrim:
+            {
+                if (eval_string(info, opexpr->operand[0], offset, length, value) != 0)
+                {
+                    return -1;
+                }
+                while (*length > 0 && iswhitespace((*value)[*offset]))
+                {
+                    (*length)--;
+                    (*offset)++;
+                }
+            }
+            break;
+        case expr_rtrim:
+            {
+                if (eval_string(info, opexpr->operand[0], offset, length, value) != 0)
+                {
+                    return -1;
+                }
+                while (*length > 0 && iswhitespace((*value)[*offset + *length - 1]))
+                {
+                    (*length)--;
+                }
+            }
+            break;
+        case expr_trim:
+            {
+                if (eval_string(info, opexpr->operand[0], offset, length, value) != 0)
+                {
+                    return -1;
+                }
+                while (*length > 0 && iswhitespace((*value)[*offset]))
+                {
+                    (*length)--;
+                    (*offset)++;
+                }
+                while (*length > 0 && iswhitespace((*value)[*offset + *length - 1]))
+                {
+                    (*length)--;
                 }
             }
             break;
@@ -2827,6 +3034,86 @@ int coda_expr_eval_integer(const coda_Expr *expr, const coda_Cursor *cursor, int
         return 1;
     }
     return result;
+}
+
+int coda_expr_eval_double(const coda_Expr *expr, const coda_Cursor *cursor, double *value)
+{
+    eval_info info;
+    int result;
+
+    if (expr->result_type != expr_result_double)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "expression is not a 'double' expression");
+        return -1;
+    }
+
+    info.orig_cursor = cursor;
+    if (cursor != NULL)
+    {
+        info.cursor = *cursor;
+    }
+    info.for_index = 0;
+    info.variable_index = 0;
+    info.variable_name = NULL;
+    info.not_constant = 0;
+
+    result = eval_double(&info, expr, value);
+    if (result != 0 && cursor == NULL && info.not_constant)
+    {
+        return 1;
+    }
+    return result;
+}
+
+int coda_expr_eval_string(const coda_Expr *expr, const coda_Cursor *cursor, long *length, char **value)
+{
+    eval_info info;
+    long offset;
+    int result;
+
+    if (expr->result_type != expr_result_string)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "expression is not a 'string' expression");
+        return -1;
+    }
+
+    info.orig_cursor = cursor;
+    if (cursor != NULL)
+    {
+        info.cursor = *cursor;
+    }
+    info.for_index = 0;
+    info.variable_index = 0;
+    info.variable_name = NULL;
+    info.not_constant = 0;
+
+    result = eval_string(&info, expr, &offset, length, value);
+    if (result != 0)
+    {
+        if (cursor == NULL && info.not_constant)
+        {
+            return 1;
+        }
+        return result;
+    }
+
+    if (offset != 0)
+    {
+        char *truncated_value;
+
+        truncated_value = malloc(*length + 1);
+        if (truncated_value == NULL)
+        {
+            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %ld bytes) (%s:%u)",
+                           *length, __FILE__, __LINE__);
+            return -1;
+        }
+        memcpy(truncated_value, &(*value)[offset], *length);
+        free(*value);
+        *value = truncated_value;
+    }
+
+    return 0;
 }
 
 

@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2007-2008 S&T, The Netherlands.
+// Copyright (C) 2007-2009 S&T, The Netherlands.
 //
 // This file is part of CODA.
 //
@@ -20,8 +20,8 @@
 
 /*
     pass returned PyObject pointers back straight to Python. this is
-    used by several numarray related helper functions. (see for instance:
-    NUMARRAY_OUTPUT_HELPER).
+    used by several numpy related helper functions. (see for instance:
+    NUMPY_OUTPUT_HELPER).
 */
 %typemap(out) PyObject *HELPER_FUNCTION_RETURN_VALUE
 {
@@ -321,22 +321,22 @@
 
 /*
 ----------------------------------------------------------------------------------------
-- HELPER FUNCTIONS THAT ALLOW READ FUNCTIONS TO RETURN NUMARRAY OBJECTS                -
+- HELPER FUNCTIONS THAT ALLOW READ FUNCTIONS TO RETURN NUMPY OBJECTS                -
 ----------------------------------------------------------------------------------------
 */
 /*
     'generic' helper function to read C arrays of a specific type
-    (e.g. int8) into a numarray object of equivalent type.
+    (e.g. int8) into a numpy object of equivalent type.
 */
-%define NUMARRAY_OUTPUT_HELPER(__helper_name,__function_name,__native_type,__numarray_type)
+%define NUMPY_OUTPUT_HELPER(__helper_name,__function_name,__native_type,__numpy_type)
 %inline
 %{
     PyObject * ## __helper_name ## (const coda_Cursor *cursor)
     {
         int tmp_result, tmp_num_dims;
-        int tmp_dims_int[CODA_MAX_NUM_DIMS];
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
         long tmp_dims_long[CODA_MAX_NUM_DIMS];
-        PyArrayObject *tmp;
+        PyObject *tmp;
         int i;
 
         tmp_result = coda_cursor_get_array_dim(cursor,&tmp_num_dims,tmp_dims_long);
@@ -358,13 +358,13 @@
             tmp_dims_int[tmp_num_dims++] = 1;
         }
 
-        tmp = (PyArrayObject*) PyArray_FromDims(tmp_num_dims,tmp_dims_int,__numarray_type);
+        tmp = PyArray_SimpleNew(tmp_num_dims,tmp_dims_int,__numpy_type);
         if (tmp==NULL)
         {
             return PyErr_NoMemory();
         }
  
-        tmp_result = __function_name(cursor, (__native_type*) tmp->data, coda_array_ordering_c);
+        tmp_result = __function_name(cursor, (__native_type*)PyArray_DATA(tmp), coda_array_ordering_c);
     
         if (tmp_result<0)
         {
@@ -372,7 +372,7 @@
             return PyErr_Format(codacError, #__function_name"(): %s", coda_errno_to_string(coda_errno));
         }
         
-        return (PyObject*) tmp;
+        return tmp;
     }        
 %}
 %ignore __function_name ## ;
@@ -381,17 +381,17 @@
 
 /*
     'generic' helper function to read C arrays of special types
-    (e.g. complex) into two numarray objects ('split' representation).
+    (e.g. complex) into two numpy objects ('split' representation).
 */
-%define SPLIT_NUMARRAY_OUTPUT_HELPER(__helper_name,__function_name,__native_type,__numarray_type)
+%define SPLIT_NUMPY_OUTPUT_HELPER(__helper_name,__function_name,__native_type,__numpy_type)
 %inline
 %{
     PyObject * ## __helper_name ## (const coda_Cursor *cursor)
     {
         int tmp_result, tmp_num_dims;
-        int tmp_dims_int[CODA_MAX_NUM_DIMS];
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS];
         long tmp_dims_long[CODA_MAX_NUM_DIMS];
-        PyArrayObject *tmp[2];
+        PyObject *tmp[2];
         PyObject *result_list;
         int i;
 
@@ -414,19 +414,19 @@
             tmp_dims_int[tmp_num_dims++] = 1;
         }
 
-        tmp[0] = (PyArrayObject*) PyArray_FromDims(tmp_num_dims,tmp_dims_int,__numarray_type);
+        tmp[0] = PyArray_SimpleNew(tmp_num_dims,tmp_dims_int,__numpy_type);
         if (tmp==NULL)
         {
             return PyErr_NoMemory();
         }
  
-        tmp[1] = (PyArrayObject*) PyArray_FromDims(tmp_num_dims,tmp_dims_int,__numarray_type);
+        tmp[1] = PyArray_SimpleNew(tmp_num_dims,tmp_dims_int,__numpy_type);
         if (tmp==NULL)
         {
             return PyErr_NoMemory();
         }
 
-        tmp_result = __function_name(cursor,(__native_type*) tmp[0]->data,(__native_type*) tmp[1]->data,
+        tmp_result = __function_name(cursor,(__native_type*)PyArray_DATA(tmp[0]), (__native_type*)PyArray_DATA(tmp[1]),
                                      coda_array_ordering_c);
     
         if (tmp_result<0)
@@ -444,8 +444,8 @@
             return PyErr_NoMemory();
         }
 
-        PyList_SET_ITEM(result_list,0,(PyObject*) tmp[0]);
-        PyList_SET_ITEM(result_list,1,(PyObject*) tmp[1]);
+        PyList_SET_ITEM(result_list, 0, tmp[0]);
+        PyList_SET_ITEM(result_list, 1, tmp[1]);
         
         return result_list;
     }        
@@ -454,25 +454,25 @@
 %enddef
 
 /*
-    'generic' helper function to read a pair of doubles as a 1x2 numarray
+    'generic' helper function to read a pair of doubles as a 1x2 numpy
     object (e.g. complex).
 */
-%define DOUBLE_PAIR_NUMARRAY_OUTPUT_HELPER(__helper_name,__function_name)
+%define DOUBLE_PAIR_NUMPY_OUTPUT_HELPER(__helper_name,__function_name)
 %inline
 %{
     PyObject * ## __helper_name ## (const coda_Cursor *cursor)
     {
-        int tmp_dims[1] = {2};
+        npy_intp tmp_dims[1] = {2};
         int tmp_result;
-        PyArrayObject *tmp;
+        PyObject *tmp;
     
-        tmp = (PyArrayObject*) PyArray_FromDims(1,tmp_dims,tFloat64);
+        tmp = PyArray_SimpleNew(1,tmp_dims,NPY_FLOAT64);
         if (tmp==NULL)
         {
             return PyErr_NoMemory();
         }
 
-        tmp_result = __function_name(cursor,(double*) tmp->data);
+        tmp_result = __function_name(cursor, (double*)PyArray_DATA(tmp));
     
         if (tmp_result<0)
         {
@@ -480,7 +480,7 @@
             return PyErr_Format(codacError, #__function_name"(): %s", coda_errno_to_string(coda_errno));
         }
         
-        return (PyObject*) tmp;
+        return tmp;
     }        
 %}
 %ignore __function_name ## ;
@@ -489,18 +489,18 @@
 
 /*
     'generic' helper function to read an array of pairs of doubles (e.g.
-    complex), which will be returned as a numarray with an added
+    complex), which will be returned as a numpy with an added
     dimension of size 2.
 */
-%define DOUBLE_PAIR_ARRAY_NUMARRAY_OUTPUT_HELPER(__helper_name,__function_name)
+%define DOUBLE_PAIR_ARRAY_NUMPY_OUTPUT_HELPER(__helper_name,__function_name)
 %inline
 %{
     PyObject * ## __helper_name ## (const coda_Cursor *cursor)
     {
         int tmp_result, tmp_num_dims;
-        int tmp_dims_int[CODA_MAX_NUM_DIMS+1];
+        npy_intp tmp_dims_int[CODA_MAX_NUM_DIMS+1];
         long tmp_dims_long[CODA_MAX_NUM_DIMS+1];
-        PyArrayObject *tmp;
+        PyObject *tmp;
         int i;
 
         tmp_result = coda_cursor_get_array_dim(cursor,&tmp_num_dims,tmp_dims_long);
@@ -523,13 +523,13 @@
         }
         tmp_dims_int[tmp_num_dims++] = 2;
 
-        tmp = (PyArrayObject*) PyArray_FromDims(tmp_num_dims,tmp_dims_int,tFloat64);
+        tmp = PyArray_SimpleNew(tmp_num_dims,tmp_dims_int,NPY_FLOAT64);
         if (tmp==NULL)
         {
             return PyErr_NoMemory();
         }
 
-        tmp_result = __function_name(cursor,(double*) tmp->data, coda_array_ordering_c);
+        tmp_result = __function_name(cursor, (double*)PyArray_DATA(tmp), coda_array_ordering_c);
     
         if (tmp_result<0)
         {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -53,7 +53,7 @@ int coda_xml_type_get_read_type(const coda_Type *type, coda_native_type *read_ty
     switch (((coda_xmlType *)type)->tag)
     {
         case tag_xml_ascii_type:
-            /* the content is defined using a data dictionary definition */
+            /* the content is defined using an ascii definition */
             return coda_type_get_read_type((coda_Type *)((coda_xmlElement *)type)->ascii_type, read_type);
         case tag_xml_text:
         case tag_xml_attribute:
@@ -75,7 +75,7 @@ int coda_xml_type_get_string_length(const coda_Type *type, long *length)
     switch (((coda_xmlType *)type)->tag)
     {
         case tag_xml_ascii_type:
-            /* the content is defined using a data dictionary definition */
+            /* the content is defined using an ascii definition */
             return coda_ascii_type_get_string_length((coda_Type *)((coda_xmlElement *)type)->ascii_type, length);
         case tag_xml_root:
         case tag_xml_record:
@@ -95,7 +95,7 @@ int coda_xml_type_get_bit_size(const coda_Type *type, int64_t *bit_size)
     switch (((coda_xmlType *)type)->tag)
     {
         case tag_xml_ascii_type:
-            /* the content is defined using a data dictionary definition */
+            /* the content is defined using an ascii definition */
             return coda_ascii_type_get_bit_size((coda_Type *)((coda_xmlElement *)type)->ascii_type, bit_size);
         default:
             *bit_size = -1;
@@ -110,7 +110,7 @@ int coda_xml_type_get_unit(const coda_Type *type, const char **unit)
     switch (((coda_xmlType *)type)->tag)
     {
         case tag_xml_ascii_type:
-            /* the content is defined using a data dictionary definition */
+            /* the content is defined using an ascii definition */
             return coda_ascii_type_get_unit((coda_Type *)((coda_xmlElement *)type)->ascii_type, unit);
         default:
             *unit = NULL;
@@ -125,7 +125,7 @@ int coda_xml_type_get_fixed_value(const coda_Type *type, const char **fixed_valu
     switch (((coda_xmlType *)type)->tag)
     {
         case tag_xml_ascii_type:
-            /* the content is defined using a data dictionary definition */
+            /* the content is defined using an ascii definition */
             return coda_xml_type_get_fixed_value((coda_Type *)((coda_xmlElement *)type)->ascii_type, fixed_value,
                                                  length);
         case tag_xml_attribute:
@@ -151,7 +151,7 @@ int coda_xml_type_get_num_record_fields(const coda_Type *type, long *num_fields)
             *num_fields = 1;
             break;
         case tag_xml_ascii_type:
-            /* the content is defined using a data dictionary definition */
+            /* the content is defined using an ascii definition */
             return coda_ascbin_type_get_num_record_fields((coda_Type *)((coda_xmlElement *)type)->ascii_type,
                                                           num_fields);
         case tag_xml_record:
@@ -186,7 +186,7 @@ int coda_xml_type_get_record_field_index_from_name(const coda_Type *type, const 
                 return -1;
             }
         case tag_xml_ascii_type:
-            /* the content is defined using a data dictionary definition */
+            /* the content is defined using an ascii definition */
             return coda_ascbin_type_get_record_field_index_from_name((coda_Type *)((coda_xmlElement *)type)->ascii_type,
                                                                      name, index);
         case tag_xml_record:
@@ -224,7 +224,7 @@ int coda_xml_type_get_record_field_type(const coda_Type *type, long index, coda_
             *field_type = (coda_Type *)((coda_xmlRoot *)type)->field->type;
             break;
         case tag_xml_ascii_type:
-            /* the content is defined using a data dictionary definition */
+            /* the content is defined using an ascii definition */
             return coda_ascbin_type_get_record_field_type((coda_Type *)((coda_xmlElement *)type)->ascii_type, index,
                                                           field_type);
         case tag_xml_record:
@@ -267,7 +267,7 @@ int coda_xml_type_get_record_field_name(const coda_Type *type, long index, const
             *name = ((coda_xmlRoot *)type)->field->name;
             break;
         case tag_xml_ascii_type:
-            /* the content is defined using a data dictionary definition */
+            /* the content is defined using an ascii definition */
             return coda_ascbin_type_get_record_field_name((coda_Type *)((coda_xmlElement *)type)->ascii_type, index,
                                                           name);
         case tag_xml_record:
@@ -310,7 +310,7 @@ int coda_xml_type_get_record_field_hidden_status(const coda_Type *type, long ind
             *hidden = 0;
             break;
         case tag_xml_ascii_type:
-            /* the content is defined using a data dictionary definition */
+            /* the content is defined using an ascii definition */
             return coda_ascbin_type_get_record_field_hidden_status((coda_Type *)((coda_xmlElement *)type)->ascii_type,
                                                                    index, hidden);
         case tag_xml_record:
@@ -353,7 +353,7 @@ int coda_xml_type_get_record_field_available_status(const coda_Type *type, long 
             *available = 1;
             break;
         case tag_xml_ascii_type:
-            /* the content is defined using a data dictionary definition */
+            /* the content is defined using an ascii definition */
             return coda_ascbin_type_get_record_field_available_status((coda_Type *)
                                                                       ((coda_xmlElement *)type)->ascii_type, index,
                                                                       available);
@@ -388,7 +388,7 @@ int coda_xml_type_get_record_union_status(const coda_Type *type, int *is_union)
     switch (((coda_xmlType *)type)->tag)
     {
         case tag_xml_ascii_type:
-            /* the content is defined using a data dictionary definition */
+            /* the content is defined using an ascii definition */
             return coda_ascbin_type_get_record_union_status((coda_Type *)((coda_xmlElement *)type)->ascii_type,
                                                             is_union);
         case tag_xml_record:
@@ -412,7 +412,7 @@ int coda_xml_type_get_array_num_dims(const coda_Type *type, int *num_dims)
             *num_dims = 1;
             break;
         case tag_xml_ascii_type:
-            /* the content is defined using a data dictionary definition */
+            /* the content is defined using an ascii definition */
             return coda_ascbin_type_get_array_num_dims((coda_Type *)((coda_xmlElement *)type)->ascii_type, num_dims);
         default:
             assert(0);
@@ -431,7 +431,7 @@ int coda_xml_type_get_array_dim(const coda_Type *type, int *num_dims, long dim[]
             dim[0] = -1;
             break;
         case tag_xml_ascii_type:
-            /* the content is defined using a data dictionary definition */
+            /* the content is defined using an ascii definition */
             return coda_ascbin_type_get_array_dim((coda_Type *)((coda_xmlElement *)type)->ascii_type, num_dims, dim);
         default:
             assert(0);
@@ -449,7 +449,7 @@ int coda_xml_type_get_array_base_type(const coda_Type *type, coda_Type **base_ty
             *base_type = (coda_Type *)((coda_xmlArray *)type)->base_type;
             break;
         case tag_xml_ascii_type:
-            /* the content is defined using a data dictionary definition */
+            /* the content is defined using an ascii definition */
             return coda_ascbin_type_get_array_base_type((coda_Type *)((coda_xmlElement *)type)->ascii_type, base_type);
         default:
             assert(0);
@@ -464,7 +464,7 @@ int coda_xml_type_get_special_type(const coda_Type *type, coda_special_type *spe
     switch (((coda_xmlType *)type)->tag)
     {
         case tag_xml_ascii_type:
-            /* the content is defined using a data dictionary definition */
+            /* the content is defined using an ascii definition */
             return coda_ascii_type_get_special_type((coda_Type *)((coda_xmlElement *)type)->ascii_type, special_type);
         default:
             assert(0);
@@ -479,7 +479,7 @@ int coda_xml_type_get_special_base_type(const coda_Type *type, coda_Type **base_
     switch (((coda_xmlType *)type)->tag)
     {
         case tag_xml_ascii_type:
-            /* the content is defined using a data dictionary definition */
+            /* the content is defined using an ascii definition */
             return coda_ascii_type_get_special_base_type((coda_Type *)((coda_xmlElement *)type)->ascii_type, base_type);
         default:
             assert(0);

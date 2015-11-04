@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -206,9 +206,9 @@ void coda_hdf5_release_dynamic_type(coda_DynamicType *T)
     coda_hdf5_release_type((coda_Type *)T);
 }
 
-static int new_hdf5DataType(hid_t datatype_id, coda_hdf5DataType **type);
+static int new_hdf5DataType(hid_t datatype_id, coda_hdf5DataType **type, int allow_vlen_data);
 
-static int new_hdf5BasicDataType(hid_t datatype_id, coda_hdf5DataType **type)
+static int new_hdf5BasicDataType(hid_t datatype_id, coda_hdf5DataType **type, int allow_vlen_data)
 {
     coda_hdf5BasicDataType *basic_type;
 
@@ -226,6 +226,7 @@ static int new_hdf5BasicDataType(hid_t datatype_id, coda_hdf5DataType **type)
     basic_type->description = NULL;
     basic_type->tag = tag_hdf5_basic_datatype;
     basic_type->datatype_id = datatype_id;
+    basic_type->is_variable_string = 0;
     switch (H5Tget_class(basic_type->datatype_id))
     {
         case H5T_ENUM:
@@ -312,6 +313,13 @@ static int new_hdf5BasicDataType(hid_t datatype_id, coda_hdf5DataType **type)
         case H5T_STRING:
             basic_type->type_class = coda_text_class;
             basic_type->read_type = coda_native_type_string;
+            basic_type->is_variable_string = H5Tis_variable_str(datatype_id);
+            if (basic_type->is_variable_string && !allow_vlen_data)
+            {
+                /* we don't support variable strings in this context */
+                delete_hdf5BasicDataType(basic_type);
+                return 1;
+            }
             break;
         default:
             /* unsupported basic data type */
@@ -417,7 +425,7 @@ static int new_hdf5CompoundDataType(hid_t datatype_id, coda_hdf5DataType **type)
             return -1;
         }
 
-        result = new_hdf5BasicDataType(member_id, &compound_type->member[index]);
+        result = new_hdf5BasicDataType(member_id, &compound_type->member[index], 0);
         if (result < 0)
         {
             /* member_id is already closed by new_hdf5BasicDataType() */
@@ -478,7 +486,7 @@ static int new_hdf5CompoundDataType(hid_t datatype_id, coda_hdf5DataType **type)
     return 0;
 }
 
-static int new_hdf5DataType(hid_t datatype_id, coda_hdf5DataType **type)
+static int new_hdf5DataType(hid_t datatype_id, coda_hdf5DataType **type, int allow_vlen_data)
 {
     if (datatype_id < 0)
     {
@@ -493,7 +501,7 @@ static int new_hdf5DataType(hid_t datatype_id, coda_hdf5DataType **type)
         case H5T_FLOAT:
         case H5T_STRING:
         case H5T_ENUM:
-            return new_hdf5BasicDataType(datatype_id, type);
+            return new_hdf5BasicDataType(datatype_id, type, allow_vlen_data);
         case H5T_COMPOUND:
             return new_hdf5CompoundDataType(datatype_id, type);
         case H5T_TIME:
@@ -572,7 +580,7 @@ static int new_hdf5Attribute(hid_t attr_id, coda_hdf5Attribute **type)
         delete_hdf5Attribute(attr);
         return -1;
     }
-    result = new_hdf5DataType(H5Aget_type(attr->attribute_id), &attr->base_type);
+    result = new_hdf5DataType(H5Aget_type(attr->attribute_id), &attr->base_type, 0);
     if (result < 0)
     {
         delete_hdf5Attribute(attr);
@@ -910,7 +918,7 @@ static int create_tree(coda_hdf5ProductFile *pf, hid_t loc_id, const char *path,
                     delete_hdf5DataSet(dataset);
                     return -1;
                 }
-                result = new_hdf5DataType(H5Dget_type(dataset->dataset_id), &dataset->base_type);
+                result = new_hdf5DataType(H5Dget_type(dataset->dataset_id), &dataset->base_type, 1);
                 if (result < 0)
                 {
                     delete_hdf5DataSet(dataset);

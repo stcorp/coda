@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -379,7 +379,7 @@ LIBCODA_API int coda_match_filefilter(const char *filefilter, int num_filepaths,
         return -1;
     }
 
-    if (filefilter == NULL || filefilter == "")
+    if (filefilter == NULL || filefilter[0] == '\0')
     {
         filefilter = "true";
     }

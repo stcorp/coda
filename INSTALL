@@ -1,4 +1,4 @@
-Copyright (C) 2007-2008 S&T, The Netherlands
+Copyright (C) 2007-2009 S&T, The Netherlands
 
                         CODA Installation Documentation
 
@@ -36,7 +36,7 @@ What you will need
     and all documentation and examples. For the IDL and MATLAB interfaces,
     pre-built versions are included for IDL 5.4 - 6.3 for Windows, and MATLAB
     R13 (v6.5) - R2007a (v7.4) for Windows. For the Python interface, a
-    pre-built version for Python 2.4 is included. All CODA interfaces have been
+    pre-built version for Python 2.6 is included. All CODA interfaces have been
     compiled with HDF4 and HDF5 support built in.
 
     If you do not have the CODA package you need, you can download it from the
@@ -55,8 +55,8 @@ What you will need
     MATLAB : The MATLAB interface will only work with MATLAB version 5.3 (R11)
     and higher.
 
-  - If you plan on using the Python interface you need Python version 2.4 and
-    the Python 'numarray' package (version 1.1 or higer).
+  - If you plan on using the Python interface you need Python version 2.6 and
+    the Python 'numpy' package (version 1.1 or higer).
 
 
   The following items are only needed if you use the CODA source distribution:
@@ -141,7 +141,7 @@ a Unix-based platform :
 
     --enable-python : By default CODA is built without the Python interface.
     Use this option to enable building of the interface to Python. If you
-    enable the Python interface then make sure you have installed the numarray
+    enable the Python interface then make sure you have installed the numpy
     package for Python.
 
     PYTHON=<Python executable> : If you want to build the Python interface you
@@ -194,6 +194,12 @@ a Unix-based platform :
     default location!). If ./configure complains that it can't find the
     'hdf5.h' include file, pass this option to ./configure with the location of
     this include file.
+    
+    F77=<your fortran compiler> : This allows you to select which fortran
+    compiler you will be using when you intend to use to CODA Fortran interface.
+    CODA will then generate the Makefile template that reflects the settings for
+    the specified fortran compiler. Note that the compiler may also be a f90 or
+    f95 compiler.
 
     Note that you don't have to provide any options to the configure script to
     create the Fortran interface for CODA. The wrapper code is always created.
@@ -262,19 +268,20 @@ home directory (~/matlab/startup.m) that contains the line:
 If you enabled Python then you won't have to do anything if you installed CODA
 in the same directory as you installed Python (e.g. if both are installed under
 /usr/local for instance). You can verify whether this is the case by checking
-that the file <CODA installdir>/lib/python2.4/os.py exists. If you installed
-CODA in another location then you should create a 'coda.pth' file in the
-directory <Python installdir>/lib/python2.4/site-packages containing one text
-line with the location of the Python package:
+that the file <CODA installdir>/lib/python2.6/os.py exists. (the python2.x
+directory name will depend on the Python version that you are using).
+If you installed CODA in another location then you should create a 'coda.pth'
+file in the directory <Python installdir>/lib/python2.6/site-packages
+containing one text line with the location of the Python package:
 
-    <CODA installdir>/lib/python2.4/site-packages
+    <CODA installdir>/lib/python2.6/site-packages
 
 Python will then automatically load the coda.pth file at startup and add the
 path to the Python package to the Python searchpath. You can also manually
 modify the searchpath from within Python by calling the following Python
 commands:
     >>> import sys
-    >>> sys.path.append('<CODA installdir>/lib/python2.4/site-packages')
+    >>> sys.path.append('<CODA installdir>/lib/python2.6/site-packages')
 But this manual modification will be lost as soon as you quit Python.
 
 Of course you should replace <CODA installdir> with the installation directory
@@ -305,8 +312,8 @@ interfaces) on a Windows platform :
     files for these libraries.
 
  3) If you want to build the Python interfaces, make sure you have installed
-    Python 2.4 and the numarray package. You should then create an environment
-    variable PYTHONHOME that points to your Python2.4 directory
+    Python and the numpy package. You should then create an environment
+    variable PYTHONHOME that points to your Python directory
     (e.g. PYTHONHOME=C:\Python24).
 
  4) Go to the win32 subdirectory of your unpacked source package.

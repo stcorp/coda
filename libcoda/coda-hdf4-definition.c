@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -278,7 +278,8 @@ void coda_hdf4_release_dynamic_type(coda_DynamicType *T)
     coda_hdf4_release_type((coda_Type *)T);
 }
 
-static coda_hdf4BasicType *new_hdf4BasicType(int32 data_type, double scale_factor, double add_offset)
+static coda_hdf4BasicType *new_hdf4BasicType(coda_format format, int32 data_type, double scale_factor,
+                                             double add_offset)
 {
     coda_hdf4BasicType *T;
 
@@ -291,7 +292,7 @@ static coda_hdf4BasicType *new_hdf4BasicType(int32 data_type, double scale_facto
     }
 
     T->retain_count = 0;
-    T->format = coda_format_hdf4;
+    T->format = format;
     T->name = NULL;
     T->description = NULL;
     T->tag = tag_hdf4_basic_type;
@@ -358,8 +359,8 @@ static coda_hdf4BasicType *new_hdf4BasicType(int32 data_type, double scale_facto
     return T;
 }
 
-static coda_hdf4BasicTypeArray *new_hdf4BasicTypeArray(int32 data_type, int32 count, double scale_factor,
-                                                       double add_offset)
+static coda_hdf4BasicTypeArray *new_hdf4BasicTypeArray(coda_format format, int32 data_type, int32 count,
+                                                       double scale_factor, double add_offset)
 {
     coda_hdf4BasicTypeArray *T;
 
@@ -372,13 +373,13 @@ static coda_hdf4BasicTypeArray *new_hdf4BasicTypeArray(int32 data_type, int32 co
     }
 
     T->retain_count = 0;
-    T->format = coda_format_hdf4;
+    T->format = format;
     T->type_class = coda_array_class;
     T->name = NULL;
     T->description = NULL;
     T->tag = tag_hdf4_basic_type_array;
     T->count = count;
-    T->basic_type = new_hdf4BasicType(data_type, scale_factor, add_offset);
+    T->basic_type = new_hdf4BasicType(format, data_type, scale_factor, add_offset);
     if (T->basic_type == NULL)
     {
         free(T);
@@ -496,11 +497,12 @@ static coda_hdf4Attributes *new_hdf4AttributesForGRImage(coda_hdf4ProductFile *p
         assert(result == 0);
         if (length == 1)
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicType(data_type, 1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicType(coda_format_hdf4, data_type, 1, 0);
         }
         else
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(data_type, length, 1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, data_type, length,
+                                                                                   1, 0);
         }
         if (T->attribute[attr_index - 1] == NULL)
         {
@@ -538,7 +540,8 @@ static coda_hdf4Attributes *new_hdf4AttributesForGRImage(coda_hdf4ProductFile *p
                 result = hashtable_add_name(T->hash_data, T->attribute_name[attr_index - 1]);
                 assert(result == 0);
                 length = ANannlen(T->ann_id[i]);
-                T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(DFNT_CHAR, length, 1, 0);
+                T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, DFNT_CHAR,
+                                                                                       length, 1, 0);
                 if (T->attribute[attr_index - 1] == NULL)
                 {
                     delete_hdf4Attributes(T);
@@ -566,7 +569,8 @@ static coda_hdf4Attributes *new_hdf4AttributesForGRImage(coda_hdf4ProductFile *p
                 result = hashtable_add_name(T->hash_data, T->attribute_name[attr_index - 1]);
                 assert(result == 0);
                 length = ANannlen(T->ann_id[T->num_data_labels + i]);
-                T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(DFNT_CHAR, length, 1, 0);
+                T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, DFNT_CHAR,
+                                                                                       length, 1, 0);
                 if (T->attribute[attr_index - 1] == NULL)
                 {
                     delete_hdf4Attributes(T);
@@ -597,7 +601,7 @@ static coda_hdf4Attributes *new_hdf4AttributesForSDS(coda_hdf4ProductFile *pf, i
         return NULL;
     }
     T->retain_count = 0;
-    T->format = coda_format_hdf4;
+    T->format = pf->format;
     T->type_class = coda_record_class;
     T->name = NULL;
     T->description = NULL;
@@ -695,11 +699,11 @@ static coda_hdf4Attributes *new_hdf4AttributesForSDS(coda_hdf4ProductFile *pf, i
         assert(result == 0);
         if (length == 1)
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicType(data_type, 1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicType(T->format, data_type, 1, 0);
         }
         else
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(data_type, length, 1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(T->format, data_type, length, 1, 0);
         }
         if (T->attribute[attr_index - 1] == NULL)
         {
@@ -737,7 +741,8 @@ static coda_hdf4Attributes *new_hdf4AttributesForSDS(coda_hdf4ProductFile *pf, i
                 result = hashtable_add_name(T->hash_data, T->attribute_name[attr_index - 1]);
                 assert(result == 0);
                 length = ANannlen(T->ann_id[i]);
-                T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(DFNT_CHAR, length, 1, 0);
+                T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(T->format, DFNT_CHAR, length, 1,
+                                                                                       0);
                 if (T->attribute[attr_index - 1] == NULL)
                 {
                     delete_hdf4Attributes(T);
@@ -766,7 +771,8 @@ static coda_hdf4Attributes *new_hdf4AttributesForSDS(coda_hdf4ProductFile *pf, i
                 result = hashtable_add_name(T->hash_data, T->attribute_name[attr_index - 1]);
                 assert(result == 0);
                 length = ANannlen(T->ann_id[T->num_data_labels + i]);
-                T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(DFNT_CHAR, length, 1, 0);
+                T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(T->format, DFNT_CHAR, length, 1,
+                                                                                       0);
                 if (T->attribute[attr_index - 1] == NULL)
                 {
                     delete_hdf4Attributes(T);
@@ -884,11 +890,12 @@ static coda_hdf4Attributes *new_hdf4AttributesForVdataField(int32 vdata_id, int3
         assert(result == 0);
         if (length == 1)
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicType(data_type, 1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicType(coda_format_hdf4, data_type, 1, 0);
         }
         else
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(data_type, length, 1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, data_type, length,
+                                                                                   1, 0);
         }
         if (T->attribute[attr_index - 1] == NULL)
         {
@@ -1023,11 +1030,12 @@ static coda_hdf4Attributes *new_hdf4AttributesForVdata(coda_hdf4ProductFile *pf,
         assert(result == 0);
         if (length == 1)
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicType(data_type, 1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicType(coda_format_hdf4, data_type, 1, 0);
         }
         else
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(data_type, length, 1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, data_type, length,
+                                                                                   1, 0);
         }
         if (T->attribute[attr_index - 1] == NULL)
         {
@@ -1065,7 +1073,8 @@ static coda_hdf4Attributes *new_hdf4AttributesForVdata(coda_hdf4ProductFile *pf,
                 result = hashtable_add_name(T->hash_data, T->attribute_name[attr_index - 1]);
                 assert(result == 0);
                 length = ANannlen(T->ann_id[i]);
-                T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(DFNT_CHAR, length, 1, 0);
+                T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, DFNT_CHAR,
+                                                                                       length, 1, 0);
                 if (T->attribute[attr_index - 1] == NULL)
                 {
                     delete_hdf4Attributes(T);
@@ -1093,7 +1102,8 @@ static coda_hdf4Attributes *new_hdf4AttributesForVdata(coda_hdf4ProductFile *pf,
                 result = hashtable_add_name(T->hash_data, T->attribute_name[attr_index - 1]);
                 assert(result == 0);
                 length = ANannlen(T->ann_id[T->num_data_labels + i]);
-                T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(DFNT_CHAR, length, 1, 0);
+                T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, DFNT_CHAR,
+                                                                                       length, 1, 0);
                 if (T->attribute[attr_index - 1] == NULL)
                 {
                     delete_hdf4Attributes(T);
@@ -1224,11 +1234,12 @@ static coda_hdf4Attributes *new_hdf4AttributesForVgroup(coda_hdf4ProductFile *pf
         assert(result == 0);
         if (length == 1)
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicType(data_type, 1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicType(coda_format_hdf4, data_type, 1, 0);
         }
         else
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(data_type, length, 1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, data_type, length,
+                                                                                   1, 0);
         }
         if (T->attribute[attr_index - 1] == NULL)
         {
@@ -1266,7 +1277,8 @@ static coda_hdf4Attributes *new_hdf4AttributesForVgroup(coda_hdf4ProductFile *pf
                 result = hashtable_add_name(T->hash_data, T->attribute_name[attr_index - 1]);
                 assert(result == 0);
                 length = ANannlen(T->ann_id[i]);
-                T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(DFNT_CHAR, length, 1, 0);
+                T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, DFNT_CHAR,
+                                                                                       length, 1, 0);
                 if (T->attribute[attr_index - 1] == NULL)
                 {
                     delete_hdf4Attributes(T);
@@ -1295,7 +1307,8 @@ static coda_hdf4Attributes *new_hdf4AttributesForVgroup(coda_hdf4ProductFile *pf
                 result = hashtable_add_name(T->hash_data, T->attribute_name[attr_index - 1]);
                 assert(result == 0);
                 length = ANannlen(T->ann_id[T->num_data_labels + i]);
-                T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(DFNT_CHAR, length, 1, 0);
+                T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, DFNT_CHAR,
+                                                                                       length, 1, 0);
                 if (T->attribute[attr_index - 1] == NULL)
                 {
                     delete_hdf4Attributes(T);
@@ -1417,11 +1430,12 @@ static coda_hdf4FileAttributes *new_hdf4AttributesForRoot(coda_hdf4ProductFile *
         assert(result == 0);
         if (length == 1)
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicType(data_type, 1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicType(coda_format_hdf4, data_type, 1, 0);
         }
         else
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(data_type, length, 1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, data_type, length,
+                                                                                   1, 0);
         }
         if (T->attribute[attr_index - 1] == NULL)
         {
@@ -1448,11 +1462,12 @@ static coda_hdf4FileAttributes *new_hdf4AttributesForRoot(coda_hdf4ProductFile *
         assert(result == 0);
         if (length == 1)
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicType(data_type, 1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicType(coda_format_hdf4, data_type, 1, 0);
         }
         else
         {
-            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(data_type, length, 1, 0);
+            T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, data_type, length,
+                                                                                   1, 0);
         }
         if (T->attribute[attr_index - 1] == NULL)
         {
@@ -1479,7 +1494,8 @@ static coda_hdf4FileAttributes *new_hdf4AttributesForRoot(coda_hdf4ProductFile *
             return NULL;
         }
         length = ANannlen(ann_id);
-        T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(DFNT_CHAR, length, 1, 0);
+        T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, DFNT_CHAR, length, 1,
+                                                                               0);
         if (T->attribute[attr_index - 1] == NULL)
         {
             delete_hdf4FileAttributes(T);
@@ -1511,7 +1527,8 @@ static coda_hdf4FileAttributes *new_hdf4AttributesForRoot(coda_hdf4ProductFile *
             return NULL;
         }
         length = ANannlen(ann_id);
-        T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(DFNT_CHAR, length, 1, 0);
+        T->attribute[attr_index - 1] = (coda_hdf4Type *)new_hdf4BasicTypeArray(coda_format_hdf4, DFNT_CHAR, length, 1,
+                                                                               0);
         if (T->attribute[attr_index - 1] == NULL)
         {
             delete_hdf4FileAttributes(T);
@@ -1620,7 +1637,7 @@ static coda_hdf4GRImage *new_hdf4GRImage(coda_hdf4ProductFile *pf, int32 index)
         }
     }
 
-    T->basic_type = new_hdf4BasicType(T->data_type, scale_factor, add_offset);
+    T->basic_type = new_hdf4BasicType(coda_format_hdf4, T->data_type, scale_factor, add_offset);
     if (T->basic_type == NULL)
     {
         GRendaccess(T->ri_id);
@@ -1662,7 +1679,7 @@ static coda_hdf4SDS *new_hdf4SDS(coda_hdf4ProductFile *pf, int32 sds_index)
         return NULL;
     }
     T->retain_count = 0;
-    T->format = coda_format_hdf4;
+    T->format = pf->format;
     T->type_class = coda_array_class;
     T->name = NULL;
     T->description = NULL;
@@ -1743,7 +1760,7 @@ static coda_hdf4SDS *new_hdf4SDS(coda_hdf4ProductFile *pf, int32 sds_index)
         }
     }
 
-    T->basic_type = new_hdf4BasicType(T->data_type, scale_factor, add_offset);
+    T->basic_type = new_hdf4BasicType(T->format, T->data_type, scale_factor, add_offset);
     if (T->basic_type == NULL)
     {
         SDendaccess(T->sds_id);
@@ -1859,7 +1876,7 @@ static coda_hdf4VdataField *new_hdf4VdataField(int32 vdata_id, int32 field_index
         }
     }
 
-    T->basic_type = new_hdf4BasicType(T->data_type, scale_factor, add_offset);
+    T->basic_type = new_hdf4BasicType(coda_format_hdf4, T->data_type, scale_factor, add_offset);
     if (T->basic_type == NULL)
     {
         free(T);
@@ -2003,7 +2020,7 @@ static coda_hdf4Vdata *new_hdf4Vdata(coda_hdf4ProductFile *pf, int32 vdata_ref)
             delete_hdf4Vdata(T);
             return NULL;
         }
-        T->field_name[i] = coda_identifier_from_name(T->field[i]->name, T->hash_data);
+        T->field_name[i] = coda_identifier_from_name(T->field[i]->field_name, T->hash_data);
         if (T->field_name[i] == NULL)
         {
             delete_hdf4Vdata(T);
@@ -2358,7 +2375,7 @@ static int init_hdf4Vgroups(coda_hdf4ProductFile *pf)
                                     T->num_entries++;
                                     T->entry[T->num_entries - 1] = (coda_hdf4Type *)pf->gri[k];
                                     T->entry_name[T->num_entries - 1] =
-                                        coda_identifier_from_name(pf->gri[k]->name, T->hash_data);
+                                        coda_identifier_from_name(pf->gri[k]->gri_name, T->hash_data);
                                     if (T->entry_name[T->num_entries - 1] == NULL)
                                     {
                                         free(refs);
@@ -2389,7 +2406,7 @@ static int init_hdf4Vgroups(coda_hdf4ProductFile *pf)
                                     T->num_entries++;
                                     T->entry[T->num_entries - 1] = (coda_hdf4Type *)pf->sds[k];
                                     T->entry_name[T->num_entries - 1] =
-                                        coda_identifier_from_name(pf->sds[k]->name, T->hash_data);
+                                        coda_identifier_from_name(pf->sds[k]->sds_name, T->hash_data);
                                     if (T->entry_name[T->num_entries - 1] == NULL)
                                     {
                                         free(refs);
@@ -2418,7 +2435,7 @@ static int init_hdf4Vgroups(coda_hdf4ProductFile *pf)
                                     T->num_entries++;
                                     T->entry[T->num_entries - 1] = (coda_hdf4Type *)pf->vdata[k];
                                     T->entry_name[T->num_entries - 1] =
-                                        coda_identifier_from_name(pf->vdata[k]->name, T->hash_data);
+                                        coda_identifier_from_name(pf->vdata[k]->vdata_name, T->hash_data);
                                     if (T->entry_name[T->num_entries - 1] == NULL)
                                     {
                                         free(refs);
@@ -2445,7 +2462,7 @@ static int init_hdf4Vgroups(coda_hdf4ProductFile *pf)
                                     T->num_entries++;
                                     T->entry[T->num_entries - 1] = (coda_hdf4Type *)pf->vgroup[k];
                                     T->entry_name[T->num_entries - 1] =
-                                        coda_identifier_from_name(pf->vgroup[k]->name, T->hash_data);
+                                        coda_identifier_from_name(pf->vgroup[k]->vgroup_name, T->hash_data);
                                     if (T->entry_name[T->num_entries - 1] == NULL)
                                     {
                                         free(refs);
@@ -2566,7 +2583,7 @@ static int create_hdf4Root(coda_hdf4ProductFile *pf)
                 pf->vgroup[i]->group_count++;
                 T->num_entries++;
                 T->entry[T->num_entries - 1] = (coda_hdf4Type *)pf->vgroup[i];
-                T->entry_name[T->num_entries - 1] = coda_identifier_from_name(pf->vgroup[i]->name, T->hash_data);
+                T->entry_name[T->num_entries - 1] = coda_identifier_from_name(pf->vgroup[i]->vgroup_name, T->hash_data);
                 if (T->entry_name[T->num_entries - 1] == NULL)
                 {
                     return -1;
@@ -2582,7 +2599,7 @@ static int create_hdf4Root(coda_hdf4ProductFile *pf)
                 pf->gri[i]->group_count++;
                 T->num_entries++;
                 T->entry[T->num_entries - 1] = (coda_hdf4Type *)pf->gri[i];
-                T->entry_name[T->num_entries - 1] = coda_identifier_from_name(pf->gri[i]->name, T->hash_data);
+                T->entry_name[T->num_entries - 1] = coda_identifier_from_name(pf->gri[i]->gri_name, T->hash_data);
                 if (T->entry_name[T->num_entries - 1] == NULL)
                 {
                     return -1;
@@ -2598,7 +2615,7 @@ static int create_hdf4Root(coda_hdf4ProductFile *pf)
                 pf->sds[i]->group_count++;
                 T->num_entries++;
                 T->entry[T->num_entries - 1] = (coda_hdf4Type *)pf->sds[i];
-                T->entry_name[T->num_entries - 1] = coda_identifier_from_name(pf->sds[i]->name, T->hash_data);
+                T->entry_name[T->num_entries - 1] = coda_identifier_from_name(pf->sds[i]->sds_name, T->hash_data);
                 if (T->entry_name[T->num_entries - 1] == NULL)
                 {
                     return -1;
@@ -2614,7 +2631,7 @@ static int create_hdf4Root(coda_hdf4ProductFile *pf)
                 pf->vdata[i]->group_count++;
                 T->num_entries++;
                 T->entry[T->num_entries - 1] = (coda_hdf4Type *)pf->vdata[i];
-                T->entry_name[T->num_entries - 1] = coda_identifier_from_name(pf->vdata[i]->name, T->hash_data);
+                T->entry_name[T->num_entries - 1] = coda_identifier_from_name(pf->vdata[i]->vdata_name, T->hash_data);
                 if (T->entry_name[T->num_entries - 1] == NULL)
                 {
                     return -1;
@@ -2778,7 +2795,7 @@ int coda_hdf4_close(coda_ProductFile *pf)
     return 0;
 }
 
-int coda_hdf4_open(const char *filename, int64_t file_size, coda_ProductFile **pf)
+int coda_hdf4_open(const char *filename, int64_t file_size, coda_format format, coda_ProductFile **pf)
 {
     coda_hdf4ProductFile *product_file;
 
@@ -2791,7 +2808,7 @@ int coda_hdf4_open(const char *filename, int64_t file_size, coda_ProductFile **p
     }
     product_file->filename = NULL;
     product_file->file_size = file_size;
-    product_file->format = coda_format_hdf4;
+    product_file->format = format;
     product_file->root_type = NULL;
     product_file->product_definition = NULL;
     product_file->product_variable_size = NULL;

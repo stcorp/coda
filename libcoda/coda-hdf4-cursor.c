@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -622,14 +622,21 @@ static int coda_hdf4_read_basic_type(const coda_Cursor *cursor, void *dst)
                 coda_hdf4SDS *type;
 
                 type = (coda_hdf4SDS *)cursor->stack[cursor->n - 2].type;
-                for (i = type->rank - 1; i >= 0; i--)
+                if (type->rank == 0)
                 {
-                    start[i] = index % type->dimsizes[i];
-                    index /= type->dimsizes[i];
-                    stride[i] = 1;
-                    edge[i] = 1;
+                    start[0] = 0;
+                    edge[1] = 1;
                 }
-                if (SDreaddata(type->sds_id, start, stride, edge, dst) != 0)
+                else
+                {
+                    for (i = type->rank - 1; i >= 0; i--)
+                    {
+                        start[i] = index % type->dimsizes[i];
+                        index /= type->dimsizes[i];
+                        edge[i] = 1;
+                    }
+                }
+                if (SDreaddata(type->sds_id, start, NULL, edge, dst) != 0)
                 {
                     coda_set_error(CODA_ERROR_HDF4, NULL);
                     return -1;
@@ -653,7 +660,7 @@ static int coda_hdf4_read_basic_type(const coda_Cursor *cursor, void *dst)
                     coda_set_error(CODA_ERROR_HDF4, NULL);
                     return -1;
                 }
-                if (VSsetfields(type->vdata_id, field_type->name) != 0)
+                if (VSsetfields(type->vdata_id, field_type->field_name) != 0)
                 {
                     coda_set_error(CODA_ERROR_HDF4, NULL);
                     return -1;
@@ -666,7 +673,7 @@ static int coda_hdf4_read_basic_type(const coda_Cursor *cursor, void *dst)
                     int element_size;
                     int size;
 
-                    size = VSsizeof(type->vdata_id, field_type->name);
+                    size = VSsizeof(type->vdata_id, field_type->field_name);
                     if (size < 0)
                     {
                         coda_set_error(CODA_ERROR_HDF4, NULL);
@@ -746,13 +753,20 @@ static int read_array_without_conversion(const coda_Cursor *cursor, void *dst)
                 coda_hdf4SDS *type;
 
                 type = (coda_hdf4SDS *)cursor->stack[cursor->n - 1].type;
-                for (i = 0; i < type->rank; i++)
+                if (type->rank == 0)
                 {
-                    start[i] = 0;
-                    stride[i] = 1;
-                    edge[i] = type->dimsizes[i];
+                    start[0] = 0;
+                    edge[0] = 1;
                 }
-                if (SDreaddata(type->sds_id, start, stride, edge, dst) != 0)
+                else
+                {
+                    for (i = 0; i < type->rank; i++)
+                    {
+                        start[i] = 0;
+                        edge[i] = type->dimsizes[i];
+                    }
+                }
+                if (SDreaddata(type->sds_id, start, NULL, edge, dst) != 0)
                 {
                     coda_set_error(CODA_ERROR_HDF4, NULL);
                     return -1;
@@ -772,7 +786,7 @@ static int read_array_without_conversion(const coda_Cursor *cursor, void *dst)
                     coda_set_error(CODA_ERROR_HDF4, NULL);
                     return -1;
                 }
-                if (VSsetfields(type->vdata_id, field_type->name) != 0)
+                if (VSsetfields(type->vdata_id, field_type->field_name) != 0)
                 {
                     coda_set_error(CODA_ERROR_HDF4, NULL);
                     return -1;

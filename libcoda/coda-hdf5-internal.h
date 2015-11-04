@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -22,6 +22,12 @@
 #define CODA_HDF5_INTERNAL_H
 
 #include "coda-hdf5.h"
+
+/* HDF5 creates its own versions of uint32_t, int64_t, and uint64_t as typedefs */
+/* We therefore disable our #define entries for these types if we have them */
+#undef int64_t
+#undef uint32_t
+#undef uint64_t
 
 #include "hdf5.h"
 
@@ -95,6 +101,7 @@ typedef struct coda_hdf5BasicDataType_struct
     hdf5_type_tag tag;
     hid_t datatype_id;
     coda_native_type read_type;
+    int is_variable_string;
 } coda_hdf5BasicDataType;
 
 typedef struct coda_hdf5CompoundDataType_struct

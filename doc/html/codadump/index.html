@@ -61,7 +61,7 @@
                     show all possible values for a variable sized dim
                     (implies --calc_dim)
             --no_special_types
-                    bypass special data types from the CODA Data Dictionary -
+                    bypass special data types from the CODA format definition -
                     data with a special type is treated using its non-special
                     base type
 </pre>
@@ -95,7 +95,7 @@
             -t, --time_as_string
                     print time as a string (instead of a floating point value)
             --no_special_types
-                    bypass special data types from the CODA Data Dictionary -
+                    bypass special data types from the CODA format definition -
                     data with a special type is treated using its non-special
                     base type
 </pre>
@@ -119,7 +119,7 @@
             -s, --silent
                     run in silent mode
             --no_special_types
-                    bypass special data types from the CODA Data Dictionary -
+                    bypass special data types from the CODA format definition -
                     data with a special type is treated using its non-special
                     base type
 </pre>
@@ -128,7 +128,7 @@
 
       <p>It is possible to export only part of a product file by specifying a filter with the -f option. For more information about this filtering option look at the section titled "<a href="#filtering">Filtering of data</a>".</p>
 
-      <p>The codadump tool uses a generic method to export product data into HDF4. The advantage of this approach is that updates to the Data Dictionary in the CODA library will automatically be supported by the HDF4 conversion routines when the codadump tool is rebuilt from source. Another advantage is that there exists a fixed mapping between the structure of a product file and the exported version in HDF4 format, which allows you to know beforehand what the exported file will look like.</p>
+      <p>The codadump tool uses a generic method to export product data into HDF4. The advantage of this approach is that updates to the CODA product format definitions will automatically be supported by the HDF4 conversion routines when the codadump tool is rebuilt from source. Another advantage is that there exists a fixed mapping between the structure of a product file and the exported version in HDF4 format, which allows you to know beforehand what the exported file will look like.</p>
 
       <p>There is however also a downside to this generic approach. Since the HDF4 format is more restrictive in how it can deal with complex data structures compared compared to some of raw binary product formats, some products can not properly be exported into HDF4.</p>
 
@@ -312,7 +312,7 @@ Vgroup "dataset" containing:
 
       <div class="footer">
         <hr />
-        <p>Copyright &copy; 2007-2008 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+        <p>Copyright &copy; 2007-2009 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
       </div>
 
     </div>

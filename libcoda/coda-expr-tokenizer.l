@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -49,7 +49,7 @@ INTEGER      [0-9]+
 SIGN         [+-]
 FL_MANTISSA  ({INTEGER}".")|("."{INTEGER})|({INTEGER}"."{INTEGER})
 FL_EXPONENT  [Ee]{SIGN}?{INTEGER}
-FLOAT        {FL_MANTISSA}{FL_EXPONENT}?
+FLOAT        ({FL_MANTISSA}{FL_EXPONENT}?)|({INTEGER}{FL_EXPONENT})
 IDENTIFIER   [[:alpha:]][[:alnum:]_.]*
 WHITESPACE   [[:space:]]+
 
@@ -66,8 +66,10 @@ WHITESPACE   [[:space:]]+
 "<="                    return LESS_EQUAL;
 "=="                    return EQUAL;
 "!="                    return NOT_EQUAL;
-"&&"                    return AND;
-"||"                    return OR;
+"&"                     return AND;
+"|"                     return OR;
+"&&"                    return LOGICAL_AND;
+"||"                    return LOGICAL_OR;
 "!"                     return NOT;
 ".."                    return GOTO_PARENT;
 
@@ -90,24 +92,35 @@ WHITESPACE   [[:space:]]+
 "bytes"                 return FUNC_BYTES;
 "byteoffset"            return FUNC_BYTEOFFSET;
 "bytesize"              return FUNC_BYTESIZE;
+"ceil"                  return FUNC_CEIL;
 "count"                 return FUNC_COUNT;
 "exists"                return FUNC_EXISTS;
 "filename"              return FUNC_FILENAME;
 "filesize"              return FUNC_FILESIZE;
 "float"                 return FUNC_FLOAT;
+"floor"                 return FUNC_FLOOR;
 "goto"                  return FUNC_GOTO;
 "if"                    return FUNC_IF;
 "index"                 return FUNC_INDEX;
 "int"                   return FUNC_INT;
+"isnan"                 return FUNC_ISNAN;
+"isinf"                 return FUNC_ISINF;
+"isplusinf"             return FUNC_ISPLUSINF;
+"ismininf"              return FUNC_ISMININF;
 "length"                return FUNC_LENGTH;
+"ltrim"                 return FUNC_LTRIM;
 "numelements"           return FUNC_NUMELEMENTS;
 "max"                   return FUNC_MAX;
 "min"                   return FUNC_MIN;
 "productclass"          return FUNC_PRODUCTCLASS;
 "producttype"           return FUNC_PRODUCTTYPE;
 "productversion"        return FUNC_PRODUCTVERSION;
+"round"                 return FUNC_ROUND;
+"rtrim"                 return FUNC_RTRIM;
 "str"                   return FUNC_STR;
 "substr"                return FUNC_SUBSTR;
+"trim"                  return FUNC_TRIM;
+"unboundindex"          return FUNC_UNBOUNDINDEX;
 
 {IDENTIFIER}            {
                             yylval.stringval = strdup(yytext);

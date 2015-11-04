@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -46,7 +46,7 @@ long count_product_error = 0;
 static void print_version()
 {
     printf("codacheck version %s\n", libcoda_version);
-    printf("Copyright (C) 2007-2008 S&T, The Netherlands\n");
+    printf("Copyright (C) 2007-2009 S&T, The Netherlands\n");
     printf("\n");
 }
 
@@ -420,12 +420,105 @@ static int check_data(coda_Cursor *cursor, int64_t *bit_size)
             }
             break;
         case coda_text_class:
+            {
+                coda_Type *type;
+                char *data = NULL;
+                long string_length;
+                const char *fixed_value;
+                long fixed_value_length;
+
+                if (bit_size != NULL)
+                {
+                    if (coda_cursor_get_bit_size(cursor, bit_size) != 0)
+                    {
+                        print_error_with_cursor(cursor, coda_errno);
+                        if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT)
+                        {
+                            return -1;
+                        }
+                        /* if we can't determine the bit size, don't try to read the data */
+                        break;
+                    }
+                }
+                if (coda_cursor_get_string_length(cursor, &string_length) != 0)
+                {
+                    print_error_with_cursor(cursor, coda_errno);
+                    if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT)
+                    {
+                        return -1;
+                    }
+                    /* if we can't determine the string length, don't try to read the data */
+                    break;
+                }
+                if (string_length < 0)
+                {
+                    coda_set_error(CODA_ERROR_PRODUCT, "string length is negative");
+                    print_error_with_cursor(cursor, coda_errno);
+                    /* if we can't determine a proper string length, don't try to read the data */
+                    break;
+                }
+
+                if (coda_cursor_get_type(cursor, &type) != 0)
+                {
+                    print_error_with_cursor(cursor, coda_errno);
+                    return -1;
+                }
+                if (coda_type_get_fixed_value(type, &fixed_value, &fixed_value_length) != 0)
+                {
+                    print_error_with_cursor(cursor, coda_errno);
+                    return -1;
+                }
+
+                if (string_length > 0)
+                {
+                    data = (char *)malloc(string_length + 1);
+                    if (data == NULL)
+                    {
+                        coda_set_error(CODA_ERROR_OUT_OF_MEMORY,
+                                       "out of memory (could not allocate %lu bytes) (%s:%u)", string_length + 1,
+                                       __FILE__, __LINE__);
+                        print_error_with_cursor(cursor, coda_errno);
+                        return -1;
+                    }
+                    if (coda_cursor_read_string(cursor, data, string_length + 1) != 0)
+                    {
+                        print_error_with_cursor(cursor, coda_errno);
+                        free(data);
+                        return -1;
+                    }
+                }
+
+                if (fixed_value != NULL)
+                {
+                    if (string_length != fixed_value_length)
+                    {
+                        coda_set_error(CODA_ERROR_PRODUCT, "string data does not match fixed value (length differs)");
+                        print_error_with_cursor(cursor, coda_errno);
+                        /* we do not return -1; we can just continue checking the rest of the file */
+                    }
+                    else if (string_length > 0)
+                    {
+                        if (memcmp(data, fixed_value, fixed_value_length) != 0)
+                        {
+                            coda_set_error(CODA_ERROR_PRODUCT, "string data does not match fixed value");
+                            print_error_with_cursor(cursor, coda_errno);
+                            /* we do not return -1; we can just continue checking the rest of the file */
+                        }
+                    }
+                }
+
+                if (data != NULL)
+                {
+                    free(data);
+                }
+            }
+            break;
         case coda_raw_class:
             {
                 int64_t byte_size;
                 coda_Type *type;
                 const char *fixed_value;
-                long length;
+                long fixed_value_length;
 
                 if (bit_size != NULL)
                 {
@@ -460,39 +553,39 @@ static int check_data(coda_Cursor *cursor, int64_t *bit_size)
                     print_error_with_cursor(cursor, coda_errno);
                     return -1;
                 }
-                if (coda_type_get_fixed_value(type, &fixed_value, &length) != 0)
+                if (coda_type_get_fixed_value(type, &fixed_value, &fixed_value_length) != 0)
                 {
                     print_error_with_cursor(cursor, coda_errno);
                     return -1;
                 }
                 if (fixed_value != NULL)
                 {
-                    if (byte_size != length)
+                    if (byte_size != fixed_value_length)
                     {
                         coda_set_error(CODA_ERROR_PRODUCT, "data does not match fixed value (length differs)");
                         print_error_with_cursor(cursor, coda_errno);
                         /* we do not return -1; we can just continue checking the rest of the file */
                     }
-                    else if (length > 0)
+                    else if (fixed_value_length > 0)
                     {
                         uint8_t *data;
 
-                        data = (uint8_t *)malloc(length);
+                        data = (uint8_t *)malloc(byte_size);
                         if (data == NULL)
                         {
                             coda_set_error(CODA_ERROR_OUT_OF_MEMORY,
-                                           "out of memory (could not allocate %lu bytes) (%s:%u)", length, __FILE__,
-                                           __LINE__);
+                                           "out of memory (could not allocate %lu bytes) (%s:%u)", (long)byte_size,
+                                           __FILE__, __LINE__);
                             print_error_with_cursor(cursor, coda_errno);
                             return -1;
                         }
-                        if (coda_cursor_read_bytes(cursor, data, 0, length) != 0)
+                        if (coda_cursor_read_bytes(cursor, data, 0, byte_size) != 0)
                         {
                             print_error_with_cursor(cursor, coda_errno);
                             free(data);
                             return -1;
                         }
-                        if (memcmp(data, fixed_value, length) != 0)
+                        if (memcmp(data, fixed_value, fixed_value_length) != 0)
                         {
                             coda_set_error(CODA_ERROR_PRODUCT, "data does not match fixed value");
                             print_error_with_cursor(cursor, coda_errno);
@@ -703,9 +796,7 @@ static void check_file(char *filename)
                 }
             }
             break;
-        case coda_format_xml:
-        case coda_format_hdf4:
-        case coda_format_hdf5:
+        default:
             if (!option_quick)
             {
                 if (read_check(pf) != 0)

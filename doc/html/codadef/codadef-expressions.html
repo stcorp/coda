@@ -83,6 +83,22 @@
 
       <h3>functions</h3>
     
+      <h5>isnan(float)</h5>
+      
+      <p>Returns true if (and only if) the floating point value is NaN (the special 'Not a Number' value).</p>
+
+      <h5>isinf(float)</h5>
+      
+      <p>Returns true if (and only if) the floating point value is +Inf or -Inf (minus or plus infinity).</p>
+
+      <h5>ismininf(float)</h5>
+      
+      <p>Returns true if (and only if) the floating point value is -Inf (minus infinity).</p>
+
+      <h5>isplusinf(float)</h5>
+      
+      <p>Returns true if (and only if) the floating point value is +Inf (plus infinity).</p>
+
       <h5>exists(node)</h5>
 
       <p>Some product types will have certain data elements defined as optional. For instance, a calibration data set may be available for one product, but not for another, even though both products are of the same product type. With the '<code>exists</code>' function it is possible to check for the availability of this optional data. Note that this function only works on nodes that refer to data that is actually defined as being optional. Providing a node to a location that could never exist will result in an error.</p>
@@ -127,7 +143,7 @@
 
       <h3>operators</h3>
       
-      <p>The following operations are provided: addition ('<code>+</code>'), subtraction ('<code>-</code>'), multiplication ('<code>*</code>'), division ('<code>/</code>'), modulo ('<code>%</code>'), and power ('<code>^</code>').</p>
+      <p>The following operations are provided: addition ('<code>+</code>'), subtraction ('<code>-</code>'), multiplication ('<code>*</code>'), division ('<code>/</code>'), modulo ('<code>%</code>'), power ('<code>^</code>'), bitwise and ('<code>&amp;</code>'), and bitwise or ('<code>|</code>').</p>
 
       <p>A unary '<code>-</code>' before an integer expression can be used to turn the sign of an integer.</p>
 
@@ -146,6 +162,10 @@
       <p>Convert the string to an integer value.</p>
 
       <p>The rules for conversion are the same as for specifying a constant integer value in the expression language.</p>
+
+      <h5>abs(integer)</h5>
+
+      <p>Returns the absolute value of an integer as an integer.</p>
 
       <h5>max(integer, integer)</h5>
 
@@ -231,6 +251,10 @@
       <div class="fragment"><code><b>if</b>(<b>float</b>(/calibration/value[0]) < 0.0, -1, 1)</code></div>
       <p>This will return the sign of the first array element.</p>
 
+      <h5>unboundindex(node, boolean)</h5>
+
+      <p>This function has the same behavior as the <code><b>index</b>(<i>node</i>, <i>boolean</i>)</code> function, but it will not check for the array size. It just treats the array as an unlimited array, which means you should be careful that the expression will not try to read beyond its boundary (e.g. by including a check of the <code>byteoffset</code> against the <code>filesize</code> in the boolean expression for ascii/binary files).</p>
+
       <h2>float expressions</h2>
 
       <p>A float expression is an expression that results in a floating point value.</p>
@@ -241,7 +265,7 @@
 
       <h3>constant values</h3>
       
-      <p>Floating point constant values should always have a '<code>.</code>' and can optionally have an exponent. The special values '<code>nan</code>', and '<code>inf</code>' can be used to represent the IEEE754 special cases not-a-number and infinity.</p>
+      <p>Floating point constant values should have a '<code>.</code>' and/or an exponent. The exponent should start with either a '<code>D</code>' (fortran style) or '<code>E</code>' character (case insensitive). The special values '<code>nan</code>', and '<code>inf</code>' can be used to represent the IEEE754 special cases not-a-number and infinity.</p>
 
       <p>Examples:</p>
 
@@ -251,6 +275,8 @@
 -1.
 1.0E-20
 -.09e99
+.133000D+03
+1e-6
 nan
 inf
 -inf
@@ -282,6 +308,22 @@ inf
       <p>Convert the string to a floating point value.</p>
 
       <p>The rules for conversion are the same as for specifying a constant floating point value in the expression language.</p>
+
+      <h5>abs(float)</h5>
+
+      <p>Returns the absolute value of a floating point value as a floating point value.</p>
+
+      <h5>ceil(float)</h5>
+
+      <p>Returns the smallest integral value not less than the argument as a floating point value.</p>
+
+      <h5>floor(float)</h5>
+
+      <p>Returns the largest integral value not greater than the argument as a floating point value.</p>
+
+      <h5>round(float)</h5>
+
+      <p>Returns the floating point value, rounded to nearest integer (halfway away from zero).</p>
 
       <h5>max(float, float)</h5>
 
@@ -354,7 +396,7 @@ inf
 
       <h5>bytes(node)</h5>
 
-      <p>Reads the data element pointed to by the node parameter as a raw byte array. This function differs from <code><b>str</b>(node)</code> because it is not restricted to reading text data, but can be used independent of the type of data at the node position (e.g. it can be used to read a binary record).</p>
+      <p>Reads the data element pointed to by the node parameter as a raw byte array. This function differs from <code><b>str</b>(node)</code> because it is not restricted to reading text data, but can be used independent of the type of data at the node position, as long as the data is stored in an 'ascii' or 'binary' formatted product (e.g. it can be used to read a binary record).</p>
 
       <h5>bytes(node, integer)</h5>
 
@@ -367,6 +409,24 @@ inf
       <p>Example:</p>
       <div class="fragment"><code>"bcd" == <b>substr</b>(1, 3, "abcdef")</code></div>
       <p>This should always be true.</p>
+
+      <h5>ltrim(string)</h5>
+
+      <p>Return the string with all white space characters removed from the left (=start of string).</p>
+
+      <p>The following characters are considered white space: space, tab, newline, carriage return.</p>
+
+      <h5>rtrim(string)</h5>
+
+      <p>Return the string with all white space characters removed from the right (=end of string).</p>
+
+      <p>The following characters are considered white space: space, tab, newline, carriage return.</p>
+
+      <h5>trim(string)</h5>
+
+      <p>Return the string with all white space characters removed from the left and right (=beginning and end of string).</p>
+
+      <p>The following characters are considered white space: space, tab, newline, carriage return.</p>
 
       <h5>add(node, string)</h5>
 
@@ -400,7 +460,7 @@ inf
 
       <p>A node can be specified as a relative or absolute path. An absolute path starts with a '<code>/</code>', which refers to the root of the product. Relative paths start with either '<code>.</code>', '<code>..</code>', or '<code>:</code>'. When a node starts with '<code>..</code>' this is just a shorthand for '<code>./..</code>', which refers to the parent node of the current node. The relative paths '<code>.</code>' and '<code>:</code>' both refer to the current node position but with a slightly different meaning. The '<code>:</code>' node will always refer to the node with which the evaluation was started, whereas the location of '<code>.</code>' will depend on where the expression is used (for instance, if it used within the evaluation of the second argument of a  '<code>count(node, boolean)</code>' expression it will refer to the array element in '<code>node</code>' that is being evaluated). The node position with which the evaluation is started is either equal to the node to which the expression is attached or, if the expression is not attached to a specific product parameter, it is the root of the product.</p>
 
-      <p>There is a special node expression '<code>asciiline</code>' that can only be used in expressions for product format definitions for ASCII products. The '<code>asciiline</code>' expression should be used as start point of a node expression and will map the view of a file to an array of strings where each string corresponds a single line (include end of line characters) of the ascii file. For example the expression <code><b>bitoffset</b>(<b>asciiline</b>[<b>index</b>(<b>asciiline</b>, <b>str</b>(., 1) != "#")])</code> will give the bitoffset in the file of the first line that does not start with a '#' character.</p>
+      <p>There is a special node expression '<code>asciiline</code>' that can only be used in expressions for product format definitions for ASCII products. The '<code>asciiline</code>' expression should be used as start point of a node expression and will map the view of a file to an array of strings where each string corresponds with a single line (including end of line character(s)) of the ascii file. For example the expression <code><b>bitoffset</b>(<b>asciiline</b>[<b>index</b>(<b>asciiline</b>, <b>str</b>(., 1) != "#")])</code> will give the bitoffset in the file of the first line that does not start with a '#' character.</p>
 
       <h2>formal definition</h2>
       
@@ -416,14 +476,14 @@ character = alpha | digit |
 	'-'|'.'|'/'|':'|';'|'<'|'='|'>'|'?'|'@'|'['|'\'|']'|
 	'^'|'_'|'`'|'{'|'|'|'}'|'~' ;
 
-identifier = alpha, [{alpha | alpha | '_'}] ;
+identifier = alpha, [{alpha | digit | '_'}] ;
 
 digit = '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9' ;
 sign = '+'|'-' ;
 
 intvalue = {digit} ;
 
-floatvalue = (intvalue, '.', [intvalue] | '.', intvalue), [('E' | 'e'), [sign], intvalue] ;
+floatvalue = (intvalue, '.', [intvalue] | '.', intvalue), [('E' | 'e' | 'D' | 'd'), [sign], intvalue] ;
 
 strvalue = '"', [{character-'"' | ('\', '"')}], '"' ;
 
@@ -492,7 +552,10 @@ intexpr =
 	intexpr, '/', intexpr |
 	intexpr, '%', intexpr |
 	intexpr, '^', intexpr |
+	intexpr, '&', intexpr |
+	intexpr, '|', intexpr |
 	'(', intexpr, ')' |
+	'abs', '(', intexpr, ')' |
 	'max', '(', intexpr, ',', intexpr, ')' |
 	'min', '(', intexpr, ',', intexpr, ')' |
 	'numelements', '(', node, ')' |
@@ -508,6 +571,7 @@ intexpr =
 	'index', '(', node, ')' |
 	'index', '(', node, ',', boolexpr, ')' |
 	'if', '(', boolexpr, ',', intexpr, ',' intexpr, ')' ;
+	'unboundindex', '(', node, ',', boolexpr, ')' |
 
 floatexpr = 
 	floatvalue |
@@ -537,12 +601,21 @@ floatexpr =
 	floatexpr, '^', intexpr |
 	intexpr, '^', floatexpr |
 	'(', floatexpr, ')' |
-	'min', '(', floatexpr, ',', floatexpr, ')' |
-	'min', '(', floatexpr, ',', intexpr, ')' |
-	'min', '(', intexpr, ',', floatexpr, ')' |
+	'abs', '(', floatexpr, ')' |
+	'abs', '(', intexpr, ')' |
+	'ceil', '(', floatexpr, ')' |
+	'ceil', '(', intexpr, ')' |
+	'floor', '(', floatexpr, ')' |
+	'floor', '(', intexpr, ')' |
+	'round', '(', floatexpr, ')' |
+	'round', '(', intexpr, ')' |
 	'max', '(', floatexpr, ',', floatexpr, ')' |
 	'max', '(', floatexpr, ',', intexpr, ')' |
 	'max', '(', intexpr, ',', floatexpr, ')' |
+	'min', '(', floatexpr, ',', floatexpr, ')' |
+	'min', '(', floatexpr, ',', intexpr, ')' |
+	'min', '(', intexpr, ',', floatexpr, ')' |
+	'add', '(' node, ',', floatexpr, ')' |
 	'if', '(' boolexpr, ',', floatexpr, ',', floatexpr, ')' |
 	'if', '(' boolexpr, ',', floatexpr, ',', intexpr, ')' |
 	'if', '(' boolexpr, ',', intexpr, ',', floatexpr, ')' ;
@@ -555,6 +628,9 @@ stringexpr =
 	'bytes', '(', node, ',', intexpr, ')' |
 	stringexpr, '+', stringexpr |
 	'substr', '(', intexpr, ',', intexpr, ',', stringexpr, ')' |
+	'ltrim', '(', stringexpr, ')' |
+	'rtrim', '(', stringexpr, ')' |
+	'trim', '(', stringexpr, ')' |
 	'add', '(', node, ',', stringexpr, ')' |
 	'productclass', '(', ')' |
 	'producttype', '(', ')' |
@@ -581,7 +657,7 @@ node =
 
       <div class="footer">
         <hr />
-        <p>Copyright &copy; 2007-2008 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+        <p>Copyright &copy; 2007-2009 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
       </div>
 
     </div>

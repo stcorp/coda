@@ -50,6 +50,9 @@
 #define ENABLE_HDF4_VDATA_ATTRIBUTES 1
 #endif
 
+/* Make sure we use the 1.6 compatibility API for HDF 1.8 */
+#define H5_USE_16_API
+
 #define YYMALLOC malloc
 #define YYFREE free
 

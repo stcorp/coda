@@ -2,8 +2,8 @@
 #
 project(CODA)
 
-set(CODA_VERSION 1.0)
-set(VERSION 1.0)
+set(VERSION 1.1.1)
+set(CODA_VERSION \"${VERSION}\")
 
 # General setup
 #
@@ -19,11 +19,6 @@ include(CheckIncludeFile)
 include(CheckTypeSize)
 include(TestBigEndian)
 include(CheckTypeExists)
-
-#set(CMAKE_VERBOSE_MAKEFILE OFF)
-#if (MSVC)
-#  set(CMAKE_C_FLAGS_RELEASE "/O2 /Ob2 /DNDEBUG" CACHE STRING "Flags used by the compiler during release builds." FORCE)
-#endif (MSVC)
 
 # Option handling
 #
@@ -43,16 +38,24 @@ if (NOT DISABLE_HDF4_VDATA_ATTRIBUTES)
   set(ENABLE_HDF4_VDATA_ATTRIBUTES 1)
 endif (NOT DISABLE_HDF4_VDATA_ATTRIBUTES)
 
-# zlib is needed by libcoda independent of hdf.
+# Some autoconf variables that CMake does not use itself, but
+# that are used in the config files.
 #
-find_package(ZLIB)
+set(PACKAGE_NAME \"${CMAKE_PROJECT_NAME}\")
+string(TOLOWER ${PACKAGE_NAME} PACKAGE)
+set(PACKAGE_VERSION ${CODA_VERSION})
+string(REPLACE "\"" "" PACKAGE_STRING "${PACKAGE_NAME} ${PACKAGE_VERSION}")
+set(PACKAGE_STRING \"${PACKAGE_STRING}\")
+set(VERSION \"${VERSION}\")
+set(PACKAGE_TARNAME ${PACKAGE})
+set(PACKAGE_BUGREPORT \"\")
 
-if (NOT ZLIB_FOUND)
-  message(FATAL_ERROR "zlib libraries and/or header files are not found. Try setting the ZLIB_LIB and ZLIB_INCLUDE environment variables to the location of your zlib library and include files.")
-else (NOT ZLIB_FOUND)
-  include_directories(${ZLIB_INCLUDE_DIR})
-  set (HAVE_ZLIB 1)
-endif (NOT ZLIB_FOUND)
+# Global compilation settings
+#
+if (CMAKE_COMPILER_IS_GNUCC)
+  set(GNU_WARNING_FLAGS "-W -Wall")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${GNU_WARNING_FLAGS}")
+endif (CMAKE_COMPILER_IS_GNUCC)
 
 # hdf
 #
@@ -98,40 +101,33 @@ if (LIBM_LIBRARY)
   set(HAVE_LIBM 1)
 endif (LIBM_LIBRARY)
 
-if (APPLE)
-  find_library(LIBSYSTEMSTUBS_LIBRARY SystemStubs)
-  if (LIBSYSTEMSTUBS_LIBRARY)
-    set(HAVE_LIBSYSTEMSTUBS 1)
-  endif (LIBSYSTEMSTUBS_LIBRARY)
-endif (APPLE)
-
 # Lex / Yacc - adapted from CMake's own CMakeLists.txt
 #
-FIND_PROGRAM(YACC_EXECUTABLE
+find_program(YACC_EXECUTABLE
   NAMES yacc bison
   PATHS /usr/bin
   DOC "Yacc or Bison executable")
-FIND_PROGRAM(FLEX_EXECUTABLE
+find_program(FLEX_EXECUTABLE
   NAMES flex
   PATHS /usr/bin
   DOC "Flex executable")
-MARK_AS_ADVANCED(YACC_EXECUTABLE FLEX_EXECUTABLE)
-IF(YACC_EXECUTABLE)
-  SET(BISON_FLAGS)
-  IF(YACC_EXECUTABLE MATCHES "bison")
-    SET(BISON_FLAGS "--yacc --defines")
-  ENDIF(YACC_EXECUTABLE MATCHES "bison")
-  ADD_CUSTOM_COMMAND(
+mark_as_advanced(YACC_EXECUTABLE FLEX_EXECUTABLE)
+if(YACC_EXECUTABLE)
+  set(BISON_FLAGS)
+  if(YACC_EXECUTABLE MATCHES "bison")
+    set(BISON_FLAGS "--yacc --defines")
+  endif(YACC_EXECUTABLE MATCHES "bison")
+  add_custom_command(
     OUTPUT coda-expr-parser.c coda-expr-parser.h
     DEPENDS libcoda/coda-expr-parser.y
     COMMAND
     ${YACC_EXECUTABLE} --defines=coda-expr-parser.h -ocoda-expr-parser.c ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/coda-expr-parser.y
     )
-  ADD_CUSTOM_TARGET(RerunYacc DEPENDS coda-expr-parser.c)
-ENDIF(YACC_EXECUTABLE)
+  add_custom_target(RerunYacc DEPENDS coda-expr-parser.c)
+endif(YACC_EXECUTABLE)
 
-IF(FLEX_EXECUTABLE)
-  ADD_CUSTOM_COMMAND(
+if(FLEX_EXECUTABLE)
+  add_custom_command(
     OUTPUT coda-expr-tokenizer.c
     DEPENDS libcoda/coda-expr-tokenizer.l
     COMMAND
@@ -141,53 +137,52 @@ IF(FLEX_EXECUTABLE)
     COMMAND
     ${CMAKE_COMMAND} -E copy lex.yy.c coda-expr-tokenizer.c
     )
-  ADD_CUSTOM_TARGET(RerunLex DEPENDS code-expr-tokenizer.c)
-ENDIF(FLEX_EXECUTABLE)
+  add_custom_target(RerunLex DEPENDS code-expr-tokenizer.c)
+endif(FLEX_EXECUTABLE)
 
 
 # Required include files
 #
 set(INCLUDES "")
 
-macro (FIND_INCLUDE FILE VARIABLE)
+macro (find_include FILE VARIABLE)
   CHECK_INCLUDE_FILE(${FILE} ${VARIABLE})
   if (${VARIABLE})
     set(INCLUDES ${INCLUDES} ${FILE})
   endif (${VARIABLE})
-endmacro (FIND_INCLUDE)
+endmacro (find_include)
 
-FIND_INCLUDE(dirent.h		HAVE_DIRENT_H)
-FIND_INCLUDE(dlfcn.h		HAVE_DLFCN_H)
-FIND_INCLUDE(export.h		HAVE_EXPORT_H)
-FIND_INCLUDE(inttypes.h		HAVE_INTTYPES_H)
-FIND_INCLUDE(memory.h		HAVE_MEMORY_H)
-FIND_INCLUDE(stdint.h		HAVE_STDINT_H)
-FIND_INCLUDE(stdlib.h		HAVE_STDLIB_H)
-FIND_INCLUDE(strings.h		HAVE_STRINGS_H)
-FIND_INCLUDE(string.h		HAVE_STRING_H)
-FIND_INCLUDE(sys/mman.h	    HAVE_SYS_MMAN_H)
-FIND_INCLUDE(sys/stat.h		HAVE_SYS_STAT_H)
-FIND_INCLUDE(sys/types.h	HAVE_SYS_TYPES_H)
-FIND_INCLUDE(unistd.h		HAVE_UNISTD_H)
-FIND_INCLUDE(zlib.h		    HAVE_ZLIB_H)
+find_include(dirent.h		HAVE_DIRENT_H)
+find_include(dlfcn.h		HAVE_DLFCN_H)
+find_include(export.h		HAVE_EXPORT_H)
+find_include(inttypes.h		HAVE_INTTYPES_H)
+find_include(memory.h		HAVE_MEMORY_H)
+find_include(stdint.h		HAVE_STDINT_H)
+find_include(stdlib.h		HAVE_STDLIB_H)
+find_include(strings.h		HAVE_STRINGS_H)
+find_include(string.h		HAVE_STRING_H)
+find_include(sys/mman.h	    HAVE_SYS_MMAN_H)
+find_include(sys/stat.h		HAVE_SYS_STAT_H)
+find_include(sys/types.h	HAVE_SYS_TYPES_H)
+find_include(unistd.h		HAVE_UNISTD_H)
 
 set(CMAKE_EXTRA_INCLUDE_FILES ${INCLUDES})
 
 # Required functions
 #
-CHECK_FUNCTION_EXISTS(bcopy HAVE_BCOPY)
-CHECK_FUNCTION_EXISTS(floor HAVE_FLOOR)
-CHECK_FUNCTION_EXISTS(getpagesize HAVE_GETPAGESIZE)
-CHECK_FUNCTION_EXISTS(malloc HAVE_MALLOC)
-CHECK_FUNCTION_EXISTS(memmove HAVE_MEMMOVE)
-CHECK_FUNCTION_EXISTS(mmap HAVE_MMAP)
-CHECK_FUNCTION_EXISTS(pread HAVE_PREAD)
-CHECK_FUNCTION_EXISTS(realloc HAVE_REALLOC)
-CHECK_FUNCTION_EXISTS(stat HAVE_STAT)
-CHECK_FUNCTION_EXISTS(strcasecmp HAVE_STRCASECMP)
-CHECK_FUNCTION_EXISTS(strdup HAVE_STRDUP)
-CHECK_FUNCTION_EXISTS(strncasecmp HAVE_STRNCASECMP)
-CHECK_FUNCTION_EXISTS(vsnprintf HAVE_VSNPRINTF)
+check_function_exists(bcopy HAVE_BCOPY)
+check_function_exists(floor HAVE_FLOOR)
+check_function_exists(getpagesize HAVE_GETPAGESIZE)
+check_function_exists(malloc HAVE_MALLOC)
+check_function_exists(memmove HAVE_MEMMOVE)
+check_function_exists(mmap HAVE_MMAP)
+check_function_exists(pread HAVE_PREAD)
+check_function_exists(realloc HAVE_REALLOC)
+check_function_exists(stat HAVE_STAT)
+check_function_exists(strcasecmp HAVE_STRCASECMP)
+check_function_exists(strdup HAVE_STRDUP)
+check_function_exists(strncasecmp HAVE_STRNCASECMP)
+check_function_exists(vsnprintf HAVE_VSNPRINTF)
 
 if (WIN32)
   # Hack for Windows
@@ -197,24 +192,25 @@ if (WIN32)
   set (HAVE_VSNPRINTF 1)
 endif (WIN32)
 
+
 # Required types (and their sizes)
 #
-CHECK_TYPE_EXISTS(uchar "${INCLUDES}" HAVE_UCHAR)
+check_type_exists(uchar "${INCLUDES}" HAVE_UCHAR)
 set(UCHAR "unsigned char")
-CHECK_TYPE_EXISTS(size_t "${INCLUDES}" HAVE_SIZE_T)
+check_type_exists(size_t "${INCLUDES}" HAVE_SIZE_T)
 set(SIZE_T "long")
-CHECK_TYPE_EXISTS(ptrdiff_t "${INCLUDES}" HAVE_PTRDIFF_T)
+check_type_exists(ptrdiff_t "${INCLUDES}" HAVE_PTRDIFF_T)
 set(PTRDIFF_T "int")
 
-CHECK_TYPE_SIZE(size_t SIZEOF_SIZE_T)
-CHECK_TYPE_SIZE(off_t SIZEOF_OFF_T)
-CHECK_TYPE_SIZE(double SIZEOF_DOUBLE)
-CHECK_TYPE_SIZE(float SIZEOF_FLOAT)
-CHECK_TYPE_SIZE(int SIZEOF_INT)
-CHECK_TYPE_SIZE(long SIZEOF_LONG)
-CHECK_TYPE_SIZE(short SIZEOF_SHORT)
+check_type_size(size_t SIZEOF_SIZE_T)
+check_type_size(off_t SIZEOF_OFF_T)
+check_type_size(double SIZEOF_DOUBLE)
+check_type_size(float SIZEOF_FLOAT)
+check_type_size(int SIZEOF_INT)
+check_type_size(long SIZEOF_LONG)
+check_type_size(short SIZEOF_SHORT)
 
-TEST_BIG_ENDIAN(WORDS_BIGENDIAN)
+test_big_endian(WORDS_BIGENDIAN)
 
 if (HAVE_STDLIB_H AND HAVE_STDDEF_H)
   set(STDC_HEADERS 1)
@@ -237,13 +233,19 @@ include_directories(
 
 
 # config files
+#
+add_definitions(-DHAVE_CONFIG_H)
 
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake.in 
+  ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/coda.h.cmake.in 
+  ${CMAKE_CURRENT_BINARY_DIR}/coda.h)
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/idl/coda-idl.dlm.in 
+  ${CMAKE_CURRENT_BINARY_DIR}/idl/coda-idl.dlm)
 
-ADD_DEFINITIONS(-DHAVE_CONFIG_H -DHAVE_CODA_CONFIG)
-
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/libcoda/coda.h.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/coda.h)
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/idl/coda-idl.dlm.in ${CMAKE_CURRENT_BINARY_DIR}/idl/coda-idl.dlm)
 
 # The Doxyfile uses some autoconf variables CMake does not have.
 # We set them here manually, so that we can use the same .in
@@ -252,7 +254,10 @@ CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/idl/coda-idl.dlm.in ${CMAKE_CURRENT_B
 set(top_builddir ${CMAKE_BINARY_DIR})
 set(top_srcdir ${CMAKE_SOURCE_DIR})
 set(srcdir ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/doc)
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/libcoda/doc/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/libcoda/doc/Doxyfile)
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/doc/Doxyfile.in 
+  ${CMAKE_CURRENT_BINARY_DIR}/libcoda/doc/Doxyfile)
+
 
 # libcoda sources
 #
@@ -321,147 +326,23 @@ set(LIBCODA_HDF4_FILES
   libcoda/coda-hdf4.h
 )
 
+if (WITH_HDF4)
+  set(LIBCODA_SOURCES ${LIBCODA_SOURCES} ${LIBCODA_HDF4_FILES})
+endif (WITH_HDF4)
+
+
 set(LIBCODA_HDF5_FILES
   libcoda/coda-hdf5-cursor.c
   libcoda/coda-hdf5-definition.c
   libcoda/coda-hdf5-internal.h
   libcoda/coda-hdf5-type.c
   libcoda/coda-hdf5.h
-)
-
-if (WITH_HDF4)
-  set(LIBCODA_SOURCES ${LIBCODA_SOURCES} ${LIBCODA_HDF4_FILES})
-endif (WITH_HDF4)
+  )
 
 if (WITH_HDF5)
   set(LIBCODA_SOURCES ${LIBCODA_SOURCES} ${LIBCODA_HDF5_FILES})
 endif (WITH_HDF5)
 
-
-# Custom CODA expat library
-#
-set(LIBEXPAT_SOURCES
-  libcoda/expat/ascii.h
-  libcoda/expat/asciitab.h
-  libcoda/expat/coda_expat_mangle.h
-  libcoda/expat/expat.h
-  libcoda/expat/expat_external.h
-  libcoda/expat/iasciitab.h
-  libcoda/expat/internal.h
-  libcoda/expat/latin1tab.h
-  libcoda/expat/nametab.h
-  libcoda/expat/utf8tab.h
-  libcoda/expat/xmlparse.c
-  libcoda/expat/xmlrole.c
-  libcoda/expat/xmlrole.h
-  libcoda/expat/xmltok.c
-  libcoda/expat/xmltok.h
-  libcoda/expat/xmltok_impl.h
-)
-
-include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/expat)
-add_library(expat STATIC ${LIBEXPAT_SOURCES})
-
-install(FILES coda.h DESTINATION include)
-
-# Build both shared and static libraries.
-#
-
-
-
-# Set dynamic library version
-
-set(LIBCODA_CURRENT 0)
-set(LIBCODA_REVISION 0)
-set(LIBCODA_AGE 0)
-
-#add_library(coda SHARED ${LIBCODA_SOURCES})
-#target_link_libraries(coda expat ${ZLIB_LIBRARIES} ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
-#set_target_properties(coda PROPERTIES
-#  VERSION ${LIBCODA_CURRENT}.${LIBCODA_REVISION}.${LIBCODA_AGE}
-#  SOVERSION ${LIBCODA_CURRENT}
-#)
-#install(TARGETS coda DESTINATION lib)
-
-add_library(coda-static STATIC ${LIBCODA_SOURCES})
-target_link_libraries(coda-static expat ${ZLIB_LIBRARIES})
-set_target_properties(coda-static PROPERTIES
-  OUTPUT_NAME "libcoda"
-)
-install(TARGETS coda-static DESTINATION lib)
-
-if (MSVC)
-#  set(CMAKE_C_FLAGS_RELEASE "/O2 /Ob2 /DNDEBUG")
-  set_source_files_properties(coda-expr-tokenizer.c PROPERTIES
-    COMPILE_FLAGS "/D YY_NO_UNISTD_H"
-    )
-#  set_target_properties(coda-static PROPERTIES
-#    COMPILE_FLAGS "/nologo /GX /D_MBCS /D_LIB /YX /FD /c"
-#    )
-#  set_target_properties(coda PROPERTIES
-#    COMPILE_FLAGS "/nologo /GX /D_MBCS /YX /FD /c /D_USRDLL /DLIBCODADLL_EXPORTS /DLIBCODADLL"
-#    )
-  
-endif (MSVC)
-
-
-# tools codacheck
-
-set(codacheck_SOURCES
-  tools/codacheck/codacheck.c
-  )
-add_executable(codacheck ${codacheck_SOURCES})
-target_link_libraries(codacheck coda-static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
-if (MSVC)
-  set_target_properties(codacheck PROPERTIES
-    COMPILE_FLAGS "/nologo /GX /D_CONSOLE /D_MBCS /YX /FD"
-    )
-endif (MSVC)
-
-# tools codacmp
-
-set(codacmp_SOURCES
-  tools/codacmp/codacmp.c
-  )
-add_executable(codacmp ${codacmp_SOURCES})
-target_link_libraries(codacmp coda-static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
-
-# tools/codadump
-
-set(codadump_SOURCES
-	tools/codadump/codadump-ascii.c
-	tools/codadump/codadump-debug.c
-	tools/codadump/codadump-dim.c
-	tools/codadump/codadump-filter.c
-	tools/codadump/codadump-traverse.c
-	tools/codadump/codadump.c
-	tools/codadump/codadump-filter.h
-	tools/codadump/codadump.h
-  )
-set(codadump_hdf4_files
-  tools/codadump/codadump-hdf4.c
-  )
-if (WITH_HDF4)
-  set (codadump_SOURCES ${codadump_SOURCES} ${codadump_hdf4_files})
-endif (WITH_HDF4)
-add_executable(codadump ${codadump_SOURCES})
-target_link_libraries(codadump coda-static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
-
-# tools codafind
-
-set(codafind_SOURCES
-  tools/codafind/codafind.c
-  )
-add_executable(codafind ${codafind_SOURCES})
-target_link_libraries(codafind coda-static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
-
-# tools codadd
-
-set(codadd_SOURCES
-  tools/codadd/codadd.c
-  )
-add_executable(codadd ${codadd_SOURCES})
-target_link_libraries(codadd coda-static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
 
 # fortran
 
@@ -477,13 +358,6 @@ if (NOT SUBPACKAGE_MODE)
 	fortran/checkf77.sh
     )
 endif (NOT SUBPACKAGE_MODE)
-
-set(EXTRA_DIST ${EXTRA_DIST}
-	fortran/Makefile.in
-	fortran/coda_fortran.c
-	fortran/checkf77.sh
-	fortran/example.f
-    )
 
 set(generate_finc_SOURCES
   fortran/generate-finc.c
@@ -514,57 +388,46 @@ set(CODA_MATLAB_SOURCE_FILES
   matlab/mxCreateNumericMatrix.c
   )
 
-set(EXTRA_DIST ${EXTRA_DIST}
-  ${CODA_MATLAB_SOURCE_FILES}
-  )
-
 if (BUILD_MATLAB)
   message(STATUS "CMake MATLAB build not supported yet.")
 endif (BUILD_MATLAB)
 
 # python
 
-if (BUILD_PYTHON)
+set(CODA_PYTHON_SOURCE_FILES
+  python/codac.c
+)
 
+if (BUILD_PYTHON)
   find_package(Python)
 
-  # Not including SWIG rules (yet)
+  if (NOT PYTHON)
+    message(FATAL_ERROR "PYTHON interpreter and/or header files are not found. Try setting the PYTHON and/or PYTHON_INCLUDE environment variables to the location of your PYTHON interpreter and include files.")
+  else (NOT PYTHON)
+    include_directories(${PYTHON_INCLUDE})
+  endif (NOT PYTHON)
 
-  set(EXTRA_DIST
-    ${EXTA_DIST}
-    python/codac.c
-	python/codac.py
-	$(srcdir)/python/codac.i
-	$(srcdir)/python/coda_typemaps.i
-	$(srcdir)/python/coda_ignore.i
-	$(srcdir)/python/coda_rename.i
-    )
+  find_package(NumPy)
 
-  message(FATAL_ERROR "CMake Python support not complete yet yet")
+  if (NOT NUMPY_FOUND)
+    message(FATAL_ERROR "Python numpy package is needed for the Python interface. Please install 'numpy' or, if you have already installed this package, set the NUMPY_INCLUDE environment variable and make sure that the file $NUMPY_INCLUDE/numpy/ndarrayobject.h exists.")
+  else (NOT NUMPY_FOUND)
+    include_directories(${NUMPY_INCLUDE_DIR})
+  endif (NOT NUMPY_FOUND)
+
+
+
+  set(LIBCODA_SOURCES ${LIBCODA_SOURCES} ${CODA_PYTHON_SOURCE_FILES})
+
+
+
 
 endif (BUILD_PYTHON)
-
-# *** misc distribution files ***
-
-set(EXTRA_DIST ${EXTRA_DIST}
-  CHANGES
-  COPYING
-  FAQ
-  INSTALL
-  LICENSES
-  README
-  bootstrap
-  codadef.sh
-  )
 
 # *** idl data ***
 
 set(CODA_IDL_DIMFILES
   idl/coda-idl.dlm
-  )
-
-set(EXTRA_DIST ${EXTRA_DIST}
-  idl/coda-idl.dlm.in
   )
 
 if (NOT SUBPACKAGE_MODE)
@@ -599,29 +462,168 @@ set(CODA_MATLAB_MFILES
 	matlab/coda_version.m
     )
 
-set(EXTRA_DIST ${EXTRA_DIST}
-  ${CODA_MATLAB_MFILES}
-  )
-
 if (NOT SUBPACKAGE_MODE)
   if (BUILD_MATLAB)
     set(matlabmexexec_DATA ${CODA_MATLAB_MFILES})
   endif(BUILD_MATLAB)
 endif(NOT SUBPACKAGE_MODE)
 
-# *** documentation ***
+# Custom CODA expat library
 #
-# TBD
+set(LIBEXPAT_SOURCES
+  libcoda/expat/ascii.h
+  libcoda/expat/asciitab.h
+  libcoda/expat/coda_expat_mangle.h
+  libcoda/expat/expat.h
+  libcoda/expat/expat_external.h
+  libcoda/expat/iasciitab.h
+  libcoda/expat/internal.h
+  libcoda/expat/latin1tab.h
+  libcoda/expat/nametab.h
+  libcoda/expat/utf8tab.h
+  libcoda/expat/xmlparse.c
+  libcoda/expat/xmlrole.c
+  libcoda/expat/xmlrole.h
+  libcoda/expat/xmltok.c
+  libcoda/expat/xmltok.h
+  libcoda/expat/xmltok_impl.h
+)
 
-# *** indent ***
+include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/expat)
+add_library(expat STATIC ${LIBEXPAT_SOURCES})
+
+
+# Custom CODA zlib library
 #
-# Um, let's not, for now. :-)
+set(LIBZLIB_SOURCES
+  libcoda/zlib/adler32.c
+  libcoda/zlib/coda_zlib_mangle.h
+  libcoda/zlib/crc32.c
+  libcoda/zlib/crc32.h
+  libcoda/zlib/inffast.c
+  libcoda/zlib/inffast.h
+  libcoda/zlib/inffixed.h
+  libcoda/zlib/inflate.c
+  libcoda/zlib/inflate.h
+  libcoda/zlib/inftrees.c
+  libcoda/zlib/inftrees.h
+  libcoda/zlib/zconf.h
+  libcoda/zlib/zlib.h
+  libcoda/zlib/zutil.c
+  libcoda/zlib/zutil.h
+)
+
+include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/zlib)
+add_library(z STATIC ${LIBZLIB_SOURCES})
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/coda.h DESTINATION include)
+
+# Do not build the dynamic version for now.
+#
+# Set dynamic library version
+#
+set(LIBCODA_CURRENT 0)
+set(LIBCODA_REVISION 0)
+set(LIBCODA_AGE 1)
+
+add_library(coda SHARED ${LIBCODA_SOURCES})
+target_link_libraries(coda expat z ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
+set_target_properties(coda PROPERTIES
+  VERSION ${LIBCODA_CURRENT}.${LIBCODA_REVISION}.${LIBCODA_AGE}
+  SOVERSION ${LIBCODA_CURRENT}
+)
+install(TARGETS coda DESTINATION lib)
+
+add_library(coda_static STATIC ${LIBCODA_SOURCES})
+target_link_libraries(coda_static expat z)
+set_target_properties(coda_static PROPERTIES
+  OUTPUT_NAME "coda"
+)
+install(TARGETS coda_static DESTINATION lib)
+
+if (MSVC)
+  set_source_files_properties(coda-expr-tokenizer.c PROPERTIES
+    COMPILE_FLAGS "/D YY_NO_UNISTD_H"
+    )
+endif (MSVC)
+
+
+# tools codacheck
+
+set(codacheck_SOURCES
+  tools/codacheck/codacheck.c
+  )
+add_executable(codacheck ${codacheck_SOURCES})
+target_link_libraries(codacheck coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
+install(TARGETS codacheck DESTINATION bin)
+
+if (MSVC)
+  set_target_properties(codacheck PROPERTIES
+    COMPILE_FLAGS "/nologo /GX /D_CONSOLE /D_MBCS /YX /FD"
+    )
+endif (MSVC)
+
+# tools codacmp
+
+set(codacmp_SOURCES
+  tools/codacmp/codacmp.c
+  )
+add_executable(codacmp ${codacmp_SOURCES})
+target_link_libraries(codacmp coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
+install(TARGETS codacmp DESTINATION bin)
+
+# tools/codadump
+
+set(codadump_SOURCES
+	tools/codadump/codadump-ascii.c
+	tools/codadump/codadump-debug.c
+	tools/codadump/codadump-dim.c
+	tools/codadump/codadump-filter.c
+	tools/codadump/codadump-traverse.c
+	tools/codadump/codadump.c
+	tools/codadump/codadump-filter.h
+	tools/codadump/codadump.h
+  )
+set(codadump_hdf4_files
+  tools/codadump/codadump-hdf4.c
+  )
+if (WITH_HDF4)
+  set (codadump_SOURCES ${codadump_SOURCES} ${codadump_hdf4_files})
+endif (WITH_HDF4)
+add_executable(codadump ${codadump_SOURCES})
+target_link_libraries(codadump coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
+install(TARGETS codadump DESTINATION bin)
+
+# tools codafind
+
+set(codafind_SOURCES
+  tools/codafind/codafind.c
+  )
+add_executable(codafind ${codafind_SOURCES})
+target_link_libraries(codafind coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
+install(TARGETS codafind DESTINATION bin)
+
+# tools codadd
+
+set(codadd_SOURCES
+  tools/codadd/codadd.c
+  tools/codadd/codadd-doc.c
+  tools/codadd/codadd-list.c
+  )
+add_executable(codadd ${codadd_SOURCES})
+target_link_libraries(codadd coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
+install(TARGETS codadd DESTINATION bin)
 
 
 # Windows stuff
 
 # Notice that doing this on Linux does not copy the
 # DOS line endings (CMake bug 0008506)
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/win32/coda.iss.in ${CMAKE_CURRENT_BINARY_DIR}/win32/coda.iss)
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/win32/setup.py.in ${CMAKE_CURRENT_BINARY_DIR}/win32/setup.py)
+#
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/win32/coda.iss.in 
+  ${CMAKE_CURRENT_BINARY_DIR}/win32/coda.iss)
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/win32/setup.py.in 
+  ${CMAKE_CURRENT_BINARY_DIR}/win32/setup.py)
 

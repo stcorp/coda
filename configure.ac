@@ -1,5 +1,5 @@
 # autoconf file for CODA
-AC_INIT(CODA, 1.1.1)
+AC_INIT(CODA, 1.2.0)
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE(foreign 1.8.3 -Wall)
 
@@ -66,6 +66,9 @@ int strncasecmp(const char *, const char *, size_t);
 int vsnprintf(const char *, size_t, const char *, va_list ap);
 #endif
 
+/* Make sure we use the 1.6 compatibility API for HDF 1.8 */
+#define H5_USE_16_API
+
 #endif /* !defined(CODA_CONFIG_H) */
 ])
 
@@ -90,8 +93,8 @@ AC_CONFIG_FILES([win32/coda.iss win32/setup.py])
 #    increment age.
 # 6. If any interfaces have been removed or changed since the last public
 #    release, then set age to 0.
-LIBCODA_CURRENT=0
-LIBCODA_REVISION=1
+LIBCODA_CURRENT=1
+LIBCODA_REVISION=0
 LIBCODA_AGE=0
 AC_SUBST(LIBCODA_CURRENT)
 AC_SUBST(LIBCODA_REVISION)
@@ -292,14 +295,14 @@ Try setting the PYTHON environment variable to the full path to your python exec
     AC_MSG_ERROR(BOXED_TEXT([ERROR: Python include files are needed to build the Python interface.
 Try setting the PYTHON_INCLUDE environment variable to the directory that contains Python.h.]))
   fi
-  AC_ARG_VAR(NUMARRAY_INCLUDE, [The Python include directory where the 'numarray' package is installed ($NUMARRAY_INCLUDE/numarray/arrayobject.h should exist). By default NUMARRAY_INCLUDE is set to the value of PYTHON_INCLUDE])
-  if test -z "$NUMARRAY_INCLUDE" ; then
-    NUMARRAY_INCLUDE=$PYTHON_INCLUDE
+  AC_ARG_VAR(NUMPY_INCLUDE, [The Python include directory where the 'numpy' package is installed ($NUMPY_INCLUDE/numpy/ndarrayobject.h should exist). By default NUMPY_INCLUDE is set to the value of PYTHON_INCLUDE])
+  if test -z "$NUMPY_INCLUDE" ; then
+    NUMPY_INCLUDE=$PYTHON_INCLUDE
   else
-    CPPFLAGS="-I$NUMARRAY_INCLUDE $CPPFLAGS"
+    CPPFLAGS="-I$NUMPY_INCLUDE $CPPFLAGS"
   fi
-  AC_CHECK_FILE($NUMARRAY_INCLUDE/numarray/arrayobject.h, ,
-    [AC_MSG_ERROR([BOXED_TEXT([ERROR: Python numarray package is needed for the Python interface. Please install 'numarray' or, if you have already installed this package, set the NUMARRAY_INCLUDE environment variable and make sure that the file $NUMARRAY_INCLUDE/numarray/arrayobject.h exists.])])])
+  AC_CHECK_FILE($NUMPY_INCLUDE/numpy/ndarrayobject.h, ,
+    [AC_MSG_ERROR([BOXED_TEXT([ERROR: Python numpy package is needed for the Python interface. Please install 'numpy' or, if you have already installed this package, set the NUMPY_INCLUDE environment variable and make sure that the file $NUMPY_INCLUDE/numpy/ndarrayobject.h exists.])])])
   codapythondir="$pythondir/coda"
   codapyexecdir="$pyexecdir/coda"
 fi
@@ -344,8 +347,6 @@ if test $ac_cv_with_hdf5 = yes ; then
 Try setting the HDF5_LIB and HDF5_INCLUDE environment variables to the
 location of your HDF5 library and include files.]))
   fi
-# Make sure we use the 1.6 compatibility API for HDF 1.8
-  CPPFLAGS="$CPPFLAGS -DH5_USE_16_API"
 fi 
 AC_SUBST(HDF5LIBS)
 AM_CONDITIONAL(WITH_HDF5, test $ac_cv_with_hdf5 = yes)

@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2007-2008 S&T, The Netherlands.
+// Copyright (C) 2007-2009 S&T, The Netherlands.
 //
 // This file is part of CODA.
 //
@@ -32,18 +32,16 @@
 #include "config.h"
 #endif
 
-#include "numarray/libnumarray.h"
-#include "numarray/arrayobject.h"
+#include "numpy/arrayobject.h"
 #include "coda.h"
 %}
 
 
 /*
-    make sure to initialise libnumarray.
+    make sure to initialise the NumPy array.
 */
 %init %{
-    import_libnumeric();
-    import_libnumarray();
+    import_array();
 %}
 
 
@@ -334,6 +332,7 @@ POSIX_SCALAR_OUTPUT_HELPER(uint64_t, PyLong_FromUnsignedLongLong)
     coda_double_to_datetime()::int *YEAR, int *MONTH, int *DAY, 
                                int *HOUR, int *MINUTE, int *SECOND, int *MUSEC
     coda_get_product_version()::int *version
+    coda_type_has_ascii_content::int *has_ascii_content
     coda_type_get_record_field_hidden_status()::int *hidden
     coda_type_get_record_field_available_status()::int *available
     coda_type_get_record_union_status()::int *is_union
@@ -347,12 +346,11 @@ POSIX_SCALAR_OUTPUT_HELPER(uint64_t, PyLong_FromUnsignedLongLong)
                      int *HOUR, int *MINUTE, int *SECOND, int *MUSEC,
                      int *version,
                      int *has_ascii_content,
-                     int *has_xml_content,
-                     int *depth,
                      int *hidden,
                      int *available,
                      int *is_union,
                      int *num_dims,
+                     int *depth,
                      int *product_version };
 
 
@@ -379,13 +377,11 @@ POSIX_SCALAR_OUTPUT_HELPER(uint64_t, PyLong_FromUnsignedLongLong)
 /*
     coda_cursor_read_complex_double_split()::double *dst_re, double *dst_im
     coda_datetime_to_double()::double *datetime
-    coda_string_to_time()::double *time
+    coda_string_to_time()::double *datetime
 */
 %apply double *OUTPUT { double *dst,
                         double *dst_re, double *dst_im,
-                        double *dst_latitude, double *dst_longitude,
-                        double *datetime,
-                        double *time };
+                        double *datetime };
 
 
 /*
@@ -521,38 +517,38 @@ POSIX_SCALAR_OUTPUT_HELPER(uint64_t, PyLong_FromUnsignedLongLong)
     simple-type (POSIX/standard C) arrays (e.g. int8_t), standard
     C floating point type (float,double) or characters (read as int8).
 */
-NUMARRAY_OUTPUT_HELPER(cursor_read_int8_array,coda_cursor_read_int8_array,int8_t,tInt8)
-NUMARRAY_OUTPUT_HELPER(cursor_read_uint8_array,coda_cursor_read_uint8_array,uint8_t,tUInt8)
-NUMARRAY_OUTPUT_HELPER(cursor_read_int16_array,coda_cursor_read_int16_array,int16_t,tInt16)
-NUMARRAY_OUTPUT_HELPER(cursor_read_uint16_array,coda_cursor_read_uint16_array,uint16_t,tUInt16)
-NUMARRAY_OUTPUT_HELPER(cursor_read_int32_array,coda_cursor_read_int32_array,int32_t,tInt32)
-NUMARRAY_OUTPUT_HELPER(cursor_read_uint32_array,coda_cursor_read_uint32_array,uint32_t,tUInt32)
-NUMARRAY_OUTPUT_HELPER(cursor_read_int64_array,coda_cursor_read_int64_array,int64_t,tInt64)
-NUMARRAY_OUTPUT_HELPER(cursor_read_uint64_array,coda_cursor_read_uint64_array,uint64_t,tUInt64)
-NUMARRAY_OUTPUT_HELPER(cursor_read_float_array,coda_cursor_read_float_array,float,tFloat32)
-NUMARRAY_OUTPUT_HELPER(cursor_read_double_array,coda_cursor_read_double_array,double,tFloat64)
-NUMARRAY_OUTPUT_HELPER(cursor_read_char_array,coda_cursor_read_char_array,char,tInt8)
+NUMPY_OUTPUT_HELPER(cursor_read_int8_array,coda_cursor_read_int8_array,int8_t,NPY_INT8)
+NUMPY_OUTPUT_HELPER(cursor_read_uint8_array,coda_cursor_read_uint8_array,uint8_t,NPY_UINT8)
+NUMPY_OUTPUT_HELPER(cursor_read_int16_array,coda_cursor_read_int16_array,int16_t,NPY_INT16)
+NUMPY_OUTPUT_HELPER(cursor_read_uint16_array,coda_cursor_read_uint16_array,uint16_t,NPY_UINT16)
+NUMPY_OUTPUT_HELPER(cursor_read_int32_array,coda_cursor_read_int32_array,int32_t,NPY_INT32)
+NUMPY_OUTPUT_HELPER(cursor_read_uint32_array,coda_cursor_read_uint32_array,uint32_t,NPY_UINT32)
+NUMPY_OUTPUT_HELPER(cursor_read_int64_array,coda_cursor_read_int64_array,int64_t,NPY_INT64)
+NUMPY_OUTPUT_HELPER(cursor_read_uint64_array,coda_cursor_read_uint64_array,uint64_t,NPY_UINT64)
+NUMPY_OUTPUT_HELPER(cursor_read_float_array,coda_cursor_read_float_array,float,NPY_FLOAT32)
+NUMPY_OUTPUT_HELPER(cursor_read_double_array,coda_cursor_read_double_array,double,NPY_FLOAT64)
+NUMPY_OUTPUT_HELPER(cursor_read_char_array,coda_cursor_read_char_array,char,NPY_INT8)
 
 
 /*
 	create helper functions for read_* functions that read
 	special type complex as a pair of doubles.
 */
-DOUBLE_PAIR_NUMARRAY_OUTPUT_HELPER(cursor_read_complex_double_pair,coda_cursor_read_complex_double_pair)
+DOUBLE_PAIR_NUMPY_OUTPUT_HELPER(cursor_read_complex_double_pair,coda_cursor_read_complex_double_pair)
 
 
 /*
     create helper functions for read_*_array functions that read
     special type complex into split arrays.
 */
-SPLIT_NUMARRAY_OUTPUT_HELPER(cursor_read_complex_double_split_array,coda_cursor_read_complex_double_split_array,double,tFloat64)
+SPLIT_NUMPY_OUTPUT_HELPER(cursor_read_complex_double_split_array,coda_cursor_read_complex_double_split_array,double,NPY_FLOAT64)
 
 
 /*
 	create helper functions to read_*_array functions that read special
 	type complex as arrays of pairs of doubles.
 */
-DOUBLE_PAIR_ARRAY_NUMARRAY_OUTPUT_HELPER(cursor_read_complex_double_pairs_array,coda_cursor_read_complex_double_pairs_array)
+DOUBLE_PAIR_ARRAY_NUMPY_OUTPUT_HELPER(cursor_read_complex_double_pairs_array,coda_cursor_read_complex_double_pairs_array)
 
 
 /*
@@ -580,11 +576,11 @@ DOUBLE_PAIR_ARRAY_NUMARRAY_OUTPUT_HELPER(cursor_read_complex_double_pairs_array,
 
 
 /*
-    helper function to read an array of complex numbers as a numarray of type
-    Complex64. no associated function in the CODA C library exists, i.e. this
+    helper function to read an array of complex numbers as a numpy of type
+    complex64. no associated function in the CODA C library exists, i.e. this
     function is specific to the coda-python module.
 */
-NUMARRAY_OUTPUT_HELPER(cursor_read_complex_array,coda_cursor_read_complex_double_pairs_array,double,tComplex64)
+NUMPY_OUTPUT_HELPER(cursor_read_complex_array,coda_cursor_read_complex_double_pairs_array,double,NPY_COMPLEX64)
 
 
 /*
@@ -613,14 +609,14 @@ NUMARRAY_OUTPUT_HELPER(cursor_read_complex_array,coda_cursor_read_complex_double
     PyObject *cursor_read_bits(const coda_Cursor *cursor, int64_t bit_offset, int64_t bit_length)
     {
         int64_t byte_length;
-        int tmp_byte_length;
+        npy_intp tmp_byte_length;
         int tmp_result;
-        PyArrayObject *tmp;
+        PyObject *tmp;
     
         byte_length = (bit_length >> 3) + ((bit_length & 0x7) != 0 ? 1 : 0);
 
         /*
-            throw an exception if byte_length > INT_MAX, because PyArray_FromDims
+            throw an exception if byte_length > INT_MAX, because PyArray_SimpleNew
             does not support larger array sizes.
         */
         if (byte_length > INT_MAX)
@@ -629,14 +625,14 @@ NUMARRAY_OUTPUT_HELPER(cursor_read_complex_array,coda_cursor_read_complex_double
             return NULL;
         }
         
-        tmp_byte_length = (int)byte_length;
-        tmp = (PyArrayObject*)PyArray_FromDims(1, &tmp_byte_length, tUInt8);
+        tmp_byte_length = (npy_intp)byte_length;
+        tmp = PyArray_SimpleNew(1, &tmp_byte_length, NPY_UINT8);
         if (tmp == NULL)
         {
             return PyErr_NoMemory();
         }
     
-        tmp_result = coda_cursor_read_bits(cursor, (uint8_t *)tmp->data, bit_offset, bit_length);
+        tmp_result = coda_cursor_read_bits(cursor, (uint8_t *)PyArray_DATA(tmp), bit_offset, bit_length);
     
         if (tmp_result < 0)
         {
@@ -644,7 +640,7 @@ NUMARRAY_OUTPUT_HELPER(cursor_read_complex_array,coda_cursor_read_complex_double
             return PyErr_Format(codacError, "coda_cursor_read_bits(): %s", coda_errno_to_string(coda_errno));
         }
         
-        return (PyObject*) tmp;
+        return tmp;
     }
 %}
 %ignore coda_cursor_read_bits;
@@ -657,12 +653,12 @@ NUMARRAY_OUTPUT_HELPER(cursor_read_complex_array,coda_cursor_read_complex_double
 %{
     PyObject *cursor_read_bytes(const coda_Cursor *cursor, int64_t offset, int64_t length)
     {
-        int tmp_length;
+        npy_intp tmp_length;
         int tmp_result;
-        PyArrayObject *tmp;
+        PyObject *tmp;
     
         /*
-            throw an exception if length > INT_MAX, because PyArray_FromDims does not
+            throw an exception if length > INT_MAX, because PyArray_SimpleNew does not
             support larger array sizes.
         */
         if( length > INT_MAX )
@@ -671,14 +667,14 @@ NUMARRAY_OUTPUT_HELPER(cursor_read_complex_array,coda_cursor_read_complex_double
             return NULL;
         }
         
-        tmp_length = (int)length;
-        tmp = (PyArrayObject *)PyArray_FromDims(1, &tmp_length, tUInt8);
+        tmp_length = (npy_intp)length;
+        tmp = PyArray_SimpleNew(1, &tmp_length, NPY_UINT8);
         if (tmp == NULL)
         {
             return PyErr_NoMemory();
         }
     
-        tmp_result = coda_cursor_read_bytes(cursor, (uint8_t *)tmp->data, offset, length);
+        tmp_result = coda_cursor_read_bytes(cursor, (uint8_t *)PyArray_DATA(tmp), offset, length);
     
         if (tmp_result < 0)
         {
@@ -686,7 +682,7 @@ NUMARRAY_OUTPUT_HELPER(cursor_read_complex_array,coda_cursor_read_complex_double
             return PyErr_Format(codacError, "coda_cursor_read_bytes(): %s", coda_errno_to_string(coda_errno));
         }
         
-        return (PyObject*) tmp;
+        return tmp;
     }
 %}
 %ignore coda_cursor_read_bytes;

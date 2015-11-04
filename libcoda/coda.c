@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -89,7 +89,7 @@ int coda_option_use_fast_size_expressions = 1;
 int coda_option_use_mmap = 1;
 
 /** Enable/Disable the use of special types.
- * The CODA Data Dictionary contains a series of special types that were introduced to make it easier for the user to
+ * The CODA type system contains a series of special types that were introduced to make it easier for the user to
  * read certain types of information. Examples of special types are the 'time', 'complex', and 'no data'
  * types. Each special data type is an abstraction on top of another non-special data type. Sometimes you want to
  * access a file using just the non-special data types (e.g. if you want to get to the raw time data in a file).
@@ -227,8 +227,8 @@ LIBCODA_API int coda_get_option_perform_conversions(void)
  * If the use of fast size expressions is enabled (the default), CODA will use the 'faster' method of retrieving
  * the size/offset information for a data element (e.g. use the contents of the record field that contains the record
  * size). Note that this faster method only occurs when the data element, such as the record, also has a
- * 'fast expression' associated with it (if this is the case then this expression is shown in the Data Dictionary
- * documentation for the data element).
+ * 'fast expression' associated with it (if this is the case then this expression is shown in the Product Format
+ * Definition documentation for the data element).
  *
  * If this option is disabled then CODA will only use the traditional method for calculating the size (or offset) and
  * thus ignore any 'fast expressions' that may exist.
@@ -360,13 +360,13 @@ static char *coda_definition_path = NULL;
  */
 LIBCODA_API int coda_set_definition_path(const char *path)
 {
+    if (coda_definition_path != NULL)
+    {
+        free(coda_definition_path);
+        coda_definition_path = NULL;
+    }
     if (path == NULL)
     {
-        if (coda_definition_path != NULL)
-        {
-            free(coda_definition_path);
-            coda_definition_path = NULL;
-        }
         return 0;
     }
     coda_definition_path = strdup(path);
@@ -489,6 +489,8 @@ int coda_get_type_for_dynamic_type(coda_DynamicType *dynamic_type, coda_Type **t
         case coda_format_xml:
             return coda_xml_get_type_for_dynamic_type(dynamic_type, type);
         case coda_format_hdf4:
+        case coda_format_cdf:
+        case coda_format_netcdf:
 #ifdef HAVE_HDF4
             return coda_hdf4_get_type_for_dynamic_type(dynamic_type, type);
 #else

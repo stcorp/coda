@@ -27,7 +27,7 @@
 %     integer back to a floating point value and divide it by 10 again.
 %     To see which fields of a product are effected by the
 %     PerformConversions option and what the conversion factor is look
-%     at the Data Dictionary documentation that came with CODA.
+%     at the corresponding CODA Product Format Definition documentation.
 %     You should also be aware that changing this option not only
 %     effects the result of coda_fetch, but also the result of
 %     coda_class (since this may, for instance, return 'single' instead

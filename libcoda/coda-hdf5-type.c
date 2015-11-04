@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -49,7 +49,14 @@ int coda_hdf5_type_get_read_type(const coda_Type *type, coda_native_type *read_t
 
 int coda_hdf5_type_get_string_length(const coda_Type *type, long *length)
 {
-    *length = H5Tget_size(((coda_hdf5BasicDataType *)type)->datatype_id);
+    if (((coda_hdf5BasicDataType *)type)->is_variable_string)
+    {
+        *length = -1;
+    }
+    else
+    {
+        *length = H5Tget_size(((coda_hdf5BasicDataType *)type)->datatype_id);
+    }
 
     return 0;
 }

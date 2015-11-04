@@ -7,7 +7,7 @@
 
 
 /* This is the current version of coda */
-#define CODA_VERSION "1.0"
+#cmakedefine CODA_VERSION ${CODA_VERSION}
 
 /* Define to 1 if HDF4 Vdata/Vgroup attributes can be used (only enable if
    CODA is linked against HDF4 library version 4.2r2 or higher). */
@@ -132,32 +132,26 @@
 /* Define to 1 if you have the `vsnprintf' function. */
 #cmakedefine HAVE_VSNPRINTF ${HAVE_VSNPRINTF}
 
-/* Define to 1 if zlib is available. */
-#cmakedefine HAVE_ZLIB ${HAVE_ZLIB}
-
-/* Define to 1 if you have the <zlib.h> header file. */
-#cmakedefine HAVE_ZLIB_H ${HAVE_ZLIB_H}
-
 /* Define to 1 if your C compiler doesn't accept -c and -o together. */
 #cmakedefine NO_MINUS_C_MINUS_O ${NO_MINUS_C_MINUS_O}
 
 /* Name of package */
-#define PACKAGE "coda"
+#cmakedefine PACKAGE ${PACKAGE}
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT ""
+#cmakedefine PACKAGE_BUGREPORT ${PACKAGE_BUGREPORT}
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "CODA"
+#cmakedefine PACKAGE_NAME ${PACKAGE_NAME}
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "CODA 1.0"
+#cmakedefine PACKAGE_STRING ${PACKAGE_STRING}
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "coda"
+#cmakedefine PACKAGE_TARNAME ${PACKAGE_TARNAME}
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.0"
+#cmakedefine PACKAGE_VERSION ${PACKAGE_VERSION}
 
 /* Define to the compiler attribute to test for printf format compliance */
 #cmakedefine PRINTF_ATTR ${PRINTF_ATTR}
@@ -169,7 +163,7 @@
 #cmakedefine TM_IN_SYS_TIME ${TM_IN_SYS_TIME}
 
 /* Version number of package */
-#define VERSION "1.0"
+#cmakedefine VERSION ${VERSION}
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
@@ -320,7 +314,64 @@ int vsnprintf(const char *, size_t, const char *, va_list ap);
 #endif
 
 #ifdef WIN32
-#include "../win32/config.h"
+/* include windows specific headers */
+#include <windows.h>
+#include <io.h>
+#include <direct.h>
+
+/* include sys/stat.h because we are going to override stat */
+#include <sys/stat.h>
+
+/* we need to redefine ELEMENT_TYPE because it conflicts with io.h contents */
+#define ELEMENT_TYPE ELEMENT_TYPE_RENAMED
+#define XML_NS 1
+#define XML_DTD 1
+#define XML_LARGE_SIZE 1
+#define XML_CONTEXT_BYTES 1024
+#define XML_BUILDING_EXPAT 1
+
+/* redefines for special string handling functions */
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
+#define snprintf _snprintf
+#define vsnprintf _vsnprintf
+
+/* redefines for file handling functions */
+#define open(arg1,arg2) _open(arg1,arg2)
+#define close(arg1) _close(arg1)
+#define read(arg1,arg2,arg3) _read(arg1,arg2,arg3)
+#define lseek(arg1,arg2,arg3) _lseeki64(arg1,arg2,arg3)
+#define off_t __int64
+#define stat _stati64
+#define S_IFREG _S_IFREG
+
+#define YYMALLOC malloc
+#define YYFREE free
+
+/* coda-idl defines */
+
+#ifdef IDL_V5_3
+#define HAVE_IDL_SYSFUN_DEF2 1
+#endif
+
+#ifdef IDL_V5_4
+#define HAVE_IDL_SYSFUN_DEF2 1
+#define HAVE_IDL_SYSRTN_UNION 1
+#endif
+
+/* coda-matlab defines */
+
+#if defined(MATLAB_R11) || defined(MATLAB_R12)
+#define mxCreateDoubleScalar replacement_mxCreateDoubleScalar
+#else
+#define HAVE_MXCREATEDOUBLESCALAR 1
+#endif
+
+#ifdef MATLAB_R11
+#define mxCreateNumericMatrix replacement_mxCreateNumericMatrix
+#else
+#define HAVE_MXCREATENUMERICMATRIX 1
+#endif
 #endif
 
 #endif /* !defined(CODA_CONFIG_H) */

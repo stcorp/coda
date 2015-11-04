@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -45,7 +45,7 @@ int show_description;
 static void print_version()
 {
     printf("codadump version %s\n", libcoda_version);
-    printf("Copyright (C) 2007-2008 S&T, The Netherlands\n");
+    printf("Copyright (C) 2007-2009 S&T, The Netherlands\n");
     printf("\n");
 }
 
@@ -71,7 +71,7 @@ static void print_help()
     printf("                    show all possible values for a variable sized dim\n");
     printf("                    (implies --calc_dim)\n");
     printf("            --no_special_types\n");
-    printf("                    bypass special data types from the CODA Data Dictionary -\n");
+    printf("                    bypass special data types from the CODA format definition -\n");
     printf("                    data with a special type is treated using its non-special\n");
     printf("                    base type\n");
     printf("\n");
@@ -95,7 +95,7 @@ static void print_help()
     printf("            -t, --time_as_string\n");
     printf("                    print time as a string (instead of a floating point value)\n");
     printf("            --no_special_types\n");
-    printf("                    bypass special data types from the CODA Data Dictionary -\n");
+    printf("                    bypass special data types from the CODA format definition -\n");
     printf("                    data with a special type is treated using its non-special\n");
     printf("                    base type\n");
     printf("\n");
@@ -112,7 +112,7 @@ static void print_help()
     printf("            -s, --silent\n");
     printf("                    run in silent mode\n");
     printf("            --no_special_types\n");
-    printf("                    bypass special data types from the CODA Data Dictionary -\n");
+    printf("                    bypass special data types from the CODA format definition -\n");
     printf("                    data with a special type is treated using its non-special\n");
     printf("                    base type\n");
     printf("\n");

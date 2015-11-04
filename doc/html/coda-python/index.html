@@ -195,27 +195,27 @@ import coda
       <table class="fancy" border="1" cellspacing="0">
         <tr><th>CODA&nbsp;class</th><th>CODA&nbsp;read&nbsp;type / CODA&nbsp;special&nbsp;type</th><th>Python data type</th></tr>
         <tr><td>record</td><td>&nbsp;</td><td><code>coda.Record</code></td></tr>
-        <tr><td>array</td><td>&nbsp;</td><td>Depending on the base type this will be either an array of scalars (a <code>numarray.array</code> object) or an array of Python objects (a <code>numarray.objects.array</code> object). The following table relates the CODA array base type to the numarray base type:
+        <tr><td>array</td><td>&nbsp;</td><td>This will be a numpy array (<code>numpy.array</code>) object. The following table relates the CODA array base type to the numpy base type:
            <table class="fancy" border="1" cellspacing="0">
-             <tr><th>CODA&nbsp;class</th><th>CODA&nbsp;read&nbsp;type / CODA&nbsp;special&nbsp;type</th><th>numarray base type</th></tr>
+             <tr><th>CODA&nbsp;class</th><th>CODA&nbsp;read&nbsp;type / CODA&nbsp;special&nbsp;type</th><th>numpy base type</th></tr>
              <tr><td>record</td><td>&nbsp;</td><td>Python object (<code>coda.Record</code>)</td></tr>
-             <tr><td>array</td><td>&nbsp;</td><td>Python object (a numarray object)</td></tr>
-             <tr><td>integer</td><td>int8</td><td>Int8</td></tr>
-             <tr><td>integer</td><td>uint8</td><td>UInt8</td></tr>
-             <tr><td>integer</td><td>int16</td><td>Int16</td></tr>
-             <tr><td>integer</td><td>uint16</td><td>UInt16</td></tr>
-             <tr><td>integer</td><td>int32</td><td>Int32</td></tr>
-             <tr><td>integer</td><td>uint32</td><td>UInt32</td></tr>
-             <tr><td>integer</td><td>int64</td><td>Int64</td></tr>
-             <tr><td>integer</td><td>uint64</td><td>UInt64</td></tr>
-             <tr><td>real</td><td>float</td><td>Float32</td></tr>
-             <tr><td>real</td><td>double</td><td>Float64</td></tr>
+             <tr><td>array</td><td>&nbsp;</td><td>Python object (a <code>numpy.array</code> object)</td></tr>
+             <tr><td>integer</td><td>int8</td><td>int8</td></tr>
+             <tr><td>integer</td><td>uint8</td><td>uint8</td></tr>
+             <tr><td>integer</td><td>int16</td><td>int16</td></tr>
+             <tr><td>integer</td><td>uint16</td><td>uint16</td></tr>
+             <tr><td>integer</td><td>int32</td><td>int32</td></tr>
+             <tr><td>integer</td><td>uint32</td><td>uint32</td></tr>
+             <tr><td>integer</td><td>int64</td><td>int64</td></tr>
+             <tr><td>integer</td><td>uint64</td><td>uint64</td></tr>
+             <tr><td>real</td><td>float</td><td>float32</td></tr>
+             <tr><td>real</td><td>double</td><td>float64</td></tr>
              <tr><td>text</td><td>char</td><td>Python object (the Python object is a Python String of length 1)</td></tr>
              <tr><td>text</td><td>string</td><td>Python object (Python String)</td></tr>
-             <tr><td>raw</td><td>bytes</td><td>Python object (<code>numarray.array</code> array with base type uint8)</td></tr>
+             <tr><td>raw</td><td>bytes</td><td>Python object (<code>numpy.array</code> object with base type uint8)</td></tr>
              <tr><td>special</td><td>no_data</td><td>Python object (<code>None</code>)</td></tr>
-             <tr><td>special</td><td>time</td><td>Float64</td></tr>
-             <tr><td>special</td><td>complex</td><td>Complex64</td></tr>
+             <tr><td>special</td><td>time</td><td>float64</td></tr>
+             <tr><td>special</td><td>complex</td><td>complex64</td></tr>
            </table>   
         </td></tr>
         <tr><td>integer</td><td>int8</td><td>Python Integer</td></tr>
@@ -230,7 +230,7 @@ import coda
         <tr><td>real</td><td>double</td><td>Python Float</td></tr>
         <tr><td>text</td><td>char</td><td>Python String</td></tr>
         <tr><td>text</td><td>string</td><td>Python String</td></tr>
-        <tr><td>raw</td><td>bytes</td><td><code>numarray.array</code> array with base type uint8</td></tr>
+        <tr><td>raw</td><td>bytes</td><td><code>numpy.array</code> object with base type uint8</td></tr>
         <tr><td>special</td><td>no_data</td><td><code>None</code></td></tr>
         <tr><td>special</td><td>time</td><td>Python Float</td></tr>
         <tr><td>special</td><td>complex</td><td>Python Complex Number</td></tr>
@@ -242,7 +242,7 @@ import coda
 
       <p>The <code>start</code> parameter determines the offset in the product from which the <code>path</code> parameter is expanded. It can either be a file handle or a CODA Cursor (see <a href="#low_level_types">Low level CODA Data Types</a>). When a file handle is passed we start at the root of the product and when it is a cursor we start at the position of the cursor.</p>
 
-      <p>The <code>path</code> argument is actually a series of parameters (which can also be empty). Starting from the <code>start</code> position, the <code>path</code> parameters should provide valid fieldnames and array indices to navigate deeper into the product. For example, suppose we have a product that  has a <code>measurements</code> data set with 100 data set records and in each data set record there is a <code>time</code> field containing a time value of type double. If we want to read the time value in the first data set record (using the file handle <code>filehandle</code> as <code>start</code> parameter) we would use: <code>coda.fetch(filehandle, "measurements", 0, "time")</code>. However, it is also possible to read several data elements at once. We can for instance read the full data set record using <code>coda.fetch(filehandle, "measurements", 0)</code> or even read the whole product using <code>coda.fetch(filehandle)</code>. When you read a group of data at once, CODA will create a dynamic data structure in Python (consisting of <code>coda.Record</code> and numarray objects to represent records and arrays) for the product data that is read.</p>
+      <p>The <code>path</code> argument is actually a series of parameters (which can also be empty). Starting from the <code>start</code> position, the <code>path</code> parameters should provide valid fieldnames and array indices to navigate deeper into the product. For example, suppose we have a product that has a <code>measurements</code> data set with 100 data set records and in each data set record there is a <code>time</code> field containing a time value of type double. If we want to read the time value in the first data set record (using the file handle <code>filehandle</code> as <code>start</code> parameter) we would use: <code>coda.fetch(filehandle, "measurements", 0, "time")</code>. However, it is also possible to read several data elements at once. We can for instance read the full data set record using <code>coda.fetch(filehandle, "measurements", 0)</code> or even read the whole product using <code>coda.fetch(filehandle)</code>. When you read a group of data at once, CODA will create a dynamic data structure in Python (consisting of <code>coda.Record</code> and <code>numpy.array</code> objects to represent records and arrays) for the product data that is read.</p>
 
       <p>The two types of arguments that you can use in the list of arguments for <code>path</code> are:</p>
       <ul>
@@ -276,7 +276,7 @@ import coda
 
       <p>Retrieve the description of a field.</p>
 
-      <p>This function returns a string containing the description in the data dictionary of the specified data element.</p>
+      <p>This function returns a string containing the description in the CODA product format definition of the specified data element.</p>
 
       <p>The <code>start</code> parameter must be a valid CODA file handle that was retrieved with <code>coda.open()</code> <i>or</i> a valid <a href="#low_level_types">CODA Cursor</a>. If the start argument is a cursor, then the specified path is traversed starting from the position represented by the cursor. The format of the <code>path</code> argument is described at the <a href="#coda_path_argument">top of this section</a>.</p>
 
@@ -346,7 +346,7 @@ import coda
 
       <p>Retrieve unit information.</p>
 
-      <p>This function returns a string containing the unit information which is stored in the data dictionary for the specified data item.</p>
+      <p>This function returns a string containing the unit information which is stored in the CODA product format definition for the specified data item.</p>
 
       <p>The <code>start</code> parameter must be a valid CODA file handle that was retrieved with <code>coda.open()</code> <i>or</i> a valid <a href="#low_level_types">CODA Cursor</a>. If the start argument is a cursor, then the specified path is traversed starting from the position represented by the cursor. The format of the <code>path</code> argument is described at the <a href="#coda_path_argument">top of this section</a>.</p>
 
@@ -530,38 +530,38 @@ except coda.CodacError, e:
       <h5 id="coda_cursor_read_bits"><code>dst = coda.cursor_read_bits(cursor, bit_offset, bit_length)</code></h5>
       <h5 id="coda_cursor_read_bytes"><code>dst = coda.cursor_read_bytes(cursor, offset, length)</code></h5>
       <h5 id="coda_cursor_read_int8_array"><code>dst = coda.cursor_read_int8_array(cursor)</code></h5>
-      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numarray object using C array ordering.</p>
+      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numpy array object using C array ordering.</p>
       <h5 id="coda_cursor_read_uint8_array"><code>dst = coda.cursor_read_uint8_array(cursor)</code></h5>
-      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numarray object using C array ordering.</p>
+      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numpy array  object using C array ordering.</p>
       <h5 id="coda_cursor_read_int16_array"><code>dst = coda.cursor_read_int16_array(cursor)</code></h5>
-      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numarray object using C array ordering.</p>
+      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numpy array  object using C array ordering.</p>
       <h5 id="coda_cursor_read_uint16_array"><code>dst = coda.cursor_read_uint16_array(cursor)</code></h5>
-      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numarray object using C array ordering.</p>
+      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numpy array  object using C array ordering.</p>
       <h5 id="coda_cursor_read_int32_array"><code>dst = coda.cursor_read_int32_array(cursor)</code></h5>
-      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numarray object using C array ordering.</p>
+      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numpy array  object using C array ordering.</p>
       <h5 id="coda_cursor_read_uint32_array"><code>dst = coda.cursor_read_uint32_array(cursor)</code></h5>
-      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numarray object using C array ordering.</p>
+      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numpy array  object using C array ordering.</p>
       <h5 id="coda_cursor_read_int64_array"><code>dst = coda.cursor_read_int64_array(cursor)</code></h5>
-      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numarray object using C array ordering.</p>
+      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numpy array  object using C array ordering.</p>
       <h5 id="coda_cursor_read_uint64_array"><code>dst = coda.cursor_read_uint64_array(cursor)</code></h5>
-      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numarray object using C array ordering.</p>
+      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numpy array  object using C array ordering.</p>
       <h5 id="coda_cursor_read_float_array"><code>dst = coda.cursor_read_float_array(cursor)</code></h5>
-      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numarray object using C array ordering.</p>
+      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numpy array  object using C array ordering.</p>
       <h5 id="coda_cursor_read_double_array"><code>dst = coda.cursor_read_double_array(cursor)</code></h5>
-      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numarray object using C array ordering.</p>
+      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numpy array  object using C array ordering.</p>
       <h5 id="coda_cursor_read_char_array"><code>dst = coda.cursor_read_char_array(cursor)</code></h5>
-      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numarray object using C array ordering.</p>
+      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numpy array  object using C array ordering.</p>
       <p>Since Python does not have a native char type the character array will be returned as an array of signed 8 bit integers.</p>
       <h5 id="coda_cursor_read_complex_double_pair"><code>dst = coda.cursor_read_complex_double_pair</code></h5>
       <h5 id="coda_cursor_read_complex_double_pairs_array"><code>dst = coda.cursor_read_complex_double_pairs_array</code></h5>
-      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numarray object using C array ordering.</p>
+      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numpy array  object using C array ordering.</p>
       <h5 id="coda_cursor_read_complex_double_split"><code>[dst_re, dst_im] = coda.cursor_read_complex_double_split</code></h5>
       <h5 id="coda_cursor_read_complex_double_split_array"><code>[dst_re, dst_im] = coda.cursor_read_complex_double_split_array</code></h5>
-      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numarray object using C array ordering.</p>
+      <p>No <code>array_ordering</code> parameter is required; CODA will always return the array data in a numpy array  object using C array ordering.</p>
       
       <div class="footer">
         <hr />
-        <p>Copyright &copy; 2007-2008 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+        <p>Copyright &copy; 2007-2009 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
       </div>
 
     </div>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -90,7 +90,7 @@ int coda_bin_type_get_unit(const coda_Type *type, const char **unit)
             *unit = ((coda_binVSFInteger *)type)->unit;
             break;
         case tag_bin_time:
-            *unit = "MJD2000";
+            *unit = "s since 2000-01-01";
             break;
         case tag_bin_complex:
             /* use unit of element type */

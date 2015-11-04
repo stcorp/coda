@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -31,7 +31,7 @@
 
 static void print_copyright_notice(void)
 {
-    printf("C Copyright (C) 2007-2008 S&T, The Netherlands.\n");
+    printf("C Copyright (C) 2007-2009 S&T, The Netherlands.\n");
     printf("C\n");
     printf("C This file is part of CODA.\n");
     printf("C\n");
@@ -179,6 +179,8 @@ static void print_constants(void)
     PRINT_CONSTANT(coda_format_xml, i);
     PRINT_CONSTANT(coda_format_hdf4, i);
     PRINT_CONSTANT(coda_format_hdf5, i);
+    PRINT_CONSTANT(coda_format_cdf, i);
+    PRINT_CONSTANT(coda_format_netcdf, i);
 
     PRINT_EMPTY;
 

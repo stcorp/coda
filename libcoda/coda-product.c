@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -195,25 +195,31 @@ static int get_format_and_size(const char *filename, coda_format *format, int64_
     close(fd);
 
     /* HDF4 */
-    if (*file_size >= 4)
+    if (*file_size >= 4 && memcmp(buffer, "\016\003\023\001", 4) == 0)
     {
-        if (memcmp(buffer, "\016\003\023\001", 4) == 0 ||       /* HDF4 */
-            memcmp(buffer, "\000\000\377\377", 4) == 0 ||       /* (NASA) CDF */
-            memcmp(buffer, "CDF\001", 4) == 0)  /* netCDF */
-        {
-            *format = coda_format_hdf4;
-            return 0;
-        }
+        *format = coda_format_hdf4;
+        return 0;
     }
 
     /* HDF5 */
-    if (*file_size >= 8)
+    if (*file_size >= 8 && memcmp(buffer, "\211HDF\r\n\032\n", 8) == 0)
     {
-        if (memcmp(buffer, "\211HDF\r\n\032\n", 8) == 0)
-        {
-            *format = coda_format_hdf5;
-            return 0;
-        }
+        *format = coda_format_hdf5;
+        return 0;
+    }
+
+    /* (NASA) CDF */
+    if (*file_size >= 4 && memcmp(buffer, "\000\000\377\377", 4) == 0)
+    {
+        *format = coda_format_cdf;
+        return 0;
+    }
+
+    /* NetCDF */
+    if (*file_size >= 4 && memcmp(buffer, "CDF\001", 4) == 0)
+    {
+        *format = coda_format_netcdf;
+        return 0;
     }
 
     /* XML */
@@ -300,6 +306,8 @@ LIBCODA_API int coda_recognize_file(const char *filename, int64_t *file_size, co
             break;
         case coda_format_hdf4:
         case coda_format_hdf5:
+        case coda_format_cdf:
+        case coda_format_netcdf:
             break;
     }
 
@@ -379,8 +387,10 @@ LIBCODA_API int coda_open(const char *filename, coda_ProductFile **pf)
             }
             break;
         case coda_format_hdf4:
+        case coda_format_cdf:
+        case coda_format_netcdf:
 #ifdef HAVE_HDF4
-            if (coda_hdf4_open(filename, file_size, &product_file) != 0)
+            if (coda_hdf4_open(filename, file_size, format, &product_file) != 0)
             {
                 return -1;
             }
@@ -483,6 +493,8 @@ LIBCODA_API int coda_close(coda_ProductFile *pf)
         case coda_format_xml:
             return coda_xml_close(pf);
         case coda_format_hdf4:
+        case coda_format_cdf:
+        case coda_format_netcdf:
 #ifdef HAVE_HDF4
             return coda_hdf4_close(pf);
 #else

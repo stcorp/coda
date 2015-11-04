@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -197,7 +197,9 @@ enum coda_format_enum
     coda_format_binary,                     /**< Data stored in structured binary format */
     coda_format_xml,                        /**< Data stored in XML format */
     coda_format_hdf4,                       /**< Data stored in HDF4 (or netCDF) format */
-    coda_format_hdf5                        /**< Data stored in HDF5 format */
+    coda_format_hdf5,                       /**< Data stored in HDF5 format */
+    coda_format_cdf,                        /**< Data stored in (NASA) CDF format */
+    coda_format_netcdf                      /**< Data stored in NetCDF format */
 };
 
 enum coda_type_class_enum
@@ -457,7 +459,7 @@ LIBCODA_API int coda_cursor_read_complex_double_split_array(const coda_Cursor *c
 #define CODA_PRIVATE_FIELD(name) coda_private_field_ ## name
 #endif
 
-#define CODA_CURSOR_MAXDEPTH 16
+#define CODA_CURSOR_MAXDEPTH 32
 
 struct coda_Cursor_struct
 {

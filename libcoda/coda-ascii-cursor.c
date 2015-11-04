@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -350,7 +350,7 @@ long coda_ascii_parse_double(const char *buffer, long buffer_length, double *dst
             length -= 3;
             if (!ignore_trailing_bytes && length != 0)
             {
-                coda_set_error(CODA_ERROR_INVALID_FORMAT, "invalid format for ascii integer");
+                coda_set_error(CODA_ERROR_INVALID_FORMAT, "invalid format for ascii floating point value");
                 return -1;
             }
             *dst = coda_NaN();
@@ -362,7 +362,7 @@ long coda_ascii_parse_double(const char *buffer, long buffer_length, double *dst
             length -= 3;
             if (!ignore_trailing_bytes && length != 0)
             {
-                coda_set_error(CODA_ERROR_INVALID_FORMAT, "invalid format for ascii integer");
+                coda_set_error(CODA_ERROR_INVALID_FORMAT, "invalid format for ascii floating point value");
                 return -1;
             }
             *dst = negative ? coda_MinInf() : coda_PlusInf();
@@ -417,7 +417,7 @@ long coda_ascii_parse_double(const char *buffer, long buffer_length, double *dst
         value = -value;
     }
     /* read exponent part */
-    if (length > 0 && (*buffer == 'e' || *buffer == 'E'))
+    if (length > 0 && (*buffer == 'd' || *buffer == 'D' || *buffer == 'e' || *buffer == 'E'))
     {
         long exponent_value;
 

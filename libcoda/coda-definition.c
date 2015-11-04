@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -72,6 +72,8 @@ void coda_release_type(coda_Type *type)
             coda_xml_release_type(type);
             break;
         case coda_format_hdf4:
+        case coda_format_cdf:
+        case coda_format_netcdf:
 #ifdef HAVE_HDF4
             coda_hdf4_release_type(type);
 #endif
@@ -98,6 +100,8 @@ void coda_release_dynamic_type(coda_DynamicType *type)
             coda_xml_release_dynamic_type(type);
             break;
         case coda_format_hdf4:
+        case coda_format_cdf:
+        case coda_format_netcdf:
 #ifdef HAVE_HDF4
             coda_hdf4_release_dynamic_type(type);
 #endif
@@ -434,7 +438,7 @@ static int init_product_variable(coda_ProductFile *pf, int index)
 
 int coda_product_variable_get_size(coda_ProductFile *pf, const char *name, long *size)
 {
-    int index;
+    long index;
 
     assert(pf != NULL && name != NULL && size != NULL);
     assert(pf->product_variable != NULL);
@@ -554,6 +558,7 @@ coda_ProductDefinition *coda_product_definition_new(const char *name, coda_forma
     product_definition->hash_data = NULL;
     product_definition->num_product_variables = 0;
     product_definition->product_variable = NULL;
+    product_definition->product_type = NULL;
 
     product_definition->name = strdup(name);
     if (product_definition->name == NULL)
@@ -786,6 +791,24 @@ int coda_product_type_set_description(coda_ProductType *product_type, const char
 
 int coda_product_type_add_product_definition(coda_ProductType *product_type, coda_ProductDefinition *product_definition)
 {
+    int i;
+
+    if (product_definition->product_type != NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "product definition %s can not be used by more than one product "
+                       "type (%s and %s)", product_definition->name, product_definition->product_type->name,
+                       product_type->name);
+        return -1;
+    }
+    for (i = 0; i < product_type->num_product_definitions; i++)
+    {
+        if (product_type->product_definition[i]->version == product_definition->version)
+        {
+            coda_set_error(CODA_ERROR_DATA_DEFINITION, "multiple product definitions with version number %d for "
+                           "product type %s", product_definition->version, product_type->name);
+            return -1;
+        }
+    }
     if (hashtable_add_name(product_type->hash_data, product_definition->name) != 0)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "duplicate product definition %s for product type %s",
@@ -813,6 +836,23 @@ int coda_product_type_add_product_definition(coda_ProductType *product_type, cod
     product_definition->product_type = product_type;
 
     return 0;
+}
+
+coda_ProductDefinition *coda_product_type_get_product_definition_by_version(coda_ProductType *product_type, int version)
+{
+    int i;
+
+    for (i = 0; i < product_type->num_product_definitions; i++)
+    {
+        if (product_type->product_definition[i]->version == version)
+        {
+            return product_type->product_definition[i];
+        }
+    }
+
+    coda_set_error(CODA_ERROR_DATA_DEFINITION, "product type %s does not contain a definition with version %d",
+                   product_type->name, version);
+    return NULL;
 }
 
 void coda_product_class_delete(coda_ProductClass *product_class)
@@ -995,6 +1035,27 @@ int coda_product_class_add_product_type(coda_ProductClass *product_class, coda_P
 
     return 0;
 }
+
+coda_ProductType *coda_product_class_get_product_type(const coda_ProductClass *product_class, const char *name)
+{
+    int index;
+
+    index = hashtable_get_index_from_name(product_class->product_type_hash_data, name);
+    if (index == -1)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "product class %s does not contain a product type with name %s",
+                       product_class->name, name);
+        return NULL;
+    }
+
+    return product_class->product_type[index];
+}
+
+int coda_product_class_has_product_type(const coda_ProductClass *product_class, const char *name)
+{
+    return (hashtable_get_index_from_name(product_class->product_type_hash_data, name) != -1);
+}
+
 
 int coda_product_class_add_named_type(coda_ProductClass *product_class, coda_Type *type)
 {
@@ -1237,6 +1298,8 @@ static int data_dictionary_add_detection_rule(coda_DetectionRule *detection_rule
             break;
         case coda_format_hdf4:
         case coda_format_hdf5:
+        case coda_format_cdf:
+        case coda_format_netcdf:
             assert(0);
             exit(1);
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -37,7 +37,7 @@ int option_verbose;
 static void print_version()
 {
     printf("codacheck version %s\n", libcoda_version);
-    printf("Copyright (C) 2007-2008 S&T, The Netherlands\n");
+    printf("Copyright (C) 2007-2009 S&T, The Netherlands\n");
     printf("\n");
 }
 

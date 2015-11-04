@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -39,6 +39,7 @@ enum coda_exprType_enum
     expr_byte_offset,
     expr_byte_size,
     expr_bytes,
+    expr_ceil,
     expr_constant_boolean,
     expr_constant_double,
     expr_constant_integer,
@@ -49,6 +50,7 @@ enum coda_exprType_enum
     expr_file_size,
     expr_filename,
     expr_float,
+    expr_floor,
     expr_for_index,
     expr_for,
     expr_goto_array_element,
@@ -64,9 +66,16 @@ enum coda_exprType_enum
     expr_if,
     expr_index,
     expr_integer,
+    expr_isinf,
+    expr_ismininf,
+    expr_isnan,
+    expr_isplusinf,
     expr_length,
     expr_less_equal,
     expr_less,
+    expr_logical_and,
+    expr_logical_or,
+    expr_ltrim,
     expr_max,
     expr_min,
     expr_modulo,
@@ -80,10 +89,14 @@ enum coda_exprType_enum
     expr_product_class,
     expr_product_type,
     expr_product_version,
+    expr_round,
+    expr_rtrim,
     expr_sequence,
     expr_string,
     expr_substr,
     expr_subtract,
+    expr_trim,
+    expr_unbound_array_index,
     expr_variable_exists,
     expr_variable_index,
     expr_variable_set,

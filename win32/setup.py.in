@@ -13,5 +13,5 @@ setup (name             = "CODA",
        license          = "GPL",
        url              = "http://www.stcorp.nl/coda/",
        packages         = ['coda'],
-       data_files       = [(os.path.join(get_python_lib(), 'coda'), [os.path.join('coda', '_codac.dll')])]
+       data_files       = [(os.path.join(get_python_lib(), 'coda'), [os.path.join('coda', '_codac.pyd')])]
        )

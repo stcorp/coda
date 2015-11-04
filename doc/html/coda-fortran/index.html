@@ -107,7 +107,7 @@
       
       <p>After you have build and installed CODA, you will have a directory '<code>&lt;prefix&gt;/share/coda/fortran</code>' (with &lt;prefix&gt; being the installation directory you provided to the CODA configure script). In this directory you will find a <code>Makefile</code>, a <code>checkf77.sh</code> script, the <code>coda.inc</code> include file, the wrapper file <code>coda_fortran.c</code> that should be linked into your Fortran program, and an example file.</p>
 
-      <p>When you ran the ./configure script of CODA, the configure script was automatically locating your Fortran compiler and finding out which options it requires. These settings should already be included in the Makefile. You are however advised to check the contents of the Makefile in order to verify that these settings are correct. If you change the Fortran compiler to a different compiler then make sure to also run the <code>checkf77.sh</code> script (pass your Fortran compiler as parameter: e.g. <code>./checkf77.sh g77</code>) to find out what options should be assigned to the <code>WRAPFORTRAN_FLAGS</code> variable.</p>
+      <p>When you ran the ./configure script of CODA, the configure script was automatically locating your Fortran compiler and finding out which options it requires (if you have multiple fortran compilers installed, you can specify which fortran to use by passing the F77 option to the configure script. e.g. F77=g95). These settings should already be included in the Makefile. You are however advised to check the contents of the Makefile in order to verify that these settings are correct. If you change the Fortran compiler to a different compiler then make sure to also run the <code>checkf77.sh</code> script (pass your Fortran compiler as parameter: e.g. <code>./checkf77.sh g77</code>) to find out what options should be assigned to the <code>WRAPFORTRAN_FLAGS</code> variable.</p>
 
      <p>Note: Although the F77 variable in the Makefile suggests that it is only meant for Fortran 77 compilers you can safely let it point to a Fortran 90/95 compiler.</p>
 
@@ -151,7 +151,7 @@ INTEGER          FUNCTION CODA_ISINF(DOUBLE PRECISION X)
 INTEGER          FUNCTION CODA_ISPLUSINF(DOUBLE PRECISION X)
 INTEGER          FUNCTION CODA_ISMININF(DOUBLE PRECISION X)
 
-INTEGER FUNCTION CODA_C_INDEX_TO_FORTRAN_INDEX(INTEGER N_DIMS, INTEGER DIM(CODA_MAX_N_DIMS), INT INDEX)
+INTEGER FUNCTION CODA_C_INDEX_TO_FORTRAN_INDEX(INTEGER N_DIMS, INTEGER DIM(CODA_MAX_N_DIMS), INTEGER INDEX)
 
 DOUBLE PRECISION FUNCTION CODA_TIME()
 INTEGER          FUNCTION CODA_DATETIME_TO_DOUBLE(INTEGER YEAR, INTEGER MONTH, INTEGER DAY, INTEGER HOUR, INTEGER MINUTE, INTEGER SECOND, INTEGER MUSEC, DOUBLE PRECISION DATETIME)
@@ -308,7 +308,7 @@ INTEGER FUNCTION CODA_CURSOR_READ_COMPLEX_DOUBLE_SPLIT_ARRAY(INTEGER CURSOR, DOU
 
       <div class="footer">
         <hr />
-        <p>Copyright &copy; 2007-2008 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+        <p>Copyright &copy; 2007-2009 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
       </div>
 
     </div>

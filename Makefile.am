@@ -317,13 +317,17 @@ codafind_SOURCES = \
 	tools/codafind/codafind.c
 codafind_LDFLAGS = -static
 codafind_LDADD = libcoda.la
+INDENTFILES += $(codafind_SOURCES)
 
 # tools/codadd
 
 codadd_SOURCES = \
-	tools/codadd/codadd.c
+	tools/codadd/codadd.c \
+	tools/codadd/codadd-doc.c \
+	tools/codadd/codadd-list.c
 codadd_LDFLAGS = -static
 codadd_LDADD = libcoda_internal.la
+INDENTFILES += $(codadd_SOURCES)
 
 # fortran
 
@@ -585,16 +589,16 @@ indent:
 # *** CMake-specific ***
 
 EXTRA_DIST += \
-    CMakeLists.txt \
-    CMakeModules/CheckTypeExists.cmake \
-    CMakeModules/FindPython.cmake \
-    CMakeModules/FindHDF4.cmake \
-    CMakeModules/FindHDF5.cmake \
-    CMakeModules/FindZLIB.cmake \
-    CMakeModules/FindJPEG.cmake \
-    CMakeModules/FindSZIP.cmake \
-    cmakeify-dot-infiles.pl \
-    config.h.cmake.in \
+	CMakeLists.txt \
+	CMakeModules/CheckTypeExists.cmake \
+	CMakeModules/FindPython.cmake \
+	CMakeModules/FindHDF4.cmake \
+	CMakeModules/FindHDF5.cmake \
+	CMakeModules/FindZLIB.cmake \
+	CMakeModules/FindJPEG.cmake \
+	CMakeModules/FindSZIP.cmake \
+	cmakeify-dot-infiles.pl \
+	config.h.cmake.in \
 	libcoda/coda.h.cmake.in \
 	win32/config.h.cmake.in
 

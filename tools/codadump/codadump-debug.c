@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 S&T, The Netherlands.
+ * Copyright (C) 2007-2009 S&T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -90,7 +90,7 @@ static void print_escaped(const char *data, long length)
                 ff_printf("\\n");
                 break;
             case '\v':
-                fi_printf("\\v");
+                ff_printf("\\v");
                 break;
             case '\f':
                 ff_printf("\\f");
