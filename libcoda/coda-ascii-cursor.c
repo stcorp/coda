@@ -821,14 +821,14 @@ static int read_bytes_in_bounds(coda_ProductFile *pf, int64_t byte_offset, int64
     else
     {
 #if HAVE_PREAD
-        if (pread(product_file->fd, dst, (size_t)length, (off_t) byte_offset) < 0)
+        if (pread(product_file->fd, dst, (size_t)length, (off_t)byte_offset) < 0)
         {
             coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product_file->filename,
                            strerror(errno));
             return -1;
         }
 #else
-        if (lseek(product_file->fd, (off_t) byte_offset, SEEK_SET) < 0)
+        if (lseek(product_file->fd, (off_t)byte_offset, SEEK_SET) < 0)
         {
             coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %f in file %s (%s)",
                            (double)byte_offset, product_file->filename, strerror(errno));

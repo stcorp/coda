@@ -70,12 +70,12 @@ def getArgs():
         opts, args = getopt.getopt(sys.argv[1:], "c:t:p:r:h")
     except:
         print help
-        sys.exit()
+        sys.exit(1)
 
     for o, v in opts:
         if o == "-h":
             print help
-            sys.exit()
+            sys.exit(1)
         elif o == "-c":
             codaDefPath = v
         elif o == "-t":
@@ -98,7 +98,7 @@ def getArgs():
         else:
             print 'not enough parameters supplied!'
             print help
-            sys.exit()
+            sys.exit(1)
 
 
 def setPathVars():
@@ -146,7 +146,7 @@ def testFiles():
             print "Couldn't open file with restricted product types, ", restrictPath, '!'
             error = True
     if error:
-        sys.exit()
+        sys.exit(1)
 
 
 def getFile(fileName):
@@ -160,7 +160,7 @@ def getFile(fileName):
             document = parse(fileName)
         except Exception,e:
             print 'File, ',fileName,', import error: ', e
-            sys.exit()
+            sys.exit(1)
     else:
         print "Function getFile, following file didn't exists: ", fileName
     
@@ -295,7 +295,7 @@ def appendNamedTest(name):
 
     if found == False:
         print 'NamedTest: ', name, 'not found in named test collection, abort'
-        sys.exit()
+        sys.exit(1)
 
     doc = loNamedTests.ownerDocument
 
@@ -344,7 +344,7 @@ def appendNamedCrossFileTest(name):
 
     if found == False:
         print 'NamedCrossFileTest: ', name, 'not found in named cross file test collection, abort'
-        sys.exit()
+        sys.exit(1)
 
     doc = loNamedCrossFileTests.ownerDocument
 

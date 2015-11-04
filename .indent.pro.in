@@ -38,6 +38,7 @@
 -T FILE
 -T LPTSTR
 -T size_t
+-T off_t
 -T int8_t
 -T int16_t
 -T int32_t
