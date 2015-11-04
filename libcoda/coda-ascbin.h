@@ -23,7 +23,8 @@
 
 #include "coda-internal.h"
 
-int coda_ascbin_recognize_file(const char *filename, int64_t size, coda_product_definition **definition);
+int coda_ascbin_recognize_file(const char *filename, int64_t size, coda_format *format,
+                               coda_product_definition **definition);
 
 int coda_ascbin_cursor_set_product(coda_cursor *cursor, coda_product *product);
 int coda_ascbin_cursor_goto_record_field_by_index(coda_cursor *cursor, long index);

@@ -55,6 +55,8 @@ static int get_relative_field_bit_offset_by_index(const coda_cursor *cursor, lon
 
             if (coda_expression_eval_bool(field->available_expr, cursor, &available) != 0)
             {
+                coda_add_error_message(" for available expression");
+                coda_cursor_add_to_error_message(cursor);
                 return -1;
             }
             /* don't evaluate offset expression if field is not available! */
@@ -74,7 +76,13 @@ static int get_relative_field_bit_offset_by_index(const coda_cursor *cursor, lon
             }
         }
         /* determine offset using expr */
-        return coda_expression_eval_integer(field->bit_offset_expr, cursor, rel_bit_offset);
+        if (coda_expression_eval_integer(field->bit_offset_expr, cursor, rel_bit_offset) != 0)
+        {
+            coda_add_error_message(" for offset expression");
+            coda_cursor_add_to_error_message(cursor);
+            return -1;
+        }
+        return 0;
     }
 
     assert(field_index != 0);   /* the first field should either have a fixed bit offset or a bit_offset_expr */
@@ -106,6 +114,8 @@ static int get_relative_field_bit_offset_by_index(const coda_cursor *cursor, lon
         {
             if (coda_expression_eval_bool(record->field[i]->available_expr, cursor, &available) != 0)
             {
+                coda_add_error_message(" for available expression");
+                coda_cursor_add_to_error_message(cursor);
                 return -1;
             }
         }
@@ -171,6 +181,8 @@ static int get_next_relative_field_bit_offset(const coda_cursor *cursor, int64_t
 
             if (coda_expression_eval_bool(field->available_expr, &record_cursor, &available) != 0)
             {
+                coda_add_error_message(" for available expression");
+                coda_cursor_add_to_error_message(cursor);
                 return -1;
             }
             /* don't evaluate offset expression if field is not available! */
@@ -182,7 +194,13 @@ static int get_next_relative_field_bit_offset(const coda_cursor *cursor, int64_t
             }
         }
         /* determine offset using expr */
-        return coda_expression_eval_integer(field->bit_offset_expr, &record_cursor, rel_bit_offset);
+        if (coda_expression_eval_integer(field->bit_offset_expr, &record_cursor, rel_bit_offset) != 0)
+        {
+            coda_add_error_message(" for offset expression");
+            coda_cursor_add_to_error_message(cursor);
+            return -1;
+        }
+        return 0;
     }
 
     /* determine offset by using bit_offset of current field and adding its bit size */
@@ -253,6 +271,8 @@ int coda_ascbin_cursor_goto_record_field_by_index(coda_cursor *cursor, long inde
         {
             if (coda_expression_eval_bool(record->field[index]->available_expr, cursor, &available) != 0)
             {
+                coda_add_error_message(" for available expression");
+                coda_cursor_add_to_error_message(cursor);
                 return -1;
             }
         }
@@ -321,6 +341,8 @@ int coda_ascbin_cursor_goto_next_record_field(coda_cursor *cursor)
             record_cursor.n--;
             if (coda_expression_eval_bool(record->field[index]->available_expr, &record_cursor, &available) != 0)
             {
+                coda_add_error_message(" for available expression");
+                coda_cursor_add_to_error_message(cursor);
                 return -1;
             }
         }
@@ -393,6 +415,8 @@ int coda_ascbin_cursor_goto_array_element(coda_cursor *cursor, int num_subs, con
 
             if (coda_expression_eval_integer(array->dim_expr[i], cursor, &var_dim) != 0)
             {
+                coda_add_error_message(" for dim[%d] expression", i);
+                coda_cursor_add_to_error_message(cursor);
                 return -1;
             }
             dim = (long)var_dim;
@@ -581,6 +605,8 @@ int coda_ascbin_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size
                     {
                         if (coda_expression_eval_integer(record->size_expr, cursor, bit_size) != 0)
                         {
+                            coda_add_error_message(" for size expression");
+                            coda_cursor_add_to_error_message(cursor);
                             return -1;
                         }
                         if (record->bit_size == -8)
@@ -771,6 +797,8 @@ int coda_ascbin_cursor_get_num_elements(const coda_cursor *cursor, long *num_ele
 
                             if (coda_expression_eval_integer(array->dim_expr[i], cursor, &var_dim) != 0)
                             {
+                                coda_add_error_message(" for dim[%d] expression", i);
+                                coda_cursor_add_to_error_message(cursor);
                                 return -1;
                             }
                             if (var_dim < 0)
@@ -858,6 +886,8 @@ int coda_ascbin_cursor_get_available_union_field_index(const coda_cursor *cursor
     union_cursor.stack[union_cursor.n - 1].bit_offset = union_cursor.stack[union_cursor.n - 2].bit_offset;
     if (coda_expression_eval_integer(record->union_field_expr, &union_cursor, &index64) != 0)
     {
+        coda_add_error_message(" for union field expression");
+        coda_cursor_add_to_error_message(cursor);
         return -1;
     }
     if (index64 < 0 || index64 >= record->num_fields)
@@ -892,6 +922,8 @@ int coda_ascbin_cursor_get_array_dim(const coda_cursor *cursor, int *num_dims, l
 
             if (coda_expression_eval_integer(array->dim_expr[i], cursor, &var_dim) != 0)
             {
+                coda_add_error_message(" for dim[%d] expression", i);
+                coda_cursor_add_to_error_message(cursor);
                 return -1;
             }
             if (var_dim < 0)

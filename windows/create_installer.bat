@@ -75,19 +75,17 @@ xcopy    "%CODA_SOURCE_DIR%\windows\readme.txt"           "%CODA_INSTALLER_DIR%"
 if %errorlevel% neq 0 exit /b %errorlevel%
 xcopy    "%CODA_SOURCE_DIR%\windows\*.iss"                "%CODA_INSTALLER_DIR%"             >> "%LOG_FILE%"
 if %errorlevel% neq 0 exit /b %errorlevel%
-xcopy    "%VC_REDIST_DIR%\Microsoft.VC90.CRT\msvcr90.dll" "%CODA_INSTALLER_DIR%\bin"         >> "%LOG_FILE%"
-if %errorlevel% neq 0 exit /b %errorlevel%
 xcopy    "%SZIP_BINARY_DIR%\szip.dll"                     "%CODA_INSTALLER_DIR%\bin"         >> "%LOG_FILE%"
 if %errorlevel% neq 0 exit /b %errorlevel%
 xcopy    "%ZLIB_BINARY_DIR%\zlibdll.dll"                  "%CODA_INSTALLER_DIR%\bin"         >> "%LOG_FILE%"
 if %errorlevel% neq 0 exit /b %errorlevel%
-xcopy    "%HDF4_BINARY_DIR%\hdfdll.dll"                   "%CODA_INSTALLER_DIR%\bin"         >> "%LOG_FILE%"
+xcopy    "%HDF4_BINARY_DIR%\hdf.dll"                      "%CODA_INSTALLER_DIR%\bin"         >> "%LOG_FILE%"
 if %errorlevel% neq 0 exit /b %errorlevel%
-xcopy    "%HDF4_BINARY_DIR%\mfhdfdll.dll"                 "%CODA_INSTALLER_DIR%\bin"         >> "%LOG_FILE%"
+xcopy    "%HDF4_BINARY_DIR%\mfhdf.dll"                    "%CODA_INSTALLER_DIR%\bin"         >> "%LOG_FILE%"
 if %errorlevel% neq 0 exit /b %errorlevel%
-xcopy    "%HDF4_BINARY_DIR%\xdrdll.dll"                   "%CODA_INSTALLER_DIR%\bin"         >> "%LOG_FILE%"
+xcopy    "%HDF4_BINARY_DIR%\xdr.dll"                      "%CODA_INSTALLER_DIR%\bin"         >> "%LOG_FILE%"
 if %errorlevel% neq 0 exit /b %errorlevel%
-xcopy    "%HDF5_BINARY_DIR%\hdf5dll.dll"                  "%CODA_INSTALLER_DIR%\bin"         >> "%LOG_FILE%"
+xcopy    "%HDF5_BINARY_DIR%\hdf5.dll"                     "%CODA_INSTALLER_DIR%\bin"         >> "%LOG_FILE%"
 if %errorlevel% neq 0 exit /b %errorlevel%
 xcopy    "%CODA_BINARY_DIR%\coda.dll"                     "%CODA_INSTALLER_DIR%\bin"         >> "%LOG_FILE%"
 if %errorlevel% neq 0 exit /b %errorlevel%
@@ -131,7 +129,9 @@ echo Creating installer using Inno Setup...
 
 "%INNO4_HOME%\ISCC.exe" "%CODA_INSTALLER_DIR%\removepath.iss"
 if %errorlevel% neq 0 exit /b %errorlevel%
-"%INNO4_HOME%\ISCC.exe" "%CODA_INSTALLER_DIR%\coda.iss"
+if "%CODA_PLATFORM%" == "Win32" "%INNO4_HOME%\ISCC.exe" "%CODA_INSTALLER_DIR%\codawin32.iss"
+if %errorlevel% neq 0 exit /b %errorlevel%
+if "%CODA_PLATFORM%" == "Win64" "%INNO4_HOME%\ISCC.exe" "%CODA_INSTALLER_DIR%\codawin64.iss"
 if %errorlevel% neq 0 exit /b %errorlevel%
 
 goto END

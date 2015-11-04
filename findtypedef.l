@@ -1,5 +1,6 @@
 %option noyywrap
 %option always-interactive
+%option noinput
 %option nounput
 
 %x COMMENT

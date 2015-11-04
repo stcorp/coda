@@ -161,7 +161,7 @@ static void fill_error(struct IDL_CodaError *fill, int err)
                 message = "expected a CODA_DATAHANDLE structure or LONG64 product-file identifier";
                 break;
             case CODA_IDL_ERR_EXPECTED_DATAHANDLE_VALUE_GOT_ARRAY:
-                message = "expected a *single* CODA_DATAHANDLE single stucture; use (datahandle_array[x], ...) "
+                message = "expected a *single* CODA_DATAHANDLE single structure; use (datahandle_array[x], ...) "
                     "instead of (datahandle_array, x, ...)";
                 break;
             case CODA_IDL_ERR_WRONG_DATA_ITEM_SELECTOR:

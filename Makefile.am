@@ -193,7 +193,7 @@ libqiap_files = \
 INDENTFILES += $(libqiap_files)
 EXTRA_DIST += \
 	libcoda/qiap/README \
-	libcoda/qiap/doc/extrapages \
+	libcoda/qiap/doc/extrapages.txt \
 	libcoda/qiap/doc/footer.html \
 	libcoda/qiap/doc/header.html \
 	libcoda/qiap/doc/Doxyfile.in
@@ -758,15 +758,15 @@ endif
 EXTRA_DIST += \
 	$(DOCFILES) \
 	libcoda/doc/Doxyfile.in \
-	libcoda/doc/extrapages \
+	libcoda/doc/extrapages.txt \
 	libcoda/doc/footer.html \
 	libcoda/doc/header.html \
 	libcoda/qiap/doc/Doxyfile.in \
-	libcoda/qiap/doc/extrapages \
+	libcoda/qiap/doc/extrapages.txt \
 	libcoda/qiap/doc/footer.html \
 	libcoda/qiap/doc/header.html \
 	java/doc/Doxyfile.in \
-	java/doc/extrapages \
+	java/doc/extrapages.txt \
 	java/doc/footer.html \
 	java/doc/header.html \
 	doclibcoda.mk \
@@ -942,8 +942,10 @@ EXTRA_DIST += \
 	unix2dos \
 	windows/clean_dir.bat \
 	windows/coda.h \
-	windows/coda.iss \
-	windows/coda.iss.in \
+	windows/codawin32.iss \
+	windows/codawin32.iss.in \
+	windows/codawin64.iss \
+	windows/codawin64.iss.in \
 	windows/coda.sln \
 	windows/codacheck.vcproj \
 	windows/codacmp.vcproj \

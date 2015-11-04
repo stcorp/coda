@@ -63,6 +63,8 @@ int coda_bin_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size)
             {
                 if (coda_expression_eval_integer(type->size_expr, cursor, bit_size) != 0)
                 {
+                    coda_add_error_message(" for size expression");
+                    coda_cursor_add_to_error_message(cursor);
                     return -1;
                 }
                 if (type->bit_size == -8)

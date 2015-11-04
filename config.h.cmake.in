@@ -65,9 +65,6 @@
 /* Define to 1 if you have the `m' library (-lm). */
 #cmakedefine HAVE_LIBM ${HAVE_LIBM}
 
-/* Define to 1 if you have the `SystemStubs' library (-lSystemStubs). */
-#cmakedefine HAVE_LIBSYSTEMSTUBS ${HAVE_LIBSYSTEMSTUBS}
-
 /* Define to 1 if you have the `ws2_32' library (-lws2_32). */
 #cmakedefine HAVE_LIBWS2_32 ${HAVE_LIBWS2_32}
 

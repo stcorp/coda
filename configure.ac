@@ -1,5 +1,5 @@
 # autoconf file for CODA
-AC_INIT([CODA],[2.11])
+AC_INIT([CODA],[2.11.1])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE(foreign subdir-objects 1.10 -Wall)
 
@@ -84,7 +84,7 @@ AC_CONFIG_FILES([java/build.xml])
 AC_CONFIG_FILES([libcoda/doc/Doxyfile java/doc/Doxyfile])
 AC_CONFIG_FILES([libcoda/qiap/doc/Doxyfile])
 AC_CONFIG_FILES([idl/coda-idl.dlm])
-AC_CONFIG_FILES([windows/coda.iss windows/setup.py])
+AC_CONFIG_FILES([windows/codawin32.iss windows/codawin64.iss windows/setup.py])
 
 # Set dynamic library version
 
@@ -100,7 +100,7 @@ AC_CONFIG_FILES([windows/coda.iss windows/setup.py])
 # 6. If any interfaces have been removed or changed since the last public
 #    release, then set age to 0.
 LIBCODA_CURRENT=11
-LIBCODA_REVISION=0
+LIBCODA_REVISION=1
 LIBCODA_AGE=5
 AC_SUBST(LIBCODA_CURRENT)
 AC_SUBST(LIBCODA_REVISION)
@@ -151,10 +151,6 @@ AC_SUBST(SWIGFLAGS)
 # *** checks for libraries ****
 
 ST_CHECK_LIB_M
-
-# On Mac OS X 10.4 (because of the MATLAB and FORTRAN interfaces of CODA)
-# we need to explicitly link against the SystemStubs library
-ST_CHECK_MACOSX_SYSTEMSTUBS
 
 # *** checks for header files ***
 
@@ -367,7 +363,7 @@ if test $ac_cv_enable_java = yes ; then
     AC_MSG_ERROR(BOXED_TEXT([ERROR: The Sun Java Development Kit (JDK) is required to build the Java interface.
 Try setting the JAVA and JAVAC environment variables to the full paths to your java and javac executables if you have Java installed.]))
   fi
-  if test `uname -s` = Darwin ; then
+  if test `uname -s` = Darwin && ! test -e $JAVA_HOME/include; then
     JNIEXT=.jnilib
     if test -x /usr/bin/javaconfig; then
       JNICPPFLAGS=-I`javaconfig Headers`

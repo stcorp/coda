@@ -467,7 +467,7 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size,
             if (cursor->product->format == coda_format_xml &&
                 bit_size_to_byte_size(calculated_bit_size) < expected_byte_size)
             {
-                long offset = ((coda_mem_data *)cursor->stack[cursor->n - 1].type)->offset;
+                long offset = (long)((coda_mem_data *)cursor->stack[cursor->n - 1].type)->offset;
                 int64_t byte_size = expected_byte_size - (calculated_bit_size >> 3);
                 char *data;
                 long i;

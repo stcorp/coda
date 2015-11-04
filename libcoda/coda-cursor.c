@@ -1454,7 +1454,7 @@ LIBCODA_API int coda_cursor_has_ascii_content(const coda_cursor *cursor, int *ha
                 if (type->type_class == coda_special_class)
                 {
                     coda_cursor sub_cursor = *cursor;
-                    
+
                     if (coda_cursor_use_base_type_of_special_type(&sub_cursor) != 0)
                     {
                         return -1;

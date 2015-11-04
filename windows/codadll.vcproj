@@ -24,8 +24,8 @@
 				AdditionalOptions="/Zm400 "
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories=".,..,..\libcoda,..\libcoda\expat,..\libcoda\pcre,..\libcoda\qiap,$(ZLIB_INCLUDE_DIR),$(HDF4_INCLUDE_DIR),$(HDF5_INCLUDE_DIR)"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBCODADLL_EXPORTS;LIBCODADLL;HAVE_HDF4;HAVE_HDF5;_HDFDLL_;_HDF5USEDLL_;HAVE_CONFIG_H;YY_NO_UNISTD_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE"
+				AdditionalIncludeDirectories=".,..,..\libcoda,..\libcoda\expat,..\libcoda\pcre,..\libcoda\qiap,$(ZLIB_INCLUDE_DIR),$(HDF4_DYNAMIC_INCLUDE_DIR),$(HDF5_DYNAMIC_INCLUDE_DIR)"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBCODADLL_EXPORTS;LIBCODADLL;HAVE_HDF4;HAVE_HDF5;HAVE_CONFIG_H;YY_NO_UNISTD_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE"
 				StringPooling="true"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -33,7 +33,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="hdfdll.lib mfhdfdll.lib hdf5dll.lib zlibdll.lib odbc32.lib odbccp32.lib  ws2_32.lib"
+				AdditionalDependencies="hdf.lib mfhdf.lib hdf5.lib zlibdll.lib odbc32.lib odbccp32.lib  ws2_32.lib"
 				OutputFile="$(OutDir)coda.dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(HDF4_LIB),$(HDF5_LIB),$(ZLIB_LIB)"
@@ -53,8 +53,8 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/Zm400 "
 				Optimization="0"
-				AdditionalIncludeDirectories=".,..,..\libcoda,..\libcoda\expat,..\libcoda\pcre,..\libcoda\qiap,$(ZLIB_INCLUDE_DIR),$(HDF4_INCLUDE_DIR),$(HDF5_INCLUDE_DIR)"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBCODADLL_EXPORTS;LIBCODADLL;HAVE_HDF4;HAVE_HDF5;_HDFDLL_;_HDF5USEDLL_;HAVE_CONFIG_H;YY_NO_UNISTD_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE"
+				AdditionalIncludeDirectories=".,..,..\libcoda,..\libcoda\expat,..\libcoda\pcre,..\libcoda\qiap,$(ZLIB_INCLUDE_DIR),$(HDF4_DYNAMIC_INCLUDE_DIR),$(HDF5_DYNAMIC_INCLUDE_DIR)"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBCODADLL_EXPORTS;LIBCODADLL;HAVE_HDF4;HAVE_HDF5;HAVE_CONFIG_H;YY_NO_UNISTD_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -63,7 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="hdfdlld.lib mfhdfdlld.lib hdf5dlld.lib zlibdll.lib odbc32.lib odbccp32.lib ws2_32.lib"
+				AdditionalDependencies="hdf.lib mfhdf.lib hdf5.lib zlibdll.lib odbc32.lib odbccp32.lib ws2_32.lib"
 				OutputFile="$(OutDir)coda_d.dll"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -86,8 +86,8 @@
 				AdditionalOptions="/Zm400 "
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories=".,..,..\libcoda,..\libcoda\expat,..\libcoda\pcre,..\libcoda\qiap,$(ZLIB_INCLUDE_DIR),$(HDF4_INCLUDE_DIR),$(HDF5_INCLUDE_DIR)"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBCODADLL_EXPORTS;LIBCODADLL;HAVE_HDF4;HAVE_HDF5;_HDFDLL_;_HDF5USEDLL_;HAVE_CONFIG_H;YY_NO_UNISTD_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE"
+				AdditionalIncludeDirectories=".,..,..\libcoda,..\libcoda\expat,..\libcoda\pcre,..\libcoda\qiap,$(ZLIB_INCLUDE_DIR),$(HDF4_DYNAMIC_INCLUDE_DIR),$(HDF5_DYNAMIC_INCLUDE_DIR)"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBCODADLL_EXPORTS;LIBCODADLL;HAVE_HDF4;HAVE_HDF5;HAVE_CONFIG_H;YY_NO_UNISTD_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE"
 				StringPooling="true"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -95,7 +95,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="hdfdll.lib mfhdfdll.lib hdf5dll.lib zlibdll.lib odbc32.lib odbccp32.lib ws2_32.lib"
+				AdditionalDependencies="hdf.lib mfhdf.lib hdf5.lib zlibdll.lib odbc32.lib odbccp32.lib ws2_32.lib"
 				OutputFile="$(OutDir)coda.dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(HDF4_LIB),$(HDF5_LIB),$(ZLIB_LIB)"
@@ -115,8 +115,8 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/Zm400 "
 				Optimization="0"
-				AdditionalIncludeDirectories=".,..,..\libcoda,..\libcoda\expat,..\libcoda\pcre,..\libcoda\qiap,$(ZLIB_INCLUDE_DIR),$(HDF4_INCLUDE_DIR),$(HDF5_INCLUDE_DIR)"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBCODADLL_EXPORTS;LIBCODADLL;HAVE_HDF4;HAVE_HDF5;_HDFDLL_;_HDF5USEDLL_;HAVE_CONFIG_H;YY_NO_UNISTD_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE"
+				AdditionalIncludeDirectories=".,..,..\libcoda,..\libcoda\expat,..\libcoda\pcre,..\libcoda\qiap,$(ZLIB_INCLUDE_DIR),$(HDF4_DYNAMIC_INCLUDE_DIR),$(HDF5_DYNAMIC_INCLUDE_DIR)"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBCODADLL_EXPORTS;LIBCODADLL;HAVE_HDF4;HAVE_HDF5;HAVE_CONFIG_H;YY_NO_UNISTD_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -125,7 +125,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="hdfdlld.lib mfhdfdlld.lib hdf5dlld.lib zlibdll.lib odbc32.lib odbccp32.lib ws2_32.lib"
+				AdditionalDependencies="hdf.lib mfhdf.lib hdf5.lib zlibdll.lib odbc32.lib odbccp32.lib ws2_32.lib"
 				OutputFile="$(OutDir)coda_d.dll"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"

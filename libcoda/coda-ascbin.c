@@ -360,11 +360,13 @@ static coda_product_definition *evaluate_detection_node(char *buffer, int blocks
     return NULL;
 }
 
-int coda_ascbin_recognize_file(const char *filename, int64_t size, coda_product_definition **definition)
+int coda_ascbin_recognize_file(const char *filename, int64_t size, coda_format *format,
+                               coda_product_definition **definition)
 {
     char buffer[DETECTION_BLOCK_SIZE + 1];
     const char *basefilename;
     coda_ascbin_detection_node *node;
+    int64_t hdf5_offset;
     int64_t blocksize;
     int open_flags;
     int fd;
@@ -394,6 +396,19 @@ int coda_ascbin_recognize_file(const char *filename, int64_t size, coda_product_
     }
     buffer[blocksize] = '\0';   /* terminate with zero for cases where the buffer is used as a string */
 
+    /* detect if we are dealing with a HDF5 product with some header information */
+    hdf5_offset = 512;
+    while (hdf5_offset + 8 < blocksize)
+    {
+        if (memcmp(&buffer[hdf5_offset], "\211HDF\r\n\032\n", 8) == 0)
+        {
+            *format = coda_format_hdf5;
+            /* we still continue with the remaining detection functions as normal */
+            break;
+        }
+        hdf5_offset *= 2;
+    }
+
     basefilename = strrchr(filename, '/');
     if (basefilename == NULL)
     {
@@ -412,6 +427,10 @@ int coda_ascbin_recognize_file(const char *filename, int64_t size, coda_product_
 
     node = coda_ascbin_get_detection_tree();
     *definition = evaluate_detection_node(buffer, (int)blocksize, basefilename, size, node);
+    if (*definition != NULL && *format == coda_format_binary)
+    {
+        *format = (*definition)->format;
+    }
 
     return 0;
 }

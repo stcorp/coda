@@ -2,9 +2,7 @@ LIBQIAP_DOCFILES = \
 	doc/html/libqiap/bc_s.png \
 	doc/html/libqiap/bdwn.png \
 	doc/html/libqiap/closed.png \
-	doc/html/libqiap/coda-qiap_8h.html \
 	doc/html/libqiap/dynsections.js \
-	doc/html/libqiap/files.html \
 	doc/html/libqiap/ftv2blank.png \
 	doc/html/libqiap/ftv2cl.png \
 	doc/html/libqiap/ftv2doc.png \
@@ -21,11 +19,6 @@ LIBQIAP_DOCFILES = \
 	doc/html/libqiap/ftv2pnode.png \
 	doc/html/libqiap/ftv2splitbar.png \
 	doc/html/libqiap/ftv2vertline.png \
-	doc/html/libqiap/globals.html \
-	doc/html/libqiap/globals_defs.html \
-	doc/html/libqiap/globals_func.html \
-	doc/html/libqiap/globals_type.html \
-	doc/html/libqiap/globals_vars.html \
 	doc/html/libqiap/group__coda__qiap.html \
 	doc/html/libqiap/group__qiap.html \
 	doc/html/libqiap/index.html \
@@ -35,7 +28,6 @@ LIBQIAP_DOCFILES = \
 	doc/html/libqiap/nav_g.png \
 	doc/html/libqiap/nav_h.png \
 	doc/html/libqiap/open.png \
-	doc/html/libqiap/qiap_8h.html \
 	doc/html/libqiap/sync_off.png \
 	doc/html/libqiap/sync_on.png
 doc/html/libqiap/bc_s.png:
@@ -44,11 +36,7 @@ doc/html/libqiap/bdwn.png:
 	$(MAKE) libqiap_doc
 doc/html/libqiap/closed.png:
 	$(MAKE) libqiap_doc
-doc/html/libqiap/coda-qiap_8h.html:
-	$(MAKE) libqiap_doc
 doc/html/libqiap/dynsections.js:
-	$(MAKE) libqiap_doc
-doc/html/libqiap/files.html:
 	$(MAKE) libqiap_doc
 doc/html/libqiap/ftv2blank.png:
 	$(MAKE) libqiap_doc
@@ -82,16 +70,6 @@ doc/html/libqiap/ftv2splitbar.png:
 	$(MAKE) libqiap_doc
 doc/html/libqiap/ftv2vertline.png:
 	$(MAKE) libqiap_doc
-doc/html/libqiap/globals.html:
-	$(MAKE) libqiap_doc
-doc/html/libqiap/globals_defs.html:
-	$(MAKE) libqiap_doc
-doc/html/libqiap/globals_func.html:
-	$(MAKE) libqiap_doc
-doc/html/libqiap/globals_type.html:
-	$(MAKE) libqiap_doc
-doc/html/libqiap/globals_vars.html:
-	$(MAKE) libqiap_doc
 doc/html/libqiap/group__coda__qiap.html:
 	$(MAKE) libqiap_doc
 doc/html/libqiap/group__qiap.html:
@@ -109,8 +87,6 @@ doc/html/libqiap/nav_g.png:
 doc/html/libqiap/nav_h.png:
 	$(MAKE) libqiap_doc
 doc/html/libqiap/open.png:
-	$(MAKE) libqiap_doc
-doc/html/libqiap/qiap_8h.html:
 	$(MAKE) libqiap_doc
 doc/html/libqiap/sync_off.png:
 	$(MAKE) libqiap_doc

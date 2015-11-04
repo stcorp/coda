@@ -202,7 +202,7 @@ static int read_array(const coda_cursor *cursor, void *dst)
     type = (coda_netcdf_array *)cursor->stack[cursor->n - 1].type;
     product = (coda_netcdf_product *)cursor->product;
 
-    block_size = (long)type->definition->num_elements * (type->base_type->definition->bit_size >> 3);
+    block_size = (long)(type->definition->num_elements * (type->base_type->definition->bit_size >> 3));
     num_blocks = 1;
     if (type->base_type->record_var)
     {

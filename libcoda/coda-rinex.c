@@ -1819,7 +1819,7 @@ static int read_main_header(ingest_info *info)
     }
 
     value = (coda_dynamic_type *)coda_mem_float_new((coda_type_number *)rinex_type[rinex_format_version], NULL,
-                                                    info->product, info->format_version);
+                                                    info->product, (float)info->format_version);
     coda_mem_record_add_field(info->header, "format_version", value, 0);
     value = (coda_dynamic_type *)coda_mem_char_new((coda_type_text *)rinex_type[rinex_file_type], NULL, info->product,
                                                    info->file_type);
@@ -3189,7 +3189,7 @@ static int read_navigation_records(ingest_info *info)
             coda_mem_record_add_field(record, "sisa", value, 0);
             value =
                 (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)rinex_type[rinex_nav_sv_health_galileo],
-                                                         NULL, info->product, record_value[24]);
+                                                         NULL, info->product, (uint32_t)record_value[24]);
             coda_mem_record_add_field(record, "sv_health", value, 0);
             value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_bgd_e5a_e1],
                                                              NULL, info->product, record_value[25]);

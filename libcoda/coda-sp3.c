@@ -919,7 +919,7 @@ static int read_header(ingest_info *info)
         return -1;
     }
     value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_num_epochs], NULL, info->product,
-                                                    int_value);
+                                                    (int32_t)int_value);
     coda_mem_record_add_field(info->header, "num_epochs", value, 0);
 
     memcpy(str, &line[40], 5);
@@ -972,7 +972,7 @@ static int read_header(ingest_info *info)
         return -1;
     }
     value = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)sp3_type[sp3_gps_week], NULL, info->product,
-                                                    int_value);
+                                                    (int16_t)int_value);
     coda_mem_record_add_field(info->header, "gps_week", value, 0);
 
     if (coda_ascii_parse_double(&line[8], 15, &double_value, 0) < 0)
@@ -999,7 +999,7 @@ static int read_header(ingest_info *info)
         return -1;
     }
     value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_mjd_start], NULL, info->product,
-                                                    int_value);
+                                                    (int32_t)int_value);
     coda_mem_record_add_field(info->header, "mjd_start", value, 0);
 
     if (coda_ascii_parse_double(&line[45], 15, &double_value, 0) < 0)
@@ -1038,7 +1038,7 @@ static int read_header(ingest_info *info)
         return -1;
     }
     value = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)sp3_type[sp3_num_satellites], NULL,
-                                                    info->product, int_value);
+                                                    info->product, (uint8_t)int_value);
     coda_mem_record_add_field(info->header, "num_satellites", value, 0);
     info->num_satellites = (int)int_value;
 
@@ -1121,7 +1121,7 @@ static int read_header(ingest_info *info)
                 return -1;
             }
             value = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)sp3_type[sp3_sat_accuracy], NULL,
-                                                            info->product, int_value);
+                                                            info->product, (int16_t)int_value);
             coda_mem_array_add_element((coda_mem_array *)array, value);
         }
     }
@@ -1356,7 +1356,7 @@ static int read_records(ingest_info *info)
                 return -1;
             }
             value = (coda_dynamic_type *)coda_mem_int8_new((coda_type_number *)sp3_type[sp3_P_x_sdev], NULL,
-                                                           info->product, int_value);
+                                                           info->product, (int8_t)int_value);
             coda_mem_record_add_field(info->pos_clk, "x_sdev", value, 0);
 
             if (linelength < 66 || memcmp(&line[64], "  ", 2) == 0)
@@ -1369,7 +1369,7 @@ static int read_records(ingest_info *info)
                 return -1;
             }
             value = (coda_dynamic_type *)coda_mem_int8_new((coda_type_number *)sp3_type[sp3_P_y_sdev], NULL,
-                                                           info->product, int_value);
+                                                           info->product, (int8_t)int_value);
             coda_mem_record_add_field(info->pos_clk, "y_sdev", value, 0);
 
             if (linelength < 69 || memcmp(&line[67], "  ", 2) == 0)
@@ -1382,7 +1382,7 @@ static int read_records(ingest_info *info)
                 return -1;
             }
             value = (coda_dynamic_type *)coda_mem_int8_new((coda_type_number *)sp3_type[sp3_P_z_sdev], NULL,
-                                                           info->product, int_value);
+                                                           info->product, (int8_t)int_value);
             coda_mem_record_add_field(info->pos_clk, "z_sdev", value, 0);
 
             if (linelength < 73 || memcmp(&line[70], "   ", 3) == 0)
@@ -1395,7 +1395,7 @@ static int read_records(ingest_info *info)
                 return -1;
             }
             value = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)sp3_type[sp3_P_clock_sdev], NULL,
-                                                            info->product, int_value);
+                                                            info->product, (int16_t)int_value);
             coda_mem_record_add_field(info->pos_clk, "clock_sdev", value, 0);
 
             str[0] = linelength < 75 ? ' ' : line[74];
@@ -1494,7 +1494,7 @@ static int read_records(ingest_info *info)
                 return -1;
             }
             value = (coda_dynamic_type *)coda_mem_int8_new((coda_type_number *)sp3_type[sp3_V_xvel_sdev], NULL,
-                                                           info->product, int_value);
+                                                           info->product, (int8_t)int_value);
             coda_mem_record_add_field(info->vel_rate, "xvel_sdev", value, 0);
 
             if (linelength < 66 || memcmp(&line[64], "  ", 2) == 0)
@@ -1507,7 +1507,7 @@ static int read_records(ingest_info *info)
                 return -1;
             }
             value = (coda_dynamic_type *)coda_mem_int8_new((coda_type_number *)sp3_type[sp3_V_yvel_sdev], NULL,
-                                                           info->product, int_value);
+                                                           info->product, (int8_t)int_value);
             coda_mem_record_add_field(info->vel_rate, "yvel_sdev", value, 0);
 
             if (linelength < 69 || memcmp(&line[67], "  ", 2) == 0)
@@ -1520,7 +1520,7 @@ static int read_records(ingest_info *info)
                 return -1;
             }
             value = (coda_dynamic_type *)coda_mem_int8_new((coda_type_number *)sp3_type[sp3_V_zvel_sdev], NULL,
-                                                           info->product, int_value);
+                                                           info->product, (int8_t)int_value);
             coda_mem_record_add_field(info->vel_rate, "zvel_sdev", value, 0);
 
             if (linelength < 73 || memcmp(&line[70], "   ", 3) == 0)
@@ -1533,7 +1533,7 @@ static int read_records(ingest_info *info)
                 return -1;
             }
             value = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)sp3_type[sp3_V_clkrate_sdev], NULL,
-                                                            info->product, int_value);
+                                                            info->product, (int16_t)int_value);
             coda_mem_record_add_field(info->vel_rate, "clkrate_sdev", value, 0);
         }
         else
@@ -1573,7 +1573,7 @@ static int read_records(ingest_info *info)
                     return -1;
                 }
                 value = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)sp3_type[sp3_EP_x_sdev], NULL,
-                                                                info->product, int_value);
+                                                                info->product, (int16_t)int_value);
                 coda_mem_record_add_field(info->corr, "x_sdev", value, 0);
 
                 if (linelength < 13 || memcmp(&line[9], "    ", 4) == 0)
@@ -1586,7 +1586,7 @@ static int read_records(ingest_info *info)
                     return -1;
                 }
                 value = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)sp3_type[sp3_EP_y_sdev], NULL,
-                                                                info->product, int_value);
+                                                                info->product, (int16_t)int_value);
                 coda_mem_record_add_field(info->corr, "y_sdev", value, 0);
 
                 if (linelength < 18 || memcmp(&line[14], "    ", 4) == 0)
@@ -1599,7 +1599,7 @@ static int read_records(ingest_info *info)
                     return -1;
                 }
                 value = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)sp3_type[sp3_EP_z_sdev], NULL,
-                                                                info->product, int_value);
+                                                                info->product, (int16_t)int_value);
                 coda_mem_record_add_field(info->corr, "z_sdev", value, 0);
 
                 if (linelength < 26 || memcmp(&line[19], "       ", 7) == 0)
@@ -1612,7 +1612,7 @@ static int read_records(ingest_info *info)
                     return -1;
                 }
                 value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_EP_clock_sdev], NULL,
-                                                                info->product, int_value);
+                                                                info->product, (int32_t)int_value);
                 coda_mem_record_add_field(info->corr, "clock_sdev", value, 0);
 
                 if (linelength < 35 || memcmp(&line[27], "        ", 8) == 0)
@@ -1625,7 +1625,7 @@ static int read_records(ingest_info *info)
                     return -1;
                 }
                 value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_EP_xy_corr], NULL,
-                                                                info->product, int_value);
+                                                                info->product, (int32_t)int_value);
                 coda_mem_record_add_field(info->corr, "xy_corr", value, 0);
 
                 if (linelength < 44 || memcmp(&line[36], "        ", 8) == 0)
@@ -1638,7 +1638,7 @@ static int read_records(ingest_info *info)
                     return -1;
                 }
                 value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_EP_xz_corr], NULL,
-                                                                info->product, int_value);
+                                                                info->product, (int32_t)int_value);
                 coda_mem_record_add_field(info->corr, "xz_corr", value, 0);
 
                 if (linelength < 53 || memcmp(&line[45], "        ", 8) == 0)
@@ -1651,7 +1651,7 @@ static int read_records(ingest_info *info)
                     return -1;
                 }
                 value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_EP_xc_corr], NULL,
-                                                                info->product, int_value);
+                                                                info->product, (int32_t)int_value);
                 coda_mem_record_add_field(info->corr, "xc_corr", value, 0);
 
                 if (linelength < 62 || memcmp(&line[54], "        ", 8) == 0)
@@ -1664,7 +1664,7 @@ static int read_records(ingest_info *info)
                     return -1;
                 }
                 value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_EP_yz_corr], NULL,
-                                                                info->product, int_value);
+                                                                info->product, (int32_t)int_value);
                 coda_mem_record_add_field(info->corr, "yz_corr", value, 0);
 
                 if (linelength < 71 || memcmp(&line[63], "        ", 8) == 0)
@@ -1677,7 +1677,7 @@ static int read_records(ingest_info *info)
                     return -1;
                 }
                 value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_EP_yc_corr], NULL,
-                                                                info->product, int_value);
+                                                                info->product, (int32_t)int_value);
                 coda_mem_record_add_field(info->corr, "yc_corr", value, 0);
 
                 if (linelength < 80 || memcmp(&line[72], "        ", 8) == 0)
@@ -1690,7 +1690,7 @@ static int read_records(ingest_info *info)
                     return -1;
                 }
                 value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_EP_zc_corr], NULL,
-                                                                info->product, int_value);
+                                                                info->product, (int32_t)int_value);
                 coda_mem_record_add_field(info->corr, "zc_corr", value, 0);
 
                 coda_mem_record_add_field(info->pos_clk, "corr", (coda_dynamic_type *)info->corr, 0);
@@ -1716,7 +1716,7 @@ static int read_records(ingest_info *info)
                     return -1;
                 }
                 value = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)sp3_type[sp3_EV_xvel_sdev], NULL,
-                                                                info->product, int_value);
+                                                                info->product, (int16_t)int_value);
                 coda_mem_record_add_field(info->corr, "xvel_sdev", value, 0);
 
                 if (linelength < 13 || memcmp(&line[9], "    ", 4) == 0)
@@ -1729,7 +1729,7 @@ static int read_records(ingest_info *info)
                     return -1;
                 }
                 value = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)sp3_type[sp3_EV_yvel_sdev], NULL,
-                                                                info->product, int_value);
+                                                                info->product, (int16_t)int_value);
                 coda_mem_record_add_field(info->corr, "yvel_sdev", value, 0);
 
                 if (linelength < 18 || memcmp(&line[14], "    ", 4) == 0)
@@ -1742,7 +1742,7 @@ static int read_records(ingest_info *info)
                     return -1;
                 }
                 value = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)sp3_type[sp3_EV_zvel_sdev], NULL,
-                                                                info->product, int_value);
+                                                                info->product, (int16_t)int_value);
                 coda_mem_record_add_field(info->corr, "zvel_sdev", value, 0);
 
                 if (linelength < 28 || memcmp(&line[19], "       ", 7) == 0)
@@ -1755,7 +1755,7 @@ static int read_records(ingest_info *info)
                     return -1;
                 }
                 value = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)sp3_type[sp3_EV_clkrate_sdev],
-                                                                NULL, info->product, int_value);
+                                                                NULL, info->product, (int16_t)int_value);
                 coda_mem_record_add_field(info->corr, "clkrate_sdev", value, 0);
 
                 if (linelength < 35 || memcmp(&line[27], "        ", 8) == 0)
@@ -1768,7 +1768,7 @@ static int read_records(ingest_info *info)
                     return -1;
                 }
                 value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_EV_xy_corr], NULL,
-                                                                info->product, int_value);
+                                                                info->product, (int32_t)int_value);
                 coda_mem_record_add_field(info->corr, "xy_corr", value, 0);
 
                 if (linelength < 44 || memcmp(&line[36], "        ", 8) == 0)
@@ -1781,7 +1781,7 @@ static int read_records(ingest_info *info)
                     return -1;
                 }
                 value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_EV_xz_corr], NULL,
-                                                                info->product, int_value);
+                                                                info->product, (int32_t)int_value);
                 coda_mem_record_add_field(info->corr, "xz_corr", value, 0);
 
                 if (linelength < 53 || memcmp(&line[45], "        ", 8) == 0)
@@ -1794,7 +1794,7 @@ static int read_records(ingest_info *info)
                     return -1;
                 }
                 value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_EV_xc_corr], NULL,
-                                                                info->product, int_value);
+                                                                info->product, (int32_t)int_value);
                 coda_mem_record_add_field(info->corr, "xc_corr", value, 0);
 
                 if (linelength < 62 || memcmp(&line[54], "        ", 8) == 0)
@@ -1807,7 +1807,7 @@ static int read_records(ingest_info *info)
                     return -1;
                 }
                 value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_EV_yz_corr], NULL,
-                                                                info->product, int_value);
+                                                                info->product, (int32_t)int_value);
                 coda_mem_record_add_field(info->corr, "yz_corr", value, 0);
 
                 if (linelength < 71 || memcmp(&line[63], "        ", 8) == 0)
@@ -1820,7 +1820,7 @@ static int read_records(ingest_info *info)
                     return -1;
                 }
                 value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_EV_yc_corr], NULL,
-                                                                info->product, int_value);
+                                                                info->product, (int32_t)int_value);
                 coda_mem_record_add_field(info->corr, "yc_corr", value, 0);
 
                 if (linelength < 80 || memcmp(&line[72], "        ", 8) == 0)
@@ -1833,7 +1833,7 @@ static int read_records(ingest_info *info)
                     return -1;
                 }
                 value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)sp3_type[sp3_EV_zc_corr], NULL,
-                                                                info->product, int_value);
+                                                                info->product, (int32_t)int_value);
                 coda_mem_record_add_field(info->corr, "zc_corr", value, 0);
 
                 coda_mem_record_add_field(info->vel_rate, "corr", (coda_dynamic_type *)info->corr, 0);

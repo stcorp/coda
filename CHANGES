@@ -1,3 +1,22 @@
+2.11.1 2014-11-14
+~~~~~~~~~~~~~~~~~
+
+* Detection of HDF5 files now also supports HDF5 files where the
+  superblock is not located at the start of the file but at offset
+  512, 1024, or 2048. Files that have the superblock starting at
+  higher offsets are still not supported.
+
+* Error messages for offset/size/availability expressions now show at
+  which cursor position the error occured.
+
+* Updates to windows build systems.
+  - Fixed building against latest version of HDF5 (hdf5-1.8.13).
+  - CODA binaries are now built against Python 2.7.8 and numpy 1.8.2.
+  - Microsoft Visual C++ runtime libraries are no longer included with the 
+    Windows binary installer. You now have to install these yourself:
+       http://www.microsoft.com/en-us/download/details.aspx?id=29
+       http://www.microsoft.com/en-pk/download/details.aspx?id=15336
+
 2.11 2014-08-27
 ~~~~~~~~~~~~~~~
 

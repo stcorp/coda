@@ -2,7 +2,7 @@
 #
 project(CODA)
 
-set(VERSION 2.11)
+set(VERSION 2.11.1)
 set(CODA_VERSION \"${VERSION}\")
 
 # General setup
@@ -718,7 +718,7 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
   # Set dynamic library version
   #
   set(LIBCODA_CURRENT 11)
-  set(LIBCODA_REVISION 0)
+  set(LIBCODA_REVISION 1)
   set(LIBCODA_AGE 5)
   math(EXPR LIBCODA_MAJOR "${LIBCODA_CURRENT} - ${LIBCODA_AGE}")
   set(LIBCODA_MINOR ${LIBCODA_AGE})
@@ -839,8 +839,11 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
   # DOS line endings (CMake bug 0008506)
   #
   configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/windows/coda.iss.in
-    ${CMAKE_CURRENT_BINARY_DIR}/windows/coda.iss)
+    ${CMAKE_CURRENT_SOURCE_DIR}/windows/codawin32.iss.in
+    ${CMAKE_CURRENT_BINARY_DIR}/windows/codawin32.iss)
+  configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/windows/codawin64.iss.in
+    ${CMAKE_CURRENT_BINARY_DIR}/windows/codawin64.iss)
   configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/windows/setup.py.in
     ${CMAKE_CURRENT_BINARY_DIR}/windows/setup.py)

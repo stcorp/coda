@@ -1,0 +1,171 @@
+; Script for Inno Setup <http://www.innosetup.com/>
+
+#include "modifypath.iss"
+
+[Setup]
+AppName=@PACKAGE_NAME@
+AppId=@PACKAGE_TARNAME@
+AppVerName=@PACKAGE_NAME@ @PACKAGE_VERSION@
+AppPublisher=S[&]T
+AppPublisherURL=http://www.stcorp.nl/
+AppSupportURL=http://www.stcorp.nl/coda/
+AppUpdatesURL=http://www.stcorp.nl/coda/
+DefaultDirName={sd}\@PACKAGE_NAME@
+DefaultGroupName=@PACKAGE_NAME@
+DisableStartupPrompt=yes
+DisableProgramGroupPage=yes
+OutputBaseFilename=@PACKAGE_TARNAME@setup-win64-@PACKAGE_VERSION@
+OutputDir=.
+LicenseFile=COPYING
+
+[Files]
+Source: "CHANGES";        DestDir: "{app}";
+Source: "COPYING";        DestDir: "{app}";
+Source: "LICENSES";       DestDir: "{app}";
+Source: "INSTALL";        DestDir: "{app}";
+Source: "FAQ";            DestDir: "{app}";
+Source: "readme.txt";     DestDir: "{app}";         Flags: isreadme
+Source: "removepath.exe"; DestDir: "{app}";         Flags: ignoreversion
+
+Source: "bin\*.dll";      DestDir: "{app}\bin";
+Source: "bin\*.exe";      DestDir: "{app}\bin";     Flags: ignoreversion
+Source: "include\*.*";    DestDir: "{app}\include";
+Source: "lib\*.*";        DestDir: "{app}\lib";
+Source: "doc\*.*";        DestDir: "{app}\doc";     Flags: recursesubdirs
+
+Source: "idl\*.*";        DestDir: "{app}\idl";
+Source: "matlab\*.*";     DestDir: "{app}\matlab";
+Source: "python\*.*";     DestDir: "{app}\python";  Flags: recursesubdirs
+Source: "java\*.*";       DestDir: "{app}\java";
+
+[UninstallDelete]
+Type: filesandordirs; Name: "{app}\python\build"
+
+[UninstallRun]
+Filename: "{app}\removepath.exe"; Parameters: "{app}\bin {code:GetInstallUserType}"
+
+[Code]
+var
+  FinishedInstall: Boolean;
+  InstallUserType: Integer;
+
+function GetInstallUserType(Default: String) : String;
+begin
+  Result := IntToStr(InstallUserType);
+end;
+
+function GetInstallForAllUsers() : Boolean;
+begin
+  Result := (InstallUserType = 1);
+end;
+
+function GetInstallForCurrentUser() : Boolean;
+begin
+  Result := (InstallUserType = 2);
+end;
+
+function ScriptDlgPages(CurPage: Integer; BackClicked: Boolean): Boolean;
+var
+  CurSubPage: Integer;
+  Next: Boolean;
+  CheckListBox: TNewCheckListBox;
+  CurrentUserRadioButton: Integer;
+  AllUsersRadioButton: Integer;
+begin
+  if (not BackClicked and (CurPage = wpSelectDir)) or (BackClicked and (CurPage = wpSelectTasks)) then begin
+    if not BackClicked then
+      CurSubPage := 0
+    else
+      CurSubPage := 0;
+    ScriptDlgPageOpen();
+    ScriptDlgPageSetCaption('Choose Installation Options');
+    ScriptDlgPageSetSubCaption2('');
+    while (CurSubPage >= 0) and (CurSubPage <= 0) and not Terminated do begin
+      case CurSubPage of
+        0:
+          begin
+            { The default is to install the toolbox for all users }
+            if InstallUserType = 0 then
+            begin
+              InstallUserType := 1;
+            end;
+
+            ScriptDlgPageSetSubCaption1('Choose the scope of your installation');
+            ScriptDlgPageClearCustom();
+
+            CheckListBox := TNewCheckListBox.Create(WizardForm.ScriptDlgPanel);
+            CheckListBox.BorderStyle := bsNone;
+            CheckListBox.Color := WizardForm.Color;
+            CheckListBox.MinItemHeight := WizardForm.TasksList.MinItemHeight;
+            CheckListBox.ShowLines := False;
+            CheckListBox.WantTabs := True;
+            CheckListBox.Flat := True;
+            CheckListBox.Width := WizardForm.ScriptDlgPanel.Width;
+            CheckListBox.Parent := WizardForm.ScriptDlgPanel;
+            CheckListBox.AddGroup('Install the toolbox:', '', 0, nil);
+            AllUsersRadioButton := CheckListBox.AddRadioButton('for all users (this requires administrator privileges)', '', 0, 0, GetInstallForAllUsers(), True, nil);
+            CurrentUserRadioButton := CheckListBox.AddRadioButton('for the current user only', '', 0, 0, GetInstallForCurrentUser(), True, nil);
+
+            Next := ScriptDlgPageProcessCustom();
+            
+            if (CheckListBox.Checked[AllUsersRadioButton]) then
+            begin
+              InstallUserType := 1;
+            end;
+            if (CheckListBox.Checked[CurrentUserRadioButton]) then
+            begin
+              InstallUserType := 2;
+            end;
+          end;
+      end;
+      if Next then
+        CurSubPage := CurSubPage + 1
+      else
+        CurSubPage := CurSubPage - 1;
+    end;
+    if not BackClicked then
+      Result := Next
+    else
+      Result := not Next;
+    ScriptDlgPageClose(not Result);
+  end else
+    Result := True;
+end;
+
+function NextButtonClick(CurPage: Integer): Boolean;
+begin
+  Result := ScriptDlgPages(CurPage, False);
+end;
+
+function BackButtonClick(CurPage: Integer): Boolean;
+begin
+  Result := ScriptDlgPages(CurPage, True);
+end;
+
+procedure DeInitializeSetup();
+var
+  lparam : String;
+  scope  : Integer;
+begin
+  if FinishedInstall then
+  begin
+    scope := psAllUsers;
+    if GetInstallForCurrentUser() then
+    begin
+      scope := psCurrentUser;
+    end
+    ModifyPath('{app}\bin', pmAddToEnd, scope);
+    { SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)"Environment") }
+    lparam := 'Environment';
+    SendMessage($FFFF, $001A, 0, CastStringToInteger(lparam));
+  end
+end;
+
+procedure CurStepChanged(CurStep: Integer);
+begin
+  if CurStep = csFinished then
+  begin
+    FinishedInstall := True;
+  end
+end;
+

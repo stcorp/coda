@@ -32,7 +32,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="hdf.lib mfhdf.lib xdr.lib hdf5.lib libjpeg.lib libszip.lib zlib.lib libcoda.lib ws2_32.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="libhdf.lib libmfhdf.lib libxdr.lib libhdf5.lib libjpeg.lib libszip.lib zlib.lib libcoda.lib ws2_32.lib odbc32.lib odbccp32.lib"
 				OutputFile="$(OutDir)codacmp.exe"
 				LinkIncremental="1"
 				IgnoreDefaultLibraryNames="libcmt.lib"
@@ -62,7 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="hdfd.lib mfhdfd.lib xdrd.lib hdf5d.lib libjpeg.lib libszip.lib zlib.lib libcoda_d.lib ws2_32.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="libhdf.lib libmfhdf.lib libxdr.lib libhdf5.lib libjpeg.lib libszip.lib zlib.lib libcoda_d.lib ws2_32.lib odbc32.lib odbccp32.lib"
 				OutputFile="$(OutDir)codacmp_d.exe"
 				LinkIncremental="2"
 				IgnoreDefaultLibraryNames="libcmtd.lib"
@@ -94,7 +94,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="hdf.lib mfhdf.lib xdr.lib hdf5.lib libjpeg.lib libszip.lib zlib.lib libcoda.lib ws2_32.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="libhdf.lib libmfhdf.lib libxdr.lib libhdf5.lib libjpeg.lib libszip.lib zlib.lib libcoda.lib ws2_32.lib odbc32.lib odbccp32.lib"
 				OutputFile="$(OutDir)codacmp.exe"
 				LinkIncremental="1"
 				IgnoreDefaultLibraryNames="libcmt.lib"
@@ -124,7 +124,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="hdfd.lib mfhdfd.lib xdrd.lib hdf5d.lib libjpeg.lib libszip.lib zlib.lib libcoda_d.lib ws2_32.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="libhdf.lib libmfhdf.lib libxdr.lib libhdf5.lib libjpeg.lib libszip.lib zlib.lib libcoda_d.lib ws2_32.lib odbc32.lib odbccp32.lib"
 				OutputFile="$(OutDir)codacmp_d.exe"
 				LinkIncremental="2"
 				IgnoreDefaultLibraryNames="libcmtd.lib"

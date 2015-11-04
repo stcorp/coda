@@ -324,13 +324,10 @@ static int detect_definition(const char *filename, coda_format *format, int64_t 
     switch (*format)
     {
         case coda_format_binary:
-            if (coda_ascbin_recognize_file(filename, *file_size, definition) != 0)
+            /* this recognition will also detect cases where the format was HDF5 (not starting at offset 0) */
+            if (coda_ascbin_recognize_file(filename, *file_size, format, definition) != 0)
             {
                 return -1;
-            }
-            if (*definition != NULL)
-            {
-                *format = (*definition)->format;
             }
             break;
         case coda_format_xml:
@@ -348,7 +345,7 @@ static int detect_definition(const char *filename, coda_format *format, int64_t 
         case coda_format_rinex:
         case coda_format_sp3:
             /* We currently use the ascii detection tree to assign product class/type for these formats */
-            if (coda_ascbin_recognize_file(filename, *file_size, definition) != 0)
+            if (coda_ascbin_recognize_file(filename, *file_size, format, definition) != 0)
             {
                 return -1;
             }

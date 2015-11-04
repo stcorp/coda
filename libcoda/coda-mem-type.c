@@ -769,8 +769,9 @@ coda_mem_data *coda_mem_data_new(coda_type *definition, coda_dynamic_type *attri
             return NULL;
         }
         /* num_blocks = ((mem_size - 1) / block_size) + 1, since we need to round up */
-        current_num_blocks = product->mem_size == 0 ? 0 : ((product->mem_size - 1) / DATA_BLOCK_SIZE) + 1;
-        new_num_blocks = length == 0 ? current_num_blocks : ((product->mem_size + length - 1) / DATA_BLOCK_SIZE) + 1;
+        current_num_blocks = (long)(product->mem_size == 0 ? 0 : ((product->mem_size - 1) / DATA_BLOCK_SIZE) + 1);
+        new_num_blocks =
+            (long)(length == 0 ? current_num_blocks : ((product->mem_size + length - 1) / DATA_BLOCK_SIZE) + 1);
         if (new_num_blocks > current_num_blocks)
         {
             uint8_t *new_mem_ptr;

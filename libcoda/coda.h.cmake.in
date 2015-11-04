@@ -145,7 +145,9 @@ extern "C"
 
 LIBCODA_API extern const char *libcoda_version;
 
-/** Maximum number of dimensions of a multidimensional array */
+/** Maximum number of dimensions of a multidimensional array 
+ * \ingroup coda_general
+ */
 #define CODA_MAX_NUM_DIMS         8
 
 /* Defines for backward compatibility with CODA 1.x interface */
@@ -186,6 +188,10 @@ LIBCODA_API extern int coda_errno;
 
 #define CODA_ERROR_DATA_DEFINITION                         (-400)
 #define CODA_ERROR_EXPRESSION                              (-401)
+
+/** \addtogroup coda_general
+ * @{
+ */
 
 enum coda_array_ordering_enum
 {
@@ -255,6 +261,8 @@ enum coda_native_type_enum
     coda_native_type_string,                /**< string (#coda_text_class) */
     coda_native_type_bytes                  /**< series of uninterpreted bytes (#coda_raw_class) */
 };
+
+/** @} */
 
 enum coda_expression_type_enum
 {

@@ -14,7 +14,7 @@ DefaultDirName={sd}\@PACKAGE_NAME@
 DefaultGroupName=@PACKAGE_NAME@
 DisableStartupPrompt=yes
 DisableProgramGroupPage=yes
-OutputBaseFilename=@PACKAGE_TARNAME@setup-@PACKAGE_VERSION@
+OutputBaseFilename=@PACKAGE_TARNAME@setup-win32-@PACKAGE_VERSION@
 OutputDir=.
 LicenseFile=COPYING
 

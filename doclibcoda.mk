@@ -2,9 +2,7 @@ LIBCODA_DOCFILES = \
 	doc/html/libcoda/bc_s.png \
 	doc/html/libcoda/bdwn.png \
 	doc/html/libcoda/closed.png \
-	doc/html/libcoda/coda_8h.html \
 	doc/html/libcoda/dynsections.js \
-	doc/html/libcoda/files.html \
 	doc/html/libcoda/ftv2blank.png \
 	doc/html/libcoda/ftv2cl.png \
 	doc/html/libcoda/ftv2doc.png \
@@ -21,14 +19,6 @@ LIBCODA_DOCFILES = \
 	doc/html/libcoda/ftv2pnode.png \
 	doc/html/libcoda/ftv2splitbar.png \
 	doc/html/libcoda/ftv2vertline.png \
-	doc/html/libcoda/globals.html \
-	doc/html/libcoda/globals_0x6c.html \
-	doc/html/libcoda/globals_defs.html \
-	doc/html/libcoda/globals_enum.html \
-	doc/html/libcoda/globals_eval.html \
-	doc/html/libcoda/globals_func.html \
-	doc/html/libcoda/globals_type.html \
-	doc/html/libcoda/globals_vars.html \
 	doc/html/libcoda/group__coda__cursor.html \
 	doc/html/libcoda/group__coda__error.html \
 	doc/html/libcoda/group__coda__expression.html \
@@ -51,11 +41,7 @@ doc/html/libcoda/bdwn.png:
 	$(MAKE) libcoda_doc
 doc/html/libcoda/closed.png:
 	$(MAKE) libcoda_doc
-doc/html/libcoda/coda_8h.html:
-	$(MAKE) libcoda_doc
 doc/html/libcoda/dynsections.js:
-	$(MAKE) libcoda_doc
-doc/html/libcoda/files.html:
 	$(MAKE) libcoda_doc
 doc/html/libcoda/ftv2blank.png:
 	$(MAKE) libcoda_doc
@@ -88,22 +74,6 @@ doc/html/libcoda/ftv2pnode.png:
 doc/html/libcoda/ftv2splitbar.png:
 	$(MAKE) libcoda_doc
 doc/html/libcoda/ftv2vertline.png:
-	$(MAKE) libcoda_doc
-doc/html/libcoda/globals.html:
-	$(MAKE) libcoda_doc
-doc/html/libcoda/globals_0x6c.html:
-	$(MAKE) libcoda_doc
-doc/html/libcoda/globals_defs.html:
-	$(MAKE) libcoda_doc
-doc/html/libcoda/globals_enum.html:
-	$(MAKE) libcoda_doc
-doc/html/libcoda/globals_eval.html:
-	$(MAKE) libcoda_doc
-doc/html/libcoda/globals_func.html:
-	$(MAKE) libcoda_doc
-doc/html/libcoda/globals_type.html:
-	$(MAKE) libcoda_doc
-doc/html/libcoda/globals_vars.html:
 	$(MAKE) libcoda_doc
 doc/html/libcoda/group__coda__cursor.html:
 	$(MAKE) libcoda_doc

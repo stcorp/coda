@@ -33,7 +33,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/EXPORT:mexFunction"
-				AdditionalDependencies="hdf.lib mfhdf.lib xdr.lib hdf5.lib libjpeg.lib libszip.lib zlib.lib libmx.lib libmex.lib libmat.lib libcoda.lib ws2_32.lib"
+				AdditionalDependencies="libhdf.lib libmfhdf.lib libxdr.lib libhdf5.lib libjpeg.lib libszip.lib zlib.lib libmx.lib libmex.lib libmat.lib libcoda.lib ws2_32.lib"
 				OutputFile="$(OutDir)coda_matlab.mexw32"
 				LinkIncremental="1"
 				IgnoreDefaultLibraryNames="libcmt.lib"
@@ -64,7 +64,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/EXPORT:mexFunction"
-				AdditionalDependencies="hdfd.lib mfhdfd.lib xdrd.lib hdf5d.lib libjpeg.lib libszip.lib zlib.lib libmx.lib libmex.lib libmat.lib libcoda_d.lib ws2_32.lib"
+				AdditionalDependencies="libhdf.lib libmfhdf.lib libxdr.lib libhdf5.lib libjpeg.lib libszip.lib zlib.lib libmx.lib libmex.lib libmat.lib libcoda_d.lib ws2_32.lib"
 				OutputFile="$(OutDir)coda_matlab.mexw32"
 				LinkIncremental="2"
 				IgnoreDefaultLibraryNames="libcmtd.lib"
@@ -97,7 +97,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/EXPORT:mexFunction"
-				AdditionalDependencies="hdf.lib mfhdf.lib xdr.lib hdf5.lib libjpeg.lib libszip.lib zlib.lib libmx.lib libmex.lib libmat.lib libcoda.lib ws2_32.lib"
+				AdditionalDependencies="libhdf.lib libmfhdf.lib libxdr.lib libhdf5.lib libjpeg.lib libszip.lib zlib.lib libmx.lib libmex.lib libmat.lib libcoda.lib ws2_32.lib"
 				OutputFile="$(OutDir)coda_matlab.mexw64"
 				LinkIncremental="1"
 				IgnoreDefaultLibraryNames="libcmt.lib"
@@ -128,7 +128,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/EXPORT:mexFunction"
-				AdditionalDependencies="hdfd.lib mfhdfd.lib xdrd.lib hdf5d.lib libjpeg.lib libszip.lib zlib.lib libmx.lib libmex.lib libmat.lib libcoda_d.lib ws2_32.lib"
+				AdditionalDependencies="libhdf.lib libmfhdf.lib libxdr.lib libhdf5.lib libjpeg.lib libszip.lib zlib.lib libmx.lib libmex.lib libmat.lib libcoda_d.lib ws2_32.lib"
 				OutputFile="$(OutDir)coda_matlab.mexw64"
 				LinkIncremental="2"
 				IgnoreDefaultLibraryNames="libcmtd.lib"

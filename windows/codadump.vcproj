@@ -23,7 +23,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories=".,..\libcoda,$(HDF4_INCLUDE_DIR)"
+				AdditionalIncludeDirectories=".,..\libcoda,$(HDF4_STATIC_INCLUDE_DIR)"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;HAVE_HDF4;HAVE_CONFIG_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -32,7 +32,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="hdf.lib mfhdf.lib xdr.lib hdf5.lib libjpeg.lib libszip.lib zlib.lib libcoda.lib ws2_32.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="libhdf.lib libmfhdf.lib libxdr.lib libhdf5.lib libjpeg.lib libszip.lib zlib.lib libcoda.lib ws2_32.lib odbc32.lib odbccp32.lib"
 				OutputFile="$(OutDir)codadump.exe"
 				LinkIncremental="1"
 				IgnoreDefaultLibraryNames="libcmt.lib"
@@ -52,7 +52,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".,..\libcoda,$(HDF4_INCLUDE_DIR)"
+				AdditionalIncludeDirectories=".,..\libcoda,$(HDF4_STATIC_INCLUDE_DIR)"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;HAVE_HDF4;HAVE_CONFIG_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -62,7 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="hdfd.lib mfhdfd.lib xdrd.lib hdf5d.lib libjpeg.lib libszip.lib zlib.lib libcoda_d.lib ws2_32.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="libhdf.lib libmfhdf.lib libxdr.lib libhdf5.lib libjpeg.lib libszip.lib zlib.lib libcoda_d.lib ws2_32.lib odbc32.lib odbccp32.lib"
 				OutputFile="$(OutDir)codadump_d.exe"
 				LinkIncremental="2"
 				IgnoreDefaultLibraryNames="libcmtd.lib"
@@ -85,7 +85,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories=".,..\libcoda,$(HDF4_INCLUDE_DIR)"
+				AdditionalIncludeDirectories=".,..\libcoda,$(HDF4_STATIC_INCLUDE_DIR)"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;HAVE_HDF4;HAVE_CONFIG_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -94,7 +94,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="hdf.lib mfhdf.lib xdr.lib hdf5.lib libjpeg.lib libszip.lib zlib.lib libcoda.lib ws2_32.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="libhdf.lib libmfhdf.lib libxdr.lib libhdf5.lib libjpeg.lib libszip.lib zlib.lib libcoda.lib ws2_32.lib odbc32.lib odbccp32.lib"
 				OutputFile="$(OutDir)codadump.exe"
 				LinkIncremental="1"
 				IgnoreDefaultLibraryNames="libcmt.lib"
@@ -114,7 +114,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".,..\libcoda,$(HDF4_INCLUDE_DIR)"
+				AdditionalIncludeDirectories=".,..\libcoda,$(HDF4_STATIC_INCLUDE_DIR)"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;HAVE_HDF4;HAVE_CONFIG_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -124,7 +124,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="hdfd.lib mfhdfd.lib xdrd.lib hdf5d.lib libjpeg.lib libszip.lib zlib.lib libcoda_d.lib ws2_32.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="libhdf.lib libmfhdf.lib libxdr.lib libhdf5.lib libjpeg.lib libszip.lib zlib.lib libcoda_d.lib ws2_32.lib odbc32.lib odbccp32.lib"
 				OutputFile="$(OutDir)codadump_d.exe"
 				LinkIncremental="2"
 				IgnoreDefaultLibraryNames="libcmtd.lib"
