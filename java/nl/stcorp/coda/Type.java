@@ -245,6 +245,21 @@ public class Type
         codac.type_get_fixed_value(this.type, fixed_value, length);
         return fixed_value[0];
     }
+    
+    
+    /**
+     * Get the type for the associated attribute record.
+     * 
+     * @return The type of the attribute record.
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public Type getAttributes() throws CodaException
+    {
+        SWIGTYPE_p_coda_type_struct attributes = new SWIGTYPE_p_coda_type_struct();
+        codac.type_get_attributes(this.type, attributes);
+        return new Type(attributes);
+    }
 
 
     /**

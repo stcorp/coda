@@ -153,6 +153,10 @@ SOURCE="..\tools\codadd\codadd-doc.c"
 
 SOURCE="..\tools\codadd\codadd-list.c"
 # End Source File
+# Begin Source File
+
+SOURCE="..\tools\codadd\codadd-xmlschema.c"
+# End Source File
 # End Group
 # End Target
 # End Project

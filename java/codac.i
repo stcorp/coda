@@ -606,6 +606,7 @@ int coda_cursor_read_char_array(const coda_cursor *cursor, char *dst, coda_array
   memory-managed by CODA itself:
 
   coda_get_product_root_type()::coda_type **type
+  coda_type_get_attributes()::coda_type **attributes
   coda_type_get_record_field_type()::coda_type **field_type
   coda_type_get_array_base_type()::coda_type **base_type
   coda_type_get_special_base_type()::coda_type **base_type

@@ -271,6 +271,10 @@ public class codac implements codacConstants {
     return codacJNI.type_get_fixed_value(SWIGTYPE_p_coda_type_struct.getCPtr(type), fixed_value, length);
   }
 
+  public static int type_get_attributes(SWIGTYPE_p_coda_type_struct type, SWIGTYPE_p_coda_type_struct attributes) throws nl.stcorp.coda.CodaException {
+    return codacJNI.type_get_attributes(SWIGTYPE_p_coda_type_struct.getCPtr(type), attributes);
+  }
+
   public static int type_get_num_record_fields(SWIGTYPE_p_coda_type_struct type, int[] num_fields) throws nl.stcorp.coda.CodaException {
     return codacJNI.type_get_num_record_fields(SWIGTYPE_p_coda_type_struct.getCPtr(type), num_fields);
   }

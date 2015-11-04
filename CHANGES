@@ -1,3 +1,18 @@
+2.1 2011-07-21
+~~~~~~~~~~~~~~
+
+* CODA now has a logo.
+
+* Added coda_type_get_attributes().
+
+* Added support for SP3-c format.
+
+* Added XML Schema export option to codadd.
+
+* Fixed documentation for 'exists()' expression. This function can also be used
+  on non-existing paths (instead of only being able to test for availability of
+  optional record fields).
+
 2.0.1 2011-05-17
 ~~~~~~~~~~~~~~~~
 

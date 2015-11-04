@@ -10,17 +10,17 @@ body {
 }
 
 a               { text-decoration: none; }
-a:link          { color: #883322; background-color: inherit; } 
-a:hover         { color: #BB3322; background-color: inherit; }
-a:visited       { color: #551100; background-color: inherit; }
-a:visited:hover { color: #881100; background-color: inherit; }
+a:link          { color: #882222; background-color: inherit; } 
+a:hover         { color: #BB2222; background-color: inherit; }
+a:visited       { color: #550000; background-color: inherit; }
+a:visited:hover { color: #880000; background-color: inherit; }
 
 a.header:link          { color: #EEEEEE; background-color: inherit; }
 a.header:hover         { color: #999999; background-color: inherit; }
 a.header:visited       { color: #CCCCCC; background-color: inherit; }
 a.header:visited:hover { color: #999999; background-color: inherit; }
 
-h1 { color: #553322; font-size: 3.6ex; }
+h1 { color: #552222; font-size: 3.6ex; }
 h2 { color: #333333; font-size: 3.0ex; }
 h3 { color: #000000; font-size: 2.1ex; }
 
@@ -47,7 +47,7 @@ table tr th, table tr td {
 } 
 table tr th {
   color: #eeeeee;
-  background: #553322;
+  background: #552222;
 }
 table tr th.subhdr {
   font-weight: normal;

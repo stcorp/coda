@@ -74,6 +74,7 @@ public class codacJNI {
   public final static native int type_get_description(long jarg1, String[] jarg2) throws nl.stcorp.coda.CodaException;
   public final static native int type_get_unit(long jarg1, String[] jarg2) throws nl.stcorp.coda.CodaException;
   public final static native int type_get_fixed_value(long jarg1, String[] jarg2, int[] jarg3) throws nl.stcorp.coda.CodaException;
+  public final static native int type_get_attributes(long jarg1, SWIGTYPE_p_coda_type_struct jarg2) throws nl.stcorp.coda.CodaException;
   public final static native int type_get_num_record_fields(long jarg1, int[] jarg2) throws nl.stcorp.coda.CodaException;
   public final static native int type_get_record_field_index_from_name(long jarg1, String jarg2, int[] jarg3) throws nl.stcorp.coda.CodaException;
   public final static native int type_get_record_field_index_from_real_name(long jarg1, String jarg2, int[] jarg3) throws nl.stcorp.coda.CodaException;

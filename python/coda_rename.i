@@ -72,6 +72,7 @@
 %rename(type_get_description) coda_type_get_description;
 %rename(type_get_unit) coda_type_get_unit;
 %rename(type_get_fixed_value) coda_type_get_fixed_value;
+%rename(type_get_attributes) coda_type_get_attributes;
 %rename(type_get_num_record_fields) coda_type_get_num_record_fields;
 %rename(type_get_record_field_index_from_name) coda_type_get_record_field_index_from_name;
 %rename(type_get_record_field_index_from_real_name) coda_type_get_record_field_index_from_real_name;

@@ -347,7 +347,8 @@ codadd_SOURCES = \
 	tools/codadd/codadd.c \
 	tools/codadd/codadd-detect.c \
 	tools/codadd/codadd-doc.c \
-	tools/codadd/codadd-list.c
+	tools/codadd/codadd-list.c \
+	tools/codadd/codadd-xmlschema.c
 codadd_LDFLAGS = -static
 # keep this linked to libcoda_internal.la because of SUBPACKAGE_MODE
 codadd_LDADD = libcoda_internal.la
@@ -655,6 +656,7 @@ DOCFILES = \
 	doc/html/index.html \
 	doc/html/css/codadef.css \
 	doc/html/css/codadoc.css \
+	doc/html/images/coda-large.png \
 	$(LIBCODA_DOCFILES) \
 	$(JAVA_DOCFILES) \
 	doc/html/codadef/codadef-expressions.html \
@@ -664,6 +666,7 @@ DOCFILES = \
 	doc/html/codadef/codadef-hdf5.html \
 	doc/html/codadef/codadef-netcdf.html \
 	doc/html/codadef/codadef-rinex.html \
+	doc/html/codadef/codadef-sp3c.html \
 	doc/html/codadef/codadef-xml.html \
 	doc/html/codacheck/index.html \
 	doc/html/codacmp/index.html \

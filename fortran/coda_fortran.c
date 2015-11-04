@@ -438,6 +438,11 @@ int UFNAME(CODA_TYPE_GET_FIXED_VALUE,coda_type_get_fixed_value)(void *type, char
     return result;
 }
 
+int UFNAME(CODA_TYPE_GET_ATTRIBUTES,coda_type_get_attributes)(void *type, void *attributes)
+{
+    return coda_type_get_attributes(*(coda_type **)type, (coda_type **)attributes);
+}
+
 int UFNAME(CODA_TYPE_GET_NUM_RECORD_FIELDS,coda_type_get_num_record_fields)(void *type, long *n_fields)
 {
     return coda_type_get_num_record_fields(*(coda_type **)type, n_fields);

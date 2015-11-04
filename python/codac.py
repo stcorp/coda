@@ -442,6 +442,10 @@ def type_get_fixed_value(*args):
   return _codac.type_get_fixed_value(*args)
 type_get_fixed_value = _codac.type_get_fixed_value
 
+def type_get_attributes(*args):
+  return _codac.type_get_attributes(*args)
+type_get_attributes = _codac.type_get_attributes
+
 def type_get_num_record_fields(*args):
   return _codac.type_get_num_record_fields(*args)
 type_get_num_record_fields = _codac.type_get_num_record_fields

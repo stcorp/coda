@@ -40,6 +40,7 @@ int use_special_types;
 
 void generate_html(const char *prefixdir);
 void generate_list(const char *product_class, const char *product_type, int version);
+void generate_xmlschema(const char *output_file_name, const char *product_class, const char *product_type, int version);
 void generate_detection_tree(coda_format format);
 
 static void print_version()
@@ -83,6 +84,15 @@ static void print_help()
     printf("                    bypass special data types from the CODA format definition -\n");
     printf("                    data with a special type is treated using its non-special\n");
     printf("                    base type\n");
+    printf("\n");
+    printf("    codadd [-D definitionpath] xmlschema [<xmlschema options>]\n");
+    printf("                               <product class> <product type> <version>\n");
+    printf("        Create an XML Schema file for a single product definition\n");
+    printf("        Note that this will only work if the product class/type/version points\n");
+    printf("        to a product definition for an XML file\n");
+    printf("        XML Schema options:\n");
+    printf("            -o, --output <filename>\n");
+    printf("                    write output to specified file\n");
     printf("\n");
     printf("    codadd [-D definitionpath] dtree <format>\n");
     printf("        Shows the product recognition detection tree for the given file format.\n");
@@ -255,6 +265,53 @@ int main(int argc, char *argv[])
             }
         }
         generate_list(product_class, product_type, version);
+    }
+    else if (strcmp(argv[i], "xmlschema") == 0)
+    {
+        const char *output_file_name = NULL;
+        const char *product_class = NULL;
+        const char *product_type = NULL;
+        int version = -1;
+
+        i++;
+        while (i < argc)
+        {
+            if ((strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "--output") == 0) &&
+                i + 1 < argc && argv[i + 1][0] != '-')
+            {
+                i++;
+                output_file_name = argv[i];
+            }
+            else if (argv[i][0] != '-')
+            {
+                break;
+            }
+            else
+            {
+                fprintf(stderr, "ERROR: Incorrect arguments\n");
+                print_help();
+                exit(1);
+            }
+            i++;
+        }
+
+        if (i != argc - 3)
+        {
+            fprintf(stderr, "ERROR: Incorrect arguments\n");
+            print_help();
+            exit(1);
+        }
+        product_class = argv[i];
+        i++;
+        product_type = argv[i];
+        i++;
+        if (sscanf(argv[i], "%d", &version) != 1)
+        {
+            fprintf(stderr, "ERROR: Incorrect product version argument\n");
+            print_help();
+            exit(1);
+        }
+        generate_xmlschema(output_file_name, product_class, product_type, version);
     }
     else if (strcmp(argv[i], "dtree") == 0)
     {

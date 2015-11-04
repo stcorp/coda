@@ -184,14 +184,26 @@ enum
     num_grib_types
 };
 
-static coda_type *grib_type[num_grib_types];
+static coda_type **grib_type = NULL;
 
-int coda_grib_init(void)
+static int grib_init(void)
 {
     coda_type_record_field *field;
     coda_type *basic_type;
     int i;
 
+    if (grib_type != NULL)
+    {
+        return 0;
+    }
+
+    grib_type = malloc(num_grib_types * sizeof(coda_type *));
+    if (grib_type == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                       (long)num_grib_types * sizeof(coda_type *), __FILE__, __LINE__);
+        return -1;
+    }
     for (i = 0; i < num_grib_types; i++)
     {
         grib_type[i] = NULL;
@@ -1091,6 +1103,10 @@ void coda_grib_done(void)
 {
     int i;
 
+    if (grib_type == NULL)
+    {
+        return;
+    }
     for (i = 0; i < num_grib_types; i++)
     {
         if (grib_type[i] != NULL)
@@ -1099,6 +1115,8 @@ void coda_grib_done(void)
             grib_type[i] = NULL;
         }
     }
+    free(grib_type);
+    grib_type = NULL;
 }
 
 #ifndef WORDS_BIGENDIAN
@@ -2499,6 +2517,11 @@ int coda_grib_open(const char *filename, int64_t file_size, coda_product **produ
     uint8_t buffer[28];
     int64_t message_size;
     int64_t file_offset = 0;
+
+    if (grib_init() != 0)
+    {
+        return -1;
+    }
 
     grib_product = (coda_grib_product *)malloc(sizeof(coda_grib_product));
     if (grib_product == NULL)

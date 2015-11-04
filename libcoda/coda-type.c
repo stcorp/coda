@@ -3247,6 +3247,37 @@ LIBCODA_API int coda_type_get_fixed_value(const coda_type *type, const char **fi
     return 0;
 }
 
+/** Get the type for the associated attribute record.
+ * Note that this record may not have any fields if there are no attributes for this type.
+ * \param type CODA type.
+ * \param attributes Pointer to the variable where the pointer to the type defining the attribte record will be stored.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_type_get_attributes(const coda_type *type, coda_type **attributes)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (attributes == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "attributes argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (type->attributes == NULL)
+    {
+        *attributes = (coda_type *)coda_type_empty_record(type->format);
+    }
+    else
+    {
+        *attributes = (coda_type *)type->attributes;
+    }
+    return 0;
+}
+
 /** Get the number of fields of a record type.
  * If the type is not a record class the function will return an error.
  * \param type CODA type.

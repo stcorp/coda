@@ -309,6 +309,7 @@ static void print_function_definitions(void)
     PRINT_FUNCDEF(coda_type_get_description, int);
     PRINT_FUNCDEF(coda_type_get_unit, int);
     PRINT_FUNCDEF(coda_type_get_fixed_value, int);
+    PRINT_FUNCDEF(coda_type_get_attributes, int);
 
     PRINT_FUNCDEF(coda_type_get_num_record_fields, int);
     PRINT_FUNCDEF(coda_type_get_record_field_index_from_name, int);

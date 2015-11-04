@@ -178,7 +178,7 @@ enum
     num_rinex_types
 };
 
-static coda_type *rinex_type[num_rinex_types];
+static coda_type **rinex_type = NULL;
 
 typedef struct satellite_info_struct
 {
@@ -215,7 +215,7 @@ typedef struct ingest_info_struct
     coda_mem_array *time_system_corr_array;     /* actuall data for /header/time_system_corr */
 } ingest_info;
 
-void satellite_info_cleanup(satellite_info *info)
+static void satellite_info_cleanup(satellite_info *info)
 {
     int i;
 
@@ -248,7 +248,7 @@ void satellite_info_cleanup(satellite_info *info)
     }
 }
 
-void ingest_info_cleanup(ingest_info *info)
+static void ingest_info_cleanup(ingest_info *info)
 {
     if (info->f != NULL)
     {
@@ -288,7 +288,7 @@ void ingest_info_cleanup(ingest_info *info)
     }
 }
 
-void satellite_info_init(satellite_info *info)
+static void satellite_info_init(satellite_info *info)
 {
     info->num_observables = 0;
     info->observable = NULL;
@@ -298,7 +298,7 @@ void satellite_info_init(satellite_info *info)
     info->records = NULL;
 }
 
-void ingest_info_init(ingest_info *info)
+static void ingest_info_init(ingest_info *info)
 {
     info->f = NULL;
     info->header = NULL;
@@ -319,11 +319,23 @@ void ingest_info_init(ingest_info *info)
     info->time_system_corr_array = NULL;
 }
 
-int coda_rinex_init(void)
+static int rinex_init(void)
 {
     coda_type_record_field *field;
     int i;
 
+    if (rinex_type != NULL)
+    {
+        return 0;
+    }
+
+    rinex_type = malloc(num_rinex_types * sizeof(coda_type *));
+    if (rinex_type == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                       (long)num_rinex_types * sizeof(coda_type *), __FILE__, __LINE__);
+        return -1;
+    }
     for (i = 0; i < num_rinex_types; i++)
     {
         rinex_type[i] = NULL;
@@ -1351,6 +1363,10 @@ void coda_rinex_done(void)
 {
     int i;
 
+    if (rinex_type == NULL)
+    {
+        return;
+    }
     for (i = 0; i < num_rinex_types; i++)
     {
         if (rinex_type[i] != NULL)
@@ -1359,6 +1375,8 @@ void coda_rinex_done(void)
             rinex_type[i] = NULL;
         }
     }
+    free(rinex_type);
+    rinex_type = NULL;
 }
 
 static void rtrim(char *str)
@@ -3109,6 +3127,11 @@ int coda_rinex_open(const char *filename, int64_t file_size, coda_product **prod
 {
     coda_product *product_file;
     coda_product_definition *product_definition;
+
+    if (rinex_init() != 0)
+    {
+        return -1;
+    }
 
     /* We currently use the ascii detection tree to assign product class/type to RINEX files */
     if (coda_ascbin_recognize_file(filename, file_size, &product_definition) != 0)

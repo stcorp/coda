@@ -23,6 +23,8 @@
 
 #include "coda-internal.h"
 
+void coda_sp3c_done(void);
+
 int coda_sp3c_open(const char *filename, int64_t file_size, coda_product **product);
 int coda_sp3c_close(coda_product *product);
 int coda_sp3c_cursor_set_product(coda_cursor *cursor, coda_product *product);

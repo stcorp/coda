@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html>
+
+  <head>
+    <title>CODA SP3-c Mapping Description</title>
+    <link rel="stylesheet" href="../css/codadoc.css" type="text/css" />
+  </head>
+
+  <body>
+
+    <div class="main">
+
+      <h1>CODA SP3-c Mapping Description</h1>
+
+      <p>CODA provides access to SP3-c data. This is done by importing the full file and providing access to an in-memory structure of the data via the CODA <a href="codadef-format.html">data types</a>. Below we will describe how CODA maps the SP3-c product structure to one that is based on the CODA data types. We assume you already have a decent understanding of the SP3-c format and its details.</p>
+      
+      <p>A SP3-c file consists of a header section followed by a series of epoch data records. Each epoch data record contains the epoch and, for each satellite, a Position and Clock Record and (depending on the Position/Velocity Flag field in the header) a Velocity and Rate Record. Both records can be accompanied by a Correlation record.</p>
+     
+      <p>CODA will try to provide as direct a mapping to the SP3-c data as possible. This means that the in memory data structure will follow to a large extend the order in which data is stored in the file. Below the mapping for the SP3-c data is provided.</p>
+      
+      <p>The following table gives the mapping of header sections to CODA parameters</p>
+      
+      <table class="fancy" border="1" cellspacing="0">
+      <tr><th>CODA path to variable</th><th>type class</th><th>read type</th></tr>
+      <tr><td>/header/pos_vel</td><td>string</td><td>char</td></tr>
+      <tr><td>/header/datetime_start</td><td>time</td><td>double</td></tr>
+      <tr><td>/header/num_epochs</td><td>integer</td><td>int32</td></tr>
+      <tr><td>/header/data_used</td><td>text</td><td>string</td></tr>
+      <tr><td>/header/coordinate_sys</td><td>text</td><td>string</td></tr>
+      <tr><td>/header/orbit_type</td><td>text</td><td>string</td></tr>
+      <tr><td>/header/agency</td><td>text</td><td>string</td></tr>
+      <tr><td>/header/gps_week</td><td>integer</td><td>int16</td></tr>
+      <tr><td>/header/sec_of_week</td><td>real</td><td>double</td></tr>
+      <tr><td>/header/epoch_interval</td><td>real</td><td>double</td></tr>
+      <tr><td>/header/mjd_start</td><td>integer</td><td>int32</td></tr>
+      <tr><td>/header/frac_day</td><td>real</td><td>double</td></tr>
+      <tr><td>/header/num_satellites</td><td>integer</td><td>uint8</td></tr>
+      <tr><td>/header/sat_id[]</td><td>text</td><td>string</td></tr>
+      <tr><td>/header/sat_accuracy[]</td><td>integer</td><td>int16</td></tr>
+      <tr><td>/header/file_type</td><td>text</td><td>string</td></tr>
+      <tr><td>/header/time_system</td><td>text</td><td>string</td></tr>
+      <tr><td>/header/base_pos_vel</td><td>real</td><td>double</td></tr>
+      <tr><td>/header/base_clk_rate</td><td>real</td><td>double</td></tr>
+      </table>
+
+      <p>The following table gives the mapping of the epoch records structure to CODA parameters. An SP3-c file can contain multiple epoch records. Each epoch record contains the epoch (datetime start) and a maximum of four records per satellite: Position and Clock Record, Position and Clock Correlation Record (included as an optional <code>corr</code> field in the Position and Clock Record), Velocity and Rate Record, and Velocity and Rate Correlation Record (included as an optional <code>corr</code> field in the Velocity and Rate Record). Note that CODA will not convert any of the values that are stored as exponent-encoded values for you (e.g. the standard deviation values). Any blank integer or floating point values will be set 0 upon read.</p>
+      
+      <table class="fancy" border="1" cellspacing="0">
+      <tr><th>CODA path to variable</th><th>type class</th><th>read type</th></tr>
+      <tr><td>/record[]/epoch</td><td>time</td><td>double</td></tr>
+      <tr><td>/record[]/pos_clk[]/vehicle_id</td><td>text</td><td>char</td></tr>
+      <tr><td>/record[]/pos_clk[]/x_coordinate</td><td>real</td><td>double</td></tr>
+      <tr><td>/record[]/pos_clk[]/y_coordinate</td><td>real</td><td>double</td></tr>
+      <tr><td>/record[]/pos_clk[]/z_coordinate</td><td>real</td><td>double</td></tr>
+      <tr><td>/record[]/pos_clk[]/clock</td><td>real</td><td>double</td></tr>
+      <tr><td>/record[]/pos_clk[]/x_sdev</td><td>integer</td><td>int8</td></tr>
+      <tr><td>/record[]/pos_clk[]/y_sdev</td><td>integer</td><td>int8</td></tr>
+      <tr><td>/record[]/pos_clk[]/z_sdev</td><td>integer</td><td>int8</td></tr>
+      <tr><td>/record[]/pos_clk[]/clock_sdev</td><td>integer</td><td>int16</td></tr>
+      <tr><td>/record[]/pos_clk[]/clock_event_flag</td><td>string</td><td>char</td></tr>
+      <tr><td>/record[]/pos_clk[]/clock_pred_flag</td><td>string</td><td>char</td></tr>
+      <tr><td>/record[]/pos_clk[]/maneuver_flag</td><td>string</td><td>char</td></tr>
+      <tr><td>/record[]/pos_clk[]/orbit_pred_flag</td><td>string</td><td>char</td></tr>
+      <tr><td>/record[]/pos_clk[]/corr/x_sdev</td><td>integer</td><td>int16</td></tr>
+      <tr><td>/record[]/pos_clk[]/corr/y_sdev</td><td>integer</td><td>int16</td></tr>
+      <tr><td>/record[]/pos_clk[]/corr/z_sdev</td><td>integer</td><td>int16</td></tr>
+      <tr><td>/record[]/pos_clk[]/corr/clock_sdev</td><td>integer</td><td>int32</td></tr>
+      <tr><td>/record[]/pos_clk[]/corr/xy_corr</td><td>integer</td><td>int32</td></tr>
+      <tr><td>/record[]/pos_clk[]/corr/xz_corr</td><td>integer</td><td>int32</td></tr>
+      <tr><td>/record[]/pos_clk[]/corr/xc_corr</td><td>integer</td><td>int32</td></tr>
+      <tr><td>/record[]/pos_clk[]/corr/yz_corr</td><td>integer</td><td>int32</td></tr>
+      <tr><td>/record[]/pos_clk[]/corr/yc_corr</td><td>integer</td><td>int32</td></tr>
+      <tr><td>/record[]/pos_clk[]/corr/zc_corr</td><td>integer</td><td>int32</td></tr>
+      <tr><td>/record[]/rate_vel[]/vehicle_id</td><td>text</td><td>char</td></tr>
+      <tr><td>/record[]/rate_vel[]/x_velocity</td><td>real</td><td>double</td></tr>
+      <tr><td>/record[]/rate_vel[]/y_velocity</td><td>real</td><td>double</td></tr>
+      <tr><td>/record[]/rate_vel[]/z_velocity</td><td>real</td><td>double</td></tr>
+      <tr><td>/record[]/rate_vel[]/clock_rate</td><td>real</td><td>double</td></tr>
+      <tr><td>/record[]/rate_vel[]/xvel_sdev</td><td>integer</td><td>int8</td></tr>
+      <tr><td>/record[]/rate_vel[]/yvel_sdev</td><td>integer</td><td>int8</td></tr>
+      <tr><td>/record[]/rate_vel[]/zvel_sdev</td><td>integer</td><td>int8</td></tr>
+      <tr><td>/record[]/rate_vel[]/clkrate_sdev</td><td>integer</td><td>int16</td></tr>
+      <tr><td>/record[]/rate_vel[]/corr/xvel_sdev</td><td>integer</td><td>int16</td></tr>
+      <tr><td>/record[]/rate_vel[]/corr/yvel_sdev</td><td>integer</td><td>int16</td></tr>
+      <tr><td>/record[]/rate_vel[]/corr/zvel_sdev</td><td>integer</td><td>int16</td></tr>
+      <tr><td>/record[]/rate_vel[]/corr/clkrate_sdev</td><td>integer</td><td>int32</td></tr>
+      <tr><td>/record[]/rate_vel[]/corr/xy_corr</td><td>integer</td><td>int32</td></tr>
+      <tr><td>/record[]/rate_vel[]/corr/xz_corr</td><td>integer</td><td>int32</td></tr>
+      <tr><td>/record[]/rate_vel[]/corr/xc_corr</td><td>integer</td><td>int32</td></tr>
+      <tr><td>/record[]/rate_vel[]/corr/yz_corr</td><td>integer</td><td>int32</td></tr>
+      <tr><td>/record[]/rate_vel[]/corr/yc_corr</td><td>integer</td><td>int32</td></tr>
+      <tr><td>/record[]/rate_vel[]/corr/zc_corr</td><td>integer</td><td>int32</td></tr>
+      </table>
+
+      <div class="footer">
+        <hr />
+        <p>Copyright &copy; 2007-2011 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+      </div>
+
+    </div>
+
+  </body>
+
+</html>

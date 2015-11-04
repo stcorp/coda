@@ -1171,7 +1171,9 @@ static int idl_coda_fetch_cursor_to_StructDefPtr(coda_cursor *cursor, IDL_Struct
                 {
                     case coda_record_class:
                         /* insert cursor type (recursive call) */
-                        result = idl_coda_fetch_cursor_to_StructDefPtr(cursor, &record_tags[field_index].type);
+                        result =
+                            idl_coda_fetch_cursor_to_StructDefPtr(cursor,
+                                                                  (IDL_StructDefPtr *)&record_tags[field_index].type);
                         break;
                     case coda_array_class:
                         {
@@ -1571,7 +1573,7 @@ static int idl_coda_fetch_datahandle_scalar_filldata(struct IDL_CodaDataHandle *
     return 0;
 }
 
-static int idl_coda_fetch_datahandle_record_filldata(struct IDL_CodaDataHandle *datahandle, IDL_STRUCT_TAG_DEF *sdef,
+static int idl_coda_fetch_datahandle_record_filldata(struct IDL_CodaDataHandle *datahandle, IDL_StructDefPtr sdef,
                                                      char *data)
 {
     coda_type *record_type;
@@ -1665,8 +1667,7 @@ static int idl_coda_fetch_datahandle_record_filldata(struct IDL_CodaDataHandle *
                 {
                     case coda_record_class:
                         /* This will expand the record in-situ, recursively */
-                        if (idl_coda_fetch_datahandle_record_filldata
-                            (datahandle, (IDL_STRUCT_TAG_DEF *)field_info->value.s.sdef, fill) != 0)
+                        if (idl_coda_fetch_datahandle_record_filldata(datahandle, field_info->value.s.sdef, fill) != 0)
                         {
                             return -1;
                         }
@@ -3411,10 +3412,10 @@ static void register_idl_struct_types(void)
         {0, 0, 0, 0}
     };
 
-    /* define the CODA_EMPTY_ARRAY structure type */
+    /* define the CODA_NO_DATA structure type */
 
     static IDL_STRUCT_TAG_DEF coda_no_data_tags[] = {
-        {"opaque", 0, (void *)IDL_TYP_BYTE, 0},
+        {"OPAQUE", 0, (void *)IDL_TYP_BYTE, 0},
         {0, 0, 0, 0}
     };
 

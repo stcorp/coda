@@ -6636,6 +6636,43 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_type_get_attributes(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  coda_type *arg1 = (coda_type *) 0 ;
+  coda_type **arg2 = (coda_type **) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  coda_type *tmp2 = NULL ;
+  PyObject * obj0 = 0 ;
+  int result;
+  
+  {
+    arg2 = &tmp2;
+  }
+  if (!PyArg_ParseTuple(args,(char *)"O:type_get_attributes",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_coda_type_struct, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "type_get_attributes" "', argument " "1"" of type '" "coda_type const *""'"); 
+  }
+  arg1 = (coda_type *)(argp1);
+  {
+    result = (int)coda_type_get_attributes((struct coda_type_struct const *)arg1,arg2);
+    
+    if (result < 0)
+    {
+      return PyErr_Format(codacError,"coda_type_get_attributes(): %s", coda_errno_to_string(coda_errno));
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  {
+    resultobj = t_output_helper(resultobj, SWIG_NewPointerObj(*arg2, SWIGTYPE_p_coda_type_struct, 0));
+  }
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_type_get_num_record_fields(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   coda_type *arg1 = (coda_type *) 0 ;
@@ -9522,6 +9559,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"type_get_description", _wrap_type_get_description, METH_VARARGS, NULL},
 	 { (char *)"type_get_unit", _wrap_type_get_unit, METH_VARARGS, NULL},
 	 { (char *)"type_get_fixed_value", _wrap_type_get_fixed_value, METH_VARARGS, NULL},
+	 { (char *)"type_get_attributes", _wrap_type_get_attributes, METH_VARARGS, NULL},
 	 { (char *)"type_get_num_record_fields", _wrap_type_get_num_record_fields, METH_VARARGS, NULL},
 	 { (char *)"type_get_record_field_index_from_name", _wrap_type_get_record_field_index_from_name, METH_VARARGS, NULL},
 	 { (char *)"type_get_record_field_index_from_real_name", _wrap_type_get_record_field_index_from_real_name, METH_VARARGS, NULL},

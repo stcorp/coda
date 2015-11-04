@@ -18,7 +18,7 @@
     
       <h2 id="general">General description</h2>
       
-      <p>The codadd tool is a support tool for the CODA Product Format Definition (.codadef) files. It is able to verify and inspect the .codadef contents and it allows generation of HTML documentation for the product format definitions.</p>
+      <p>The codadd tool is a support tool for the CODA Product Format Definition (.codadef) files. It is able to verify and inspect the .codadef contents, it allows generation of HTML documentation for the product format definitions, and provides conversion functions for format definitions.</p>
 
 
 <pre>
@@ -53,6 +53,15 @@
                     bypass special data types from the CODA format definition -
                     data with a special type is treated using its non-special
                     base type
+
+    codadd [-D definitionpath] xmlschema [&lt;xmlschema options&gt;]
+                               &lt;product class&gt; &lt;product type&gt; &lt;version&gt;
+        Create an XML Schema file for a single product definition
+        Note that this will only work if the product class/type/version points
+        to a product definition for an XML file
+        XML Schema options:
+            -o, --output &lt;filename&gt;
+                    write output to specified file
 
     codadd [-D definitionpath] dtree &lt;format&gt;
         Shows the product recognition detection tree for the given file format.

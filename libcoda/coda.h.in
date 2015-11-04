@@ -375,6 +375,7 @@ LIBCODA_API int coda_type_get_name(const coda_type *type, const char **name);
 LIBCODA_API int coda_type_get_description(const coda_type *type, const char **description);
 LIBCODA_API int coda_type_get_unit(const coda_type *type, const char **unit);
 LIBCODA_API int coda_type_get_fixed_value(const coda_type *type, const char **fixed_value, long *length);
+LIBCODA_API int coda_type_get_attributes(const coda_type *type, coda_type **attributes);
 
 LIBCODA_API int coda_type_get_num_record_fields(const coda_type *type, long *num_fields);
 LIBCODA_API int coda_type_get_record_field_index_from_name(const coda_type *type, const char *name, long *index);

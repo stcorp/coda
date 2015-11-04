@@ -3079,6 +3079,47 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1fixed_1value(JNI
 }
 
 
+SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1attributes(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg2) {
+  jint jresult = 0 ;
+  coda_type *arg1 = (coda_type *) 0 ;
+  coda_type **arg2 = (coda_type **) 0 ;
+  coda_type *ppcoda_type2 = 0 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(coda_type **)&jarg1; 
+  
+  arg2 = &ppcoda_type2;
+  
+  {
+    result = (int)coda_type_get_attributes((struct coda_type_struct const *)arg1,arg2);
+    
+    if (result < 0)
+    {
+      int namelen = strlen("coda_type_get_attributes");
+      const char *codamsg = coda_errno_to_string(coda_errno);
+      char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
+      jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
+      
+      sprintf(fullMessage, "coda_type_get_attributes(): %s", codamsg);
+      (*jenv)->ThrowNew(jenv, clazz, fullMessage);
+      free(fullMessage);
+      return 0;
+    }
+  }
+  {
+    /* Give Java proxy the C pointer (of newly created object) */
+    jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/SWIGTYPE_p_coda_type_struct");
+    jfieldID fid = (*jenv)->GetFieldID(jenv, clazz, "swigCPtr", "J");
+    jlong cPtr = 0;
+    *(coda_type **)&cPtr = *arg2;
+    (*jenv)->SetLongField(jenv, jarg2, fid, cPtr);
+  }
+  return jresult;
+}
+
+
 SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1num_1record_1fields(JNIEnv *jenv, jclass jcls, jlong jarg1, jintArray jarg2) {
   jint jresult = 0 ;
   coda_type *arg1 = (coda_type *) 0 ;

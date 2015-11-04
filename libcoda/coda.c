@@ -31,6 +31,7 @@
 #endif
 #include "coda-grib.h"
 #include "coda-rinex.h"
+#include "coda-sp3c.h"
 #include "coda-path.h"
 
 /** \file */
@@ -528,29 +529,6 @@ LIBCODA_API int coda_init(void)
             return -1;
         }
 #endif
-        if (coda_grib_init() != 0)
-        {
-            coda_data_dictionary_done();
-            if (coda_definition_path != NULL)
-            {
-                free(coda_definition_path);
-                coda_definition_path = NULL;
-            }
-            coda_leap_second_table_done();
-            return -1;
-        }
-        if (coda_rinex_init() != 0)
-        {
-            coda_grib_done();
-            coda_data_dictionary_done();
-            if (coda_definition_path != NULL)
-            {
-                free(coda_definition_path);
-                coda_definition_path = NULL;
-            }
-            coda_leap_second_table_done();
-            return -1;
-        }
     }
     coda_init_counter++;
 
@@ -579,6 +557,7 @@ LIBCODA_API void coda_done(void)
         coda_init_counter--;
         if (coda_init_counter == 0)
         {
+            coda_sp3c_done();
             coda_rinex_done();
             coda_grib_done();
             coda_data_dictionary_done();

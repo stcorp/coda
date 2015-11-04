@@ -480,9 +480,9 @@ POSIX_SCALAR_OUTPUT_HELPER(uint64_t, PyLong_FromUnsignedLongLong)
 
 /*
     handle output "coda_type **" arguments to
-    coda_get_product_root_type(), coda_type_get_record_field_type(),
-    coda_type_get_array_base_type(), coda_type_get_special_base_type(),
-    coda_cursor_get_type()
+    coda_get_product_root_type(), coda_type_get_attributes(),
+    coda_type_get_record_field_type(), coda_type_get_array_base_type(),
+    coda_type_get_special_base_type(), coda_cursor_get_type()
 */
 %apply opaque_pointer **OUTPUT { coda_type ** }
 

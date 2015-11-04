@@ -23,7 +23,6 @@
 
 #include "coda-internal.h"
 
-int coda_grib_init(void);
 void coda_grib_done(void);
 
 int coda_grib_open(const char *filename, int64_t file_size, coda_product **product);
