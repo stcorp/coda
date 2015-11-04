@@ -259,6 +259,11 @@ static void generate_html_attributes(const coda_type *type, int *first_attribute
 
     coda_type_get_num_record_fields(type, &num_fields);
 
+    if (!*first_attribute)
+    {
+        fi_printf("<br />");
+    }
+
     for (i = 0; i < num_fields; i++)
     {
         coda_type *field_type;
@@ -278,7 +283,7 @@ static void generate_html_attributes(const coda_type *type, int *first_attribute
         {
             if (!*first_attribute)
             {
-                fi_printf("<br /><br />\n");
+                fi_printf("<br />\n");
             }
             else
             {

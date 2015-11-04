@@ -668,13 +668,9 @@ floatexpr =
 	intexpr, '^', floatexpr |
 	'(', floatexpr, ')' |
 	'abs', '(', floatexpr, ')' |
-	'abs', '(', intexpr, ')' |
 	'ceil', '(', floatexpr, ')' |
-	'ceil', '(', intexpr, ')' |
 	'floor', '(', floatexpr, ')' |
-	'floor', '(', intexpr, ')' |
 	'round', '(', floatexpr, ')' |
-	'round', '(', intexpr, ')' |
 	'max', '(', floatexpr, ',', floatexpr, ')' |
 	'max', '(', floatexpr, ',', intexpr, ')' |
 	'max', '(', intexpr, ',', floatexpr, ')' |
@@ -702,6 +698,7 @@ stringexpr =
 	'add', '(', node, ',', stringexpr, ')' |
 	'regex', '(', stringexpr, ',', stringexpr, ',', intexpr ')' |
 	'regex', '(', stringexpr, ',', stringexpr, ',', stringexpr ')' |
+	'productformat', '(', ')' |
 	'productclass', '(', ')' |
 	'producttype', '(', ')' |
 	'filename', '(', ')' |

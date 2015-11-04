@@ -481,6 +481,7 @@ LIBCODA_API int coda_open(const char *filename, coda_product **product)
             {
                 return -1;
             }
+            break;
         case coda_format_rinex:
             if (coda_rinex_open(filename, file_size, &product_file) != 0)
             {

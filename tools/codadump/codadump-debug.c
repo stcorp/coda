@@ -559,9 +559,12 @@ static void print_data(coda_cursor *cursor)
                             {
                                 if (coda_time_to_string(data, str) != 0)
                                 {
-                                    handle_coda_error();
+                                    ff_printf(" {--invalid time value--}\n");
                                 }
-                                ff_printf(" %s\n", str);
+                                else
+                                {
+                                    ff_printf(" %s\n", str);
+                                }
                             }
                         }
                         break;

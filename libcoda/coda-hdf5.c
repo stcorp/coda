@@ -122,9 +122,9 @@ static herr_t add_error_message(int n, H5E_error_t *err_desc, void *client_data)
     if (n == 0)
     {
         /* we only display the deepest error in the stack */
-        coda_add_error_message("%s(): %s (major=\"%s\", minor=\"%s\") (%s:%u)", err_desc->func_name, err_desc->desc,
-                               H5Eget_major(err_desc->maj_num), H5Eget_minor(err_desc->min_num), err_desc->file_name,
-                               err_desc->line);
+        coda_add_error_message("[HDF5] %s(): %s (major=\"%s\", minor=\"%s\") (%s:%u)", err_desc->func_name,
+                               err_desc->desc, H5Eget_major(err_desc->maj_num), H5Eget_minor(err_desc->min_num),
+                               err_desc->file_name, err_desc->line);
     }
 
     return 0;

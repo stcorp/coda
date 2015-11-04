@@ -556,6 +556,6 @@ void coda_hdf4_add_error_message(void)
 
     if (error != 0)
     {
-        coda_add_error_message(HEstring(error));
+        coda_add_error_message("[HDF4] %s", HEstring(error));
     }
 }
