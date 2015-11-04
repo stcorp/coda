@@ -1093,7 +1093,7 @@ LIBCODA_API int coda_type_get_record_field_available_status(const coda_Type *typ
  * \a is_union will be set to 1, otherwise it will be set to 0.
  * If the type is not a record class the function will return an error.
  * \param type CODA type.
- * \param is_union Pointer to a variable where the number of fields will be stored.
+ * \param is_union Pointer to a variable where the union status will be stored.
  * \return
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).

@@ -3,7 +3,8 @@
 SETLOCAL
 
 SET INNOCOMP=C:\Program Files\Inno Setup 4\compil32.exe
-SET VISANBLDDIR=C:\visanbin
+SET JAVA_HOME="C:\jdk1.6.0_07"
+SET VISANBLDDIR=E:\visanbin
 SET HDF4_INCLUDE="%VISANBLDDIR%\VISAN\include\hdf"
 SET HDF5_INCLUDE="%VISANBLDDIR%\VISAN\include"
 SET ZLIB_INCLUDE="%VISANBLDDIR%\VISAN\include"
@@ -25,6 +26,7 @@ IF NOT EXIST "%HDF5_INCLUDE%" GOTO NO_HDF5
 IF NOT EXIST "%HDF5_LIB%" GOTO NO_HDF5
 IF NOT EXIST "%PYTHONHOME%\include\Python.h" GOTO NO_PYTHON
 IF NOT EXIST "%PYTHONHOME%\libs\python26.lib" GOTO NO_PYTHON
+IF NOT EXIST "%JAVA_HOME%\include\jni.h" GOTO NO_JAVA
 IF NOT EXIST "coda.sln" GOTO NO_SLN
 
 
@@ -43,6 +45,9 @@ IF EXIST matlab rmdir /Q /S matlab
 ECHO Building LIBCODA
 devenv coda.sln /build "Release with HDF"
 
+ECHO Building CODA-JAVA
+CALL coda_java.bat
+
 ECHO Building CODA-IDL
 CALL coda_idl.bat c:\rsi\idl54 5.4
 MOVE idl idl54
@@ -56,8 +61,8 @@ ECHO Building CODA-MATLAB
 CALL coda_matlab.bat c:\MATLAB6p5 R13 no
 
 ECHO Copying HDF4 DLLs
-COPY "%HDF4_DLL%\hd423m.dll" Release\withhdf
-COPY "%HDF4_DLL%\hm423m.dll" Release\withhdf
+COPY "%HDF4_DLL%\hd424m.dll" Release\withhdf
+COPY "%HDF4_DLL%\hm424m.dll" Release\withhdf
 
 ECHO Copying HDF5 DLLs
 COPY "%HDF5_DLL%\hdf5dll.dll" Release\withhdf
@@ -107,6 +112,13 @@ GOTO END
 ECHO.
 ECHO Python directory not found. Make sure Python is installed and that
 ECHO the PYTHONHOME variable in this batchfile is properly set.
+ECHO.
+GOTO END
+
+:NO_JAVA
+ECHO.
+ECHO Java directory not found. Make sure the Java JDK is installed and that
+ECHO the JAVA_HOME variable in this batchfile is properly set.
 ECHO.
 GOTO END
 

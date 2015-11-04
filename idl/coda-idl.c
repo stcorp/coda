@@ -404,7 +404,8 @@ static IDL_VPTR x_coda_close(int argc, IDL_VPTR *argv)
     pf_slot[pf_index].pf = 0;   /* remove product file from slots */
     pf_slot[pf_index].pf_id = 0;
 
-    return mk_coda_error(CODA_SUCCESS);
+    coda_set_error(CODA_SUCCESS, NULL);
+    return mk_coda_error(coda_errno);
 }
 
 static IDL_VPTR x_coda_version(int argc, IDL_VPTR *argv)

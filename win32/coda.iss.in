@@ -42,9 +42,16 @@ Source: "matlab\*.*"; DestDir: "{app}\matlab";
 Source: "setup.py"; DestDir: "{app}\python";
 Source: "..\python\*.py"; DestDir: "{app}\python\coda";
 Source: "Release\withhdf\_codac.pyd"; DestDir: "{app}\python\coda";
+Source: "Release\withhdf\coda_jni.dll"; DestDir: "{app}\java";
+Source: "coda.jar"; DestDir: "{app}\java";
+Source: "build.xml"; DestDir: "{app}\java";
+Source: "..\java\*.java"; DestDir: "{app}\java";
 Source: "..\doc\*.*"; DestDir: "{app}\doc"; Flags: recursesubdirs
 Source: "Release\withhdf\hd*.dll"; DestDir: "{app}\bin";
 Source: "Release\withhdf\hm*.dll"; DestDir: "{app}\bin";
+Source: "Release\withhdf\zlib1.dll"; DestDir: "{app}\bin";
+Source: "Release\withhdf\szlibdll.dll"; DestDir: "{app}\bin";
+Source: "C:\WINDOWS\system32\msvcr71.dll"; DestDir: "{app}\bin";
 Source: "removepath.exe"; DestDir: "{app}";
 
 [UninstallDelete]

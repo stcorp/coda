@@ -1,0 +1,99 @@
+<project name="CodaTest" default="jar">
+
+  <description>
+This is the Ant build file for the CODA Java library example program.
+  </description>
+
+  <!-- compiler options -->
+
+  <property name="coda.java.jvm"         value="@JAVA@" />
+  <property name="coda.javac.executable" value="@JAVAC@" />
+  <property name="coda.definition.path"  location="../definitions" />
+  <property name="coda.lib.dir"          location="." />
+
+  <property name="src.dir"   location="." />
+  <property name="build.dir" location="build" />
+
+  <property name="javac.debug"        value="on"/>
+  <property name="javac.deprecation"  value="on"/>
+  <property name="javac.source"       value="1.6"/>
+  <property name="javac.target"       value="1.6"/>
+
+  <property name="jarfile" value="${ant.project.name}.jar"/>
+
+  <path id="dist.classpath">
+    <fileset dir="${coda.lib.dir}">
+      <include name="coda.jar" />
+    </fileset>
+  </path>
+
+  <manifestclasspath property="lib.list" jarfile="${jarfile}">
+    <classpath refid="dist.classpath" />
+  </manifestclasspath>
+
+  <target name="config-info">
+    <echo message="Operating System:    ${os.name} ${os.version} ${os.arch}" />
+    <echo message="Ant Version:         ${ant.version}" />
+    <echo message="Ant Home:            ${ant.home}" />
+    <echo message="Java Runtime:        ${java.runtime.name}" />
+    <echo message="Java Version:        ${java.vm.version} (${java.vm.info})" />
+    <echo message="Java Source Version: ${javac.source}" />
+    <echo message="Java Target Version: ${javac.target}" />
+    <echo message="CODA Java Runtime:   ${coda.java.jvm}" />
+    <echo message="CODA Java Compiler:  ${coda.javac.executable}" />
+  </target>
+
+  <target name="init" depends="config-info">
+    <tstamp />
+    <mkdir dir="${build.dir}" />
+  </target>
+
+  <target name="compile" depends="init" description="compile the source code">
+    <javac srcdir="${src.dir}"
+           destdir="${build.dir}"
+           classpathref="dist.classpath"
+           fork="true"
+           failonerror="true"
+           debug="${javac.debug}"
+           deprecation="${javac.deprecation}"
+           source="${javac.source}"
+           target="${javac.target}"
+           executable="${coda.javac.executable}" />
+  </target>
+
+
+  <target name="jar" depends="compile" description="create the .jar file">
+
+    <fileset dir="${coda.lib.dir}" id="lib.dist.fileset">
+      <include name="coda.jar" />
+    </fileset>
+
+    <pathconvert pathsep=" " 
+                 property="dist.classpath" 
+                 refid="lib.dist.fileset" />
+
+    <jar jarfile="${jarfile}">
+      <fileset dir="${build.dir}" includes="**/*" />
+      <manifest>
+        <attribute name="Main-Class" value="nl.stcorp.coda.CodaTest" />
+        <attribute name="Class-Path" value="${lib.list}" />
+      </manifest>
+    </jar>
+  </target>
+
+  <target name="run" depends="jar" description="run the program">
+    <java jar="${jarfile}"
+          fork="true"
+          failonerror="true"
+          maxmemory="128m"
+          jvm="${coda.java.jvm}">
+      <env key="CODA_DEFINITION" value="${coda.definition.path}" />
+      <assertions>
+        <enable/>
+      </assertions>
+      <jvmarg value="-Dcoda.lib.dir=${coda.lib.dir}" />
+      <arg line="${args}" />
+    </java>
+  </target>
+
+</project>

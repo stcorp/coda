@@ -461,6 +461,9 @@ intexpr:
             $$ = coda_expr_new(expr_constant_integer, $1, NULL, NULL, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
+    | FUNC_INT '(' intexpr ')' {
+            $$ = $3;
+        }
     | FUNC_INT '(' node ')' {
             $$ = coda_expr_new(expr_integer, NULL, $3, NULL, NULL, NULL);
             if ($$ == NULL) YYERROR;
@@ -555,6 +558,10 @@ intexpr:
             $$ = coda_expr_new(expr_length, NULL, $3, NULL, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
+    | FUNC_LENGTH '(' node ')' {
+            $$ = coda_expr_new(expr_length, NULL, $3, NULL, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
     | FUNC_BITSIZE '(' node ')' {
             $$ = coda_expr_new(expr_bit_size, NULL, $3, NULL, NULL, NULL);
             if ($$ == NULL) YYERROR;
@@ -617,6 +624,9 @@ floatexpr:
     | INF_VALUE {
             $$ = coda_expr_new(expr_constant_double, strdup("inf"), NULL, NULL, NULL, NULL);
             if ($$ == NULL) YYERROR;
+        }
+    | FUNC_FLOAT '(' floatexpr ')' {
+            $$ = $3;
         }
     | FUNC_FLOAT '(' node ')' {
             $$ = coda_expr_new(expr_float, NULL, $3, NULL, NULL, NULL);
@@ -770,6 +780,9 @@ stringexpr:
       STRING_VALUE {
             $$ = coda_expr_new(expr_constant_string, $1, NULL, NULL, NULL, NULL);
             if ($$ == NULL) YYERROR;
+        }
+    | FUNC_STR '(' stringexpr ')' {
+            $$ = $3;
         }
     | FUNC_STR '(' node ')' {
             $$ = coda_expr_new(expr_string, NULL, $3, NULL, NULL, NULL);

@@ -438,7 +438,7 @@ static coda_hdf4Attributes *new_hdf4AttributesForGRImage(coda_hdf4ProductFile *p
         return NULL;
     }
 
-    /* from here on we use delete_hdf4Attributes to clean up after an error occured */
+    /* from here on we use delete_hdf4Attributes to clean up after an error occurred */
 
     T->num_attributes = T->num_obj_attributes + T->num_data_labels + T->num_data_descriptions;
     T->hash_data = new_hashtable(0);
@@ -640,7 +640,7 @@ static coda_hdf4Attributes *new_hdf4AttributesForSDS(coda_hdf4ProductFile *pf, i
         T->num_data_descriptions = 0;
     }
 
-    /* from here on we use delete_hdf4Attributes to clean up after an error occured */
+    /* from here on we use delete_hdf4Attributes to clean up after an error occurred */
 
     T->num_attributes = T->num_obj_attributes + T->num_data_labels + T->num_data_descriptions;
     T->hash_data = new_hashtable(0);
@@ -829,7 +829,7 @@ static coda_hdf4Attributes *new_hdf4AttributesForVdataField(int32 vdata_id, int3
     T->num_data_labels = 0;
     T->num_data_descriptions = 0;
 
-    /* from here on we use delete_hdf4Attributes to clean up after an error occured */
+    /* from here on we use delete_hdf4Attributes to clean up after an error occurred */
 
     T->num_attributes = T->num_obj_attributes;
     T->hash_data = new_hashtable(0);
@@ -969,7 +969,7 @@ static coda_hdf4Attributes *new_hdf4AttributesForVdata(coda_hdf4ProductFile *pf,
         return NULL;
     }
 
-    /* from here on we use delete_hdf4Attributes to clean up after an error occured */
+    /* from here on we use delete_hdf4Attributes to clean up after an error occurred */
 
     T->num_attributes = T->num_obj_attributes + T->num_data_labels + T->num_data_descriptions;
     T->hash_data = new_hashtable(0);
@@ -1173,7 +1173,7 @@ static coda_hdf4Attributes *new_hdf4AttributesForVgroup(coda_hdf4ProductFile *pf
         return NULL;
     }
 
-    /* from here on we use delete_hdf4Attributes to clean up after an error occured */
+    /* from here on we use delete_hdf4Attributes to clean up after an error occurred */
 
     T->num_attributes = T->num_obj_attributes + T->num_data_labels + T->num_data_descriptions;
     T->hash_data = new_hashtable(0);
@@ -1372,7 +1372,7 @@ static coda_hdf4FileAttributes *new_hdf4AttributesForRoot(coda_hdf4ProductFile *
     T->attribute_name = NULL;
     T->hash_data = NULL;
 
-    /* from here on we use delete_hdf4FileAttributes to clean up after an error occured */
+    /* from here on we use delete_hdf4FileAttributes to clean up after an error occurred */
 
     T->hash_data = new_hashtable(0);
     if (T->hash_data == NULL)

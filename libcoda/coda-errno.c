@@ -42,7 +42,7 @@ static char coda_error_message_buffer[MAX_ERROR_INFO_LENGTH + 1];
  * described in this section. You will also be able to retrieve a character string with an error description via
  * the coda_errno_to_string() function. This function will return either the default error message for the error
  * code, or a custom error message. A custom error message will only be returned if the error code you pass to
- * coda_errno_to_string() is equal to the last error that occured and if this last error was set with a custom error
+ * coda_errno_to_string() is equal to the last error that occurred and if this last error was set with a custom error
  * message. The CODA error state can be set with the coda_set_error() function.<br>
  */
 
@@ -63,19 +63,19 @@ static char coda_error_message_buffer[MAX_ERROR_INFO_LENGTH + 1];
  * Out of memory.
  */
 /** \def CODA_ERROR_HDF4
- * An error occured in the HDF4 library.
+ * An error occurred in the HDF4 library.
  */
 /** \def CODA_ERROR_NO_HDF4_SUPPORT
  * No HDF4 support built into CODA.
  */
 /** \def CODA_ERROR_HDF5
- * An error occured in the HDF5 library.
+ * An error occurred in the HDF5 library.
  */
 /** \def CODA_ERROR_NO_HDF5_SUPPORT
  * No HDF5 support built into CODA.
  */
 /** \def CODA_ERROR_XML
- * An error occured while parsing an XML data block.
+ * An error occurred while parsing an XML data block.
  */
 
 /** \def CODA_ERROR_FILE_NOT_FOUND

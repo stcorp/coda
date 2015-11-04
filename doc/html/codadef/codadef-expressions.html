@@ -211,6 +211,14 @@
       <div class="fragment"><code><b>length</b>("A String")==8</code></div>
       <p>This should always be true.</p>
 
+      <h5>length(node)</h5>
+
+      <p>This function only works if node points to string data. It will return the length (number of characters) of the string pointed to by the node.</p>
+
+      <p>Example:</p>
+      <div class="fragment"><code><b>length</b>(/some/data)==length(str(/some/data))</code></div>
+      <p>This should always be true.</p>
+
       <h5>bitsize(node)</h5>
 
       <p>This function will return the bit size of the data item pointed to by '<code>node</code>'. If the bit size is not available (e.g. for HDF products) this function will return -1.</p>
@@ -544,6 +552,7 @@ boolexpr =
 
 intexpr = 
 	intvalue |
+	'int', '(', intexpr, ')' |
 	'int', '(', node, ')' |
 	'int', '(', stringexpr, ')' |
 	'$', identifier |
@@ -567,6 +576,7 @@ intexpr =
 	'count', '(' node, ',', boolexpr, ')' |
 	'add', '(' node, ',', intexpr, ')' |
 	'length', '(', stringexpr, ')' |
+	'length', '(', node, ')' |
 	'bitsize', '(', node, ')' |
 	'bytesize', '(', node, ')' |
 	'productversion', '(', ')' |
@@ -582,6 +592,7 @@ floatexpr =
 	floatvalue |
 	'nan' |
 	'inf' |
+	'float', '(', floatexpr, ')' |
 	'float', '(', node, ')' |
 	'float', '(', intexpr, ')' |
 	'float', '(', stringexpr, ')' |
@@ -627,6 +638,7 @@ floatexpr =
 
 stringexpr = 
 	stringvalue |
+	'str', '(', stringexpr, ')' |
 	'str', '(', node, ')' |
 	'str', '(', node, ',', intexpr, ')' |
 	'bytes', '(', node, ')' |

@@ -76,7 +76,7 @@ ECHO Creating coda-idl.obj
 cl %CPPFLAGS% /Fo"%INTDIR%\coda-idl.obj" -c "%CODASRCDIR%\coda-idl.c"
 
 ECHO Creating coda-idl.dll
-link %LDFLAGS% /DLL /OUT:"%OUTDIR%\coda-idl.dll" /DEF:coda-idl.def "%INTDIR%\coda-idl.obj" "%IDL_LIBDIR%\%IDL_LIB%" "%HDF4_LIB%\hd423.lib" "%HDF4_LIB%\hm423.lib" "%JPEG_LIB%\libjpeg.lib" "%SZIP_LIB%\szlib.lib" "%ZLIB_LIB%\zlib.lib" "%HDF5_LIB%\hdf5.lib" "%LIBCODADIR%\withhdf\libcoda.lib" ws2_32.lib 
+link %LDFLAGS% /DLL /OUT:"%OUTDIR%\coda-idl.dll" /DEF:coda-idl.def "%INTDIR%\coda-idl.obj" "%IDL_LIBDIR%\%IDL_LIB%" "%HDF4_LIB%\hd424.lib" "%HDF4_LIB%\hm424.lib" "%JPEG_LIB%\libjpeg.lib" "%SZIP_LIB%\szlib.lib" "%ZLIB_LIB%\zlib.lib" "%HDF5_LIB%\hdf5.lib" "%LIBCODADIR%\withhdf\libcoda.lib" ws2_32.lib 
 
 ECHO Copying coda-idl.dlm
 COPY %CODASRCDIR%\coda-idl.dlm "%OUTDIR%\coda-idl.dlm" > NUL

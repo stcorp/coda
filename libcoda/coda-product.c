@@ -278,7 +278,7 @@ static int get_format_and_size(const char *filename, coda_format *format, int64_
  * \param version Pointer to the variable where the product format version number will be stored.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_recognize_file(const char *filename, int64_t *file_size, coda_format *file_format,
                                     const char **product_class, const char **product_type, int *version)

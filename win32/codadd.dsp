@@ -100,7 +100,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 "$(HDF4_LIB)\hd423.lib" "$(HDF4_LIB)\hm423.lib" "$(HDF5_LIB)\hdf5.lib" "$(JPEG_LIB)\libjpeg.lib" "$(SZIP_LIB)\szlib.lib" "$(ZLIB_LIB)\zlib.lib" Release\withhdf\libcoda.lib ws2_32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
+# ADD LINK32 "$(HDF4_LIB)\hd424.lib" "$(HDF4_LIB)\hm424.lib" "$(HDF5_LIB)\hdf5.lib" "$(JPEG_LIB)\libjpeg.lib" "$(SZIP_LIB)\szlib.lib" "$(ZLIB_LIB)\zlib.lib" Release\withhdf\libcoda.lib ws2_32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
 
 !ELSEIF  "$(CFG)" == "codadd - Win32 Debug with HDF"
 
@@ -124,7 +124,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 "$(HDF4_LIB)\hd423d.lib" "$(HDF4_LIB)\hm423d.lib" "$(HDF5_LIB)\hdf5.lib" "$(JPEG_LIB)\libjpeg.lib" "$(SZIP_LIB)\szlib.lib" "$(ZLIB_LIB)\zlib.lib" Debug\withhdf\libcoda.lib ws2_32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /out:"Debug\withhdf\codadd_d.exe" /pdbtype:sept
+# ADD LINK32 "$(HDF4_LIB)\hd424d.lib" "$(HDF4_LIB)\hm424d.lib" "$(HDF5_LIB)\hdf5.lib" "$(JPEG_LIB)\libjpeg.lib" "$(SZIP_LIB)\szlib.lib" "$(ZLIB_LIB)\zlib.lib" Debug\withhdf\libcoda.lib ws2_32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /out:"Debug\withhdf\codadd_d.exe" /pdbtype:sept
 
 !ENDIF 
 

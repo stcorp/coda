@@ -257,9 +257,7 @@ static void handle_ziparchive_error(const char *message, ...)
 {
     va_list ap;
 
-    coda_errno = CODA_ERROR_DATA_DEFINITION;
-
-    coda_set_error_message("could not read data from definition file: ");
+    coda_set_error(CODA_ERROR_DATA_DEFINITION, "could not read data from definition file: ");
 
     va_start(ap, message);
     coda_add_error_message_vargs(message, ap);

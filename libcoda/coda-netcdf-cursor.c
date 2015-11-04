@@ -1493,7 +1493,7 @@ int coda_netcdf_cursor_read_float_array(const coda_Cursor *cursor, float *dst, c
                 scale_factor = type->base_type->scale_factor;
                 for (i = 0; i < num_elements; i++)
                 {
-                    ((float *)dst)[i] = scale_factor * ((float *)dst)[i] + add_offset;
+                    ((float *)dst)[i] = (float)(scale_factor * ((float *)dst)[i] + add_offset);
                 }
             }
             return 0;
@@ -1558,7 +1558,7 @@ int coda_netcdf_cursor_read_float_array(const coda_Cursor *cursor, float *dst, c
                     scale_factor = type->base_type->scale_factor;
                     for (i = 0; i < num_elements; i++)
                     {
-                        ((float *)dst)[i] = scale_factor * ((float *)dst)[i] + add_offset;
+                        ((float *)dst)[i] = (float)(scale_factor * ((float *)dst)[i] + add_offset);
                     }
                 }
             }

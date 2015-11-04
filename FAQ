@@ -57,6 +57,7 @@ If you did not provide a --prefix option then $(PREFIX) equals '/usr/local'):
 
    $(PREFIX)/bin/codacheck
    $(PREFIX)/bin/codacmp
+   $(PREFIX)/bin/codadd
    $(PREFIX)/bin/codadump
    $(PREFIX)/bin/codafind
    $(PREFIX)/include/coda.h
@@ -101,10 +102,31 @@ that are about 250MB apiece, you can probably use 5 simultaneously opened
 files, but not 50. So a remedy to this situation is to close some product-files
 before you open a new one.
 
+ * Will CODA work on 64-bit systems?
+
+The CODA source code is fully 64-bit compatible. However, for most operating
+systems, a default 32-bit build of CODA will work without problems on a 64-bit
+version of the operating system.
+When you want to create a 64-bit version of CODA, you often have to provide
+special compiler flags to enable this. On a Unix system with gcc, you should
+provide the -m64 flag as additional CFLAGS option (i.e. pass the parameter
+'CFLAGS="-m64"' to ./configure).
+Note that you also need to make sure that all third party libraries that you
+want to use (i.e. HDF4 and/or HDF5) are build as 64-bit binaries as well for
+this to work.
+
  * When I call a CODA function using MATLAB R14 on Linux, MATLAB returns an
    error message, and then crashes with an "Abort" message.
 
 Make sure you are using MATLAB R14 service pack 3 (= MATLAB 7.1).
 MATLAB 7.0, 7.0.1, and 7.0.4 are known to give issues. If upgrading to 7.1
 does not solve the problem, please contact us for further assistance.
+
+ * When calling a CODA function in IDL, IDL returns an 'Error loading sharable
+   executable.' message, mentioning 'wrong architecture' in the message.
+
+This often means that you are running idl in 64-bit mode, whereas you have
+build CODA in 32-bit mode. You should either run idl in 32 bit mode (e.g.
+run 'idl -32' from the command prompt), or build a 64-bit version of CODA (see
+above).
 

@@ -47,6 +47,9 @@
       end if
 
       result = coda_cursor_get_type_class(cursor, type_class)
+      if (result .ne. 0) then
+        call handle_coda_error()
+      end if
 
       call coda_type_get_class_name(type_class, root_type)
       write(*,*) 'Root type = ' // root_type
@@ -54,6 +57,9 @@
       call coda_cursor_delete(cursor)
 
       result = coda_close(pf)
+      if (result .ne. 0) then
+        call handle_coda_error()
+      end if
 
       call coda_done()
 

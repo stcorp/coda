@@ -1,3 +1,16 @@
+1.3.1 2009-09-25
+~~~~~~~~~~~~~~~~
+
+* Added Java interface.
+
+* CODA expression 'length' now also works on 'node' expressions.
+
+* Fixed behavior of coda_cursor_read_bits() when the bit_length argument is 0.
+
+* Added support for reading of arrays of basic types for XML products where
+  the array is not an ASCII (space separated) array, but each ASCII value is
+  stored in a separate XML element.
+
 1.3.0 2009-07-17
 ~~~~~~~~~~~~~~~~
 

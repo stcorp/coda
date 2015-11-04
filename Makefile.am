@@ -7,8 +7,11 @@ ACLOCAL_AMFLAGS = -I m4
 DOXYGEN = @DOXYGEN@
 INDENT = @INDENT@
 
-DISOPT_FLAG = @DISOPT_FLAG@
-SWIGFLAGS = -w119,451 -Ipython -I$(srcdir)/python -DPRINTF_ATTR= @SWIGFLAGS@
+PYTHON_SWIGFLAGS = -w119,451 -python -Ipython -I$(srcdir)/python -DPRINTF_ATTR= @SWIGFLAGS@
+JAVA_SWIGFLAGS = -w119,451 -java -Ijava -I$(srcdir)/java -package nl.stcorp.coda -outdir java/nl/stcorp/coda -DPRINTF_ATTR= @SWIGFLAGS@
+JNICPPFLAGS = @JNICPPFLAGS@
+JNIEXT = @JNIEXT@
+
 AM_CPPFLAGS = -Ilibcoda -I$(srcdir)/libcoda
 AM_YFLAGS = -d
 
@@ -66,6 +69,10 @@ codapython_PYTHON = \
 codapyexec_LTLIBRARIES = _codac.la
 endif
 
+if BUILD_JAVA
+java_LTLIBRARIES = libcoda_jni.la
+endif
+
 # empty dir for .codadef definition files
 
 definitions_DATA =
@@ -80,8 +87,9 @@ endif
 
 # *** SWIG dependencies ***
 
-@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/codac.Pc
+@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/codac.Pc ./$(DEPDIR)/coda_jni.Pc
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/codac.Pc@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/coda_jni.Pc@am__quote@
 
 # *** build rules ***
 
@@ -426,8 +434,8 @@ python/codac.c: libcoda/coda.h.in $(srcdir)/python/codac.i \
 @AMDEP_TRUE@	source='$(srcdir)/python/codac.i' object='python/codac.c' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@	depfile='$(DEPDIR)/codac.Pc' tmpdepfile='$(DEPDIR)/codac.TPc' @AMDEPBACKSLASH@
 @AMDEP_TRUE@	depmode='none' $(depcomp) @AMDEPBACKSLASH@
-@AMDEP_TRUE@	$(SWIG) -python $(SWIGFLAGS) -M $(srcdir)/python/codac.i > $(DEPDIR)/codac.Pc
-	$(SWIG) -python $(SWIGFLAGS) -o python/codac.c $(srcdir)/python/codac.i
+@AMDEP_TRUE@	$(SWIG) $(PYTHON_SWIGFLAGS) -M $(srcdir)/python/codac.i > $(DEPDIR)/codac.Pc
+	$(SWIG) $(PYTHON_SWIGFLAGS) -o python/codac.c $(srcdir)/python/codac.i
 
 EXTRA_DIST += \
 	python/codac.c \
@@ -442,6 +450,91 @@ _codac_la_SOURCES = python/codac.c
 _codac_la_LDFLAGS = -module -shared -avoid-version
 _codac_la_LIBADD = libcoda_internal.la
 _codac_la_DEPENDENCIES = libcoda_internal.la
+endif
+
+# java
+
+java/coda_jni.c: libcoda/coda.h.in $(srcdir)/java/codac.i \
+    $(srcdir)/java/coda_ignore.i \
+    $(srcdir)/java/coda_rename.i 
+	@$(mkinstalldirs) java/nl/stcorp/coda
+@AMDEP_TRUE@	source='$(srcdir)/java/codac.i' object='java/coda_jni.c' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/coda_jni.Pc' tmpdepfile='$(DEPDIR)/coda_jni.TPc' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depmode='none' $(depcomp) @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(SWIG) $(JAVA_SWIGFLAGS) -M $(srcdir)/java/codac.i > $(DEPDIR)/coda_jni.Pc
+	$(SWIG) $(JAVA_SWIGFLAGS) -o java/coda_jni.c  $(srcdir)/java/codac.i
+
+java_files = \
+	$(srcdir)/java/nl/stcorp/coda/CodaException.java \
+	$(srcdir)/java/nl/stcorp/coda/Product.java \
+	$(srcdir)/java/nl/stcorp/coda/Type.java \
+	$(srcdir)/java/nl/stcorp/coda/Cursor.java \
+	$(srcdir)/java/nl/stcorp/coda/Coda.java \
+	java/nl/stcorp/coda/ArrayOrderingEnum.java \
+	java/nl/stcorp/coda/FilefilterStatusEnum.java \
+	java/nl/stcorp/coda/FormatEnum.java \
+	java/nl/stcorp/coda/NativeTypeEnum.java \
+	java/nl/stcorp/coda/SpecialTypeEnum.java \
+	java/nl/stcorp/coda/TypeClassEnum.java \
+	java/nl/stcorp/coda/codacConstants.java \
+	java/nl/stcorp/coda/codac.java \
+	java/nl/stcorp/coda/codacJNI.java \
+	java/nl/stcorp/coda/SWIGTYPE_p_coda_ProductFile_struct.java \
+	java/nl/stcorp/coda/SWIGTYPE_p_coda_Cursor_struct.java \
+	java/nl/stcorp/coda/SWIGTYPE_p_coda_Type_struct.java
+
+EXTRA_DIST += \
+	java/coda_jni.c \
+	$(java_files) \
+	java/CodaTest.java \
+	$(srcdir)/java/codac.i \
+	$(srcdir)/java/coda_ignore.i \
+	$(srcdir)/java/coda_rename.i
+
+
+if BUILD_JAVA
+noinst_JAVA = $(java_files)
+
+java_class_files = \
+	nl/stcorp/coda/CodaException.class \
+	nl/stcorp/coda/Product.class \
+	nl/stcorp/coda/Type.class \
+	nl/stcorp/coda/Cursor.class \
+	nl/stcorp/coda/Coda.class \
+	nl/stcorp/coda/ArrayOrderingEnum.class \
+	nl/stcorp/coda/FilefilterStatusEnum.class \
+	nl/stcorp/coda/FormatEnum.class \
+	nl/stcorp/coda/NativeTypeEnum.class \
+	nl/stcorp/coda/SpecialTypeEnum.class \
+	nl/stcorp/coda/TypeClassEnum.class \
+	nl/stcorp/coda/codacConstants.class \
+	nl/stcorp/coda/codac.class \
+	nl/stcorp/coda/codacJNI.class \
+	nl/stcorp/coda/SWIGTYPE_p_coda_ProductFile_struct.class \
+	nl/stcorp/coda/SWIGTYPE_p_coda_Cursor_struct.class \
+	nl/stcorp/coda/SWIGTYPE_p_coda_Type_struct.class \
+	nl/stcorp/coda/ArrayOrderingEnum\$$SwigNext.class \
+	nl/stcorp/coda/FilefilterStatusEnum\$$SwigNext.class \
+	nl/stcorp/coda/FormatEnum\$$SwigNext.class \
+	nl/stcorp/coda/NativeTypeEnum\$$SwigNext.class \
+	nl/stcorp/coda/SpecialTypeEnum\$$SwigNext.class \
+	nl/stcorp/coda/TypeClassEnum\$$SwigNext.class
+
+coda.jar: classnoinst.stamp
+	$(JAR) -cf coda.jar $(java_class_files)
+
+java_DATA = \
+	java/CodaTest.java \
+	java/build.xml \
+	coda.jar
+
+libcoda_jni_la_SOURCES = java/coda_jni.c
+libcoda_jni_la_CPPFLAGS = $(JNICPPFLAGS) $(AM_CPPFLAGS) -fno-strict-aliasing
+libcoda_jni_la_LDFLAGS = -module -shared -avoid-version -shrext $(JNIEXT)
+libcoda_jni_la_LIBADD = libcoda_internal.la
+libcoda_jni_la_DEPENDENCIES = libcoda_internal.la
+
+CLEANFILES += coda.jar $(java_class_files)
 endif
 
 # *** misc distribution files ***
@@ -504,42 +597,49 @@ endif
 # *** documentation ***
 
 include doclibcoda.mk
+include docjava.mk
 
 DOCFILES = \
 	doc/html/index.html \
 	doc/html/css/codadef.css \
 	doc/html/css/codadoc.css \
 	$(LIBCODA_DOCFILES) \
+	$(JAVA_DOCFILES) \
 	doc/html/codadef/codadef-expressions.html \
 	doc/html/codadef/codadef-format.html \
 	doc/html/codadef/codadef-hdf4.html \
 	doc/html/codadef/codadef-hdf5.html \
 	doc/html/codadef/codadef-xml.html \
-	doc/html/coda-fortran/index.html \
-	doc/html/coda-idl/index.html \
-	doc/html/coda-matlab/index.html \
-	doc/html/coda-python/index.html \
 	doc/html/codacheck/index.html \
 	doc/html/codacmp/index.html \
 	doc/html/codadd/index.html \
 	doc/html/codadump/index.html \
-	doc/html/codafind/index.html
+	doc/html/codafind/index.html \
+	doc/html/fortran/index.html \
+	doc/html/idl/index.html \
+	doc/html/matlab/index.html \
+	doc/html/python/index.html
 
 EXTRA_DIST += \
 	$(DOCFILES) \
 	libcoda/doc/Doxyfile.in \
 	libcoda/doc/extrapages \
-	libcoda/doc/libcoda_footer.html \
-	libcoda/doc/libcoda_header.html \
-	doclibcoda.mk
+	libcoda/doc/footer.html \
+	libcoda/doc/header.html \
+	java/doc/Doxyfile.in \
+	java/doc/extrapages \
+	java/doc/footer.html \
+	java/doc/header.html \
+	doclibcoda.mk \
+	docjava.mk
 
 if !SUBPACKAGE_MODE
 nobase_pkgdata_DATA = $(DOCFILES)
 endif
 
-doc: libcoda_doc
+doc: libcoda_doc java_doc
 
-docclean: libcoda_docclean
+docclean: libcoda_docclean java_docclean
 
 libcoda_doc: coda.h libcoda/doc/Doxyfile
 	@if test "x$(DOXYGEN)" = x ; then \
@@ -569,6 +669,36 @@ doclibcoda_include:
 	  rm -f doclibcoda.mk2 ; \
 	else \
 	  mv doclibcoda.mk2 $(srcdir)/doclibcoda.mk ; \
+	fi
+
+java_doc: $(java_files) java/doc/Doxyfile
+	@if test "x$(DOXYGEN)" = x ; then \
+	  echo "Doxygen not available. Documentation was not (re)created." ; \
+	else \
+	  $(MAKE) java_docclean ; \
+	  echo "creating coda java documentation" ; \
+	  test -d doc/html || $(mkinstalldirs) doc/html ; \
+	  cd java/doc ; \
+	  $(DOXYGEN) Doxyfile ; \
+	  cd ../.. ; \
+	  rm -rf doc/html/java/doxygen.* ; \
+	  echo "creating docjava.mk" ; \
+	  $(MAKE) docjava_include ; \
+	fi
+
+java_docclean:
+	@echo "removing coda java documentation"
+	@rm -rf doc/html/java
+
+docjava_include:
+	@find doc/html/java -type f | LANG= sort | $(AWK) 'BEGIN {printf("JAVA_DOCFILES =")}; {printf(" \\\n\t%s", $$0)}' > docjava.mk2
+	@echo "" >> docjava.mk2
+	@find doc/html/java -type f | LANG= sort | $(AWK) '{printf("%s:\n\t$$(MAKE) java_doc\n", $$0)}' >> docjava.mk2
+	@if diff $(srcdir)/docjava.mk docjava.mk2 >/dev/null 2>&1 ; then \
+	  echo "docjava.mk is unchanged" ; \
+	  rm -f docjava.mk2 ; \
+	else \
+	  mv docjava.mk2 $(srcdir)/docjava.mk ; \
 	fi
 
 
@@ -625,10 +755,12 @@ EXTRA_DIST += \
 	win32/coda.iss.in \
 	win32/coda-idl.def \
 	win32/coda_idl.bat \
+	win32/coda_java.bat \
 	win32/coda_matlab.bat \
 	win32/codadll.dsp \
 	win32/codalib.dsp \
 	win32/codapython.dsp \
+	win32/codajava.dsp \
 	win32/config.h \
 	win32/config.h.in \
 	win32/makedist.bat \
@@ -640,6 +772,7 @@ EXTRA_DIST += \
 	win32/removepath.iss \
 	win32/setup.py \
 	win32/setup.py.in \
+	win32/build.xml \
 	win32/readme.txt
 
 win32/coda.h: $(srcdir)/libcoda/coda.h.in
@@ -647,6 +780,9 @@ win32/coda.h: $(srcdir)/libcoda/coda.h.in
 
 win32/readme.txt: $(srcdir)/README
 	$(srcdir)/unix2dos $(srcdir)/README > win32/readme.txt
+
+win32/build.xml: $(srcdir)/java/build.xml.in
+	cat $(srcdir)/java/build.xml.in | sed 's/\@JAVA\@/C:\\jdk1.6.0_07\\bin\\java/' | sed 's/\@JAVAC\@/C:\\jdk1.6.0_07\\bin\\javac/' > win32/build.xml
 
 # *** development install targets to avoid long installs ***
 

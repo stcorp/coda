@@ -68,7 +68,7 @@ What you will need
 
   - If you want to use the HDF4 features of CODA then you will need to have a
     recent version of HDF4 installed (for building the source package on
-    Windows you will need to have version 4.2r3 of HDF).
+    Windows you will need to have version 4.2r4 of HDF).
     You will also need the additional required libraries libjpeg, szlib, and
     zlib.
     On some UNIX systems you can install HDF4 via the package manager on your
@@ -78,7 +78,7 @@ What you will need
 
   - If you want to use the HDF5 features of CODA then you will need to have a
     recent version of HDF5 installed (for building the source package on
-    Windows you will need to have version 1.6.7 of HDF5).
+    Windows you will need to have version 1.8.3 of HDF5).
     You will also need the additional required libraries szlib and zlib.
 
 Building the source package (Unix)
@@ -259,6 +259,12 @@ your system administrator). The variable should be set to "<IDL_DEFAULT>"
 appended with the CODA DLM directory. If, for instance, you have installed CODA
 in /usr/local then you should set the IDL_DLM_PATH environment variable to
 "<IDL_DEFAULT>:/usr/local/lib/coda/idl".
+Note that you should ideally not use the IDL 'pref_set' function to set
+IDL_DLM_PATH (the CODA DLM file will load, but CODA will not be able to find
+its coda format definition files this way). The IDL_DLM_PATH really has to be
+an environment variable.
+Information on how to set environment variables on Mac OS X can be found at:
+http://developer.apple.com/mac/library/documentation/MacOSX/Conceptual/BPRuntimeConfig/Articles/EnvironmentVars.html
 
 For MATLAB you should create a startup.m file in a 'matlab' directory in your
 home directory (~/matlab/startup.m) that contains the line:
@@ -300,8 +306,8 @@ interfaces) on a Windows platform :
  2) CODA can import/export HDF4 and/or HDF5 data. The VC++ project files for
     these components contain both targets that include the HDF4 and HDF5
     capability and targets without this capability. To be able to build CODA
-    with HDF4 and HDF5 you will need to have both HDF4 version 4.2r3 and HDF5
-    version 1.6.7 installed and add the system environment variables
+    with HDF4 and HDF5 you will need to have both HDF4 version 4.2r4 and HDF5
+    version 1.8.3 installed and add the system environment variables
     HDF4_INCLUDE, HDF4_LIB, HDF4_DLL, HDF5_INCLUDE, HDF5_LIB, and HDF5_DLL that
     point to your HDF4 and HDF5 include file, library file, and dll file
     directories.

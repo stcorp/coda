@@ -866,6 +866,7 @@ int coda_xml_cursor_read_bytes(const coda_Cursor *cursor, uint8_t *dst, int64_t 
 int coda_xml_cursor_read_int8_array(const coda_Cursor *cursor, int8_t *dst, coda_array_ordering array_ordering)
 {
     coda_xmlDynamicType *type;
+    long num_elements;
 
     type = (coda_xmlDynamicType *)cursor->stack[cursor->n - 1].type;
     if (type->tag == tag_xml_ascii_type_dynamic)
@@ -880,13 +881,36 @@ int coda_xml_cursor_read_int8_array(const coda_Cursor *cursor, int8_t *dst, coda
                                                  ((coda_xmlElementDynamicType *)type)->inner_bit_size);
     }
 
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a int8 array data type");
-    return -1;
+    if (coda_xml_cursor_get_num_elements(cursor, &num_elements) != 0)
+    {
+        return -1;
+    }
+    if (num_elements > 0)
+    {
+        coda_Cursor array_cursor = *cursor;
+        long i;
+
+        for (i = 0; i < num_elements; i++)
+        {
+            if (coda_xml_cursor_goto_array_element_by_index(&array_cursor, i) != 0)
+            {
+                return -1;
+            }
+            if (coda_xml_cursor_read_int8(&array_cursor, &dst[i]) != 0)
+            {
+                return -1;
+            }
+            coda_cursor_goto_parent(&array_cursor);
+        }
+    }
+
+    return 0;
 }
 
 int coda_xml_cursor_read_uint8_array(const coda_Cursor *cursor, uint8_t *dst, coda_array_ordering array_ordering)
 {
     coda_xmlDynamicType *type;
+    long num_elements;
 
     type = (coda_xmlDynamicType *)cursor->stack[cursor->n - 1].type;
     if (type->tag == tag_xml_ascii_type_dynamic)
@@ -901,13 +925,36 @@ int coda_xml_cursor_read_uint8_array(const coda_Cursor *cursor, uint8_t *dst, co
                                                   ((coda_xmlElementDynamicType *)type)->inner_bit_size);
     }
 
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a uint8 array data type");
-    return -1;
+    if (coda_xml_cursor_get_num_elements(cursor, &num_elements) != 0)
+    {
+        return -1;
+    }
+    if (num_elements > 0)
+    {
+        coda_Cursor array_cursor = *cursor;
+        long i;
+
+        for (i = 0; i < num_elements; i++)
+        {
+            if (coda_xml_cursor_goto_array_element_by_index(&array_cursor, i) != 0)
+            {
+                return -1;
+            }
+            if (coda_xml_cursor_read_uint8(&array_cursor, &dst[i]) != 0)
+            {
+                return -1;
+            }
+            coda_cursor_goto_parent(&array_cursor);
+        }
+    }
+
+    return 0;
 }
 
 int coda_xml_cursor_read_int16_array(const coda_Cursor *cursor, int16_t *dst, coda_array_ordering array_ordering)
 {
     coda_xmlDynamicType *type;
+    long num_elements;
 
     type = (coda_xmlDynamicType *)cursor->stack[cursor->n - 1].type;
     if (type->tag == tag_xml_ascii_type_dynamic)
@@ -922,13 +969,36 @@ int coda_xml_cursor_read_int16_array(const coda_Cursor *cursor, int16_t *dst, co
                                                   ((coda_xmlElementDynamicType *)type)->inner_bit_size);
     }
 
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a int16 array data type");
-    return -1;
+    if (coda_xml_cursor_get_num_elements(cursor, &num_elements) != 0)
+    {
+        return -1;
+    }
+    if (num_elements > 0)
+    {
+        coda_Cursor array_cursor = *cursor;
+        long i;
+
+        for (i = 0; i < num_elements; i++)
+        {
+            if (coda_xml_cursor_goto_array_element_by_index(&array_cursor, i) != 0)
+            {
+                return -1;
+            }
+            if (coda_xml_cursor_read_int16(&array_cursor, &dst[i]) != 0)
+            {
+                return -1;
+            }
+            coda_cursor_goto_parent(&array_cursor);
+        }
+    }
+
+    return 0;
 }
 
 int coda_xml_cursor_read_uint16_array(const coda_Cursor *cursor, uint16_t *dst, coda_array_ordering array_ordering)
 {
     coda_xmlDynamicType *type;
+    long num_elements;
 
     type = (coda_xmlDynamicType *)cursor->stack[cursor->n - 1].type;
     if (type->tag == tag_xml_ascii_type_dynamic)
@@ -943,13 +1013,36 @@ int coda_xml_cursor_read_uint16_array(const coda_Cursor *cursor, uint16_t *dst, 
                                                    ((coda_xmlElementDynamicType *)type)->inner_bit_size);
     }
 
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a uint16 array data type");
-    return -1;
+    if (coda_xml_cursor_get_num_elements(cursor, &num_elements) != 0)
+    {
+        return -1;
+    }
+    if (num_elements > 0)
+    {
+        coda_Cursor array_cursor = *cursor;
+        long i;
+
+        for (i = 0; i < num_elements; i++)
+        {
+            if (coda_xml_cursor_goto_array_element_by_index(&array_cursor, i) != 0)
+            {
+                return -1;
+            }
+            if (coda_xml_cursor_read_uint16(&array_cursor, &dst[i]) != 0)
+            {
+                return -1;
+            }
+            coda_cursor_goto_parent(&array_cursor);
+        }
+    }
+
+    return 0;
 }
 
 int coda_xml_cursor_read_int32_array(const coda_Cursor *cursor, int32_t *dst, coda_array_ordering array_ordering)
 {
     coda_xmlDynamicType *type;
+    long num_elements;
 
     type = (coda_xmlDynamicType *)cursor->stack[cursor->n - 1].type;
     if (type->tag == tag_xml_ascii_type_dynamic)
@@ -964,13 +1057,36 @@ int coda_xml_cursor_read_int32_array(const coda_Cursor *cursor, int32_t *dst, co
                                                   ((coda_xmlElementDynamicType *)type)->inner_bit_size);
     }
 
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a int32 array data type");
-    return -1;
+    if (coda_xml_cursor_get_num_elements(cursor, &num_elements) != 0)
+    {
+        return -1;
+    }
+    if (num_elements > 0)
+    {
+        coda_Cursor array_cursor = *cursor;
+        long i;
+
+        for (i = 0; i < num_elements; i++)
+        {
+            if (coda_xml_cursor_goto_array_element_by_index(&array_cursor, i) != 0)
+            {
+                return -1;
+            }
+            if (coda_xml_cursor_read_int32(&array_cursor, &dst[i]) != 0)
+            {
+                return -1;
+            }
+            coda_cursor_goto_parent(&array_cursor);
+        }
+    }
+
+    return 0;
 }
 
 int coda_xml_cursor_read_uint32_array(const coda_Cursor *cursor, uint32_t *dst, coda_array_ordering array_ordering)
 {
     coda_xmlDynamicType *type;
+    long num_elements;
 
     type = (coda_xmlDynamicType *)cursor->stack[cursor->n - 1].type;
     if (type->tag == tag_xml_ascii_type_dynamic)
@@ -985,13 +1101,36 @@ int coda_xml_cursor_read_uint32_array(const coda_Cursor *cursor, uint32_t *dst, 
                                                    ((coda_xmlElementDynamicType *)type)->inner_bit_size);
     }
 
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a uint32 array data type");
-    return -1;
+    if (coda_xml_cursor_get_num_elements(cursor, &num_elements) != 0)
+    {
+        return -1;
+    }
+    if (num_elements > 0)
+    {
+        coda_Cursor array_cursor = *cursor;
+        long i;
+
+        for (i = 0; i < num_elements; i++)
+        {
+            if (coda_xml_cursor_goto_array_element_by_index(&array_cursor, i) != 0)
+            {
+                return -1;
+            }
+            if (coda_xml_cursor_read_uint32(&array_cursor, &dst[i]) != 0)
+            {
+                return -1;
+            }
+            coda_cursor_goto_parent(&array_cursor);
+        }
+    }
+
+    return 0;
 }
 
 int coda_xml_cursor_read_int64_array(const coda_Cursor *cursor, int64_t *dst, coda_array_ordering array_ordering)
 {
     coda_xmlDynamicType *type;
+    long num_elements;
 
     type = (coda_xmlDynamicType *)cursor->stack[cursor->n - 1].type;
     if (type->tag == tag_xml_ascii_type_dynamic)
@@ -1006,13 +1145,36 @@ int coda_xml_cursor_read_int64_array(const coda_Cursor *cursor, int64_t *dst, co
                                                   ((coda_xmlElementDynamicType *)type)->inner_bit_size);
     }
 
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a int64 array data type");
-    return -1;
+    if (coda_xml_cursor_get_num_elements(cursor, &num_elements) != 0)
+    {
+        return -1;
+    }
+    if (num_elements > 0)
+    {
+        coda_Cursor array_cursor = *cursor;
+        long i;
+
+        for (i = 0; i < num_elements; i++)
+        {
+            if (coda_xml_cursor_goto_array_element_by_index(&array_cursor, i) != 0)
+            {
+                return -1;
+            }
+            if (coda_xml_cursor_read_int64(&array_cursor, &dst[i]) != 0)
+            {
+                return -1;
+            }
+            coda_cursor_goto_parent(&array_cursor);
+        }
+    }
+
+    return 0;
 }
 
 int coda_xml_cursor_read_uint64_array(const coda_Cursor *cursor, uint64_t *dst, coda_array_ordering array_ordering)
 {
     coda_xmlDynamicType *type;
+    long num_elements;
 
     type = (coda_xmlDynamicType *)cursor->stack[cursor->n - 1].type;
     if (type->tag == tag_xml_ascii_type_dynamic)
@@ -1027,13 +1189,36 @@ int coda_xml_cursor_read_uint64_array(const coda_Cursor *cursor, uint64_t *dst, 
                                                    ((coda_xmlElementDynamicType *)type)->inner_bit_size);
     }
 
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a uint64 array data type");
-    return -1;
+    if (coda_xml_cursor_get_num_elements(cursor, &num_elements) != 0)
+    {
+        return -1;
+    }
+    if (num_elements > 0)
+    {
+        coda_Cursor array_cursor = *cursor;
+        long i;
+
+        for (i = 0; i < num_elements; i++)
+        {
+            if (coda_xml_cursor_goto_array_element_by_index(&array_cursor, i) != 0)
+            {
+                return -1;
+            }
+            if (coda_xml_cursor_read_uint64(&array_cursor, &dst[i]) != 0)
+            {
+                return -1;
+            }
+            coda_cursor_goto_parent(&array_cursor);
+        }
+    }
+
+    return 0;
 }
 
 int coda_xml_cursor_read_float_array(const coda_Cursor *cursor, float *dst, coda_array_ordering array_ordering)
 {
     coda_xmlDynamicType *type;
+    long num_elements;
 
     type = (coda_xmlDynamicType *)cursor->stack[cursor->n - 1].type;
     if (type->tag == tag_xml_ascii_type_dynamic)
@@ -1048,13 +1233,36 @@ int coda_xml_cursor_read_float_array(const coda_Cursor *cursor, float *dst, coda
                                                   ((coda_xmlElementDynamicType *)type)->inner_bit_size);
     }
 
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a float array data type");
-    return -1;
+    if (coda_xml_cursor_get_num_elements(cursor, &num_elements) != 0)
+    {
+        return -1;
+    }
+    if (num_elements > 0)
+    {
+        coda_Cursor array_cursor = *cursor;
+        long i;
+
+        for (i = 0; i < num_elements; i++)
+        {
+            if (coda_xml_cursor_goto_array_element_by_index(&array_cursor, i) != 0)
+            {
+                return -1;
+            }
+            if (coda_xml_cursor_read_float(&array_cursor, &dst[i]) != 0)
+            {
+                return -1;
+            }
+            coda_cursor_goto_parent(&array_cursor);
+        }
+    }
+
+    return 0;
 }
 
 int coda_xml_cursor_read_double_array(const coda_Cursor *cursor, double *dst, coda_array_ordering array_ordering)
 {
     coda_xmlDynamicType *type;
+    long num_elements;
 
     type = (coda_xmlDynamicType *)cursor->stack[cursor->n - 1].type;
     if (type->tag == tag_xml_ascii_type_dynamic)
@@ -1069,13 +1277,36 @@ int coda_xml_cursor_read_double_array(const coda_Cursor *cursor, double *dst, co
                                                    ((coda_xmlElementDynamicType *)type)->inner_bit_size);
     }
 
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a double array data type");
-    return -1;
+    if (coda_xml_cursor_get_num_elements(cursor, &num_elements) != 0)
+    {
+        return -1;
+    }
+    if (num_elements > 0)
+    {
+        coda_Cursor array_cursor = *cursor;
+        long i;
+
+        for (i = 0; i < num_elements; i++)
+        {
+            if (coda_xml_cursor_goto_array_element_by_index(&array_cursor, i) != 0)
+            {
+                return -1;
+            }
+            if (coda_xml_cursor_read_double(&array_cursor, &dst[i]) != 0)
+            {
+                return -1;
+            }
+            coda_cursor_goto_parent(&array_cursor);
+        }
+    }
+
+    return 0;
 }
 
 int coda_xml_cursor_read_char_array(const coda_Cursor *cursor, char *dst, coda_array_ordering array_ordering)
 {
     coda_xmlDynamicType *type;
+    long num_elements;
 
     type = (coda_xmlDynamicType *)cursor->stack[cursor->n - 1].type;
     if (type->tag == tag_xml_ascii_type_dynamic)
@@ -1090,6 +1321,28 @@ int coda_xml_cursor_read_char_array(const coda_Cursor *cursor, char *dst, coda_a
                                                  ((coda_xmlElementDynamicType *)type)->inner_bit_size);
     }
 
-    coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a char array data type");
-    return -1;
+    if (coda_xml_cursor_get_num_elements(cursor, &num_elements) != 0)
+    {
+        return -1;
+    }
+    if (num_elements > 0)
+    {
+        coda_Cursor array_cursor = *cursor;
+        long i;
+
+        for (i = 0; i < num_elements; i++)
+        {
+            if (coda_xml_cursor_goto_array_element_by_index(&array_cursor, i) != 0)
+            {
+                return -1;
+            }
+            if (coda_xml_cursor_read_char(&array_cursor, &dst[i]) != 0)
+            {
+                return -1;
+            }
+            coda_cursor_goto_parent(&array_cursor);
+        }
+    }
+
+    return 0;
 }

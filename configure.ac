@@ -1,9 +1,9 @@
 # autoconf file for CODA
-AC_INIT(CODA, 1.3)
+AC_INIT([CODA],[1.3.1])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE(foreign 1.8.3 -Wall)
 
-AC_PREREQ(2.60)
+AC_PREREQ(2.63)
 
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -76,7 +76,8 @@ int vsnprintf(const char *, size_t, const char *, va_list ap);
 AC_CONFIG_HEADERS([coda.h:libcoda/coda.h.in])
 AC_CONFIG_HEADERS([win32/config.h])
 AC_CONFIG_FILES([Makefile fortran/Makefile])
-AC_CONFIG_FILES([libcoda/doc/Doxyfile])
+AC_CONFIG_FILES([java/build.xml])
+AC_CONFIG_FILES([libcoda/doc/Doxyfile java/doc/Doxyfile])
 AC_CONFIG_FILES([idl/coda-idl.dlm])
 AC_CONFIG_FILES([win32/coda.iss win32/setup.py])
 
@@ -94,7 +95,7 @@ AC_CONFIG_FILES([win32/coda.iss win32/setup.py])
 # 6. If any interfaces have been removed or changed since the last public
 #    release, then set age to 0.
 LIBCODA_CURRENT=2
-LIBCODA_REVISION=1
+LIBCODA_REVISION=2
 LIBCODA_AGE=1
 AC_SUBST(LIBCODA_CURRENT)
 AC_SUBST(LIBCODA_REVISION)
@@ -111,7 +112,7 @@ AM_PROG_CC_C_O
 ST_CHECK_WRAPFORTRAN_F77_OPTIONS
 
 # configure libtool
-AC_PROG_LIBTOOL
+LT_INIT
 AC_SUBST(LIBTOOL_DEPS)
 
 # lex and yacc
@@ -196,7 +197,7 @@ AC_REPLACE_FUNCS([strdup strcasecmp strncasecmp vsnprintf])
 # *** sub-package mode ***
 
 AC_ARG_ENABLE([coda-subpackage-mode],
-  [AC_HELP_STRING([--enable-coda-subpackage-mode],[only build the CODA library and codadd, but don't install anything for CODA. This is intended for when CODA is used as a sub-package within a larger software pacakge])],
+  [AS_HELP_STRING([--enable-coda-subpackage-mode],[only build the CODA library and codadd, but don't install anything for CODA. This is intended for when CODA is used as a sub-package within a larger software pacakge])],
   [ac_cv_enable_coda_subpackage_mode=$enableval],
   [AC_CACHE_CHECK([build CODA as sub-package],ac_cv_enable_coda_subpackage_mode,ac_cv_enable_coda_subpackage_mode=no)])
 AM_CONDITIONAL(SUBPACKAGE_MODE, test $ac_cv_enable_coda_subpackage_mode = yes)
@@ -219,24 +220,26 @@ AC_SUBST(fortrandir)
 AC_SUBST(definitionsdir)
 AC_SUBST(pkgdatadir)
 
-# The directories for optional components start empty an will be set later
+# The directories for optional components start empty and will be set later
 
 idldlmexecdir=
 codaidlexamplesdir=
 matlabmexexecdir=
 codapythondir=
 codapyexecdir=
+javadir=
 
 AC_SUBST(idldlmexecdir)
 AC_SUBST(codaidlexamplesdir)
 AC_SUBST(matlabmexexecdir)
 AC_SUBST(codapythondir)
 AC_SUBST(codapyexecdir)
+AC_SUBST(javadir)
 
 # *** coda-idl ***
 
 AC_ARG_ENABLE(idl,
-              [AC_HELP_STRING([--enable-idl], [build the IDL interface])],
+              [AS_HELP_STRING([--enable-idl],[build the IDL interface])],
               [ac_cv_enable_idl=$enableval],
               [AC_CACHE_CHECK([build IDL interface], ac_cv_enable_idl, ac_cv_enable_idl=no)])
 
@@ -258,7 +261,7 @@ AM_CONDITIONAL(BUILD_IDL, test $ac_cv_enable_idl = yes)
 # *** coda-matlab ***
 
 AC_ARG_ENABLE([matlab],
-              [AC_HELP_STRING([--enable-matlab], [build the MATLAB interface])],
+              [AS_HELP_STRING([--enable-matlab],[build the MATLAB interface])],
               [ac_cv_enable_matlab=$enableval],
               [AC_CACHE_CHECK([build MATLAB interface], ac_cv_enable_matlab, ac_cv_enable_matlab=no)])
 
@@ -280,7 +283,7 @@ AM_CONDITIONAL(BUILD_MATLAB, test $ac_cv_enable_matlab = yes)
 # *** coda-python ***
 
 AC_ARG_ENABLE([python],
-  [AC_HELP_STRING([--enable-python], [build the Python interface])],
+  [AS_HELP_STRING([--enable-python],[build the Python interface])],
   [ac_cv_enable_python=$enableval],
   [AC_CACHE_CHECK([build Python interface], ac_cv_enable_python, ac_cv_enable_python=no)])
 
@@ -309,10 +312,40 @@ fi
 
 AM_CONDITIONAL(BUILD_PYTHON, test $ac_cv_enable_python = yes)
 
+
+# *** coda-java ***
+
+AC_ARG_ENABLE([java],
+  [AS_HELP_STRING([--enable-java],[build the Java interface])],
+  [ac_cv_enable_java=$enableval],
+  [AC_CACHE_CHECK([build Java interface], ac_cv_enable_java, ac_cv_enable_java=no)]
+)
+
+if test $ac_cv_enable_java = yes ; then
+  ST_CHECK_JAVA
+  if test $st_cv_have_java = no ; then
+    AC_MSG_ERROR(BOXED_TEXT([ERROR: The Sun Java Development Kit (JDK) is required to build the Java interface.
+Try setting the JAVA and JAVAC environment variables to the full paths to your java and javac executables if you have Java installed.]))
+  fi
+  AC_CHECK_FILE($JAVA_HOME/include/jni.h, , 
+    [AC_MSG_ERROR([BOXED_TEXT([ERROR: The Java Native Interface (jni.h) is required for the Java interface. Make sure you have the full JDK installed, not just the Runtime Environment (JRE).])])])
+  JNICPPFLAGS="-I$JAVA_HOME/include -I$JAVA_HOME/include/"`uname -s | tr A-Z a-z`" $CPPFLAGS"
+  AC_SUBST(JNICPPFLAGS)
+  if test `uname -s` = Darwin ; then
+    JNIEXT=.jnilib
+  else
+    JNIEXT=.so
+  fi
+  AC_SUBST(JNIEXT)
+  javadir="\${pkgdatadir}/java"
+fi
+
+AM_CONDITIONAL(BUILD_JAVA, test $ac_cv_enable_java = yes)
+
 # *** hdf ***
 
 AC_ARG_WITH([hdf4],
-  [AC_HELP_STRING([--with-hdf4],[build HDF4 support into CODA])],
+  [AS_HELP_STRING([--with-hdf4],[build HDF4 support into CODA])],
   [ac_cv_with_hdf4=$withval],
   [AC_CACHE_CHECK([use HDF4], ac_cv_with_hdf4, ac_cv_with_hdf4=no)])
 
@@ -324,7 +357,7 @@ Try setting the HDF4_LIB and HDF4_INCLUDE environment variables to the
 location of your HDF4 library and include files.]))
   fi
   AC_ARG_ENABLE(hdf4-vdata-attributes,
-                [AC_HELP_STRING([--disable-hdf4-vdata-attributes], [use this option if you have HDF4.2r1 or earlier])],
+                [AS_HELP_STRING([--disable-hdf4-vdata-attributes],[use this option if you have HDF4.2r1 or earlier])],
                 [ac_cv_enable_hdf4_vdata_attributes=$enableval],
                 [AC_CACHE_CHECK([enable HDF4 Vdata attributes], ac_cv_enable_hdf4_vdata_attributes,
                                  ac_cv_enable_hdf4_vdata_attributes=yes)])
@@ -336,7 +369,7 @@ AC_SUBST(HDF4LIBS)
 AM_CONDITIONAL(WITH_HDF4, test $ac_cv_with_hdf4 = yes)
 
 AC_ARG_WITH([hdf5],
-  [AC_HELP_STRING([--with-hdf5],[build HDF5 support into CODA])],
+  [AS_HELP_STRING([--with-hdf5],[build HDF5 support into CODA])],
   [ac_cv_with_hdf5=$withval],
   [AC_CACHE_CHECK([use HDF5],ac_cv_with_hdf5,ac_cv_with_hdf5=no)])
 
@@ -361,7 +394,7 @@ AC_DEFINE([XML_CONTEXT_BYTES], 1024, [Define to specify how much context to reta
 # *** extra ***
 
 AC_ARG_ENABLE([printf-warnings],
-  [AC_HELP_STRING([--enable-printf-warnings],[enables compiler warnings for the printf-like functions in CODA. This only works if compiling with the GNU compiler. Don't use this option for official installations of CODA (since this will prevent coda.h being used by other compilers).])],
+  [AS_HELP_STRING([--enable-printf-warnings],[enables compiler warnings for the printf-like functions in CODA. This only works if compiling with the GNU compiler. Don't use this option for official installations of CODA (since this will prevent coda.h being used by other compilers).])],
   [ac_cv_enable_printf_warnings=$enableval],
   [AC_CACHE_CHECK([enable printf warnings],ac_cv_enable_printf_warnings,ac_cv_enable_printf_warnings=no)])
 

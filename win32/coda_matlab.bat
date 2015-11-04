@@ -1,4 +1,4 @@
- @ECHO OFF
+@ECHO OFF
 
 SETLOCAL
 
@@ -87,7 +87,7 @@ COPY "%CODASRCDIR%\coda-matlab-traverse.c" "%INTDIR%\codatraverse.c" > NUL
 %MEX% %MEXFLAGS% -outdir "%INTDIR%" -c "%INTDIR%\codatraverse.c"
 
 ECHO Creating coda_matlab.dll
-%MEX% %MEXFLAGS% -outdir "%OUTDIR%" "%CODASRCDIR%\coda_matlab.c" "%INTDIR%\codagetdata.obj" "%INTDIR%\codatraverse.obj" %COMMON_CODA_OBJECTS% "%HDF4_LIB%\hd423.lib" "%HDF4_LIB%\hm423.lib" "%JPEG_LIB%\libjpeg.lib" "%SZIP_LIB%\szlib.lib" "%ZLIB_LIB%\zlib.lib" "%HDF5_LIB%\hdf5.lib" "%LIBCODADIR%\withhdf\libcoda.lib" ws2_32.lib
+%MEX% %MEXFLAGS% -outdir "%OUTDIR%" "%CODASRCDIR%\coda_matlab.c" "%INTDIR%\codagetdata.obj" "%INTDIR%\codatraverse.obj" %COMMON_CODA_OBJECTS% "%HDF4_LIB%\hd424.lib" "%HDF4_LIB%\hm424.lib" "%JPEG_LIB%\libjpeg.lib" "%SZIP_LIB%\szlib.lib" "%ZLIB_LIB%\zlib.lib" "%HDF5_LIB%\hdf5.lib" "%LIBCODADIR%\withhdf\libcoda.lib" ws2_32.lib
 
 ECHO Copying .m files
 COPY "%CODASRCDIR%\*.m" "%OUTDIR%" > NUL

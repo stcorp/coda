@@ -1981,6 +1981,29 @@ static int eval_integer(eval_info *info, const coda_Expr *expr, int64_t *value)
             }
             break;
         case expr_length:
+            if (opexpr->operand[0]->result_type == expr_result_node)
+            {
+                coda_Cursor prev_cursor;
+                long length;
+
+                if (info->orig_cursor == NULL)
+                {
+                    info->not_constant = 1;
+                    return -1;
+                }
+                prev_cursor = info->cursor;
+                if (eval_cursor(info, opexpr->operand[0]) != 0)
+                {
+                    return -1;
+                }
+                if (coda_cursor_get_string_length(&info->cursor, &length) != 0)
+                {
+                    return -1;
+                }
+                *value = length;
+                info->cursor = prev_cursor;
+            }
+            else
             {
                 long offset;
                 long length;

@@ -1,0 +1,48 @@
+/** \page index CODA Java Interface
+ *
+ * \section intro Introduction
+
+*
+      The CODA Java interface consists of a Java package
+ 'nl.stcorp.coda', containing several classes and methods that
+ allow the user to easily access data inside product files.</p>
+
+      The CODA Java interface contains a wrapping of the <a href="../libcoda/index.html">CODA C interface</a>. The higher-level CODA functions as can be found in the IDL and MATLAB interfaces of CODA are not available.
+
+       The main difference between the C and the Java interfaces is that for Java a number of classes (Coda, Product, Cursor, and Type) have been defined to which the various functions are attached as methods (comparable to the similarly named structs at the C level). These methods are either static class methods (for global CODA functions not directly involving a data product), or instance methods (for CODA functions that are specific to a Product, a Cursor, or a Type, i.e. would take a pointer to such a struct as their first parameter in the C version).
+
+       In addition, the Java interface renames all functions and variables to be more Java-like (i.e. use 'camelCase'). The prefix that most of the C function names have ('coda_', 'coda_product_') have also been removed as redundant, because the methods now all exist in the scope of a particular Class that generally corresponds to that prefix (e.g. 'coda_init()' becomes 'Coda.init()', not 'Coda.coda_init()').
+
+       A final difference is that the error return codes of the C interface have been replaced by an exception mechanism at the Java layer. Most CODA methods need to be wrapped in a try-catch pair that tests for a CodaException occurrance. If something goes wrong, that exception will be thrown, its message containing the original CODA error message returned by the underlying C function.
+
+       The underlying <a href="../libcoda/index.html">CODA C interface</a> API documentation remains the authoritative reference documentation source for CODA functionality. The Java API information provided here is basic and mainly serves to (a)  document the method and parameter names, and (b) give information about those areas in which there is a significant difference between the C and Java interface other than what has already been described here. Documentation on the CODA enumerated types can also be found in the C API documentation.
+
+ *
+ * \section intro_classes Classes
+ * Each class has a separate section that contains its general description together with descriptions for all types,
+ * variables, methods, etc. that are part of this class.
+ *
+ * - <a href="annotated.html">CODA Classes</a>
+*/
+
+/**
+* \package nl.stcorp.coda
+*
+* \enum ArrayOrderingEnum
+* Ordering of elements within arrays (C or Fortran variant).
+*
+* \enum FormatEnum
+* The data storage formats that are supported by CODA.
+*
+* \enum NativeTypeEnum
+* Machine specific data types.
+*
+* \enum SpecialTypeEnum
+* The special data types.
+*
+* \enum TypeClassEnum
+* CODA Type classes.
+*
+*
+*/
+ 

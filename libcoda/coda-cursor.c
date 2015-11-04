@@ -1540,7 +1540,7 @@ LIBCODA_API int coda_cursor_get_array_dim(const coda_Cursor *cursor, int *num_di
  * \param dst Pointer to the variable where the value that was read from the product will be stored.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_int8(const coda_Cursor *cursor, int8_t *dst)
 {
@@ -1595,7 +1595,7 @@ LIBCODA_API int coda_cursor_read_int8(const coda_Cursor *cursor, int8_t *dst)
  * \param dst Pointer to the variable where the value that was read from the product will be stored.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_uint8(const coda_Cursor *cursor, uint8_t *dst)
 {
@@ -1652,7 +1652,7 @@ LIBCODA_API int coda_cursor_read_uint8(const coda_Cursor *cursor, uint8_t *dst)
  * \param dst Pointer to the variable where the value that was read from the product will be stored.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_int16(const coda_Cursor *cursor, int16_t *dst)
 {
@@ -1708,7 +1708,7 @@ LIBCODA_API int coda_cursor_read_int16(const coda_Cursor *cursor, int16_t *dst)
  * \param dst Pointer to the variable where the value that was read from the product will be stored.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_uint16(const coda_Cursor *cursor, uint16_t *dst)
 {
@@ -1767,7 +1767,7 @@ LIBCODA_API int coda_cursor_read_uint16(const coda_Cursor *cursor, uint16_t *dst
  * \param dst Pointer to the variable where the value that was read from the product will be stored.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_int32(const coda_Cursor *cursor, int32_t *dst)
 {
@@ -1824,7 +1824,7 @@ LIBCODA_API int coda_cursor_read_int32(const coda_Cursor *cursor, int32_t *dst)
  * \param dst Pointer to the variable where the value that was read from the product will be stored.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_uint32(const coda_Cursor *cursor, uint32_t *dst)
 {
@@ -1885,7 +1885,7 @@ LIBCODA_API int coda_cursor_read_uint32(const coda_Cursor *cursor, uint32_t *dst
  * \param dst Pointer to the variable where the value that was read from the product will be stored.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_int64(const coda_Cursor *cursor, int64_t *dst)
 {
@@ -1943,7 +1943,7 @@ LIBCODA_API int coda_cursor_read_int64(const coda_Cursor *cursor, int64_t *dst)
  * \param dst Pointer to the variable where the value that was read from the product will be stored.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_uint64(const coda_Cursor *cursor, uint64_t *dst)
 {
@@ -2007,7 +2007,7 @@ LIBCODA_API int coda_cursor_read_uint64(const coda_Cursor *cursor, uint64_t *dst
  * \param dst Pointer to the variable where the value that was read from the product will be stored.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_float(const coda_Cursor *cursor, float *dst)
 {
@@ -2071,7 +2071,7 @@ LIBCODA_API int coda_cursor_read_float(const coda_Cursor *cursor, float *dst)
  * \param dst Pointer to the variable where the value that was read from the product will be stored.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_double(const coda_Cursor *cursor, double *dst)
 {
@@ -2124,7 +2124,7 @@ LIBCODA_API int coda_cursor_read_double(const coda_Cursor *cursor, double *dst)
  * \param dst Pointer to the variable where the value that was read from the product will be stored.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_char(const coda_Cursor *cursor, char *dst)
 {
@@ -2182,7 +2182,7 @@ LIBCODA_API int coda_cursor_read_char(const coda_Cursor *cursor, char *dst)
  * \param dst_size The maximum number of bytes to write in \a dst.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_string(const coda_Cursor *cursor, char *dst, long dst_size)
 {
@@ -2256,7 +2256,7 @@ LIBCODA_API int coda_cursor_read_string(const coda_Cursor *cursor, char *dst, lo
 }
 
 /** Read a specified amount of bits. The data is stored in \a dst.
- * This function will work independent of the type of data at the current cursos position, but it will not work on
+ * This function will work independent of the type of data at the current cursor position, but it will not work on
  * ASCII, XML, HDF4, and HDF5 data.
  * The function will read a \a bit_length amount of bits starting from the sum of the cursor offset position and the
  * amount of bits given by the \a bit_offset parameter. If \a bit_length is not a rounded amount of bytes the data will
@@ -2268,7 +2268,7 @@ LIBCODA_API int coda_cursor_read_string(const coda_Cursor *cursor, char *dst, lo
  * \param bit_length The number of bits to read.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_bits(const coda_Cursor *cursor, uint8_t *dst, int64_t bit_offset, int64_t bit_length)
 {
@@ -2281,6 +2281,15 @@ LIBCODA_API int coda_cursor_read_bits(const coda_Cursor *cursor, uint8_t *dst, i
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
+    }
+    if (bit_length < 0)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "bit_length argument is negative (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (bit_length == 0)
+    {
+        return 0;
     }
 
     switch (cursor->stack[cursor->n - 1].type->format)
@@ -2302,7 +2311,7 @@ LIBCODA_API int coda_cursor_read_bits(const coda_Cursor *cursor, uint8_t *dst, i
 }
 
 /** Read a specified amount of bytes. The data is stored in \a dst.
- * This function will work independent of the type of data at the current cursos position, but it will not work on HDF4
+ * This function will work independent of the type of data at the current cursor position, but it will not work on HDF4
  * and HDF5 files. For XML files it will only work if the cursor points to a single element (i.e. you will get an error
  * when the cursor points to an XML element array or an attribute record).
  * The function will read a \a length amount of bytes starting from the sum of the cursor offset position and the
@@ -2313,7 +2322,7 @@ LIBCODA_API int coda_cursor_read_bits(const coda_Cursor *cursor, uint8_t *dst, i
  * \param length The number of bytes to read.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_bytes(const coda_Cursor *cursor, uint8_t *dst, int64_t offset, int64_t length)
 {
@@ -2325,6 +2334,11 @@ LIBCODA_API int coda_cursor_read_bytes(const coda_Cursor *cursor, uint8_t *dst, 
     if (dst == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "dst argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (length < 0)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "length argument is negative (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
     if (length == 0)
@@ -2362,7 +2376,7 @@ LIBCODA_API int coda_cursor_read_bytes(const coda_Cursor *cursor, uint8_t *dst, 
  * #coda_array_ordering_fortran.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_int8_array(const coda_Cursor *cursor, int8_t *dst, coda_array_ordering array_ordering)
 {
@@ -2426,7 +2440,7 @@ LIBCODA_API int coda_cursor_read_int8_array(const coda_Cursor *cursor, int8_t *d
  * #coda_array_ordering_fortran.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_uint8_array(const coda_Cursor *cursor, uint8_t *dst,
                                              coda_array_ordering array_ordering)
@@ -2493,7 +2507,7 @@ LIBCODA_API int coda_cursor_read_uint8_array(const coda_Cursor *cursor, uint8_t 
  * #coda_array_ordering_fortran.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_int16_array(const coda_Cursor *cursor, int16_t *dst,
                                              coda_array_ordering array_ordering)
@@ -2559,7 +2573,7 @@ LIBCODA_API int coda_cursor_read_int16_array(const coda_Cursor *cursor, int16_t 
  * #coda_array_ordering_fortran.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_uint16_array(const coda_Cursor *cursor, uint16_t *dst,
                                               coda_array_ordering array_ordering)
@@ -2628,7 +2642,7 @@ LIBCODA_API int coda_cursor_read_uint16_array(const coda_Cursor *cursor, uint16_
  * #coda_array_ordering_fortran.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_int32_array(const coda_Cursor *cursor, int32_t *dst,
                                              coda_array_ordering array_ordering)
@@ -2695,7 +2709,7 @@ LIBCODA_API int coda_cursor_read_int32_array(const coda_Cursor *cursor, int32_t 
  * #coda_array_ordering_fortran.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_uint32_array(const coda_Cursor *cursor, uint32_t *dst,
                                               coda_array_ordering array_ordering)
@@ -2766,7 +2780,7 @@ LIBCODA_API int coda_cursor_read_uint32_array(const coda_Cursor *cursor, uint32_
  * #coda_array_ordering_fortran.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_int64_array(const coda_Cursor *cursor, int64_t *dst,
                                              coda_array_ordering array_ordering)
@@ -2834,7 +2848,7 @@ LIBCODA_API int coda_cursor_read_int64_array(const coda_Cursor *cursor, int64_t 
  * #coda_array_ordering_fortran.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_uint64_array(const coda_Cursor *cursor, uint64_t *dst,
                                               coda_array_ordering array_ordering)
@@ -2908,7 +2922,7 @@ LIBCODA_API int coda_cursor_read_uint64_array(const coda_Cursor *cursor, uint64_
  * #coda_array_ordering_fortran.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_float_array(const coda_Cursor *cursor, float *dst, coda_array_ordering array_ordering)
 {
@@ -2961,7 +2975,7 @@ LIBCODA_API int coda_cursor_read_float_array(const coda_Cursor *cursor, float *d
     exit(1);
 }
 
-/** Retrieve a data array as type \c float from the product file. The values are stored in \a dst.
+/** Retrieve a data array as type \c double from the product file. The values are stored in \a dst.
  * The cursor must point to an array with a basic type that has one of the following read types to succeed:
  * - \c int8
  * - \c uint8
@@ -2981,7 +2995,7 @@ LIBCODA_API int coda_cursor_read_float_array(const coda_Cursor *cursor, float *d
  * #coda_array_ordering_fortran.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_double_array(const coda_Cursor *cursor, double *dst,
                                               coda_array_ordering array_ordering)
@@ -3035,7 +3049,7 @@ LIBCODA_API int coda_cursor_read_double_array(const coda_Cursor *cursor, double 
     exit(1);
 }
 
-/** Retrieve a data array as type \c float from the product file. The values are stored in \a dst.
+/** Retrieve a data array as type \c char from the product file. The values are stored in \a dst.
  * The cursor must point to an array with a basic type that has read type \c char to succeed.
  * For all other data types the function will return an error.
  * \param cursor Pointer to a CODA cursor.
@@ -3044,7 +3058,7 @@ LIBCODA_API int coda_cursor_read_double_array(const coda_Cursor *cursor, double 
  * #coda_array_ordering_fortran.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_char_array(const coda_Cursor *cursor, char *dst, coda_array_ordering array_ordering)
 {
@@ -3106,7 +3120,7 @@ LIBCODA_API int coda_cursor_read_char_array(const coda_Cursor *cursor, char *dst
  * \param dst Pointer to the variable where the value that was read from the product will be stored.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_complex_double_pair(const coda_Cursor *cursor, double *dst)
 {
@@ -3150,7 +3164,7 @@ LIBCODA_API int coda_cursor_read_complex_double_pair(const coda_Cursor *cursor, 
  * #coda_array_ordering_fortran.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_complex_double_pairs_array(const coda_Cursor *cursor, double *dst,
                                                             coda_array_ordering array_ordering)
@@ -3200,7 +3214,7 @@ LIBCODA_API int coda_cursor_read_complex_double_pairs_array(const coda_Cursor *c
  * \param dst_im Pointer to the variable where the imaginary value that was read from the product will be stored.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_complex_double_split(const coda_Cursor *cursor, double *dst_re, double *dst_im)
 {
@@ -3227,7 +3241,7 @@ LIBCODA_API int coda_cursor_read_complex_double_split(const coda_Cursor *cursor,
  * #coda_array_ordering_fortran.
  * \return
  *   \arg \c 0, Success.
- *   \arg \c -1, Error occured (check #coda_errno).
+ *   \arg \c -1, Error occurred (check #coda_errno).
  */
 LIBCODA_API int coda_cursor_read_complex_double_split_array(const coda_Cursor *cursor, double *dst_re, double *dst_im,
                                                             coda_array_ordering array_ordering)

@@ -25,9 +25,10 @@
 #include "ziparchive.h"
 #include "hashtable.h"
 
+#include <sys/stat.h>
 #include <assert.h>
-#include <fcntl.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -151,8 +152,8 @@ static int get_entries(zaFile *zf)
     {
         /* There is probably a zipfile comment at the end -> bail out */
         /* In the future, if needed, we could implement an approach that just reads all local file headers */
-        zf->handle_error("could not locate package index. There is probably a 'zip file comment' at the end of the "
-                         "file (which is not supported)");
+        zf->handle_error("could not locate package index in zip file '%s'. There is probably a 'zip file comment' at "
+                         "the end of the file (which is not supported)", zf->filename);
         return -1;
     }
 
@@ -332,8 +333,33 @@ static int get_entries(zaFile *zf)
 
 zaFile *za_open(const char *filename, void (*error_handler) (const char *, ...))
 {
+    struct stat statbuf;
     zaFile *zf;
+    char buffer[2];
     int open_flags;
+
+    if (stat(filename, &statbuf) != 0)
+    {
+        if (errno == ENOENT)
+        {
+            error_handler("could not find %s", filename);
+        }
+        else
+        {
+            error_handler("could not open %s (%s)", filename, strerror(errno));
+        }
+        return NULL;
+    }
+    if ((statbuf.st_mode & S_IFREG) == 0)
+    {
+        error_handler("could not open %s (not a regular file)", filename);
+        return NULL;
+    }
+    if (statbuf.st_size < 22)
+    {
+        error_handler("could not open %s (not a zip file)", filename);
+        return NULL;
+    }
 
     zf = malloc(sizeof(zaFile));
     if (zf == NULL)
@@ -378,8 +404,19 @@ zaFile *za_open(const char *filename, void (*error_handler) (const char *, ...))
         return NULL;
     }
 
-    zf->hash_data = new_hashtable(1);
+    if (read(zf->fd, buffer, 2) < 0)
+    {
+        zf->handle_error(strerror(errno));
+        za_close(zf);
+        return NULL;
+    }
+    if (buffer[0] != 'P' && buffer[1] != 'K')
+    {
+        error_handler("could not open %s (not a zip file)", filename);
+        return NULL;
+    }
 
+    zf->hash_data = new_hashtable(1);
     if (get_entries(zf) != 0)
     {
         za_close(zf);

@@ -110,7 +110,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 "$(ZLIB_LIB)\zlib1.lib" "$(HDF4_LIB)\hd423m.lib" "$(HDF4_LIB)\hm423m.lib" "$(HDF5_LIB)\hdf5dll.lib" kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386 /out:"Release\withhdf\coda.dll"
+# ADD LINK32 "$(ZLIB_LIB)\zlib1.lib" "$(HDF4_LIB)\hd424m.lib" "$(HDF4_LIB)\hm424m.lib" "$(HDF5_LIB)\hdf5dll.lib" kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386 /out:"Release\withhdf\coda.dll"
 
 !ELSEIF  "$(CFG)" == "codadll - Win32 Debug with HDF"
 
@@ -137,7 +137,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 "$(ZLIB_LIB)\zlib1.lib" "$(HDF4_LIB)\hd423m.lib" "$(HDF4_LIB)\hm423m.lib" "$(HDF5_LIB)\hdf5dll.lib" kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /out:"Debug\withhdf\coda_d.dll" /pdbtype:sept
+# ADD LINK32 "$(ZLIB_LIB)\zlib1.lib" "$(HDF4_LIB)\hd424m.lib" "$(HDF4_LIB)\hm424m.lib" "$(HDF5_LIB)\hdf5dll.lib" kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /out:"Debug\withhdf\coda_d.dll" /pdbtype:sept
 
 !ENDIF 
 
