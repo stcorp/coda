@@ -101,6 +101,17 @@ public class Cursor
 
 
     /**
+     * Moves the cursor to point to the given path.
+     * 
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public void gotoPath(String path) throws CodaException
+    {
+        codac.cursor_goto(this.cursor, path);
+    }
+
+    /**
      * Moves the cursor to point to the first field of a record.
      * 
      * @throws CodaException
@@ -280,6 +291,21 @@ public class Cursor
         int has_ascii_content[] = new int[1];
         codac.cursor_has_ascii_content(this.cursor, has_ascii_content);
         return has_ascii_content[0] == 1;
+    }
+
+
+    /**
+     * Determine wether data at the current cursor position has attributes.
+     * 
+     * @return Whether attributes are present.
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public boolean hasAttributes() throws CodaException
+    {
+        int has_attributes[] = new int[1];
+        codac.cursor_has_attributes(this.cursor, has_attributes);
+        return has_attributes[0] == 1;
     }
 
 

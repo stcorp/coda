@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
         yyin = fopen(argv[1], "r");
         if (yyin == NULL)
         {
-            fprintf(stderr, "ERROR: Could not open file\n");
+            fprintf(stderr, "ERROR: could not open file\n");
             exit(1);
         }
     }

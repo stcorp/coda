@@ -137,6 +137,7 @@
 		</Configuration>
 	</Configurations>
 	<Files>
+		<File RelativePath="..\tools\codadd\codadd-definition.c"/>
 		<File RelativePath="..\tools\codadd\codadd-detect.c"/>
 		<File RelativePath="..\tools\codadd\codadd-doc.c"/>
 		<File RelativePath="..\tools\codadd\codadd-list.c"/>

@@ -366,20 +366,24 @@ int coda_expression_is_constant(const coda_expression *expr);
   coda_double_to_utcdatetime()::int *YEAR, int *MONTH, int *DAY,
                                 int *HOUR, int *MINUTE, int *SECOND, int *MUSEC
   coda_get_product_version()::int *version
+  coda_type_has_ascii_content()::int *has_ascii_content
+  coda_type_has_attributes()::int *has_attributes
+  coda_cursor_has_attributes()::int *has_attributes
   coda_type_get_record_field_hidden_status()::int *hidden
   coda_type_get_record_field_available_status()::int *available
+  coda_cursor_get_record_field_available_status()::int *available
   coda_type_get_record_union_status()::int *is_union
   coda_type_get_array_num_dims()::int *num_dims
   coda_type_get_array_dim()::int *num_dims
   coda_cursor_get_depth()::int *depth
-  coda_cursor_get_record_field_available_status()::int *available
   coda_recognize_file()::int *product_version
-  coda_expression_eval_boolean()::int *value
+  coda_expression_eval_bool():int *value
 */
 %apply int *OUTPUT { int *YEAR, int *MONTH, int *DAY,
          int *HOUR, int *MINUTE, int *SECOND, int *MUSEC,
          int *version,
          int *has_ascii_content,
+         int *has_attributes,
          int *hidden,
          int *available,
          int *is_union,

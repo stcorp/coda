@@ -2,7 +2,7 @@
 #
 project(CODA)
 
-set(VERSION 2.3.1)
+set(VERSION 2.4)
 set(CODA_VERSION \"${VERSION}\")
 
 # General setup
@@ -418,8 +418,6 @@ if(CODA_BUILD_IDL)
     else(WIN32)
       if(APPLE)
         set(IDL_LINK_FLAGS "${IDL_LINK_FLAGS} -undefined dynamic_lookup")
-      else()
-        set(IDL_LINK_FLAGS "-module -shared -avoid-version")
       endif(APPLE)
     endif(WIN32)
 
@@ -724,8 +722,8 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/coda.h DESTINATION include)
 #
 # Set dynamic library version
 #
-set(LIBCODA_CURRENT 8)
-set(LIBCODA_REVISION 1)
+set(LIBCODA_CURRENT 9)
+set(LIBCODA_REVISION 0)
 set(LIBCODA_AGE 3)
 math(EXPR LIBCODA_MAJOR "${LIBCODA_CURRENT} - ${LIBCODA_AGE}")
 set(LIBCODA_MINOR ${LIBCODA_AGE})
@@ -828,6 +826,7 @@ install(TARGETS codafind DESTINATION bin)
 
 set(codadd_SOURCES
   tools/codadd/codadd.c
+  tools/codadd/codadd-definition.c
   tools/codadd/codadd-detect.c
   tools/codadd/codadd-doc.c
   tools/codadd/codadd-list.c

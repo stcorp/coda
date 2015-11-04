@@ -128,6 +128,7 @@ static int quick_size_check(coda_product *product)
 static int check_data(coda_cursor *cursor, int64_t *bit_size)
 {
     coda_type_class type_class;
+    int has_attributes;
 
     if (coda_cursor_get_type_class(cursor, &type_class) != 0)
     {
@@ -489,27 +490,21 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size)
             break;
     }
 
-    /* check attributes */
+    if (coda_cursor_has_attributes(cursor, &has_attributes) != 0)
     {
-        long num_elements;
-
+        print_error_with_cursor(cursor);
+        return -1;
+    }
+    if (has_attributes)
+    {
         if (coda_cursor_goto_attributes(cursor) != 0)
         {
             print_error_with_cursor(cursor);
             return -1;
         }
-        if (coda_cursor_get_num_elements(cursor, &num_elements) != 0)
+        if (check_data(cursor, NULL) != 0)
         {
-            print_error_with_cursor(cursor);
             return -1;
-        }
-        /* we check for empty attribute lists here in order to prevent endless recursions of attributes of attributes */
-        if (num_elements > 0)
-        {
-            if (check_data(cursor, NULL) != 0)
-            {
-                return -1;
-            }
         }
         coda_cursor_goto_parent(cursor);
     }
@@ -718,7 +713,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            fprintf(stderr, "ERROR: Incorrect arguments\n");
+            fprintf(stderr, "ERROR: invalid arguments\n");
             print_help();
             exit(1);
         }

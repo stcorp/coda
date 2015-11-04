@@ -29,11 +29,17 @@
       <ul>
       <li><a href="codadef/codadef-format.html">CODA Product Format Definition Description Format</a></li>
       </ul>
-      <p>Product format definitions in CODA can make use of a powerful expression language for e.g. determining array sizes, bit offsets, etc. This expression language is described in the CODA Expressions documentation:</p>
+
+      <p>In order for CODA to be able to access a file, it will need to now about the format. For self-describing data formats such as netCDF/HDF, CODA can determine the format definition from the file itself (see below for mapping descriptions), but for other kinds of products you will need to have a CODA product format definition (.codadef) file containing the format definitions of the products that you want to access. Note that the CODA software package does not come with any .codadef files itself, but other software that embed CODA often do. In addition, on the CODA website you can find a set of .codadef files as well.<p>
+      
+      <p>In order to use .codadef files, you must make sure that CODA knows where to find them. It is therefore important that you make sure that the <b>CODA definition path is properly set</b>. There are several ways to do this:</p>
       <ul>
-      <li><a href="codadef/codadef-expressions.html">CODA Expressions</a></li>
+      <li>Put your .codadef file in the default location for CODA definition files (<code>&lt;prefix&gt;/definitions</code> on Windows and  <code>&lt;prefix&gt;/share/coda/definitions</code> on Linux/MacOSX; note that software that embed CODA may use their own default locations). However, only the CODA command line tools and IDL and MATLAB interfaces will use this default location. For the other interfaces you will have to use one of the options below.</li>
+      <li>Set the <code>CODA_DEFINITION</code> environment variable. This environment variable should be a ':' separated (';' on Windows) list of absolute paths to directories containing .codadef files or absolute paths to .codadef files themselves (or a mix of those).</li>
+      <li>Set the CODA definition path programmatically (for e.g. C, Fortran, Java). See the interface documentation below for details.</li>
       </ul>
-      <p>Data products that are in XML, netCDF, GRIB, HDF4, or HDF5 do not always need a CODA product format description, since they are self describing formats. For other formats, such as RINEX, the format is too complex to be captured by a CODA product format description, so a special backend was introduced to deal with the format. The approach that CODA uses to map the data from the native format to CODA data types can be found in the mapping descriptions for each format:</p>
+
+      <p>For formats that are self-describing or that are too complex to be captured by .codadef files, CODA comes with a special backend to deal with the format. The file formats that CODA supports in thise way (and thus don't require .codadef files per se) are XML, netCDF, GRIB, HDF4, HDF5, RINEX, and SP3. The approach that CODA uses to map the data from the native file format to CODA data types can be found in the mapping descriptions for each format below:</p>
       <ul>
       <li><a href="codadef/codadef-xml.html">CODA XML Mapping Description</a></li>
       <li><a href="codadef/codadef-netcdf.html">CODA netCDF Mapping Description</a></li>
@@ -42,6 +48,12 @@
       <li><a href="codadef/codadef-hdf5.html">CODA HDF5 Mapping Description</a></li>
       <li><a href="codadef/codadef-rinex.html">CODA RINEX Mapping Description</a></li>
       <li><a href="codadef/codadef-sp3.html">CODA SP3 Mapping Description</a></li>
+      </ul>
+
+      <h2>CODA Expression Language</h2>
+      <p>CODA comes with an expression language that can be used to perform simple operations on product data. It is used in tools such as codafind and codaeval but is also used inside CODA product format definitions for e.g. determining array sizes, bit offsets, etc. This expression language is described in the CODA Expressions documentation:</p>
+      <ul>
+      <li><a href="codadef/codadef-expressions.html">CODA Expressions</a></li>
       </ul>
 
       <h2>C interface</h2>

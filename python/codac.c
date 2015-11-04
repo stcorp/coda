@@ -6548,6 +6548,45 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_type_has_attributes(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  coda_type *arg1 = (coda_type *) 0 ;
+  int *arg2 = (int *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int temp2 ;
+  int res2 = SWIG_TMPOBJ ;
+  PyObject * obj0 = 0 ;
+  int result;
+  
+  arg2 = &temp2;
+  if (!PyArg_ParseTuple(args,(char *)"O:type_has_attributes",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_coda_type_struct, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "type_has_attributes" "', argument " "1"" of type '" "coda_type const *""'"); 
+  }
+  arg1 = (coda_type *)(argp1);
+  {
+    result = (int)coda_type_has_attributes((struct coda_type_struct const *)arg1,arg2);
+    
+    if (result < 0)
+    {
+      return PyErr_Format(codacError,"coda_type_has_attributes(): %s", coda_errno_to_string(coda_errno));
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  if (SWIG_IsTmpObj(res2)) {
+    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg2)));
+  } else {
+    int new_flags = SWIG_IsNewObj(res2) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
+    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg2), SWIGTYPE_p_int, new_flags));
+  }
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_type_get_format(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   coda_type *arg1 = (coda_type *) 0 ;
@@ -7680,6 +7719,49 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_cursor_goto(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  coda_cursor *arg1 = (coda_cursor *) 0 ;
+  char *arg2 = (char *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int res2 ;
+  char *buf2 = 0 ;
+  int alloc2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  int result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:cursor_goto",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_coda_cursor_struct, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cursor_goto" "', argument " "1"" of type '" "coda_cursor *""'"); 
+  }
+  arg1 = (coda_cursor *)(argp1);
+  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "cursor_goto" "', argument " "2"" of type '" "char const *""'");
+  }
+  arg2 = (char *)(buf2);
+  {
+    result = (int)coda_cursor_goto(arg1,(char const *)arg2);
+    
+    if (result < 0)
+    {
+      if (alloc2 == SWIG_NEWOBJ) free((char*)buf2);
+      
+      return PyErr_Format(codacError,"coda_cursor_goto(): %s", coda_errno_to_string(coda_errno));
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  if (alloc2 == SWIG_NEWOBJ) free((char*)buf2);
+  return resultobj;
+fail:
+  if (alloc2 == SWIG_NEWOBJ) free((char*)buf2);
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_cursor_goto_first_record_field(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   coda_cursor *arg1 = (coda_cursor *) 0 ;
@@ -8193,6 +8275,45 @@ SWIGINTERN PyObject *_wrap_cursor_has_ascii_content(PyObject *SWIGUNUSEDPARM(sel
     if (result < 0)
     {
       return PyErr_Format(codacError,"coda_cursor_has_ascii_content(): %s", coda_errno_to_string(coda_errno));
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  if (SWIG_IsTmpObj(res2)) {
+    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg2)));
+  } else {
+    int new_flags = SWIG_IsNewObj(res2) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
+    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg2), SWIGTYPE_p_int, new_flags));
+  }
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_cursor_has_attributes(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  coda_cursor *arg1 = (coda_cursor *) 0 ;
+  int *arg2 = (int *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int temp2 ;
+  int res2 = SWIG_TMPOBJ ;
+  PyObject * obj0 = 0 ;
+  int result;
+  
+  arg2 = &temp2;
+  if (!PyArg_ParseTuple(args,(char *)"O:cursor_has_attributes",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_coda_cursor_struct, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cursor_has_attributes" "', argument " "1"" of type '" "coda_cursor const *""'"); 
+  }
+  arg1 = (coda_cursor *)(argp1);
+  {
+    result = (int)coda_cursor_has_attributes((struct coda_cursor_struct const *)arg1,arg2);
+    
+    if (result < 0)
+    {
+      return PyErr_Format(codacError,"coda_cursor_has_attributes(): %s", coda_errno_to_string(coda_errno));
     }
   }
   resultobj = SWIG_Py_Void();
@@ -9871,6 +9992,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"get_product_definition_file", _wrap_get_product_definition_file, METH_VARARGS, NULL},
 	 { (char *)"get_product_root_type", _wrap_get_product_root_type, METH_VARARGS, NULL},
 	 { (char *)"get_product_variable_value", _wrap_get_product_variable_value, METH_VARARGS, NULL},
+	 { (char *)"type_has_attributes", _wrap_type_has_attributes, METH_VARARGS, NULL},
 	 { (char *)"type_get_format", _wrap_type_get_format, METH_VARARGS, NULL},
 	 { (char *)"type_get_class", _wrap_type_get_class, METH_VARARGS, NULL},
 	 { (char *)"type_get_read_type", _wrap_type_get_read_type, METH_VARARGS, NULL},
@@ -9896,6 +10018,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"type_get_special_type", _wrap_type_get_special_type, METH_VARARGS, NULL},
 	 { (char *)"type_get_special_base_type", _wrap_type_get_special_base_type, METH_VARARGS, NULL},
 	 { (char *)"cursor_set_product", _wrap_cursor_set_product, METH_VARARGS, NULL},
+	 { (char *)"cursor_goto", _wrap_cursor_goto, METH_VARARGS, NULL},
 	 { (char *)"cursor_goto_first_record_field", _wrap_cursor_goto_first_record_field, METH_VARARGS, NULL},
 	 { (char *)"cursor_goto_next_record_field", _wrap_cursor_goto_next_record_field, METH_VARARGS, NULL},
 	 { (char *)"cursor_goto_record_field_by_index", _wrap_cursor_goto_record_field_by_index, METH_VARARGS, NULL},
@@ -9910,6 +10033,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"cursor_goto_parent", _wrap_cursor_goto_parent, METH_VARARGS, NULL},
 	 { (char *)"cursor_use_base_type_of_special_type", _wrap_cursor_use_base_type_of_special_type, METH_VARARGS, NULL},
 	 { (char *)"cursor_has_ascii_content", _wrap_cursor_has_ascii_content, METH_VARARGS, NULL},
+	 { (char *)"cursor_has_attributes", _wrap_cursor_has_attributes, METH_VARARGS, NULL},
 	 { (char *)"cursor_get_string_length", _wrap_cursor_get_string_length, METH_VARARGS, NULL},
 	 { (char *)"cursor_get_bit_size", _wrap_cursor_get_bit_size, METH_VARARGS, NULL},
 	 { (char *)"cursor_get_byte_size", _wrap_cursor_get_byte_size, METH_VARARGS, NULL},

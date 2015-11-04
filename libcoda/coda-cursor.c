@@ -266,7 +266,14 @@ int coda_cursor_print_path(const coda_cursor *cursor, int (*print) (const char *
                         {
                             return -1;
                         }
-                        if (print("/%s", name) < 0)
+                        if (i == 0 || cursor->stack[i - 1].index != -1)
+                        {
+                            if (print("/") < 0)
+                            {
+                                return -1;
+                            }
+                        }
+                        if (print("%s", name) < 0)
                         {
                             return -1;
                         }
@@ -344,6 +351,171 @@ LIBCODA_API int coda_cursor_set_product(coda_cursor *cursor, coda_product *produ
 
     assert(0);
     exit(1);
+}
+
+/** Moves the cursor to the location in the product specific by a path string.
+ * The \a path string should contain a path reference similar to a 'node expression'
+ * (see \link coda_expression CODA expression language\endlink).
+ * The \a cursor parameter should contain a properly initialised cursor (e.g. using coda_cursor_set_product())
+ * The cursor position of \a cursor will be updated based on the path provided. This can be a move relative to the
+ * current cursor position in case of a relative path specification or an explicit move in case of an absolute path
+ * specification (i.e. if the node expression starts with '/').
+ * Although the \a path parameter is similar to a CODA node expression, there are a few differences:
+ *  - the ':' specifier is not allowed (use '.')
+ *  - a relative path that starts with a field reference does not have to start with a './', you can immediately 
+ *    start with the field name (e.g. you can use 'foo/bar' instead of './foo/bar')
+ * \param cursor Pointer to a valid CODA cursor.
+ * \param path A string representing a path to a location inside a product.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_cursor_goto(coda_cursor *cursor, const char *path)
+{
+    coda_type *type = NULL;
+    long index;
+    int start = 0;
+    int end;
+
+    if (path[start] == '/')
+    {
+        if (coda_cursor_goto_root(cursor) != 0)
+        {
+            return -1;
+        }
+        /* skip leading '/' if it is not followed by a record field name */
+        if (path[start + 1] == '\0' || path[start + 1] == '/' || path[start + 1] == '[' || path[start + 1] == '@')
+        {
+            start++;
+        }
+    }
+
+    while (path[start] != '\0')
+    {
+        if (path[start] == '@')
+        {
+            /* attribute */
+            if (coda_cursor_goto_attributes(cursor) != 0)
+            {
+                return -1;
+            }
+            start++;
+            end = start;
+            while (path[end] != '\0' && path[end] != '/' && path[end] != '[' && path[end] != '@')
+            {
+                end++;
+            }
+            if (end == start + 1 && path[start] == '.')
+            {
+                /* stay at this position */
+            }
+            else if (end == start + 2 && path[start] == '.' && path[start + 1] == '.')
+            {
+                if (coda_cursor_goto_parent(cursor) != 0)
+                {
+                    return -1;
+                }
+            }
+            else if (end > start)
+            {
+                if (coda_cursor_get_type(cursor, &type) != 0)
+                {
+                    return -1;
+                }
+                if (coda_type_get_record_field_index_from_name_n(type, &path[start], end - start, &index) != 0)
+                {
+                    return -1;
+                }
+                if (coda_cursor_goto_record_field_by_index(cursor, index) != 0)
+                {
+                    return -1;
+                }
+            }
+            start = end;
+        }
+        else if (path[start] == '[')
+        {
+            int result;
+            int n;
+
+            /* array index */
+            start++;
+            end = start;
+            while (path[end] != '\0' && path[end] != ']')
+            {
+                end++;
+            }
+            if (path[end] == '\0')
+            {
+                coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid path '%s' (missing ']')", path);
+                return -1;
+            }
+            if (start == end)
+            {
+                coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid array index '' in path");
+                return -1;
+            }
+            result = sscanf(&path[start], "%ld%n", &index, &n);
+            if (result != 1 || n != end - start)
+            {
+                coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid array index '%.*s' in path", end - start,
+                               &path[start]);
+                return -1;
+            }
+            if (coda_cursor_goto_array_element_by_index(cursor, index) != 0)
+            {
+                return -1;
+            }
+            start = end + 1;
+        }
+        else
+        {
+            /* it is Ok to ommit a leading '/' when we start with a field name */
+            if (path[start] == '/')
+            {
+                start++;
+            }
+            else if (start > 0)
+            {
+                coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid path '%s' (missing '/'?)", path);
+                return -1;
+            }
+            end = start;
+            while (path[end] != '\0' && path[end] != '/' && path[end] != '[' && path[end] != '@')
+            {
+                end++;
+            }
+            if (end == start + 1 && path[start] == '.')
+            {
+                /* stay at this position */
+            }
+            else if (end == start + 2 && path[start] == '.' && path[start + 1] == '.')
+            {
+                if (coda_cursor_goto_parent(cursor) != 0)
+                {
+                    return -1;
+                }
+            }
+            else
+            {
+                if (coda_cursor_get_type(cursor, &type) != 0)
+                {
+                    return -1;
+                }
+                if (coda_type_get_record_field_index_from_name_n(type, &path[start], end - start, &index) != 0)
+                {
+                    return -1;
+                }
+                if (coda_cursor_goto_record_field_by_index(cursor, index) != 0)
+                {
+                    return -1;
+                }
+            }
+            start = end;
+        }
+    }
+
+    return 0;
 }
 
 /** Moves the cursor to point to the first field of a record.
@@ -1021,6 +1193,11 @@ LIBCODA_API int coda_cursor_has_ascii_content(const coda_cursor *cursor, int *ha
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
+    if (has_ascii_content == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "has_ascii_content argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
 
     switch (cursor->stack[cursor->n - 1].type->backend)
     {
@@ -1031,12 +1208,42 @@ LIBCODA_API int coda_cursor_has_ascii_content(const coda_cursor *cursor, int *ha
             return coda_xml_cursor_has_ascii_content(cursor, has_ascii_content);
         default:
             {
-                coda_type *definition = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+                coda_type *type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
 
-                *has_ascii_content = (definition->type_class == coda_text_class);
+                *has_ascii_content = (type->type_class == coda_text_class);
             }
             break;
     }
+    return 0;
+}
+
+/** Determine whether data at the current cursor position has any attributes.
+ * If coda_cursor_goto_attributes() will point to a record that has one or more fields then \a has_attributes will be
+ * set to 1, otherwise it will be set to 0.
+ * Note that this has the same result as calling coda_type_has_attributes() with the result from coda_cursor_get_type().
+ * \param cursor Pointer to a valid CODA cursor.
+ * \param has_attributes Pointer to the variable where attribute availability status will be stored.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_cursor_has_attributes(const coda_cursor *cursor, int *has_attributes)
+{
+    coda_type *type;
+
+    if (cursor == NULL || cursor->n <= 0 || cursor->stack[cursor->n - 1].type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid cursor argument (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (has_attributes == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "has_attributes argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    *has_attributes = (type->attributes != NULL);
     return 0;
 }
 

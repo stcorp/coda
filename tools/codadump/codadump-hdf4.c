@@ -41,18 +41,18 @@ void hdf4_info_init()
     hdf4_info.hdf_vfile_id = Hopen(output_file_name, DFACC_CREATE, 0);
     if (hdf4_info.hdf_vfile_id == -1)
     {
-        fprintf(stderr, "ERROR: Could not create HDF4 file \"%s\"\n", output_file_name);
+        fprintf(stderr, "ERROR: could not create HDF4 file \"%s\"\n", output_file_name);
         exit(1);
     }
     if (Vstart(hdf4_info.hdf_vfile_id) == -1)
     {
-        fprintf(stderr, "ERROR: Could not initialize HDF4 Vdata/Vgroup interface\n");
+        fprintf(stderr, "ERROR: could not initialize HDF4 Vdata/Vgroup interface\n");
         exit(1);
     }
     hdf4_info.hdf_file_id = SDstart(output_file_name, DFACC_WRITE);
     if (hdf4_info.hdf_file_id == -1)
     {
-        fprintf(stderr, "ERROR: Could not initialize HDF4 SD interface\n");
+        fprintf(stderr, "ERROR: could not initialize HDF4 SD interface\n");
         exit(1);
     }
     hdf4_info.vgroup_depth = 0;

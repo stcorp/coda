@@ -243,6 +243,10 @@ public class codac implements codacConstants {
     return codacJNI.get_product_variable_value(SWIGTYPE_p_coda_product_struct.getCPtr(product), variable, index, value);
   }
 
+  public static int type_has_attributes(SWIGTYPE_p_coda_type_struct type, int[] has_attributes) throws nl.stcorp.coda.CodaException {
+    return codacJNI.type_has_attributes(SWIGTYPE_p_coda_type_struct.getCPtr(type), has_attributes);
+  }
+
   public static int type_get_format(SWIGTYPE_p_coda_type_struct type, int[] format) throws nl.stcorp.coda.CodaException {
     return codacJNI.type_get_format(SWIGTYPE_p_coda_type_struct.getCPtr(type), format);
   }
@@ -343,6 +347,10 @@ public class codac implements codacConstants {
     return codacJNI.cursor_set_product(SWIGTYPE_p_coda_cursor_struct.getCPtr(cursor), SWIGTYPE_p_coda_product_struct.getCPtr(product));
   }
 
+  public static int cursor_goto(SWIGTYPE_p_coda_cursor_struct cursor, String path) throws nl.stcorp.coda.CodaException {
+    return codacJNI.cursor_goto(SWIGTYPE_p_coda_cursor_struct.getCPtr(cursor), path);
+  }
+
   public static int cursor_goto_first_record_field(SWIGTYPE_p_coda_cursor_struct cursor) throws nl.stcorp.coda.CodaException {
     return codacJNI.cursor_goto_first_record_field(SWIGTYPE_p_coda_cursor_struct.getCPtr(cursor));
   }
@@ -397,6 +405,10 @@ public class codac implements codacConstants {
 
   public static int cursor_has_ascii_content(SWIGTYPE_p_coda_cursor_struct cursor, int[] has_ascii_content) throws nl.stcorp.coda.CodaException {
     return codacJNI.cursor_has_ascii_content(SWIGTYPE_p_coda_cursor_struct.getCPtr(cursor), has_ascii_content);
+  }
+
+  public static int cursor_has_attributes(SWIGTYPE_p_coda_cursor_struct cursor, int[] has_attributes) throws nl.stcorp.coda.CodaException {
+    return codacJNI.cursor_has_attributes(SWIGTYPE_p_coda_cursor_struct.getCPtr(cursor), has_attributes);
   }
 
   public static int cursor_get_string_length(SWIGTYPE_p_coda_cursor_struct cursor, int[] length) throws nl.stcorp.coda.CodaException {

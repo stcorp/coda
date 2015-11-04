@@ -16,11 +16,10 @@
 
       <p>The CODA MATLAB interface consists of several functions that allow the user to easily access data inside product files.</p>
 
-      <p>This page describes how to use the functions that are provided by the CODA MATLAB interface.</p>
-
       <h2>Contents</h2>
 
       <ul>
+        <li><a href="#codadef">CODA Definition Path</a></li>
         <li><a href="#functions">Functions</a>
           <ul>
             <li><a href="#coda_attributes"><code>CODA_ATTRIBUTES</code></a></li>
@@ -50,6 +49,12 @@
 	<li><a href="#coda_options">CODA MATLAB interface options</a></li>
       </ul>
 
+      <h2 id="codadef">CODA Definition Path</h2>
+
+      <p>Note that in order to access products whose formats are defined using .codadef files, you should let CODA now where these .codadef files are stored. By default the CODA MATLAB interface will look for .codadef files in a directory relative to the location of the CODA MATLAB MEX file (<code>../definitions</code> on Windows and <code>../../../share/coda/definitions</code> on other systems; note that software that embed CODA may sometimes override this default location).</p>
+      
+      <p>You can override the default location by setting the CODA_DEFINITION environment variable. This environment variable should be a ':' separated (';' on Windows) list of absolute paths to directories containing .codadef files or absolute paths to .codadef files themselves (or a mix of those).</p>
+      
       <h2 id="functions">Functions</h2>
 
       <p>The descriptions for each CODA MATLAB interface function are formatted in the same way that MATLAB documents its functions. This means that although functions might be written in capitals here, you should use the small-caps version in MATLAB to call them.</p>

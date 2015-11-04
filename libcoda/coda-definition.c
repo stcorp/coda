@@ -1064,8 +1064,35 @@ static coda_data_dictionary *coda_data_dictionary_new(void)
     return data_dictionary;
 }
 
+static int data_dictionary_rebuild_product_class_hash_data(void)
+{
+    int i;
+
+    hashtable_delete(coda_global_data_dictionary->hash_data);
+    coda_global_data_dictionary->hash_data = hashtable_new(1);
+    if (coda_global_data_dictionary->hash_data == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashtable) (%s:%u)", __FILE__,
+                       __LINE__);
+        return -1;
+    }
+    for (i = 0; i < coda_global_data_dictionary->num_product_classes; i++)
+    {
+        if (hashtable_add_name
+            (coda_global_data_dictionary->hash_data, coda_global_data_dictionary->product_class[i]->name) != 0)
+        {
+            assert(0);
+            exit(1);
+        }
+    }
+
+    return 0;
+}
+
 int coda_data_dictionary_add_product_class(coda_product_class *product_class)
 {
+    int i;
+
     if (coda_global_data_dictionary == NULL)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "coda has not been initialized");
@@ -1093,8 +1120,25 @@ int coda_data_dictionary_add_product_class(coda_product_class *product_class)
         }
         coda_global_data_dictionary->product_class = new_product_class;
     }
+    /* add sorted */
+    for (i = 0; i < coda_global_data_dictionary->num_product_classes - 1; i++)
+    {
+        if (strcmp(product_class->name, coda_global_data_dictionary->product_class[i]->name) < 0)
+        {
+            coda_product_class *temp = product_class;
+
+            product_class = coda_global_data_dictionary->product_class[i];
+            coda_global_data_dictionary->product_class[i] = temp;
+        }
+    }
     coda_global_data_dictionary->num_product_classes++;
     coda_global_data_dictionary->product_class[coda_global_data_dictionary->num_product_classes - 1] = product_class;
+
+    /* rebuild hashtable (since we use a sorted insert) */
+    if (data_dictionary_rebuild_product_class_hash_data() != 0)
+    {
+        return -1;
+    }
 
     return 0;
 }
@@ -1155,22 +1199,9 @@ int coda_data_dictionary_remove_product_class(coda_product_class *product_class)
     coda_product_class_delete(product_class);
 
     /* rebuild hashtable */
-    hashtable_delete(coda_global_data_dictionary->hash_data);
-    coda_global_data_dictionary->hash_data = hashtable_new(1);
-    if (coda_global_data_dictionary->hash_data == NULL)
+    if (data_dictionary_rebuild_product_class_hash_data() != 0)
     {
-        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not create hashtable) (%s:%u)", __FILE__,
-                       __LINE__);
         return -1;
-    }
-    for (i = 0; i < coda_global_data_dictionary->num_product_classes; i++)
-    {
-        if (hashtable_add_name
-            (coda_global_data_dictionary->hash_data, coda_global_data_dictionary->product_class[i]->name) != 0)
-        {
-            assert(0);
-            exit(1);
-        }
     }
 
     /* rebuild detection tree */

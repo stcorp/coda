@@ -109,7 +109,7 @@ static void print_funcdef(const char *name, const char *returntype)
     }
     else
     {
-        fprintf(stderr, "ERROR: Unknown return type '%s' for function '%s'\n", returntype, name);
+        fprintf(stderr, "ERROR: unknown return type '%s' for function '%s'\n", returntype, name);
         exit(1);
     }
     printf("%s\n", name);
@@ -230,6 +230,7 @@ static void print_function_definitions(void)
     PRINT_EMPTY;
 
     PRINT_FUNCDEF(coda_set_definition_path, int);
+    PRINT_FUNCDEF(coda_set_definition_path_conditional, int);
 
     PRINT_EMPTY;
 
@@ -301,6 +302,8 @@ static void print_function_definitions(void)
     PRINT_FUNCDEF(coda_type_get_native_type_name, void);
     PRINT_FUNCDEF(coda_type_get_special_type_name, void);
 
+    PRINT_FUNCDEF(coda_type_has_attributes, int);
+
     PRINT_FUNCDEF(coda_type_get_format, int);
     PRINT_FUNCDEF(coda_type_get_class, int);
     PRINT_FUNCDEF(coda_type_get_read_type, int);
@@ -337,6 +340,7 @@ static void print_function_definitions(void)
 
     PRINT_FUNCDEF(coda_cursor_set_product, int);
 
+    PRINT_FUNCDEF(coda_cursor_goto, int);
     PRINT_FUNCDEF(coda_cursor_goto_first_record_field, int);
     PRINT_FUNCDEF(coda_cursor_goto_next_record_field, int);
     PRINT_FUNCDEF(coda_cursor_goto_record_field_by_index, int);
@@ -356,6 +360,7 @@ static void print_function_definitions(void)
     PRINT_FUNCDEF(coda_cursor_use_base_type_of_special_type, int);
 
     PRINT_FUNCDEF(coda_cursor_has_ascii_content, int);
+    PRINT_FUNCDEF(coda_cursor_has_attributes, int);
 
     PRINT_FUNCDEF(coda_cursor_get_string_length, int);
     PRINT_FUNCDEF(coda_cursor_get_bit_size, int);

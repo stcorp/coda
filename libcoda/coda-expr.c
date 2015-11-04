@@ -410,8 +410,8 @@ coda_expression *coda_expression_new(coda_expression_node_type tag, char *string
         case expr_byte_offset:
         case expr_byte_size:
         case expr_file_size:
-        case expr_for_index:
         case expr_index:
+        case expr_index_var:
         case expr_integer:
         case expr_length:
         case expr_num_elements:
@@ -474,6 +474,7 @@ coda_expression *coda_expression_new(coda_expression_node_type tag, char *string
             break;
         case expr_array_add:
         case expr_if:
+        case expr_with:
             expr->result_type = op2->result_type;
             break;
         case expr_regex:
@@ -521,19 +522,25 @@ typedef struct eval_info_struct
 {
     const coda_cursor *orig_cursor;
     coda_cursor cursor;
-    int64_t for_index;
+    int64_t index[3];
     int64_t variable_index;
     const char *variable_name;
 } eval_info;
 
-/* eval status info
-  - for index (only 1)
-  - variable index (only 1)
-  - name of variable
-  - product handle
-  - original cursor
-  - current cursor
-*/
+static void init_eval_info(eval_info *info, const coda_cursor *cursor)
+{
+    info->orig_cursor = cursor;
+    if (cursor != NULL)
+    {
+        info->cursor = *cursor;
+    }
+    info->index[0] = 0;
+    info->index[1] = 0;
+    info->index[2] = 0;
+    info->variable_index = 0;
+    info->variable_name = NULL;
+}
+
 static int eval_boolean(eval_info *info, const coda_expression *expr, int *value);
 static int eval_float(eval_info *info, const coda_expression *expr, double *value);
 static int eval_integer(eval_info *info, const coda_expression *expr, int64_t *value);
@@ -1338,6 +1345,23 @@ static int eval_boolean(eval_info *info, const coda_expression *expr, int *value
                 }
             }
             break;
+        case expr_with:
+            {
+                int64_t prev_index;
+                int index_id = opexpr->identifier[0] - 'i';
+
+                prev_index = info->index[index_id];
+                if (eval_integer(info, opexpr->operand[0], &info->index[index_id]) != 0)
+                {
+                    return -1;
+                }
+                if (eval_boolean(info, opexpr->operand[1], value) != 0)
+                {
+                    return -1;
+                }
+                info->index[index_id] = prev_index;
+            }
+            break;
         default:
             assert(0);
             exit(1);
@@ -1667,6 +1691,23 @@ static int eval_float(eval_info *info, const coda_expression *expr, double *valu
                     }
                 }
                 info->cursor = prev_cursor;
+            }
+            break;
+        case expr_with:
+            {
+                int64_t prev_index;
+                int index_id = opexpr->identifier[0] - 'i';
+
+                prev_index = info->index[index_id];
+                if (eval_integer(info, opexpr->operand[0], &info->index[index_id]) != 0)
+                {
+                    return -1;
+                }
+                if (eval_float(info, opexpr->operand[1], value) != 0)
+                {
+                    return -1;
+                }
+                info->index[index_id] = prev_index;
             }
             break;
         default:
@@ -2326,6 +2367,9 @@ static int eval_integer(eval_info *info, const coda_expression *expr, int64_t *v
                 *value = index;
             }
             break;
+        case expr_index_var:
+            *value = info->index[opexpr->identifier[0] - 'i'];
+            break;
         case expr_variable_index:
             {
                 long size;
@@ -2395,8 +2439,22 @@ static int eval_integer(eval_info *info, const coda_expression *expr, int64_t *v
                 *value = *varptr;
             }
             break;
-        case expr_for_index:
-            *value = info->for_index;
+        case expr_with:
+            {
+                int64_t prev_index;
+                int index_id = opexpr->identifier[0] - 'i';
+
+                prev_index = info->index[index_id];
+                if (eval_integer(info, opexpr->operand[0], &info->index[index_id]) != 0)
+                {
+                    return -1;
+                }
+                if (eval_integer(info, opexpr->operand[1], value) != 0)
+                {
+                    return -1;
+                }
+                info->index[index_id] = prev_index;
+            }
             break;
         default:
             assert(0);
@@ -3029,6 +3087,23 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                 }
             }
             break;
+        case expr_with:
+            {
+                int64_t prev_index;
+                int index_id = opexpr->identifier[0] - 'i';
+
+                prev_index = info->index[index_id];
+                if (eval_integer(info, opexpr->operand[0], &info->index[index_id]) != 0)
+                {
+                    return -1;
+                }
+                if (eval_string(info, opexpr->operand[1], offset, length, value) != 0)
+                {
+                    return -1;
+                }
+                info->index[index_id] = prev_index;
+            }
+            break;
         default:
             assert(0);
             exit(1);
@@ -3049,8 +3124,9 @@ static int eval_void(eval_info *info, const coda_expression *expr)
                 int64_t from;
                 int64_t to;
                 int64_t step = 1;
+                int index_id = opexpr->identifier[0] - 'i';
 
-                prev_index = info->for_index;
+                prev_index = info->index[index_id];
                 if (eval_integer(info, opexpr->operand[0], &from) != 0)
                 {
                     return -1;
@@ -3073,7 +3149,7 @@ static int eval_void(eval_info *info, const coda_expression *expr)
                 }
                 if (step > 0)
                 {
-                    for (info->for_index = from; info->for_index <= to; info->for_index += step)
+                    for (info->index[index_id] = from; info->index[index_id] <= to; info->index[index_id] += step)
                     {
                         if (eval_void(info, opexpr->operand[3]) != 0)
                         {
@@ -3083,7 +3159,7 @@ static int eval_void(eval_info *info, const coda_expression *expr)
                 }
                 else
                 {
-                    for (info->for_index = from; info->for_index >= to; info->for_index += step)
+                    for (info->index[index_id] = from; info->index[index_id] >= to; info->index[index_id] += step)
                     {
                         if (eval_void(info, opexpr->operand[3]) != 0)
                         {
@@ -3091,7 +3167,7 @@ static int eval_void(eval_info *info, const coda_expression *expr)
                         }
                     }
                 }
-                info->for_index = prev_index;
+                info->index[index_id] = prev_index;
             }
             break;
         case expr_goto:
@@ -3321,15 +3397,7 @@ int coda_expression_eval_void(const coda_expression *expr, const coda_cursor *cu
         return -1;
     }
 
-    info.orig_cursor = cursor;
-    if (cursor != NULL)
-    {
-        info.cursor = *cursor;
-    }
-    info.for_index = 0;
-    info.variable_index = 0;
-    info.variable_name = NULL;
-
+    init_eval_info(&info, cursor);
     return eval_void(&info, expr);
 }
 
@@ -3480,15 +3548,7 @@ LIBCODA_API int coda_expression_eval_bool(const coda_expression *expr, const cod
         return -1;
     }
 
-    info.orig_cursor = cursor;
-    if (cursor != NULL)
-    {
-        info.cursor = *cursor;
-    }
-    info.for_index = 0;
-    info.variable_index = 0;
-    info.variable_name = NULL;
-
+    init_eval_info(&info, cursor);
     return eval_boolean(&info, expr, value);
 }
 
@@ -3518,15 +3578,7 @@ LIBCODA_API int coda_expression_eval_integer(const coda_expression *expr, const 
         return -1;
     }
 
-    info.orig_cursor = cursor;
-    if (cursor != NULL)
-    {
-        info.cursor = *cursor;
-    }
-    info.for_index = 0;
-    info.variable_index = 0;
-    info.variable_name = NULL;
-
+    init_eval_info(&info, cursor);
     return eval_integer(&info, expr, value);
 }
 
@@ -3556,15 +3608,7 @@ LIBCODA_API int coda_expression_eval_float(const coda_expression *expr, const co
         return -1;
     }
 
-    info.orig_cursor = cursor;
-    if (cursor != NULL)
-    {
-        info.cursor = *cursor;
-    }
-    info.for_index = 0;
-    info.variable_index = 0;
-    info.variable_name = NULL;
-
+    init_eval_info(&info, cursor);
     return eval_float(&info, expr, value);
 }
 
@@ -3603,15 +3647,7 @@ LIBCODA_API int coda_expression_eval_string(const coda_expression *expr, const c
         return -1;
     }
 
-    info.orig_cursor = cursor;
-    if (cursor != NULL)
-    {
-        info.cursor = *cursor;
-    }
-    info.for_index = 0;
-    info.variable_index = 0;
-    info.variable_name = NULL;
-
+    init_eval_info(&info, cursor);
     if (eval_string(&info, expr, &offset, length, value) != 0)
     {
         return -1;
@@ -3673,12 +3709,7 @@ LIBCODA_API int coda_expression_eval_node(const coda_expression *expr, coda_curs
         return -1;
     }
 
-    info.orig_cursor = cursor;
-    info.cursor = *cursor;
-    info.for_index = 0;
-    info.variable_index = 0;
-    info.variable_name = NULL;
-
+    init_eval_info(&info, cursor);
     if (eval_cursor(&info, expr) != 0)
     {
         return -1;

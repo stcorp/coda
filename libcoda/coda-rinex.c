@@ -76,6 +76,7 @@ enum
     rinex_rcv_clock_offs_appl,
     rinex_leap_seconds,
     rinex_num_satellites,
+    rinex_time_system_id,
 
     rinex_epoch_string,
     rinex_obs_epoch,
@@ -175,6 +176,19 @@ enum
     rinex_nav_sbas_array,
     rinex_nav_file,
 
+    rinex_clk_type,
+    rinex_clk_name,
+    rinex_clk_epoch,
+    rinex_clk_bias,
+    rinex_clk_bias_sigma,
+    rinex_clk_rate,
+    rinex_clk_rate_sigma,
+    rinex_clk_acceleration,
+    rinex_clk_acceleration_sigma,
+
+    rinex_clk_header,
+    rinex_clk_record,
+
     num_rinex_types
 };
 
@@ -207,9 +221,10 @@ typedef struct ingest_info_struct
     long offset;
     /* Observation specific */
     coda_type_record *epoch_record_definition;  /* definition for /record[] */
+    coda_mem_record *epoch_record;      /* actual data for /record[] */
+    /* Observation and Clock specific */
     coda_mem_array *sys_array;  /* actuall data for /header/sys */
     coda_mem_array *records;    /* actual data for /record */
-    coda_mem_record *epoch_record;      /* actual data for /record[] */
     /* Navigation specific */
     coda_mem_array *ionospheric_corr_array;     /* actuall data for /header/ionospheric_corr */
     coda_mem_array *time_system_corr_array;     /* actuall data for /header/time_system_corr */
@@ -349,7 +364,7 @@ static int rinex_init(void)
     coda_type_set_byte_size(rinex_type[rinex_file_type], 1);
     coda_type_set_read_type(rinex_type[rinex_file_type], coda_native_type_char);
     coda_type_set_description(rinex_type[rinex_file_type], "File type: O for Observation Data, N for Navigation Data, "
-                              "M for Meteorological Data");
+                              "C for Clock Data, M for Meteorological Data");
 
     rinex_type[rinex_satellite_system] = (coda_type *)coda_type_text_new(coda_format_rinex);
     coda_type_set_byte_size(rinex_type[rinex_satellite_system], 1);
@@ -521,6 +536,15 @@ static int rinex_init(void)
     coda_type_set_read_type(rinex_type[rinex_num_satellites], coda_native_type_uint16);
     coda_type_set_description(rinex_type[rinex_num_satellites],
                               "Number of satellites, for which observations are stored in the file");
+
+    rinex_type[rinex_time_system_id] = (coda_type *)coda_type_text_new(coda_format_rinex);
+    coda_type_set_description(rinex_type[rinex_time_system_id], "Time system used for time tags: "
+                              "'GPS' = GPS system time -> steered to (TAI - 19 s), "
+                              "'GLO' = GLONASS system time -> steered to UTC, "
+                              "'GAL' = Galileo system time -> steered to GPS time, "
+                              "'UTC' = Coordinated Universal Time, 'TAI' = International Atomic Time. "
+                              "Defaults: 'GPS' for pure GPS files, 'GLO' for pure GLONASS files, "
+                              "'GAL' for pure Galileo files");
 
     rinex_type[rinex_epoch_string] = (coda_type *)coda_type_text_new(coda_format_rinex);
 
@@ -1356,6 +1380,112 @@ static int rinex_init(void)
     coda_type_record_field_set_type(field, rinex_type[rinex_nav_sbas_array]);
     coda_type_record_add_field((coda_type_record *)rinex_type[rinex_nav_file], field);
 
+    rinex_type[rinex_clk_type] = (coda_type *)coda_type_text_new(coda_format_rinex);
+    coda_type_set_description(rinex_type[rinex_clk_type], "Clock data type (AR, AS, CR, DR, MS)");
+
+    rinex_type[rinex_clk_name] = (coda_type *)coda_type_text_new(coda_format_rinex);
+    coda_type_set_description(rinex_type[rinex_clk_name], "Receiver or satellite name");
+
+    rinex_type[rinex_clk_epoch] = (coda_type *)coda_type_time_new(coda_format_rinex, NULL);
+    coda_type_time_set_base_type((coda_type_special *)rinex_type[rinex_clk_epoch], rinex_type[rinex_epoch_string]);
+    coda_type_set_description(rinex_type[rinex_obs_epoch], "Epoch in GPS time (not local time!)");
+
+    rinex_type[rinex_clk_bias] = (coda_type *)coda_type_number_new(coda_format_rinex, coda_real_class);
+    coda_type_set_read_type(rinex_type[rinex_clk_bias], coda_native_type_double);
+    coda_type_set_description(rinex_type[rinex_clk_bias], "Clock bias");
+    coda_type_number_set_unit((coda_type_number *)rinex_type[rinex_clk_bias], "s");
+
+    rinex_type[rinex_clk_bias_sigma] = (coda_type *)coda_type_number_new(coda_format_rinex, coda_real_class);
+    coda_type_set_read_type(rinex_type[rinex_clk_bias_sigma], coda_native_type_double);
+    coda_type_set_description(rinex_type[rinex_clk_bias_sigma], "Clock bias sigma");
+    coda_type_number_set_unit((coda_type_number *)rinex_type[rinex_clk_bias_sigma], "s");
+
+    rinex_type[rinex_clk_rate] = (coda_type *)coda_type_number_new(coda_format_rinex, coda_real_class);
+    coda_type_set_read_type(rinex_type[rinex_clk_rate], coda_native_type_double);
+    coda_type_set_description(rinex_type[rinex_clk_rate], "Clock rate");
+
+    rinex_type[rinex_clk_rate_sigma] = (coda_type *)coda_type_number_new(coda_format_rinex, coda_real_class);
+    coda_type_set_read_type(rinex_type[rinex_clk_rate_sigma], coda_native_type_double);
+    coda_type_set_description(rinex_type[rinex_clk_rate_sigma], "Clock rate sigma");
+
+    rinex_type[rinex_clk_acceleration] = (coda_type *)coda_type_number_new(coda_format_rinex, coda_real_class);
+    coda_type_set_read_type(rinex_type[rinex_clk_acceleration], coda_native_type_double);
+    coda_type_set_description(rinex_type[rinex_clk_acceleration], "Clock acceleration");
+    coda_type_number_set_unit((coda_type_number *)rinex_type[rinex_clk_acceleration], "1/s");
+
+    rinex_type[rinex_clk_acceleration_sigma] = (coda_type *)coda_type_number_new(coda_format_rinex, coda_real_class);
+    coda_type_set_read_type(rinex_type[rinex_clk_acceleration_sigma], coda_native_type_double);
+    coda_type_set_description(rinex_type[rinex_clk_acceleration_sigma], "Clock acceleration sigma");
+    coda_type_number_set_unit((coda_type_number *)rinex_type[rinex_clk_acceleration_sigma], "1/s");
+
+    rinex_type[rinex_clk_header] = (coda_type *)coda_type_record_new(coda_format_rinex);
+    field = coda_type_record_field_new("format_version");
+    coda_type_record_field_set_type(field, rinex_type[rinex_format_version]);
+    coda_type_record_add_field((coda_type_record *)rinex_type[rinex_clk_header], field);
+    field = coda_type_record_field_new("file_type");
+    coda_type_record_field_set_type(field, rinex_type[rinex_file_type]);
+    coda_type_record_add_field((coda_type_record *)rinex_type[rinex_clk_header], field);
+    field = coda_type_record_field_new("satellite_system");
+    coda_type_record_field_set_type(field, rinex_type[rinex_satellite_system]);
+    coda_type_record_add_field((coda_type_record *)rinex_type[rinex_clk_header], field);
+    field = coda_type_record_field_new("program");
+    coda_type_record_field_set_type(field, rinex_type[rinex_program]);
+    coda_type_record_add_field((coda_type_record *)rinex_type[rinex_clk_header], field);
+    field = coda_type_record_field_new("run_by");
+    coda_type_record_field_set_type(field, rinex_type[rinex_run_by]);
+    coda_type_record_add_field((coda_type_record *)rinex_type[rinex_clk_header], field);
+    field = coda_type_record_field_new("datetime");
+    coda_type_record_field_set_type(field, rinex_type[rinex_datetime]);
+    coda_type_record_add_field((coda_type_record *)rinex_type[rinex_clk_header], field);
+    field = coda_type_record_field_new("datetime_time_zone");
+    coda_type_record_field_set_type(field, rinex_type[rinex_datetime_time_zone]);
+    coda_type_record_add_field((coda_type_record *)rinex_type[rinex_clk_header], field);
+    field = coda_type_record_field_new("sys");
+    coda_type_record_field_set_type(field, rinex_type[rinex_sys_array]);
+    coda_type_record_add_field((coda_type_record *)rinex_type[rinex_clk_header], field);
+    field = coda_type_record_field_new("time_system_id");
+    coda_type_record_field_set_type(field, rinex_type[rinex_time_system_id]);
+    coda_type_record_field_set_optional(field);
+    coda_type_record_add_field((coda_type_record *)rinex_type[rinex_clk_header], field);
+    field = coda_type_record_field_new("leap_seconds");
+    coda_type_record_field_set_type(field, rinex_type[rinex_leap_seconds]);
+    coda_type_record_field_set_optional(field);
+    coda_type_record_add_field((coda_type_record *)rinex_type[rinex_clk_header], field);
+
+    rinex_type[rinex_clk_record] = (coda_type *)coda_type_record_new(coda_format_rinex);
+    field = coda_type_record_field_new("type");
+    coda_type_record_field_set_type(field, rinex_type[rinex_clk_type]);
+    coda_type_record_add_field((coda_type_record *)rinex_type[rinex_clk_record], field);
+    field = coda_type_record_field_new("name");
+    coda_type_record_field_set_type(field, rinex_type[rinex_clk_name]);
+    coda_type_record_add_field((coda_type_record *)rinex_type[rinex_clk_record], field);
+    field = coda_type_record_field_new("epoch");
+    coda_type_record_field_set_type(field, rinex_type[rinex_clk_epoch]);
+    coda_type_record_add_field((coda_type_record *)rinex_type[rinex_clk_record], field);
+    field = coda_type_record_field_new("bias");
+    coda_type_record_field_set_type(field, rinex_type[rinex_clk_bias]);
+    coda_type_record_add_field((coda_type_record *)rinex_type[rinex_clk_record], field);
+    field = coda_type_record_field_new("bias_sigma");
+    coda_type_record_field_set_type(field, rinex_type[rinex_clk_bias_sigma]);
+    coda_type_record_field_set_optional(field);
+    coda_type_record_add_field((coda_type_record *)rinex_type[rinex_clk_record], field);
+    field = coda_type_record_field_new("rate");
+    coda_type_record_field_set_type(field, rinex_type[rinex_clk_rate]);
+    coda_type_record_field_set_optional(field);
+    coda_type_record_add_field((coda_type_record *)rinex_type[rinex_clk_record], field);
+    field = coda_type_record_field_new("rate_sigma");
+    coda_type_record_field_set_type(field, rinex_type[rinex_clk_rate_sigma]);
+    coda_type_record_field_set_optional(field);
+    coda_type_record_add_field((coda_type_record *)rinex_type[rinex_clk_record], field);
+    field = coda_type_record_field_new("acceleration");
+    coda_type_record_field_set_type(field, rinex_type[rinex_clk_acceleration]);
+    coda_type_record_field_set_optional(field);
+    coda_type_record_add_field((coda_type_record *)rinex_type[rinex_clk_record], field);
+    field = coda_type_record_field_new("acceleration_sigma");
+    coda_type_record_field_set_type(field, rinex_type[rinex_clk_acceleration_sigma]);
+    coda_type_record_field_set_optional(field);
+    coda_type_record_add_field((coda_type_record *)rinex_type[rinex_clk_record], field);
+
     return 0;
 }
 
@@ -1456,15 +1586,14 @@ static int read_main_header(ingest_info *info)
         return -1;
     }
     info->file_type = line[20];
-    info->satellite_system = line[40];
 
     switch (info->file_type)
     {
         case 'O':
             if (info->format_version != 3.0)
             {
-                coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, "RINEX format version %3.2f is not supported",
-                               info->format_version);
+                coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, "RINEX format version %3.2f is not supported for "
+                               "Observation data", info->format_version);
                 return -1;
             }
             info->header = coda_mem_record_new((coda_type_record *)rinex_type[rinex_obs_header]);
@@ -1472,15 +1601,34 @@ static int read_main_header(ingest_info *info)
         case 'N':
             if (info->format_version != 3.0)
             {
-                coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, "RINEX format version %3.2f is not supported",
-                               info->format_version);
+                coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, "RINEX format version %3.2f is not supported for "
+                               "Navigation data", info->format_version);
                 return -1;
             }
             info->header = coda_mem_record_new((coda_type_record *)rinex_type[rinex_nav_header]);
             break;
+        case 'C':
+            if (info->format_version != 2.0 && info->format_version != 3.0)
+            {
+                coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, "RINEX format version %3.2f is not supported for "
+                               "Clock data", info->format_version);
+                return -1;
+            }
+            info->header = coda_mem_record_new((coda_type_record *)rinex_type[rinex_clk_header]);
+            break;
         default:
             coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, "RINEX file type '%c' is not supported", info->file_type);
             return -1;
+    }
+
+    if (info->format_version == 3.0)
+    {
+        info->satellite_system = line[40];
+    }
+    else
+    {
+        /* for older RINEX versions the only supported satellite system is GPS */
+        info->satellite_system = 'G';
     }
 
     value = (coda_dynamic_type *)coda_mem_real_new((coda_type_number *)rinex_type[rinex_format_version],
@@ -1674,17 +1822,24 @@ static int read_observation_header(ingest_info *info)
             coda_mem_record_add_field(info->header, "run_by", value, 0);
             memcpy(str, &line[40], 15);
             str[15] = '\0';
-            if (sscanf(str, "%4d%2d%2d %2d%2d%2d", &year, &month, &day, &hour, &minute, &second) != 6)
+            if (strcmp(str, "               ") != 0)
             {
-                coda_set_error(CODA_ERROR_FILE_READ, "invalid time string '%s' (line: %ld, byte offset: %ld)",
-                               str, info->linenumber, info->offset + 40);
-                return -1;
+                if (sscanf(str, "%4d%2d%2d %2d%2d%2d", &year, &month, &day, &hour, &minute, &second) != 6)
+                {
+                    coda_set_error(CODA_ERROR_FILE_READ, "invalid time string '%s' (line: %ld, byte offset: %ld)",
+                                   str, info->linenumber, info->offset + 40);
+                    return -1;
+                }
+                if (coda_datetime_to_double(year, month, day, hour, minute, second, 0, &double_value) != 0)
+                {
+                    coda_set_error(CODA_ERROR_FILE_READ, "invalid time value (line: %ld, byte offset: %ld)",
+                                   info->linenumber, info->offset + 40);
+                    return -1;
+                }
             }
-            if (coda_datetime_to_double(year, month, day, hour, minute, second, 0, &double_value) != 0)
+            else
             {
-                coda_set_error(CODA_ERROR_FILE_READ, "invalid time value (line: %ld, byte offset: %ld)",
-                               info->linenumber, info->offset + 40);
-                return -1;
+                double_value = coda_NaN();
             }
             base_type = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)rinex_type[rinex_datetime_string],
                                                                str);
@@ -2372,17 +2527,24 @@ static int read_navigation_header(ingest_info *info)
             coda_mem_record_add_field(info->header, "run_by", value, 0);
             memcpy(str, &line[40], 15);
             str[15] = '\0';
-            if (sscanf(str, "%4d%2d%2d %2d%2d%2d", &year, &month, &day, &hour, &minute, &second) != 6)
+            if (strcmp(str, "               ") != 0)
             {
-                coda_set_error(CODA_ERROR_FILE_READ, "invalid time string '%s' (line: %ld, byte offset: %ld)",
-                               str, info->linenumber, info->offset + 40);
-                return -1;
+                if (sscanf(str, "%4d%2d%2d %2d%2d%2d", &year, &month, &day, &hour, &minute, &second) != 6)
+                {
+                    coda_set_error(CODA_ERROR_FILE_READ, "invalid time string '%s' (line: %ld, byte offset: %ld)",
+                                   str, info->linenumber, info->offset + 40);
+                    return -1;
+                }
+                if (coda_datetime_to_double(year, month, day, hour, minute, second, 0, &double_value) != 0)
+                {
+                    coda_set_error(CODA_ERROR_FILE_READ, "invalid time value (line: %ld, byte offset: %ld)",
+                                   info->linenumber, info->offset + 40);
+                    return -1;
+                }
             }
-            if (coda_datetime_to_double(year, month, day, hour, minute, second, 0, &double_value) != 0)
+            else
             {
-                coda_set_error(CODA_ERROR_FILE_READ, "invalid time value (line: %ld, byte offset: %ld)",
-                               info->linenumber, info->offset + 40);
-                return -1;
+                double_value = coda_NaN();
             }
             base_type = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)rinex_type[rinex_datetime_string],
                                                                str);
@@ -2996,6 +3158,360 @@ static int read_navigation_records(ingest_info *info)
     return 0;
 }
 
+static int read_clock_header(ingest_info *info)
+{
+    coda_dynamic_type *value;
+    char line[MAX_LINE_LENGTH];
+    long linelength;
+    double double_value;
+    int64_t int_value;
+    char str[61];
+
+    info->sys_array = coda_mem_array_new((coda_type_array *)rinex_type[rinex_sys_array]);
+
+    info->offset = ftell(info->f);
+    info->linenumber++;
+    linelength = get_line(info->f, line);
+    if (linelength < 0)
+    {
+        return -1;
+    }
+    while (linelength > 0)
+    {
+        if (linelength < 61)
+        {
+            coda_set_error(CODA_ERROR_FILE_READ, "header line length (%ld) too short (line: %ld, byte offset: %ld)",
+                           linelength, info->linenumber, info->offset);
+            return -1;
+        }
+
+        if (strncmp(&line[60], "PGM / RUN BY / DATE", 19) == 0)
+        {
+            coda_dynamic_type *base_type;
+            int year, month, day, hour, minute, second;
+
+            memcpy(str, line, 20);
+            str[20] = '\0';
+            rtrim(str);
+            value = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)rinex_type[rinex_program], str);
+            coda_mem_record_add_field(info->header, "program", value, 0);
+            memcpy(str, &line[20], 20);
+            rtrim(str);
+            value = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)rinex_type[rinex_run_by], str);
+            coda_mem_record_add_field(info->header, "run_by", value, 0);
+            memcpy(str, &line[40], 15);
+            str[15] = '\0';
+            if (strcmp(str, "               ") != 0)
+            {
+                if (sscanf(str, "%4d%2d%2d %2d%2d%2d", &year, &month, &day, &hour, &minute, &second) != 6)
+                {
+                    if (info->format_version == 3.0)
+                    {
+                        coda_set_error(CODA_ERROR_FILE_READ, "invalid time string '%s' (line: %ld, byte offset: %ld)",
+                                       str, info->linenumber, info->offset + 40);
+                        return -1;
+                    }
+                    /* for older RINEX Clock versions just set datetime to NaN */
+                    double_value = coda_NaN();
+                }
+                else if (coda_datetime_to_double(year, month, day, hour, minute, second, 0, &double_value) != 0)
+                {
+                    coda_set_error(CODA_ERROR_FILE_READ, "invalid time value (line: %ld, byte offset: %ld)",
+                                   info->linenumber, info->offset + 40);
+                    return -1;
+                }
+            }
+            else
+            {
+                double_value = coda_NaN();
+            }
+            base_type = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)rinex_type[rinex_datetime_string],
+                                                               str);
+            value = (coda_dynamic_type *)coda_mem_time_new((coda_type_special *)rinex_type[rinex_datetime],
+                                                           double_value, base_type);
+            coda_mem_record_add_field(info->header, "datetime", value, 0);
+            memcpy(str, &line[56], 3);
+            str[3] = '\0';
+            value = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)rinex_type[rinex_datetime_time_zone], str);
+            coda_mem_record_add_field(info->header, "datetime_time_zone", value, 0);
+        }
+        else if (strncmp(&line[60], "COMMENT", 7) == 0)
+        {
+            /* ignore comments */
+        }
+        else if (strncmp(&line[60], "SYS / # / OBS TYPES", 19) == 0)
+        {
+            if (handle_observation_definition(info, line) != 0)
+            {
+                return -1;
+            }
+        }
+        else if (strncmp(&line[60], "TIME SYSTEM ID", 14) == 0)
+        {
+            memcpy(str, &line[3], 3);
+            str[3] = '\0';
+            rtrim(str);
+            value = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)rinex_type[rinex_time_system_id], str);
+            coda_mem_record_add_field(info->header, "time_system_id", value, 0);
+        }
+        else if (strncmp(&line[60], "LEAP SECONDS", 12) == 0)
+        {
+            if (coda_ascii_parse_int64(line, 6, &int_value, 0) < 0)
+            {
+                coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset);
+                return -1;
+            }
+            value = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)rinex_type[rinex_leap_seconds],
+                                                              int_value);
+            coda_mem_record_add_field(info->header, "leap_seconds", value, 0);
+        }
+        else if (strncmp(&line[60], "SYS / DCBS APPLIED", 18) == 0)
+        {
+        }
+        else if (strncmp(&line[60], "SYS / PCVS APPLIED", 18) == 0)
+        {
+        }
+        else if (strncmp(&line[60], "# / TYPES OF DATA", 17) == 0)
+        {
+        }
+        else if (strncmp(&line[60], "STATION NAME / NUM", 18) == 0)
+        {
+        }
+        else if (strncmp(&line[60], "STATION CLK REF", 15) == 0)
+        {
+        }
+        else if (strncmp(&line[60], "ANALYSIS CENTER", 15) == 0)
+        {
+        }
+        else if (strncmp(&line[60], "# OF CLK REF", 12) == 0)
+        {
+        }
+        else if (strncmp(&line[60], "ANALYSIS CLK REF", 16) == 0)
+        {
+        }
+        else if (strncmp(&line[60], "# OF SOLN STA / TRF", 19) == 0)
+        {
+        }
+        else if (strncmp(&line[60], "SOLN STA NAME / NUM", 19) == 0)
+        {
+        }
+        else if (strncmp(&line[60], "# OF SOLN SATS", 14) == 0)
+        {
+        }
+        else if (strncmp(&line[60], "PRN LIST", 8) == 0)
+        {
+        }
+        else if (strncmp(&line[60], "END OF HEADER", 13) == 0)
+        {
+            /* end of header */
+            break;
+        }
+        else
+        {
+            coda_set_error(CODA_ERROR_FILE_READ, "invalid header item '%s' (line: %ld, byte offset: %ld)",
+                           &line[60], info->linenumber, info->offset + 60);
+            return -1;
+        }
+
+        info->offset = ftell(info->f);
+        info->linenumber++;
+        linelength = get_line(info->f, line);
+        if (linelength < 0)
+        {
+            return -1;
+        }
+    }
+
+    coda_mem_record_add_field(info->header, "sys", (coda_dynamic_type *)info->sys_array, 0);
+    info->sys_array = NULL;
+
+    info->offset = ftell(info->f);
+    info->linenumber++;
+    return 0;
+}
+
+static int read_clock_records(ingest_info *info)
+{
+    char line[MAX_LINE_LENGTH];
+    long linelength;
+    double double_value;
+    char str[61];
+
+    info->offset = ftell(info->f);
+    info->linenumber++;
+    linelength = get_line(info->f, line);
+    if (linelength < 0)
+    {
+        return -1;
+    }
+    while (linelength > 0)
+    {
+        coda_dynamic_type *base_type;
+        coda_dynamic_type *value;
+        char epoch_string[28];
+        int year, month, day, hour, minute, second;
+        double second_double;
+        int num_values;
+
+        if (linelength < 40)
+        {
+            coda_set_error(CODA_ERROR_FILE_READ, "record line length (%ld) too short (line: %ld, byte offset: %ld)",
+                           linelength, info->linenumber, info->offset);
+            return -1;
+        }
+
+        info->epoch_record = coda_mem_record_new((coda_type_record *)rinex_type[rinex_clk_record]);
+
+        memcpy(str, line, 2);
+        str[2] = '\0';
+        rtrim(str);
+        value = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)rinex_type[rinex_clk_type], str);
+        coda_mem_record_add_field(info->epoch_record, "type", value, 0);
+
+        memcpy(str, &line[3], 4);
+        str[4] = '\0';
+        rtrim(str);
+        value = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)rinex_type[rinex_clk_name], str);
+        coda_mem_record_add_field(info->epoch_record, "name", value, 0);
+
+        memcpy(epoch_string, &line[8], 27);
+        epoch_string[27] = '\0';
+        if (strcmp(epoch_string, "                           ") != 0)
+        {
+            if (sscanf(epoch_string, "%4d %2d %2d %2d %2d%lf", &year, &month, &day, &hour, &minute, &second_double) !=
+                6)
+            {
+                coda_set_error(CODA_ERROR_FILE_READ, "invalid time string '%s' (line: %ld, byte offset: %ld)",
+                               epoch_string, info->linenumber, info->offset + 2);
+                return -1;
+            }
+            second = (int)second_double;
+            if (coda_datetime_to_double(year, month, day, hour, minute, second, (second_double - second) * 1e6,
+                                        &double_value) != 0)
+            {
+                coda_set_error(CODA_ERROR_FILE_READ, "invalid time value (line: %ld, byte offset: %ld)",
+                               info->linenumber, info->offset + 2);
+                return -1;
+            }
+        }
+        else
+        {
+            double_value = coda_NaN();
+        }
+        base_type = (coda_dynamic_type *)coda_mem_text_new((coda_type_text *)rinex_type[rinex_epoch_string],
+                                                           epoch_string);
+        value = (coda_dynamic_type *)coda_mem_time_new((coda_type_special *)rinex_type[rinex_clk_epoch],
+                                                       double_value, base_type);
+        coda_mem_record_add_field(info->epoch_record, "epoch", value, 0);
+
+        memcpy(str, &line[34], 3);
+        str[3] = '\0';
+        if (sscanf(str, "%3d", &num_values) != 1 || num_values < 1 || num_values > 6)
+        {
+            coda_set_error(CODA_ERROR_FILE_READ, "invalid 'number of data values' entry in clock record "
+                           "(line: %ld, byte offset: %ld)", info->linenumber, info->offset + 34);
+            return -1;
+        }
+
+        if (coda_ascii_parse_double(&line[40], 19, &double_value, 0) < 0)
+        {
+            coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset);
+            return -1;
+        }
+        value = (coda_dynamic_type *)coda_mem_real_new((coda_type_number *)rinex_type[rinex_clk_bias], double_value);
+        coda_mem_record_add_field(info->epoch_record, "bias", value, 0);
+        if (num_values > 1)
+        {
+            if (linelength < 79)
+            {
+                coda_set_error(CODA_ERROR_FILE_READ, "record line length (%ld) too short (line: %ld, byte offset: %ld)",
+                               linelength, info->linenumber, info->offset);
+                return -1;
+            }
+            if (coda_ascii_parse_double(&line[60], 19, &double_value, 0) < 0)
+            {
+                coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset);
+                return -1;
+            }
+            value = (coda_dynamic_type *)coda_mem_real_new((coda_type_number *)rinex_type[rinex_clk_bias_sigma],
+                                                           double_value);
+            coda_mem_record_add_field(info->epoch_record, "bias_sigma", value, 0);
+        }
+
+        if (num_values > 2)
+        {
+            /* read next line */
+            info->offset = ftell(info->f);
+            info->linenumber++;
+            linelength = get_line(info->f, line);
+            if (linelength < 0)
+            {
+                return -1;
+            }
+            if (linelength < (num_values - 2) * 20 - 1)
+            {
+                coda_set_error(CODA_ERROR_FILE_READ, "record line length (%ld) too short (line: %ld, byte offset: %ld)",
+                               linelength, info->linenumber, info->offset);
+                return -1;
+            }
+            if (coda_ascii_parse_double(line, 19, &double_value, 0) < 0)
+            {
+                coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset);
+                return -1;
+            }
+            value =
+                (coda_dynamic_type *)coda_mem_real_new((coda_type_number *)rinex_type[rinex_clk_rate], double_value);
+            coda_mem_record_add_field(info->epoch_record, "rate", value, 0);
+            if (num_values > 3)
+            {
+                if (coda_ascii_parse_double(&line[20], 19, &double_value, 0) < 0)
+                {
+                    coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset);
+                    return -1;
+                }
+                value = (coda_dynamic_type *)coda_mem_real_new((coda_type_number *)rinex_type[rinex_clk_rate_sigma],
+                                                               double_value);
+                coda_mem_record_add_field(info->epoch_record, "rate_sigma", value, 0);
+            }
+            if (num_values > 4)
+            {
+                if (coda_ascii_parse_double(&line[40], 19, &double_value, 0) < 0)
+                {
+                    coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset);
+                    return -1;
+                }
+                value = (coda_dynamic_type *)coda_mem_real_new((coda_type_number *)rinex_type[rinex_clk_acceleration],
+                                                               double_value);
+                coda_mem_record_add_field(info->epoch_record, "acceleration", value, 0);
+            }
+            if (num_values > 5)
+            {
+                if (coda_ascii_parse_double(&line[60], 19, &double_value, 0) < 0)
+                {
+                    coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset);
+                    return -1;
+                }
+                value =
+                    (coda_dynamic_type *)coda_mem_real_new((coda_type_number *)rinex_type[rinex_clk_acceleration_sigma],
+                                                           double_value);
+                coda_mem_record_add_field(info->epoch_record, "acceleration_sigma", value, 0);
+            }
+        }
+        coda_mem_array_add_element(info->records, (coda_dynamic_type *)info->epoch_record);
+        info->epoch_record = NULL;
+
+        info->offset = ftell(info->f);
+        info->linenumber++;
+        linelength = get_line(info->f, line);
+        if (linelength < 0)
+        {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
 static int read_file(const char *filename, coda_dynamic_type **root)
 {
     coda_type_array *records_definition;
@@ -3065,7 +3581,7 @@ static int read_file(const char *filename, coda_dynamic_type **root)
         coda_mem_record_add_field(root_type, "record", (coda_dynamic_type *)info.records, 1);
         info.records = NULL;
     }
-    else        /* file_type == 'N' */
+    else if (info.file_type == 'N')
     {
         info.epoch_record_definition = coda_type_record_new(coda_format_rinex);
         field = coda_type_record_field_new("epoch");
@@ -3112,6 +3628,41 @@ static int read_file(const char *filename, coda_dynamic_type **root)
         info.galileo.records = NULL;
         coda_mem_record_add_field(root_type, "sbas", (coda_dynamic_type *)info.sbas.records, 0);
         info.sbas.records = NULL;
+    }
+    else        /* file_type == 'C' */
+    {
+        if (read_clock_header(&info) != 0)
+        {
+            ingest_info_cleanup(&info);
+            return -1;
+        }
+        if (coda_mem_record_validate(info.header) != 0)
+        {
+            ingest_info_cleanup(&info);
+            return -1;
+        }
+
+        /* create /record array */
+        records_definition = coda_type_array_new(coda_format_rinex);
+        coda_type_array_add_variable_dimension((coda_type_array *)records_definition, NULL);
+        coda_type_array_set_base_type(records_definition, rinex_type[rinex_clk_record]);
+        info.records = coda_mem_array_new(records_definition);
+        coda_type_release((coda_type *)records_definition);
+
+        if (read_clock_records(&info) != 0)
+        {
+            ingest_info_cleanup(&info);
+            return -1;
+        }
+
+        /* create root record */
+        definition = coda_type_record_new(coda_format_rinex);
+        root_type = coda_mem_record_new(definition);
+        coda_type_release((coda_type *)definition);
+        coda_mem_record_add_field(root_type, "header", (coda_dynamic_type *)info.header, 1);
+        info.header = NULL;
+        coda_mem_record_add_field(root_type, "record", (coda_dynamic_type *)info.records, 1);
+        info.records = NULL;
     }
 
     *root = (coda_dynamic_type *)root_type;

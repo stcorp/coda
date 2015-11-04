@@ -2884,6 +2884,32 @@ LIBCODA_API const char *coda_type_get_special_type_name(coda_special_type specia
     return "unknown";
 }
 
+/** Determine whether the type has any attributes.
+ * If the record returned by coda_type_get_attributes() has one or more fields then \a has_attributes will be set to 1,
+ * otherwise it will be set to 0.
+ * \param type CODA type.
+ * \param has_attributes Pointer to the variable where attribute availability status will be stored.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_type_has_attributes(const coda_type *type, int *has_attributes)
+{
+    if (type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (has_attributes == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "has_attributes argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    *has_attributes = (type->attributes != NULL);
+    return 0;
+}
+
 /** Get the storage format of a type.
  * \param type CODA type.
  * \param format Pointer to a variable where the format will be stored.
@@ -3211,7 +3237,7 @@ LIBCODA_API int coda_type_get_fixed_value(const coda_type *type, const char **fi
 /** Get the type for the associated attribute record.
  * Note that this record may not have any fields if there are no attributes for this type.
  * \param type CODA type.
- * \param attributes Pointer to the variable where the pointer to the type defining the attribte record will be stored.
+ * \param attributes Pointer to the variable where the pointer to the type defining the attribute record will be stored.
  * \return
  *   \arg \c 0, Success.
  *   \arg \c -1, Error occurred (check #coda_errno).

@@ -1,10 +1,18 @@
-/** \page index CODA C interface
+/** \mainpage CODA C interface
  *
  * \section intro Introduction
  *
  * This is the documentation that describes the Application Programmers Interface (API) for the CODA C Library.
  * It contains a full description for each of the functions in the API and a general description for each of the modules
  * mentioned below.
+ * 
+ * \section codadef CODA definition path
+ *
+ * Note that in order to access products whose formats are defined using .codadef files, you should let CODA now
+ * where these .codadef files are stored. You can do this by using the coda_set_definition_path() or
+ * coda_set_definition_path_conditional() functions, or you can set the CODA_DEFINITION environment variable.
+ * This environment variable should be a ':' separated (';' on Windows) list of absolute paths to directories containing
+ * .codadef files or absolute paths to .codadef files themselves (or a mix of those).
  *
  * \section intro_modules Modules
  * Each module has a separate section that contains its general description together with descriptions for all types,

@@ -52,6 +52,7 @@ FL_EXPONENT  [Ee]{SIGN}?{INTEGER}
 FLOAT        ({FL_MANTISSA}{FL_EXPONENT}?)|({INTEGER}{FL_EXPONENT})
 IDENTIFIER   [[:alpha:]][[:alnum:]_]*
 WHITESPACE   [[:space:]]+
+INDEX        "i"|"j"|"k"
 
 %%
 
@@ -77,7 +78,6 @@ WHITESPACE   [[:space:]]+
 "asciiline"             return ASCIILINE;
 "do"                    return DO;
 "for"                   return FOR;
-"i"                     return FORINDEX;
 "step"                  return STEP;
 "to"                    return TO;
 "nan"                   return NAN_VALUE;
@@ -124,7 +124,12 @@ WHITESPACE   [[:space:]]+
 "substr"                return FUNC_SUBSTR;
 "trim"                  return FUNC_TRIM;
 "unboundindex"          return FUNC_UNBOUNDINDEX;
+"with"                  return FUNC_WITH;
 
+{INDEX}                 {
+                            yylval.stringval = strdup(yytext);
+                            return INDEX_VAR;
+                        }
 {IDENTIFIER}            {
                             yylval.stringval = strdup(yytext);
                             return NAME;

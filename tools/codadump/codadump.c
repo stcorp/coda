@@ -172,7 +172,7 @@ static void handle_list_run_mode(int argc, char *argv[])
             traverse_info.filter[0] = codadump_filter_create(argv[i + 1]);
             if (traverse_info.filter[0] == NULL)
             {
-                fprintf(stderr, "ERROR: Incorrect filter or empty filter\n");
+                fprintf(stderr, "ERROR: incorrect filter or empty filter\n");
                 print_help();
                 exit(1);
             }
@@ -205,7 +205,7 @@ static void handle_list_run_mode(int argc, char *argv[])
         }
         else
         {
-            fprintf(stderr, "ERROR: Incorrect arguments\n");
+            fprintf(stderr, "ERROR: invalid arguments\n");
             print_help();
             exit(1);
         }
@@ -213,7 +213,7 @@ static void handle_list_run_mode(int argc, char *argv[])
 
     if (traverse_info.file_name == NULL || traverse_info.file_name[0] == '\0')
     {
-        fprintf(stderr, "ERROR: Incorrect arguments\n");
+        fprintf(stderr, "ERROR: invalid arguments\n");
         print_help();
         exit(1);
     }
@@ -268,7 +268,7 @@ static void handle_ascii_run_mode(int argc, char *argv[])
             traverse_info.filter[0] = codadump_filter_create(argv[i + 1]);
             if (traverse_info.filter[0] == NULL)
             {
-                fprintf(stderr, "ERROR: Incorrect filter or empty filter\n");
+                fprintf(stderr, "ERROR: incorrect filter or empty filter\n");
                 print_help();
                 exit(1);
             }
@@ -312,7 +312,7 @@ static void handle_ascii_run_mode(int argc, char *argv[])
         }
         else
         {
-            fprintf(stderr, "ERROR: Incorrect arguments\n");
+            fprintf(stderr, "ERROR: invalid arguments\n");
             print_help();
             exit(1);
         }
@@ -320,7 +320,7 @@ static void handle_ascii_run_mode(int argc, char *argv[])
 
     if (traverse_info.file_name == NULL || traverse_info.file_name[0] == '\0')
     {
-        fprintf(stderr, "ERROR: Incorrect arguments\n");
+        fprintf(stderr, "ERROR: invalid arguments\n");
         print_help();
         exit(1);
     }
@@ -340,7 +340,7 @@ static void handle_ascii_run_mode(int argc, char *argv[])
         ascii_output = fopen(output_file_name, "w");
         if (ascii_output == NULL)
         {
-            fprintf(stderr, "ERROR: Could not create output file \"%s\"\n", output_file_name);
+            fprintf(stderr, "ERROR: could not create output file \"%s\"\n", output_file_name);
             exit(1);
         }
     }
@@ -384,7 +384,7 @@ static void handle_hdf4_run_mode(int argc, char *argv[])
             traverse_info.filter[0] = codadump_filter_create(argv[i + 1]);
             if (traverse_info.filter[0] == NULL)
             {
-                fprintf(stderr, "ERROR: Incorrect filter or empty filter\n");
+                fprintf(stderr, "ERROR: incorrect filter or empty filter\n");
                 print_help();
                 exit(1);
             }
@@ -410,7 +410,7 @@ static void handle_hdf4_run_mode(int argc, char *argv[])
         }
         else
         {
-            fprintf(stderr, "ERROR: Incorrect arguments\n");
+            fprintf(stderr, "ERROR: invalid arguments\n");
             print_help();
             exit(1);
         }
@@ -418,7 +418,7 @@ static void handle_hdf4_run_mode(int argc, char *argv[])
 
     if (traverse_info.file_name == NULL)
     {
-        fprintf(stderr, "ERROR: Incorrect arguments\n");
+        fprintf(stderr, "ERROR: invalid arguments\n");
         print_help();
         exit(1);
     }
@@ -438,7 +438,7 @@ static void handle_hdf4_run_mode(int argc, char *argv[])
 
     if ((traverse_info.file_name[0] == '\0') || (output_file_name[0] == '\0'))
     {
-        fprintf(stderr, "ERROR: Incorrect arguments\n");
+        fprintf(stderr, "ERROR: invalid arguments\n");
         print_help();
         exit(1);
     }
@@ -490,7 +490,7 @@ static void handle_debug_run_mode(int argc, char *argv[])
         }
         else
         {
-            fprintf(stderr, "ERROR: Incorrect arguments\n");
+            fprintf(stderr, "ERROR: invalid arguments\n");
             print_help();
             exit(1);
         }
@@ -498,7 +498,7 @@ static void handle_debug_run_mode(int argc, char *argv[])
 
     if (traverse_info.file_name == NULL || traverse_info.file_name[0] == '\0')
     {
-        fprintf(stderr, "ERROR: Incorrect arguments\n");
+        fprintf(stderr, "ERROR: invalid arguments\n");
         print_help();
         exit(1);
     }
@@ -515,7 +515,7 @@ static void handle_debug_run_mode(int argc, char *argv[])
         ascii_output = fopen(output_file_name, "w");
         if (ascii_output == NULL)
         {
-            fprintf(stderr, "ERROR: Could not create output file \"%s\"\n", output_file_name);
+            fprintf(stderr, "ERROR: could not create output file \"%s\"\n", output_file_name);
             exit(1);
         }
     }
@@ -578,7 +578,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        fprintf(stderr, "ERROR: Incorrect arguments\n");
+        fprintf(stderr, "ERROR: invalid arguments\n");
         print_help();
         exit(1);
     }

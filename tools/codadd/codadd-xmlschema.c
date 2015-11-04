@@ -32,17 +32,6 @@
 #include "coda-expr.h"
 #include "coda-type.h"
 
-static int has_attributes(coda_type *type)
-{
-    coda_type *attributes;
-    long num_record_fields;
-
-    coda_type_get_attributes(type, &attributes);
-    coda_type_get_num_record_fields(attributes, &num_record_fields);
-
-    return (num_record_fields > 0);
-}
-
 static void print_attributes(FILE *f, coda_type *type)
 {
     coda_type *attributes;
@@ -130,6 +119,7 @@ static void print_xml_element(FILE *f, coda_type *type)
         else
         {
             const char *xsdtype;
+            int has_attributes;
 
             switch (field_type_class)
             {
@@ -150,7 +140,8 @@ static void print_xml_element(FILE *f, coda_type *type)
                     assert(0);
                     exit(1);
             }
-            if (has_attributes(field_type))
+            coda_type_has_attributes(field_type, &has_attributes);
+            if (has_attributes)
             {
                 fprintf(f, ">");
                 fprintf(f, "<xs:complexType>");
@@ -205,12 +196,12 @@ void generate_xmlschema(const char *output_file_name, const char *product_class_
 
     if (product_definition->format != coda_format_xml)
     {
-        printf("  ERROR: Product is not in XML\n");
+        printf("  ERROR: product is not in XML format\n");
         exit(1);
     }
     if (product_definition->root_type == NULL)
     {
-        printf("  ERROR: Product does not have a format definition\n");
+        printf("  ERROR: product does not have a format definition\n");
         exit(1);
     }
 
@@ -219,7 +210,7 @@ void generate_xmlschema(const char *output_file_name, const char *product_class_
         schema_output = fopen(output_file_name, "w");
         if (schema_output == NULL)
         {
-            fprintf(stderr, "ERROR: Could not create output file \"%s\"\n", output_file_name);
+            fprintf(stderr, "ERROR: could not create output file \"%s\"\n", output_file_name);
             exit(1);
         }
     }

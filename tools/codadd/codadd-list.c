@@ -320,11 +320,8 @@ static void generate_expr(const coda_expression *expr, int precedence)
             generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(")");
             break;
-        case expr_for_index:
-            printf("i");
-            break;
         case expr_for:
-            printf("for i = ");
+            printf("for %s = ", ((coda_expression_operation *)expr)->identifier);
             generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(" to ");
             generate_expr(((coda_expression_operation *)expr)->operand[1], 15);
@@ -421,6 +418,9 @@ static void generate_expr(const coda_expression *expr, int precedence)
             printf("index(");
             generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
             printf(")");
+            break;
+        case expr_index_var:
+            printf("%s", ((coda_expression_operation *)expr)->identifier);
             break;
         case expr_integer:
             printf("int(");
@@ -714,6 +714,13 @@ static void generate_expr(const coda_expression *expr, int precedence)
                 printf("]");
             }
             break;
+        case expr_with:
+            printf("with(%s = ", ((coda_expression_operation *)expr)->identifier);
+            generate_expr(((coda_expression_operation *)expr)->operand[0], 15);
+            printf(", ");
+            generate_expr(((coda_expression_operation *)expr)->operand[1], 15);
+            printf(")");
+            break;
     }
 }
 
@@ -739,7 +746,7 @@ static void print_path(int depth)
                         const char *fieldname;
 
                         coda_type_get_record_field_name(type, indexstack[i + 1], &fieldname);
-                        if (i > 0)
+                        if (i > 0 && indexstack[i] != -1)
                         {
                             printf("/");
                         }
@@ -875,11 +882,17 @@ static void print_type(coda_type *type, int depth)
 
     if (show_attributes)
     {
-        coda_type *attributes;
+        int has_attributes;
 
-        coda_type_get_attributes(type, &attributes);
-        indexstack[depth + 1] = -1;
-        print_type(attributes, depth + 1);
+        coda_type_has_attributes(type, &has_attributes);
+        if (has_attributes)
+        {
+            coda_type *attributes;
+
+            coda_type_get_attributes(type, &attributes);
+            indexstack[depth + 1] = -1;
+            print_type(attributes, depth + 1);
+        }
     }
 
     switch (type_class)

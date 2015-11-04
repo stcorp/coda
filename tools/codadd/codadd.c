@@ -43,6 +43,7 @@ int use_special_types;
 void generate_html(const char *prefixdir);
 void generate_list(const char *product_class, const char *product_type, int version);
 void generate_xmlschema(const char *output_file_name, const char *product_class, const char *product_type, int version);
+void generate_definition(const char *output_file_name, const char *file_name);
 void generate_detection_tree(coda_format format);
 
 static void print_version()
@@ -184,7 +185,7 @@ int main(int argc, char *argv[])
         i++;
         if (i != argc - 1)
         {
-            fprintf(stderr, "ERROR: Incorrect arguments\n");
+            fprintf(stderr, "ERROR: invalid arguments\n");
             print_help();
             exit(1);
         }
@@ -247,7 +248,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                fprintf(stderr, "ERROR: Incorrect arguments\n");
+                fprintf(stderr, "ERROR: invalid arguments\n");
                 print_help();
                 exit(1);
             }
@@ -266,14 +267,14 @@ int main(int argc, char *argv[])
                 {
                     if (sscanf(argv[i], "%d", &version) != 1)
                     {
-                        fprintf(stderr, "ERROR: Incorrect product version argument\n");
+                        fprintf(stderr, "ERROR: invalid product version argument\n");
                         print_help();
                         exit(1);
                     }
                     i++;
                     if (i < argc)
                     {
-                        fprintf(stderr, "ERROR: Incorrect arguments\n");
+                        fprintf(stderr, "ERROR: invalid arguments\n");
                         print_help();
                         exit(1);
                     }
@@ -304,7 +305,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                fprintf(stderr, "ERROR: Incorrect arguments\n");
+                fprintf(stderr, "ERROR: invalid arguments\n");
                 print_help();
                 exit(1);
             }
@@ -313,7 +314,7 @@ int main(int argc, char *argv[])
 
         if (i != argc - 3)
         {
-            fprintf(stderr, "ERROR: Incorrect arguments\n");
+            fprintf(stderr, "ERROR: invalid arguments\n");
             print_help();
             exit(1);
         }
@@ -323,7 +324,7 @@ int main(int argc, char *argv[])
         i++;
         if (sscanf(argv[i], "%d", &version) != 1)
         {
-            fprintf(stderr, "ERROR: Incorrect product version argument\n");
+            fprintf(stderr, "ERROR: invalid product version argument\n");
             print_help();
             exit(1);
         }
@@ -334,7 +335,7 @@ int main(int argc, char *argv[])
         i++;
         if (i != argc - 1)
         {
-            fprintf(stderr, "ERROR: Incorrect arguments\n");
+            fprintf(stderr, "ERROR: invalid arguments\n");
             print_help();
             exit(1);
         }
@@ -352,14 +353,48 @@ int main(int argc, char *argv[])
         }
         else
         {
-            fprintf(stderr, "ERROR: Incorrect arguments\n");
+            fprintf(stderr, "ERROR: invalid arguments\n");
             print_help();
             exit(1);
         }
     }
+    else if (strcmp(argv[i], "def") == 0)
+    {
+        const char *output_file_name = NULL;
+
+        i++;
+        while (i < argc)
+        {
+            if ((strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "--output") == 0) &&
+                i + 1 < argc && argv[i + 1][0] != '-')
+            {
+                i++;
+                output_file_name = argv[i];
+            }
+            else if (argv[i][0] != '-')
+            {
+                break;
+            }
+            else
+            {
+                fprintf(stderr, "ERROR: invalid arguments\n");
+                print_help();
+                exit(1);
+            }
+            i++;
+        }
+
+        if (i != argc - 1)
+        {
+            fprintf(stderr, "ERROR: invalid arguments\n");
+            print_help();
+            exit(1);
+        }
+        generate_definition(output_file_name, argv[i]);
+    }
     else
     {
-        fprintf(stderr, "ERROR: Incorrect arguments\n");
+        fprintf(stderr, "ERROR: invalid arguments\n");
         print_help();
         exit(1);
     }

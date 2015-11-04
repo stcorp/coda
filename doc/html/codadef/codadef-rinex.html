@@ -14,11 +14,11 @@
 
       <h1>CODA RINEX Mapping Description</h1>
 
-      <p>CODA provides access to RINEX V3.0 Observation and Navigation data (support for Meteorological or Clock data is currently not available). This is done by importing the full file and providing access to an in-memory structure of the data via the CODA <a href="codadef-format.html">data types</a>. Below we will describe how CODA maps the RINEX product structure to one that is based on the CODA data types. We assume you already have a decent understanding of the RINEX format and its details.</p>
+      <p>CODA provides access to RINEX Observation (V3.0), Navigation (V3.0), and Clock (V2.0 and V3.0) data. Support for Meteorological data or other versions of the format is currently not available. Data access is implemented in CODA by first importing the full file and then providing access to an in-memory structure of the data via the CODA <a href="codadef-format.html">data types</a>. Below we will describe how CODA maps the RINEX product structure to one that is based on the CODA data types. We assume you already have a decent understanding of the RINEX format and its details.</p>
       
-      <p>A RINEX file consists of a header section followed by a series of data records. CODA supports all mandatory header elements and most of the optional header elements for Observation and Navigation data.</p>
+      <p>A RINEX file consists of a header section followed by a series of data records. CODA supports all mandatory header elements and most of the optional header elements for Observation, Navigation, and Clock data.</p>
      
-      <p>CODA will try to provide as direct a mapping to the RINEX data as possible. This means that the in memory data structure will follow to a large extend the order in which data is stored in the file. Below the mapping for the RINEX Observation and Navigation data is provided.</p>
+      <p>CODA will try to provide as direct a mapping to the RINEX data as possible. This means that the in memory data structure will follow to a large extend the order in which data is stored in the file. Below the mapping for the RINEX Observation, Navigation, and Clock data is provided.</p>
       
       <h2>RINEX Observation data</h2>
       
@@ -231,6 +231,62 @@
       <tr><td>/sbas[]/sat_vel_z</td><td>real</td><td>double</td></tr>
       <tr><td>/sbas[]/sat_acc_z</td><td>real</td><td>double</td></tr>
       <tr><td>/sbas[]/iodn</td><td>real</td><td>double</td></tr>
+      </table>
+
+      <h2>RINEX Clock data</h2>
+      
+      <p>The following table gives the mapping of header sections to CODA parameters</p>
+      
+      <table class="fancy" border="1" cellspacing="0">
+      <tr><th>CODA path to variable</th><th>type class</th><th>read type</th><th>rinex header v2.0</th><th>rinex header v3.0</th></tr>
+      <tr><td>/header/format_version</td><td>real</td><td>float</td><td>RINEX VERSION / TYPE</td><td>RINEX VERSION / TYPE</td></tr>
+      <tr><td>/header/file_type</td><td>text</td><td>char</td><td>RINEX VERSION / TYPE</td><td>RINEX VERSION / TYPE</td></tr>
+      <tr><td>/header/satellite_system</td><td>text</td><td>char</td><td><i></i></td><td>RINEX VERSION / TYPE</td></tr>
+      <tr><td>/header/program</td><td>text</td><td>string</td><td>PGM / RUN BY / DATE</td><td>PGM / RUN BY / DATE</td></tr>
+      <tr><td>/header/run_by</td><td>text</td><td>string</td><td>PGM / RUN BY / DATE</td><td>PGM / RUN BY / DATE</td></tr>
+      <tr><td>/header/datetime</td><td>time</td><td>double</td><td>PGM / RUN BY / DATE</td><td>PGM / RUN BY / DATE</td></tr>
+      <tr><td>/header/datetime_time_zone</td><td>text</td><td>string</td><td>PGM / RUN BY / DATE</td><td>PGM / RUN BY / DATE</td></tr>
+      <tr><td><i>not supported</i></td><td>&nbsp;</td><td>&nbsp;</td><td>COMMENT</td><td>COMMENT</td></tr>
+      <tr><td>/header/sys[]/code</td><td>text</td><td>char</td><td></td><td>SYS / # / OBS TYPES</td></tr>
+      <tr><td>/header/sys[]/num_obs_types</td><td>integer</td><td>int16</td><td></td><td>SYS / # / OBS TYPES</td></tr>
+      <tr><td>/header/sys[]/descriptor[]</td><td>text</td><td>string</td><td></td><td>SYS / # / OBS TYPES</td></tr>
+      <tr><td>/header/time_system_id</td><td>text</td><td>string</td><td></td><td>TIME SYSTEM ID</td></tr>
+      <tr><td>/header/leap_seconds</td><td>integer</td><td>int32</td><td>LEAP SECONDS</td><td>LEAP SECONDS</td></tr>
+      <tr><td><i>not supported</i></td><td>&nbsp;</td><td>&nbsp;</td><td></td><td>SYS / DCBS APPLIED</td></tr>
+      <tr><td><i>not supported</i></td><td>&nbsp;</td><td>&nbsp;</td><td></td><td>SYS / PCVS APPLIED</td></tr>
+      <tr><td><i>not supported</i></td><td>&nbsp;</td><td>&nbsp;</td><td># / TYPES OF DATA</td><td># / TYPES OF DATA</td></tr>
+      <tr><td><i>not supported</i></td><td>&nbsp;</td><td>&nbsp;</td><td>STATION NAME / NUM</td><td>STATION NAME / NUM</td></tr>
+      <tr><td><i>not supported</i></td><td>&nbsp;</td><td>&nbsp;</td><td>STATION CLK REF</td><td>STATION CLK REF</td></tr>
+      <tr><td><i>not supported</i></td><td>&nbsp;</td><td>&nbsp;</td><td>ANALYSIS CENTER</td><td>ANALYSIS CENTER</td></tr>
+      <tr><td><i>not supported</i></td><td>&nbsp;</td><td>&nbsp;</td><td># OF CLK REF</td><td># OF CLK REF</td></tr>
+      <tr><td><i>not supported</i></td><td>&nbsp;</td><td>&nbsp;</td><td>ANALYSIS CLK REF</td><td>ANALYSIS CLK REF</td></tr>
+      <tr><td><i>not supported</i></td><td>&nbsp;</td><td>&nbsp;</td><td># OF SOLN STA / TRF</td><td># OF SOLN STA / TRF</td></tr>
+      <tr><td><i>not supported</i></td><td>&nbsp;</td><td>&nbsp;</td><td>SOLN STA NAME / NUM</td><td>SOLN STA NAME / NUM</td></tr>
+      <tr><td><i>not supported</i></td><td>&nbsp;</td><td>&nbsp;</td><td># OF SOLN SATS</td><td># OF SOLN SATS</td></tr>
+      <tr><td><i>not supported</i></td><td>&nbsp;</td><td>&nbsp;</td><td>PRN LIST</td><td>PRN LIST</td></tr>
+      </table>
+
+      <p>There are a few considerations when dealing with files using the V2.0 format:</p>
+      <ul>
+      <li>The 'satellite_system' will have a hard-coded value of 'G' (V2.0 data is always about GPS data)</li>
+      <li>If the 'datetime' field in the header does not follow the format as specified by V3.0 then the value for 'datetime' will be set to NaN</li>
+      <li>The field 'time_system_id' will not be available for V2.0 data (it is an optional record field that will be set to 'no data' when you try to access it)</li>
+      <li>The 'sys' array will always be empty (i.e. 0 element array)</li>
+      </ul>
+
+      <p>The following table gives the mapping of the clock records structure to CODA parameters.</p>
+      
+      <table class="fancy" border="1" cellspacing="0">
+      <tr><th>CODA path to variable</th><th>type class</th><th>read type</th></tr>
+      <tr><td>/record[]/type</td><td>text</td><td>string</td></tr>
+      <tr><td>/record[]/name</td><td>text</td><td>string</td></tr>
+      <tr><td>/record[]/epoch</td><td>time</td><td>double</td></tr>
+      <tr><td>/record[]/bias</td><td>real</td><td>double</td></tr>
+      <tr><td>/record[]/bias_sigma</td><td>real</td><td>double</td></tr>
+      <tr><td>/record[]/rate</td><td>real</td><td>double</td></tr>
+      <tr><td>/record[]/rate_sigma</td><td>real</td><td>double</td></tr>
+      <tr><td>/record[]/acceleration</td><td>real</td><td>double</td></tr>
+      <tr><td>/record[]/acceleration_sigma</td><td>real</td><td>double</td></tr>
       </table>
 
       <div class="footer">

@@ -243,6 +243,41 @@ int UFNAME(CODA_STRING_TO_TIME,coda_string_to_time)(const char *str, double *tim
     return result;
 }
 
+int UFNAME(CODA_UTCDATETIME_TO_DOUBLE,coda_utcdatetime_to_double)(int *YEAR, int *MONTH, int *DAY, int *HOUR, int *MINUTE, int *SECOND, int *MUSEC, double *datetime)
+{
+    return coda_utcdatetime_to_double(*YEAR, *MONTH, *DAY, *HOUR, *MINUTE, *SECOND, *MUSEC, datetime);
+}
+
+int UFNAME(CODA_DOUBLE_TO_UTCDATETIME,coda_double_to_datetime)(double *datetime, int *YEAR, int *MONTH, int *DAY, int *HOUR, int *MINUTE, int *SECOND, int *MUSEC)
+{
+    return coda_double_to_utcdatetime(*datetime, YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MUSEC);
+}
+
+int UFNAME(CODA_TIME_TO_UTCSTRING,coda_time_to_utcstring)(double *time, char *str, int str_size)
+{
+    int result;
+    INOUTSTR_BEGIN_DEF(str)
+    if (str_size < 26)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "string argument should have at least 26 characters (%s:%u)",
+                       __FILE__, __LINE__);
+        return -1;
+    }
+    INOUTSTR_BEGIN_INIT(str)
+    result = coda_time_to_utcstring(*time, str_s);
+    INOUTSTR_END(str)
+    return result;
+}
+
+int UFNAME(CODA_UTCSTRING_TO_TIME,coda_utcstring_to_time)(const char *str, double *time, int str_size)
+{
+    int result;
+    INSTR_BEGIN(str)
+    result = coda_utcstring_to_time(str_s, time);
+    INSTR_END(str)
+    return result;
+}
+
 int UFNAME(CODA_GET_ERRNO,coda_get_errno)(void)
 {
     return coda_errno;
@@ -342,11 +377,6 @@ int UFNAME(CODA_GET_PRODUCT_VERSION,coda_get_product_version)(void *pf, int *ver
     return coda_get_product_version(*(coda_product **)pf, version);
 }
 
-int UFNAME(CODA_GET_PRODUCT_ROOT_TYPE,coda_get_product_root_type)(void *pf, void *type)
-{
-    return coda_get_product_root_type(*(coda_product **)pf, (coda_type **)type);
-}
-
 int UFNAME(CODA_GET_PRODUCT_DEFINITION_FILE,coda_get_product_definition_file)(void *pf, char *definition_file, int definition_file_size)
 {
     int result;
@@ -354,6 +384,11 @@ int UFNAME(CODA_GET_PRODUCT_DEFINITION_FILE,coda_get_product_definition_file)(vo
     result = coda_get_product_class(*(coda_product **)pf, &definition_file_s);
     OUTSTR_END(definition_file)
     return result;
+}
+
+int UFNAME(CODA_GET_PRODUCT_ROOT_TYPE,coda_get_product_root_type)(void *pf, void *type)
+{
+    return coda_get_product_root_type(*(coda_product **)pf, (coda_type **)type);
 }
 
 int UFNAME(CODA_GET_PRODUCT_VARIABLE_VALUE,coda_get_product_variable_value)(void *pf, char *variable, int *index, int64_t *value, int variable_size)
@@ -391,6 +426,11 @@ void UFNAME(CODA_TYPE_GET_SPECIAL_TYPE_NAME,coda_type_get_special_type_name)(int
     OUTSTR_BEGIN(special_type_name)
     special_type_name_s = coda_type_get_special_type_name(*special_type);
     OUTSTR_END(special_type_name)
+}
+
+int UFNAME(CODA_TYPE_HAS_ATTRIBUTES,coda_type_has_attributes)(void *type, int *has_attributes)
+{
+    return coda_type_has_attributes(*(coda_type **)type, has_attributes);
 }
 
 int UFNAME(CODA_TYPE_GET_FORMAT,coda_type_get_format)(void *type, int *format)
@@ -571,6 +611,15 @@ int UFNAME(CODA_CURSOR_SET_PRODUCT,coda_cursor_set_product)(void *cursor, void *
     return coda_cursor_set_product(*(coda_cursor **)cursor, *(coda_product **)pf);
 }
 
+int UFNAME(CODA_CURSOR_GOTO,coda_cursor_goto)(void *cursor, char *path, int path_size)
+{
+    int result;
+    INSTR_BEGIN(path)
+    result = coda_cursor_goto(*(coda_cursor **)cursor, path_s);
+    INSTR_END(path)
+    return result;
+}
+
 int UFNAME(CODA_CURSOR_GOTO_FIRST_RECORD_FIELD,coda_cursor_goto_first_record_field)(void *cursor)
 {
     return coda_cursor_goto_first_record_field(*(coda_cursor **)cursor);
@@ -643,6 +692,11 @@ int UFNAME(CODA_CURSOR_USE_BASE_TYPE_OF_SPECIAL_TYPE,coda_cursor_use_base_type_o
 int UFNAME(CODA_CURSOR_HAS_ASCII_CONTENT,coda_cursor_has_ascii_content)(void *cursor, int *has_ascii_content)
 {
     return coda_cursor_has_ascii_content(*(coda_cursor **)cursor, has_ascii_content);
+}
+
+int UFNAME(CODA_CURSOR_HAS_ATTRIBUTES,coda_cursor_has_attributes)(void *cursor, int *has_attributes)
+{
+    return coda_cursor_has_attributes(*(coda_cursor **)cursor, has_attributes);
 }
 
 int UFNAME(CODA_CURSOR_GET_STRING_LENGTH,coda_cursor_get_string_length)(void *cursor, long *length)

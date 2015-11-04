@@ -407,8 +407,12 @@ static int tree_node_add_item_for_path(tree_node *node, const coda_type *type, c
                 }
                 else
                 {
+                    int result;
+                    int n;
+
                     /* add item to specific array element */
-                    if (sscanf(&path[start], "%ld", &index) != 1)
+                    result = sscanf(&path[start], "%ld%n", &index, &n);
+                    if (result != 1 || n != end - start)
                     {
                         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid array index '%.*s' in path", end - start,
                                        &path[start]);

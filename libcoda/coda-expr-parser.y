@@ -102,6 +102,7 @@ static void coda_expression_error(const char *error)
 %token    <stringval> FLOAT_VALUE
 %token    <stringval> STRING_VALUE
 %token    <stringval> NAME
+%token    <stringval> INDEX_VAR
 %left                 LOGICAL_AND LOGICAL_OR
 %nonassoc             NOT
 %left                 GREATER_EQUAL LESS_EQUAL EQUAL NOT_EQUAL '>' '<'
@@ -116,7 +117,6 @@ static void coda_expression_error(const char *error)
 %token                ASCIILINE
 %token                DO
 %token                FOR
-%token                FORINDEX
 %token                STEP
 %token                TO
 %token                NAN_VALUE
@@ -163,6 +163,7 @@ static void coda_expression_error(const char *error)
 %token                FUNC_SUBSTR
 %token                FUNC_TRIM
 %token                FUNC_UNBOUNDINDEX
+%token                FUNC_WITH
 
 %type     <expr>      node
 %type     <expr>      rootnode
@@ -197,7 +198,6 @@ reserved_identifier:
     | ASCIILINE { $$ = "asciiline"; }
     | DO  { $$ = "do"; }
     | FOR { $$ = "for"; }
-    | FORINDEX { $$ = "i"; }
     | STEP { $$ = "step"; }
     | TO { $$ = "to"; }
     | NAN_VALUE { $$ = "nan"; }
@@ -243,6 +243,8 @@ reserved_identifier:
     | FUNC_SUBSTR { $$ = "substr"; }
     | FUNC_TRIM { $$ = "trim"; }
     | FUNC_UNBOUNDINDEX { $$ = "unboundindex"; }
+    | FUNC_WITH { $$ = "with"; }
+    | INDEX_VAR
     ;
 
 identifier:
@@ -263,16 +265,20 @@ voidexpr:
             $$ = coda_expression_new(expr_sequence, NULL, $1, $3, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
-    | FOR FORINDEX '=' intexpr TO intexpr DO voidexpr {
-            $$ = coda_expression_new(expr_for, NULL, $4, $6, NULL, $8);
+    | FOR INDEX_VAR '=' intexpr TO intexpr DO voidexpr {
+            $$ = coda_expression_new(expr_for, $2, $4, $6, NULL, $8);
             if ($$ == NULL) YYERROR;
         }
-    | FOR FORINDEX '=' intexpr TO intexpr STEP intexpr DO voidexpr {
-            $$ = coda_expression_new(expr_for, NULL, $4, $6, $8, $10);
+    | FOR INDEX_VAR '=' intexpr TO intexpr STEP intexpr DO voidexpr {
+            $$ = coda_expression_new(expr_for, $2, $4, $6, $8, $10);
             if ($$ == NULL) YYERROR;
         }
     | FUNC_GOTO '(' node ')' {
             $$ = coda_expression_new(expr_goto, NULL, $3, NULL, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_WITH '(' INDEX_VAR '=' intexpr ',' voidexpr ')' {
+            $$ = coda_expression_new(expr_with, $3, $5, $7, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
     ;
@@ -459,6 +465,10 @@ boolexpr:
             $$ = coda_expression_new(expr_if, NULL, $3, $5, $7, NULL);
             if ($$ == NULL) YYERROR;
         }
+    | FUNC_WITH '(' INDEX_VAR '=' intexpr ',' boolexpr ')' {
+            $$ = coda_expression_new(expr_with, $3, $5, $7, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
     ;
 
 intexpr:
@@ -485,8 +495,8 @@ intexpr:
             $$ = coda_expression_new(expr_variable_value, $2, $4, NULL, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
-    | FORINDEX {
-            $$ = coda_expression_new(expr_for_index, NULL, NULL, NULL, NULL, NULL);
+    | INDEX_VAR {
+            $$ = coda_expression_new(expr_index_var, $1, NULL, NULL, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
     | '-' intexpr %prec UNARY {
@@ -607,8 +617,8 @@ intexpr:
             $$ = coda_expression_new(expr_unbound_array_index, NULL, $3, $5, $7, NULL);
             if ($$ == NULL) YYERROR;
         }
-    | FUNC_UNBOUNDINDEX '(' node ',' boolexpr ',' boolexpr ')' {
-            $$ = coda_expr_new(expr_unbound_array_index, NULL, $3, $5, $7, NULL);
+    | FUNC_WITH '(' INDEX_VAR '=' intexpr ',' intexpr ')' {
+            $$ = coda_expression_new(expr_with, $3, $5, $7, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
     ;
@@ -775,6 +785,10 @@ floatexpr:
             $$ = coda_expression_new(expr_if, NULL, $3, $5, $7, NULL);
             if ($$ == NULL) YYERROR;
         }
+    | FUNC_WITH '(' INDEX_VAR '=' intexpr ',' floatexpr ')' {
+            $$ = coda_expression_new(expr_with, $3, $5, $7, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
     ;
 
 stringexpr:
@@ -855,6 +869,10 @@ stringexpr:
         }
     | FUNC_IF '(' boolexpr ',' stringexpr ',' stringexpr ')' {
             $$ = coda_expression_new(expr_if, NULL, $3, $5, $7, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_WITH '(' INDEX_VAR '=' intexpr ',' stringexpr ')' {
+            $$ = coda_expression_new(expr_with, $3, $5, $7, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
     ;

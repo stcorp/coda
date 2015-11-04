@@ -416,6 +416,10 @@ def get_product_variable_value(*args):
   return _codac.get_product_variable_value(*args)
 get_product_variable_value = _codac.get_product_variable_value
 
+def type_has_attributes(*args):
+  return _codac.type_has_attributes(*args)
+type_has_attributes = _codac.type_has_attributes
+
 def type_get_format(*args):
   return _codac.type_get_format(*args)
 type_get_format = _codac.type_get_format
@@ -516,6 +520,10 @@ def cursor_set_product(*args):
   return _codac.cursor_set_product(*args)
 cursor_set_product = _codac.cursor_set_product
 
+def cursor_goto(*args):
+  return _codac.cursor_goto(*args)
+cursor_goto = _codac.cursor_goto
+
 def cursor_goto_first_record_field(*args):
   return _codac.cursor_goto_first_record_field(*args)
 cursor_goto_first_record_field = _codac.cursor_goto_first_record_field
@@ -571,6 +579,10 @@ cursor_use_base_type_of_special_type = _codac.cursor_use_base_type_of_special_ty
 def cursor_has_ascii_content(*args):
   return _codac.cursor_has_ascii_content(*args)
 cursor_has_ascii_content = _codac.cursor_has_ascii_content
+
+def cursor_has_attributes(*args):
+  return _codac.cursor_has_attributes(*args)
+cursor_has_attributes = _codac.cursor_has_attributes
 
 def cursor_get_string_length(*args):
   return _codac.cursor_get_string_length(*args)

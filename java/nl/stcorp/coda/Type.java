@@ -107,6 +107,19 @@ public class Type
         return codac.type_get_special_type_name(specialType);
     }
 
+    /**
+     * Determine wether the type has attributes.
+     * 
+     * @return Whether attributes are present.
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public boolean hasAttributes() throws CodaException
+    {
+        int has_attributes[] = new int[1];
+        codac.type_has_attributes(this.type, has_attributes);
+        return has_attributes[0] == 1;
+    }
 
     /**
      * Get the storage format of a type.

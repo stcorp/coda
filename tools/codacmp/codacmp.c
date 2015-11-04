@@ -767,38 +767,38 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
 
     /* check attributes */
     {
-        long num_elements1;
-        long num_elements2;
+        int has_attributes1;
+        int has_attributes2;
 
-        if (coda_cursor_goto_attributes(cursor1) != 0)
+        if (coda_cursor_has_attributes(cursor1, &has_attributes1) != 0)
         {
             print_error_with_cursor(cursor1, 1);
             return -1;
         }
-        if (coda_cursor_goto_attributes(cursor2) != 0)
+        if (coda_cursor_has_attributes(cursor2, &has_attributes2) != 0)
         {
             print_error_with_cursor(cursor2, 2);
             return -1;
         }
-        if (coda_cursor_get_num_elements(cursor1, &num_elements1) != 0)
+        if (has_attributes1 || has_attributes2)
         {
-            print_error_with_cursor(cursor1, 1);
-            return -1;
-        }
-        if (coda_cursor_get_num_elements(cursor2, &num_elements2) != 0)
-        {
-            print_error_with_cursor(cursor2, 2);
-            return -1;
-        }
-        if (num_elements1 > 0 || num_elements2 > 0)
-        {
+            if (coda_cursor_goto_attributes(cursor1) != 0)
+            {
+                print_error_with_cursor(cursor1, 1);
+                return -1;
+            }
+            if (coda_cursor_goto_attributes(cursor2) != 0)
+            {
+                print_error_with_cursor(cursor2, 2);
+                return -1;
+            }
             if (compare_data(cursor1, cursor2) != 0)
             {
                 return -1;
             }
+            coda_cursor_goto_parent(cursor1);
+            coda_cursor_goto_parent(cursor2);
         }
-        coda_cursor_goto_parent(cursor1);
-        coda_cursor_goto_parent(cursor2);
     }
 
     return 0;
@@ -907,7 +907,7 @@ int main(int argc, char **argv)
         }
         else
         {
-            fprintf(stderr, "ERROR: Incorrect arguments\n");
+            fprintf(stderr, "ERROR: invalid arguments\n");
             print_help();
             exit(1);
         }
@@ -916,7 +916,7 @@ int main(int argc, char **argv)
     if (i != argc - 2)
     {
         /* we expect two filenames for the last two arguments */
-        fprintf(stderr, "ERROR: Incorrect arguments\n");
+        fprintf(stderr, "ERROR: invalid arguments\n");
         print_help();
         exit(1);
     }

@@ -64,6 +64,7 @@
 %rename(type_get_class_name) coda_type_get_class_name;
 %rename(type_get_native_type_name) coda_type_get_native_type_name;
 %rename(type_get_special_type_name) coda_type_get_special_type_name;
+%rename(type_has_attributes) coda_type_has_attributes;
 %rename(type_get_format) coda_type_get_format;
 %rename(type_get_class) coda_type_get_class;
 %rename(type_get_read_type) coda_type_get_read_type;
@@ -89,6 +90,7 @@
 %rename(type_get_special_type) coda_type_get_special_type;
 %rename(type_get_special_base_type) coda_type_get_special_base_type;
 %rename(cursor_set_product) coda_cursor_set_product;
+%rename(cursor_goto) coda_cursor_goto;
 %rename(cursor_goto_first_record_field) coda_cursor_goto_first_record_field;
 %rename(cursor_goto_next_record_field) coda_cursor_goto_next_record_field;
 %rename(cursor_goto_record_field_by_index) coda_cursor_goto_record_field_by_index;
@@ -103,6 +105,7 @@
 %rename(cursor_goto_parent) coda_cursor_goto_parent;
 %rename(cursor_use_base_type_of_special_type) coda_cursor_use_base_type_of_special_type;
 %rename(cursor_has_ascii_content) coda_cursor_has_ascii_content;
+%rename(cursor_has_attributes) coda_cursor_has_attributes;
 %rename(cursor_get_string_length) coda_cursor_get_string_length;
 %rename(cursor_get_bit_size) coda_cursor_get_bit_size;
 %rename(cursor_get_byte_size) coda_cursor_get_byte_size;

@@ -744,11 +744,6 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
             free(name);
             return -1;
         }
-        if (conversion->numerator == 1.0 && conversion->add_offset == 0.0 && coda_isNaN(conversion->invalid_value))
-        {
-            coda_conversion_delete(conversion);
-            conversion = NULL;
-        }
 
         /* nc_type */
         if (read(product->fd, &nc_type, 4) < 0)
@@ -763,6 +758,18 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
 #ifndef WORDS_BIGENDIAN
         swap_int32(&nc_type);
 #endif
+
+        /* check if we need to use a conversion */
+        if (conversion->numerator == 1.0 && conversion->add_offset == 0.0)
+        {
+            /* don't create conversions for non-floating type data if we only have an 'invalid_value' attribute */
+            if ((nc_type != 5 && nc_type != 6) || coda_isNaN(conversion->invalid_value))
+            {
+                coda_conversion_delete(conversion);
+                conversion = NULL;
+            }
+        }
+
         /* vsize */
         if (read(product->fd, &vsize, 4) < 0)
         {

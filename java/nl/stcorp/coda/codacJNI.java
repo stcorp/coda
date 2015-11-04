@@ -67,6 +67,7 @@ public class codacJNI {
   public final static native int get_product_definition_file(long jarg1, String[] jarg2) throws nl.stcorp.coda.CodaException;
   public final static native int get_product_root_type(long jarg1, SWIGTYPE_p_coda_type_struct jarg2) throws nl.stcorp.coda.CodaException;
   public final static native int get_product_variable_value(long jarg1, String jarg2, int jarg3, long[] jarg4) throws nl.stcorp.coda.CodaException;
+  public final static native int type_has_attributes(long jarg1, int[] jarg2) throws nl.stcorp.coda.CodaException;
   public final static native int type_get_format(long jarg1, int[] jarg2) throws nl.stcorp.coda.CodaException;
   public final static native int type_get_class(long jarg1, int[] jarg2) throws nl.stcorp.coda.CodaException;
   public final static native int type_get_read_type(long jarg1, int[] jarg2) throws nl.stcorp.coda.CodaException;
@@ -92,6 +93,7 @@ public class codacJNI {
   public final static native int type_get_special_type(long jarg1, int[] jarg2) throws nl.stcorp.coda.CodaException;
   public final static native int type_get_special_base_type(long jarg1, SWIGTYPE_p_coda_type_struct jarg2) throws nl.stcorp.coda.CodaException;
   public final static native int cursor_set_product(long jarg1, long jarg2) throws nl.stcorp.coda.CodaException;
+  public final static native int cursor_goto(long jarg1, String jarg2) throws nl.stcorp.coda.CodaException;
   public final static native int cursor_goto_first_record_field(long jarg1) throws nl.stcorp.coda.CodaException;
   public final static native int cursor_goto_next_record_field(long jarg1) throws nl.stcorp.coda.CodaException;
   public final static native int cursor_goto_record_field_by_index(long jarg1, int jarg2) throws nl.stcorp.coda.CodaException;
@@ -106,6 +108,7 @@ public class codacJNI {
   public final static native int cursor_goto_parent(long jarg1) throws nl.stcorp.coda.CodaException;
   public final static native int cursor_use_base_type_of_special_type(long jarg1) throws nl.stcorp.coda.CodaException;
   public final static native int cursor_has_ascii_content(long jarg1, int[] jarg2) throws nl.stcorp.coda.CodaException;
+  public final static native int cursor_has_attributes(long jarg1, int[] jarg2) throws nl.stcorp.coda.CodaException;
   public final static native int cursor_get_string_length(long jarg1, int[] jarg2) throws nl.stcorp.coda.CodaException;
   public final static native int cursor_get_bit_size(long jarg1, long[] jarg2) throws nl.stcorp.coda.CodaException;
   public final static native int cursor_get_byte_size(long jarg1, long[] jarg2) throws nl.stcorp.coda.CodaException;

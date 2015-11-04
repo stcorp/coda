@@ -38,7 +38,7 @@
 static void coda_matlab_parse_arg(const mxArray *arg, int *arg_type, long *index, char **name, int *length)
 {
     int arg_num_dims;
-    const int *arg_dim;
+    const mwSize *arg_dim;
 
     mxAssert(arg != NULL, "Arguments array pointer is zero");
     mxAssert(arg_type != NULL, "Pointer to 'type' argument is zero");
@@ -70,7 +70,7 @@ static void coda_matlab_parse_arg(const mxArray *arg, int *arg_type, long *index
     else if (arg_num_dims == 2 && arg_dim[0] == 1 && arg_dim[1] > 0 && arg_dim[1] <= CODA_MAX_NUM_DIMS)
     {
         void *data;
-        int i;
+        mwSize i;
 
         /* arg contains value array */
 

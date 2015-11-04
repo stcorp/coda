@@ -385,7 +385,7 @@ static void traverse_data()
                         {
                             if (coda_errno == CODA_ERROR_INVALID_NAME)
                             {
-                                fprintf(stderr, "ERROR: Incorrect filter - incorrect fieldname (%s)\n", name);
+                                fprintf(stderr, "ERROR: incorrect filter - incorrect fieldname (%s)\n", name);
                                 exit(1);
                             }
                             handle_coda_error();

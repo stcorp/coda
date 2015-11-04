@@ -1,3 +1,21 @@
+2.4 2012-02-23
+~~~~~~~~~~~~~~
+
+* Added coda_cursor_goto(), coda_type_has_attributes(), and
+  coda_cursor_has_attributes().
+
+* Added basic support for RINEX Clock (2.0 and 3.0) format.
+
+* Added 'with' function to CODA expression language and introduced
+  additional index variables ('j' and 'k') for the 'for' and 'with'
+  functions.
+
+* Improved document to better explain setting of CODA definition path.
+
+* Added missing utc datetime functions to Fortran interface.
+
+* Fixed issue in printing of attributes for 'codadd list'.
+
 2.3.1 2012-01-21
 ~~~~~~~~~~~~~~~~
 

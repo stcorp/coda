@@ -21,8 +21,8 @@
       <h2>Contents</h2>
 
       <ul>
-      	<li><a href="#initialisation">Initialisation of CODA</a></li>
-      	<li><a href="#high_level_types">High level CODA Data Types</a></li>
+        <li><a href="#codadef">CODA Definition Path</a></li>
+        <li><a href="#high_level_types">High level CODA Data Types</a></li>
         <li><a href="#high_level_functions">High level CODA Functions</a>
           <ul>
             <li><a href="#coda_open_hl"><code>coda.open</code></a></li>
@@ -89,6 +89,7 @@
             <li><a href="#coda_type_get_class_name"><code>coda.type_get_class_name</code></a></li>
             <li><a href="#coda_type_get_native_type_name"><code>coda.type_get_native_type_name</code></a></li>
             <li><a href="#coda_type_get_special_type_name"><code>coda.type_get_special_type_name</code></a></li>
+            <li><a href="#coda_type_has_attributes"><code>coda.type_has_attributes</code></a></li>
             <li><a href="#coda_type_get_format"><code>coda.type_get_format</code></a></li>
             <li><a href="#coda_type_get_class"><code>coda.type_get_class</code></a></li>
             <li><a href="#coda_type_get_read_type"><code>coda.type_get_read_type</code></a></li>
@@ -114,6 +115,7 @@
             <li><a href="#coda_type_get_special_type"><code>coda.type_get_special_type</code></a></li>
             <li><a href="#coda_type_get_special_base_type"><code>coda.type_get_special_base_type</code></a></li>
             <li><a href="#coda_cursor_set_product"><code>coda.cursor_set_product</code></a></li>
+            <li><a href="#coda_cursor_goto"><code>coda.cursor_goto</code></a></li>
             <li><a href="#coda_cursor_goto_first_record_field"><code>coda.cursor_goto_first_record_field</code></a></li>
             <li><a href="#coda_cursor_goto_next_record_field"><code>coda.cursor_goto_next_record_field</code></a></li>
             <li><a href="#coda_cursor_goto_record_field_by_index"><code>coda.cursor_goto_record_field_by_index</code></a></li>
@@ -128,6 +130,7 @@
             <li><a href="#coda_cursor_goto_parent"><code>coda.cursor_goto_parent</code></a></li>
             <li><a href="#coda_cursor_use_base_type_of_special_type"><code>coda.cursor_use_base_type_of_special_type</code></a></li>
             <li><a href="#coda_cursor_has_ascii_content"><code>coda.cursor_has_ascii_content</code></a></li>
+            <li><a href="#coda_cursor_has_attributes"><code>coda.cursor_has_attributes</code></a></li>
             <li><a href="#coda_cursor_get_string_length"><code>coda.cursor_get_string_length</code></a></li>
             <li><a href="#coda_cursor_get_bit_size"><code>coda.cursor_get_bit_size</code></a></li>
             <li><a href="#coda_cursor_get_byte_size"><code>coda.cursor_get_byte_size</code></a></li>
@@ -190,9 +193,11 @@
       </ul>
 
 
-      <h2 id="initialisation">Initialisation of CODA</h2>
+      <h2 id="codadef">CODA Definition Path</h2>
       
-      <p>When you import the CODA Python package this will trigger an initialisation of CODA. Part of this initialisation is that CODA will search its definition path for all .codadef Product Format Definition files. In order to specify where CODA will look for its .codadef files you can set the CODA_DEFINITION environment variable before you import the CODA Python package. Setting the environment variable can be performed from within Python using:</p>
+      <p>Note that in order to access products whose formats are defined using .codadef files, you should let CODA now where these .codadef files are stored. You can do this  by setting the CODA_DEFINITION environment variable. This environment variable should be a ':' separated (';' on Windows) list of absolute paths to directories containing .codadef files or absolute paths to .codadef files themselves (or a mix of those).</p>
+
+      <p>When you import the CODA Python package this will trigger an initialisation of CODA, so you should make sure that the CODA_DEFINITION environment variable is set  before you import the CODA Python package. Setting the environment variable can be performed from within Python using:</p>
       
 <div class="fragment"><pre>
 import os
@@ -499,6 +504,7 @@ except coda.CodacError, e:
       <h5 id="coda_type_get_class_name"><code>coda.type_get_class_name(type_class)</code></h5>
       <h5 id="coda_type_get_native_type_name"><code>coda.type_get_native_type_name(native_type)</code></h5>
       <h5 id="coda_type_get_special_type_name"><code>coda.type_get_special_type_name(special_type)</code></h5>
+      <h5 id="coda_type_has_attributes"><code>has_attributes = coda.type_has_attributes(type)</code></h5>
       <h5 id="coda_type_get_format"><code>format = coda.type_get_format(type)</code></h5>
       <h5 id="coda_type_get_class"><code>type_class = coda.type_get_class(type)</code></h5>
       <h5 id="coda_type_get_read_type"><code>read_type = coda.type_get_read_type(type)</code></h5>
@@ -525,6 +531,7 @@ except coda.CodacError, e:
       <h5 id="coda_type_get_special_base_type"><code>base_type = coda.type_get_special_base_type(type)</code></h5>
       <h5 id="coda_cursor_set_product"><code>coda.cursor_set_product(cursor, product)</code></h5>
       <p>You can create a new cursor with <code>cursor = coda.Cursor()</code>. With <code>coda.cursor_set_product</code> this cursor can then be initialized to the root of a product. It is also possible to use a cursor as <code>start</code> parameter in the <a href="#high_level_functions">high level CODA functions</a>.</p>
+      <h5 id="coda_cursor_goto"><code>coda.cursor_goto(cursor, path)</code></h5>
       <h5 id="coda_cursor_goto_first_record_field"><code>coda.cursor_goto_first_record_field(cursor)</code></h5>
       <h5 id="coda_cursor_goto_next_record_field"><code>coda.cursor_goto_next_record_field(cursor)</code></h5>
       <h5 id="coda_cursor_goto_record_field_by_index"><code>coda.cursor_goto_record_field_by_index(cursor, index)</code></h5>
@@ -540,6 +547,7 @@ except coda.CodacError, e:
       <h5 id="coda_cursor_goto_parent"><code>coda.cursor_goto_parent(cursor)</code></h5>
       <h5 id="coda_cursor_use_base_type_of_special_type"><code>coda.cursor_use_base_type_of_special_type(cursor)</code></h5>
       <h5 id="coda_cursor_has_ascii_content"><code>has_ascii_content = coda.cursor_has_ascii_content(cursor)</code></h5>
+      <h5 id="coda_cursor_has_attributes"><code>has_attributes = coda.cursor_has_attributes(cursor)</code></h5>
       <h5 id="coda_cursor_get_string_length"><code>length = coda.cursor_get_string_length(cursor)</code></h5>
       <h5 id="coda_cursor_get_bit_size"><code>bit_size = coda.cursor_get_bit_size(cursor)</code></h5>
       <h5 id="coda_cursor_get_byte_size"><code>byte_size = coda.cursor_get_byte_size(cursor)</code></h5>

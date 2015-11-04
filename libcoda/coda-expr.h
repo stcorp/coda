@@ -52,7 +52,6 @@ enum coda_expression_node_type_enum
     expr_filename,
     expr_float,
     expr_floor,
-    expr_for_index,
     expr_for,
     expr_goto_array_element,
     expr_goto_attribute,
@@ -66,6 +65,7 @@ enum coda_expression_node_type_enum
     expr_greater,
     expr_if,
     expr_index,
+    expr_index_var,
     expr_integer,
     expr_isinf,
     expr_ismininf,
@@ -103,7 +103,8 @@ enum coda_expression_node_type_enum
     expr_variable_exists,
     expr_variable_index,
     expr_variable_set,
-    expr_variable_value
+    expr_variable_value,
+    expr_with
 };
 typedef enum coda_expression_node_type_enum coda_expression_node_type;
 

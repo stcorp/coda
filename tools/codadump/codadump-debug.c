@@ -114,25 +114,24 @@ static void print_escaped(const char *data, long length)
 static void print_data(coda_cursor *cursor)
 {
     coda_type_class type_class;
-    long num_attributes;
+    int has_attributes;
 
-    /* print attributes */
-    if (coda_cursor_goto_attributes(cursor) != 0)
+    if (coda_cursor_has_attributes(cursor, &has_attributes) != 0)
     {
         handle_coda_error();
     }
-    if (coda_cursor_get_num_elements(cursor, &num_attributes) != 0)
+    if (has_attributes)
     {
-        handle_coda_error();
-    }
-    if (num_attributes > 0)
-    {
+        if (coda_cursor_goto_attributes(cursor) != 0)
+        {
+            handle_coda_error();
+        }
         fi_printf("{attributes}\n");
         INDENT++;
         print_data(cursor);
         INDENT--;
+        coda_cursor_goto_parent(cursor);
     }
-    coda_cursor_goto_parent(cursor);
 
     if (coda_cursor_get_type_class(cursor, &type_class) != 0)
     {

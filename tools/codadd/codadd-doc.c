@@ -37,19 +37,15 @@
 #include "coda-definition.h"
 
 #ifdef __GNUC__
-static int ff_printf(const char *templ, ...) __attribute__ ((format(printf, 1, 2)));
-static int fi_printf(const char *templ, ...) __attribute__ ((format(printf, 1, 2)));
+static int ff_printf(const char *fmt, ...) __attribute__ ((format(printf, 1, 2)));
+static int fi_printf(const char *fmt, ...) __attribute__ ((format(printf, 1, 2)));
 #else
-static int ff_printf(const char *templ, ...);
-static int fi_printf(const char *templ, ...);
+static int ff_printf(const char *fmt, ...);
+static int fi_printf(const char *fmt, ...);
 #endif
 
-#define SPLIT_SIZE 80
-#define MAX_IDENTIFIER_LENGTH 45
-
-int INDENT = 0;
-int DEPTH = 0;
-FILE *FFILE;
+static int INDENT = 0;
+static FILE *FFILE;
 
 const char *product_variable_name = NULL;
 
@@ -66,27 +62,27 @@ static void indent(void)
     }
 }
 
-static int ff_printf(const char *templ, ...)
+static int ff_printf(const char *fmt, ...)
 {
     int result;
     va_list ap;
 
-    va_start(ap, templ);
-    result = vfprintf(FFILE, templ, ap);
+    va_start(ap, fmt);
+    result = vfprintf(FFILE, fmt, ap);
     va_end(ap);
 
     return result;
 }
 
-static int fi_printf(const char *templ, ...)
+static int fi_printf(const char *fmt, ...)
 {
     int result;
     va_list ap;
 
     indent();
 
-    va_start(ap, templ);
-    result = vfprintf(FFILE, templ, ap);
+    va_start(ap, fmt);
+    result = vfprintf(FFILE, fmt, ap);
     va_end(ap);
 
     return result;
@@ -1081,11 +1077,8 @@ static void generate_html_expr(const coda_expression *expr, int precedence)
             generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(")");
             break;
-        case expr_for_index:
-            ff_printf("<i>i</i>");
-            break;
         case expr_for:
-            ff_printf("<b>for</b> <i>i</i> = ");
+            ff_printf("<b>for</b> <i>%s</i> = ", ((coda_expression_operation *)expr)->identifier);
             generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(" <b>to</b> ");
             generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
@@ -1182,6 +1175,9 @@ static void generate_html_expr(const coda_expression *expr, int precedence)
             ff_printf("<b>index</b>(");
             generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
             ff_printf(")");
+            break;
+        case expr_index_var:
+            ff_printf("<i>%s</i>", ((coda_expression_operation *)expr)->identifier);
             break;
         case expr_integer:
             ff_printf("<b>int</b>(");
@@ -1474,6 +1470,13 @@ static void generate_html_expr(const coda_expression *expr, int precedence)
                 generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
                 ff_printf("]");
             }
+            break;
+        case expr_with:
+            ff_printf("<b>with</b>(<i>%s</i> = ", ((coda_expression_operation *)expr)->identifier);
+            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
+            ff_printf(", ");
+            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
+            ff_printf(")");
             break;
     }
 }

@@ -66,7 +66,7 @@ static mxArray *coda_matlab_get_multi_index_data(coda_cursor *base_cursor, int n
     int array_num_dims;
     long local_index[CODA_MAX_NUM_DIMS];
     long result_dim[CODA_MAX_NUM_DIMS];
-    int matlab_dim[CODA_MAX_NUM_DIMS];
+    mwSize matlab_dim[CODA_MAX_NUM_DIMS];
     int result_index;
     int result_is_scalar = 0;
     long num_elements;
@@ -578,7 +578,7 @@ mxArray *coda_matlab_read_data(coda_cursor *cursor)
                             }
                             else
                             {
-                                int dim[CODA_MAX_NUM_DIMS];
+                                mwSize dim[CODA_MAX_NUM_DIMS];
 
                                 dim[0] = (int)byte_size;
                                 mx_data = mxCreateNumericArray(1, dim, mxUINT8_CLASS, mxREAL);
@@ -858,7 +858,7 @@ static int coda_matlab_read_data_direct(coda_cursor *cursor, mxArray *mx_data, i
  */
 static mxArray *coda_matlab_read_array(coda_cursor *cursor, int num_dims, const long *dim, int num_elements)
 {
-    int matlab_dim[CODA_MAX_NUM_DIMS];
+    mwSize matlab_dim[CODA_MAX_NUM_DIMS];
     long temp_dim[1];
     mxArray *mx_data = NULL;
     coda_type *array_type;

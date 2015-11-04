@@ -103,7 +103,7 @@ static void generate_escaped_string(const char *str, int length)
 static void print_version()
 {
     printf("codaeval %s\n", libcoda_version);
-    printf("Copyright (C) 2007-2011 S[&]T, The Netherlands\n");
+    printf("Copyright (C) 2007-2012 S[&]T, The Netherlands\n");
     printf("\n");
 }
 
@@ -334,7 +334,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            fprintf(stderr, "ERROR: Incorrect arguments\n");
+            fprintf(stderr, "ERROR: invalid arguments\n");
             print_help();
             exit(1);
         }
@@ -343,7 +343,7 @@ int main(int argc, char *argv[])
     /* expression parameter */
     if (i >= argc)
     {
-        fprintf(stderr, "ERROR: Incorrect arguments\n");
+        fprintf(stderr, "ERROR: invalid arguments\n");
         print_help();
         exit(1);
     }
@@ -382,7 +382,7 @@ int main(int argc, char *argv[])
         if (expr_type != coda_expression_boolean && expr_type != coda_expression_integer &&
             expr_type != coda_expression_float && expr_type != coda_expression_string)
         {
-            fprintf(stderr, "ERROR: Only boolean, integer, floating point, and string expressions can be evaluated on "
+            fprintf(stderr, "ERROR: only boolean, integer, floating point, and string expressions can be evaluated on "
                     "products\n");
             exit(1);
         }
@@ -413,14 +413,14 @@ int main(int argc, char *argv[])
     {
         if (node_expr != NULL)
         {
-            fprintf(stderr, "ERROR: Incorrect arguments (path expression is only allowed if a file/directory list is "
+            fprintf(stderr, "ERROR: invalid arguments (path expression is only allowed if a file/directory list is "
                     "provided)\n");
             exit(1);
         }
         if (!coda_expression_is_constant(eval_expr))
         {
             fprintf(stderr,
-                    "ERROR: Incorrect arguments (file/directory list needs to be provided if expression is not a "
+                    "ERROR: invalid arguments (file/directory list needs to be provided if expression is not a "
                     "constant expression)\n");
             exit(1);
         }

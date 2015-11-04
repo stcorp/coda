@@ -1,5 +1,10 @@
 JAVA_DOCFILES = \
 	doc/html/java/annotated.html \
+	doc/html/java/class_array_ordering_enum.html \
+	doc/html/java/class_format_enum.html \
+	doc/html/java/class_native_type_enum.html \
+	doc/html/java/class_special_type_enum.html \
+	doc/html/java/class_type_class_enum.html \
 	doc/html/java/classes.html \
 	doc/html/java/classnl_1_1stcorp_1_1coda_1_1_coda-members.html \
 	doc/html/java/classnl_1_1stcorp_1_1coda_1_1_coda.html \
@@ -17,6 +22,16 @@ JAVA_DOCFILES = \
 	doc/html/java/functions_func.html \
 	doc/html/java/index.html
 doc/html/java/annotated.html:
+	$(MAKE) java_doc
+doc/html/java/class_array_ordering_enum.html:
+	$(MAKE) java_doc
+doc/html/java/class_format_enum.html:
+	$(MAKE) java_doc
+doc/html/java/class_native_type_enum.html:
+	$(MAKE) java_doc
+doc/html/java/class_special_type_enum.html:
+	$(MAKE) java_doc
+doc/html/java/class_type_class_enum.html:
 	$(MAKE) java_doc
 doc/html/java/classes.html:
 	$(MAKE) java_doc

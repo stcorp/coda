@@ -14,7 +14,7 @@
 
       <h1>CODA Expressions</h1>
       
-      <p>CODA comes with an advanced expression language that is able to perform calculations on product data. The expression language is primarilay used in the definitions of the product formats to formally describe how variable sizes, offsets, etc. are calculated. However, the expression language is also used within e.g. the codafind tool to formulate queries on data products. The expression language provides a means to specify locations in the file, read values from the file and apply calculations on these values.</p>
+      <p>CODA comes with an advanced expression language that is able to perform calculations on product data. The expression language is primarilay used in the definitions of the product formats to formally describe how variable sizes, offsets, etc. are calculated. However, the expression language is also used within e.g. the codafind and codaeval tools to formulate queries on data products. The expression language provides a means to specify locations in a file, read values from a file and apply calculations on these values.</p>
 
       <p>The expression language is a basic language in ASCII format. In this document we will describe the language and provide a formal definition using the ISO/IEC 14977 EBNF (Extended Backus-Naur Form) format.</p>
       
@@ -24,7 +24,7 @@
       
       <p>Expressions can range from being very simple (specifying just a constant value) to very complex (using various functions/operations to calculate the resulting value). An expression of one type can make use of sub-expressions of another type. For instance, a boolean expresssion can return the result of a comparison of two string expressions.</p>
 
-      <p>In addition to expressions for each of the 5 types there is also a sixth category, the expressions that do not return any value. Those expressions are refered to as <i>void</i> expressions (i.e. statements).</p>
+      <p>In addition to expressions for each of the five data types there is also a sixth category of expressions, those that do not return any value. These expressions are refered to as <i>void</i> expressions (i.e. statements).</p>
       
       <p>The CODA expressions can thus be categorized in the following six groups:</p>
 
@@ -55,9 +55,9 @@
 
       <h3>functions</h3>
       
-      <h5>for i = integer to integer (step integer) do void</h5>
+      <h5>for indexvar = integer to integer (step integer) do void</h5>
 
-      <p>The <code>for</code> expression executes the void expression after '<code>do</code>' in a loop. The loop will terminate as soon as the index <code><i>i</i></code> exceeds the value of the integer expression after '<code>to</code>'. The step value is optional. The step may be negative, in which case the loop index will decrease with each step. The current value of the loop index can be used inside the void expression using the '<code>i</code>' integer expression.</p>
+      <p>The <code>for</code> expression executes the void expression after '<code>do</code>' in a loop. The loop will terminate as soon as the index '<code>indexvar</code>' exceeds the value of the integer expression after '<code>to</code>'. The index '<code>indexvar</code>' can be any of three variables that can be used for keeping indices: <code><i>i</i></code>, <code><i>j</i></code>, or <code><i>k</i></code>. The step value is optional. The step may be negative, in which case the loop index will decrease with each step. The current value of the loop index can be used inside the void expression using the index integer expression '<code><i>i</i></code>', '<code><i>j</i></code>', or '<code><i>k</i></code>'.</p>
 
       <p>Example:</p>
       <div class="fragment"><code><b>for</b> <i>i</i> = 0 <b>to</b> 2 <b>do</b> <i>$count</i>[<i>i</i>] = 100 * <i>i</i></code></div>
@@ -137,6 +137,15 @@
 
       <p>If the first boolean expression argument evaluates to true the second argument is evaluated and its result returned, otherwise the third argument is evaluated and its result returned.</p>
 
+      <h5>with(indexvar = integer, boolean)</h5>
+
+      <p>Evaluate the boolean expression as provided in the second argument while using the given <code>indexvar</code> (which can be either <code><i>i</i></code>, <code><i>j</i></code>, or <code><i>k</i></code>) as precalculated/cached value. This is useful if e.g. an expression needs to use an integer value from a product twice or more and you only want to read the value once.</p>
+
+      <p>Example:</p>
+      <div class="fragment"><code><b>with</b>(<i>k</i> = <b>int</b>(/data/intvalue), <i>k</i> &gt; 10 || <i>k</i> &lt; 0)</code></div>
+
+      <p>This will be faster than using '<code><b>int</b>(/data/intvalue) &gt; 10 || <b>int</b>(/data/intvalue) &lt; 0</code>'.</p>
+
       <h2>integer expressions</h2>
 
       <p>An integer expression is an expression that results in an integer value.</p>
@@ -149,11 +158,12 @@
       
       <h3>variables</h3>
       
-      <p>There are two kinds of variables that can be used as integer expression: product variables and the for-loop index. CODA only supports integer variables (i.e. variables can not contain boolean, floating point, or string data).</p>
+      <p>There are two kinds of variables that can be used as integer expression: product variables and index variables. CODA only supports integer variables (i.e. variables can not contain boolean, floating point, or string data).</p>
       
-      <p>Product variables are referenced using a '<code>$</code>' character followed by the name of the product variable. If the product variable is an array then an additional array subscript should also be provided using '<code>[]</code>'. For example '<code>$foo</code>' will return the value of the scalar product variable 'foo' and '<code>$bar[10]</code>' will return the 11-th array element from the 1-dimensional product variable 'bar'. Note that product variables can only be refered to if they have been defined in the CODA product format definition for the open product file.</p>
+      <p>Product variables can be seen as a caching mechanism for expression results. A product variable is a named scalar or a one-dimensional array that is attached to an open product. Note that product variables can only be refered to if they have been defined in the CODA product format definition for the open product file. The initialisation expression for a product variable is fixed and defined as part of the product format definition. Product variables are initialized the first time a value is requested from it (it will thus not impact the performance of opening a product file).<br />
+      Product variables are referenced using a '<code>$</code>' character followed by the name of the product variable. If the product variable is an array then an additional (zero-based) array subscript should also be provided using '<code>[]</code>'. For example '<code>$foo</code>' will return the value of the scalar product variable 'foo' and '<code>$bar[10]</code>' will return the 11-th array element from the 1-dimensional product variable 'bar'.</p>
 
-      <p>Inside a for loop the current value of the loop index can be retrieved by using the '<code><i>i</i></code>' expression.</p>
+      <p>Inside a for loop or '<code>with</code>' function the current value of the loop/with index can be retrieved by using the corresponding '<code><i>i</i></code>', '<code><i>j</i></code>', or '<code><i>k</i></code>' expression. These are called index variables.</p>
 
       <h3>operators</h3>
       
@@ -226,7 +236,7 @@
       <p>This function only works if node points to string data. It will return the length (number of characters) of the string pointed to by the node.</p>
 
       <p>Example:</p>
-      <div class="fragment"><code><b>length</b>(/some/data)==length(str(/some/data))</code></div>
+      <div class="fragment"><code><b>length</b>(/some/data)==<b>length</b>(<b>str</b>(/some/data))</code></div>
       <p>This should always be true.</p>
 
       <h5>bitsize(node)</h5>
@@ -286,6 +296,15 @@
       <p>You should provide an explicit termination condition if you want the function to return -1 if no elements were found matching the boolean expression of the second argument.</p>
       
       <p>The function will, for each array element, always first evaluate the termination condition. Only if that evaluates to false will the boolean expression of the second argument be evaluated (otherwise the function will return -1).</p>
+
+      <h5>with(indexvar = integer, integer)</h5>
+
+      <p>Evaluate the integer expression as provided in the second argument while using the given <code>indexvar</code> (which can be either <code><i>i</i></code>, <code><i>j</i></code>, or <code><i>k</i></code>) as precalculated/cached value. This is useful if e.g. an expression needs to use an integer value from a product twice or more and you only want to read the value once.</p>
+
+      <p>Example:</p>
+      <div class="fragment"><code><b>with</b>(<i>k</i> = <b>int</b>(/data/intvalue), <b>if</b>(<i>k</i> &gt; 10, <i>k</i> + 10, <i>k</i> - 5))</code></div>
+
+      <p>This will be faster than using '<code><b>if</b>(<b>int</b>(/data/intvalue) &gt; 10, <b>int</b>(/data/intvalue) + 10, <b>int</b>(/data/intvalue) - 5)</code>'.</p>
 
       <h2>float expressions</h2>
 
@@ -376,6 +395,15 @@ inf
       <h5>if(boolean, float, float)</h5>
 
       <p>If the boolean expression evaluates to true the second argument is evaluated and its result returned, otherwise the third argument is evaluated and its result returned.</p>
+
+      <h5>with(indexvar = integer, float)</h5>
+
+      <p>Evaluate the float expression as provided in the second argument while using the given <code>indexvar</code> (which can be either <code><i>i</i></code>, <code><i>j</i></code>, or <code><i>k</i></code>) as precalculated/cached value. This is useful if e.g. an expression needs to use an integer value from a product twice or more and you only want to read the value once.</p>
+
+      <p>Example:</p>
+      <div class="fragment"><code><b>with</b>(<i>k</i> = <b>int</b>(/data/intvalue), <b>if</b>(<i>k</i> &lt;= 0, 0.0, <b>if</b>(<i>k</i> &gt;= 100, 1.0, <i>k</i> / 100.0)))</code></div>
+
+      <p>This will be faster than using '<code><b>if</b>(<b>int</b>(/data/intvalue) &lt;= 0, 0.0, <b>if</b>(<b>int</b>(/data/intvalue) &gt;= 100, 1.0, <b>int</b>(/data/intvalue) / 100.0))</code>'.</p>
 
       <h2>string expressions</h2>
 
@@ -508,6 +536,15 @@ inf
 
       <p>If the boolean expression evaluates to true the second argument is evaluated and its result returned, otherwise the third argument is evaluated and its result returned.</p>
 
+      <h5>with(indexvar = integer, string)</h5>
+
+      <p>Evaluate the string expression as provided in the second argument while using the given <code>indexvar</code> (which can be either <code><i>i</i></code>, <code><i>j</i></code>, or <code><i>k</i></code>) as precalculated/cached value. This is useful if e.g. an expression needs to use an integer value from a product twice or more and you only want to read the value once.</p>
+
+      <p>Example:</p>
+      <div class="fragment"><code><b>with</b>(<i>k</i> = <b>length</b>(/some/data), <b>substr</b>(<i>k</i> / 2, <i>k</i> - (<i>k</i> / 2), <b>str</b>(/some/data)))</code></div>
+
+      <p>This will be faster than using '<code><b>substr</b>(<b>length</b>(/some/data) / 2, <b>length</b>(/some/data) - (<b>length</b>(/some/data) / 2), <b>str</b>(/some/data))</code>'.</p>
+
       <h2>node expressions</h2>
       
       <p>A node describes a path into a product file similar to XPath for XML.</p>
@@ -538,6 +575,8 @@ character = alpha | digit |
 
 identifier = alpha, [{alpha | digit | '_'}] ;
 
+indexvar = 'i'|'j'|'k'
+
 digit = '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9' ;
 sign = '+'|'-' ;
 
@@ -551,10 +590,11 @@ voidexpr =
 	'$' identifier '=' intexpr |
 	'$' identifier '[' intexpr ']' '=' intexpr |
 	voidexpr ';' voidexpr |
-	'for' 'i' '=' intexpr 'to' intexpr 'do' voidexpr |
-	'for' 'i' '=' intexpr 'to' intexpr 'step' intexpr 'do' voidexpr |
-	'for' 'i' '=' intexpr 'to' intexpr 'step' intexpr 'do' voidexpr |
+	'for' indexvar '=' intexpr 'to' intexpr 'do' voidexpr |
+	'for' indexvar '=' intexpr 'to' intexpr 'step' intexpr 'do' voidexpr |
+	'for' indexvar '=' intexpr 'to' intexpr 'step' intexpr 'do' voidexpr |
 	'goto' '(' node ')' ;
+	'with', '(', indexvar, '=', intexpr, ',', voidexpr, ')' ;
 
 boolexpr =
 	'true' |
@@ -598,6 +638,7 @@ boolexpr =
 	'exists', '(', node, ',', boolexpr, ')' |
 	'all', '(', node, ',', boolexpr, ')' ;
 	'if', '(' boolexpr, ',', boolexpr, ',', boolexpr, ')' ;
+	'with', '(', indexvar, '=', intexpr, ',', boolexpr, ')' ;
 
 intexpr = 
 	intvalue |
@@ -606,7 +647,7 @@ intexpr =
 	'int', '(', stringexpr, ')' |
 	'$', identifier |
 	'$', identifier, '[', intexpr, ']' |
-	'i' |
+	indexvar |
 	'-', intexpr |
 	'+', intexpr |
 	intexpr, '+', intexpr |
@@ -637,6 +678,7 @@ intexpr =
 	'if', '(', boolexpr, ',', intexpr, ',' intexpr, ')' |
 	'unboundindex', '(', node, ',', boolexpr, ')' |
 	'unboundindex', '(', node, ',', boolexpr, ',', boolexpr, ')' ;
+	'with', '(', indexvar, '=', intexpr, ',', intexpr, ')' ;
 
 floatexpr = 
 	floatvalue |
@@ -681,6 +723,7 @@ floatexpr =
 	'if', '(' boolexpr, ',', floatexpr, ',', floatexpr, ')' |
 	'if', '(' boolexpr, ',', floatexpr, ',', intexpr, ')' |
 	'if', '(' boolexpr, ',', intexpr, ',', floatexpr, ')' ;
+	'with', '(', indexvar, '=', intexpr, ',', floatexpr, ')' ;
 
 stringexpr = 
 	stringvalue |
@@ -703,6 +746,7 @@ stringexpr =
 	'producttype', '(', ')' |
 	'filename', '(', ')' |
 	'if', '(' boolexpr, ',', stringexpr, ',', stringexpr, ')' ;
+	'with', '(', indexvar, '=', intexpr, ',', stringexpr, ')' ;
 
 rootnode = '/'
 

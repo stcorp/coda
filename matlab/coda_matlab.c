@@ -834,9 +834,9 @@ static void coda_matlab_fieldavailable(int nlhs, mxArray *plhs[], int nrhs, cons
     if (type_class == coda_record_class)
     {
         int arg_num_dims;
-        const int *arg_dim;
+        const mwSize *arg_dim;
         char *fieldname;
-        int length;
+        mwSize length;
         long field_index;
         int available;
 
@@ -1069,9 +1069,9 @@ static void coda_matlab_getopt(int nlhs, mxArray *plhs[], int nrhs, const mxArra
     }
     else
     {
-        int length;
+        mwSize length;
         char *name;
-        const int *prhs_dim;
+        const mwSize *prhs_dim;
 
         /* Get value of certain option */
 
@@ -1316,9 +1316,9 @@ static void coda_matlab_product_version(int nlhs, mxArray *plhs[], int nrhs, con
 
 static void coda_matlab_setopt(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    const int *prhs_dim;
+    const mwSize *prhs_dim;
     char *name;
-    int length;
+    mwSize length;
 
     plhs = plhs;        /* prevents 'unused parameter' warning */
 
@@ -1510,7 +1510,7 @@ static void coda_matlab_time_to_string(int nlhs, mxArray *plhs[], int nrhs, cons
     {
         double *time_value;
         int num_dims;
-        const int *dim;
+        const mwSize *dim;
         int i;
 
         num_dims = mxGetNumberOfDimensions(prhs[0]);

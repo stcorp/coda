@@ -16,11 +16,10 @@
 
       <p>The CODA IDL interface consists of just a handful of IDL 'named structures' and functions. A primary design goal was to simplify, as much as possible, the number of different types and functions a user would have to master in order to effectively use the library.</p>
 
-      <p>This page describes all IDL 'named structure' types and functions provided by the CODA IDL interface.</p>
-
       <h2>Contents</h2>
 
       <ul>
+        <li><a href="#codadef">CODA Definition Path</a></li>
         <li><a href="#named-structures">Named Structures</a>
           <ul>
             <li><a href="#coda_datahandle"><code>CODA_DATAHANDLE</code></a></li>
@@ -69,6 +68,12 @@
         </li>
       </ul>
 
+      <h2 id="codadef">CODA Definition Path</h2>
+
+      <p>Note that in order to access products whose formats are defined using .codadef files, you should let CODA now where these .codadef files are stored. By default the CODA IDL interface will look for .codadef files in a directory relative to the location of the CODA IDL DLM file (<code>../definitions</code> on Windows and <code>../../../share/coda/definitions</code> on other systems; note that software that embed CODA may sometimes override this default location). However, this will only work if you have set the IDL_DLM_PATH environment variable as specified in the CODA installation instructions for the IDL interface (otherwise no default location will be set).</p>
+      
+      <p>You can override the default location by setting the CODA_DEFINITION environment variable. This environment variable should be a ':' separated (';' on Windows) list of absolute paths to directories containing .codadef files or absolute paths to .codadef files themselves (or a mix of those).</p>
+      
       <h2 id="named-structures">Named Structures</h2>
 
       <p>The CODA IDL interface defines three 'named structures'. This section discusses them in detail. For reference, the three types are shown in the table below.</p>
@@ -86,13 +91,9 @@
 
       <p><code>CODA_DATAHANDLE</code> variables are used extensively 'under the hood' of the CODA IDL interface; however, there are two closely related cases where this type will also be visible at the IDL user level.</p>
 
-      <p>If a call to <code>CODA_FETCH</code> is made that should return an 'array of array' or 'array of record' type, the call will return an 'array of <code>CODA_DATAHANDLE</code>' instead. The reason for this is that the sophisticated type system supported by CODA does not map in full generality onto the IDL type system.</p>
+      <p>If a call to <code>CODA_FETCH</code> is made that should return an 'array of array' or 'array of record' type, the call will return an 'array of <code>CODA_DATAHANDLE</code>' instead.</p>
 
-      <p>The notion of an 'array of array' cannot be mapped onto IDL other than by combining the dimensions of the outer and inner arrays; however, for technical reasons, this would only work for a limited set of product formats.</p>
-
-      <p>Similarly, the notion of an 'array of record' could, on first sight, be expressed by using a structure-array in IDL. Again, this is not possible in the general case.</p>
-         
-      <p>For consistency, we have chosen to handle all these cases uniformly, always returning an 'array of <code>CODA_DATAHANDLE</code>' when an 'array of array' or an 'array of record' is fetched. You can then manually traverse the 'array of <code>CODA_DATAHANDLE</code>', and use <code>CODA_FETCH</code> to obtain the individual records or arrays represented by the <code>CODA_DATAHANDLE</code> elements.</p>
+      <p>The reason for this behavior is that the sophisticated type system supported by CODA cannot be mapped in full generality onto the IDL type system from within IDL DLMs. Within a DLM it is not posible to create IDL arrays where different elements have different storage sizes (and DLMs do not have public access to the 'pointer interface' that can be used from within IDL code). Due to the generality of the CODA interface it is currently also not possible to make an exception for the possible cases where the records/arrays might per-chance have the same storage size for each array element. For consistency, we have therefore chosen to handle all these cases uniformly, always returning an 'array of <code>CODA_DATAHANDLE</code>' when an 'array of array' or an 'array of record' is fetched. You can then manually traverse the 'array of <code>CODA_DATAHANDLE</code>', and use <code>CODA_FETCH</code> (providing a <code>CODA_DATAHANDLE</code> as first argument) to obtain the individual records or arrays represented by the <code>CODA_DATAHANDLE</code> elements.</p>
 
       <p>Although the proper use of <code>CODA_DATAHANDLE</code>-arrays is probably the most subtle and difficult aspect of using the CODA IDL interface, it has proved to be quite easy to get used to. In fact, when used properly, the use of an 'array of <code>CODA_DATAHANDLE</code>' often improves performance as the <code>CODA_DATAHANDLE</code> elements effectively cache the information needed to access the data, thereby speeding up subsequent accesses.</p>
 

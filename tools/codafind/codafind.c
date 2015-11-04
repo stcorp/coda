@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            fprintf(stderr, "ERROR: Incorrect arguments\n");
+            fprintf(stderr, "ERROR: invalid arguments\n");
             print_help();
             exit(1);
         }
@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
     if (i == argc)
     {
         /* no files or directories provided */
-        fprintf(stderr, "ERROR: Incorrect arguments\n");
+        fprintf(stderr, "ERROR: invalid arguments\n");
         print_help();
         exit(1);
     }

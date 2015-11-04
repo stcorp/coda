@@ -375,6 +375,7 @@ INDENTFILES += $(codacmp_SOURCES)
 
 codadd_SOURCES = \
 	tools/codadd/codadd.c \
+	tools/codadd/codadd-definition.c \
 	tools/codadd/codadd-detect.c \
 	tools/codadd/codadd-doc.c \
 	tools/codadd/codadd-list.c \
