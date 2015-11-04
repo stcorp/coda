@@ -1,3 +1,15 @@
+2.3.1 2012-01-21
+~~~~~~~~~~~~~~~~
+
+* Added leap second for 2012-07-01 to default leap second table.
+
+* CODA IDL function CODA_SIZE now returns '0' when you reference a scalar.
+
+* Fixed installation paths on Unix in CMake build.
+
+* Fixed issue where XML attribute names when accessing plain XML files
+ (without codadef) could erroneously get a numeric postix.
+
 2.3 2011-12-13
 ~~~~~~~~~~~~~~
 
@@ -36,7 +48,7 @@
 * Upgraded the Windows Visual Studion 6.0 project files to Visual Studio 2008
   (9.0) project files.
 
-* The binary installer of BEAT for Windows now requires IDL 6.3 or higher.
+* The binary installer of CODA for Windows now requires IDL 6.3 or higher.
 
 2.2 2011-09-02
 ~~~~~~~~~~~~~~

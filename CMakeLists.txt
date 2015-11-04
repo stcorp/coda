@@ -2,7 +2,7 @@
 #
 project(CODA)
 
-set(VERSION 2.3)
+set(VERSION 2.3.1)
 set(CODA_VERSION \"${VERSION}\")
 
 # General setup
@@ -402,7 +402,11 @@ if(CODA_BUILD_IDL)
 
   if(IDL_DIR)
     set(IDL_DIR ${IDL_DIR} CACHE STRING "Root directory of an IDL installation" FORCE)
-    set(IDL_INSTALL_DIR "idl")
+    if(WIN32)
+      set(IDL_INSTALL_DIR idl)
+    else()
+      set(IDL_INSTALL_DIR lib/idl)
+    endif()
 
     set(HAVE_IDL_SYSFUN_DEF2 1)
     set(HAVE_IDL_SYSRTN_UNION 1)
@@ -412,9 +416,10 @@ if(CODA_BUILD_IDL)
       set(IDL_LIB "${IDL_LIBDIR}/idl.lib")
       set(IDL_LINK_FLAGS "/EXPORT:IDL_Load,@1")
     else(WIN32)
-      set(IDL_LINK_FLAGS "-module -shared -avoid-version")
       if(APPLE)
         set(IDL_LINK_FLAGS "${IDL_LINK_FLAGS} -undefined dynamic_lookup")
+      else()
+        set(IDL_LINK_FLAGS "-module -shared -avoid-version")
       endif(APPLE)
     endif(WIN32)
 
@@ -481,7 +486,11 @@ if(CODA_BUILD_MATLAB)
     endif(NOT IS_DIRECTORY "${MATLAB_DIR}")
 
     set(MATLAB_DIR ${MATLAB_DIR} CACHE STRING "Root directory of MATLAB installation" FORCE)
-    set(MATLAB_INSTALL_DIR "matlab")
+    if(WIN32)
+      set(MATLAB_INSTALL_DIR matlab)
+    else()
+      set(MATLAB_INSTALL_DIR lib/matlab)
+    endif()
 
     find_path(MATLAB_INCLUDE_DIR "mex.h" ${MATLAB_DIR}/extern/include)
     mark_as_advanced(MATLAB_INCLUDE_DIR)
@@ -716,14 +725,16 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/coda.h DESTINATION include)
 # Set dynamic library version
 #
 set(LIBCODA_CURRENT 8)
-set(LIBCODA_REVISION 0)
+set(LIBCODA_REVISION 1)
 set(LIBCODA_AGE 3)
+math(EXPR LIBCODA_MAJOR "${LIBCODA_CURRENT} - ${LIBCODA_AGE}")
+set(LIBCODA_MINOR ${LIBCODA_AGE})
 
 add_library(coda SHARED ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBPCRE_SOURCES} ${LIBZLIB_SOURCES} ${LIBQIAP_SOURCES})
 target_link_libraries(coda ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
 set_target_properties(coda PROPERTIES
-  VERSION ${LIBCODA_CURRENT}.${LIBCODA_REVISION}.${LIBCODA_AGE}
-  SOVERSION ${LIBCODA_CURRENT}
+  VERSION ${LIBCODA_MAJOR}.${LIBCODA_MINOR}.${LIBCODA_REVISION}
+  SOVERSION ${LIBCODA_MAJOR}
 )
 install(TARGETS coda DESTINATION lib)
 

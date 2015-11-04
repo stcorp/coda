@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2011 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2012 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -167,7 +167,13 @@ void coda_add_error_message_vargs(const char *message, va_list ap)
     {
         return;
     }
-    /* write to local buffer first in order to allow using the result of coda_errno_to_string inside the va_list */
+    if (current_length == 0)
+    {
+        /* populate the message buffer with the default error message */
+        strcpy(message_buffer, coda_errno_to_string(coda_errno));
+        current_length = strlen(message_buffer);
+    }
+    /* write to local buffer in order to allow using the result of coda_errno_to_string inside the va_list */
     vsnprintf(message_buffer, MAX_ERROR_INFO_LENGTH - current_length, message, ap);
     message_buffer[MAX_ERROR_INFO_LENGTH - current_length] = '\0';
     strcat(coda_error_message_buffer, message_buffer);

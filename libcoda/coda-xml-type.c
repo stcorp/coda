@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2011 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2012 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -233,6 +233,7 @@ static coda_mem_record *attribute_record_new(coda_type_record *definition, const
     for (i = 0; attr[2 * i] != NULL; i++)
     {
         coda_mem_text *attribute;
+        int update_mem_record = update_definition;
 
         attribute_index = hashtable_get_index_from_name(definition->real_name_hash_data, attr[2 * i]);
         if (update_definition)
@@ -259,6 +260,7 @@ static coda_mem_record *attribute_record_new(coda_type_record *definition, const
             {
                 attribute = coda_mem_text_new((coda_type_text *)definition->field[attribute_index]->type,
                                               attr[2 * i + 1]);
+                update_mem_record = 0;
             }
         }
         else
@@ -277,7 +279,7 @@ static coda_mem_record *attribute_record_new(coda_type_record *definition, const
             return NULL;
         }
 
-        if (coda_mem_record_add_field(attributes, attr[2 * i], (coda_dynamic_type *)attribute, update_definition) != 0)
+        if (coda_mem_record_add_field(attributes, attr[2 * i], (coda_dynamic_type *)attribute, update_mem_record) != 0)
         {
             coda_dynamic_type_delete((coda_dynamic_type *)attribute);
             coda_dynamic_type_delete((coda_dynamic_type *)attributes);

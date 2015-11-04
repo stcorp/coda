@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2011 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2012 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -2966,8 +2966,11 @@ static IDL_VPTR x_coda_size(int argc, IDL_VPTR *argv)
     }
     if (type_class != coda_array_class)
     {
-        /* 'coda_size' will only work for arrays. */
-        return mk_coda_error(CODA_IDL_ERR_SIZE_OF_NONARRAY);
+        /* it is a scalar, return 0 */
+        retval = IDL_Gettmp();
+        retval->type = IDL_TYP_ULONG;
+        retval->value.ul = 0;
+        return retval;
     }
 
     /* create the array descriptor */

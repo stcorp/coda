@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2011 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2012 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -74,7 +74,7 @@
  * The leap seconds are inserted to cause UTC to follow the rotation of the Earth, which is expressed by means of the
  * non uniform time reference Universal Time UT1. 
  * If UT1 is predicted to lag behind UTC by more than 0.9 seconds, a leap second is inserted.
- * CODA has a built-in table of leap seconds up to 2009-01-01. You can use a more recent table by downloading the
+ * CODA has a built-in table of leap seconds up to 2012-07-01. You can use a more recent table by downloading the
  * recent list of leap seconds from ftp://maia.usno.navy.mil/ser7/tai-utc.dat and set the environment variable
  * CODA_LEAP_SECOND_TABLE with a full path to this file.
  * - UT1: Universal Time
@@ -1202,6 +1202,7 @@ int coda_leap_second_table_init(void)
         register_leap_second(-31535969.0);      /* 1999-01-01 UTC */
         register_leap_second(189388832.0);      /* 2006-01-01 UTC */
         register_leap_second(284083233.0);      /* 2009-01-01 UTC */
+        register_leap_second(394416034.0);      /* 2012-07-01 UTC */
     }
 
     return 0;
