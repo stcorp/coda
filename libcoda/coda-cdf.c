@@ -21,11 +21,9 @@
 #include "coda-cdf-internal.h"
 #include "coda-mem-internal.h"
 #include "coda-read-bytes.h"
-#ifndef WORDS_BIGENDIAN
 #include "coda-swap2.h"
 #include "coda-swap4.h"
 #include "coda-swap8.h"
-#endif
 
 #ifdef HAVE_SYS_MMAN_H
 #include <sys/mman.h>

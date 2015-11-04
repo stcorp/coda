@@ -1,3 +1,8 @@
+2.7.2 2012-09-24
+~~~~~~~~~~~~~~~~
+
+* Fixed broken compilation from source on big-endian systems.
+
 2.7.1 2012-09-18
 ~~~~~~~~~~~~~~~~
 
