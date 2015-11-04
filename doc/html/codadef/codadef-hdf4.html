@@ -83,6 +83,8 @@
 
       <p>If an HDF4 object has a scale_factor and/or add_offset attribute CODA will use this to automatically convert any values that are read from the object (value_returned = value_read * scale_factor + add_offset). The application of this conversion can be enabled/disabled using the same global option that is used to turn on/off conversions for products that are described by CODA format definition files (this option is turned on by default).</p>
 
+      <p>If a variable has a _FillValue attribute CODA will use this to automatically set the value to NaN (potentially upgrading the type to a double). The application of this conversion can be enabled/disabled as described above.</p>
+
       <div class="footer">
         <hr />
         <p>Copyright &copy; 2007-2013 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2013 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2014 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -21,6 +21,8 @@
 #include "coda-internal.h"
 #include "coda-type.h"
 #include "coda-ascii-internal.h"
+#include "coda-xml-internal.h"
+#include "coda-read-bytes.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -30,6 +32,7 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size,
                       void (*callbackfunc) (coda_cursor *, const char *, void *), void *userdata)
 {
     coda_type_class type_class;
+    int skip_xml_size_check = 0;
     int has_attributes;
 
     if (coda_cursor_get_type_class(cursor, &type_class) != 0)
@@ -153,6 +156,7 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size,
                         if (coda_cursor_get_bit_size(cursor, &fast_size) != 0)
                         {
                             callbackfunc(cursor, coda_errno_to_string(coda_errno), userdata);
+                            skip_xml_size_check = 1;
                         }
                         else if (*bit_size != fast_size)
                         {
@@ -227,12 +231,14 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size,
                     }
                     callbackfunc(cursor, coda_errno_to_string(coda_errno), userdata);
                     /* if we can't determine the string length, don't try to read the data */
+                    skip_xml_size_check = 1;
                     break;
                 }
                 if (string_length < 0)
                 {
                     callbackfunc(cursor, "string length is negative", userdata);
                     /* if we can't determine a proper string length, don't try to read the data */
+                    skip_xml_size_check = 1;
                     break;
                 }
 
@@ -341,6 +347,7 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size,
                         }
                         callbackfunc(cursor, coda_errno_to_string(coda_errno), userdata);
                         /* if we can't determine the bit size, don't try to read the data */
+                        skip_xml_size_check = 1;
                         break;
                     }
                 }
@@ -348,6 +355,7 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size,
                 {
                     callbackfunc(cursor, "bit size is negative", userdata);
                     /* if we can't determine a proper size, don't try to read the data */
+                    skip_xml_size_check = 1;
                     break;
                 }
                 byte_size = (local_bit_size >> 3) + (local_bit_size & 0x7 ? 1 : 0);
@@ -438,6 +446,64 @@ static int check_data(coda_cursor *cursor, int64_t *bit_size,
 
             }
             break;
+    }
+
+    /* additional size test for xml backend */
+    if (cursor->stack[cursor->n - 1].type->backend == coda_backend_xml && !skip_xml_size_check)
+    {
+        if (((coda_xml_type *)cursor->stack[cursor->n - 1].type)->tag == tag_xml_element)
+        {
+            coda_xml_element *element = (coda_xml_element *)cursor->stack[cursor->n - 1].type;
+
+            if (element->num_elements == 0)
+            {
+                int64_t local_bit_size = 0;
+
+                if (bit_size != NULL)
+                {
+                    local_bit_size = *bit_size;
+                }
+                else if (coda_cursor_get_bit_size(cursor, &local_bit_size) != 0)
+                {
+                    return -1;
+                }
+                if (element->inner_bit_size > local_bit_size)
+                {
+                    long byte_size = (long)((element->inner_bit_size - local_bit_size) >> 3);
+                    char *data;
+                    long i;
+
+                    /* verify that trailing data consists of only whitespace */
+                    data = (char *)malloc((size_t)byte_size + 1);
+                    if (data == NULL)
+                    {
+                        coda_set_error(CODA_ERROR_OUT_OF_MEMORY,
+                                       "out of memory (could not allocate %lu bytes) (%s:%u)", (long)byte_size,
+                                       __FILE__, __LINE__);
+                        return -1;
+                    }
+                    if (read_bytes(cursor->product, (element->inner_bit_offset + local_bit_size) >> 3, byte_size,
+                                   (uint8_t *)data) != 0)
+                    {
+                        free(data);
+                        return -1;
+                    }
+                    data[byte_size] = '\0';
+                    for (i = 0; i < byte_size; i++)
+                    {
+                        if (data[i] != ' ' && data[i] != '\t' && data[i] != '\n' && data[i] != '\r')
+                        {
+                            char msg[100];
+
+                            sprintf(msg, "non-whitespace trailing data found at byte %ld", (long)(local_bit_size >> 3));
+                            callbackfunc(cursor, msg, userdata);
+                            break;
+                        }
+                    }
+                    free(data);
+                }
+            }
+        }
     }
 
     if (coda_cursor_has_attributes(cursor, &has_attributes) != 0)

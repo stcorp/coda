@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2013 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2014 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -484,6 +484,10 @@ intexpr:
             $$ = $3;
         }
     | FUNC_INT '(' node ')' {
+            $$ = coda_expression_new(expr_integer, NULL, $3, NULL, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_INT '(' boolexpr ')' {
             $$ = coda_expression_new(expr_integer, NULL, $3, NULL, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }

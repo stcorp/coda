@@ -1,3 +1,19 @@
+2.10 2014-02-01
+~~~~~~~~~~~~~~~
+
+* Added support for 'offset' and 'invalid' attributes for a Conversion element
+  in codadef files.
+
+* Added int(bool) to CODA expressions.
+
+* Added size check for content of xml elements to codacheck.
+
+* Fixed issue where coda_cursor_has_attributes() and coda_type_has_attributes()
+  would always return false for HDF5. This could result on attributes not being
+  shown in several interfaces (e.g. codadump)
+
+* Fixed bug in codadump debug argument parsing.
+
 2.9.1 2013-06-27
 ~~~~~~~~~~~~~~~~
 
@@ -209,7 +225,7 @@
 * Fixed issue where CODA did not properly support HDF4 dataset names that are
   longer than 63 characters.
 
-* Upgraded the Windows Visual Studion 6.0 project files to Visual Studio 2008
+* Upgraded the Windows Visual Studio 6.0 project files to Visual Studio 2008
   (9.0) project files.
 
 * The binary installer of CODA for Windows now requires IDL 6.3 or higher.

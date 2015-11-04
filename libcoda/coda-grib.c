@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2013 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2014 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -1924,7 +1924,7 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                     free(raw_data);
                     return -1;
                 }
-                type = (coda_dynamic_type *)coda_mem_raw_new((coda_type_raw *)grib_type[grib1_local],
+                type = (coda_dynamic_type *)coda_mem_raw_new((coda_type_raw *)grib_type[grib2_local],
                                                              section_size - 5, raw_data);
                 coda_mem_array_add_element(localArray, type);
                 file_offset += section_size - 5;

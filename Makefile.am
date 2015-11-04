@@ -306,7 +306,7 @@ libcoda_la_CPPFLAGS = -Ilibcoda/expat -I$(srcdir)/libcoda/expat -Ilibcoda/pcre -
 libcoda_la_LDFLAGS = -no-undefined -version-info $(LIBCODA_CURRENT):$(LIBCODA_REVISION):$(LIBCODA_AGE)
 libcoda_la_LIBADD = @LTLIBOBJS@ libexpat_internal.la libpcre_internal.la libz_internal.la $(QIAPLIBS) $(HDF4LIBS) $(HDF5LIBS)
 INDENTFILES += $(libcoda_la_SOURCES) libcoda/coda.h.in
-BUILT_SOURCES += coda-expr-parser.h
+BUILT_SOURCES += libcoda/coda-expr-parser.h
 
 libcoda_internal_la_SOURCES = \
 	libcoda/coda-ascbin-cursor.c \
@@ -333,8 +333,8 @@ libcoda_internal_la_SOURCES = \
 	libcoda/coda-definition.c \
 	libcoda/coda-definition.h \
 	libcoda/coda-errno.c \
-	coda-expr-parser.c \
-	coda-expr-parser.h \
+	libcoda/coda-expr-parser.c \
+	libcoda/coda-expr-parser.h \
 	libcoda/coda-expr-tokenizer.l \
 	libcoda/coda-expr.c \
 	libcoda/coda-expr.h \

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2013 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2014 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -614,7 +614,6 @@ int coda_ascii_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size,
     char buffer[MAX_ASCII_NUMBER_LENGTH];
     long buffer_size = -1;
     int use_buffer = 0;
-    int dynamic_size;
 
     if (type->bit_size >= 0)
     {
@@ -648,6 +647,8 @@ int coda_ascii_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size,
     /* only read buffer when we are dealing with numbers (without size_expr) or if there are mappings */
     if (use_buffer)
     {
+        int dynamic_size;
+
         buffer_size = get_buffer_size(-1, size_boundary, (cursor->product->file_size << 3) - bit_offset, &dynamic_size);
         if (buffer_size < 0)
         {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2013 S[&]T, The Netherlands.
+ * Copyright (C) 2009-2014 S[&]T, The Netherlands.
  *
  * This file is part of the QIAP Toolkit.
  *

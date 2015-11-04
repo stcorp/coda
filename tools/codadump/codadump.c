@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2013 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2014 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -45,7 +45,7 @@ int show_description;
 static void print_version()
 {
     printf("codadump version %s\n", libcoda_version);
-    printf("Copyright (C) 2007-2013 S[&]T, The Netherlands.\n");
+    printf("Copyright (C) 2007-2014 S[&]T, The Netherlands.\n");
     printf("\n");
 }
 
@@ -489,7 +489,8 @@ static void handle_debug_run_mode(int argc, char *argv[])
             output_file_name = argv[i + 1];
             i++;
         }
-        if ((strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "--path") == 0) && i + 1 < argc && argv[i + 1][0] != '-')
+        else if ((strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "--path") == 0) && i + 1 < argc &&
+                 argv[i + 1][0] != '-')
         {
             starting_path = argv[i + 1];
             i++;

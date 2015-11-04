@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2013 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2014 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -42,8 +42,6 @@
 #include "coda-type.h"
 
 #define CODA_DEFINITION_NAMESPACE "http://www.stcorp.nl/coda/definition/2008/07"
-
-#define FORMAT_UNDEFINED 100
 
 typedef struct parser_info_struct parser_info;
 
@@ -167,6 +165,7 @@ struct node_info_struct
     free_data_handler free_data;
 
     coda_format format;
+    int format_set;
 
     /* handlers for sub elements */
     init_handler init_sub_element[num_xml_elements];
@@ -544,7 +543,7 @@ static int handle_format_attribute_for_type(parser_info *info, const char **attr
 {
     const char *format_string;
 
-    if (info->node->parent->format == FORMAT_UNDEFINED)
+    if (!info->node->parent->format_set)
     {
         /* we can't inherit the format of the parent, so a format attribute is required */
         format_string = get_mandatory_attribute_value(attr, "format", info->node->tag);
@@ -573,6 +572,7 @@ static int handle_format_attribute_for_type(parser_info *info, const char **attr
             }
         }
     }
+    info->node->format_set = 1;
 
     return 0;
 }
@@ -582,6 +582,7 @@ static int handle_xml_name(parser_info *info, const char **attr)
     const char *xmlname;
     node_info *node;
 
+    assert(info->node->format_set);
     if (info->node->format != coda_format_xml)
     {
         return 0;
@@ -1260,7 +1261,9 @@ static int cd_attribute_init(parser_info *info, const char **attr)
     const char *xmlname;
     coda_type *type;
 
+    assert(info->node->parent->format_set);
     info->node->format = info->node->parent->format;
+    info->node->format_set = 1;
     xmlname = get_mandatory_attribute_value(attr, "name", info->node->tag);
     if (xmlname == NULL)
     {
@@ -1348,8 +1351,12 @@ static int cd_conversion_init(parser_info *info, const char **attr)
 {
     const char *numerator_string;
     const char *denominator_string;
+    const char *offset_string;
+    const char *invalid_string;
     double numerator;
     double denominator;
+    double offset = 0;
+    double invalid = coda_NaN();
 
     numerator_string = get_mandatory_attribute_value(attr, "numerator", info->node->tag);
     if (numerator_string == NULL)
@@ -1363,17 +1370,36 @@ static int cd_conversion_init(parser_info *info, const char **attr)
     }
     if (coda_ascii_parse_double(numerator_string, strlen(numerator_string), &numerator, 1) < 0)
     {
-        coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid value '%s' for numerator", numerator_string);
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid value '%s' for 'numerator' attribute", numerator_string);
         return -1;
     }
     if (coda_ascii_parse_double(denominator_string, strlen(denominator_string), &denominator, 1) < 0)
     {
-        coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid value '%s' for denominator", denominator_string);
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid value '%s' for 'denominator' attribute",
+                       denominator_string);
         return -1;
+    }
+    offset_string = get_attribute_value(attr, "offset");
+    if (offset_string != NULL)
+    {
+        if (coda_ascii_parse_double(offset_string, strlen(offset_string), &offset, 1) < 0)
+        {
+            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid value '%s' for 'offset' attribute", offset_string);
+            return -1;
+        }
+    }
+    invalid_string = get_attribute_value(attr, "invalid");
+    if (invalid_string != NULL)
+    {
+        if (coda_ascii_parse_double(invalid_string, strlen(invalid_string), &invalid, 1) < 0)
+        {
+            coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid value '%s' for 'invalid' attribute", invalid_string);
+            return -1;
+        }
     }
 
     info->node->free_data = (free_data_handler)coda_conversion_delete;
-    info->node->data = coda_conversion_new(numerator, denominator, 0, coda_NaN());
+    info->node->data = coda_conversion_new(numerator, denominator, offset, invalid);
     register_sub_element(info->node, element_cd_unit, string_data_init, cd_conversion_set_unit);
 
     return 0;
@@ -1461,7 +1487,9 @@ static int cd_field_init(parser_info *info, const char **attr)
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "attribute 'format' not allowed for Field");
         return -1;
     }
+    assert(info->node->parent->format_set);
     info->node->format = info->node->parent->format;
+    info->node->format_set = 1;
     if (get_attribute_value(attr, "namexml") != NULL)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "attribute 'namexml' not allowed for Field");
@@ -1658,6 +1686,7 @@ static int cd_named_type_init(parser_info *info, const char **attr)
         return -1;
     }
     info->node->format = type->format;
+    info->node->format_set = 1;
     info->node->data = type;
 
     return 0;
@@ -2151,6 +2180,7 @@ static int cd_product_definition_init(parser_info *info, const char **attr)
     {
         return -1;
     }
+    info->node->format_set = 1;
     version_string = get_mandatory_attribute_value(attr, "version", info->node->tag);
     if (version_string == NULL)
     {
@@ -2215,6 +2245,7 @@ static int cd_product_definition_sub_init(parser_info *info, const char **attr)
     {
         return -1;
     }
+    info->node->format_set = 1;
     if (info->product_definition->format != info->node->format)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION,
@@ -2460,7 +2491,9 @@ static int cd_scale_factor_init(parser_info *info, const char **attr)
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "attribute 'format' not allowed for ScaleFactor");
         return -1;
     }
+    assert(info->node->parent->format_set);
     info->node->format = info->node->parent->format;
+    info->node->format_set = 1;
     if (get_attribute_value(attr, "name") != NULL)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "attribute 'name' not allowed for ScaleFactor");
@@ -3094,7 +3127,7 @@ static int push_node(parser_info *info, xml_element_tag tag, const char **attr)
     node->expect_char_data = 0;
     node->finalise_element = NULL;
     node->free_data = NULL;
-    node->format = FORMAT_UNDEFINED;
+    node->format_set = 0;
     memset(node->init_sub_element, 0, num_xml_elements * sizeof(init_handler));
     memset(node->add_element_to_parent, 0, num_xml_elements * sizeof(add_element_to_parent_handler));
     node->parent = info->node;
@@ -3192,7 +3225,7 @@ static void XMLCALL start_element_handler(void *data, const char *el, const char
             coda_set_error(CODA_ERROR_DATA_DEFINITION, "xml element '%s' is not allowed as root element",
                            coda_element_name_from_xml_name(el));
         }
-        else if (info->node->format != FORMAT_UNDEFINED)
+        else if (info->node->format_set)
         {
             coda_set_error(CODA_ERROR_DATA_DEFINITION,
                            "xml element '%s' is not allowed within element '%s'{%s}",
@@ -3399,7 +3432,7 @@ static int parse_entry(za_file *zf, zip_entry_type type, const char *name, coda_
     XML_SetUserData(info.parser, &info);
     XML_SetElementHandler(info.parser, start_element_handler, end_element_handler);
     push_node(&info, no_element, NULL);
-    info.node->format = FORMAT_UNDEFINED;
+    info.node->format_set = 0;
     switch (type)
     {
         case ze_index:

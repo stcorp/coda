@@ -111,8 +111,8 @@
 		</Configuration>
 	</Configurations>
 	<Files>
-		<File RelativePath="..\coda-expr-parser.c"/>
-		<File RelativePath="..\coda-expr-tokenizer.c"/>
+		<File RelativePath="..\libcoda\coda-expr-parser.c"/>
+		<File RelativePath="..\libcoda\coda-expr-tokenizer.c"/>
 		<File RelativePath="..\libcoda\coda-ascbin-cursor.c"/>
 		<File RelativePath="..\libcoda\coda-ascbin-internal.h"/>
 		<File RelativePath="..\libcoda\coda-ascbin.c"/>
@@ -242,7 +242,7 @@
 		<File RelativePath="..\libcoda\qiap\qiap.h"/>
 		<File RelativePath="..\libcoda\ziparchive.c"/>
 		<File RelativePath="..\libcoda\ziparchive.h"/>
-		<File RelativePath="coda-expr-parser.h"/>
+		<File RelativePath="..\libcoda\coda-expr-parser.h"/>
 		<File RelativePath="coda.h"/>
 		<File RelativePath="config.h"/>
 	</Files>

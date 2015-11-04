@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2013 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2014 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -1101,6 +1101,14 @@ static void generate_type(const coda_type *type, const char *xmlname, coda_forma
                 {
                     fi_printf("<cd:Conversion numerator=\"%g\" denominator=\"%g\"",
                               number_type->conversion->numerator, number_type->conversion->denominator);
+                    if (number_type->conversion->add_offset != 0)
+                    {
+                        ff_printf(" offset=\"%g\"", number_type->conversion->add_offset);
+                    }
+                    if (!coda_isNaN(number_type->conversion->invalid_value))
+                    {
+                        ff_printf(" invalid=\"%g\"", number_type->conversion->invalid_value);
+                    }
                     if (number_type->conversion->unit != NULL)
                     {
                         ff_printf(">\n");

@@ -158,9 +158,6 @@
    */
 #cmakedefine LT_OBJDIR ${LT_OBJDIR}
 
-/* Define to 1 if your C compiler doesn't accept -c and -o together. */
-#cmakedefine NO_MINUS_C_MINUS_O ${NO_MINUS_C_MINUS_O}
-
 /* Name of package */
 #cmakedefine PACKAGE ${PACKAGE}
 

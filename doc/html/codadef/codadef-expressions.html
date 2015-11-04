@@ -175,6 +175,12 @@
 
       <h3>functions</h3>
 
+      <h5>int(bool)</h5>
+
+      <p>Convert the boolean value to an integer value.</p>
+
+      <p>This is equivalent to calling '<code><b>if</b>(bool, 1, 0)</code>'</p>
+
       <h5>int(node)</h5>
 
       <p>Reads the value at the node as an integer. If the node does not point to data that represents an integer value this will result in an error.</p>
@@ -304,7 +310,7 @@
       <p>Example:</p>
       <div class="fragment"><code><b>with</b>(<i>k</i> = <b>int</b>(/data/intvalue), <b>if</b>(<i>k</i> &gt; 10, <i>k</i> + 10, <i>k</i> - 5))</code></div>
 
-      <p>This will be faster than using '<code><b>if</b>(<b>int</b>(/data/intvalue) &gt; 10, <b>int</b>(/data/intvalue) + 10, <b>int</b>(/data/intvalue) - 5)</code>'.</p>
+      <p>This will be faster than using '<code><b>if</b>(<b>int</b>(/data/intvalue) &gt; 10, <b>int</b>(/data/intvalue) + 10, <b>int</b>(/data/intvalue) - 5)</code>', since the value <code>/data/intvalue</code> will only be read once instead of 3 times.</p>
 
       <h2 id="float">float expressions</h2>
 
@@ -694,6 +700,7 @@ boolexpr =
 intexpr = 
 	intvalue |
 	'int', '(', intexpr, ')' |
+	'int', '(', boolexpr, ')' |
 	'int', '(', node, ')' |
 	'int', '(', stringexpr, ')' |
 	'$', identifier |

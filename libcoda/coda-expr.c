@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2013 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2014 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -1835,6 +1835,16 @@ static int eval_integer(eval_info *info, const coda_expression *expr, int64_t *v
                 }
                 coda_set_option_perform_conversions(perform_conversions);
                 info->cursor = prev_cursor;
+            }
+            else if (opexpr->operand[0]->result_type == coda_expression_boolean)
+            {
+                int bvalue;
+
+                if (eval_boolean(info, opexpr->operand[0], &bvalue) != 0)
+                {
+                    return -1;
+                }
+                *value = (int64_t)bvalue;
             }
             else
             {

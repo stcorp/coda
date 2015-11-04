@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2013 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2014 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -787,6 +787,11 @@ int coda_hdf5_create_tree(coda_hdf5_product *product, hid_t loc_id, const char *
                     coda_hdf5_type_delete((coda_dynamic_type *)group);
                     return -1;
                 }
+                if (coda_type_set_attributes((coda_type *)group->definition, group->attributes->definition) != 0)
+                {
+                    coda_hdf5_type_delete((coda_dynamic_type *)group);
+                    return -1;
+                }
 
                 *object = (coda_hdf5_object *)group;
             }
@@ -886,6 +891,11 @@ int coda_hdf5_create_tree(coda_hdf5_product *product, hid_t loc_id, const char *
 
                 dataset->attributes = new_hdf5AttributeRecord(dataset->dataset_id);
                 if (dataset->attributes == NULL)
+                {
+                    coda_hdf5_type_delete((coda_dynamic_type *)dataset);
+                    return -1;
+                }
+                if (coda_type_set_attributes((coda_type *)dataset->definition, dataset->attributes->definition) != 0)
                 {
                     coda_hdf5_type_delete((coda_dynamic_type *)dataset);
                     return -1;
