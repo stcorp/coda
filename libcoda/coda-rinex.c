@@ -3123,18 +3123,12 @@ static int read_file(const char *filename, coda_dynamic_type **root)
     return 0;
 }
 
-int coda_rinex_open(const char *filename, int64_t file_size, coda_product **product)
+int coda_rinex_open(const char *filename, int64_t file_size, const coda_product_definition *definition,
+                    coda_product **product)
 {
     coda_product *product_file;
-    coda_product_definition *product_definition;
 
     if (rinex_init() != 0)
-    {
-        return -1;
-    }
-
-    /* We currently use the ascii detection tree to assign product class/type to RINEX files */
-    if (coda_ascbin_recognize_file(filename, file_size, &product_definition) != 0)
     {
         return -1;
     }
@@ -3150,7 +3144,7 @@ int coda_rinex_open(const char *filename, int64_t file_size, coda_product **prod
     product_file->file_size = file_size;
     product_file->format = coda_format_rinex;
     product_file->root_type = NULL;
-    product_file->product_definition = product_definition;
+    product_file->product_definition = definition;
     product_file->product_variable_size = NULL;
     product_file->product_variable = NULL;
 

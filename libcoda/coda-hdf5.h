@@ -28,7 +28,8 @@ void coda_hdf5_done(void);
 
 void coda_hdf5_add_error_message(void);
 
-int coda_hdf5_open(const char *filename, int64_t file_size, coda_product **product);
+int coda_hdf5_open(const char *filename, int64_t file_size, const coda_product_definition *definition,
+                   coda_product **product);
 int coda_hdf5_close(coda_product *product);
 
 void coda_hdf5_type_delete(coda_dynamic_type *type);

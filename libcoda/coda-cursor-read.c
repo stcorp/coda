@@ -3487,7 +3487,7 @@ LIBCODA_API int coda_cursor_read_uint64_array(const coda_cursor *cursor, uint64_
             }
             break;
         default:
-            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a uint32 data type",
+            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a uint64 data type",
                            coda_type_get_native_type_name(read_type));
             return -1;
     }
@@ -3750,7 +3750,7 @@ LIBCODA_API int coda_cursor_read_float_array(const coda_cursor *cursor, float *d
             }
             break;
         default:
-            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a int64 data type",
+            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a float data type",
                            coda_type_get_native_type_name(read_type));
             return -1;
     }
@@ -3947,7 +3947,7 @@ LIBCODA_API int coda_cursor_read_double_array(const coda_cursor *cursor, double 
             }
             break;
         default:
-            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a int64 data type",
+            coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read %s data using a double data type",
                            coda_type_get_native_type_name(read_type));
             return -1;
     }

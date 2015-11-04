@@ -49,6 +49,7 @@
 %rename(utcstring_to_time) coda_utcstring_to_time;
 %rename(recognize_file) coda_recognize_file;
 %rename(open) coda_open;
+%rename(open_as) coda_open_as;
 %rename(close) coda_close;
 %rename(get_product_filename) coda_get_product_filename;
 %rename(get_product_file_size) coda_get_product_file_size;

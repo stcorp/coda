@@ -2047,9 +2047,6 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
             coda_mem_record_add_field(grid, "sourceOfGridDefinition", type, 0);
 
             num_data_points = ((buffer[1] * 256 + buffer[2]) * 256 + buffer[3]) * 256 + buffer[4];
-#ifndef WORDS_BIGENDIAN
-            swap4(&num_data_points);
-#endif
             type = (coda_dynamic_type *)coda_mem_integer_new((coda_type_number *)grib_type[grib2_numberOfDataPoints],
                                                              num_data_points);
             coda_mem_record_add_field(grid, "numberOfDataPoints", type, 0);
@@ -2508,7 +2505,8 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
     return 0;
 }
 
-int coda_grib_open(const char *filename, int64_t file_size, coda_product **product)
+int coda_grib_open(const char *filename, int64_t file_size, const coda_product_definition *definition,
+                   coda_product **product)
 {
     coda_dynamic_type *type;
     coda_grib_product *grib_product;
@@ -2534,7 +2532,7 @@ int coda_grib_open(const char *filename, int64_t file_size, coda_product **produ
     grib_product->file_size = file_size;
     grib_product->format = coda_format_grib1;
     grib_product->root_type = NULL;
-    grib_product->product_definition = NULL;
+    grib_product->product_definition = definition;
     grib_product->product_variable_size = NULL;
     grib_product->product_variable = NULL;
     grib_product->use_mmap = 0;

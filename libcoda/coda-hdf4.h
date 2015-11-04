@@ -25,7 +25,8 @@
 
 void coda_hdf4_add_error_message(void);
 
-int coda_hdf4_open(const char *filename, int64_t file_size, coda_format format, coda_product **product);
+int coda_hdf4_open(const char *filename, int64_t file_size, const coda_product_definition *definition,
+                   coda_product **product);
 int coda_hdf4_close(coda_product *product);
 
 void coda_hdf4_type_delete(coda_dynamic_type *type);

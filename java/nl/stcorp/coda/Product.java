@@ -51,6 +51,54 @@ public class Product
         codac.open(filename, this.product);
     }
 
+    /**
+     * Construct an instance of a Product class representing a product file
+     * opened for reading, forcing the use of a specific version of a format definition.
+     * 
+     * In Java, this constructor is the equivalent of the coda_open_as() function
+     * in the C interface.
+     * 
+     * @param filename
+     *            Relative or full path to the product file.
+     * @param product_class
+     *            Name of the product class for the requested format definition.
+     * @param product_type
+     *            Name of the product type for the requested format definition.
+     * @param version
+     *            Format version number of the product type definition.
+     *            Use -1 to request the latest available definition.
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public Product(String filename, String product_class, String product_type, int version) throws CodaException
+    {
+        this.product = new SWIGTYPE_p_coda_product_struct();
+        codac.open_as(filename, product_class, product_type, version, this.product);
+    }
+
+
+    /**
+     * Construct an instance of a Product class representing a product file
+     * opened for reading, forcing the use of the latest version of a specific format definition.
+     * 
+     * In Java, this constructor is the equivalent of the coda_open_as() function
+     * in the C interface.
+     * 
+     * @param filename
+     *            Relative or full path to the product file.
+     * @param product_class
+     *            Name of the product class for the requested format definition.
+     * @param product_type
+     *            Name of the product type for the requested format definition.
+     * @throws CodaException
+     *             If an error occurred.
+     */
+    public Product(String filename, String product_class, String product_type) throws CodaException
+    {
+        this.product = new SWIGTYPE_p_coda_product_struct();
+        codac.open_as(filename, product_class, product_type, -1, this.product);
+    }
+
 
     // Users never need to deal with the opaque SWIG pointer
     // themselves, so this Constructur only has internal

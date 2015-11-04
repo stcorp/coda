@@ -73,7 +73,7 @@ static void print_attributes(FILE *f, coda_type *type)
                 fprintf(f, " type=\"xs:integer\"");
                 break;
             case coda_real_class:
-                fprintf(f, " type=\"xs:decimal\"");
+                fprintf(f, " type=\"xs:float\"");
                 break;
             case coda_text_class:
                 fprintf(f, " type=\"xs:string\"");
@@ -141,7 +141,7 @@ static void print_xml_element(FILE *f, coda_type *type)
                     xsdtype = "integer";
                     break;
                 case coda_real_class:
-                    xsdtype = "decimal";
+                    xsdtype = "float";
                     break;
                 case coda_text_class:
                     xsdtype = "string";

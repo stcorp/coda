@@ -294,7 +294,7 @@ static coda_product_definition *evaluate_detection_node(char *buffer, int blocks
         if (entry->use_filename)
         {
             /* match value on filename */
-            if (entry->offset + entry->value_length > strlen(filename))
+            if (entry->offset + entry->value_length > (int64_t)strlen(filename))
             {
                 /* filename is not long enough for a match */
                 return NULL;
@@ -403,6 +403,10 @@ int coda_ascbin_recognize_file(const char *filename, int64_t size, coda_product_
     basefilename = strrchr(filename, '/');
     if (basefilename == NULL)
     {
+        basefilename = strrchr(filename, '\\');
+    }
+    if (basefilename == NULL)
+    {
         basefilename = filename;
     }
     else
@@ -418,26 +422,15 @@ int coda_ascbin_recognize_file(const char *filename, int64_t size, coda_product_
     return 0;
 }
 
-int coda_ascbin_open(const char *filename, int64_t file_size, coda_product **product)
+int coda_ascbin_open(const char *filename, int64_t file_size, const coda_product_definition *definition,
+                     coda_product **product)
 {
     coda_ascbin_product *product_file;
-    coda_product_definition *product_definition;
 
-    if (coda_ascbin_recognize_file(filename, file_size, &product_definition) != 0)
-    {
-        return -1;
-    }
-    if (product_definition == NULL)
+    if (definition == NULL)
     {
         coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, NULL);
         return -1;
-    }
-    if (product_definition->root_type == NULL)
-    {
-        if (coda_read_product_definition(product_definition) != 0)
-        {
-            return -1;
-        }
     }
 
     product_file = (coda_ascbin_product *)malloc(sizeof(coda_ascbin_product));
@@ -449,9 +442,9 @@ int coda_ascbin_open(const char *filename, int64_t file_size, coda_product **pro
     }
     product_file->filename = NULL;
     product_file->file_size = file_size;
-    product_file->format = product_definition->format;
-    product_file->root_type = (coda_dynamic_type *)product_definition->root_type;
-    product_file->product_definition = product_definition;
+    product_file->format = definition->format;
+    product_file->root_type = (coda_dynamic_type *)definition->root_type;
+    product_file->product_definition = definition;
     product_file->product_variable_size = NULL;
     product_file->product_variable = NULL;
     product_file->use_mmap = 0;

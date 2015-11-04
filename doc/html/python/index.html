@@ -26,6 +26,7 @@
         <li><a href="#high_level_functions">High level CODA Functions</a>
           <ul>
             <li><a href="#coda_open_hl"><code>coda.open</code></a></li>
+            <li><a href="#coda_open_as_hl"><code>coda.open_as</code></a></li>
             <li><a href="#coda_close_hl"><code>coda.close</code></a></li>
             <li><a href="#coda_get_attributes"><code>coda.get_attributes</code></a></li>
             <li><a href="#coda_get_description"><code>coda.get_description</code></a></li>
@@ -74,6 +75,7 @@
             <li><a href="#coda_utcstring_to_time"><code>coda.utcstring_to_time</code></a></li>
             <li><a href="#coda_recognize_file"><code>coda.recognize_file</code></a></li>
             <li><a href="#coda_open"><code>coda.open</code></a></li>
+            <li><a href="#coda_open_as"><code>coda.open_as</code></a></li>
             <li><a href="#coda_close"><code>coda.close</code></a></li>
             <li><a href="#coda_get_product_filename"><code>coda.get_product_filename</code></a></li>
             <li><a href="#coda_get_product_file_size"><code>coda.get_product_file_size</code></a></li>
@@ -271,6 +273,16 @@ import coda
       <p>This function opens a file and returns a handle to the opened product file.</p>
 
       <p>The high and lowel level <code>coda.open</code> functions are actually one and the same. You can thus use the product file handle that is returned by <code>coda.open</code> both as <code>start</code> parameter in the high level CODA functions mentioned below as well as <code>pf</code> parameter in the <a href="#low_level_functions">low level CODA functions</a>.</p>
+
+      <h3 id="coda_open_as_hl"><code>coda.open_as(filename, product_class, product_type, version)</code></h3>
+
+      <p>This function will try to open the specified file for reading similar to <code>coda.open</code>, but instead of trying to automatically recognise the applicable product class/type/version as <code>coda.open</code> does, this function will impose the format definition that is associated with the given product_class, product_type, and version parameters.</p>
+
+      <p>Note that you normally won't need this function as CODA will be able to recognize which format definition to use automatically. However, for the rare occasions where <code>coda.open</code> is not sufficient, you can use this function to force the use of a specific format definition.</p>
+
+      <p>You can specify -1 for the version to request the latest available version of the format definition.</p>
+
+      <p>The high and lowel level <code>coda.open_as</code> functions are one and the same, just as for <code>coda.open</code>.</p>
 
       <h3 id="coda_close_hl"><code>coda.close(filehandle)</code></h3>
       
@@ -471,6 +483,7 @@ except coda.CodacError, e:
       <h5 id="coda_recognize_file"><code>[file_size, format, product_class, product_type, version] = coda.recognize_file(filename)</code></h5>
       <h5 id="coda_open"><code>pf = coda.open(filename)</code></h5>
       <p>The product file handle returned by this function can also be used with the <a href="#high_level_functions">high level CODA functions</a>.</p>
+      <h5 id="coda_open_as"><code>pf = coda.open_as(filename, product_class, product_type, version)</code></h5>
       <h5 id="coda_close"><code>coda.close(pf)</code></h5>
       <h5 id="coda_get_product_filename"><code>filename = coda.get_product_filename(pf)</code></h5>
       <h5 id="coda_get_product_file_size"><code>file_size = coda.get_product_file_size(pf)</code></h5>

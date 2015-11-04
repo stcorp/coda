@@ -875,7 +875,8 @@ static int read_var_array(coda_netcdf_product *product, int32_t num_dim_lengths,
     return 0;
 }
 
-int coda_netcdf_open(const char *filename, int64_t file_size, coda_product **product)
+int coda_netcdf_open(const char *filename, int64_t file_size, const coda_product_definition *definition,
+                     coda_product **product)
 {
     coda_netcdf_product *product_file;
     coda_type_record *root_definition;
@@ -899,7 +900,7 @@ int coda_netcdf_open(const char *filename, int64_t file_size, coda_product **pro
     product_file->file_size = file_size;
     product_file->format = coda_format_netcdf;
     product_file->root_type = NULL;
-    product_file->product_definition = NULL;
+    product_file->product_definition = definition;
     product_file->product_variable_size = NULL;
     product_file->product_variable = NULL;
     product_file->use_mmap = 0;

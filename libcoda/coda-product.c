@@ -57,25 +57,26 @@
  * The CODA Product module contains functions and procedures to open, close and retrieve information about product
  * files that are supported by CODA.
  *
- * Under the hood CODA uses five different backends to access data from products. There are backends for structured
- * ascii, structured binary, XML, netCDF, HDF4, and HDF5 data formats.
- * netCDF, HDF4, and HDF5 are self describing product format. This means that CODA will retrieve information about the
- * structural layout and contents from the file itself. For XML, CODA can either use an external definition
- * (from a .codadef file) to interpret an XML file (similar like an XML Schema) or it can try to retrieve structural
- * layout of the file from the file itself.
- * This last option will result in a reduced form of access, since 'leaf elements' can not be interpreted as e.g.
- * integer/float/time but will only be accessible as string data.
+ * Under the hood CODA uses several different backends to access data from products. There are backends for structured
+ * ascii, structured binary, XML, netCDF, HDF4, HDF5, and several other data formats.
+ * Some formats such as netCDF, HDF4, and HDF5 are self describing product formats. This means that CODA will retrieve
+ * information about the structural layout and contents from the file itself. For other formats, such as XML, CODA can
+ * either use an external definition (from a .codadef file) to interpret an XML file (similar like an XML Schema) or it
+ * can try to retrieve structural layout of the file from the file itself.
+ * For XML this last option will result in a reduced form of access, since 'leaf elements' can not be interpreted as
+ * e.g. integer/float/time but will only be accessible as string data.
  * For the interpretation of structured ascii and structured binary files (or a combination of both) CODA purely relies
  * on the format definitions that are provided in the .codadef files.
  *
  * In order to be able to open product files with CODA you will first have to initialize CODA with coda_init() (see
  * \link coda_general CODA General\endlink). This initialization routine will initialize all available backends and will
  * search for all .codadef files in your CODA definition path to read the necessary descriptions of all non
- * self-describing products (note that you will then have to set the location of your CODA definition path using
- * coda_set_definition_path() or via the CODA_DEFINITION environment variable before calling coda_init()).
+ * self-describing products (note that you want to use .codadef files, you will need to have set the location of your
+ * CODA definition path using coda_set_definition_path() or via the CODA_DEFINITION environment variable before
+ * calling coda_init()).
  * As a user you can access all supported products in the same way no matter which format the product uses underneath.
- * This means that you can use the same functions for opening, traversing, reading,
- * and closing a product no matter whether you are accessing an ascii, binary, XML, netCDF, HDF4, or HDF5 file.
+ * This means that you can use the same functions for opening, traversing, reading, and closing a product no matter
+ * whether you are accessing an ascii, binary, XML, netCDF, HDF4, HDF5, etc. formatted file.
  *
  * To open a product file you will have to use the coda_open() function. This function takes as only parameter the
  * filename of the product file. CODA will then open the file and automatically check what type of file it is.
@@ -90,8 +91,8 @@
  * uniquely defines the description that will be used to interpret a product file.
  *
  * If CODA can not determine the product class, type, or version of a structured ascii/binary file, the file will not
- * be opened and an error will be returned. For XML, netCDF, HDF4, and HDF5 files CODA will open and interpret the data
- * based on the file contents.
+ * be opened and an error will be returned. For other formats such as XML, netCDF, HDF4, and HDF5 files CODA will open
+ * and interpret the data based on the file contents.
  * If everything was successful, the coda_open() function will provide you a file handle (of type #coda_product)
  * that can be passed to a range of other functions to retrieve information like the product class, type and version,
  * or to read data from the file with the help of CODA cursors (see \link coda_cursor CODA Cursor\endlink).
@@ -116,9 +117,9 @@
  *
  * It is possible to have multiple product files open at the same time. Just call coda_open() again on a different file
  * and you will get a new file handle. It is also possible to open a single product file multiple times (although this
- * is a feature we encourage you to avoid because of the mmap() limitations - see coda_set_option_use_mmap()).
- * In that case CODA will just return a second product file handle which is completely independent of the first product
- * file handle you already had.
+ * is a feature we encourage you to avoid on 32-bit systems because of the mmap() limitations - see
+ * coda_set_option_use_mmap()). In that case CODA will just return a second product file handle which is completely
+ * independent of the first product file handle you already had.
  */
 
 /** \typedef coda_product
@@ -142,14 +143,11 @@
 
 #define DETECTION_BLOCK_SIZE 80
 
-static int get_format_and_size(const char *filename, coda_format *format, int64_t *file_size)
+static int get_file_size(const char *filename, int64_t *file_size)
 {
-    unsigned char buffer[DETECTION_BLOCK_SIZE];
     struct stat statbuf;
-    int open_flags;
-    int fd;
 
-    assert(filename != NULL && format != NULL && file_size != NULL);
+    assert(filename != NULL && file_size != NULL);
 
     /* stat() the file to be opened */
 
@@ -178,6 +176,17 @@ static int get_format_and_size(const char *filename, coda_format *format, int64_
 
     *file_size = statbuf.st_size;
 
+    return 0;
+}
+
+static int get_format(const char *filename, int64_t file_size, coda_format *format)
+{
+    unsigned char buffer[DETECTION_BLOCK_SIZE];
+    int open_flags;
+    int fd;
+
+    assert(filename != NULL && format != NULL);
+
     /* open file and read detection block */
 
     open_flags = O_RDONLY;
@@ -191,9 +200,9 @@ static int get_format_and_size(const char *filename, coda_format *format, int64_
         return -1;
     }
 
-    if (*file_size > 0)
+    if (file_size > 0)
     {
-        if (read(fd, buffer, *file_size < DETECTION_BLOCK_SIZE ? (size_t)*file_size : DETECTION_BLOCK_SIZE) == -1)
+        if (read(fd, buffer, file_size < DETECTION_BLOCK_SIZE ? (size_t)file_size : DETECTION_BLOCK_SIZE) == -1)
         {
             coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", filename, strerror(errno));
             close(fd);
@@ -204,37 +213,37 @@ static int get_format_and_size(const char *filename, coda_format *format, int64_
     close(fd);
 
     /* HDF4 */
-    if (*file_size >= 4 && memcmp(buffer, "\016\003\023\001", 4) == 0)
+    if (file_size >= 4 && memcmp(buffer, "\016\003\023\001", 4) == 0)
     {
         *format = coda_format_hdf4;
         return 0;
     }
 
     /* HDF5 */
-    if (*file_size >= 8 && memcmp(buffer, "\211HDF\r\n\032\n", 8) == 0)
+    if (file_size >= 8 && memcmp(buffer, "\211HDF\r\n\032\n", 8) == 0)
     {
         *format = coda_format_hdf5;
         return 0;
     }
 
     /* (NASA) CDF */
-    if (*file_size >= 8 && (memcmp(buffer, "\000\000\377\377\000\000\377\377", 8) == 0 ||       /* 0x0000FFFF 0x0000FFFF */
-                            memcmp(buffer, "\315\363\000\001\000\000\377\377", 8) == 0 ||       /* 0xCDF30001 0x0000FFFF */
-                            memcmp(buffer, "\315\363\000\001\314\314\000\001", 8) == 0))        /* 0xCDF30001 0xCCCC0001 */
+    if (file_size >= 8 && (memcmp(buffer, "\000\000\377\377\000\000\377\377", 8) == 0 ||        /* 0x0000FFFF 0x0000FFFF */
+                           memcmp(buffer, "\315\363\000\001\000\000\377\377", 8) == 0 ||        /* 0xCDF30001 0x0000FFFF */
+                           memcmp(buffer, "\315\363\000\001\314\314\000\001", 8) == 0)) /* 0xCDF30001 0xCCCC0001 */
     {
         *format = coda_format_cdf;
         return 0;
     }
 
     /* netCDF */
-    if (*file_size >= 4 && memcmp(buffer, "CDF", 3) == 0 && (buffer[3] == '\001' || buffer[3] == '\002'))
+    if (file_size >= 4 && memcmp(buffer, "CDF", 3) == 0 && (buffer[3] == '\001' || buffer[3] == '\002'))
     {
         *format = coda_format_netcdf;
         return 0;
     }
 
     /* GRIB */
-    if (*file_size >= 8 && memcmp(buffer, "GRIB", 4) == 0)
+    if (file_size >= 8 && memcmp(buffer, "GRIB", 4) == 0)
     {
         if (buffer[7] == '\001')
         {
@@ -249,7 +258,7 @@ static int get_format_and_size(const char *filename, coda_format *format, int64_
     }
 
     /* XML */
-    if (*file_size >= 8)
+    if (file_size >= 8)
     {
         /* we do not support UTF-16, but otherwise the following compares should be used:
          * UTF-16 BE no BOM   : memcmp(buffer, "\000<\000?\000x\000m\000l", 10)
@@ -267,7 +276,7 @@ static int get_format_and_size(const char *filename, coda_format *format, int64_
     }
 
     /* SP3-c */
-    if (*file_size >= 60)
+    if (file_size >= 60)
     {
         if (buffer[0] == '#' && buffer[1] == 'c' && (buffer[2] == 'P' || buffer[2] == 'V') &&
             buffer[3] >= '0' && buffer[3] <= '9' && buffer[4] >= '0' && buffer[4] <= '9' && buffer[5] >= '0' &&
@@ -280,7 +289,7 @@ static int get_format_and_size(const char *filename, coda_format *format, int64_
     }
 
     /* RINEX */
-    if (*file_size >= 80)
+    if (file_size >= 80)
     {
         if (memcmp(&buffer[60], "RINEX VERSION / TYPE", 20) == 0)
         {
@@ -294,6 +303,59 @@ static int get_format_and_size(const char *filename, coda_format *format, int64_
     return 0;
 }
 
+static int detect_definition(const char *filename, coda_format *format, int64_t *file_size,
+                             coda_product_definition **definition)
+{
+    if (get_file_size(filename, file_size) != 0)
+    {
+        return -1;
+    }
+    if (get_format(filename, *file_size, format) != 0)
+    {
+        return -1;
+    }
+    switch (*format)
+    {
+        case coda_format_binary:
+            if (coda_ascbin_recognize_file(filename, *file_size, definition) != 0)
+            {
+                return -1;
+            }
+            if (*definition != NULL)
+            {
+                *format = (*definition)->format;
+            }
+            break;
+        case coda_format_xml:
+            if (coda_xml_recognize_file(filename, *file_size, definition) != 0)
+            {
+                return -1;
+            }
+            break;
+        case coda_format_hdf4:
+        case coda_format_hdf5:
+        case coda_format_cdf:
+        case coda_format_netcdf:
+        case coda_format_grib1:
+        case coda_format_grib2:
+            *definition = NULL;
+            break;
+        case coda_format_rinex:
+        case coda_format_sp3c:
+            /* We currently use the ascii detection tree to assign product class/type to RINEX and SP3-c files */
+            if (coda_ascbin_recognize_file(filename, *file_size, definition) != 0)
+            {
+                return -1;
+            }
+            break;
+        case coda_format_ascii:
+            /* not a format that can be returned by get_format_and_size() */
+            assert(0);
+            exit(1);
+    }
+
+    return 0;
+}
 
 /** Determine the file size, format, product class, product type, and format version of a product file.
  * This function will perform an open and close on the product file and will try to automatically recognize
@@ -334,47 +396,9 @@ LIBCODA_API int coda_recognize_file(const char *filename, int64_t *file_size, co
         return -1;
     }
 
-    if (get_format_and_size(filename, &format, &size) != 0)
+    if (detect_definition(filename, &format, &size, &definition) != 0)
     {
         return -1;
-    }
-    switch (format)
-    {
-        case coda_format_binary:
-            if (coda_ascbin_recognize_file(filename, size, &definition) != 0)
-            {
-                return -1;
-            }
-            if (definition != NULL)
-            {
-                format = definition->format;
-            }
-            break;
-        case coda_format_xml:
-            if (coda_xml_recognize_file(filename, size, &definition) != 0)
-            {
-                return -1;
-            }
-            break;
-        case coda_format_hdf4:
-        case coda_format_hdf5:
-        case coda_format_cdf:
-        case coda_format_netcdf:
-        case coda_format_grib1:
-        case coda_format_grib2:
-            break;
-        case coda_format_rinex:
-        case coda_format_sp3c:
-            /* We currently use the ascii detection tree to assign product class/type to RINEX and SP3-c files */
-            if (coda_ascbin_recognize_file(filename, size, &definition) != 0)
-            {
-                return -1;
-            }
-            break;
-        case coda_format_ascii:
-            /* not a format that can be returned by get_format_and_size() */
-            assert(0);
-            exit(1);
     }
 
     if (file_size != NULL)
@@ -401,6 +425,108 @@ LIBCODA_API int coda_recognize_file(const char *filename, int64_t *file_size, co
     return 0;
 }
 
+static int open_file(const char *filename, coda_format format, int64_t file_size,
+                     const coda_product_definition *definition, coda_product **product_file)
+{
+    switch (format)
+    {
+        case coda_format_ascii:
+        case coda_format_binary:
+            if (coda_ascbin_open(filename, file_size, definition, product_file) != 0)
+            {
+                return -1;
+            }
+            break;
+        case coda_format_xml:
+            if (coda_xml_open(filename, file_size, definition, product_file) != 0)
+            {
+                return -1;
+            }
+            break;
+        case coda_format_hdf4:
+#ifdef HAVE_HDF4
+            if (coda_hdf4_open(filename, file_size, NULL, product_file) != 0)
+            {
+                return -1;
+            }
+            break;
+#else
+            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
+            return -1;
+#endif
+        case coda_format_hdf5:
+#ifdef HAVE_HDF5
+            if (coda_hdf5_open(filename, file_size, NULL, product_file) != 0)
+            {
+                return -1;
+            }
+            break;
+#else
+            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
+            return -1;
+#endif
+        case coda_format_netcdf:
+            if (coda_netcdf_open(filename, file_size, NULL, product_file) != 0)
+            {
+                return -1;
+            }
+            break;
+        case coda_format_grib1:
+        case coda_format_grib2:
+            if (coda_grib_open(filename, file_size, NULL, product_file) != 0)
+            {
+                return -1;
+            }
+            break;
+        case coda_format_rinex:
+            if (coda_rinex_open(filename, file_size, definition, product_file) != 0)
+            {
+                return -1;
+            }
+            break;
+        case coda_format_sp3c:
+            if (coda_sp3c_open(filename, file_size, definition, product_file) != 0)
+            {
+                return -1;
+            }
+            break;
+        case coda_format_cdf:
+            coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, NULL);
+            return -1;
+    }
+
+    /* initialize product variables */
+    if ((*product_file)->product_definition != NULL && (*product_file)->product_definition->num_product_variables > 0)
+    {
+        int num_product_variables;
+        int i;
+
+        num_product_variables = (*product_file)->product_definition->num_product_variables;
+        (*product_file)->product_variable_size = malloc(num_product_variables * sizeof(long *));
+        if ((*product_file)->product_variable_size == NULL)
+        {
+            coda_close(*product_file);
+            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                           num_product_variables * sizeof(long *), __FILE__, __LINE__);
+            return -1;
+        }
+        (*product_file)->product_variable = malloc(num_product_variables * sizeof(int64_t **));
+        if ((*product_file)->product_variable == NULL)
+        {
+            coda_close(*product_file);
+            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                           num_product_variables * sizeof(int64_t **), __FILE__, __LINE__);
+            return -1;
+        }
+
+        for (i = 0; i < num_product_variables; i++)
+        {
+            (*product_file)->product_variable[i] = NULL;
+        }
+    }
+    return 0;
+}
+
 /** Open a product file for reading.
  * This function will try to open the specified file for reading. On success a newly allocated file handle will be
  * returned. The memory for this file handle will be released when coda_close() is called for this handle.
@@ -412,7 +538,7 @@ LIBCODA_API int coda_recognize_file(const char *filename, int64_t *file_size, co
  */
 LIBCODA_API int coda_open(const char *filename, coda_product **product)
 {
-    coda_product *product_file;
+    coda_product_definition *definition = NULL;
     coda_format format;
     int64_t file_size;
 
@@ -427,111 +553,79 @@ LIBCODA_API int coda_open(const char *filename, coda_product **product)
         return -1;
     }
 
-    if (get_format_and_size(filename, &format, &file_size) != 0)
+    if (detect_definition(filename, &format, &file_size, &definition) != 0)
+    {
+        return -1;
+    }
+    if (definition != NULL && definition->root_type == NULL)
+    {
+        if (coda_read_product_definition(definition) != 0)
+        {
+            return -1;
+        }
+    }
+
+    return open_file(filename, format, file_size, definition, product);
+}
+
+/** Open a product file for reading using a specific format definition.
+ * This function will try to open the specified file for reading similar to coda_open(), but instead of trying to
+ * automatically recognise the applicable product class/type/version as coda_open() does, this function will impose
+ * the format definition that is associated with the given \a product_class, \a product_type, and \a version parameters.
+ * \param filename Relative or full path to the product file.
+ * \param product_class Name of the product class for the requested format definition.
+ * \param product_type Name of the product type for the requested format definition.
+ * \param version Format version number of the product type definition. Use -1 to request the latest available definition.
+ * \param product Pointer to the variable where the pointer to the product file handle will be storeed.
+ * \return
+ *   \arg \c 0, Success.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_open_as(const char *filename, const char *product_class, const char *product_type, int version,
+                             coda_product **product)
+{
+    coda_product_definition *definition;
+    int64_t file_size;
+
+    if (filename == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "filename argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (product_class == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "product_class argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (product_type == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "product_type argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (product == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "product argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    if (get_file_size(filename, &file_size) != 0)
+    {
+        return -1;
+    }
+    if (coda_data_dictionary_get_definition(product_class, product_type, version, &definition) != 0)
     {
         return -1;
     }
 
-    switch (format)
+    if (definition->root_type == NULL)
     {
-        case coda_format_ascii:
-        case coda_format_binary:
-            if (coda_ascbin_open(filename, file_size, &product_file) != 0)
-            {
-                return -1;
-            }
-            break;
-        case coda_format_xml:
-            if (coda_xml_open(filename, file_size, &product_file) != 0)
-            {
-                return -1;
-            }
-            break;
-        case coda_format_hdf4:
-#ifdef HAVE_HDF4
-            if (coda_hdf4_open(filename, file_size, format, &product_file) != 0)
-            {
-                return -1;
-            }
-            break;
-#else
-            coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_hdf5:
-#ifdef HAVE_HDF5
-            if (coda_hdf5_open(filename, file_size, &product_file) != 0)
-            {
-                return -1;
-            }
-            break;
-#else
-            coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
-            return -1;
-#endif
-        case coda_format_netcdf:
-            if (coda_netcdf_open(filename, file_size, &product_file) != 0)
-            {
-                return -1;
-            }
-            break;
-        case coda_format_grib1:
-        case coda_format_grib2:
-            if (coda_grib_open(filename, file_size, &product_file) != 0)
-            {
-                return -1;
-            }
-            break;
-        case coda_format_rinex:
-            if (coda_rinex_open(filename, file_size, &product_file) != 0)
-            {
-                return -1;
-            }
-            break;
-        case coda_format_sp3c:
-            if (coda_sp3c_open(filename, file_size, &product_file) != 0)
-            {
-                return -1;
-            }
-            break;
-        case coda_format_cdf:
-            coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, NULL);
-            return -1;
-    }
-
-    /* initialize product variables */
-    if (product_file->product_definition != NULL && product_file->product_definition->num_product_variables > 0)
-    {
-        int num_product_variables;
-        int i;
-
-        num_product_variables = product_file->product_definition->num_product_variables;
-        product_file->product_variable_size = malloc(num_product_variables * sizeof(long *));
-        if (product_file->product_variable_size == NULL)
+        if (coda_read_product_definition(definition) != 0)
         {
-            coda_close(product_file);
-            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           num_product_variables * sizeof(long *), __FILE__, __LINE__);
             return -1;
-        }
-        product_file->product_variable = malloc(num_product_variables * sizeof(int64_t **));
-        if (product_file->product_variable == NULL)
-        {
-            coda_close(product_file);
-            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           num_product_variables * sizeof(int64_t **), __FILE__, __LINE__);
-            return -1;
-        }
-
-        for (i = 0; i < num_product_variables; i++)
-        {
-            product_file->product_variable[i] = NULL;
         }
     }
 
-    *product = product_file;
-
-    return 0;
+    return open_file(filename, definition->format, file_size, definition, product);
 }
 
 /** Close an open product file.

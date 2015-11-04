@@ -280,6 +280,7 @@ static void print_function_definitions(void)
     PRINT_FUNCDEF(coda_recognize_file, int);
 
     PRINT_FUNCDEF(coda_open, int);
+    PRINT_FUNCDEF(coda_open_as, int);
     PRINT_FUNCDEF(coda_close, int);
 
     PRINT_FUNCDEF(coda_get_product_filename, int);

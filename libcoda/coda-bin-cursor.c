@@ -1258,7 +1258,7 @@ static int read_vsf_integer(const coda_cursor *cursor, double *dst)
     {
         return -1;
     }
-    if (coda_bin_cursor_read_int32(&vsf_cursor, &scale_factor) != 0)
+    if (coda_cursor_read_int32(&vsf_cursor, &scale_factor) != 0)
     {
         return -1;
     }
@@ -1267,7 +1267,7 @@ static int read_vsf_integer(const coda_cursor *cursor, double *dst)
     {
         return -1;
     }
-    if (coda_bin_cursor_read_double(&vsf_cursor, &base_value) != 0)
+    if (coda_cursor_read_double(&vsf_cursor, &base_value) != 0)
     {
         return -1;
     }

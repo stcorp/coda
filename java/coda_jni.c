@@ -2185,6 +2185,68 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_open(JNIEnv *jenv, jclass j
 }
 
 
+SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_open_1as(JNIEnv *jenv, jclass jcls, jstring jarg1, jstring jarg2, jstring jarg3, jint jarg4, jobject jarg5) {
+  jint jresult = 0 ;
+  char *arg1 = (char *) 0 ;
+  char *arg2 = (char *) 0 ;
+  char *arg3 = (char *) 0 ;
+  int arg4 ;
+  coda_product **arg5 = (coda_product **) 0 ;
+  coda_product *ppcoda_product5 = 0 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = 0;
+  if (jarg1) {
+    arg1 = (char *)(*jenv)->GetStringUTFChars(jenv, jarg1, 0);
+    if (!arg1) return 0;
+  }
+  arg2 = 0;
+  if (jarg2) {
+    arg2 = (char *)(*jenv)->GetStringUTFChars(jenv, jarg2, 0);
+    if (!arg2) return 0;
+  }
+  arg3 = 0;
+  if (jarg3) {
+    arg3 = (char *)(*jenv)->GetStringUTFChars(jenv, jarg3, 0);
+    if (!arg3) return 0;
+  }
+  arg4 = (int)jarg4; 
+  
+  arg5 = &ppcoda_product5;
+  
+  {
+    result = (int)coda_open_as((char const *)arg1,(char const *)arg2,(char const *)arg3,arg4,arg5);
+    
+    if (result < 0)
+    {
+      int namelen = strlen("coda_open_as");
+      const char *codamsg = coda_errno_to_string(coda_errno);
+      char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
+      jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
+      
+      sprintf(fullMessage, "coda_open_as(): %s", codamsg);
+      (*jenv)->ThrowNew(jenv, clazz, fullMessage);
+      free(fullMessage);
+      return 0;
+    }
+  }
+  {
+    /* Give Java proxy the C pointer (of newly created object) */
+    jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/SWIGTYPE_p_coda_product_struct");
+    jfieldID fid = (*jenv)->GetFieldID(jenv, clazz, "swigCPtr", "J");
+    jlong cPtr = 0;
+    *(coda_product **)&cPtr = *arg5;
+    (*jenv)->SetLongField(jenv, jarg5, fid, cPtr);
+  }
+  if (arg1) (*jenv)->ReleaseStringUTFChars(jenv, jarg1, (const char *)arg1);
+  if (arg2) (*jenv)->ReleaseStringUTFChars(jenv, jarg2, (const char *)arg2);
+  if (arg3) (*jenv)->ReleaseStringUTFChars(jenv, jarg3, (const char *)arg3);
+  return jresult;
+}
+
+
 SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_close(JNIEnv *jenv, jclass jcls, jlong jarg1) {
   jint jresult = 0 ;
   coda_product *arg1 = (coda_product *) 0 ;

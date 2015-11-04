@@ -56,6 +56,7 @@ static void coda_matlab_fieldcount(int nlhs, mxArray *plhs[], int nrhs, const mx
 static void coda_matlab_fieldnames(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]);
 static void coda_matlab_getopt(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]);
 static void coda_matlab_open(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]);
+static void coda_matlab_open_as(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]);
 static void coda_matlab_product_class(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]);
 static void coda_matlab_product_type(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]);
 static void coda_matlab_product_version(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]);
@@ -276,6 +277,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else if (strcmp(funcname, "OPEN") == 0)
     {
         coda_matlab_open(nlhs, plhs, nrhs - 1, &(prhs[1]));
+    }
+    else if (strcmp(funcname, "OPEN_AS") == 0)
+    {
+        coda_matlab_open_as(nlhs, plhs, nrhs - 1, &(prhs[1]));
     }
     else if (strcmp(funcname, "PRODUCT_CLASS") == 0)
     {
@@ -1147,11 +1152,90 @@ static void coda_matlab_open(int nlhs, mxArray *plhs[], int nrhs, const mxArray 
 
     if (coda_open(filename, &pf) != 0)
     {
-        mexErrMsgTxt("Could not open specified product");
+        coda_matlab_coda_error();
     }
 
     plhs[0] = coda_matlab_add_file_handle(pf);
 
+    mxFree(filename);
+}
+
+static void coda_matlab_open_as(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+{
+    coda_product *pf;
+    char *filename;
+    char *product_class;
+    char *product_type;
+    int version;
+    int buflen;
+
+    /* check parameters */
+    if (nlhs > 1)
+    {
+        mexErrMsgTxt("Too many output arguments.");
+    }
+    if (nrhs != 4)
+    {
+        mexErrMsgTxt("Function needs exactly four arguments.");
+    }
+    if (!mxIsChar(prhs[0]))
+    {
+        mexErrMsgTxt("First argument should be a string.");
+    }
+    if (mxGetM(prhs[0]) != 1)
+    {
+        mexErrMsgTxt("First argument should be a row vector.");
+    }
+    if (!mxIsChar(prhs[1]))
+    {
+        mexErrMsgTxt("Second argument should be a string.");
+    }
+    if (mxGetM(prhs[1]) != 1)
+    {
+        mexErrMsgTxt("Second argument should be a row vector.");
+    }
+    if (!mxIsChar(prhs[2]))
+    {
+        mexErrMsgTxt("Third argument should be a string.");
+    }
+    if (mxGetM(prhs[2]) != 1)
+    {
+        mexErrMsgTxt("Third argument should be a row vector.");
+    }
+    if (!mxIsNumeric(prhs[3]))
+    {
+        mexErrMsgTxt("Fourth argument should be a numerical value.");
+    }
+
+    buflen = mxGetN(prhs[0]) + 1;
+    filename = (char *)mxCalloc(buflen, sizeof(char));
+    if (mxGetString(prhs[0], filename, buflen) != 0)
+    {
+        mexErrMsgTxt("Unable to copy the filename string.");
+    }
+    buflen = mxGetN(prhs[1]) + 1;
+    product_class = (char *)mxCalloc(buflen, sizeof(char));
+    if (mxGetString(prhs[1], product_class, buflen) != 0)
+    {
+        mexErrMsgTxt("Unable to copy the product_class string.");
+    }
+    buflen = mxGetN(prhs[2]) + 1;
+    product_type = (char *)mxCalloc(buflen, sizeof(char));
+    if (mxGetString(prhs[2], product_type, buflen) != 0)
+    {
+        mexErrMsgTxt("Unable to copy the product_type string.");
+    }
+    version = (int)mxGetScalar(prhs[3]);
+
+    if (coda_open_as(filename, product_class, product_type, version, &pf) != 0)
+    {
+        coda_matlab_coda_error();
+    }
+
+    plhs[0] = coda_matlab_add_file_handle(pf);
+
+    mxFree(product_type);
+    mxFree(product_class);
     mxFree(filename);
 }
 
@@ -1352,11 +1436,6 @@ static void coda_matlab_size(int nlhs, mxArray *plhs[], int nrhs, const mxArray 
     if (nrhs < 1)
     {
         mexErrMsgTxt("Function needs at least one argument.");
-    }
-
-    if (nrhs == 1)
-    {
-        mexErrMsgTxt("Not an array");
     }
 
     pf = coda_matlab_get_product_file(prhs[0]);

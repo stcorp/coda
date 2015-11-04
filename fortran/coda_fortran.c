@@ -278,6 +278,20 @@ int UFNAME(CODA_OPEN,coda_open)(char *filename, void *pf, int filename_size)
     return result;
 }
 
+int UFNAME(CODA_OPEN_AS,coda_open_as)(char *filename, char *product_class, char *product_type, int version, void *pf,
+                                      int filename_size, int product_class_size, int product_type_size)
+{
+    int result;
+    INSTR_BEGIN(filename)
+    INSTR_BEGIN(product_class)
+    INSTR_BEGIN(product_type)
+    result = coda_open_as(filename_s, product_class_s, product_type_s, version, (coda_product **)pf);
+    INSTR_END(product_type)
+    INSTR_END(product_class)
+    INSTR_END(filename)
+    return result;
+}
+
 int UFNAME(CODA_CLOSE,coda_close)(void *pf)
 {
     return coda_close(*(coda_product **)pf);

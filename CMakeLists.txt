@@ -2,7 +2,7 @@
 #
 project(CODA)
 
-set(VERSION 2.1)
+set(VERSION 2.2)
 set(CODA_VERSION \"${VERSION}\")
 
 # General setup
@@ -673,9 +673,9 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/coda.h DESTINATION include)
 #
 # Set dynamic library version
 #
-set(LIBCODA_CURRENT 6)
+set(LIBCODA_CURRENT 7)
 set(LIBCODA_REVISION 0)
-set(LIBCODA_AGE 1)
+set(LIBCODA_AGE 2)
 
 add_library(coda SHARED ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBPCRE_SOURCES} ${LIBZLIB_SOURCES})
 target_link_libraries(coda ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})

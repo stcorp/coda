@@ -42,15 +42,16 @@
 /** \file */
 
 /** \defgroup coda_types CODA Types
- * Each data element or group of data elements (such as an array or record) in a product file, independent of whether
- * it is an ascii, binary, XML, netCDF, HDF4, or HDF5 product, has a unique description in CODA.
+ * Each data element or group of data elements (such as an array or record) in a product file has a unique description,
+ * in CODA. This description is independent of the file format of the product (e.g. ascii, binary, XML, netCDF, etc.)
  * Each of those descriptions is refered to as a CODA type (which is of type #coda_type).
- * For ascii, binary, and XML products the type definition is fixed and is provided by .codadef files.
- * For netCDF, HDF4, and HDF5 files the type definition is taken from the products themselves.
- * /note For XML files CODA also allows taking the definition from the file itself, but CODA will then not know how to
- * interpret the 'leaf elements' (i.e. whether the content of an XML element should be a string, an integer, a time
- * value, etc.) and will treat all 'leaf elements' as ascii text.
- * 
+ * For self describing formats such as netCDF, HDF4, and HDF5 files the type definition is taken from the products
+ * themselves. For other formats, such as ascii and binary products the type definition is fixed and is provided by
+ * .codadef files.
+ * For some file formats CODA can use a predefined format stored in a .codadef file to further restricit the format
+ * of a self describing file. For XML files, for instance, CODA will treat all 'leaf elements' as ascii text if no
+ * definition for the product is available in a .codadef. However, with a definition, CODA will know how to interpret
+ * the 'leaf elements' (i.e. whether the content of an XML element should be a string, an integer, a time value, etc.).
  *
  * As an example, there is a type that describes the MPH of an ENVISAT product (which is a record).
  * This record contains a name, a textual description, the number of fields, and for each of the fields the field name
@@ -85,55 +86,15 @@
  * get a #coda_text_class type).
  *
  * CODA is able to deal with many dynamic properties that can be encountered in product files.
- * Some of these dynamic properties are: the size of arrays, the availabillity of record fields, the bit/byte offset of
- * record fields, and the size of string data or raw data.
+ * Some of these dynamic properties are: the size of arrays, the availabillity of optional record fields, the bit/byte
+ * offset of record fields, and the size of string data or raw data.
  * For data types where these properties are dynamic, you will only be able to retrieve the actual
  * size/availabillity/etc. by moving a cursor to the data element and use the CODA Cursor functions to retrieve the
  * requested property (e.g. if the size of an array is not fixed, coda_type_get_array_dim() will return a
  * dimension value of -1 and coda_cursor_get_array_dim() will return the real dimension value).
  *
- * CODA also provides mappings of the datatypes that are available in XML, netCDF, HDF4, and HDF5 products to the CODA
- * types.
- * When accessing HDF products via CODA you will therefore get the 'CODA view' on these files.
- * For XML the following mapping is used:
- *  - the root of the product maps to a record with a single field (representing the root xml element)
- *  - an XML element will map to a record if it contains other XML elements
- *  - if an XML element can occur more than once within its parent element, CODA will map this to an array of that
- *    element
- *  - if an element contains ascii content then the content will be described using a CODA type for ascii formatted data
- *  - XML attributes for an element will be described using a record with a field for each attribute
- *
- * For netCDF the following mapping is used:
- *  - the root of the product maps to a record with a field for each variable in the product
- *  - a variable maps to a scalar for 0 dimensional data or to an array of basic types for 1 or higher dimensional data
- *  - global attributes are provides as attributes of the root record
- *  - variable attributes are provided as attributes of the basic type (i.e. of the scalar or the array element)
- *  - for arrays of characters, the last dimension is mapped to a string (if it is not the appendable dimension)
- *
- * For HDF4 the following mapping is used:
- *  - the root of product maps to a record
- *  - a Vgroup maps to a record
- *  - a Vdata maps to a record
- *  - a Vdata field maps to a one dimensional array of a basic type
- *  - an SDS maps to an n-dimensional array of a basic type
- *  - a GRImage maps to a two dimensional array of a basic type (the dimensions are swapped in order to get to a c
- *    array ordering)
- *  - for each HDF4 element the attributes and annotations that belong to this element are grouped together into a
- *    single attribute record. A single attribute can map to a basic type or to an array of a basic type.
- *
- * For HDF5 the following mapping is used:
- *  - a group maps to a record
- *  - an dataset maps to an n-dimensional array of a basic type (only simple dataspaces are supported)
- *  - for each HDF5 element the attributes that belong to this element are grouped together into a single attribute
- *    record
- *  - HDF5 softlinks and datatype objects are not supported by CODA
- *  - CODA only supports datasets and attributes that contain integer, float and string HDF5 data types and these data
- *    types map to their respective basic type in CODA.
- *
- * CODA doesn't use the #coda_special_class types for netCDF, HDF4, and HDF5 products.
- *
- * More information about the CODA types and descriptions of the supported products can be found in the CODA Product
- * Format Definitions documentation that is included with the CODA package.
+ * More information about the CODA types and descriptions of the mappings of self describing formats to CODA types
+ * can be found in other parts of the CODA documentation that is included with the CODA package.
  */
 
 /** \typedef coda_type
@@ -2223,7 +2184,7 @@ coda_type_special *coda_type_vsf_integer_new(coda_format format)
     type->format = format;
     type->retain_count = 0;
     type->type_class = coda_special_class;
-    type->read_type = coda_native_type_not_available;
+    type->read_type = coda_native_type_double;
     type->name = NULL;
     type->description = NULL;
     type->bit_size = -1;

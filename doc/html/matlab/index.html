@@ -35,6 +35,7 @@
             <li><a href="#coda_fieldnames"><code>CODA_FIELDNAMES</code></a></li>
             <li><a href="#coda_getopt"><code>CODA_GETOPT</code></a></li>
             <li><a href="#coda_open"><code>CODA_OPEN</code></a></li>
+            <li><a href="#coda_open_as"><code>CODA_OPEN_AS</code></a></li>
             <li><a href="#coda_product_class"><code>CODA_PRODUCT_CLASS</code></a></li>
             <li><a href="#coda_product_type"><code>CODA_PRODUCT_TYPE</code></a></li>
             <li><a href="#coda_product_version"><code>CODA_PRODUCT_VERSION</code></a></li>
@@ -178,7 +179,19 @@
 
       <p>The <code>filepath</code> parameter must be a string containing the full path (or relative path with respect to the current working directory) of the product file.</p>
 
-      <p>See also <a href="#coda_close"><code>CODA_CLOSE</code></a>, <a href="#coda_clearall"><code>CODA_CLEARALL</code></a></p>
+      <p>See also <a href="#coda_close"><code>CODA_CLOSE</code></a>, <a href="#coda_open_as"><code>CODA_OPEN_AS</code></a>, <a href="#coda_clearall"><code>CODA_CLEARALL</code></a></p>
+
+      <h3 id="coda_open"><code>CODA_OPEN_AS</code></h3>
+
+      <p><code>CODA_OPEN_AS</code> Open a product file using a specific format definition.</p>
+       
+      <p><code>CODA_FILE_ID = CODA_OPEN_AS(FILEPATH, PRODUCT_CLASS, PRODUCT_TYPE, VERSION)</code> will try to open the specified file for reading similar to <code>CODA_OPEN</code>, but instead of trying to automatically recognise the applicable product class/type/version as <code>CODA_OPEN</code> does, this function will impose the format definition that is associated with the given product_class, product_type, and version parameters.</p>
+
+      <p>Note that you normally won't need this function as CODA will be able to recognize which format definition to use automatically. However, for the rare occasions where <code>CODA_OPEN</code> is not sufficient, you can use this function to force the use of a specific format definition.</p>
+
+      <p>You can specify -1 for the version to request the latest available version of the format definition.</p>
+
+      <p>See also <a href="#coda_open"><code>CODA_OPEN</code></a>, <a href="#coda_close"><code>CODA_CLOSE</code></a>, <a href="#coda_clearall"><code>CODA_CLEARALL</code></a></p>
 
       <h3 id="coda_product_class"><code>CODA_PRODUCT_CLASS</code></h3>
 

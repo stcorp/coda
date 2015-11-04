@@ -5783,6 +5783,83 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_open_as(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  char *arg1 = (char *) 0 ;
+  char *arg2 = (char *) 0 ;
+  char *arg3 = (char *) 0 ;
+  int arg4 ;
+  coda_product **arg5 = (coda_product **) 0 ;
+  int res1 ;
+  char *buf1 = 0 ;
+  int alloc1 = 0 ;
+  int res2 ;
+  char *buf2 = 0 ;
+  int alloc2 = 0 ;
+  int res3 ;
+  char *buf3 = 0 ;
+  int alloc3 = 0 ;
+  int val4 ;
+  int ecode4 = 0 ;
+  coda_product *tmp5 = NULL ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  int result;
+  
+  {
+    arg5 = &tmp5;
+  }
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:open_as",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
+  res1 = SWIG_AsCharPtrAndSize(obj0, &buf1, NULL, &alloc1);
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "open_as" "', argument " "1"" of type '" "char const *""'");
+  }
+  arg1 = (char *)(buf1);
+  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "open_as" "', argument " "2"" of type '" "char const *""'");
+  }
+  arg2 = (char *)(buf2);
+  res3 = SWIG_AsCharPtrAndSize(obj2, &buf3, NULL, &alloc3);
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "open_as" "', argument " "3"" of type '" "char const *""'");
+  }
+  arg3 = (char *)(buf3);
+  ecode4 = SWIG_AsVal_int(obj3, &val4);
+  if (!SWIG_IsOK(ecode4)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "open_as" "', argument " "4"" of type '" "int""'");
+  } 
+  arg4 = (int)(val4);
+  {
+    result = (int)coda_open_as((char const *)arg1,(char const *)arg2,(char const *)arg3,arg4,arg5);
+    
+    if (result < 0)
+    {
+      if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
+      if (alloc2 == SWIG_NEWOBJ) free((char*)buf2);
+      if (alloc3 == SWIG_NEWOBJ) free((char*)buf3);
+      
+      return PyErr_Format(codacError,"coda_open_as(): %s", coda_errno_to_string(coda_errno));
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  {
+    resultobj = t_output_helper(resultobj, SWIG_NewPointerObj(*arg5, SWIGTYPE_p_coda_product_struct, 0));
+  }
+  if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
+  if (alloc2 == SWIG_NEWOBJ) free((char*)buf2);
+  if (alloc3 == SWIG_NEWOBJ) free((char*)buf3);
+  return resultobj;
+fail:
+  if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
+  if (alloc2 == SWIG_NEWOBJ) free((char*)buf2);
+  if (alloc3 == SWIG_NEWOBJ) free((char*)buf3);
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_close(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   coda_product *arg1 = (coda_product *) 0 ;
@@ -9540,6 +9617,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"coda_time_to_utcstring", _wrap_coda_time_to_utcstring, METH_VARARGS, NULL},
 	 { (char *)"recognize_file", _wrap_recognize_file, METH_VARARGS, NULL},
 	 { (char *)"open", _wrap_open, METH_VARARGS, NULL},
+	 { (char *)"open_as", _wrap_open_as, METH_VARARGS, NULL},
 	 { (char *)"close", _wrap_close, METH_VARARGS, NULL},
 	 { (char *)"get_product_filename", _wrap_get_product_filename, METH_VARARGS, NULL},
 	 { (char *)"get_product_file_size", _wrap_get_product_file_size, METH_VARARGS, NULL},

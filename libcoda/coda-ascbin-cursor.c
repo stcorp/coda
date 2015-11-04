@@ -31,10 +31,10 @@
 static int eval_current_type(coda_cursor *cursor)
 {
     /* check whether this is a missing field */
-    if (cursor->n > 1 && ((coda_type *)cursor->stack[cursor->n - 2].type)->type_class == coda_record_class &&
-        cursor->stack[cursor->n - 1].index != -1 && (cursor->stack[cursor->n - 2].type->backend == coda_backend_ascii ||
-                                                     cursor->stack[cursor->n - 2].type->backend == coda_backend_binary))
-
+    if (cursor->n > 1 && cursor->stack[cursor->n - 1].index != -1 &&
+        (cursor->stack[cursor->n - 2].type->backend == coda_backend_ascii ||
+         cursor->stack[cursor->n - 2].type->backend == coda_backend_binary) &&
+        ((coda_type *)cursor->stack[cursor->n - 2].type)->type_class == coda_record_class)
     {
         coda_cursor record_cursor;
         int available;
@@ -252,7 +252,7 @@ int coda_ascbin_cursor_goto_record_field_by_index(coda_cursor *cursor, long inde
     coda_type_record *record;
     int64_t bit_offset;
 
-    record = (coda_type_record *)cursor->stack[cursor->n - 1].type;
+    record = (coda_type_record *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
 
     if (index < 0 || index >= record->num_fields)
     {
@@ -291,7 +291,7 @@ int coda_ascbin_cursor_goto_next_record_field(coda_cursor *cursor)
     int64_t bit_offset;
     long index;
 
-    record = (coda_type_record *)cursor->stack[cursor->n - 2].type;
+    record = (coda_type_record *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 2].type);
     index = cursor->stack[cursor->n - 1].index + 1;
     if (index < 0 || index >= record->num_fields)
     {
@@ -324,9 +324,11 @@ int coda_ascbin_cursor_goto_next_record_field(coda_cursor *cursor)
 
 int coda_ascbin_cursor_goto_available_union_field(coda_cursor *cursor)
 {
+    coda_type_record *record;
     long index;
 
-    if (((coda_type_record *)cursor->stack[cursor->n - 1].type)->union_field_expr == NULL)
+    record = (coda_type_record *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    if (record->union_field_expr == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to a union");
         return -1;
@@ -346,7 +348,7 @@ int coda_ascbin_cursor_goto_array_element(coda_cursor *cursor, int num_subs, con
     long offset_elements;
     long i;
 
-    array = (coda_type_array *)cursor->stack[cursor->n - 1].type;
+    array = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
 
     /* check the number of dimensions */
     if (num_subs != array->num_dims)
@@ -434,7 +436,7 @@ int coda_ascbin_cursor_goto_array_element_by_index(coda_cursor *cursor, long ind
     coda_type_array *array;
     long i;
 
-    array = (coda_type_array *)cursor->stack[cursor->n - 1].type;
+    array = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
 
     /* check the range for index */
     if (coda_option_perform_boundary_checks)
@@ -497,7 +499,7 @@ int coda_ascbin_cursor_goto_next_array_element(coda_cursor *cursor)
     int64_t bit_size;
     long index;
 
-    array = (coda_type_array *)cursor->stack[cursor->n - 2].type;
+    array = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 2].type);
     index = cursor->stack[cursor->n - 1].index + 1;
 
     if (coda_option_perform_boundary_checks)
@@ -537,7 +539,7 @@ int coda_ascbin_cursor_goto_next_array_element(coda_cursor *cursor)
 
 int coda_ascbin_cursor_goto_attributes(coda_cursor *cursor)
 {
-    coda_format format = ((coda_type *)cursor->stack[cursor->n - 1].type)->format;
+    coda_format format = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type)->format;
 
     cursor->n++;
     cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)coda_type_empty_record(format);
@@ -550,19 +552,20 @@ int coda_ascbin_cursor_goto_attributes(coda_cursor *cursor)
 
 int coda_ascbin_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size)
 {
-    if (((coda_type *)cursor->stack[cursor->n - 1].type)->bit_size >= 0)
+    coda_type *type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    if (type->bit_size >= 0)
     {
-        *bit_size = ((coda_type *)cursor->stack[cursor->n - 1].type)->bit_size;
+        *bit_size = type->bit_size;
     }
     else
     {
-        switch (((coda_type *)cursor->stack[cursor->n - 1].type)->type_class)
+        switch (type->type_class)
         {
             case coda_record_class:
                 {
-                    coda_type_record *record;
+                    coda_type_record *record = (coda_type_record *)type;
 
-                    record = (coda_type_record *)cursor->stack[cursor->n - 1].type;
                     if (coda_option_use_fast_size_expressions && record->size_expr != NULL)
                     {
                         if (coda_expression_eval_integer(record->size_expr, cursor, bit_size) != 0)
@@ -580,7 +583,7 @@ int coda_ascbin_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size
                         coda_cursor field_cursor;
 
                         field_cursor = *cursor;
-                        if (coda_ascbin_cursor_goto_available_union_field(&field_cursor) != 0)
+                        if (coda_cursor_goto_available_union_field(&field_cursor) != 0)
                         {
                             return -1;
                         }
@@ -600,7 +603,7 @@ int coda_ascbin_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size
                             long i;
 
                             field_cursor = *cursor;
-                            if (coda_ascbin_cursor_goto_record_field_by_index(&field_cursor, 0) != 0)
+                            if (coda_cursor_goto_record_field_by_index(&field_cursor, 0) != 0)
                             {
                                 return -1;
                             }
@@ -646,10 +649,8 @@ int coda_ascbin_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size
                 break;
             case coda_array_class:
                 {
-                    coda_type_array *array;
+                    coda_type_array *array = (coda_type_array *)type;
                     long num_elements;
-
-                    array = (coda_type_array *)cursor->stack[cursor->n - 1].type;
 
                     /* get the number of elements in array */
                     if (coda_cursor_get_num_elements(cursor, &num_elements) != 0)
@@ -711,16 +712,17 @@ int coda_ascbin_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size
 
 int coda_ascbin_cursor_get_num_elements(const coda_cursor *cursor, long *num_elements)
 {
-    switch (((coda_type *)cursor->stack[cursor->n - 1].type)->type_class)
+    coda_type *type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    switch (type->type_class)
     {
         case coda_record_class:
-            *num_elements = ((coda_type_record *)cursor->stack[cursor->n - 1].type)->num_fields;
+            *num_elements = ((coda_type_record *)type)->num_fields;
             break;
         case coda_array_class:
             {
-                coda_type_array *array;
+                coda_type_array *array = (coda_type_array *)type;
 
-                array = (coda_type_array *)cursor->stack[cursor->n - 1].type;
                 if (array->num_elements != -1)
                 {
                     *num_elements = array->num_elements;
@@ -773,9 +775,7 @@ int coda_ascbin_cursor_get_num_elements(const coda_cursor *cursor, long *num_ele
 
 int coda_ascbin_cursor_get_record_field_available_status(const coda_cursor *cursor, long index, int *available)
 {
-    coda_type_record *record;
-
-    record = (coda_type_record *)cursor->stack[cursor->n - 1].type;
+    coda_type_record *record = (coda_type_record *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
 
     if (index < 0 || index >= record->num_fields)
     {
@@ -788,7 +788,7 @@ int coda_ascbin_cursor_get_record_field_available_status(const coda_cursor *curs
     {
         long available_index;
 
-        if (coda_ascbin_cursor_get_available_union_field_index(cursor, &available_index) != 0)
+        if (coda_cursor_get_available_union_field_index(cursor, &available_index) != 0)
         {
             return -1;
         }
@@ -811,11 +811,10 @@ int coda_ascbin_cursor_get_record_field_available_status(const coda_cursor *curs
 
 int coda_ascbin_cursor_get_available_union_field_index(const coda_cursor *cursor, long *index)
 {
-    coda_type_record *record;
+    coda_type_record *record = (coda_type_record *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     coda_cursor union_cursor;
     int64_t index64;
 
-    record = (coda_type_record *)cursor->stack[cursor->n - 1].type;
     if (record->union_field_expr == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to a union");
@@ -853,10 +852,9 @@ int coda_ascbin_cursor_get_available_union_field_index(const coda_cursor *cursor
 
 int coda_ascbin_cursor_get_array_dim(const coda_cursor *cursor, int *num_dims, long dim[])
 {
-    coda_type_array *array;
+    coda_type_array *array = (coda_type_array *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     int i;
 
-    array = (coda_type_array *)cursor->stack[cursor->n - 1].type;
     *num_dims = array->num_dims;
     for (i = 0; i < array->num_dims; i++)
     {

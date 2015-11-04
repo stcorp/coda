@@ -473,7 +473,7 @@ POSIX_SCALAR_OUTPUT_HELPER(uint64_t, PyLong_FromUnsignedLongLong)
 
 
 /*
-    handle output "coda_product **" argument to coda_open()
+    handle output "coda_product **" argument to e.g. coda_open()
 */
 %apply opaque_pointer **OUTPUT { coda_product ** }
 

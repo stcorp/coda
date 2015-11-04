@@ -10,7 +10,7 @@ function varargout = coda_open(varargin)
 %   relative path with respect to the current working directory) of the
 %   product file.
 %
-%   See also CODA_CLOSE, CODA_CLEARALL
+%   See also CODA_CLOSE, CODA_OPEN_AS, CODA_CLEARALL
 %
 
 % Call CODA_MATLAB.MEX to do the actual work.

@@ -23,7 +23,8 @@
 
 #include "coda-internal.h"
 
-int coda_netcdf_open(const char *filename, int64_t file_size, coda_product **product);
+int coda_netcdf_open(const char *filename, int64_t file_size, const coda_product_definition *definition,
+                     coda_product **product);
 int coda_netcdf_close(coda_product *product);
 
 void coda_netcdf_type_delete(coda_dynamic_type *type);

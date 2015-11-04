@@ -195,6 +195,10 @@ public class codac implements codacConstants {
     return codacJNI.open(filename, product);
   }
 
+  public static int open_as(String filename, String product_class, String product_type, int version, SWIGTYPE_p_coda_product_struct product) throws nl.stcorp.coda.CodaException {
+    return codacJNI.open_as(filename, product_class, product_type, version, product);
+  }
+
   public static int close(SWIGTYPE_p_coda_product_struct product) throws nl.stcorp.coda.CodaException {
     return codacJNI.close(SWIGTYPE_p_coda_product_struct.getCPtr(product));
   }

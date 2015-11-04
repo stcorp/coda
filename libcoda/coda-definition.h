@@ -152,8 +152,9 @@ coda_product_type *coda_product_type_new(const char *name);
 int coda_product_type_set_description(coda_product_type *product_type, const char *description);
 int coda_product_type_add_product_definition(coda_product_type *product_type,
                                              coda_product_definition *product_definition);
-coda_product_definition *coda_product_type_get_product_definition_by_version(coda_product_type *product_type,
+coda_product_definition *coda_product_type_get_product_definition_by_version(const coda_product_type *product_type,
                                                                              int version);
+coda_product_definition *coda_product_type_get_latest_product_definition(const coda_product_type *product_type);
 void coda_product_type_delete(coda_product_type *product_type);
 
 coda_product_class *coda_product_class_new(const char *name);
@@ -174,6 +175,8 @@ int coda_data_dictionary_add_product_class(coda_product_class *product_class);
 coda_product_class *coda_data_dictionary_get_product_class(const char *name);
 int coda_data_dictionary_has_product_class(const char *name);
 int coda_data_dictionary_remove_product_class(coda_product_class *product_class);
+int coda_data_dictionary_get_definition(const char *product_class, const char *product_type, int version,
+                                        coda_product_definition **definition);
 void coda_data_dictionary_done(void);
 
 

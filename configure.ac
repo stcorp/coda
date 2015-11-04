@@ -1,5 +1,5 @@
 # autoconf file for CODA
-AC_INIT([CODA],[2.1])
+AC_INIT([CODA],[2.2])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE(foreign 1.8.3 -Wall)
 
@@ -21,7 +21,8 @@ AH_TOP([
 AH_BOTTOM([
 #ifdef HAVE_PREAD
 /* some platforms (e.g. Linux) require this definition in order to enable support for pread */
-#define _XOPEN_SOURCE 500
+/* Use 600 instead of 500 to prevent Mac OS X to complain about missing strdup definitions */
+#define _XOPEN_SOURCE 600
 #endif
 
 #ifdef HAVE_INTTYPES_H
@@ -97,9 +98,9 @@ AC_CONFIG_FILES([win32/coda.iss win32/setup.py])
 #    increment age.
 # 6. If any interfaces have been removed or changed since the last public
 #    release, then set age to 0.
-LIBCODA_CURRENT=6
+LIBCODA_CURRENT=7
 LIBCODA_REVISION=0
-LIBCODA_AGE=1
+LIBCODA_AGE=2
 AC_SUBST(LIBCODA_CURRENT)
 AC_SUBST(LIBCODA_REVISION)
 AC_SUBST(LIBCODA_AGE)

@@ -366,6 +366,10 @@ def open(*args):
   return _codac.open(*args)
 open = _codac.open
 
+def open_as(*args):
+  return _codac.open_as(*args)
+open_as = _codac.open_as
+
 def close(*args):
   return _codac.close(*args)
 close = _codac.close

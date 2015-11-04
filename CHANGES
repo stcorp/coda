@@ -1,3 +1,29 @@
+2.2 2011-09-02
+~~~~~~~~~~~~~~
+
+* Added coda_open_as().
+
+* Fixed issue where CODA was producing error messages when trying to read
+  Variable Scale Factor integers.
+
+* Fixed endian conversion problem in GRIB backend for Grid Definition Section
+  data.
+
+* Fixed issue where MATLAB coda_size() function did not work on the root of
+  a product if the root was an array.
+
+* Fixed issue where expressions on ascii content in xml products were not able
+  to use the attribute content of the encapsulating xml element.
+
+* Fixed matching of product format detection expressions based on file names on
+  Windows when the path to the file used '\' characters instead of '/'.
+
+* libcoda is now linked statically into the CODA IDL DLM again on Unix systems
+  (regression from CODA 1.1). This eliminates the need for users to set a
+  runtime shared library path.
+
+* Fixed wrong fieldname in CODA documentation of SP3-c mapping.
+
 2.1 2011-07-21
 ~~~~~~~~~~~~~~
 

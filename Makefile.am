@@ -428,8 +428,8 @@ CLEANFILES += fortran/coda.inc
 if BUILD_IDL
 coda_idl_la_SOURCES = idl/coda-idl.c
 coda_idl_la_LDFLAGS = -module -shared -avoid-version
-coda_idl_la_LIBADD = libcoda.la
-coda_idl_la_DEPENDENCIES = libcoda.la
+coda_idl_la_LIBADD = libcoda_internal.la
+coda_idl_la_DEPENDENCIES = libcoda_internal.la
 INDENTFILES += $(coda_idl_la_SOURCES)
 endif
 
@@ -630,6 +630,7 @@ CODA_MATLAB_MFILES = \
 	matlab/coda_fieldnames.m \
 	matlab/coda_getopt.m \
 	matlab/coda_open.m \
+	matlab/coda_open_as.m \
 	matlab/coda_options.m \
 	matlab/coda_param.m \
 	matlab/coda_product_class.m \

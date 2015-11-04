@@ -34,6 +34,7 @@
             <li><a href="#coda_getopt"><code>CODA_GETOPT</code></a></li>
             <li><a href="#coda_setopt"><code>CODA_SETOPT</code></a></li>
             <li><a href="#coda_open"><code>CODA_OPEN</code></a></li>
+            <li><a href="#coda_open_as"><code>CODA_OPEN_AS</code></a></li>
             <li><a href="#coda_close"><code>CODA_CLOSE</code></a></li>
             <li><a href="#coda_product_class"><code>CODA_PRODUCT_CLASS</code></a></li>
             <li><a href="#coda_product_type"><code>CODA_PRODUCT_TYPE</code></a></li>
@@ -126,7 +127,7 @@
 
       <p>The <code>CODA_VERSION</code> function returns a string containing the current version number of CODA. The version number is always of the format 'x.y.z', i.e., major, minor, and revision numbers, separated by dots.</p>
 
-      <h3 id="coda_getopt">Function <code>CODA_GETOPT(option_name: STRING): INT</code></h3>
+      <h3 id="coda_getopt">Function <code>CODA_GETOPT(STRING option_name): INT</code></h3>
 
       <p>The <code>CODA_GETOPT</code> function returns the numerical value of a CODA IDL interface option. The following options are supported:</p>
 
@@ -176,7 +177,7 @@
         </tr>
       </table>
 
-      <h3 id="coda_setopt">Function <code>CODA_SETOPT(option_name: STRING, new_value: INT): INT</code></h3>
+      <h3 id="coda_setopt">Function <code>CODA_SETOPT(STRING option_name, INT new_value): INT</code></h3>
 
       <p>The <code>CODA_SETOPT</code> function is used to set the CODA IDL interface option to a new value. See the <code>CODA_GETOPT</code> description above for a list of allowed options and values, and their associated meanings.</p>
       
@@ -191,6 +192,14 @@
       <p>It is perfectly OK to have multiple files open at the same time. Still, you are advised to close files as soon as you are done with them, since each of them consumes a vital system resource: <i>address space</i>. Note that this is <i>not</i> the same as 'memory': a data product is not read in its entirety into memory. A typical opened product file should consume a couple of tens of kilobytes of memory. However, the entire product file is virtually <i>mapped into</i> memory (a well-known technique that provides high-performance I/O access to a file). On a modern 32-bit computer (e.g., an Intel x86-class computer running Linux or Windows), up to 3 gigabytes worth of files may be mapped into memory at any one point in time.</p>
 
       <p>In the CODA IDL interface, you can have up to 100 files open simultaneously. An attempt to open more files will yield an error.</p>
+
+      <h3 id="coda_open_as">Function <code>CODA_OPEN_AS(STRING filename, STRING product_class, STRING product_type, INT version): ULONG64</code></h3>
+
+      <p><code>CODA_OPEN_AS</code> will try to open the specified file for reading similar to <code>CODA_OPEN</code>, but instead of trying to automatically recognise the applicable product class/type/version as <code>CODA_OPEN</code> does, this function will impose the format definition that is associated with the given product_class, product_type, and version parameters.</p>
+
+      <p>Note that you normally won't need this function as CODA will be able to recognize which format definition to use automatically. However, for the rare occasions where <code>CODA_OPEN</code> is not sufficient, you can use this function to force the use of a specific format definition.</p>
+
+      <p>You can specify -1 for the version to request the latest available version of the format definition.</p>
 
       <h3 id="coda_close">Function <code>CODA_CLOSE(ULONG64 pf_id): CODA_ERROR</code></h3>
 

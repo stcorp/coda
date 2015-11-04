@@ -86,7 +86,7 @@ void coda_expression__delete_buffer(void *);
 
 static void coda_expression_error(const char *error)
 {
-    coda_set_error(CODA_ERROR_EXPRESSION, error);
+    coda_set_error(CODA_ERROR_EXPRESSION, "%s", error);
 }
 
 /* *INDENT-OFF* */

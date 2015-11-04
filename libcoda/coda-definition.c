@@ -411,6 +411,12 @@ coda_product_definition *coda_product_definition_new(const char *name, coda_form
 {
     coda_product_definition *product_definition;
 
+    if (!coda_is_identifier(name))
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "name '%s' is not a valid identifier for product definition", name);
+        return NULL;
+    }
+
     product_definition = malloc(sizeof(coda_product_definition));
     if (product_definition == NULL)
     {
@@ -595,13 +601,6 @@ coda_product_type *coda_product_type_new(const char *name)
 {
     coda_product_type *product_type;
 
-    if (!coda_is_identifier(name))
-    {
-        coda_set_error(CODA_ERROR_DATA_DEFINITION, "name '%s' is not a valid identifier for product type definition",
-                       name);
-        return NULL;
-    }
-
     product_type = malloc(sizeof(coda_product_type));
     if (product_type == NULL)
     {
@@ -711,7 +710,7 @@ int coda_product_type_add_product_definition(coda_product_type *product_type,
     return 0;
 }
 
-coda_product_definition *coda_product_type_get_product_definition_by_version(coda_product_type *product_type,
+coda_product_definition *coda_product_type_get_product_definition_by_version(const coda_product_type *product_type,
                                                                              int version)
 {
     int i;
@@ -727,6 +726,32 @@ coda_product_definition *coda_product_type_get_product_definition_by_version(cod
     coda_set_error(CODA_ERROR_DATA_DEFINITION, "product type %s does not contain a definition with version %d",
                    product_type->name, version);
     return NULL;
+}
+
+coda_product_definition *coda_product_type_get_latest_product_definition(const coda_product_type *product_type)
+{
+    int max_version;
+    int max_i;
+    int i;
+
+    if (product_type->num_product_definitions == 0)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "product type %s does not contain any definitions",
+                       product_type->name);
+        return NULL;
+    }
+    max_version = product_type->product_definition[0]->version;
+    max_i = 0;
+    for (i = 1; i < product_type->num_product_definitions; i++)
+    {
+        if (product_type->product_definition[i]->version > max_version)
+        {
+            max_version = product_type->product_definition[i]->version;
+            max_i = i;
+        }
+    }
+
+    return product_type->product_definition[max_i];
 }
 
 void coda_product_class_delete(coda_product_class *product_class)
@@ -1227,6 +1252,40 @@ static int data_dictionary_rebuild_detection_tree(void)
         }
     }
 
+    return 0;
+}
+
+int coda_data_dictionary_get_definition(const char *product_class_name, const char *product_type_name, int version,
+                                        coda_product_definition **definition)
+{
+    const coda_product_class *product_class;
+    const coda_product_type *product_type;
+    coda_product_definition *product_definition = NULL;
+
+    product_class = coda_data_dictionary_get_product_class(product_class_name);
+    if (product_class == NULL)
+    {
+        return -1;
+    }
+    product_type = coda_product_class_get_product_type(product_class, product_type_name);
+    if (product_type == NULL)
+    {
+        return -1;
+    }
+    if (version < 0)
+    {
+        product_definition = coda_product_type_get_latest_product_definition(product_type);
+    }
+    else
+    {
+        product_definition = coda_product_type_get_product_definition_by_version(product_type, version);
+    }
+    if (product_definition == NULL)
+    {
+        return -1;
+    }
+
+    *definition = product_definition;
     return 0;
 }
 

@@ -74,11 +74,13 @@
       <tr><td><i>not supported</i></td><td>&nbsp;</td><td>&nbsp;</td><td>PRN / # OF OBS</td></tr>
       </table>
 
-      <p>The following table gives the mapping of the epoch records structure to CODA parameters. A RINEX observation file can contain multiple epoch records. Each epoch records contains the epoch (time of observation) and observations for one or more satellites. Since per satellite system the list of observation types is fixed (as defined by the 'SYS / # / OBS TYPES' header content) the observations are grouped per satellite system. Within the epoch record you will thus, if the system is applicable to the overall file, find fields for each of the type of satellite systems (<i>system</i> can be 'gps', 'glonass', 'galileo', and/or 'sbas'). The field per sattelite system will then contain an array of records with the observations of the satellites of that system. Each such record contains the 2-digit number of the satellite and fields (<i>observation_type</i>) for each of the observation types (based on the names as defined by the 'SYS / # / OBS TYPES' header content). Examples of paths that you may encounter to observations are thus e.g. /record[]/gps[]/C1C/observation and /record[]/galileo[]/L1B/observation. If the LLI and/or signal strength values are not explicitly provided in the file, they will be set to 0.</p>
+      <p>The following table gives the mapping of the epoch records structure to CODA parameters. A RINEX observation file can contain multiple epoch records. Each epoch record contains the epoch (time of observation) and observations for one or more satellites. Since per satellite system the list of observation types is fixed (as defined by the 'SYS / # / OBS TYPES' header content) the observations are grouped per satellite system. Within the epoch record you will thus, if the system is applicable to the overall file, find fields for each of the type of satellite systems (<i>system</i> can be 'gps', 'glonass', 'galileo', and/or 'sbas'). The field per satellite system will then contain an array of records with the observations of the satellites of that system. Each such record contains the 2-digit number of the satellite and fields (<i>observation_type</i>) for each of the observation types (based on the names as defined by the 'SYS / # / OBS TYPES' header content). Examples of paths that you may encounter to observations are thus e.g. /record[]/gps[]/C1C/observation and /record[]/galileo[]/L1B/observation. If the LLI and/or signal strength values are not explicitly provided in the file, they will be set to 0.</p>
       
       <table class="fancy" border="1" cellspacing="0">
       <tr><th>CODA path to variable</th><th>type class</th><th>read type</th></tr>
       <tr><td>/record[]/epoch</td><td>time</td><td>double</td></tr>
+      <tr><td>/record[]/flag</td><td>text</td><td>char</td></tr>
+      <tr><td>/record[]/receiver_clock_offset</td><td>real</td><td>double</td></tr>
       <tr><td>/record[]/<i>system</i>[]/number</td><td>integer</td><td>uint8</td></tr>
       <tr><td>/record[]/<i>system</i>[]/<i>observation_type</i>/observation</td><td>real</td><td>double</td></tr>
       <tr><td>/record[]/<i>system</i>[]/<i>observation_type</i>/lli</td><td>integer</td><td>uint8</td></tr>
@@ -111,7 +113,7 @@
       <tr><td>/header/leap_seconds</td><td>integer</td><td>int32</td><td>LEAP SECONDS</td></tr>
       </table>
 
-      <p>The following tables give the mapping of the navigation records structure to CODA parameters. Since the record definition for a Navigation record depends on the satellite system, CODA groups all records of the same satellite type together into a single array of Navigation records. At top level these arrays can be access using the name of the satellite system ('gps', 'glonass', 'galileo', or 'sbas'). Below you will find the CODA record definitions for each of the different satellite types.</p>
+      <p>The following tables give the mapping of the navigation records structure to CODA parameters. Since the record definition for a Navigation record depends on the satellite system, CODA groups all records of the same satellite type together into a single array of Navigation records. At top level these arrays can be accessed using the name of the satellite system ('gps', 'glonass', 'galileo', or 'sbas'). Below you will find the CODA record definitions for each of the different satellite types.</p>
       
       <h3>RINEX Navigation record for GPS</h3>
 

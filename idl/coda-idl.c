@@ -354,6 +354,64 @@ static IDL_VPTR x_coda_open(int argc, IDL_VPTR *argv)
     return retval;
 }
 
+static IDL_VPTR x_coda_open_as(int argc, IDL_VPTR *argv)
+{
+    IDL_VPTR retval;
+    const char *fname;
+    const char *product_class;
+    const char *product_type;
+    int version;
+    int product_index;
+
+    assert(argc == 4);
+    if (idl_coda_init() != 0)
+    {
+        return mk_coda_error(coda_errno);
+    }
+
+    IDL_ENSURE_STRING(argv[0]);
+    IDL_ENSURE_STRING(argv[1]);
+    IDL_ENSURE_STRING(argv[2]);
+
+    /* find first free slot */
+    for (product_index = 0; product_index < NUM_PF_SLOTS; product_index++)
+    {
+        if (product_slot[product_index].product == NULL)
+        {
+            break;
+        }
+    }
+
+    if (product_index == NUM_PF_SLOTS)  /* all slots in use! */
+    {
+        return mk_coda_error(CODA_IDL_ERR_MAX_OPEN_FILES);
+    }
+
+    fname = IDL_STRING_STR(&argv[0]->value.str);
+    product_class = IDL_STRING_STR(&argv[1]->value.str);
+    product_type = IDL_STRING_STR(&argv[2]->value.str);
+    version = IDL_LongScalar(argv[3]);
+    if (coda_open_as(fname, product_class, product_type, version, &product_slot[product_index].product) != 0)
+    {
+        return mk_coda_error(coda_errno);
+    }
+
+    /* opened succesfully! Update unique_id_counter */
+
+    do
+    {
+        unique_id_counter++;
+    } while ((unique_id_counter - 1) % NUM_PF_SLOTS != product_index);
+
+    product_slot[product_index].product_id = unique_id_counter;
+
+    retval = IDL_Gettmp();
+    retval->type = IDL_TYP_ULONG64;
+    retval->value.ul64 = unique_id_counter;
+
+    return retval;
+}
+
 static IDL_VPTR x_coda_close(int argc, IDL_VPTR *argv)
 {
     int64_t product_id;
@@ -3449,6 +3507,7 @@ static int register_idl_functions_and_procedures(void)
         {{x_coda_is_no_data}, "CODA_IS_NO_DATA", 1, 1, 0, 0},
         {{x_coda_is_error}, "CODA_IS_ERROR", 1, 1, 0, 0},
         {{x_coda_open}, "CODA_OPEN", 1, 1, 0, 0},
+        {{x_coda_open_as}, "CODA_OPEN_AS", 4, 4, 0, 0},
         {{x_coda_product_class}, "CODA_PRODUCT_CLASS", 1, 1, 0, 0},
         {{x_coda_product_type}, "CODA_PRODUCT_TYPE", 1, 1, 0, 0},
         {{x_coda_product_version}, "CODA_PRODUCT_VERSION", 1, 1, 0, 0},
@@ -3483,6 +3542,7 @@ static int register_idl_functions_and_procedures(void)
         {x_coda_is_no_data, "CODA_IS_NO_DATA", 1, 1, 0, 0},
         {x_coda_is_error, "CODA_IS_ERROR", 1, 1, 0, 0},
         {x_coda_open, "CODA_OPEN", 1, 1, 0, 0},
+        {x_coda_open_as, "CODA_OPEN_AS", 4, 4, 0, 0},
         {x_coda_product_class, "CODA_PRODUCT_CLASS", 1, 1, 0, 0},
         {x_coda_product_type, "CODA_PRODUCT_TYPE", 1, 1, 0, 0},
         {x_coda_product_version, "CODA_PRODUCT_VERSION", 1, 1, 0, 0},
@@ -3522,6 +3582,7 @@ static int register_idl_functions_and_procedures(void)
         {x_coda_is_no_data, "CODA_IS_NO_DATA", 1, 1, 0},
         {x_coda_is_error, "CODA_IS_ERROR", 1, 1, 0},
         {x_coda_open, "CODA_OPEN", 1, 1, 0},
+        {x_coda_open_as, "CODA_OPEN_AS", 4, 4, 0},
         {x_coda_product_class, "CODA_PRODUCT_CLASS", 1, 1, 0},
         {x_coda_product_type, "CODA_PRODUCT_TYPE", 1, 1, 0},
         {x_coda_product_version, "CODA_PRODUCT_VERSION", 1, 1, 0},

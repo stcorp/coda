@@ -345,6 +345,8 @@ LIBCODA_API int coda_recognize_file(const char *filename, int64_t *file_size, co
                                     const char **product_class, const char **product_type, int *version);
 
 LIBCODA_API int coda_open(const char *filename, coda_product **product);
+LIBCODA_API int coda_open_as(const char *filename, const char *product_class, const char *product_type, int version,
+                             coda_product **product);
 LIBCODA_API int coda_close(coda_product *product);
 
 LIBCODA_API int coda_get_product_filename(const coda_product *product, const char **filename);

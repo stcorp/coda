@@ -55,6 +55,7 @@ public class codacJNI {
   public final static native int double_to_utcdatetime(double jarg1, int[] jarg2, int[] jarg3, int[] jarg4, int[] jarg5, int[] jarg6, int[] jarg7, int[] jarg8) throws nl.stcorp.coda.CodaException;
   public final static native int utcstring_to_time(String jarg1, double[] jarg2) throws nl.stcorp.coda.CodaException;
   public final static native int open(String jarg1, SWIGTYPE_p_coda_product_struct jarg2) throws nl.stcorp.coda.CodaException;
+  public final static native int open_as(String jarg1, String jarg2, String jarg3, int jarg4, SWIGTYPE_p_coda_product_struct jarg5) throws nl.stcorp.coda.CodaException;
   public final static native int close(long jarg1) throws nl.stcorp.coda.CodaException;
   public final static native int get_product_filename(long jarg1, String[] jarg2) throws nl.stcorp.coda.CodaException;
   public final static native int get_product_file_size(long jarg1, long[] jarg2) throws nl.stcorp.coda.CodaException;

@@ -293,7 +293,8 @@
 
 #ifdef HAVE_PREAD
 /* some platforms (e.g. Linux) require this definition in order to enable support for pread */
-#define _XOPEN_SOURCE 500
+/* Use 600 instead of 500 to prevent Mac OS X to complain about missing strdup definitions */
+#define _XOPEN_SOURCE 600
 #endif
 
 #ifdef HAVE_INTTYPES_H

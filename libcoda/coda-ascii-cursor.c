@@ -949,9 +949,8 @@ int coda_ascii_cursor_set_asciilines(coda_cursor *cursor, coda_product *product)
 
 int coda_ascii_cursor_use_base_type_of_special_type(coda_cursor *cursor)
 {
-    coda_type_special *type;
+    coda_type_special *type = (coda_type_special *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
 
-    type = (coda_type_special *)cursor->stack[cursor->n - 1].type;
     cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)type->base_type;
 
     return 0;
@@ -979,7 +978,7 @@ int coda_ascii_cursor_get_string_length(const coda_cursor *cursor, long *length,
 
 int coda_ascii_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size, int64_t size_boundary)
 {
-    coda_type *type = (coda_type *)cursor->stack[cursor->n - 1].type;
+    coda_type *type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     coda_ascii_mappings *mappings = NULL;
     int64_t bit_offset = cursor->stack[cursor->n - 1].bit_offset;
     char buffer[MAX_ASCII_NUMBER_LENGTH];
@@ -1044,7 +1043,7 @@ int coda_ascii_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size,
         coda_cursor spec_cursor;
 
         spec_cursor = *cursor;
-        if (coda_ascii_cursor_use_base_type_of_special_type(&spec_cursor) != 0)
+        if (coda_cursor_use_base_type_of_special_type(&spec_cursor) != 0)
         {
             return -1;
         }
@@ -1332,7 +1331,7 @@ int coda_ascii_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size,
 
 int coda_ascii_cursor_get_num_elements(const coda_cursor *cursor, long *num_elements)
 {
-    switch (((coda_type *)cursor->stack[cursor->n - 1].type)->type_class)
+    switch (coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type)->type_class)
     {
         case coda_record_class:
         case coda_array_class:
@@ -1347,7 +1346,7 @@ int coda_ascii_cursor_get_num_elements(const coda_cursor *cursor, long *num_elem
 
 int coda_ascii_cursor_read_int64(const coda_cursor *cursor, int64_t *dst, int64_t size_boundary)
 {
-    coda_type_number *type = (coda_type_number *)cursor->stack[cursor->n - 1].type;
+    coda_type_number *type = (coda_type_number *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     int64_t bit_offset = cursor->stack[cursor->n - 1].bit_offset;
     char buffer[MAX_ASCII_NUMBER_LENGTH];
     long buffer_size;
@@ -1393,7 +1392,7 @@ int coda_ascii_cursor_read_int64(const coda_cursor *cursor, int64_t *dst, int64_
 
 int coda_ascii_cursor_read_uint64(const coda_cursor *cursor, uint64_t *dst, int64_t size_boundary)
 {
-    coda_type_number *type = (coda_type_number *)cursor->stack[cursor->n - 1].type;
+    coda_type_number *type = (coda_type_number *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     int64_t bit_offset = cursor->stack[cursor->n - 1].bit_offset;
     char buffer[MAX_ASCII_NUMBER_LENGTH];
     long buffer_size;
@@ -1547,7 +1546,7 @@ int coda_ascii_cursor_read_uint32(const coda_cursor *cursor, uint32_t *dst, int6
 
 static int read_double(const coda_cursor *cursor, double *dst, int64_t size_boundary)
 {
-    coda_type_number *type = (coda_type_number *)cursor->stack[cursor->n - 1].type;
+    coda_type_number *type = (coda_type_number *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     int64_t bit_offset = cursor->stack[cursor->n - 1].bit_offset;
     char buffer[MAX_ASCII_NUMBER_LENGTH];
     long buffer_size;
@@ -1606,7 +1605,7 @@ int coda_ascii_cursor_read_float(const coda_cursor *cursor, float *dst, int64_t 
 
 static int read_time(const coda_cursor *cursor, double *dst, int64_t size_boundary)
 {
-    coda_type_special *type = (coda_type_special *)cursor->stack[cursor->n - 1].type;
+    coda_type_special *type = (coda_type_special *)coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     int64_t bit_offset = cursor->stack[cursor->n - 1].bit_offset;
     char buffer[MAX_ASCII_NUMBER_LENGTH];
     long buffer_size;
@@ -1697,12 +1696,10 @@ int coda_ascii_cursor_read_char(const coda_cursor *cursor, char *dst, int64_t si
 
 int coda_ascii_cursor_read_string(const coda_cursor *cursor, char *dst, long dst_size, int64_t size_boundary)
 {
-    coda_type *type;
-    int64_t bit_offset;
+    coda_type *type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+    int64_t bit_offset = cursor->stack[cursor->n - 1].bit_offset;
     int64_t read_size = 0;
 
-    type = (coda_type *)cursor->stack[cursor->n - 1].type;
-    bit_offset = cursor->stack[cursor->n - 1].bit_offset;
     if ((bit_offset & 0x7) != 0)
     {
         coda_set_error(CODA_ERROR_PRODUCT, "product error detected (ascii text does not start at byte boundary)");
@@ -1759,9 +1756,11 @@ int coda_ascii_cursor_read_string(const coda_cursor *cursor, char *dst, long dst
 
 int coda_ascii_cursor_read_double(const coda_cursor *cursor, double *dst, int64_t size_boundary)
 {
-    if (((coda_type *)cursor->stack[cursor->n - 1].type)->type_class == coda_special_class)
+    coda_type *type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
+
+    if (type->type_class == coda_special_class)
     {
-        if (((coda_type_special *)cursor->stack[cursor->n - 1].type)->special_type != coda_special_time)
+        if (((coda_type_special *)type)->special_type != coda_special_time)
         {
             coda_set_error(CODA_ERROR_INVALID_TYPE, "can not read this data using a double data type");
             return -1;
@@ -1804,7 +1803,7 @@ static int read_array(const coda_cursor *cursor, read_function read_basic_type_f
 {
     long num_elements;
 
-    if (coda_ascii_cursor_get_num_elements(cursor, &num_elements) != 0)
+    if (coda_cursor_get_num_elements(cursor, &num_elements) != 0)
     {
         return -1;
     }
@@ -1813,7 +1812,7 @@ static int read_array(const coda_cursor *cursor, read_function read_basic_type_f
         coda_cursor array_cursor = *cursor;
         int i;
 
-        if (coda_ascbin_cursor_goto_array_element_by_index(&array_cursor, 0) != 0)
+        if (coda_cursor_goto_array_element_by_index(&array_cursor, 0) != 0)
         {
             return -1;
         }
@@ -1829,7 +1828,7 @@ static int read_array(const coda_cursor *cursor, read_function read_basic_type_f
             }
             if (i < num_elements - 1)
             {
-                if (coda_ascbin_cursor_goto_next_array_element(&array_cursor) != 0)
+                if (coda_cursor_goto_next_array_element(&array_cursor) != 0)
                 {
                     return -1;
                 }

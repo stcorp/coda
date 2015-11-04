@@ -59,9 +59,10 @@ int coda_xml_recognize_file(const char *filename, int64_t size, coda_product_def
     return 0;
 }
 
-int coda_xml_open(const char *filename, int64_t file_size, coda_product **product)
+int coda_xml_open(const char *filename, int64_t file_size, const coda_product_definition *definition,
+                  coda_product **product)
 {
-    coda_xml_product *product_file = (coda_xml_product *)product;
+    coda_xml_product *product_file;
     int open_flags;
 
     product_file = (coda_xml_product *)malloc(sizeof(coda_xml_product));
@@ -75,7 +76,7 @@ int coda_xml_open(const char *filename, int64_t file_size, coda_product **produc
     product_file->file_size = file_size;
     product_file->format = coda_format_xml;
     product_file->root_type = NULL;
-    product_file->product_definition = NULL;
+    product_file->product_definition = definition;
     product_file->product_variable_size = NULL;
     product_file->product_variable = NULL;
     product_file->use_mmap = 0;
@@ -102,24 +103,6 @@ int coda_xml_open(const char *filename, int64_t file_size, coda_product **produc
         return -1;
     }
 
-    if (coda_xml_parse_for_detection(product_file->fd, product_file->filename, &product_file->product_definition) != 0)
-    {
-        coda_xml_close((coda_product *)product_file);
-        return -1;
-    }
-
-    lseek(product_file->fd, 0, SEEK_SET);
-    if (product_file->product_definition != NULL)
-    {
-        if (product_file->product_definition->root_type == NULL)
-        {
-            if (coda_read_product_definition(product_file->product_definition) != 0)
-            {
-                coda_xml_close((coda_product *)product_file);
-                return -1;
-            }
-        }
-    }
     if (coda_xml_parse(product_file) != 0)
     {
         coda_xml_close((coda_product *)product_file);

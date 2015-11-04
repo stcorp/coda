@@ -432,7 +432,8 @@ int coda_hdf4_close(coda_product *product)
     return 0;
 }
 
-int coda_hdf4_open(const char *filename, int64_t file_size, coda_format format, coda_product **product)
+int coda_hdf4_open(const char *filename, int64_t file_size, const coda_product_definition *definition,
+                   coda_product **product)
 {
     coda_hdf4_product *product_file;
 
@@ -445,9 +446,9 @@ int coda_hdf4_open(const char *filename, int64_t file_size, coda_format format, 
     }
     product_file->filename = NULL;
     product_file->file_size = file_size;
-    product_file->format = format;
+    product_file->format = coda_format_hdf4;
     product_file->root_type = NULL;
-    product_file->product_definition = NULL;
+    product_file->product_definition = definition;
     product_file->product_variable_size = NULL;
     product_file->product_variable = NULL;
     product_file->is_hdf = 0;

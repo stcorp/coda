@@ -79,7 +79,7 @@ struct coda_product_struct
     int64_t file_size;
     coda_format format;
     coda_dynamic_type *root_type;
-    coda_product_definition *product_definition;
+    const coda_product_definition *product_definition;
     long *product_variable_size;
     int64_t **product_variable;
 };

@@ -25,7 +25,8 @@
 
 void coda_grib_done(void);
 
-int coda_grib_open(const char *filename, int64_t file_size, coda_product **product);
+int coda_grib_open(const char *filename, int64_t file_size, const coda_product_definition *definition,
+                   coda_product **product);
 int coda_grib_close(coda_product *product);
 
 void coda_grib_type_delete(coda_dynamic_type *type);

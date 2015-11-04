@@ -31,7 +31,8 @@ int coda_hdf5_init(void)
     return 0;
 }
 
-int coda_hdf5_open(const char *filename, int64_t file_size, coda_product **product)
+int coda_hdf5_open(const char *filename, int64_t file_size, const coda_product_definition *definition,
+                   coda_product **product)
 {
     coda_hdf5_product *product_file;
     int result;
@@ -47,7 +48,7 @@ int coda_hdf5_open(const char *filename, int64_t file_size, coda_product **produ
     product_file->file_size = file_size;
     product_file->format = coda_format_hdf5;
     product_file->root_type = NULL;
-    product_file->product_definition = NULL;
+    product_file->product_definition = definition;
     product_file->product_variable_size = NULL;
     product_file->product_variable = NULL;
     product_file->file_id = -1;

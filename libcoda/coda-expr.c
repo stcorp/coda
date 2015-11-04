@@ -3279,13 +3279,6 @@ static int eval_cursor(eval_info *info, const coda_expression *expr)
                     return -1;
                 }
             }
-            else
-            {
-                if (coda_cursor_set_product(&info->cursor, info->orig_cursor->product) != 0)
-                {
-                    return -1;
-                }
-            }
             if (coda_cursor_goto_attributes(&info->cursor) != 0)
             {
                 return -1;

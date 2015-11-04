@@ -571,6 +571,7 @@ int coda_cursor_read_char_array(const coda_cursor *cursor, char *dst, coda_array
   memory-managed by CODA itself:
 
   coda_open()::coda_product **pf;
+  coda_open_as()::coda_product **pf;
   coda_cursor_get_product_file()::coda_product **pf;
 
   Code adapted from the Java section of the SWIG manual.
