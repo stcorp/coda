@@ -4243,7 +4243,7 @@ SWIGINTERN coda_cursor *coda_cursor_struct___deepcopy__(struct coda_cursor_struc
             tmp_dims_int[tmp_num_dims++] = 1;
         }
 
-        tmp = PyArray_SimpleNew(tmp_num_dims, tmp_dims_int, NPY_COMPLEX64);
+        tmp = PyArray_SimpleNew(tmp_num_dims, tmp_dims_int, NPY_COMPLEX128);
         if (tmp == NULL)
         {
             return PyErr_NoMemory();

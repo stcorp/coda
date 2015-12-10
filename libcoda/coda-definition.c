@@ -300,6 +300,7 @@ static int init_product_variable(coda_product *product, int index)
                        (long)value * sizeof(int64_t), __FILE__, __LINE__);
         return -1;
     }
+    memset(product->product_variable[index], 0, (size_t)value * sizeof(int64_t));
     if (coda_expression_eval_void(product->product_definition->product_variable[index]->init_expr, &cursor) != 0)
     {
         coda_add_error_message(" while initializing product variable %s",

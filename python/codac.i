@@ -607,10 +607,10 @@ DOUBLE_PAIR_ARRAY_NUMPY_OUTPUT_HELPER(cursor_read_complex_double_pairs_array,cod
 
 /*
     helper function to read an array of complex numbers as a numpy of type
-    complex64. no associated function in the CODA C library exists, i.e. this
+    complex128. no associated function in the CODA C library exists, i.e. this
     function is specific to the coda-python module.
 */
-NUMPY_OUTPUT_HELPER(cursor_read_complex_array,coda_cursor_read_complex_double_pairs_array,double,NPY_COMPLEX64)
+NUMPY_OUTPUT_HELPER(cursor_read_complex_array,coda_cursor_read_complex_double_pairs_array,double,NPY_COMPLEX128)
 
 
 /*

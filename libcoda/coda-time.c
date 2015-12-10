@@ -53,15 +53,28 @@
  * to a time system that is based on actual clock ticks such as TAI or GPS.
  *
  * In CODA this problem is solved by introducing special UTC leap-second-aware functions for converting from a floating
- * point value to a string or datetime decomposition (and vice versa). The floating point value is always in TAI
- * whereas the string and datetime decomposition values represent the time value in UTC (be aware that the value for
- * 'amount of seconds in a minute' can range from 0 to 60 inclusive for UTC!)
+ * point value to a string or datetime decomposition (and vice versa). The floating point value is in TAI whereas the
+ * string and datetime decomposition values represent the time value in UTC (be aware that the value for 'amount of
+ * seconds in a minute' can range from 0 to 60 inclusive for UTC!)
  *
  * For each public time function there are thus two variants. One that treats all days as having 86400 seconds (and
  * where both the input(s) and output(s) are of the same time system) and one that is able to deal with leap seconds.
  * The functions that deal with leap seconds have 'utc' in the name and assume that the number of seconds since
  * 2000-01-01 is a value in the TAI time system whereas the datetime decomposition (or string value) is using the UTC
  * time system.
+ *
+ * Note that TAI does not really have a fixed epoch relative to which to provide a number of seconds. TAI is only
+ * represented in how it deviates from UTC. In CODA, the choice was made to base the offset for the TAI floating point
+ * values on the convention that 2000-01-01T00:00:00 UTC has an offset of 0 (in UTC).
+ * Since at that time TAI was 32 seconds ahead of UTC, coda_utcdatetime_to_double() (which converts UTC to TAI) will
+ * thus return the value 32 for 2000-01-01T00:00:00.
+ *
+ * If you don't want to use an actual TAI floating point value, but just an amount of seconds since
+ * 2000-01-01T00:00:00 UTC (i.e. such that a leap-second aware coversion of 2000-01-01T00:00:00 to a floating point
+ * value will actually result in 0), the best approach is to just subtract the result of
+ * coda_utcdatetime_to_double(2000,1,1,0,0,0,0,...) from your other result of coda_utcdatetime_to_double().
+ * Note that this is more robust than assuming the epoch difference is always 32 and it is also an approach that can
+ * be applied more generally to retrieve a number of seconds relative to any other UTC date.
  *
  * Below is an overview of time systems that are commonly used:
  * - TAI: International Atomic Time scale

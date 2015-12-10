@@ -4,7 +4,7 @@ Copyright (C) 2007-2015 S[&]T, The Netherlands
 
 This documentation provides installation instructions for CODA.
 
-This release has been verified to work on Linux, Windows XP, and Mac OS X, but
+This release has been verified to work on Linux, Windows 7, and Mac OS X, but
 you may encounter problems when trying to build or run this software on other
 systems. If you do encounter problems, please read the FAQ document which is
 also contained in this package to see if your problem is already described
@@ -57,7 +57,7 @@ What you will need
     and higher.
 
   - If you plan on using the Python interface you need Python version 2.6 or
-    higher (but not 3.x) and the Python 'numpy' package (version 1.2 or higher).
+    higher and the Python 'numpy' package (version 1.2 or higher).
 
   - If you plan on using the Java interface you need JDK/JRE version 6.
 
@@ -77,7 +77,7 @@ What you will need
 
   - If you want to use the HDF4 features of CODA then you will need to have a
     recent version of HDF4 installed (for building the source package on
-    Windows you will need to have version 4.2.10 of HDF).
+    Windows you will need to have version 4.2.11 of HDF).
     You will also need the additional required libraries libjpeg, szlib, and
     zlib.
     On some UNIX systems you can install HDF4 via the package manager on your
@@ -87,7 +87,7 @@ What you will need
 
   - If you want to use the HDF5 features of CODA then you will need to have a
     recent version of HDF5 installed (for building the source package on
-    Windows you will need to have version 1.8.13 of HDF5).
+    Windows you will need to have version 1.8.16 of HDF5).
     You will also need the additional required libraries szlib and zlib.
 
 Building the source package (Unix)
@@ -328,8 +328,8 @@ interfaces) on a Windows platform:
  2) CODA can import/export HDF4 and/or HDF5 data. The VC++ project files for
     these components contain both targets that include the HDF4 and HDF5
     capability and targets without this capability. To be able to build CODA
-    with HDF4 and HDF5 you will need to have both HDF4 version 4.2.10 and HDF5
-    version 1.8.13 installed and add the system environment variables
+    with HDF4 and HDF5 you will need to have both HDF4 version 4.2.11 and HDF5
+    version 1.8.16 installed and add the system environment variables
     HDF4_INCLUDE, HDF4_LIB, HDF4_DLL, HDF5_INCLUDE, HDF5_LIB, and HDF5_DLL that
     point to your HDF4 and HDF5 include file, library file, and dll file
     directories.
@@ -376,14 +376,13 @@ IDL, MATLAB and/or Python interfaces.
 
 For IDL you will have to add <CODA installdir>\idl to your DLM_PATH.
 You do this by setting an IDL_DLM_PATH environment variable.
-On Windows NT, 2000, and XP open the 'System' control panel of your Windows
-operating system and goto the 'Advanced' tab. Then click on 'Environment
-Variables' and create a new system variable with the name 'IDL_DLM_PATH' and
-value '<IDL_DEFAULT>;C:\CODA\idl'.
+On Windows open the 'System' control panel of your Windows operating system and
+goto the 'Advanced' tab. Then click on 'Environment Variables' and create a new
+system variable with the name 'IDL_DLM_PATH' and value
+'<IDL_DEFAULT>;C:\CODA\idl'.
 If you have installed CODA in a location different from C:\CODA then replace
 this part in the value by the installation directory you chose when installing
-CODA. For Windows 98 you should add the line 'SET IDL_DLM_PATH=C:\CODA\idl',
-also replacing the C:\CODA part if necessary, to your autoexec.bat.
+CODA.
 Note that you should ideally not use the IDL 'pref_set' function to set the
 IDL_DLM_PATH. The CODA DLM file will still load, but CODA will not be able to
 find its coda format definition files this way. You can work around this by

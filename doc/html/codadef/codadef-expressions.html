@@ -480,7 +480,7 @@ inf
 
       <p>Similar to the previous function, but now explicitly set the number of bytes that should be read (as indicated by the second argument). The function will always read the given number of bytes, even if this exceeds the length of the data item at the node position. If the number of bytes from the node position till the end of the file is less than the provided maximum, CODA will return an error.</p>
 
-      <h5>bytes(node, integer)</h5>
+      <h5>bytes(node, integer, integer)</h5>
 
       <p>Similar to the previous function, but now explicitly set both the byte offset relative to the node (as second argument) and the number of bytes that should be read (as third argument). Both the offset and number of bytes may exceed the range of the data at the given node. This means that the offset can be negative and/or the offset+length may exceed that of the data item at the node position. If the range exceeds the boundaries of the file (e.g. global offset is negative or offset+length exceeds the file length), CODA will return an error.</p>
 

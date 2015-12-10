@@ -1,3 +1,18 @@
+2.15.1 2015-12-09
+~~~~~~~~~~~~~~~~~
+
+* Fixed memory issue in Python cursor_read_complex_* functions.
+  (SWIG wrapping was using complex64 where it should have been complex128).
+
+* Product variables are now explicitly set to 0 before the initialization
+  expression is evaluated (elminating undefined behaviour when the init
+  expression was somehow trying to use the value of the variable itself).
+  
+* Windows build now depends on HDF4 4.2.11 and HDF5 1.8.16.
+
+* Added better clarification in the C Library documentation on the epoch
+  choice for the leap-second aware time conversions.
+ 
 2.15 2015-11-03
 ~~~~~~~~~~~~~~~
 
@@ -18,7 +33,7 @@
 * Removed stdio.h #include from coda.h
 
 * Fixed name of string cast function in generated codadef documentation
-  ('str' instead of'string').
+  ('str' instead of 'string').
 
 * Resolved issue with FLEX generated files not properly prefixing all exported
   symbols.

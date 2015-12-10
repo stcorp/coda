@@ -721,7 +721,7 @@ static int read_partial_array(const coda_cursor *cursor, long offset, long lengt
                         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "partial array reading for HDF4 GRImage requires "
                                        "offset (%ld) and length (%ld) to represent a hyperslab (range [%ld,%ld] "
                                        "exceeds length of dimension #1 (%ld)))", offset, length, (long)start[1],
-                                       (long)start[1] + edge[1] - 1, type->dim_sizes[1]);
+                                       (long)start[1] + edge[1] - 1, (long)type->dim_sizes[1]);
                         return -1;
                     }
                 }
@@ -731,14 +731,14 @@ static int read_partial_array(const coda_cursor *cursor, long offset, long lengt
                     {
                         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "partial array reading for HDF4 GRImage requires "
                                        "length (%ld) to be a multiple of the subdimension size (%ld)", length,
-                                       type->dim_sizes[1]);
+                                       (long)type->dim_sizes[1]);
                         return -1;
                     }
                     if (offset % type->dim_sizes[1] != 0)
                     {
                         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "partial array reading for HDF4 GRImage requires "
                                        " offset (%ld) to be a multiple of the subdimension size (%ld)", offset,
-                                       type->dim_sizes[1]);
+                                       (long)type->dim_sizes[1]);
                         return -1;
                     }
                     start[0] = offset / type->dim_sizes[1];
@@ -750,7 +750,7 @@ static int read_partial_array(const coda_cursor *cursor, long offset, long lengt
                         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "partial array reading for HDF4 GRImage requires "
                                        "offset (%ld) and length (%ld) to represent a hyperslab (range [%ld,%ld] "
                                        "exceeds length of dimension #0 (%ld)))", offset, length, (long)start[0],
-                                       (long)start[0] + edge[0] - 1, type->dim_sizes[0]);
+                                       (long)start[0] + edge[0] - 1, (long)type->dim_sizes[0]);
                         return -1;
                     }
                 }
@@ -804,8 +804,8 @@ static int read_partial_array(const coda_cursor *cursor, long offset, long lengt
                 {
                     coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "partial array reading for HDF4 SDS requires offset "
                                    "(%ld) and length (%ld) to represent a hyperslab (range [%ld,%ld] exceeds length "
-                                   "of dimension #%d (%ld)))", offset, length, (long)start[i],
-                                   (long)start[i] + edge[i] - 1, i, type->dimsizes[i]);
+                                   "of dimension #%ld (%ld)))", offset, length, (long)start[i],
+                                   (long)start[i] + edge[i] - 1, (long)i, (long)type->dimsizes[i]);
                     return -1;
                 }
                 while (i > 0)

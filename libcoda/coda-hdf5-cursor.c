@@ -508,7 +508,7 @@ static int read_partial_array(const coda_cursor *cursor, long offset, long lengt
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "partial array reading for HDF5 Datasets requires offset (%ld) "
                        "and length (%ld) to represent a hyperslab (range [%ld,%ld] exceeds length of dimension #%d "
-                       "(%ld)))", offset, length, (long)start[i], (long)start[i] + count[i] - 1, i, dim[i]);
+                       "(%ld)))", offset, length, (long)start[i], (long)(start[i] + count[i] - 1), i, dim[i]);
         return -1;
     }
     while (i > 0)

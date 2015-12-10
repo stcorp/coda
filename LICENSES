@@ -1,9 +1,9 @@
 ------------------------------------------------------------------
-HDF 4.2.5
+HDF 4.2.11
 ------------------------------------------------------------------
 
 Hierarchical Data Format (HDF) Software Library and Utilities
-Copyright 2006-2010 by The HDF Group.
+Copyright 2006-2015 by The HDF Group.
 
 NCSA Hierarchical Data Format (HDF) Software Library and Utilities
 Copyright 1988-2006 by the Board of Trustees of the University of Illinois.
@@ -46,11 +46,11 @@ the possibility of such damage.
 
 
 ------------------------------------------------------------------
-HDF5 1.8.3
+HDF5 1.8.16
 ------------------------------------------------------------------
 
 HDF5 (Hierarchical Data Format 5) Software Library and Utilities
-Copyright 2006-2009 by The HDF Group.
+Copyright 2006-2015 by The HDF Group.
 
 NCSA HDF5 (Hierarchical Data Format 5) Software Library and Utilities
 Copyright 1998-2006 by the Board of Trustees of the University of Illinois.
@@ -97,6 +97,12 @@ Contributors:   National Center for Supercomputing Applications (NCSA) at
 the University of Illinois, Fortner Software, Unidata Program Center (netCDF), 
 The Independent JPEG Group (JPEG), Jean-loup Gailly and Mark Adler (gzip), 
 and Digital Equipment Corporation (DEC).
+
+-----------------------------------------------------------------------------
+
+Portions of HDF5 were developed with support from the Lawrence Berkeley 
+National Laboratory (LBNL) and the United States Department of Energy 
+under Prime Contract No. DE-AC02-05CH11231.
 
 -----------------------------------------------------------------------------
 
@@ -161,7 +167,39 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 ------------------------------------------------------------------
-zlib 1.2.3
+PCRE 8.00
+------------------------------------------------------------------
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+
+    * Neither the name of the University of Cambridge nor the name of Google
+      Inc. nor the names of their contributors may be used to endorse or
+      promote products derived from this software without specific prior
+      written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+
+
+
+------------------------------------------------------------------
+zlib 1.2.5
 ------------------------------------------------------------------
 Copyright notice:
 

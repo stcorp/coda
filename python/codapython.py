@@ -79,7 +79,7 @@ class Record(object):
         numpy.int64:  "int64",
         numpy.float32: "float",
         numpy.float64: "double",
-        numpy.complex64: "complex",
+        numpy.complex128: "complex",
         numpy.object_: "object" }
 
     def __init__(self):
@@ -987,7 +987,7 @@ _numpySpecialTypeDictionary = {
     coda_special_no_data:     (False,None),
     coda_special_vsf_integer: (True,numpy.float64),
     coda_special_time:        (True,numpy.float64),
-    coda_special_complex:     (True,numpy.complex64) }
+    coda_special_complex:     (True,numpy.complex128) }
 
 #
 # MODULE OPTIONS
