@@ -197,6 +197,14 @@ AC_FUNC_REALLOC
 AC_CHECK_FUNCS([floor pread stat memmove bcopy])
 AC_REPLACE_FUNCS([strdup strcasecmp strncasecmp vsnprintf])
 
+# ** install documentation ***
+
+AC_ARG_ENABLE([install-docs],
+        [AS_HELP_STRING([--disable-install-docs],[do not install html docs])],
+        [ac_cv_enable_install_docs=$enableval],
+        [AC_CACHE_CHECK([install docs],ac_cv_enable_install_docs,ac_cv_enable_install_docs=yes)])
+AM_CONDITIONAL(INSTALL_DOCS, test $ac_cv_enable_install_docs = yes)
+
 # *** sub-package mode ***
 
 AC_ARG_ENABLE([coda-subpackage-mode],
