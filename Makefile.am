@@ -678,6 +678,7 @@ endif
 
 # *** documentation ***
 
+if INSTALL_DOCS
 include doclibcoda.mk
 include docjava.mk
 
@@ -789,7 +790,7 @@ docjava_include:
 	else \
 	  mv docjava.mk2 $(srcdir)/docjava.mk ; \
 	fi
-
+endif
 
 # *** indent ***
 
