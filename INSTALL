@@ -1,4 +1,4 @@
-Copyright (C) 2007-2015 S[&]T, The Netherlands
+Copyright (C) 2007-2016 S[&]T, The Netherlands
 
                         CODA Installation Documentation
 
@@ -89,6 +89,34 @@ What you will need
     recent version of HDF5 installed (for building the source package on
     Windows you will need to have version 1.8.16 of HDF5).
     You will also need the additional required libraries szlib and zlib.
+
+
+Using GitHub
+============
+
+CODA is also available from GitHub, but this is only recommended to be used
+by users who want to co-develop CODA and it will only work on Unix-based
+systems.
+You will need to have additional software installed and need to peform
+additional steps if you want to build CODA from the GitHub git respository.
+
+Additional software that you will need:
+  - autoconf
+  - automake
+  - libtool
+  - flex
+  - bison
+  - doxygen
+  - swig (for python and java interfaces)
+
+After you clone and checkout the CODA git repository first run the bootstrap
+script in the root of the source directory. After that you can follow the
+steps as usual for building the source package.
+
+Note that the CMake build scripts that come with CODA are currently
+incomplete/untested for all configurations (especially for the Windows
+platform).
+
 
 Building the source package (Unix)
 ==================================

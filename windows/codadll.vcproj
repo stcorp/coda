@@ -140,8 +140,6 @@
 		<File RelativePath="..\libcoda\coda-expr-parser.c"/>
 		<File RelativePath="..\libcoda\coda-expr-tokenizer.c"/>
 		<File RelativePath="..\libcoda\coda-ascbin-cursor.c"/>
-		<File RelativePath="..\libcoda\coda-ascbin-internal.h"/>
-		<File RelativePath="..\libcoda\coda-ascbin.c"/>
 		<File RelativePath="..\libcoda\coda-ascbin.h"/>
 		<File RelativePath="..\libcoda\coda-ascii-cursor.c"/>
 		<File RelativePath="..\libcoda\coda-ascii-internal.h"/>
@@ -162,6 +160,7 @@
 		<File RelativePath="..\libcoda\coda-definition-parse.c"/>
 		<File RelativePath="..\libcoda\coda-definition.c"/>
 		<File RelativePath="..\libcoda\coda-definition.h"/>
+		<File RelativePath="..\libcoda\coda-detection.c"/>
 		<File RelativePath="..\libcoda\coda-errno.c"/>
 		<File RelativePath="..\libcoda\coda-expr.c"/>
 		<File RelativePath="..\libcoda\coda-expr.h"/>

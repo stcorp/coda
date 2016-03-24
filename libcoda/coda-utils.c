@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -31,6 +31,61 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+
+int coda_format_from_string(const char *str, coda_format *format)
+{
+    if (strcmp(str, "ascii") == 0)
+    {
+        *format = coda_format_ascii;
+    }
+    else if (strcmp(str, "binary") == 0)
+    {
+        *format = coda_format_binary;
+    }
+    else if (strcmp(str, "xml") == 0)
+    {
+        *format = coda_format_xml;
+    }
+    else if (strcmp(str, "hdf4") == 0)
+    {
+        *format = coda_format_hdf4;
+    }
+    else if (strcmp(str, "hdf5") == 0)
+    {
+        *format = coda_format_hdf5;
+    }
+    else if (strcmp(str, "cdf") == 0)
+    {
+        *format = coda_format_cdf;
+    }
+    else if (strcmp(str, "netcdf") == 0)
+    {
+        *format = coda_format_netcdf;
+    }
+    else if (strcmp(str, "grib1") == 0)
+    {
+        *format = coda_format_grib1;
+    }
+    else if (strcmp(str, "grib2") == 0)
+    {
+        *format = coda_format_grib2;
+    }
+    else if (strcmp(str, "rinex") == 0)
+    {
+        *format = coda_format_rinex;
+    }
+    else if (strcmp(str, "sp3") == 0)
+    {
+        *format = coda_format_sp3;
+    }
+    else
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid 'format' attribute value '%s'", str);
+        return -1;
+    }
+
+    return 0;
+}
 
 const char *coda_element_name_from_xml_name(const char *xml_name)
 {
@@ -146,126 +201,6 @@ char *coda_identifier_from_name(const char *name, hashtable *hash_data)
     return identifier;
 }
 
-char *coda_short_identifier_from_name(const char *name, hashtable *hash_data, int maxlength)
-{
-    char *identifier;
-    int length;
-    int i;
-
-    if (name == NULL)
-    {
-        name = "unnamed";
-    }
-    else
-    {
-        /* strip leading non-alpha characters */
-        while (*name != '\0' && !isalpha(*name))
-        {
-            name++;
-        }
-        if (*name == '\0')
-        {
-            name = "unnamed";
-        }
-    }
-
-    length = strlen(name);
-    identifier = malloc(length + 1);
-    if (identifier == NULL)
-    {
-        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (long)(length + 1), __FILE__, __LINE__);
-        return NULL;
-    }
-
-    /* create indentifier */
-
-    /* first character is guaranteed to be an alpha character because of our previous test */
-    identifier[0] = name[0];
-    /* replace non-alphanumeric characters by a '_' */
-    for (i = 1; i < length; i++)
-    {
-        if (isalnum(name[i]))
-        {
-            identifier[i] = name[i];
-        }
-        else
-        {
-            identifier[i] = '_';
-        }
-    }
-    identifier[length] = '\0';
-
-    /* shorten string until it fits within maxlength characters */
-    while (length > maxlength)
-    {
-        int cur_part;
-        int i;
-
-        /* we try to do it the smart way by shortening individual string segments between '_' */
-        cur_part = 0;
-        for (i = 0; i < length; i++)
-        {
-            if (identifier[i] == '_' || identifier[i] == '.')
-            {
-                if (cur_part > 5)
-                {
-                    /* we shorten this string segment: always remove the 4th character of a segment */
-                    i = i - cur_part + 4;
-                    break;
-                }
-                cur_part = 0;
-            }
-            else
-            {
-                cur_part++;
-            }
-        }
-        if (i < length)
-        {
-            memmove(&identifier[i - 1], &identifier[i], length - i + 1);
-            length--;
-        }
-        else
-        {
-            /* can't do it by shortening string segments, so just truncate the string to maxlength characters */
-            length = maxlength;
-            identifier[maxlength] = '\0';
-        }
-    }
-
-    /* check for double occurences */
-    if (hash_data != NULL)
-    {
-        int counter;
-
-        counter = 0;
-        while (hashtable_get_index_from_name(hash_data, identifier) >= 0)
-        {
-            counter++;
-            if (counter < 10)
-            {
-                sprintf(&identifier[length - 2], "_%d", counter);
-            }
-            else if (counter < 100)
-            {
-                sprintf(&identifier[length - 3], "_%d", counter);
-            }
-            else if (counter < 1000)
-            {
-                sprintf(&identifier[length - 4], "_%d", counter);
-            }
-            else
-            {
-                assert(0);
-                exit(1);
-            }
-        }
-    }
-
-    return identifier;
-}
-
 /** \addtogroup coda_general
  * @{
  */
@@ -330,8 +265,8 @@ LIBCODA_API long coda_c_index_to_fortran_index(int num_dims, const long dim[], l
 
     if (num_dims > CODA_MAX_NUM_DIMS)
     {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "num_dims argument (%d) exceeds limit (%d) (%s:%u)", num_dims,
-                       CODA_MAX_NUM_DIMS, __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "num_dims argument (%d) exceeds limit (%d)", num_dims,
+                       CODA_MAX_NUM_DIMS);
         return -1;
     }
 

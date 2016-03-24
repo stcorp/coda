@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -46,7 +46,6 @@ struct coda_bin_product_struct
 };
 typedef struct coda_bin_product_struct coda_bin_product;
 
-int coda_bin_open_raw(const char *filename, int64_t file_size, coda_product **product);
 int coda_bin_product_open(coda_bin_product *product);
 int coda_bin_product_close(coda_bin_product *product);
 

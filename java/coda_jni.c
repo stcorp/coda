@@ -1275,6 +1275,22 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_expression_1is_1constant(JN
 }
 
 
+SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_expression_1is_1equal(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2) {
+  jint jresult = 0 ;
+  coda_expression *arg1 = (coda_expression *) 0 ;
+  coda_expression *arg2 = (coda_expression *) 0 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(coda_expression **)&jarg1; 
+  arg2 = *(coda_expression **)&jarg2; 
+  result = (int)coda_expression_is_equal((struct coda_expression_struct const *)arg1,(struct coda_expression_struct const *)arg2);
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
 SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1double(JNIEnv *jenv, jclass jcls, jlong jarg1, jdoubleArray jarg2) {
   jint jresult = 0 ;
   coda_cursor *arg1 = (coda_cursor *) 0 ;

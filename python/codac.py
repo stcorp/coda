@@ -299,6 +299,10 @@ isMinInf = _codac.isMinInf
 def expression_is_constant(*args):
   return _codac.expression_is_constant(*args)
 expression_is_constant = _codac.expression_is_constant
+
+def expression_is_equal(*args):
+  return _codac.expression_is_equal(*args)
+expression_is_equal = _codac.expression_is_equal
 CODA_MAX_NUM_DIMS = _codac.CODA_MAX_NUM_DIMS
 coda_array_ordering_c = _codac.coda_array_ordering_c
 coda_array_ordering_fortran = _codac.coda_array_ordering_fortran

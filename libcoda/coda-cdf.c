@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -1291,8 +1291,7 @@ static int read_file(coda_cdf_product *product_file)
     return 0;
 }
 
-int coda_cdf_open(const char *filename, int64_t file_size, const coda_product_definition *definition,
-                  coda_product **product)
+int coda_cdf_reopen(coda_product **product)
 {
     coda_cdf_product *product_file;
     coda_type_record *root_definition;
@@ -1306,26 +1305,22 @@ int coda_cdf_open(const char *filename, int64_t file_size, const coda_product_de
         return -1;
     }
     product_file->filename = NULL;
-    product_file->file_size = file_size;
+    product_file->file_size = (*product)->file_size;
     product_file->format = coda_format_cdf;
     product_file->root_type = NULL;
-    product_file->product_definition = definition;
+    product_file->product_definition = NULL;
     product_file->product_variable_size = NULL;
     product_file->product_variable = NULL;
     product_file->mem_size = 0;
     product_file->mem_ptr = NULL;
 
-    product_file->filename = strdup(filename);
+    product_file->raw_product = *product;
+
+    product_file->filename = strdup((*product)->filename);
     if (product_file->filename == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate filename string) (%s:%u)",
                        __FILE__, __LINE__);
-        coda_cdf_close((coda_product *)product_file);
-        return -1;
-    }
-
-    if (coda_bin_open_raw(filename, file_size, &product_file->raw_product) != 0)
-    {
         coda_cdf_close((coda_product *)product_file);
         return -1;
     }
@@ -1342,15 +1337,13 @@ int coda_cdf_open(const char *filename, int64_t file_size, const coda_product_de
 #endif
     if (magic[0] == 0x0000FFFF || magic[0] == 0xCDF26002)
     {
-        coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, "CDF format version older than 3.0 is not supported for "
-                       "file %s", product_file->filename);
+        coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, "CDF format version older than 3.0 is not supported");
         coda_cdf_close((coda_product *)product_file);
         return -1;
     }
     if (magic[1] == 0xCCCC0001)
     {
-        coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, "full file compression not supported for CDF file %s",
-                       product_file->filename);
+        coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, "full file compression not supported for CDF files");
         coda_cdf_close((coda_product *)product_file);
         return -1;
     }

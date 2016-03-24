@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -436,8 +436,7 @@ int coda_hdf4_close(coda_product *product)
     return 0;
 }
 
-int coda_hdf4_open(const char *filename, int64_t file_size, const coda_product_definition *definition,
-                   coda_product **product)
+int coda_hdf4_reopen(coda_product **product)
 {
     coda_hdf4_product *product_file;
 
@@ -449,10 +448,10 @@ int coda_hdf4_open(const char *filename, int64_t file_size, const coda_product_d
         return -1;
     }
     product_file->filename = NULL;
-    product_file->file_size = file_size;
+    product_file->file_size = (*product)->file_size;
     product_file->format = coda_format_hdf4;
     product_file->root_type = NULL;
-    product_file->product_definition = definition;
+    product_file->product_definition = NULL;
     product_file->product_variable_size = NULL;
     product_file->product_variable = NULL;
     product_file->mem_size = 0;
@@ -473,14 +472,17 @@ int coda_hdf4_open(const char *filename, int64_t file_size, const coda_product_d
     product_file->num_vdata = 0;
     product_file->vdata = NULL;
 
-    product_file->filename = strdup(filename);
+    product_file->filename = strdup((*product)->filename);
     if (product_file->filename == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate filename string) (%s:%u)",
                        __FILE__, __LINE__);
         coda_hdf4_close((coda_product *)product_file);
+        coda_close(*product);
         return -1;
     }
+
+    coda_close(*product);
 
     product_file->is_hdf = Hishdf(product_file->filename);      /* is this a real HDF4 file or a (net)CDF file */
     if (product_file->is_hdf)

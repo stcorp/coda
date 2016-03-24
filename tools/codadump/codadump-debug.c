@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -676,6 +676,7 @@ void print_debug_data(const char *product_class, const char *product_type, int f
         }
     }
 
+    coda_set_option_perform_boundary_checks(0);
     print_data(&cursor, 0);
 
     coda_close(pf);

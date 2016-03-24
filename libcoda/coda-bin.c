@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -47,7 +47,7 @@ int coda_bin_product_open(coda_bin_product *product)
     product->file = INVALID_HANDLE_VALUE;
 #endif
 
-    if (coda_option_use_mmap)
+    if (coda_option_use_mmap && product->file_size > 0)
     {
         /* Perform an mmap() of the file, filling the following fields:
          *   product->use_mem_ptr = 1
@@ -219,7 +219,7 @@ int coda_bin_product_close(coda_bin_product *product)
     return 0;
 }
 
-int coda_bin_open_raw(const char *filename, int64_t file_size, coda_product **product)
+int coda_bin_open(const char *filename, int64_t file_size, coda_product **product)
 {
     coda_bin_product *product_file;
 
@@ -270,53 +270,16 @@ int coda_bin_open_raw(const char *filename, int64_t file_size, coda_product **pr
     return 0;
 }
 
-int coda_bin_open(const char *filename, int64_t file_size, const coda_product_definition *definition,
-                  coda_product **product)
+int coda_bin_reopen_with_definition(coda_product **product, const coda_product_definition *definition)
 {
-    coda_bin_product *product_file;
+    coda_bin_product *product_file = *(coda_bin_product **)product;
 
-    if (definition == NULL)
-    {
-        coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, NULL);
-        return -1;
-    }
+    assert(definition != NULL);
+    assert(product_file->format == coda_format_binary);
+    assert(definition->format == coda_format_binary);
 
-    product_file = (coda_bin_product *)malloc(sizeof(coda_bin_product));
-    if (product_file == NULL)
-    {
-        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       sizeof(coda_bin_product), __FILE__, __LINE__);
-        return -1;
-    }
-    product_file->filename = NULL;
-    product_file->file_size = file_size;
-    product_file->format = definition->format;
     product_file->root_type = (coda_dynamic_type *)definition->root_type;
     product_file->product_definition = definition;
-    product_file->product_variable_size = NULL;
-    product_file->product_variable = NULL;
-    product_file->mem_size = 0;
-    product_file->mem_ptr = NULL;
-
-    product_file->use_mmap = 0;
-    product_file->fd = -1;
-
-    product_file->filename = strdup(filename);
-    if (product_file->filename == NULL)
-    {
-        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate filename string) (%s:%u)",
-                       __FILE__, __LINE__);
-        coda_bin_close((coda_product *)product_file);
-        return -1;
-    }
-
-    if (coda_bin_product_open(product_file) != 0)
-    {
-        coda_bin_close((coda_product *)product_file);
-        return -1;
-    }
-
-    *product = (coda_product *)product_file;
 
     return 0;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -329,6 +329,7 @@ int coda_isInf(const double x);
 int coda_isPlusInf(const double x);
 int coda_isMinInf(const double x);
 int coda_expression_is_constant(const coda_expression *expr);
+int coda_expression_is_equal(const coda_expression *expr1, const coda_expression *expr2);
 %ignore coda_get_option_bypass_special_types;
 %ignore coda_get_option_perform_boundary_checks;
 %ignore coda_get_option_perform_conversions;

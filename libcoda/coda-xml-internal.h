@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -73,34 +73,6 @@ typedef struct coda_xml_element_struct
     struct coda_xml_element_struct *parent;
 } coda_xml_element;
 
-struct coda_xml_detection_node_struct
-{
-    /* xml name of this node */
-    char *xml_name;
-
-    /* detection rules at this node */
-    int num_detection_rules;
-    coda_detection_rule **detection_rule;
-
-    /* attribute sub nodes of this node */
-    int num_attribute_subnodes;
-    struct coda_xml_detection_node_struct **attribute_subnode;
-    hashtable *attribute_hash_data;
-
-    /* sub nodes of this node */
-    int num_subnodes;
-    struct coda_xml_detection_node_struct **subnode;
-    hashtable *hash_data;
-
-    struct coda_xml_detection_node_struct *parent;
-};
-typedef struct coda_xml_detection_node_struct coda_xml_detection_node;
-
-coda_xml_detection_node *coda_xml_get_detection_tree(void);
-coda_xml_detection_node *coda_xml_detection_node_get_attribute_subnode(coda_xml_detection_node *node,
-                                                                       const char *xml_name);
-coda_xml_detection_node *coda_xml_detection_node_get_subnode(coda_xml_detection_node *node, const char *xml_name);
-
 struct coda_xml_product_struct
 {
     /* general fields (shared between all supported product types) */
@@ -120,7 +92,6 @@ struct coda_xml_product_struct
 typedef struct coda_xml_product_struct coda_xml_product;
 
 int coda_xml_parse(coda_xml_product *product);
-int coda_xml_parse_for_detection(int fd, const char *filename, coda_product_definition **definition);
 
 coda_xml_root *coda_xml_root_new(coda_type_record *definition);
 int coda_xml_root_add_element(coda_xml_root *root, coda_xml_product *product, const char *el, const char **attr,

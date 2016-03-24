@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -78,8 +78,7 @@ static int read_bytes(coda_product *product, int64_t byte_offset, int64_t length
 #if HAVE_PREAD
         if (pread(((coda_bin_product *)product)->fd, dst, (size_t)length, (off_t)byte_offset) < 0)
         {
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                           strerror(errno));
+            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file (%s)", strerror(errno));
             return -1;
         }
 #else
@@ -88,14 +87,13 @@ static int read_bytes(coda_product *product, int64_t byte_offset, int64_t length
             char byte_offset_str[21];
 
             coda_str64(byte_offset, byte_offset_str);
-            coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %s in file %s (%s)",
-                           byte_offset_str, product->filename, strerror(errno));
+            coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %s (%s)", byte_offset_str,
+                           strerror(errno));
             return -1;
         }
         if (read(((coda_bin_product *)product)->fd, dst, (size_t)length) < 0)
         {
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                           strerror(errno));
+            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file (%s)", strerror(errno));
             return -1;
         }
 #endif

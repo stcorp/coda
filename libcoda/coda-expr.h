@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -34,6 +34,7 @@ enum coda_expression_node_type_enum
     expr_array_exists,
     expr_array_index,
     expr_asciiline,
+    expr_at,
     expr_bit_offset,
     expr_bit_size,
     expr_byte_offset,
@@ -45,6 +46,7 @@ enum coda_expression_node_type_enum
     expr_constant_integer,
     expr_constant_rawstring,
     expr_constant_string,
+    expr_dim,
     expr_divide,
     expr_equal,
     expr_exists,
@@ -84,6 +86,7 @@ enum coda_expression_node_type_enum
     expr_neg,
     expr_not_equal,
     expr_not,
+    expr_num_dims,
     expr_num_elements,
     expr_or,
     expr_power,

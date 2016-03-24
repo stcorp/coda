@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -3587,7 +3587,7 @@ static int read_clock_records(ingest_info *info)
     return 0;
 }
 
-static int read_file(const char *filename, coda_product *product)
+static int read_file(coda_product *product)
 {
     coda_type_array *records_definition;
     coda_type_record_field *field;
@@ -3598,10 +3598,10 @@ static int read_file(const char *filename, coda_product *product)
     ingest_info_init(&info);
     info.product = product;
 
-    info.f = fopen(filename, "r");
+    info.f = fopen(product->filename, "r");
     if (info.f == NULL)
     {
-        coda_set_error(CODA_ERROR_FILE_OPEN, "could not open file %s", filename);
+        coda_set_error(CODA_ERROR_FILE_OPEN, "could not open file %s", product->filename);
         return -1;
     }
 
@@ -3748,8 +3748,7 @@ static int read_file(const char *filename, coda_product *product)
     return 0;
 }
 
-int coda_rinex_open(const char *filename, int64_t file_size, const coda_product_definition *definition,
-                    coda_product **product)
+int coda_rinex_reopen(coda_product **product)
 {
     coda_product *product_file;
 
@@ -3766,28 +3765,30 @@ int coda_rinex_open(const char *filename, int64_t file_size, const coda_product_
         return -1;
     }
     product_file->filename = NULL;
-    product_file->file_size = file_size;
+    product_file->file_size = (*product)->file_size;
     product_file->format = coda_format_rinex;
     product_file->root_type = NULL;
-    product_file->product_definition = definition;
+    product_file->product_definition = NULL;
     product_file->product_variable_size = NULL;
     product_file->product_variable = NULL;
     product_file->mem_size = 0;
     product_file->mem_ptr = NULL;
 
-    product_file->filename = strdup(filename);
+    product_file->filename = strdup((*product)->filename);
     if (product_file->filename == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate filename string) (%s:%u)",
                        __FILE__, __LINE__);
-        coda_rinex_close(product_file);
+        coda_close(product_file);
         return -1;
     }
 
+    coda_close(*product);
+
     /* create root type */
-    if (read_file(filename, product_file) != 0)
+    if (read_file(product_file) != 0)
     {
-        coda_rinex_close(product_file);
+        coda_close(product_file);
         return -1;
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -22,6 +22,7 @@
 #include "coda-expr.h"
 
 #include <assert.h>
+#include <ctype.h>
 #include <math.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -330,6 +331,21 @@ coda_expression *coda_expression_new(coda_expression_node_type tag, char *string
             break;
     }
 
+    if (tag == expr_neg)
+    {
+        /* turn constant numbers into negative constant values */
+        if (op1->tag == expr_constant_float)
+        {
+            ((coda_expression_float_constant *)op1)->value = -((coda_expression_float_constant *)op1)->value;
+            return op1;
+        }
+        if (op1->tag == expr_constant_integer)
+        {
+            ((coda_expression_integer_constant *)op1)->value = -((coda_expression_integer_constant *)op1)->value;
+            return op1;
+        }
+    }
+
     expr = malloc(sizeof(coda_expression_operation));
     if (expr == NULL)
     {
@@ -400,11 +416,13 @@ coda_expression *coda_expression_new(coda_expression_node_type tag, char *string
         case expr_bit_size:
         case expr_byte_offset:
         case expr_byte_size:
+        case expr_dim:
         case expr_file_size:
         case expr_index:
         case expr_index_var:
         case expr_integer:
         case expr_length:
+        case expr_num_dims:
         case expr_num_elements:
         case expr_or:
         case expr_product_version:
@@ -464,6 +482,7 @@ coda_expression *coda_expression_new(coda_expression_node_type tag, char *string
             }
             break;
         case expr_array_add:
+        case expr_at:
         case expr_if:
         case expr_with:
             expr->result_type = op2->result_type;
@@ -1336,6 +1355,23 @@ static int eval_boolean(eval_info *info, const coda_expression *expr, int *value
                 }
             }
             break;
+        case expr_at:
+            {
+                coda_cursor prev_cursor;
+
+                assert(info->orig_cursor != NULL);
+                prev_cursor = info->cursor;
+                if (eval_cursor(info, opexpr->operand[0]) != 0)
+                {
+                    return -1;
+                }
+                if (eval_boolean(info, opexpr->operand[1], value) != 0)
+                {
+                    return -1;
+                }
+                info->cursor = prev_cursor;
+            }
+            break;
         case expr_with:
             {
                 int64_t prev_index;
@@ -1749,6 +1785,23 @@ static int eval_float(eval_info *info, const coda_expression *expr, double *valu
                             }
                         }
                     }
+                }
+                info->cursor = prev_cursor;
+            }
+            break;
+        case expr_at:
+            {
+                coda_cursor prev_cursor;
+
+                assert(info->orig_cursor != NULL);
+                prev_cursor = info->cursor;
+                if (eval_cursor(info, opexpr->operand[0]) != 0)
+                {
+                    return -1;
+                }
+                if (eval_float(info, opexpr->operand[1], value) != 0)
+                {
+                    return -1;
                 }
                 info->cursor = prev_cursor;
             }
@@ -2287,6 +2340,66 @@ static int eval_integer(eval_info *info, const coda_expression *expr, int64_t *v
                 *value = length;
             }
             break;
+        case expr_dim:
+            {
+                coda_cursor prev_cursor;
+                long dim[CODA_MAX_NUM_DIMS];
+                int num_dims;
+                int64_t dim_id;
+
+                assert(info->orig_cursor != NULL);
+                prev_cursor = info->cursor;
+                if (eval_cursor(info, opexpr->operand[0]) != 0)
+                {
+                    return -1;
+                }
+                if (eval_integer(info, opexpr->operand[1], &dim_id) != 0)
+                {
+                    return -1;
+                }
+                if (coda_cursor_get_array_dim(&info->cursor, &num_dims, dim) != 0)
+                {
+                    return -1;
+                }
+                if (dim_id < 0)
+                {
+                    coda_set_error(CODA_ERROR_EXPRESSION, "dimension index (%ld) is negative", (long)dim_id);
+                    return -1;
+                }
+                if (dim_id >= num_dims)
+                {
+                    coda_set_error(CODA_ERROR_EXPRESSION, "dimension index (%ld) exceeds number of dimensions (%d)",
+                                   (long)dim_id, num_dims);
+                    return -1;
+                }
+                info->cursor = prev_cursor;
+                *value = dim[dim_id];
+            }
+            break;
+        case expr_num_dims:
+            {
+                coda_cursor prev_cursor;
+                coda_type *type;
+                int num_dims;
+
+                assert(info->orig_cursor != NULL);
+                prev_cursor = info->cursor;
+                if (eval_cursor(info, opexpr->operand[0]) != 0)
+                {
+                    return -1;
+                }
+                if (coda_cursor_get_type(&info->cursor, &type) != 0)
+                {
+                    return -1;
+                }
+                if (coda_type_get_array_num_dims(type, &num_dims) != 0)
+                {
+                    return -1;
+                }
+                info->cursor = prev_cursor;
+                *value = num_dims;
+            }
+            break;
         case expr_num_elements:
             {
                 coda_cursor prev_cursor;
@@ -2494,6 +2607,23 @@ static int eval_integer(eval_info *info, const coda_expression *expr, int64_t *v
                 *value = *varptr;
             }
             break;
+        case expr_at:
+            {
+                coda_cursor prev_cursor;
+
+                assert(info->orig_cursor != NULL);
+                prev_cursor = info->cursor;
+                if (eval_cursor(info, opexpr->operand[0]) != 0)
+                {
+                    return -1;
+                }
+                if (eval_integer(info, opexpr->operand[1], value) != 0)
+                {
+                    return -1;
+                }
+                info->cursor = prev_cursor;
+            }
+            break;
         case expr_with:
             {
                 int64_t prev_index;
@@ -2530,13 +2660,14 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
         *length = ((coda_expression_string_constant *)expr)->length;
         if (*length > 0)
         {
-            *value = strdup(((coda_expression_string_constant *)expr)->value);
+            *value = malloc(*length + 1);
             if (*value == NULL)
             {
                 coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
                                __LINE__);
                 return -1;
             }
+            memcpy(*value, ((coda_expression_string_constant *)expr)->value, *length);
         }
         else
         {
@@ -3241,6 +3372,23 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                 }
             }
             break;
+        case expr_at:
+            {
+                coda_cursor prev_cursor;
+
+                assert(info->orig_cursor != NULL);
+                prev_cursor = info->cursor;
+                if (eval_cursor(info, opexpr->operand[0]) != 0)
+                {
+                    return -1;
+                }
+                if (eval_string(info, opexpr->operand[1], offset, length, value) != 0)
+                {
+                    return -1;
+                }
+                info->cursor = prev_cursor;
+            }
+            break;
         case expr_with:
             {
                 int64_t prev_index;
@@ -3490,9 +3638,8 @@ static int eval_cursor(eval_info *info, const coda_expression *expr)
                     }
                     if (index < 0 || index >= num_elements)
                     {
-                        coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS,
-                                       "array index (%ld) exceeds array range [0:%ld) (%s:%u)", (long)index,
-                                       num_elements, __FILE__, __LINE__);
+                        coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array index (%ld) exceeds array range [0:%ld)",
+                                       (long)index, num_elements);
                         return -1;
                     }
                 }
@@ -3571,9 +3718,763 @@ int coda_expression_eval_void(const coda_expression *expr, const coda_cursor *cu
     return eval_void(&info, expr);
 }
 
+static void print_escaped_string(const char *str, int length, int (*print) (const char *, ...), int xml, int html)
+{
+    int i = 0;
+
+    if (length == 0 || str == NULL)
+    {
+        return;
+    }
+
+    if (length < 0)
+    {
+        length = strlen(str);
+    }
+
+    while (i < length)
+    {
+        switch (str[i])
+        {
+            case '\033':       /* windows does not recognize '\e' */
+                print("\\e");
+                break;
+            case '\a':
+                print("\\a");
+                break;
+            case '\b':
+                print("\\b");
+                break;
+            case '\f':
+                print("\\f");
+                break;
+            case '\n':
+                print("\\n");
+                break;
+            case '\r':
+                print("\\r");
+                break;
+            case '\t':
+                print("\\t");
+                break;
+            case '\v':
+                print("\\v");
+                break;
+            case '\\':
+                print("\\\\");
+                break;
+            case '"':
+                print(xml ? "\\&quot;" : "\\\"");
+                break;
+            case '<':
+                print((xml || html) ? "&lt;" : "<");
+                break;
+            case '>':
+                print((xml || html) ? "&gt;" : ">");
+                break;
+            case '&':
+                print((xml || html) ? "&amp;" : "&");
+                break;
+            case ' ':
+                print((xml || html) ? "&nbsp;" : " ");
+                break;
+            default:
+                if (!isprint(str[i]))
+                {
+                    print("\\%03o", (int)(unsigned char)str[i]);
+                }
+                else
+                {
+                    print("%c", str[i]);
+                }
+                break;
+        }
+        i++;
+    }
+}
+
+/* precedence
+ 1: unary minus, not
+ 2: pow
+ 3: mul, div, mod
+ 4: add, sub
+ 5: lt, le, gt, ge
+ 6: eq, ne
+ 7: and
+ 8: or
+ 9: logical_and
+ 10: logical_or
+ 15: <start>
+ */
+static int print_expression(const coda_expression *expr, int (*print) (const char *, ...), int xml, int html,
+                            int precedence)
+{
+    assert(expr != NULL);
+
+    switch (expr->tag)
+    {
+        case expr_abs:
+            print(html ? "<b>abs</b>(" : "abs(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_add:
+            if (precedence < 4)
+            {
+                print("(");
+            }
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 4);
+            print(" + ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 4);
+            if (precedence < 4)
+            {
+                print(")");
+            }
+            break;
+        case expr_array_add:
+            print(html ? "<b>add</b>(" : "add(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(", ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_array_all:
+            print(html ? "<b>all</b>(" : "all(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(", ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_and:
+            if (precedence < 7)
+            {
+                print("(");
+            }
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 7);
+            print((html || xml) ? " &amp; " : " & ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 7);
+            if (precedence < 7)
+            {
+                print(")");
+            }
+            break;
+        case expr_ceil:
+            print(html ? "<b>ceil</b>(" : "ceil(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_array_count:
+            print(html ? "<b>count</b>(" : "count(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(", ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_array_exists:
+            print(html ? "<b>exists</b>(" : "exists(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(", ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_array_index:
+            print(html ? "<b>index</b>(" : "index(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(", ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_asciiline:
+            print(html ? "<b>asciiline</b>" : "asciiline");
+            break;
+        case expr_bit_offset:
+            print(html ? "<b>bitoffset</b>(" : "bitoffset(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_bit_size:
+            print(html ? "<b>bitsize</b>(" : "bitsize(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_byte_offset:
+            print(html ? "<b>byteoffset</b>(" : "byteoffset(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_byte_size:
+            print(html ? "<b>bytesize</b>(" : "bytesize(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_bytes:
+            print(html ? "<b>bytes</b>(" : "bytes(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            if (((coda_expression_operation *)expr)->operand[1] != NULL)
+            {
+                print(",");
+                print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 15);
+            }
+            if (((coda_expression_operation *)expr)->operand[2] != NULL)
+            {
+                print(",");
+                print_expression(((coda_expression_operation *)expr)->operand[2], print, xml, html, 15);
+            }
+            print(")");
+            break;
+        case expr_constant_boolean:
+            if (((coda_expression_bool_constant *)expr)->value)
+            {
+                print(html ? "<b>true</b>" : "true");
+            }
+            else
+            {
+                print(html ? "<b>false</b>" : "false");
+            }
+            break;
+        case expr_constant_float:
+            {
+                char s[24];
+
+                coda_strfl(((coda_expression_float_constant *)expr)->value, s);
+                print("%s", s);
+            }
+            break;
+        case expr_constant_integer:
+            {
+                char s[21];
+
+                coda_str64(((coda_expression_integer_constant *)expr)->value, s);
+                print("%s", s);
+            }
+            break;
+        case expr_constant_rawstring:
+        case expr_constant_string:
+            print(xml ? "&quot;" : "\"");
+            print_escaped_string(((coda_expression_string_constant *)expr)->value,
+                                 ((coda_expression_string_constant *)expr)->length, print, xml, html);
+            print(xml ? "&quot;" : "\"");
+            break;
+        case expr_dim:
+            print(html ? "<b>dim</b>(" : "dim(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(",");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_divide:
+            if (precedence < 3)
+            {
+                print("(");
+            }
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 3);
+            print(" / ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 3);
+            if (precedence < 3)
+            {
+                print(")");
+            }
+            break;
+        case expr_equal:
+            if (precedence < 6)
+            {
+                print("(");
+            }
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 6);
+            print(" == ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 6);
+            if (precedence < 6)
+            {
+                print(")");
+            }
+            break;
+        case expr_exists:
+            print(html ? "<b>exists</b>(" : "exists(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_file_size:
+            print(html ? "<b>filesize</b>()" : "filesize()");
+            break;
+        case expr_filename:
+            print(html ? "<b>filename</b>()" : "filename()");
+            break;
+        case expr_float:
+            print(html ? "<b>float</b>(" : "float(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_floor:
+            print(html ? "<b>floor</b>(" : "floor(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_for:
+            print(html ? "<b>for</b> <i>%s</i> = " : "for %s = ", ((coda_expression_operation *)expr)->identifier);
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(html ? " <b>to</b> " : " to ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 15);
+            if (((coda_expression_operation *)expr)->operand[2] != NULL)
+            {
+                print(html ? " <b>step</b> " : " step ");
+                print_expression(((coda_expression_operation *)expr)->operand[2], print, xml, html, 15);
+            }
+            print(html ? " <b>do</b><br />" : " do ");
+            print_expression(((coda_expression_operation *)expr)->operand[3], print, xml, html, 15);
+            break;
+        case expr_goto_array_element:
+            if (((coda_expression_operation *)expr)->operand[0] != NULL)
+            {
+                print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            }
+            print("[");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 15);
+            print("]");
+            break;
+        case expr_goto_attribute:
+            if (((coda_expression_operation *)expr)->operand[0] != NULL)
+            {
+                print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            }
+            print("@%s", ((coda_expression_operation *)expr)->identifier);
+            break;
+        case expr_goto_begin:
+            print(":");
+            break;
+        case expr_goto_field:
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            if (((coda_expression_operation *)expr)->operand[0]->tag != expr_goto_root)
+            {
+                print("/");
+            }
+            print("%s", ((coda_expression_operation *)expr)->identifier);
+            break;
+        case expr_goto_here:
+            print(".");
+            break;
+        case expr_goto_parent:
+            if (((coda_expression_operation *)expr)->operand[0] != NULL)
+            {
+                print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+                print("/");
+            }
+            print("..");
+            break;
+        case expr_goto_root:
+            print("/");
+            break;
+        case expr_goto:
+            print(html ? "<b>goto</b>(" : "goto(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_greater_equal:
+            if (precedence < 5)
+            {
+                print("(");
+            }
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 5);
+            print((html || xml) ? " &gt;= " : " >= ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 5);
+            if (precedence < 5)
+            {
+                print(")");
+            }
+            break;
+        case expr_greater:
+            if (precedence < 5)
+            {
+                print("(");
+            }
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 5);
+            print((html || xml) ? " &gt; " : " > ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 5);
+            if (precedence < 5)
+            {
+                print(")");
+            }
+            break;
+        case expr_if:
+            print("if(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(", ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 15);
+            print(", ");
+            print_expression(((coda_expression_operation *)expr)->operand[2], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_index:
+            print(html ? "<b>index</b>(" : "index(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_index_var:
+            print(html ? "<i>%s</i>" : "%s", ((coda_expression_operation *)expr)->identifier);
+            break;
+        case expr_integer:
+            print(html ? "<b>int</b>(" : "int(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_isinf:
+            print(html ? "<b>isinf</b>(" : "isinf(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_ismininf:
+            print(html ? "<b>ismininf</b>(" : "ismininf(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_isnan:
+            print(html ? "<b>isnan</b>(" : "isnan(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_isplusinf:
+            print(html ? "<b>isplusinf</b>(" : "isplusinf(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_length:
+            print(html ? "<b>length</b>(" : "length(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_less_equal:
+            if (precedence < 5)
+            {
+                print("(");
+            }
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 5);
+            print((html || xml) ? " &lt;= " : " <= ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 5);
+            if (precedence < 5)
+            {
+                print(")");
+            }
+            break;
+        case expr_less:
+            if (precedence < 5)
+            {
+                print("(");
+            }
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 5);
+            print((html || xml) ? " &lt; " : " < ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 5);
+            if (precedence < 5)
+            {
+                print(")");
+            }
+            break;
+        case expr_logical_and:
+            if (precedence < 9)
+            {
+                print("(");
+            }
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 9);
+            print(html ? " <b>and</b> " : " and ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 9);
+            if (precedence < 9)
+            {
+                print(")");
+            }
+            break;
+        case expr_logical_or:
+            if (precedence < 10)
+            {
+                print("(");
+            }
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 10);
+            print(html ? " <b>or</b> " : " or ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 10);
+            if (precedence < 10)
+            {
+                print(")");
+            }
+            break;
+        case expr_ltrim:
+            print(html ? "<b>ltrim</b>(" : "ltrim(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_max:
+            print(html ? "<b>max</b>(" : "max(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(", ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_min:
+            print(html ? "<b>min</b>(" : "min(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(", ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_modulo:
+            if (precedence < 3)
+            {
+                print("(");
+            }
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 3);
+            print(" %% ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 3);
+            if (precedence < 3)
+            {
+                print(")");
+            }
+            break;
+        case expr_multiply:
+            if (precedence < 3)
+            {
+                print("(");
+            }
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 3);
+            print(" * ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 3);
+            if (precedence < 3)
+            {
+                print(")");
+            }
+            break;
+        case expr_neg:
+            print("-");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 1);
+            break;
+        case expr_not_equal:
+            if (precedence < 6)
+            {
+                print("(");
+            }
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 6);
+            print(" != ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 6);
+            if (precedence < 6)
+            {
+                print(")");
+            }
+            break;
+        case expr_not:
+            print("!");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 1);
+            break;
+        case expr_num_dims:
+            print(html ? "<b>numdims</b>(" : "numdims(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_num_elements:
+            print(html ? "<b>numelements</b>(" : "numelements(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_or:
+            if (precedence < 7)
+            {
+                print("(");
+            }
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 7);
+            print(" | ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 7);
+            if (precedence < 7)
+            {
+                print(")");
+            }
+            break;
+        case expr_power:
+            if (precedence < 2)
+            {
+                print("(");
+            }
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 2);
+            print(" ^ ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 2);
+            if (precedence < 2)
+            {
+                print(")");
+            }
+            break;
+        case expr_product_class:
+            print(html ? "<b>productclass</b>()" : "productclass()");
+            break;
+        case expr_product_format:
+            print(html ? "<b>productformat</b>()" : "productformat()");
+            break;
+        case expr_product_type:
+            print(html ? "<b>producttype</b>()" : "producttype()");
+            break;
+        case expr_product_version:
+            print(html ? "<b>productversion</b>()" : "productversion()");
+            break;
+        case expr_regex:
+            print(html ? "<b>regex</b>(" : "regex(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(", ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 15);
+            if (((coda_expression_operation *)expr)->operand[2] != NULL)
+            {
+                print(", ");
+                print_expression(((coda_expression_operation *)expr)->operand[2], print, xml, html, 15);
+            }
+            print(")");
+            break;
+        case expr_round:
+            print(html ? "<b>round</b>(" : "round(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_rtrim:
+            print(html ? "<b>rtrim</b>(" : "rtrim(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_sequence:
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(html ? ";<br />" : "; ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 15);
+            break;
+        case expr_string:
+            print(html ? "<b>str</b>(" : "str(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            if (((coda_expression_operation *)expr)->operand[1] != NULL)
+            {
+                print(", ");
+                print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 15);
+            }
+            print(")");
+            break;
+        case expr_strtime:
+            print(html ? "<b>strtime</b>(" : "strtime(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            if (((coda_expression_operation *)expr)->operand[1] != NULL)
+            {
+                print(", ");
+                print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 15);
+            }
+            print(")");
+            break;
+        case expr_substr:
+            print(html ? "<b>substr</b>(" : "substr(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(", ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 15);
+            print(", ");
+            print_expression(((coda_expression_operation *)expr)->operand[2], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_subtract:
+            if (precedence < 4)
+            {
+                print("(");
+            }
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 4);
+            print(" - ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 4);
+            if (precedence < 4)
+            {
+                print(")");
+            }
+            break;
+        case expr_time:
+            print(html ? "<b>time</b>(" : "time(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(", ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_trim:
+            print(html ? "<b>trim</b>(" : "trim(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_unbound_array_index:
+            print(html ? "<b>unboundindex</b>(" : "unboundindex(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(", ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_variable_exists:
+            print(html ? "<b>exists</b>(<i>$%s</i>, " : "exists($%s, ",
+                  ((coda_expression_operation *)expr)->identifier);
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_variable_index:
+            print(html ? "<b>index</b>(<i>$%s</i>, " : "index($%s, ", ((coda_expression_operation *)expr)->identifier);
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_variable_set:
+            print(html ? "<i>$%s</i>" : "$%s", ((coda_expression_operation *)expr)->identifier);
+            if (((coda_expression_operation *)expr)->operand[0] != NULL)
+            {
+                print("[");
+                print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+                print("]");
+            }
+            print(" = ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 15);
+            break;
+        case expr_variable_value:
+            print("$%s", ((coda_expression_operation *)expr)->identifier);
+            if (((coda_expression_operation *)expr)->operand[0] != NULL)
+            {
+                print("[");
+                print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+                print("]");
+            }
+            break;
+        case expr_at:
+            print(html ? "<b>at</b>(" : "at(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(", ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_with:
+            print(html ? "<b>with</b>(<i>%s</i> = " : "with(%s = ", ((coda_expression_operation *)expr)->identifier);
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(", ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 15);
+            print(")");
+            break;
+    }
+
+    return 0;
+}
+
+int coda_expression_print_html(const coda_expression *expr, int (*print) (const char *, ...))
+{
+    return print_expression(expr, print, 1, 1, 15);
+}
+
+int coda_expression_print_xml(const coda_expression *expr, int (*print) (const char *, ...))
+{
+    return print_expression(expr, print, 1, 0, 15);
+}
+
 /** \addtogroup coda_expression
  * @{
  */
+
+/** Write the full expression using a printf compatible function.
+ * This function will produce a string representation of the expression itself
+ * (it won't evaluate the expression, nor write its result).
+ * The \a print function parameter should be a function that resembles printf().
+ * The printed string representation is something that can be passed to #coda_expression_from_string()
+ * again to reproduce the expression object.
+ * \param expr Pointer to the expression object.
+ * \param print Reference to a printf compatible function.
+ * \return
+ *   \arg \c  0, Succes.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_expression_print(const coda_expression *expr, int (*print) (const char *, ...))
+{
+    return print_expression(expr, print, 0, 0, 15);
+}
 
 /** \fn int coda_expression_from_string(const char *exprstring, coda_expression **expr)
  * Create a new CODA expression object by parsing a string containing a CODA expression.
@@ -3673,6 +4574,91 @@ LIBCODA_API int coda_expression_is_constant(const coda_expression *expr)
     return expr->is_constant;
 }
 
+/** Determines whether two expressions are equal or not
+ * This function will return 1 if both expressions are equal, and 0 if they are not.
+ *
+ * The comparison will not be on the evaluated result of the expressions but on the operators and operands of the
+ * expressions themselves.  For two expressions to be equal, all operands to an operation need to be equal and
+ * operands need to be provided in the same order.
+ * So the expression '1!=2' will not be considered equal to the expression '2!=1'.
+ *
+ * Providing two NULL pointers will be considered as a case of equal expressions.
+ *
+ * \param expr1 A CODA expression object
+ * \param expr2 A CODA expression object
+ * \return
+ *   \arg \c 0, expr1 and expr2 consist of the exact same sequence of operators and operands.
+ *   \arg \c 1, expr1 and expr2 differ in terms of operators and operands.
+ */
+LIBCODA_API int coda_expression_is_equal(const coda_expression *expr1, const coda_expression *expr2)
+{
+    if (expr1 == NULL)
+    {
+        return expr2 == NULL;
+    }
+    if (expr2 == NULL)
+    {
+        return 0;
+    }
+
+    if (expr1->tag != expr2->tag)
+    {
+        return 0;
+    }
+
+    switch (expr1->tag)
+    {
+        case expr_constant_boolean:
+            return ((coda_expression_bool_constant *)expr1)->value == ((coda_expression_bool_constant *)expr2)->value;
+        case expr_constant_float:
+            return ((coda_expression_float_constant *)expr1)->value == ((coda_expression_float_constant *)expr2)->value;
+        case expr_constant_integer:
+            return ((coda_expression_integer_constant *)expr1)->value ==
+                ((coda_expression_integer_constant *)expr2)->value;
+        case expr_constant_rawstring:
+        case expr_constant_string:
+            if (((coda_expression_string_constant *)expr1)->length !=
+                ((coda_expression_string_constant *)expr2)->length)
+            {
+                return 0;
+            }
+            return memcmp(((coda_expression_string_constant *)expr1)->value,
+                          ((coda_expression_string_constant *)expr2)->value,
+                          ((coda_expression_string_constant *)expr1)->length) == 0;
+        default:
+            {
+                coda_expression_operation *op1 = (coda_expression_operation *)expr1;
+                coda_expression_operation *op2 = (coda_expression_operation *)expr2;
+                int i;
+
+                if (op1->identifier != NULL)
+                {
+                    if (op2->identifier == NULL)
+                    {
+                        return 0;
+                    }
+                    if (strcmp(op1->identifier, op2->identifier) != 0)
+                    {
+                        return 0;
+                    }
+                }
+                else if (op2->identifier != NULL)
+                {
+                    return 0;
+                }
+                for (i = 0; i < 4; i++)
+                {
+                    if (!coda_expression_is_equal(op1->operand[i], op2->operand[i]))
+                    {
+                        return 0;
+                    }
+                }
+            }
+    }
+
+    return 1;
+}
+
 /** Retrieve the result type of a CODA expression.
  * \param expr A CODA expression object
  * \param type Pointer to the variable where the result type of the CODA expression will be stored.
@@ -3719,7 +4705,16 @@ LIBCODA_API int coda_expression_eval_bool(const coda_expression *expr, const cod
     }
 
     init_eval_info(&info, cursor);
-    return eval_boolean(&info, expr, value);
+    if (eval_boolean(&info, expr, value) != 0)
+    {
+        if (cursor != NULL && coda_cursor_compare(cursor, &info.cursor) != 0)
+        {
+            coda_cursor_add_to_error_message(&info.cursor);
+        }
+        return -1;
+    }
+
+    return 0;
 }
 
 /** Evaluate an integer expression.
@@ -3749,7 +4744,16 @@ LIBCODA_API int coda_expression_eval_integer(const coda_expression *expr, const 
     }
 
     init_eval_info(&info, cursor);
-    return eval_integer(&info, expr, value);
+    if (eval_integer(&info, expr, value) != 0)
+    {
+        if (cursor != NULL && coda_cursor_compare(cursor, &info.cursor) != 0)
+        {
+            coda_cursor_add_to_error_message(&info.cursor);
+        }
+        return -1;
+    }
+
+    return 0;
 }
 
 /** Evaluate a floating point expression.
@@ -3779,7 +4783,16 @@ LIBCODA_API int coda_expression_eval_float(const coda_expression *expr, const co
     }
 
     init_eval_info(&info, cursor);
-    return eval_float(&info, expr, value);
+    if (eval_float(&info, expr, value) != 0)
+    {
+        if (cursor != NULL && coda_cursor_compare(cursor, &info.cursor) != 0)
+        {
+            coda_cursor_add_to_error_message(&info.cursor);
+        }
+        return -1;
+    }
+
+    return 0;
 }
 
 /** Evaluate a string expression.
@@ -3820,6 +4833,10 @@ LIBCODA_API int coda_expression_eval_string(const coda_expression *expr, const c
     init_eval_info(&info, cursor);
     if (eval_string(&info, expr, &offset, length, value) != 0)
     {
+        if (cursor != NULL && coda_cursor_compare(cursor, &info.cursor) != 0)
+        {
+            coda_cursor_add_to_error_message(&info.cursor);
+        }
         return -1;
     }
 
@@ -3882,6 +4899,10 @@ LIBCODA_API int coda_expression_eval_node(const coda_expression *expr, coda_curs
     init_eval_info(&info, cursor);
     if (eval_cursor(&info, expr) != 0)
     {
+        if (cursor != NULL && coda_cursor_compare(cursor, &info.cursor) != 0)
+        {
+            coda_cursor_add_to_error_message(&info.cursor);
+        }
         return -1;
     }
 

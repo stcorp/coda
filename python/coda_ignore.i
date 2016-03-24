@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2007-2015 S[&]T, The Netherlands.
+// Copyright (C) 2007-2016 S[&]T, The Netherlands.
 //
 // This file is part of CODA.
 //
@@ -69,3 +69,6 @@
 %ignore coda_double_to_utcdatetime;
 %ignore coda_time_to_utcstring;
 %ignore coda_utcstring_to_time;
+
+%ignore coda_cursor_print_path;
+%ignore coda_expression_print;

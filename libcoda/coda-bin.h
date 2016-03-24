@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -23,8 +23,8 @@
 
 #include "coda-internal.h"
 
-int coda_bin_open(const char *filename, int64_t file_size, const coda_product_definition *definition,
-                  coda_product **product);
+int coda_bin_open(const char *filename, int64_t file_size, coda_product **product);
+int coda_bin_reopen_with_definition(coda_product **product, const coda_product_definition *definition);
 int coda_bin_close(coda_product *product);
 
 int coda_bin_cursor_get_string_length(const coda_cursor *cursor, long *length);

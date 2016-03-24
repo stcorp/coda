@@ -39,6 +39,7 @@ public class codacJNI {
   public final static native int isPlusInf(double jarg1);
   public final static native int isMinInf(double jarg1);
   public final static native int expression_is_constant(long jarg1);
+  public final static native int expression_is_equal(long jarg1, long jarg2);
   public final static native int cursor_read_double(long jarg1, double[] jarg2) throws nl.stcorp.coda.CodaException;
   public final static native int cursor_read_uint64(long jarg1, long[] jarg2) throws nl.stcorp.coda.CodaException;
   public final static native int cursor_read_char(long jarg1, byte[] jarg2) throws nl.stcorp.coda.CodaException;

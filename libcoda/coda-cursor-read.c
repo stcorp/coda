@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -2749,7 +2749,7 @@ LIBCODA_API int coda_cursor_read_string(const coda_cursor *cursor, char *dst, lo
     }
     if (!has_ascii_content)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to text (%s:%u)", __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to text");
         return -1;
     }
 
@@ -2906,8 +2906,8 @@ LIBCODA_API int coda_cursor_read_int8_array(const coda_cursor *cursor, int8_t *d
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_array_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -2965,8 +2965,8 @@ LIBCODA_API int coda_cursor_read_uint8_array(const coda_cursor *cursor, uint8_t 
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_array_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -3028,8 +3028,8 @@ LIBCODA_API int coda_cursor_read_int16_array(const coda_cursor *cursor, int16_t 
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_array_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -3118,8 +3118,8 @@ LIBCODA_API int coda_cursor_read_uint16_array(const coda_cursor *cursor, uint16_
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_array_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -3197,8 +3197,8 @@ LIBCODA_API int coda_cursor_read_int32_array(const coda_cursor *cursor, int32_t 
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_array_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -3316,8 +3316,8 @@ LIBCODA_API int coda_cursor_read_uint32_array(const coda_cursor *cursor, uint32_
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_array_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -3411,8 +3411,8 @@ LIBCODA_API int coda_cursor_read_int64_array(const coda_cursor *cursor, int64_t 
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_array_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -3559,8 +3559,8 @@ LIBCODA_API int coda_cursor_read_uint64_array(const coda_cursor *cursor, uint64_
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_array_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -3671,8 +3671,8 @@ LIBCODA_API int coda_cursor_read_float_array(const coda_cursor *cursor, float *d
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_array_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -3935,8 +3935,8 @@ LIBCODA_API int coda_cursor_read_double_array(const coda_cursor *cursor, double 
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_array_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -4134,8 +4134,8 @@ LIBCODA_API int coda_cursor_read_char_array(const coda_cursor *cursor, char *dst
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_array_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -4197,8 +4197,8 @@ LIBCODA_API int coda_cursor_read_int8_partial_array(const coda_cursor *cursor, l
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_array_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -4213,14 +4213,14 @@ LIBCODA_API int coda_cursor_read_int8_partial_array(const coda_cursor *cursor, l
         }
         if (offset < 0 || offset >= num_elements)
         {
-            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld) (%s:%u)",
-                           offset, num_elements, __FILE__, __LINE__);
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld)", offset,
+                           num_elements);
             return -1;
         }
         if (offset + length > num_elements)
         {
             coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) + length (%ld) exceeds array range "
-                           "[0:%ld) (%s:%u)", offset, length, num_elements, __FILE__, __LINE__);
+                           "[0:%ld)", offset, length, num_elements);
             return -1;
         }
     }
@@ -4283,8 +4283,8 @@ LIBCODA_API int coda_cursor_read_uint8_partial_array(const coda_cursor *cursor, 
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_array_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -4299,14 +4299,14 @@ LIBCODA_API int coda_cursor_read_uint8_partial_array(const coda_cursor *cursor, 
         }
         if (offset < 0 || offset >= num_elements)
         {
-            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld) (%s:%u)",
-                           offset, num_elements, __FILE__, __LINE__);
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld)", offset,
+                           num_elements);
             return -1;
         }
         if (offset + length > num_elements)
         {
             coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) + length (%ld) exceeds array range "
-                           "[0:%ld) (%s:%u)", offset, length, num_elements, __FILE__, __LINE__);
+                           "[0:%ld)", offset, length, num_elements);
             return -1;
         }
     }
@@ -4372,8 +4372,8 @@ LIBCODA_API int coda_cursor_read_int16_partial_array(const coda_cursor *cursor, 
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_array_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -4388,14 +4388,14 @@ LIBCODA_API int coda_cursor_read_int16_partial_array(const coda_cursor *cursor, 
         }
         if (offset < 0 || offset >= num_elements)
         {
-            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld) (%s:%u)",
-                           offset, num_elements, __FILE__, __LINE__);
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld)", offset,
+                           num_elements);
             return -1;
         }
         if (offset + length > num_elements)
         {
             coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) + length (%ld) exceeds array range "
-                           "[0:%ld) (%s:%u)", offset, length, num_elements, __FILE__, __LINE__);
+                           "[0:%ld)", offset, length, num_elements);
             return -1;
         }
     }
@@ -4481,8 +4481,8 @@ LIBCODA_API int coda_cursor_read_uint16_partial_array(const coda_cursor *cursor,
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_array_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -4497,14 +4497,14 @@ LIBCODA_API int coda_cursor_read_uint16_partial_array(const coda_cursor *cursor,
         }
         if (offset < 0 || offset >= num_elements)
         {
-            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld) (%s:%u)",
-                           offset, num_elements, __FILE__, __LINE__);
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld)", offset,
+                           num_elements);
             return -1;
         }
         if (offset + length > num_elements)
         {
             coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) + length (%ld) exceeds array range "
-                           "[0:%ld) (%s:%u)", offset, length, num_elements, __FILE__, __LINE__);
+                           "[0:%ld)", offset, length, num_elements);
             return -1;
         }
     }
@@ -4582,8 +4582,8 @@ LIBCODA_API int coda_cursor_read_int32_partial_array(const coda_cursor *cursor, 
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_array_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -4598,14 +4598,14 @@ LIBCODA_API int coda_cursor_read_int32_partial_array(const coda_cursor *cursor, 
         }
         if (offset < 0 || offset >= num_elements)
         {
-            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld) (%s:%u)",
-                           offset, num_elements, __FILE__, __LINE__);
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld)", offset,
+                           num_elements);
             return -1;
         }
         if (offset + length > num_elements)
         {
             coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) + length (%ld) exceeds array range "
-                           "[0:%ld) (%s:%u)", offset, length, num_elements, __FILE__, __LINE__);
+                           "[0:%ld)", offset, length, num_elements);
             return -1;
         }
     }
@@ -4712,8 +4712,8 @@ LIBCODA_API int coda_cursor_read_uint32_partial_array(const coda_cursor *cursor,
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_array_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -4728,14 +4728,14 @@ LIBCODA_API int coda_cursor_read_uint32_partial_array(const coda_cursor *cursor,
         }
         if (offset < 0 || offset >= num_elements)
         {
-            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld) (%s:%u)",
-                           offset, num_elements, __FILE__, __LINE__);
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld)", offset,
+                           num_elements);
             return -1;
         }
         if (offset + length > num_elements)
         {
             coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) + length (%ld) exceeds array range "
-                           "[0:%ld) (%s:%u)", offset, length, num_elements, __FILE__, __LINE__);
+                           "[0:%ld)", offset, length, num_elements);
             return -1;
         }
     }
@@ -4825,8 +4825,8 @@ LIBCODA_API int coda_cursor_read_int64_partial_array(const coda_cursor *cursor, 
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_array_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -4841,14 +4841,14 @@ LIBCODA_API int coda_cursor_read_int64_partial_array(const coda_cursor *cursor, 
         }
         if (offset < 0 || offset >= num_elements)
         {
-            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld) (%s:%u)",
-                           offset, num_elements, __FILE__, __LINE__);
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld)", offset,
+                           num_elements);
             return -1;
         }
         if (offset + length > num_elements)
         {
             coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) + length (%ld) exceeds array range "
-                           "[0:%ld) (%s:%u)", offset, length, num_elements, __FILE__, __LINE__);
+                           "[0:%ld)", offset, length, num_elements);
             return -1;
         }
     }
@@ -4976,8 +4976,8 @@ LIBCODA_API int coda_cursor_read_uint64_partial_array(const coda_cursor *cursor,
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_array_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -4992,14 +4992,14 @@ LIBCODA_API int coda_cursor_read_uint64_partial_array(const coda_cursor *cursor,
         }
         if (offset < 0 || offset >= num_elements)
         {
-            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld) (%s:%u)",
-                           offset, num_elements, __FILE__, __LINE__);
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld)", offset,
+                           num_elements);
             return -1;
         }
         if (offset + length > num_elements)
         {
             coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) + length (%ld) exceeds array range "
-                           "[0:%ld) (%s:%u)", offset, length, num_elements, __FILE__, __LINE__);
+                           "[0:%ld)", offset, length, num_elements);
             return -1;
         }
     }
@@ -5103,8 +5103,8 @@ LIBCODA_API int coda_cursor_read_float_partial_array(const coda_cursor *cursor, 
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_array_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -5119,14 +5119,14 @@ LIBCODA_API int coda_cursor_read_float_partial_array(const coda_cursor *cursor, 
         }
         if (offset < 0 || offset >= num_elements)
         {
-            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld) (%s:%u)",
-                           offset, num_elements, __FILE__, __LINE__);
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld)", offset,
+                           num_elements);
             return -1;
         }
         if (offset + length > num_elements)
         {
             coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) + length (%ld) exceeds array range "
-                           "[0:%ld) (%s:%u)", offset, length, num_elements, __FILE__, __LINE__);
+                           "[0:%ld)", offset, length, num_elements);
             return -1;
         }
     }
@@ -5143,8 +5143,8 @@ LIBCODA_API int coda_cursor_read_float_partial_array(const coda_cursor *cursor, 
         array = malloc(length * sizeof(double));
         if (array == NULL)
         {
-            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           length * sizeof(double), __FILE__, __LINE__);
+            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes)",
+                           length * sizeof(double));
             return -1;
         }
         if (coda_cursor_read_double_partial_array(cursor, offset, length, array) != 0)
@@ -5228,8 +5228,8 @@ LIBCODA_API int coda_cursor_read_float_partial_array(const coda_cursor *cursor, 
                 array = malloc(length * sizeof(int64_t));
                 if (array == NULL)
                 {
-                    coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                                   length * sizeof(int64_t), __FILE__, __LINE__);
+                    coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes)",
+                                   length * sizeof(int64_t));
                     return -1;
                 }
                 if (read_int64_partial_array(cursor, offset, length, array) != 0)
@@ -5251,8 +5251,8 @@ LIBCODA_API int coda_cursor_read_float_partial_array(const coda_cursor *cursor, 
                 array = malloc(length * sizeof(uint64_t));
                 if (array == NULL)
                 {
-                    coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                                   length * sizeof(int64_t), __FILE__, __LINE__);
+                    coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes)",
+                                   length * sizeof(int64_t));
                     return -1;
                 }
                 if (read_uint64_partial_array(cursor, offset, length, array) != 0)
@@ -5280,8 +5280,8 @@ LIBCODA_API int coda_cursor_read_float_partial_array(const coda_cursor *cursor, 
                 array = malloc(length * sizeof(double));
                 if (array == NULL)
                 {
-                    coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                                   length * sizeof(double), __FILE__, __LINE__);
+                    coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes)",
+                                   length * sizeof(double));
                     return -1;
                 }
                 if (read_double_partial_array(cursor, offset, length, array) != 0)
@@ -5353,8 +5353,8 @@ LIBCODA_API int coda_cursor_read_double_partial_array(const coda_cursor *cursor,
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_array_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -5369,14 +5369,14 @@ LIBCODA_API int coda_cursor_read_double_partial_array(const coda_cursor *cursor,
         }
         if (offset < 0 || offset >= num_elements)
         {
-            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld) (%s:%u)",
-                           offset, num_elements, __FILE__, __LINE__);
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld)", offset,
+                           num_elements);
             return -1;
         }
         if (offset + length > num_elements)
         {
             coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) + length (%ld) exceeds array range "
-                           "[0:%ld) (%s:%u)", offset, length, num_elements, __FILE__, __LINE__);
+                           "[0:%ld)", offset, length, num_elements);
             return -1;
         }
     }
@@ -5540,8 +5540,8 @@ LIBCODA_API int coda_cursor_read_char_partial_array(const coda_cursor *cursor, l
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_array_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -5556,14 +5556,14 @@ LIBCODA_API int coda_cursor_read_char_partial_array(const coda_cursor *cursor, l
         }
         if (offset < 0 || offset >= num_elements)
         {
-            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld) (%s:%u)",
-                           offset, num_elements, __FILE__, __LINE__);
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) exceeds array range [0:%ld)", offset,
+                           num_elements);
             return -1;
         }
         if (offset + length > num_elements)
         {
             coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array offset (%ld) + length (%ld) exceeds array range "
-                           "[0:%ld) (%s:%u)", offset, length, num_elements, __FILE__, __LINE__);
+                           "[0:%ld)", offset, length, num_elements);
             return -1;
         }
     }
@@ -5647,8 +5647,8 @@ LIBCODA_API int coda_cursor_read_complex_double_pairs_array(const coda_cursor *c
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_array_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
     return read_array(cursor, (read_function)&read_double_pair, (uint8_t *)dst, 2 * sizeof(double), array_ordering);
@@ -5716,8 +5716,8 @@ LIBCODA_API int coda_cursor_read_complex_double_split_array(const coda_cursor *c
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_array_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
     return read_split_array(cursor, (read_function)&read_double_pair, (uint8_t *)dst_re, (uint8_t *)dst_im,

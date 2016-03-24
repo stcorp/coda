@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -46,7 +46,7 @@ int show_description;
 static void print_version()
 {
     printf("codadump version %s\n", libcoda_version);
-    printf("Copyright (C) 2007-2015 S[&]T, The Netherlands.\n");
+    printf("Copyright (C) 2007-2016 S[&]T, The Netherlands.\n");
     printf("\n");
 }
 
@@ -593,7 +593,6 @@ static void handle_json_run_mode(int argc, char *argv[])
         exit(1);
     }
     coda_set_option_bypass_special_types(!use_special_types);
-    coda_set_option_perform_boundary_checks(0);
     coda_set_option_perform_conversions(perform_conversions);
     if (output_file_name != NULL)
     {
@@ -680,7 +679,6 @@ static void handle_yaml_run_mode(int argc, char *argv[])
         exit(1);
     }
     coda_set_option_bypass_special_types(!use_special_types);
-    coda_set_option_perform_boundary_checks(0);
     coda_set_option_perform_conversions(perform_conversions);
     if (output_file_name != NULL)
     {
@@ -770,7 +768,6 @@ static void handle_debug_run_mode(int argc, char *argv[])
         fprintf(stderr, "ERROR: %s\n", coda_errno_to_string(coda_errno));
         exit(1);
     }
-    coda_set_option_perform_boundary_checks(0);
     coda_set_option_perform_conversions(0);
     coda_set_option_use_fast_size_expressions(use_fast_size_expressions);
     if (output_file_name != NULL)

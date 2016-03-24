@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -89,6 +89,7 @@ static void coda_expression_error(const char *error)
 %token                FUNC_ABS
 %token                FUNC_ADD
 %token                FUNC_ALL
+%token                FUNC_AT
 %token                FUNC_BITOFFSET
 %token                FUNC_BITSIZE
 %token                FUNC_BOOL
@@ -97,6 +98,7 @@ static void coda_expression_error(const char *error)
 %token                FUNC_BYTESIZE
 %token                FUNC_CEIL
 %token                FUNC_COUNT
+%token                FUNC_DIM
 %token                FUNC_EXISTS
 %token                FUNC_FILENAME
 %token                FUNC_FILESIZE
@@ -112,6 +114,7 @@ static void coda_expression_error(const char *error)
 %token                FUNC_ISMININF
 %token                FUNC_LENGTH
 %token                FUNC_LTRIM
+%token                FUNC_NUMDIMS
 %token                FUNC_NUMELEMENTS
 %token                FUNC_MAX
 %token                FUNC_MIN
@@ -172,6 +175,7 @@ reserved_identifier:
     | FUNC_ABS { $$ = "abs"; }
     | FUNC_ADD { $$ = "add"; }
     | FUNC_ALL { $$ = "all"; }
+    | FUNC_AT { $$ = "at"; }
     | FUNC_BITOFFSET { $$ = "bitoffset"; }
     | FUNC_BOOL { $$ = "bool"; }
     | FUNC_BYTES { $$ = "bytes"; }
@@ -179,6 +183,7 @@ reserved_identifier:
     | FUNC_BYTESIZE { $$ = "bytesize"; }
     | FUNC_CEIL { $$ = "ceil"; }
     | FUNC_COUNT { $$ = "count"; }
+    | FUNC_DIM { $$ = "dim"; }
     | FUNC_EXISTS { $$ = "exists"; }
     | FUNC_FILENAME { $$ = "filename"; }
     | FUNC_FILESIZE { $$ = "filesize"; }
@@ -194,6 +199,7 @@ reserved_identifier:
     | FUNC_ISMININF { $$ = "ismininf"; }
     | FUNC_LENGTH { $$ = "length"; }
     | FUNC_LTRIM { $$ = "ltrim"; }
+    | FUNC_NUMDIMS { $$ = "numdims"; }
     | FUNC_NUMELEMENTS { $$ = "numelements"; }
     | FUNC_MAX { $$ = "max"; }
     | FUNC_MIN { $$ = "min"; }
@@ -432,6 +438,10 @@ boolexpr:
             $$ = coda_expression_new(expr_if, NULL, $3, $5, $7, NULL);
             if ($$ == NULL) YYERROR;
         }
+    | FUNC_AT '(' node ',' boolexpr ')' {
+            $$ = coda_expression_new(expr_at, NULL, $3, $5, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
     | FUNC_WITH '(' INDEX_VAR '=' intexpr ',' boolexpr ')' {
             $$ = coda_expression_new(expr_with, $3, $5, $7, NULL, NULL);
             if ($$ == NULL) YYERROR;
@@ -520,6 +530,14 @@ intexpr:
             $$ = coda_expression_new(expr_num_elements, NULL, $3, NULL, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
+    | FUNC_NUMDIMS '(' node ')' {
+            $$ = coda_expression_new(expr_num_dims, NULL, $3, NULL, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_DIM '(' node ',' intexpr ')' {
+            $$ = coda_expression_new(expr_dim, NULL, $3, $5, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
     | FUNC_COUNT '(' node ',' boolexpr ')' {
             $$ = coda_expression_new(expr_array_count, NULL, $3, $5, NULL, NULL);
             if ($$ == NULL) YYERROR;
@@ -582,6 +600,10 @@ intexpr:
         }
     | FUNC_UNBOUNDINDEX '(' node ',' boolexpr ',' boolexpr ')' {
             $$ = coda_expression_new(expr_unbound_array_index, NULL, $3, $5, $7, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_AT '(' node ',' intexpr ')' {
+            $$ = coda_expression_new(expr_at, NULL, $3, $5, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
     | FUNC_WITH '(' INDEX_VAR '=' intexpr ',' intexpr ')' {
@@ -760,6 +782,10 @@ floatexpr:
             $$ = coda_expression_new(expr_if, NULL, $3, $5, $7, NULL);
             if ($$ == NULL) YYERROR;
         }
+    | FUNC_AT '(' node ',' floatexpr ')' {
+            $$ = coda_expression_new(expr_at, NULL, $3, $5, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
     | FUNC_WITH '(' INDEX_VAR '=' intexpr ',' floatexpr ')' {
             $$ = coda_expression_new(expr_with, $3, $5, $7, NULL, NULL);
             if ($$ == NULL) YYERROR;
@@ -868,6 +894,10 @@ stringexpr:
         }
     | FUNC_IF '(' boolexpr ',' stringexpr ',' stringexpr ')' {
             $$ = coda_expression_new(expr_if, NULL, $3, $5, $7, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_AT '(' node ',' stringexpr ')' {
+            $$ = coda_expression_new(expr_at, NULL, $3, $5, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
     | FUNC_WITH '(' INDEX_VAR '=' intexpr ',' stringexpr ')' {

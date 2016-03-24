@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -25,8 +25,7 @@
 
 void coda_sp3_done(void);
 
-int coda_sp3_open(const char *filename, int64_t file_size, const coda_product_definition *definition,
-                  coda_product **product);
+int coda_sp3_reopen(coda_product **product);
 int coda_sp3_close(coda_product *product);
 int coda_sp3_cursor_set_product(coda_cursor *cursor, coda_product *product);
 

@@ -131,6 +131,10 @@ public class codac implements codacConstants {
     return codacJNI.expression_is_constant(SWIGTYPE_p_coda_expression_struct.getCPtr(expr));
   }
 
+  public static int expression_is_equal(SWIGTYPE_p_coda_expression_struct expr1, SWIGTYPE_p_coda_expression_struct expr2) {
+    return codacJNI.expression_is_equal(SWIGTYPE_p_coda_expression_struct.getCPtr(expr1), SWIGTYPE_p_coda_expression_struct.getCPtr(expr2));
+  }
+
   public static int cursor_read_double(SWIGTYPE_p_coda_cursor_struct cursor, double[] dst) throws nl.stcorp.coda.CodaException {
     return codacJNI.cursor_read_double(SWIGTYPE_p_coda_cursor_struct.getCPtr(cursor), dst);
   }

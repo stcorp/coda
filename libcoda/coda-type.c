@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -585,10 +585,6 @@ static void text_delete(coda_type_text *type)
     {
         free(type->fixed_value);
     }
-    if (type->mappings != NULL)
-    {
-        mappings_delete(type->mappings);
-    }
     free(type);
 }
 
@@ -861,23 +857,6 @@ int coda_type_set_bit_size(coda_type *type, int64_t bit_size)
             }
             break;
         case coda_special_class:
-            {
-                coda_type_special *special_type = (coda_type_special *)type;
-
-                if (special_type->base_type->type_class == coda_text_class &&
-                    ((coda_type_text *)special_type->base_type)->mappings != NULL)
-                {
-                    if (mapping_type_set_bit_size(special_type->base_type,
-                                                  ((coda_type_text *)special_type->base_type)->mappings, bit_size) != 0)
-                    {
-                        return -1;
-                    }
-                    /* update bit_size */
-                    type->bit_size = special_type->base_type->bit_size;
-                    return 0;
-                }
-            }
-            break;
         case coda_record_class:
         case coda_array_class:
         case coda_text_class:
@@ -1963,7 +1942,6 @@ coda_type_text *coda_type_text_new(coda_format format)
     type->attributes = NULL;
     type->fixed_value = NULL;
     type->special_text_type = ascii_text_default;
-    type->mappings = NULL;
 
     return type;
 }
@@ -2027,8 +2005,7 @@ int coda_type_text_validate(const coda_type_text *type)
     }
     if (type->format == coda_format_ascii || type->format == coda_format_binary)
     {
-        if (type->size_expr == NULL && type->bit_size < 0 &&
-            (type->mappings == NULL || type->mappings->default_bit_size < 0))
+        if (type->size_expr == NULL && type->bit_size < 0)
         {
             coda_set_error(CODA_ERROR_DATA_DEFINITION, "missing bit size or bit size expression for text type");
             return -1;
@@ -2503,12 +2480,14 @@ int coda_type_time_add_ascii_float_mapping(coda_type_special *type, coda_ascii_f
         /* wrap existing value_expr in if-construct: if(str(.,<length>)=="<str>",<value>,<value_expr>) */
         node_expr = coda_expression_new(expr_goto_here, NULL, NULL, NULL, NULL, NULL);
         cond_expr = coda_expression_new(expr_string, NULL, node_expr, value_expr, NULL, NULL);
-        value_expr = coda_expression_new(expr_constant_string, mapping->str, NULL, NULL, NULL, NULL);
+        value_expr = coda_expression_new(expr_constant_string, strdup(mapping->str), NULL, NULL, NULL, NULL);
     }
     cond_expr = coda_expression_new(expr_equal, NULL, cond_expr, value_expr, NULL, NULL);
     coda_strfl(mapping->value, strexpr);
     value_expr = coda_expression_new(expr_constant_float, strdup(strexpr), NULL, NULL, NULL, NULL);
     type->value_expr = coda_expression_new(expr_if, NULL, cond_expr, value_expr, type->value_expr, NULL);
+
+    coda_ascii_float_mapping_delete(mapping);
 
     return 0;
 }

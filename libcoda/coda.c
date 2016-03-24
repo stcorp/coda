@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -110,8 +110,7 @@ LIBCODA_API int coda_set_option_bypass_special_types(int enable)
 {
     if (enable != 0 && enable != 1)
     {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "enable argument (%d) is not valid (%s:%u)", enable, __FILE__,
-                       __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "enable argument (%d) is not valid", enable);
         return -1;
     }
 
@@ -151,8 +150,7 @@ LIBCODA_API int coda_set_option_perform_boundary_checks(int enable)
 {
     if (enable != 0 && enable != 1)
     {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "enable argument (%d) is not valid (%s:%u)", enable, __FILE__,
-                       __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "enable argument (%d) is not valid", enable);
         return -1;
     }
 
@@ -192,8 +190,7 @@ LIBCODA_API int coda_set_option_perform_conversions(int enable)
 {
     if (!(enable == 0 || enable == 1))
     {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "enable argument (%d) is not valid (%s:%u)", enable, __FILE__,
-                       __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "enable argument (%d) is not valid", enable);
         return -1;
     }
 
@@ -245,8 +242,7 @@ LIBCODA_API int coda_set_option_use_fast_size_expressions(int enable)
 {
     if (!(enable == 0 || enable == 1))
     {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "enable argument (%d) is not valid (%s:%u)", enable, __FILE__,
-                       __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "enable argument (%d) is not valid", enable);
         return -1;
     }
 
@@ -302,8 +298,7 @@ LIBCODA_API int coda_set_option_use_mmap(int enable)
 {
     if (!(enable == 0 || enable == 1))
     {
-        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "enable argument (%d) is not valid (%s:%u)", enable, __FILE__,
-                       __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "enable argument (%d) is not valid", enable);
         return -1;
     }
 

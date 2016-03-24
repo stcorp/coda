@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -18,7 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "coda-ascbin-internal.h"
+#include "coda-ascbin.h"
 #include "coda-definition.h"
 
 #include <assert.h>
@@ -115,7 +115,6 @@ static int get_relative_field_bit_offset_by_index(const coda_cursor *cursor, lon
             if (coda_expression_eval_bool(record->field[i]->available_expr, cursor, &available) != 0)
             {
                 coda_add_error_message(" for available expression");
-                coda_cursor_add_to_error_message(cursor);
                 return -1;
             }
         }
@@ -239,8 +238,8 @@ int coda_ascbin_cursor_goto_record_field_by_index(coda_cursor *cursor, long inde
 
     if (index < 0 || index >= record->num_fields)
     {
-        coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
-                       record->num_fields, __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld)", index,
+                       record->num_fields);
         return -1;
     }
 
@@ -304,8 +303,8 @@ int coda_ascbin_cursor_goto_next_record_field(coda_cursor *cursor)
     index = cursor->stack[cursor->n - 1].index + 1;
     if (index < 0 || index >= record->num_fields)
     {
-        coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
-                       record->num_fields, __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld)", index,
+                       record->num_fields);
         return -1;
     }
 
@@ -397,9 +396,8 @@ int coda_ascbin_cursor_goto_array_element(coda_cursor *cursor, int num_subs, con
     /* check the number of dimensions */
     if (num_subs != array->num_dims)
     {
-        coda_set_error(CODA_ERROR_ARRAY_NUM_DIMS_MISMATCH,
-                       "number of dimensions argument (%d) does not match rank of array (%d) (%s:%u)",
-                       num_subs, array->num_dims, __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_ARRAY_NUM_DIMS_MISMATCH, "number of dimensions argument (%d) does not match rank of "
+                       " array (%d)", num_subs, array->num_dims);
         return -1;
     }
 
@@ -428,8 +426,8 @@ int coda_ascbin_cursor_goto_array_element(coda_cursor *cursor, int num_subs, con
 
         if (subs[i] < 0 || subs[i] >= dim)
         {
-            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array index (%ld) exceeds array range [0:%ld) (%s:%u)",
-                           subs[i], dim, __FILE__, __LINE__);
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array index (%ld) exceeds array range [0:%ld)", subs[i],
+                           dim);
             return -1;
         }
         if (i > 0)
@@ -487,8 +485,8 @@ int coda_ascbin_cursor_goto_array_element_by_index(coda_cursor *cursor, long ind
         }
         if (index < 0 || index >= num_elements)
         {
-            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array index (%ld) exceeds array range [0:%ld) (%s:%u)",
-                           index, num_elements, __FILE__, __LINE__);
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array index (%ld) exceeds array range [0:%ld)", index,
+                           num_elements);
             return -1;
         }
     }
@@ -546,8 +544,8 @@ int coda_ascbin_cursor_goto_next_array_element(coda_cursor *cursor)
 
         if (index < 0 || index >= num_elements)
         {
-            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array index (%ld) exceeds array range [0:%ld) (%s:%u)",
-                           index, num_elements, __FILE__, __LINE__);
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array index (%ld) exceeds array range [0:%ld)", index,
+                           num_elements);
             return -1;
         }
     }
@@ -806,8 +804,9 @@ int coda_ascbin_cursor_get_num_elements(const coda_cursor *cursor, long *num_ele
                                 char s[21];
 
                                 coda_str64(var_dim, s);
-                                coda_set_error(CODA_ERROR_PRODUCT, "product error detected in %s (invalid array size - "
-                                               "calculated array size = %s)", cursor->product->filename, s);
+                                coda_set_error(CODA_ERROR_PRODUCT, "product error detected (invalid array size - "
+                                               "calculated array size = %s)", s);
+                                coda_cursor_add_to_error_message(cursor);
                                 return -1;
                             }
                             n *= (long)var_dim;
@@ -835,8 +834,8 @@ int coda_ascbin_cursor_get_record_field_available_status(const coda_cursor *curs
 
     if (index < 0 || index >= record->num_fields)
     {
-        coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
-                       record->num_fields, __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld)", index,
+                       record->num_fields);
         return -1;
     }
 
@@ -898,9 +897,10 @@ int coda_ascbin_cursor_get_available_union_field_index(const coda_cursor *cursor
         coda_str64(index64, s1);
         coda_str64((cursor->stack[cursor->n - 1].bit_offset >> 3), s2);
         coda_set_error(CODA_ERROR_PRODUCT,
-                       "possible product error detected in %s (invalid result (%s) from union field expression - num "
-                       "fields = %ld - byte:bit offset = %s:%d)", cursor->product->filename, s1, record->num_fields,
-                       s2, (int)(cursor->stack[cursor->n - 1].bit_offset & 0x7));
+                       "possible product error detected (invalid result (%s) from union field expression - "
+                       "num fields = %ld - byte:bit offset = %s:%d)", s1, record->num_fields, s2,
+                       (int)(cursor->stack[cursor->n - 1].bit_offset & 0x7));
+        coda_cursor_add_to_error_message(cursor);
         return -1;
     }
     *index = (long)index64;
@@ -931,8 +931,8 @@ int coda_ascbin_cursor_get_array_dim(const coda_cursor *cursor, int *num_dims, l
                 char s[21];
 
                 coda_str64(var_dim, s);
-                coda_set_error(CODA_ERROR_PRODUCT, "product error detected in %s (invalid array size (%s))",
-                               cursor->product->filename, s);
+                coda_set_error(CODA_ERROR_PRODUCT, "product error detected (invalid array size (%s))", s);
+                coda_cursor_add_to_error_message(cursor);
                 return -1;
             }
             dim[i] = (long)var_dim;

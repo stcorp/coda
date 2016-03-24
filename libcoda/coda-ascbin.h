@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -22,9 +22,6 @@
 #define CODA_ASCBIN_H
 
 #include "coda-internal.h"
-
-int coda_ascbin_recognize_file(const char *filename, int64_t size, coda_format *format,
-                               coda_product_definition **definition);
 
 int coda_ascbin_cursor_set_product(coda_cursor *cursor, coda_product *product);
 int coda_ascbin_cursor_goto_record_field_by_index(coda_cursor *cursor, long index);

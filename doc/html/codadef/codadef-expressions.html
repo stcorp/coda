@@ -137,6 +137,10 @@
 
       <p>If the first boolean expression argument evaluates to true the second argument is evaluated and its result returned, otherwise the third argument is evaluated and its result returned.</p>
 
+      <h5>at(node, boolean)</h5>
+
+      <p>Evaluate the boolean expression as provided in the second argument with the current node position moved according to the expression from the first argument. This function is recommended if evaluating the boolean expression requires multiple navigations to the same common node position.</p>
+
       <h5>with(indexvar = integer, boolean)</h5>
 
       <p>Evaluate the boolean expression as provided in the second argument while using the given <code>indexvar</code> (which can be either <code><i>i</i></code>, <code><i>j</i></code>, or <code><i>k</i></code>) as precalculated/cached value. This is useful if e.g. an expression needs to use an integer value from a product several times and you only want to read the value once.</p>
@@ -204,6 +208,22 @@
       <h5>min(integer, integer)</h5>
 
       <p>Returns the minimum of both integers.</p>
+
+      <h5>dim(node, integer)</h5>
+
+      <p>Will return the size of a specific dimension of the array at the given node.</p>
+
+      <p>Example:</p>
+      <div class="fragment"><code><b>numelements</b>(/calibration/value)==<b>dim</b>(/calibration/value, 0) * <b>dim</b>(/calibration/value, 1)</code></div>
+      <p>This comparison should return true if '<code>/calibration/value</code>' is a two dimensional array.</p>
+
+      <p>Note that the only CODA expression functions that deal with unflattened array dimensions are '<code>dim</code>' and '<code>num_dims</code>', all other operations treat arrays as flat arrays.</p>
+
+      <h5>numdims(node)</h5>
+
+      <p>Will return the number of dimensions of the array at the given node.</p>
+
+      <p>Note that the only CODA expression functions that deal with unflattened array dimensions are '<code>dim</code>' and '<code>num_dims</code>', all other operations treat arrays as flat arrays.</p>
 
       <h5>numelements(node)</h5>
 
@@ -302,6 +322,10 @@
       <p>You should provide an explicit termination condition if you want the function to return -1 if no elements were found matching the boolean expression of the second argument.</p>
       
       <p>The function will, for each array element, always first evaluate the termination condition. Only if that evaluates to false will the boolean expression of the second argument be evaluated (otherwise the function will return -1).</p>
+
+      <h5>at(node, integer)</h5>
+
+      <p>Evaluate the integer expression as provided in the second argument with the current node position moved according to the expression from the first argument. This function is recommended if evaluating the integer expression requires multiple navigations to the same common node position.</p>
 
       <h5>with(indexvar = integer, integer)</h5>
 
@@ -407,6 +431,10 @@ inf
       <h5>if(boolean, float, float)</h5>
 
       <p>If the boolean expression evaluates to true the second argument is evaluated and its result returned, otherwise the third argument is evaluated and its result returned.</p>
+
+      <h5>at(node, float)</h5>
+
+      <p>Evaluate the float expression as provided in the second argument with the current node position moved according to the expression from the first argument. This function is recommended if evaluating the float expression requires multiple navigations to the same common node position.</p>
 
       <h5>with(indexvar = integer, float)</h5>
 
@@ -565,6 +593,15 @@ inf
       <h5>if(boolean, string, string)</h5>
 
       <p>If the boolean expression evaluates to true the second argument is evaluated and its result returned, otherwise the third argument is evaluated and its result returned.</p>
+
+      <h5>at(node, string)</h5>
+
+      <p>Evaluate the string expression as provided in the second argument with the current node position moved according to the expression from the first argument. This function is recommended if evaluating the string expression requires multiple navigations to the same common node position.</p>
+
+      <p>Example:</p>
+      <div class="fragment"><code><b>at</b>(/some/data, <b>with</b>(<i>k</i> = <b>length</b>(.), <b>substr</b>(<i>k</i> / 2, <i>k</i> - (<i>k</i> / 2), <b>str</b>(.))))</code></div>
+
+      <p>This will be faster than using '<code><b>with</b>(<i>k</i> = <b>length</b>(/some/data), <b>substr</b>(<i>k</i> / 2, <i>k</i> - (<i>k</i> / 2), <b>str</b>(/some/data)))</code>'.</p>
 
       <h5>with(indexvar = integer, string)</h5>
 
@@ -726,6 +763,8 @@ intexpr =
 	'abs', '(', intexpr, ')' |
 	'max', '(', intexpr, ',', intexpr, ')' |
 	'min', '(', intexpr, ',', intexpr, ')' |
+	'dim', '(', node, ',', intexpr ')' |
+	'numdims', '(', node, ')' |
 	'numelements', '(', node, ')' |
 	'count', '(' node, ',', boolexpr, ')' |
 	'add', '(' node, ',', intexpr, ')' |
@@ -742,6 +781,7 @@ intexpr =
 	'if', '(', boolexpr, ',', intexpr, ',' intexpr, ')' |
 	'unboundindex', '(', node, ',', boolexpr, ')' |
 	'unboundindex', '(', node, ',', boolexpr, ',', boolexpr, ')' |
+	'at', '(', node, ',', intexpr, ')' |
 	'with', '(', indexvar, '=', intexpr, ',', intexpr, ')' ;
 
 floatexpr = 
@@ -845,7 +885,7 @@ node =
 
       <div class="footer">
         <hr />
-        <p>Copyright &copy; 2007-2015 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
+        <p>Copyright &copy; 2007-2016 <b>s<span class="soft-red">[</span>&amp;<span class="soft-red">]</span>t</b>, The Netherlands.</p>
       </div>
 
     </div>

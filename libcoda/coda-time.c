@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -97,7 +97,7 @@
  * in the longitude of the observing stations caused by the polar motion. 
  * - GPS: GPS Time
  * GPS Time is an atomic clock time similar to but not the same as UTC time. It is synchronised to UTC but the main
- * difference relies in the fact that GPS time does not introduce any leap second. Thus, the introduc tion of UTC leap
+ * difference relies in the fact that GPS time does not introduce any leap second. Thus, the introduction of UTC leap
  * second causes the GPS time and UTC time to differ by a known integer number of cumulative leap seconds; i.e. the
  * leap seconds that have been accumulated since GPS epoch in midnight January 5, 1980. 
  * d GPS = TAI - GPS is the increment to be applied to GPS to give TAI, being a constant value of 19 seconds.
@@ -169,7 +169,7 @@ int coda_month_to_integer(const char month[3])
         return 12;
     }
 
-    coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid month argument (%s) (%s:%u)", month_str, __FILE__, __LINE__);
+    coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "invalid month argument (%s)", month_str);
     return -1;
 }
 
@@ -236,8 +236,7 @@ static int dmy_to_mjd2000_julian(int D, int M, int Y, int *jd)
     /* check input */
     if (Y == 0 || M < 1 || M > 12 || D < 1 || D > tabel[M] - tabel[M - 1] + ((M == 2) && (y(Y) % 4 == 0)))
     {
-        coda_set_error(CODA_ERROR_INVALID_DATETIME, "invalid date/time argument (%02d-%02d-%04d) (%s:%u)", D, M, Y,
-                       __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_DATETIME, "invalid date/time argument (%02d-%02d-%04d)", D, M, Y);
         return -1;
     }
 
@@ -269,8 +268,7 @@ static int dmy_to_mjd2000_gregorian(int D, int M, int Y, int *gd)
     if (Y == 0 || M < 1 || M > 12 || D < 1 ||
         D > tabel[M] - tabel[M - 1] + ((M == 2) && ((y(Y) % 4 == 0) ^ (y(Y) % 100 == 0) ^ (y(Y) % 400 == 0))))
     {
-        coda_set_error(CODA_ERROR_INVALID_DATETIME, "invalid date/time argument (%02d-%02d-%04d) (%s:%u)", D, M, Y,
-                       __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_DATETIME, "invalid date/time argument (%02d-%02d-%04d)", D, M, Y);
         return -1;
     }
 
@@ -331,8 +329,7 @@ static int dmy_to_mjd2000(int D, int M, int Y, int *mjd2000)
 
         if (the_date - 150934 <= transition - 2451545)
         {
-            coda_set_error(CODA_ERROR_INVALID_DATETIME, "invalid date/time argument (%02d-%02d-%04d) (%s:%u)", D, M, Y,
-                           __FILE__, __LINE__);
+            coda_set_error(CODA_ERROR_INVALID_DATETIME, "invalid date/time argument (%02d-%02d-%04d)", D, M, Y);
             return -1;
         }
 
@@ -522,8 +519,8 @@ static int hms_to_daytime(const long hour, const long minute, const long second,
 {
     if (hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 60 || musec < 0 || musec > 999999)
     {
-        coda_set_error(CODA_ERROR_INVALID_DATETIME, "invalid date/time argument (%02ld:%02ld:%02ld.%06ld) (%s:%u)",
-                       hour, minute, second, musec, __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_DATETIME, "invalid date/time argument (%02ld:%02ld:%02ld.%06ld)", hour,
+                       minute, second, musec);
         return -1;
     }
 
@@ -545,8 +542,7 @@ int coda_dayofyear_to_month_day(int year, int day_of_year, int *month, int *day_
     /* check day of year value */
     if (day_of_year < 0 || day_of_year > 366)
     {
-        coda_set_error(CODA_ERROR_INVALID_DATETIME, "invalid day of year argument (%03d) (%s:%u)", day_of_year,
-                       __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_DATETIME, "invalid day of year argument (%03d)", day_of_year);
         return -1;
     }
 
@@ -574,8 +570,7 @@ static int seconds_to_hms(int dayseconds, int *hour, int *minute, int *second)
 
     if (s < 0 || s > 86399)
     {
-        coda_set_error(CODA_ERROR_INVALID_DATETIME, "dayseconds argument (%d) is not in the range [0,86400) (%s:%u)",
-                       s, __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_DATETIME, "dayseconds argument (%d) is not in the range [0,86400)", s);
         return -1;
     }
 
@@ -783,12 +778,12 @@ LIBCODA_API int coda_time_double_to_parts(double datetime, int *year, int *month
 
     if (coda_isNaN(datetime))
     {
-        coda_set_error(CODA_ERROR_INVALID_DATETIME, "datetime argument is NaN (%s:%u)", __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_DATETIME, "datetime argument is NaN");
         return -1;
     }
     if (coda_isInf(datetime))
     {
-        coda_set_error(CODA_ERROR_INVALID_DATETIME, "datetime argument is Infinite (%s:%u)", __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_DATETIME, "datetime argument is Infinite");
         return -1;
     }
 
@@ -870,12 +865,12 @@ LIBCODA_API int coda_time_double_to_parts_utc(double datetime, int *year, int *m
 
     if (coda_isNaN(datetime))
     {
-        coda_set_error(CODA_ERROR_INVALID_DATETIME, "datetime argument is NaN (%s:%u)", __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_DATETIME, "datetime argument is NaN");
         return -1;
     }
     if (coda_isInf(datetime))
     {
-        coda_set_error(CODA_ERROR_INVALID_DATETIME, "datetime argument is Infinite (%s:%u)", __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_DATETIME, "datetime argument is Infinite");
         return -1;
     }
 

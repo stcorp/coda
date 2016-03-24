@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2007-2015 S[&]T, The Netherlands.
+// Copyright (C) 2007-2016 S[&]T, The Netherlands.
 //
 // This file is part of CODA.
 //
@@ -182,6 +182,7 @@
 %rename(expression_delete) coda_expression_delete;
 %rename(expression_get_type) coda_expression_get_type;
 %rename(expression_is_constant) coda_expression_is_constant;
+%rename(expression_is_equal) coda_expression_is_equal;
 
 %rename(expression_eval_bool) coda_expression_eval_bool;
 %rename(expression_eval_integer) coda_expression_eval_integer;

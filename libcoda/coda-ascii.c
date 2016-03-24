@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -34,17 +34,15 @@
 
 #define ASCII_PARSE_BLOCK_SIZE 4096
 
-int coda_ascii_open(const char *filename, int64_t file_size, const coda_product_definition *definition,
-                    coda_product **product)
+int coda_ascii_reopen_with_definition(coda_product **product, const coda_product_definition *definition)
 {
     coda_ascii_product *product_file;
 
-    if (definition == NULL)
-    {
-        coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, NULL);
-        return -1;
-    }
+    assert(definition != NULL);
+    assert((*product)->format == coda_format_binary);
+    assert(definition->format == coda_format_ascii);
 
+    /* copy information of binary raw product to new ascii product */
     product_file = (coda_ascii_product *)malloc(sizeof(coda_ascii_product));
     if (product_file == NULL)
     {
@@ -53,17 +51,27 @@ int coda_ascii_open(const char *filename, int64_t file_size, const coda_product_
         return -1;
     }
     product_file->filename = NULL;
-    product_file->file_size = file_size;
+    product_file->file_size = (*product)->file_size;
     product_file->format = definition->format;
     product_file->root_type = (coda_dynamic_type *)definition->root_type;
     product_file->product_definition = definition;
     product_file->product_variable_size = NULL;
     product_file->product_variable = NULL;
-    product_file->mem_size = 0;
-    product_file->mem_ptr = NULL;
+    product_file->mem_size = (*product)->mem_size;
+    (*product)->mem_size = 0;
+    product_file->mem_ptr = (*(coda_bin_product **)product)->mem_ptr;
+    (*product)->mem_ptr = NULL;
 
-    product_file->use_mmap = 0;
-    product_file->fd = -1;
+    product_file->use_mmap = (*(coda_bin_product **)product)->use_mmap;
+    product_file->fd = (*(coda_bin_product **)product)->fd;
+    (*(coda_bin_product **)product)->fd = -1;
+
+#ifdef WIN32
+    product_file->file = (*(coda_bin_product **)product)->file;
+    (*(coda_bin_product **)product)->file = INVALID_HANDLE_VALUE;
+    product_file->file_mapping = (*(coda_bin_product **)product)->file_mapping;
+    (*(coda_bin_product **)product)->file_mapping = INVALID_HANDLE_VALUE;
+#endif
 
     product_file->end_of_line = eol_unknown;
     product_file->num_asciilines = -1;
@@ -71,21 +79,15 @@ int coda_ascii_open(const char *filename, int64_t file_size, const coda_product_
     product_file->lastline_ending = eol_unknown;
     product_file->asciilines = NULL;
 
-    product_file->filename = strdup(filename);
+    product_file->filename = strdup((*product)->filename);
     if (product_file->filename == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate filename string) (%s:%u)",
                        __FILE__, __LINE__);
-        coda_ascii_close((coda_product *)product_file);
         return -1;
     }
 
-    if (coda_bin_product_open((coda_bin_product *)product_file) != 0)
-    {
-        coda_ascii_close((coda_product *)product_file);
-        return -1;
-    }
-
+    coda_close(*product);
     *product = (coda_product *)product_file;
 
     return 0;
@@ -150,9 +152,8 @@ static int verify_eol_type(coda_ascii_product *product_file, eol_type end_of_lin
     if (product_file->end_of_line != end_of_line)
     {
         coda_set_error(CODA_ERROR_PRODUCT,
-                       "product error detected in %s (inconsistent end-of-line sequence - got %s but expected %s)",
-                       product_file->filename, eol_type_to_string(end_of_line),
-                       eol_type_to_string(product_file->end_of_line));
+                       "product error detected (inconsistent end-of-line sequence - got %s but expected %s)",
+                       eol_type_to_string(end_of_line), eol_type_to_string(product_file->end_of_line));
         return -1;
     }
 
@@ -175,8 +176,7 @@ int coda_ascii_init_asciilines(coda_product *product)
     {
         if (lseek(product_file->fd, 0, SEEK_SET) < 0)
         {
-            coda_set_error(CODA_ERROR_FILE_READ, "could not move to start of file %s (%s)", product_file->filename,
-                           strerror(errno));
+            coda_set_error(CODA_ERROR_FILE_READ, "could not move to start of file (%s)", strerror(errno));
             return -1;
         }
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -177,7 +177,6 @@ typedef struct coda_type_text_struct
 
     char *fixed_value;
     coda_ascii_special_text_type special_text_type;
-    coda_ascii_mappings *mappings;
 } coda_type_text;
 
 typedef struct coda_type_raw_struct

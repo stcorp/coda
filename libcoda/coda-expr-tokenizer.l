@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -85,6 +85,7 @@ INDEX        "i"|"j"|"k"
 "abs"                   return FUNC_ABS;
 "add"                   return FUNC_ADD;
 "all"                   return FUNC_ALL;
+"at"                    return FUNC_AT;
 "bitoffset"             return FUNC_BITOFFSET;
 "bitsize"               return FUNC_BITSIZE;
 "bool"                  return FUNC_BOOL;
@@ -93,6 +94,7 @@ INDEX        "i"|"j"|"k"
 "bytesize"              return FUNC_BYTESIZE;
 "ceil"                  return FUNC_CEIL;
 "count"                 return FUNC_COUNT;
+"dim"                   return FUNC_DIM;
 "exists"                return FUNC_EXISTS;
 "filename"              return FUNC_FILENAME;
 "filesize"              return FUNC_FILESIZE;
@@ -108,6 +110,7 @@ INDEX        "i"|"j"|"k"
 "ismininf"              return FUNC_ISMININF;
 "length"                return FUNC_LENGTH;
 "ltrim"                 return FUNC_LTRIM;
+"numdims"               return FUNC_NUMDIMS;
 "numelements"           return FUNC_NUMELEMENTS;
 "max"                   return FUNC_MAX;
 "min"                   return FUNC_MIN;

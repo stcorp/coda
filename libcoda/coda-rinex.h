@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -26,8 +26,7 @@
 int coda_rinex_init(void);
 void coda_rinex_done(void);
 
-int coda_rinex_open(const char *filename, int64_t file_size, const coda_product_definition *definition,
-                    coda_product **product);
+int coda_rinex_reopen(coda_product **product);
 int coda_rinex_close(coda_product *product);
 int coda_rinex_cursor_set_product(coda_cursor *cursor, coda_product *product);
 

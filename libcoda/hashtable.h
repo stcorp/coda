@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -21,12 +21,10 @@
 #ifndef HASHTABLE_H
 #define HASHTABLE_H
 
-/* *INDENT-OFF* */
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-/* *INDENT-ON* */
 
 /* This hashtable is a special hash table in which 'name' is the key and 'index' is the value.
  * The index is the 0-based index that represents the order in which the names were added to the hash table.
@@ -35,6 +33,13 @@ extern "C"
  * Mind that the hashtable does not create a copy of the 'name' string, so you should keep a reference of this
  * string active until after you have called delete_hashtable().
  */
+
+#define hashtable_add_name coda_hashtable_add_name
+#define hashtable_delete coda_hashtable_delete
+#define hashtable_get_index_from_name coda_hashtable_get_index_from_name
+#define hashtable_get_index_from_name_n coda_hashtable_get_index_from_name_n
+#define hashtable_insert_name coda_hashtable_insert_name
+#define hashtable_new coda_hashtable_new
 
 typedef struct hashtable_struct hashtable;
 
@@ -45,10 +50,8 @@ long hashtable_get_index_from_name(hashtable *table, const char *name);
 long hashtable_get_index_from_name_n(hashtable *table, const char *name, int name_length);
 void hashtable_delete(hashtable *table);
 
-/* *INDENT-OFF* */
 #ifdef __cplusplus
 }
 #endif
-/* *INDENT-ON* */
 
 #endif

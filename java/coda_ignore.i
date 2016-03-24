@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2007-2015 S[&]T, The Netherlands.
+// Copyright (C) 2007-2016 S[&]T, The Netherlands.
 //
 // This file is part of CODA.
 //
@@ -54,3 +54,6 @@
 %ignore coda_str64;
 %ignore coda_str64u;
 %ignore coda_strfl;
+
+%ignore coda_cursor_print_path;
+%ignore coda_expression_print;

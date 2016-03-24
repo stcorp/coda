@@ -103,7 +103,7 @@ static void generate_escaped_string(const char *str, int length)
 static void print_version()
 {
     printf("codaeval %s\n", libcoda_version);
-    printf("Copyright (C) 2007-2015 S[&]T, The Netherlands\n");
+    printf("Copyright (C) 2007-2016 S[&]T, The Netherlands\n");
     printf("\n");
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -1124,6 +1124,11 @@ int UFNAME(CODA_EXPRESSION_GET_TYPE,coda_expression_get_type)(void *expression, 
 int UFNAME(CODA_EXPRESSION_IS_CONSTANT,coda_expression_is_constant)(void *expression)
 {
     return coda_expression_is_constant(*(coda_expression **)expression);
+}
+
+int UFNAME(CODA_EXPRESSION_IS_EQUAL,coda_expression_is_equal)(void *expr1, void *expr2)
+{
+    return coda_expression_is_equal(*(coda_expression **)expr1, *(coda_expression **)expr2);
 }
 
 int UFNAME(CODA_EXPRESSION_EVAL_BOOL,coda_expression_eval_bool)(void *expression, void *cursor, int *value)

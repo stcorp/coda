@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -27,8 +27,7 @@ long coda_ascii_parse_int64(const char *buffer, long buffer_length, int64_t *dst
 long coda_ascii_parse_uint64(const char *buffer, long buffer_length, uint64_t *dst, int ignore_trailing_bytes);
 long coda_ascii_parse_double(const char *buffer, long buffer_length, double *dst, int ignore_trailing_bytes);
 
-int coda_ascii_open(const char *filename, int64_t file_size, const coda_product_definition *definition,
-                    coda_product **product);
+int coda_ascii_reopen_with_definition(coda_product **product, const coda_product_definition *definition);
 int coda_ascii_close(coda_product *product);
 
 int coda_ascii_cursor_get_string_length(const coda_cursor *cursor, long *length);

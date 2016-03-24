@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -20,6 +20,16 @@
 
 #ifndef ZIPARCHIVE_H
 #define ZIPARCHIVE_H
+
+#define za_open coda_za_open
+#define za_get_filename coda_za_get_filename
+#define za_get_num_entries coda_za_get_num_entries
+#define za_get_entry_by_index coda_za_get_entry_by_index
+#define za_get_entry_by_name coda_za_get_entry_by_name
+#define za_get_entry_size coda_za_get_entry_size
+#define za_get_entry_name coda_za_get_entry_name
+#define za_read_entry coda_za_read_entry
+#define za_close coda_za_close
 
 typedef struct za_entry_struct za_entry;
 typedef struct za_file_struct za_file;

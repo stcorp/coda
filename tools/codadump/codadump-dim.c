@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -672,6 +672,7 @@ static int get_record_field_available_status(int depth, int array_depth, int rec
                             {
                                 handle_coda_error();
                             }
+                            traverse_info.array_info[array_depth + 1].global_index++;
                         }
                     }
                     coda_cursor_goto_parent(&traverse_info.cursor);

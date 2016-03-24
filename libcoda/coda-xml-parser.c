@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -70,27 +70,85 @@ static int convert_to_text(coda_type **definition)
     }
     coda_type_release(*definition);
     *definition = text_definition;
-    text_definition->retain_count++;
 
     return 0;
 }
 
-static coda_mem_record *attribute_record_new(coda_type_record *definition, coda_xml_product *product, const char **attr,
-                                             int update_definition)
+static coda_mem_record *attribute_record_new(coda_type_record *definition, coda_xml_product *product, const char *el,
+                                             const char **attr, int update_definition)
 {
     coda_mem_record *attributes;
+    coda_mem_data *attribute;
+    int update_mem_record = update_definition;
     int attribute_index;
     int i;
 
     assert(definition != NULL);
     attributes = coda_mem_record_new(definition, NULL);
 
+    if (el != coda_element_name_from_xml_name(el))
+    {
+        /* store the namespace part of the full xml name as an 'xmlns' attribute */
+        attribute_index = hashtable_get_index_from_name(definition->real_name_hash_data, "xmlns");
+        if (update_definition)
+        {
+            if (attribute_index < 0)
+            {
+                coda_type_text *attribute_definition;
+
+                attribute_definition = coda_type_text_new(coda_format_xml);
+                if (attribute_definition == NULL)
+                {
+                    coda_dynamic_type_delete((coda_dynamic_type *)attributes);
+                    return NULL;
+                }
+                attribute = coda_mem_data_new((coda_type *)attribute_definition, NULL, (coda_product *)product,
+                                              (long)(coda_element_name_from_xml_name(el) - el - 1),
+                                              (const uint8_t *)el);
+                coda_type_release((coda_type *)attribute_definition);
+            }
+            else
+            {
+                assert(attributes->field_type[attribute_index] == NULL);
+                attribute = coda_mem_data_new(definition->field[attribute_index]->type, NULL, (coda_product *)product,
+                                              (long)(coda_element_name_from_xml_name(el) - el - 1),
+                                              (const uint8_t *)el);
+                update_mem_record = 0;
+            }
+            if (attribute == NULL)
+            {
+                coda_dynamic_type_delete((coda_dynamic_type *)attributes);
+                return NULL;
+            }
+            if (coda_mem_record_add_field(attributes, "xmlns", (coda_dynamic_type *)attribute, update_mem_record) != 0)
+            {
+                coda_dynamic_type_delete((coda_dynamic_type *)attribute);
+                coda_dynamic_type_delete((coda_dynamic_type *)attributes);
+                return NULL;
+            }
+        }
+        else if (attribute_index >= 0)
+        {
+            attribute = coda_mem_data_new(definition->field[attribute_index]->type, NULL, (coda_product *)product,
+                                          (long)(coda_element_name_from_xml_name(el) - el - 1), (const uint8_t *)el);
+            if (attribute == NULL)
+            {
+                coda_dynamic_type_delete((coda_dynamic_type *)attributes);
+                return NULL;
+            }
+            if (coda_mem_record_add_field(attributes, "xmlns", (coda_dynamic_type *)attribute, update_mem_record) != 0)
+            {
+                coda_dynamic_type_delete((coda_dynamic_type *)attribute);
+                coda_dynamic_type_delete((coda_dynamic_type *)attributes);
+                return NULL;
+            }
+        }
+    }
+
     /* add attributes to attribute list */
     for (i = 0; attr[2 * i] != NULL; i++)
     {
-        coda_mem_data *attribute;
-        int update_mem_record = update_definition;
-
+        update_mem_record = update_definition;
         attribute_index = hashtable_get_index_from_name(definition->real_name_hash_data, attr[2 * i]);
         if (update_definition)
         {
@@ -418,7 +476,7 @@ static void XMLCALL start_element_handler(void *data, const char *el, const char
     if (definition->attributes == NULL)
     {
         info->attributes = NULL;
-        if (attr[0] != NULL)
+        if (attr[0] != NULL || el != coda_element_name_from_xml_name(el))
         {
             if (info->update_definition)
             {
@@ -429,7 +487,7 @@ static void XMLCALL start_element_handler(void *data, const char *el, const char
                     return;
                 }
                 info->attributes = (coda_dynamic_type *)attribute_record_new(definition->attributes, info->product,
-                                                                             attr, info->update_definition);
+                                                                             el, attr, info->update_definition);
                 if (info->attributes == NULL)
                 {
                     abort_parser(info);
@@ -438,15 +496,19 @@ static void XMLCALL start_element_handler(void *data, const char *el, const char
             }
             else
             {
-                coda_set_error(CODA_ERROR_PRODUCT, "xml attribute '%s' is not allowed", attr[0]);
-                abort_parser(info);
-                return;
+                /* we don't raise an error if the attribute definition does not contain an 'xmlns' entry */
+                if (el == coda_element_name_from_xml_name(el))
+                {
+                    coda_set_error(CODA_ERROR_PRODUCT, "xml attribute '%s' is not allowed", attr[0]);
+                    abort_parser(info);
+                    return;
+                }
             }
         }
     }
     else
     {
-        info->attributes = (coda_dynamic_type *)attribute_record_new(definition->attributes, info->product, attr,
+        info->attributes = (coda_dynamic_type *)attribute_record_new(definition->attributes, info->product, el, attr,
                                                                      info->update_definition);
         if (info->attributes == NULL)
         {
@@ -671,7 +733,7 @@ int coda_xml_parse(coda_xml_product *product)
         return -1;
     }
     info.product = product;
-    info.update_definition = (product->product_definition == NULL);
+    info.update_definition = (product->product_definition == NULL || product->product_definition->root_type == NULL);
     /* the root of the product is always a record, which will contain the top-level xml element as a field */
     if (info.update_definition)
     {
@@ -708,7 +770,7 @@ int coda_xml_parse(coda_xml_product *product)
     XML_SetNotStandaloneHandler(info.parser, not_standalone_handler);
 
     /* we also need to parse in blocks for mmap-ed files since the file size may exceed MAX_INT */
-    num_blocks = (product->raw_product->file_size / BUFFSIZE);
+    num_blocks = (long)(product->raw_product->file_size / BUFFSIZE);
     if (product->raw_product->file_size > num_blocks * BUFFSIZE)
     {
         num_blocks++;
@@ -736,8 +798,7 @@ int coda_xml_parse(coda_xml_product *product)
             length = read(((coda_bin_product *)product->raw_product)->fd, buff, BUFFSIZE);
             if (length < 0)
             {
-                coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", product->filename,
-                               strerror(errno));
+                coda_set_error(CODA_ERROR_FILE_READ, "could not read from file (%s)", strerror(errno));
                 parser_info_cleanup(&info);
                 return -1;
             }
@@ -777,307 +838,6 @@ int coda_xml_parse(coda_xml_product *product)
     info.depth = 0;
 
     parser_info_cleanup(&info);
-
-    return 0;
-}
-
-
-struct detection_parser_info_struct
-{
-    XML_Parser parser;
-    int abort_parser;
-    const char *filename;
-    int is_root_element;        /* do we have the xml root element? */
-    int unparsed_depth; /* keep track of how deep we are in the XML hierarchy after leaving the detection tree */
-    char *matchvalue;
-    coda_xml_detection_node *detection_tree;
-    coda_product_definition *product_definition;
-};
-typedef struct detection_parser_info_struct detection_parser_info;
-
-static void abort_detection_parser(detection_parser_info *info, int code)
-{
-    XML_StopParser(info->parser, 0);
-    /* we use code=1 for abnormal termination and code=2 for normal termination (i.e. further parsing is not needed) */
-    info->abort_parser = code;
-}
-
-static int detection_match_rule(detection_parser_info *info, coda_detection_rule *detection_rule)
-{
-    int i;
-
-    /* detection rules for i>0 are based on filenames */
-    for (i = 1; i < detection_rule->num_entries; i++)
-    {
-        coda_detection_rule_entry *entry = detection_rule->entry[i];
-
-        /* match value on filename */
-        if (entry->offset + entry->value_length > (int64_t)strlen(info->filename))
-        {
-            /* filename is not long enough for a match */
-            return 0;
-        }
-        if (memcmp(&info->filename[entry->offset], entry->value, entry->value_length) != 0)
-        {
-            /* no match */
-            return 0;
-        }
-    }
-    return 1;
-}
-
-static void XMLCALL detection_character_data_handler(void *data, const char *s, int len)
-{
-    detection_parser_info *info;
-
-    info = (detection_parser_info *)data;
-    if (info->unparsed_depth == 0)
-    {
-        if (info->matchvalue == NULL)
-        {
-            info->matchvalue = malloc(len + 1);
-            if (info->matchvalue == NULL)
-            {
-                coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                               (long)len + 1, __FILE__, __LINE__);
-                abort_detection_parser(info, 1);
-                return;
-            }
-            memcpy(info->matchvalue, s, len);
-            info->matchvalue[len] = '\0';
-        }
-        else
-        {
-            char *matchvalue;
-            long current_length = strlen(info->matchvalue);
-
-            matchvalue = realloc(info->matchvalue, current_length + len + 1);
-            if (matchvalue == NULL)
-            {
-                coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                               current_length + len + 1, __FILE__, __LINE__);
-                abort_detection_parser(info, 1);
-                return;
-            }
-            memcpy(&matchvalue[current_length], s, len);
-            matchvalue[current_length + len] = '\0';
-            info->matchvalue = matchvalue;
-        }
-    }
-}
-
-static void XMLCALL detection_start_element_handler(void *data, const char *el, const char **attr)
-{
-    detection_parser_info *info;
-
-    (void)attr;
-
-    info = (detection_parser_info *)data;
-    if (info->unparsed_depth == 0)
-    {
-        coda_xml_detection_node *subnode;
-
-        subnode = coda_xml_detection_node_get_subnode(info->detection_tree, el);
-        if (subnode != NULL)
-        {
-            int i;
-
-            /* go one step deeper into the expression node tree */
-            info->detection_tree = subnode;
-            info->is_root_element = 0;
-
-            if (info->detection_tree->num_attribute_subnodes > 0 && attr[0] != NULL)
-            {
-                for (i = 0; attr[2 * i] != NULL; i++)
-                {
-                    subnode = coda_xml_detection_node_get_attribute_subnode(info->detection_tree, attr[2 * i]);
-                    if (subnode != NULL)
-                    {
-                        int j;
-
-                        /* check if a product type matches */
-                        for (j = 0; j < subnode->num_detection_rules; j++)
-                        {
-                            if ((subnode->detection_rule[j]->entry[0]->value == NULL ||
-                                 strcmp(subnode->detection_rule[j]->entry[0]->value, attr[2 * i + 1]) == 0) &&
-                                detection_match_rule(info, subnode->detection_rule[j]))
-                            {
-                                /* product type found */
-                                info->product_definition = subnode->detection_rule[j]->product_definition;
-                                abort_detection_parser(info, 1);
-                                return;
-                            }
-                        }
-                    }
-                }
-            }
-
-            /* reset matchvalue */
-            if (info->matchvalue != NULL)
-            {
-                free(info->matchvalue);
-                info->matchvalue = NULL;
-            }
-        }
-        else if (info->is_root_element)
-        {
-            /* if we can't find a match for the root element we can skip further parsing */
-            abort_detection_parser(info, 2);
-            return;
-        }
-        else
-        {
-            info->unparsed_depth = 1;
-        }
-    }
-    else
-    {
-        info->unparsed_depth++;
-    }
-}
-
-static void XMLCALL detection_end_element_handler(void *data, const char *el)
-{
-    detection_parser_info *info;
-
-    (void)el;
-
-    info = (detection_parser_info *)data;
-
-    if (info->abort_parser)
-    {
-        return;
-    }
-
-    if (info->unparsed_depth == 0)
-    {
-        int i;
-
-        /* check if a product type matches */
-        for (i = 0; i < info->detection_tree->num_detection_rules; i++)
-        {
-            coda_detection_rule *rule = info->detection_tree->detection_rule[i];
-
-            if ((rule->entry[0]->value_length == 0 ||
-                 (info->matchvalue != NULL && strcmp(rule->entry[0]->value, info->matchvalue) == 0)) &&
-                detection_match_rule(info, rule))
-            {
-                /* we have a match -> product type found */
-                info->product_definition = info->detection_tree->detection_rule[i]->product_definition;
-                abort_detection_parser(info, 1);
-                return;
-            }
-        }
-        if (info->matchvalue != NULL)
-        {
-            free(info->matchvalue);
-            info->matchvalue = NULL;
-        }
-        /* go one step back in the expression node tree */
-        info->detection_tree = info->detection_tree->parent;
-    }
-    else
-    {
-        info->unparsed_depth--;
-    }
-}
-
-int coda_xml_parse_for_detection(int fd, const char *filename, coda_product_definition **definition)
-{
-    detection_parser_info info;
-    char buff[BUFFSIZE];
-
-    info.detection_tree = coda_xml_get_detection_tree();
-    if (info.detection_tree == NULL)
-    {
-        return 0;
-    }
-
-    info.parser = XML_ParserCreateNS(NULL, ' ');
-    if (info.parser == NULL)
-    {
-        coda_set_error(CODA_ERROR_XML, "could not create XML parser");
-        return -1;
-    }
-    info.abort_parser = 0;
-    info.is_root_element = 1;   /* first element that gets parsed is the root element */
-    info.unparsed_depth = 0;
-    info.matchvalue = NULL;
-    info.product_definition = NULL;
-
-    info.filename = strrchr(filename, '/');
-    if (info.filename == NULL)
-    {
-        info.filename = strrchr(filename, '\\');
-    }
-    if (info.filename == NULL)
-    {
-        info.filename = filename;
-    }
-    else
-    {
-        info.filename = &info.filename[1];
-    }
-
-    XML_SetUserData(info.parser, &info);
-    XML_SetParamEntityParsing(info.parser, XML_PARAM_ENTITY_PARSING_ALWAYS);
-    XML_SetElementHandler(info.parser, detection_start_element_handler, detection_end_element_handler);
-    XML_SetCharacterDataHandler(info.parser, detection_character_data_handler);
-    XML_SetNotStandaloneHandler(info.parser, not_standalone_handler);
-
-    for (;;)
-    {
-        int length;
-        int result;
-
-        length = read(fd, buff, BUFFSIZE);
-        if (length < 0)
-        {
-            coda_set_error(CODA_ERROR_FILE_READ, "could not read from file %s (%s)", filename, strerror(errno));
-            XML_ParserFree(info.parser);
-            return -1;
-        }
-
-        coda_errno = 0;
-        result = XML_Parse(info.parser, buff, length, (length == 0));
-        if (info.product_definition != NULL || info.abort_parser == 2)
-        {
-            break;
-        }
-        if (result == XML_STATUS_ERROR || coda_errno != 0)
-        {
-            char s[21];
-
-            if (coda_errno == 0)
-            {
-                coda_set_error(CODA_ERROR_XML, "xml parse error: %s", XML_ErrorString(XML_GetErrorCode(info.parser)));
-            }
-            coda_str64(XML_GetCurrentByteIndex(info.parser), s);
-            coda_add_error_message(" (line: %lu, byte offset: %s)", (long)XML_GetCurrentLineNumber(info.parser), s);
-            if (info.matchvalue != NULL)
-            {
-                free(info.matchvalue);
-                info.matchvalue = NULL;
-            }
-            XML_ParserFree(info.parser);
-            return -1;
-        }
-
-        if (length == 0)
-        {
-            /* end of file */
-            break;
-        }
-    }
-
-    if (info.matchvalue != NULL)
-    {
-        free(info.matchvalue);
-        info.matchvalue = NULL;
-    }
-    XML_ParserFree(info.parser);
-
-    *definition = info.product_definition;
 
     return 0;
 }

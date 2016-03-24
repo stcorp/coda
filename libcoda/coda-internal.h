@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -36,6 +36,9 @@
 #define BLOCK_SIZE 16
 
 #define bit_size_to_byte_size(x) (((x) >> 3) + ((((uint8_t)(x)) & 0x7) != 0))
+
+/* Make sure this define is set to the last enum value of coda_format */
+#define CODA_NUM_FORMATS (coda_format_sp3 + 1)
 
 enum coda_endianness_enum
 {
@@ -115,17 +118,20 @@ void coda_dynamic_type_delete(coda_dynamic_type *type);
 LIBCODA_API int coda_type_get_record_field_index_from_name_n(const coda_type *type, const char *name, int name_length,
                                                              long *index);
 
-int coda_cursor_print_path(const coda_cursor *cursor, int (*print) (const char *, ...));
+int coda_cursor_compare(const coda_cursor *cursor1, const coda_cursor *cursor2);
+
+int coda_expression_print_html(const coda_expression *expr, int (*print) (const char *, ...));
+int coda_expression_print_xml(const coda_expression *expr, int (*print) (const char *, ...));
 
 int coda_product_variable_get_size(coda_product *product, const char *name, long *size);
 int coda_product_variable_get_pointer(coda_product *product, const char *name, long i, int64_t **ptr);
 
 int coda_expression_eval_void(const coda_expression *expr, const coda_cursor *cursor);
 
+int coda_format_from_string(const char *str, coda_format *format);
 const char *coda_element_name_from_xml_name(const char *xml_name);
 int coda_is_identifier(const char *name);
 char *coda_identifier_from_name(const char *name, hashtable *hash_data);
-char *coda_short_identifier_from_name(const char *name, hashtable *hash_data, int maxlength);
 
 int coda_dayofyear_to_month_day(int year, int day_of_year, int *month, int *day_of_month);
 int coda_month_to_integer(const char month[3]);

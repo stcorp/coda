@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -2033,8 +2033,7 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
         char file_offset_str[21];
 
         coda_str64(file_offset, file_offset_str);
-        coda_set_error(CODA_ERROR_FILE_READ, "invalid GRIB termination section at byte position %s in file %s",
-                       file_offset_str, product->filename);
+        coda_set_error(CODA_ERROR_FILE_READ, "invalid GRIB termination section at byte position %s", file_offset_str);
         return -1;
     }
     file_offset += 4;
@@ -2790,8 +2789,7 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
     return 0;
 }
 
-int coda_grib_open(const char *filename, int64_t file_size, const coda_product_definition *definition,
-                   coda_product **product)
+int coda_grib_reopen(coda_product **product)
 {
     coda_dynamic_type *type;
     coda_grib_product *product_file;
@@ -2814,19 +2812,20 @@ int coda_grib_open(const char *filename, int64_t file_size, const coda_product_d
         return -1;
     }
     product_file->filename = NULL;
-    product_file->file_size = file_size;
+    product_file->file_size = (*product)->file_size;
     product_file->format = coda_format_grib1;
     product_file->root_type = NULL;
-    product_file->product_definition = definition;
+    product_file->product_definition = NULL;
     product_file->product_variable_size = NULL;
     product_file->product_variable = NULL;
     product_file->mem_size = 0;
     product_file->mem_ptr = NULL;
 
+    product_file->raw_product = *product;
     product_file->grib_version = -1;
     product_file->record_size = 0;
 
-    product_file->filename = strdup(filename);
+    product_file->filename = strdup((*product)->filename);
     if (product_file->filename == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate filename string) (%s:%u)",
@@ -2835,20 +2834,14 @@ int coda_grib_open(const char *filename, int64_t file_size, const coda_product_d
         return -1;
     }
 
-    if (coda_bin_open_raw(filename, file_size, &product_file->raw_product) != 0)
-    {
-        coda_grib_close((coda_product *)product_file);
-        return -1;
-    }
-
     message_number = 0;
-    while (file_offset < file_size - 1)
+    while (file_offset < product_file->file_size - 1)
     {
         coda_mem_record *message;
 
         /* find start of Indicator Section */
         buffer[0] = '\0';
-        while (file_offset < file_size - 1 && buffer[0] != 'G')
+        while (file_offset < product_file->file_size - 1 && buffer[0] != 'G')
         {
             if (read_bytes_in_bounds(product_file->raw_product, file_offset, 1, buffer) < 0)
             {
@@ -2857,7 +2850,7 @@ int coda_grib_open(const char *filename, int64_t file_size, const coda_product_d
             }
             file_offset++;
         }
-        if (file_offset >= file_size - 1)
+        if (file_offset >= product_file->file_size - 1)
         {
             /* there is only filler data at the end of the file, but no new message */
             break;
@@ -2872,14 +2865,14 @@ int coda_grib_open(const char *filename, int64_t file_size, const coda_product_d
         }
         if (buffer[0] != 'G' || buffer[1] != 'R' || buffer[2] != 'I' || buffer[3] != 'B')
         {
-            coda_set_error(CODA_ERROR_PRODUCT, "invalid indicator for message %ld in %s", message_number, filename);
+            coda_set_error(CODA_ERROR_PRODUCT, "invalid indicator for message %ld", message_number);
             coda_grib_close((coda_product *)product_file);
             return -1;
         }
         if (buffer[7] != 1 && buffer[7] != 2)
         {
-            coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, "unsupported GRIB format version (%d) for message %ld for "
-                           "file %s", (int)buffer[7], message_number, filename);
+            coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, "unsupported GRIB format version (%d) for message %ld",
+                           (int)buffer[7], message_number);
             coda_grib_close((coda_product *)product_file);
             return -1;
         }
@@ -2889,8 +2882,7 @@ int coda_grib_open(const char *filename, int64_t file_size, const coda_product_d
         }
         else if (product_file->grib_version != buffer[7])
         {
-            coda_set_error(CODA_ERROR_PRODUCT, "mixed GRIB versions within a single file not supported for file %s",
-                           filename);
+            coda_set_error(CODA_ERROR_PRODUCT, "mixed GRIB versions within a single file not supported");
             coda_grib_close((coda_product *)product_file);
             return -1;
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -62,8 +62,7 @@ int coda_cdf_cursor_goto_array_element(coda_cursor *cursor, int num_subs, const 
     if (num_subs != num_dims)
     {
         coda_set_error(CODA_ERROR_ARRAY_NUM_DIMS_MISMATCH,
-                       "number of dimensions argument (%d) does not match rank of array (%d) (%s:%u)", num_subs,
-                       num_dims, __FILE__, __LINE__);
+                       "number of dimensions argument (%d) does not match rank of array (%d)", num_subs, num_dims);
         return -1;
     }
 
@@ -73,8 +72,8 @@ int coda_cdf_cursor_goto_array_element(coda_cursor *cursor, int num_subs, const 
     {
         if (subs[i] < 0 || subs[i] >= dim[i])
         {
-            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array index (%ld) exceeds array range [0:%ld) (%s:%u)",
-                           subs[i], dim[i], __FILE__, __LINE__);
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array index (%ld) exceeds array range [0:%ld)", subs[i],
+                           dim[i]);
             return -1;
         }
         if (i > 0)
@@ -106,8 +105,8 @@ int coda_cdf_cursor_goto_array_element_by_index(coda_cursor *cursor, long index)
         num_elements = ((coda_type_array *)cursor->stack[cursor->n - 1].type->definition)->num_elements;
         if (index < 0 || index >= num_elements)
         {
-            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array index (%ld) exceeds array range [0:%ld) (%s:%u)",
-                           index, num_elements, __FILE__, __LINE__);
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array index (%ld) exceeds array range [0:%ld)", index,
+                           num_elements);
             return -1;
         }
     }
@@ -133,8 +132,8 @@ int coda_cdf_cursor_goto_next_array_element(coda_cursor *cursor)
         num_elements = ((coda_type_array *)cursor->stack[cursor->n - 2].type->definition)->num_elements;
         if (index < 0 || index >= num_elements)
         {
-            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array index (%ld) exceeds array range [0:%ld) (%s:%u)",
-                           index, num_elements, __FILE__, __LINE__);
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array index (%ld) exceeds array range [0:%ld)", index,
+                           num_elements);
             return -1;
         }
     }
@@ -321,7 +320,8 @@ static int read_partial_array(const coda_cursor *cursor, long offset, long lengt
 
         if (variable->data != NULL)
         {
-            memcpy(&((uint8_t *)dst)[target_offset], &variable->data[variable->offset[i] + local_offset], local_size);
+            memcpy(&((uint8_t *)dst)[target_offset], &variable->data[variable->offset[i] + local_offset],
+                   (size_t)local_size);
         }
         else
         {

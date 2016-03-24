@@ -1,3 +1,63 @@
+2.16 2016-03-24
+~~~~~~~~~~~~~~~
+
+* Automatic detection of product class/type/version is now performed
+  using CODA expressions and is now possible for all data formats.
+  All existing detection rules in codadefs are automatically translated
+  to the new CODA expression variants when the codadefs are read.
+  codadefs that tried to map hdf4, hdf5, cdf, netcdf, grib1, grib2, rinex,
+  or sp3 files to ascii/binary to allow automatic product type/version
+  detection will have to be updated to now perform the detection using
+  the actual format of the product.
+
+* Product definitions in codadefs may now omit a root type definition if
+  the product is not an 'ascii' or 'binary' product. The root type will
+  then be determined purely dynamically based on the content of the file.
+  This allows for codadef entries that are purely meant to detect the
+  product type/version for a product using a self-describing data format.
+
+* Added coda_expression_is_equal(), coda_expression_print(), and 
+  coda_cursor_print_path() functions.
+
+* Added 'at', 'dim', and 'numdims' coda expression functions.
+
+* Introduced several additions to the codadef format in order to ease
+  the transition to a future revision of the codadef format:
+  - added MatchExpression
+  - allow Attribute to be used for Array, Union, Integer, Float, Text,
+    Complex, Raw, and Time
+  - introduced real_name attribute for Field and Attribute (which is mutually
+    exclusive with the use of xmlname for types)
+  - allow Attribute to contain a type definition (similar to Field)
+    if an explicit type definition is used then any FixedValue should be
+    provided as part of the type (and not as part of Attribute).
+  - allow Hidden and Available to be used for Attribute (similar to Field)
+
+* CODA now stores the namespace of an xml element in an attribute field
+  called 'xmlns'. This only happens for xml products that have no codadef
+  definition or, if there is a codadef, where the codadef definition
+  explicitly allows the (optional) presence of an 'xmlns' attribute.
+
+* XML products with an xml namespace will now be matched by codadef detection
+  rules that do not include a namespace in the path matching rule.
+  Only rules that explicitly check for an xml namespace will now restict
+  matches to only those xml products that use that same xml namespace.
+
+* Fixed issue in list/ascii/hdf4 modes of codadump where field availability
+  was not correctly determined if the availability of the field would differ
+  per array element.
+
+* All exported symbols of the CODA shared library now have a 'coda_' prefix.
+
+* Fixed memory corruption issue in evaluating coda expressions that
+  used a string constant containing the '\0' character.
+
+* Fixed double definition problem in coda.h for MinGW.
+
+* Fortran coda.inc include file is now a plain source file and is no longer
+  generated using the generate-finc tool. The generate-finc tool has also
+  been removed (which improves cross-compilation).
+
 2.15.1 2015-12-09
 ~~~~~~~~~~~~~~~~~
 
@@ -5,7 +65,7 @@
   (SWIG wrapping was using complex64 where it should have been complex128).
 
 * Product variables are now explicitly set to 0 before the initialization
-  expression is evaluated (elminating undefined behaviour when the init
+  expression is evaluated (eliminating undefined behaviour when the init
   expression was somehow trying to use the value of the variable itself).
   
 * Windows build now depends on HDF4 4.2.11 and HDF5 1.8.16.

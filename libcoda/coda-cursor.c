@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -177,7 +177,56 @@ void coda_dynamic_type_delete(coda_dynamic_type *type)
     }
 }
 
-int coda_cursor_print_path(const coda_cursor *cursor, int (*print) (const char *, ...))
+/* compare cursors. returns -1, 0, 1 similar to strcmp, but using 'index' at each depth for ordering */
+int coda_cursor_compare(const coda_cursor *cursor1, const coda_cursor *cursor2)
+{
+    int i = 0;
+
+    while (i < cursor1->n && i < cursor2->n)
+    {
+        if (i > 0)
+        {
+            if (cursor1->stack[i].index > cursor2->stack[i].index)
+            {
+                return 1;
+            }
+            if (cursor1->stack[i].index < cursor2->stack[i].index)
+            {
+                return -1;
+            }
+        }
+        i++;
+    }
+    if (i < cursor1->n)
+    {
+        return 1;
+    }
+    if (i < cursor2->n)
+    {
+        return -1;
+    }
+
+    return 0;
+}
+
+/** \addtogroup coda_cursor
+ * @{
+ */
+
+/** Write the full path of the current cursor position using a printf compatible function.
+ * The \a print function parameter should be a function that resembles printf().
+ * The most common case use is to just use printf() itself. For example:
+ * \code{.c}
+ * coda_cursor_print_path(cursor, printf);
+ * \endcode
+ * The format of the printed path is the same as used for nodes in \link coda_expression CODA expressions \endlink.
+ * \param cursor Pointer to a CODA cursor.
+ * \param print Reference to a printf compatible function.
+ * \return
+ *   \arg \c  0, Succes.
+ *   \arg \c -1, Error occurred (check #coda_errno).
+ */
+LIBCODA_API int coda_cursor_print_path(const coda_cursor *cursor, int (*print) (const char *, ...))
 {
     int i;
 
@@ -197,7 +246,7 @@ int coda_cursor_print_path(const coda_cursor *cursor, int (*print) (const char *
         if (index == -1)
         {
             /* we are pointing to the attribute record */
-            if (print(i == 0 ? "/@" : "@") < 0)
+            if (print(i == 1 ? "/@" : "@") < 0)
             {
                 return -1;
             }
@@ -215,7 +264,7 @@ int coda_cursor_print_path(const coda_cursor *cursor, int (*print) (const char *
             switch (type_class)
             {
                 case coda_array_class:
-                    if (print((i == 0 ? "/[%ld]" : "[%ld]"), index) < 0)
+                    if (print((i == 1 ? "/[%ld]" : "[%ld]"), index) < 0)
                     {
                         return -1;
                     }
@@ -228,7 +277,7 @@ int coda_cursor_print_path(const coda_cursor *cursor, int (*print) (const char *
                         {
                             return -1;
                         }
-                        if (i == 0 || cursor->stack[i - 1].index != -1)
+                        if (i == 1 || cursor->stack[i - 1].index != -1)
                         {
                             if (print("/") < 0)
                             {
@@ -250,10 +299,6 @@ int coda_cursor_print_path(const coda_cursor *cursor, int (*print) (const char *
 
     return 0;
 }
-
-/** \addtogroup coda_cursor
- * @{
- */
 
 /** Initialize the cursor to point to the entire product.
  * \param cursor Pointer to a CODA cursor.
@@ -314,7 +359,7 @@ LIBCODA_API int coda_cursor_set_product(coda_cursor *cursor, coda_product *produ
     exit(1);
 }
 
-/** Moves the cursor to the location in the product specific by a path string.
+/** Moves the cursor to the location in the product as specified by a path string.
  * The \a path string should contain a path reference similar to a 'node expression'
  * (see \link coda_expression CODA expression language\endlink).
  * The \a cursor parameter should contain a properly initialised cursor (e.g. using coda_cursor_set_product())
@@ -518,8 +563,8 @@ LIBCODA_API int coda_cursor_goto_record_field_by_index(coda_cursor *cursor, long
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_record_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to a record (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to a record (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -655,9 +700,8 @@ LIBCODA_API int coda_cursor_goto_next_record_field(coda_cursor *cursor)
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 2].type);
     if (type->type_class != coda_record_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE,
-                       "parent of cursor does not refer to a record (parent type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "parent of cursor does not refer to a record (parent type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -665,8 +709,7 @@ LIBCODA_API int coda_cursor_goto_next_record_field(coda_cursor *cursor)
     if (cursor->stack[cursor->n - 1].index == -1)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE,
-                       "cursor does not refer to a record field (currently pointing to the record attributes) (%s:%u)",
-                       __FILE__, __LINE__);
+                       "cursor does not refer to a record field (currently pointing to the record attributes)");
         return -1;
     }
 
@@ -754,8 +797,8 @@ LIBCODA_API int coda_cursor_goto_available_union_field(coda_cursor *cursor)
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_record_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to a record (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to a record (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -841,8 +884,8 @@ LIBCODA_API int coda_cursor_goto_array_element(coda_cursor *cursor, int num_subs
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_array_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -959,8 +1002,8 @@ LIBCODA_API int coda_cursor_goto_array_element_by_index(coda_cursor *cursor, lon
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_array_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -1085,9 +1128,8 @@ LIBCODA_API int coda_cursor_goto_next_array_element(coda_cursor *cursor)
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 2].type);
     if (type->type_class != coda_array_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE,
-                       "parent of cursor does not refer to an array (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "parent of cursor does not refer to an array (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -1095,8 +1137,7 @@ LIBCODA_API int coda_cursor_goto_next_array_element(coda_cursor *cursor)
     if (cursor->stack[cursor->n - 1].index == -1)
     {
         coda_set_error(CODA_ERROR_INVALID_TYPE,
-                       "cursor does not refer to an array element (currently pointing to the array attributes) (%s:%u)",
-                       __FILE__, __LINE__);
+                       "cursor does not refer to an array element (currently pointing to the array attributes)");
         return -1;
     }
 
@@ -1356,9 +1397,8 @@ LIBCODA_API int coda_cursor_use_base_type_of_special_type(coda_cursor *cursor)
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_special_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE,
-                       "cursor does not refer to a special type (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to a special type (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -1521,7 +1561,7 @@ LIBCODA_API int coda_cursor_get_string_length(const coda_cursor *cursor, long *l
     }
     if (!has_ascii_content)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to text data (%s:%u)", __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to text data");
         return -1;
     }
 
@@ -2044,8 +2084,8 @@ LIBCODA_API int coda_cursor_get_record_field_available_status(const coda_cursor 
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_record_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to a record (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to a record (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 
@@ -2099,8 +2139,8 @@ LIBCODA_API int coda_cursor_get_available_union_field_index(const coda_cursor *c
     type = coda_get_type_for_dynamic_type(cursor->stack[cursor->n - 1].type);
     if (type->type_class != coda_record_class)
     {
-        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to a record (current type is %s) (%s:%u)",
-                       coda_type_get_class_name(type->type_class), __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_TYPE, "cursor does not refer to a record (current type is %s)",
+                       coda_type_get_class_name(type->type_class));
         return -1;
     }
 

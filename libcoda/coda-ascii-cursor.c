@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -668,27 +668,23 @@ int coda_ascii_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size)
     }
     else if (type->type_class == coda_text_class)
     {
-        mappings = ((coda_type_text *)type)->mappings;
-        if (mappings == NULL && type->size_expr == NULL &&
-            ((coda_type_text *)type)->special_text_type == ascii_text_default)
+        if (type->size_expr == NULL && ((coda_type_text *)type)->special_text_type == ascii_text_default)
         {
             *bit_size = bit_size_boundary;
             return 0;
         }
-        use_buffer = (mappings != NULL || type->size_expr == NULL);
+        use_buffer = (type->size_expr == NULL);
     }
     else if (type->type_class == coda_special_class && ((coda_type_special *)type)->special_type == coda_special_time)
     {
         coda_type *base_type = ((coda_type_special *)type)->base_type;
 
         assert(base_type->type_class == coda_text_class);
-        mappings = ((coda_type_text *)base_type)->mappings;
-        if (mappings == NULL && ((coda_type_text *)base_type)->special_text_type == ascii_text_default)
+        if (((coda_type_text *)base_type)->special_text_type == ascii_text_default)
         {
             *bit_size = bit_size_boundary;
             return 0;
         }
-        use_buffer = (mappings != NULL);
     }
 
     /* only read buffer when we are dealing with numbers (without size_expr) or if there are mappings */

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -34,18 +34,9 @@ typedef struct coda_product_variable_struct coda_product_variable;
 
 struct coda_detection_rule_entry_struct
 {
-    /* if 'use_filename' is set, it is a filename match and both 'offset' and 'value/length' should be provided */
-    /* if only 'offset' is provided, it is a file size test (in bytes); ascii/binary only */
-    /* if only 'path' is provided, it is an existence test; xml only */
-    /* if only 'value/length' is provided, it is a string match on the 4096 bytes detection block; ascii only */
-    /* if both 'offset' and 'value/length' are provided, it is a string match on the detection block; ascii/binary only */
-    /* if both 'path' and 'value/length' are provided, it is a string match on the element pointed to by path; xml only */
-    /* providing both 'path' and 'offset' is not allowed */
-    int use_filename;   /* 0 if not set */
-    int64_t offset;     /* -1 if not set */
-    char *path; /* NULL if not set */
-    char *value;        /* NULL if not set */
-    long value_length;  /* 0 if not set */
+    /* either path and/or expression needs to be != NULL */
+    char *path;
+    coda_expression *expression;
 };
 typedef struct coda_detection_rule_entry_struct coda_detection_rule_entry;
 
@@ -67,6 +58,8 @@ struct coda_product_definition_struct
 
     int num_detection_rules;
     coda_detection_rule **detection_rule;
+
+    int initialized;    /* have the root type and product variables been set? */
 
     coda_type *root_type;
 
@@ -108,29 +101,46 @@ struct coda_product_class_struct
 };
 typedef struct coda_product_class_struct coda_product_class;
 
+struct coda_detection_node_struct
+{
+    /* relative path to reach this node from the parent node
+     * if not NULL, it will be used as an 'exists' condition before evaluating the rule or any sub nodes
+     * 'path' and 'expression' can not be both != NULL
+     */
+    char *path;
+
+    /* detection expression; will be NULL for root node */
+    const coda_expression *expression;
+
+    coda_detection_rule *rule;  /* the matching rule when 'expression' or 'path' matches and none of the subnodes match */
+
+    /* sub nodes of this node */
+    int num_subnodes;
+    struct coda_detection_node_struct **subnode;
+};
+typedef struct coda_detection_node_struct coda_detection_node;
+
 struct coda_data_dictionary_struct
 {
     int num_product_classes;
     coda_product_class **product_class;
     hashtable *hash_data;
 
-    void *ascbin_detection_tree;
-    void *xml_detection_tree;
+    coda_detection_node *detection_tree[CODA_NUM_FORMATS];
 };
 typedef struct coda_data_dictionary_struct coda_data_dictionary;
 
 extern coda_data_dictionary *coda_global_data_dictionary;
 
-coda_detection_rule_entry *coda_detection_rule_entry_with_offset_new(int64_t offset, int use_filename);
-coda_detection_rule_entry *coda_detection_rule_entry_with_path_new(const char *path);
-coda_detection_rule_entry *coda_detection_rule_entry_with_size_new(int64_t size);
-int coda_detection_rule_entry_set_value(coda_detection_rule_entry *match_rule, const char *value, long value_length);
-int coda_detection_rule_entry_validate(coda_detection_rule_entry *match_rule);
+coda_detection_rule_entry *coda_detection_rule_entry_new(const char *path);
+int coda_detection_rule_entry_set_expression(coda_detection_rule_entry *entry, coda_expression *expression);
 void coda_detection_rule_entry_delete(coda_detection_rule_entry *entry);
 
 coda_detection_rule *coda_detection_rule_new(void);
 int coda_detection_rule_add_entry(coda_detection_rule *detection_rule, coda_detection_rule_entry *entry);
 void coda_detection_rule_delete(coda_detection_rule *detection_rule);
+
+int coda_evaluate_detection_node(coda_detection_node *node, coda_cursor *cursor, coda_product_definition **definition);
 
 coda_product_variable *coda_product_variable_new(const char *name);
 int coda_product_variable_set_size_expression(coda_product_variable *product_variable, coda_expression *size_expr);
@@ -177,7 +187,8 @@ int coda_data_dictionary_has_product_class(const char *name);
 int coda_data_dictionary_remove_product_class(coda_product_class *product_class);
 int coda_data_dictionary_get_definition(const char *product_class, const char *product_type, int version,
                                         coda_product_definition **definition);
+coda_detection_node *coda_data_dictionary_get_detection_tree(coda_format format);
+int coda_data_dictionary_find_definition_for_product(coda_product *product, coda_product_definition **definition);
 void coda_data_dictionary_done(void);
-
 
 #endif

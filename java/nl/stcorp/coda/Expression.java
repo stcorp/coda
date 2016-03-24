@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2007-2015 S[&]T, The Netherlands.
+// Copyright (C) 2007-2016 S[&]T, The Netherlands.
 //
 // This file is part of CODA.
 //
@@ -107,11 +107,22 @@ public class Expression
      * product and if the expression evaluation function can be called with
      * cursor=null.
      * 
-     * @return true is the expression is constant, false if not.
+     * @return true if the expression is constant, false if not.
      */
     public boolean isConstant()
     {
         return (codac.expression_is_constant(this.expr) == 1);
+    }
+
+
+    /**
+     * Return whether an expression is equal to another expression or not.
+     * 
+     * @return true if the expression matches the given expression, false if not.
+     */
+    public boolean isEqual(Expression expression)
+    {
+        return (codac.expression_is_equal(this.expr, expression.expr) == 1);
     }
 
 

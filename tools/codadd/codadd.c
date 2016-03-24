@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -49,7 +49,7 @@ void generate_detection_tree(coda_format format);
 static void print_version()
 {
     printf("codadd %s\n", libcoda_version);
-    printf("Copyright (C) 2007-2015 S[&]T, The Netherlands.\n");
+    printf("Copyright (C) 2007-2016 S[&]T, The Netherlands.\n");
     printf("\n");
 }
 
@@ -111,9 +111,8 @@ static void print_help()
     printf("\n");
     printf("    codadd [-D definitionpath] dtree <format>\n");
     printf("        Shows the product recognition detection tree for the given file format.\n");
-    printf("        Supported file formats are: ascii, binary, xml\n");
     printf("        Note that ascii and binary formatted products use the same detection\n");
-    printf("        tree\n");
+    printf("        tree.\n");
     printf("\n");
     printf("    codadd -h, --help\n");
     printf("        Show help (this text)\n");
@@ -348,6 +347,8 @@ int main(int argc, char *argv[])
     }
     else if (strcmp(argv[i], "dtree") == 0)
     {
+        coda_format format;
+
         i++;
         if (i != argc - 1)
         {
@@ -355,24 +356,13 @@ int main(int argc, char *argv[])
             print_help();
             exit(1);
         }
-        if (strcmp(argv[i], "ascii") == 0)
-        {
-            generate_detection_tree(coda_format_ascii);
-        }
-        else if (strcmp(argv[i], "binary") == 0)
-        {
-            generate_detection_tree(coda_format_binary);
-        }
-        else if (strcmp(argv[i], "xml") == 0)
-        {
-            generate_detection_tree(coda_format_xml);
-        }
-        else
+        if (coda_format_from_string(argv[i], &format) != 0)
         {
             fprintf(stderr, "ERROR: invalid arguments\n");
             print_help();
             exit(1);
         }
+        generate_detection_tree(format);
     }
     else if (strcmp(argv[i], "definition") == 0)
     {

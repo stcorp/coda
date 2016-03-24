@@ -2,7 +2,7 @@
 #
 project(CODA)
 
-set(VERSION 2.15.1)
+set(VERSION 2.16)
 set(CODA_VERSION \"${VERSION}\")
 
 # General setup
@@ -228,8 +228,6 @@ configure_file(
 #
 set(LIBCODA_SOURCES
   libcoda/coda-ascbin-cursor.c
-  libcoda/coda-ascbin-internal.h
-  libcoda/coda-ascbin.c
   libcoda/coda-ascbin.h
   libcoda/coda-ascii-cursor.c
   libcoda/coda-ascii-internal.h
@@ -250,6 +248,7 @@ set(LIBCODA_SOURCES
   libcoda/coda-definition-parse.c
   libcoda/coda-definition.c
   libcoda/coda-definition.h
+  libcoda/coda-detection.c
   libcoda/coda-errno.c
   libcoda/coda-expr.c
   libcoda/coda-expr.h
@@ -335,19 +334,11 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
 
   set(fortran_DATA
     fortran/Makefile
+    fortran/coda.inc
     fortran/coda_fortran.c
     fortran/example.f)
 
   set(fortran_SCRIPTS fortran/checkf77.sh)
-
-  set(generate_finc_SOURCES fortran/generate-finc.c)
-
-  add_executable(generate-finc ${generate_finc_SOURCES})
-  target_link_libraries(generate-finc)
-  add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/fortran/coda.inc
-    MAIN_DEPENDENCY generate-finc
-    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/generate-finc${EXEEXT} > ${CMAKE_CURRENT_BINARY_DIR}/fortran/coda.inc)
 
   # idl
   
@@ -664,9 +655,9 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
   #
   # Set dynamic library version
   #
-  set(LIBCODA_CURRENT 12)
-  set(LIBCODA_REVISION 2)
-  set(LIBCODA_AGE 5)
+  set(LIBCODA_CURRENT 13)
+  set(LIBCODA_REVISION 0)
+  set(LIBCODA_AGE 6)
   math(EXPR LIBCODA_MAJOR "${LIBCODA_CURRENT} - ${LIBCODA_AGE}")
   set(LIBCODA_MINOR ${LIBCODA_AGE})
   

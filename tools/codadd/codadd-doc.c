@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -224,7 +224,6 @@ static void generate_xml_string(const char *str, int length)
     }
 }
 
-static void generate_html_expr(const coda_expression *expr, int precedence);
 static void generate_html_type(const coda_type *type, int expand_named_type, int full_width);
 
 static void html_attr_begin(const char *key_name, int *first_attribute)
@@ -347,15 +346,13 @@ static void generate_html_attributes(const coda_type *type, int *first_attribute
                 fi_printf("<br />\n");
             }
             html_attr_begin("available", &first_field_attribute);
-            switch (type->format)
+            if (((coda_type_record *)type)->field[i]->available_expr != NULL)
             {
-                case coda_format_ascii:
-                case coda_format_binary:
-                    generate_html_expr(((coda_type_record *)type)->field[i]->available_expr, 15);
-                    break;
-                default:
-                    ff_printf("optional");
-                    break;
+                coda_expression_print_html(((coda_type_record *)type)->field[i]->available_expr, ff_printf);
+            }
+            else
+            {
+                ff_printf("optional");
             }
             html_attr_end();
         }
@@ -366,7 +363,7 @@ static void generate_html_attributes(const coda_type *type, int *first_attribute
                 fi_printf("<br />\n");
             }
             html_attr_begin("bit offset", &first_field_attribute);
-            generate_html_expr(((coda_type_record *)type)->field[i]->bit_offset_expr, 15);
+            coda_expression_print_html(((coda_type_record *)type)->field[i]->bit_offset_expr, ff_printf);
             html_attr_end();
         }
 
@@ -524,7 +521,7 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
             {
                 html_attr_begin("bit&nbsp;size", &first_attribute);
             }
-            generate_html_expr(type->size_expr, 15);
+            coda_expression_print_html(type->size_expr, ff_printf);
             html_attr_end();
         }
         switch (type->type_class)
@@ -536,7 +533,7 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
                     if (record->union_field_expr != NULL)
                     {
                         html_attr_begin("field&nbsp;expr", &first_attribute);
-                        generate_html_expr(record->union_field_expr, 15);
+                        coda_expression_print_html(record->union_field_expr, ff_printf);
                         html_attr_end();
                     }
                 }
@@ -555,11 +552,11 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
                             html_attr_begin(dimstr, &first_attribute);
                             if (array->dim_expr[i] != NULL)
                             {
-                                generate_html_expr(array->dim_expr[i], 15);
+                                coda_expression_print_html(array->dim_expr[i], ff_printf);
                             }
                             else
                             {
-                                ff_printf("determined automatically based on %s specific algorithm",
+                                ff_printf("determined automatically from %s file",
                                           coda_type_get_format_name(type->format));
                             }
                             html_attr_end();
@@ -691,38 +688,8 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
                     if (special->value_expr != NULL)
                     {
                         html_attr_begin("value", &first_attribute);
-                        generate_html_expr(special->value_expr, 15);
+                        coda_expression_print_html(special->value_expr, ff_printf);
                         html_attr_end();
-                    }
-                    if (special->base_type->type_class == coda_text_class)
-                    {
-                        if (((coda_type_text *)special->base_type)->mappings != NULL)
-                        {
-                            coda_ascii_mappings *mappings = ((coda_type_text *)special->base_type)->mappings;
-
-                            for (i = 0; i < mappings->num_mappings; i++)
-                            {
-                                html_attr_begin("mapping", &first_attribute);
-                                ff_printf("\"");
-                                generate_escaped_html_string(mappings->mapping[i]->str, mappings->mapping[i]->length);
-                                ff_printf("\"&nbsp;-&gt;&nbsp;");
-                                if (type->type_class == coda_integer_class)
-                                {
-                                    char s[21];
-
-                                    coda_str64(((coda_ascii_integer_mapping *)mappings->mapping[i])->value, s);
-                                    ff_printf("%s", s);
-                                }
-                                else
-                                {
-                                    char s[24];
-
-                                    coda_strfl(((coda_ascii_float_mapping *)mappings->mapping[i])->value, s);
-                                    ff_printf("%s", s);
-                                }
-                                html_attr_end();
-                            }
-                        }
                     }
                 }
                 break;
@@ -828,7 +795,8 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
                             {
                                 case coda_format_ascii:
                                 case coda_format_binary:
-                                    generate_html_expr(((coda_type_record *)type)->field[i]->available_expr, 15);
+                                    coda_expression_print_html(((coda_type_record *)type)->field[i]->available_expr,
+                                                               ff_printf);
                                     break;
                                 default:
                                     ff_printf("optional");
@@ -843,7 +811,8 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
                                 fi_printf("<br />\n");
                             }
                             html_attr_begin("bit offset", &first_field_attribute);
-                            generate_html_expr(((coda_type_record *)type)->field[i]->bit_offset_expr, 15);
+                            coda_expression_print_html(((coda_type_record *)type)->field[i]->bit_offset_expr,
+                                                       ff_printf);
                             html_attr_end();
                         }
                         fi_printf("</td>\n");
@@ -890,635 +859,6 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
     fi_printf("</table>\n");
 }
 
-
-/* precedence
- 1: unary minus, not
- 2: pow
- 3: mul, div, mod
- 4: add, sub
- 5: lt, le, gt, ge
- 6: eq, ne
- 7: and
- 8: or
- 9: logical_and
-10: logical_or
-15: <start>
-*/
-static void generate_html_expr(const coda_expression *expr, int precedence)
-{
-    assert(expr != NULL);
-
-    switch (expr->tag)
-    {
-        case expr_abs:
-            ff_printf("<b>abs</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(")");
-            break;
-        case expr_add:
-            if (precedence < 4)
-            {
-                ff_printf("(");
-            }
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 4);
-            ff_printf(" + ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 4);
-            if (precedence < 4)
-            {
-                ff_printf(")");
-            }
-            break;
-        case expr_array_add:
-            ff_printf("<b>add</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(", ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
-            ff_printf(")");
-            break;
-        case expr_array_all:
-            ff_printf("<b>all</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(", ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
-            ff_printf(")");
-            break;
-        case expr_and:
-            if (precedence < 7)
-            {
-                ff_printf("(");
-            }
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 7);
-            ff_printf(" &amp; ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 7);
-            if (precedence < 7)
-            {
-                ff_printf(")");
-            }
-            break;
-        case expr_ceil:
-            ff_printf("<b>ceil</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(")");
-            break;
-        case expr_array_count:
-            ff_printf("<b>count</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(", ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
-            ff_printf(")");
-            break;
-        case expr_array_exists:
-            ff_printf("<b>exists</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(", ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
-            ff_printf(")");
-            break;
-        case expr_array_index:
-            ff_printf("<b>index</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(", ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
-            ff_printf(")");
-            break;
-        case expr_asciiline:
-            ff_printf("<b>asciiline</b>");
-            break;
-        case expr_bit_offset:
-            ff_printf("<b>bitoffset</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(")");
-            break;
-        case expr_bit_size:
-            ff_printf("<b>bitsize</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(")");
-            break;
-        case expr_byte_offset:
-            ff_printf("<b>byteoffset</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(")");
-            break;
-        case expr_byte_size:
-            ff_printf("<b>bytesize</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(")");
-            break;
-        case expr_bytes:
-            ff_printf("<b>bytes</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            if (((coda_expression_operation *)expr)->operand[0] != NULL)
-            {
-                ff_printf(",");
-                generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
-            }
-            ff_printf(")");
-            break;
-        case expr_constant_boolean:
-            if (((coda_expression_bool_constant *)expr)->value)
-            {
-                ff_printf("<b>true</b>");
-            }
-            else
-            {
-                ff_printf("<b>false</b>");
-            }
-            break;
-        case expr_constant_float:
-            {
-                char s[24];
-
-                coda_strfl(((coda_expression_float_constant *)expr)->value, s);
-                ff_printf("%s", s);
-            }
-            break;
-        case expr_constant_integer:
-            {
-                char s[21];
-
-                coda_str64(((coda_expression_integer_constant *)expr)->value, s);
-                ff_printf("%s", s);
-            }
-            break;
-        case expr_constant_rawstring:
-            ff_printf("\"");
-            generate_xml_string(((coda_expression_string_constant *)expr)->value,
-                                ((coda_expression_string_constant *)expr)->length);
-            ff_printf("\"");
-            break;
-        case expr_constant_string:
-            ff_printf("\"");
-            generate_escaped_html_string(((coda_expression_string_constant *)expr)->value,
-                                         ((coda_expression_string_constant *)expr)->length);
-            ff_printf("\"");
-            break;
-        case expr_divide:
-            if (precedence < 3)
-            {
-                ff_printf("(");
-            }
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 3);
-            ff_printf(" / ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 3);
-            if (precedence < 3)
-            {
-                ff_printf(")");
-            }
-            break;
-        case expr_equal:
-            if (precedence < 6)
-            {
-                ff_printf("(");
-            }
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 6);
-            ff_printf(" == ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 6);
-            if (precedence < 6)
-            {
-                ff_printf(")");
-            }
-            break;
-        case expr_exists:
-            ff_printf("<b>exists</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(")");
-            break;
-        case expr_file_size:
-            ff_printf("<b>filesize</b>()");
-            break;
-        case expr_filename:
-            ff_printf("<b>filename</b>()");
-            break;
-        case expr_float:
-            ff_printf("<b>float</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(")");
-            break;
-        case expr_floor:
-            ff_printf("<b>floor</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(")");
-            break;
-        case expr_for:
-            ff_printf("<b>for</b> <i>%s</i> = ", ((coda_expression_operation *)expr)->identifier);
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(" <b>to</b> ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
-            if (((coda_expression_operation *)expr)->operand[2] != NULL)
-            {
-                ff_printf(" <b>step</b> ");
-                generate_html_expr(((coda_expression_operation *)expr)->operand[2], 15);
-            }
-            ff_printf(" <b>do</b><br />");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[3], 15);
-            break;
-        case expr_goto_array_element:
-            if (((coda_expression_operation *)expr)->operand[0] != NULL)
-            {
-                generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            }
-            ff_printf("[");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
-            ff_printf("]");
-            break;
-        case expr_goto_attribute:
-            if (((coda_expression_operation *)expr)->operand[0] != NULL)
-            {
-                generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            }
-            ff_printf("@%s", ((coda_expression_operation *)expr)->identifier);
-            break;
-        case expr_goto_begin:
-            ff_printf(":");
-            break;
-        case expr_goto_field:
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            if (((coda_expression_operation *)expr)->operand[0]->tag != expr_goto_root)
-            {
-                ff_printf("/");
-            }
-            ff_printf("%s", ((coda_expression_operation *)expr)->identifier);
-            break;
-        case expr_goto_here:
-            ff_printf(".");
-            break;
-        case expr_goto_parent:
-            if (((coda_expression_operation *)expr)->operand[0] != NULL)
-            {
-                generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-                ff_printf("/");
-            }
-            ff_printf("..");
-            break;
-        case expr_goto_root:
-            ff_printf("/");
-            break;
-        case expr_goto:
-            ff_printf("<b>goto</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(")");
-            break;
-        case expr_greater_equal:
-            if (precedence < 5)
-            {
-                ff_printf("(");
-            }
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 5);
-            ff_printf(" >= ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 5);
-            if (precedence < 5)
-            {
-                ff_printf(")");
-            }
-            break;
-        case expr_greater:
-            if (precedence < 5)
-            {
-                ff_printf("(");
-            }
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 5);
-            ff_printf(" > ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 5);
-            if (precedence < 5)
-            {
-                ff_printf(")");
-            }
-            break;
-        case expr_if:
-            ff_printf("<b>if</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(", ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
-            ff_printf(", ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[2], 15);
-            ff_printf(")");
-            break;
-        case expr_index:
-            ff_printf("<b>index</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(")");
-            break;
-        case expr_index_var:
-            ff_printf("<i>%s</i>", ((coda_expression_operation *)expr)->identifier);
-            break;
-        case expr_integer:
-            ff_printf("<b>int</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(")");
-            break;
-        case expr_isinf:
-            ff_printf("<b>isinf</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(")");
-            break;
-        case expr_ismininf:
-            ff_printf("<b>ismininf</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(")");
-            break;
-        case expr_isnan:
-            ff_printf("<b>isnan</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(")");
-            break;
-        case expr_isplusinf:
-            ff_printf("<b>isplusinf</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(")");
-            break;
-        case expr_length:
-            ff_printf("<b>length</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(")");
-            break;
-        case expr_less_equal:
-            if (precedence < 5)
-            {
-                ff_printf("(");
-            }
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 5);
-            ff_printf(" <= ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 5);
-            if (precedence < 5)
-            {
-                ff_printf(")");
-            }
-            break;
-        case expr_less:
-            if (precedence < 5)
-            {
-                ff_printf("(");
-            }
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 5);
-            ff_printf(" < ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 5);
-            if (precedence < 5)
-            {
-                ff_printf(")");
-            }
-            break;
-        case expr_logical_and:
-            if (precedence < 9)
-            {
-                ff_printf("(");
-            }
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 9);
-            ff_printf(" <b>and</b> ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 9);
-            if (precedence < 9)
-            {
-                ff_printf(")");
-            }
-            break;
-        case expr_logical_or:
-            if (precedence < 10)
-            {
-                ff_printf("(");
-            }
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 10);
-            ff_printf(" <b>or</b> ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 10);
-            if (precedence < 10)
-            {
-                ff_printf(")");
-            }
-            break;
-        case expr_ltrim:
-            ff_printf("<b>ltrim</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(")");
-            break;
-        case expr_max:
-            ff_printf("<b>max</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(", ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
-            ff_printf(")");
-            break;
-        case expr_min:
-            ff_printf("<b>min</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(", ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
-            ff_printf(")");
-            break;
-        case expr_modulo:
-            if (precedence < 3)
-            {
-                ff_printf("(");
-            }
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 3);
-            ff_printf(" %% ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 3);
-            if (precedence < 3)
-            {
-                ff_printf(")");
-            }
-            break;
-        case expr_multiply:
-            if (precedence < 3)
-            {
-                ff_printf("(");
-            }
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 3);
-            ff_printf(" * ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 3);
-            if (precedence < 3)
-            {
-                ff_printf(")");
-            }
-            break;
-        case expr_neg:
-            ff_printf("-");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 1);
-            break;
-        case expr_not_equal:
-            if (precedence < 6)
-            {
-                ff_printf("(");
-            }
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 6);
-            ff_printf(" != ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 6);
-            if (precedence < 6)
-            {
-                ff_printf(")");
-            }
-            break;
-        case expr_not:
-            ff_printf("!");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 1);
-            break;
-        case expr_num_elements:
-            ff_printf("<b>numelements</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(")");
-            break;
-        case expr_or:
-            if (precedence < 7)
-            {
-                ff_printf("(");
-            }
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 7);
-            ff_printf(" | ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 7);
-            if (precedence < 7)
-            {
-                ff_printf(")");
-            }
-            break;
-        case expr_power:
-            if (precedence < 2)
-            {
-                ff_printf("(");
-            }
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 2);
-            ff_printf(" ^ ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 2);
-            if (precedence < 2)
-            {
-                ff_printf(")");
-            }
-            break;
-        case expr_product_class:
-            ff_printf("<b>productclass</b>()");
-            break;
-        case expr_product_format:
-            ff_printf("<b>productformat</b>()");
-            break;
-        case expr_product_type:
-            ff_printf("<b>producttype</b>()");
-            break;
-        case expr_product_version:
-            ff_printf("<b>productversion</b>()");
-            break;
-        case expr_regex:
-            ff_printf("<b>regex</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(", ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
-            if (((coda_expression_operation *)expr)->operand[2] != NULL)
-            {
-                ff_printf(", ");
-                generate_html_expr(((coda_expression_operation *)expr)->operand[2], 15);
-            }
-            ff_printf(")");
-            break;
-        case expr_round:
-            ff_printf("<b>round</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(")");
-            break;
-        case expr_rtrim:
-            ff_printf("<b>rtrim</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(")");
-            break;
-        case expr_sequence:
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(";<br />");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
-            break;
-        case expr_string:
-            ff_printf("<b>str</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            if (((coda_expression_operation *)expr)->operand[1] != NULL)
-            {
-                ff_printf(", ");
-                generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
-            }
-            ff_printf(")");
-            break;
-        case expr_strtime:
-            ff_printf("<b>strtime</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            if (((coda_expression_operation *)expr)->operand[1] != NULL)
-            {
-                ff_printf(", ");
-                generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
-            }
-            ff_printf(")");
-            break;
-        case expr_substr:
-            ff_printf("<b>substr</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(", ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
-            ff_printf(", ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[2], 15);
-            ff_printf(")");
-            break;
-        case expr_subtract:
-            if (precedence < 4)
-            {
-                ff_printf("(");
-            }
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 4);
-            ff_printf(" - ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 4);
-            if (precedence < 4)
-            {
-                ff_printf(")");
-            }
-            break;
-        case expr_time:
-            ff_printf("<b>time</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(", ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
-            ff_printf(")");
-            break;
-        case expr_trim:
-            ff_printf("<b>trim</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(")");
-            break;
-        case expr_unbound_array_index:
-            ff_printf("<b>unboundindex</b>(");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(", ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
-            ff_printf(")");
-            break;
-        case expr_variable_exists:
-            ff_printf("<b>exists</b>(<i>$%s</i>, ", ((coda_expression_operation *)expr)->identifier);
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(")");
-            break;
-        case expr_variable_index:
-            ff_printf("<b>index</b>(<i>$%s</i>, ", ((coda_expression_operation *)expr)->identifier);
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(")");
-            break;
-        case expr_variable_set:
-            ff_printf("<i>$%s</i>", ((coda_expression_operation *)expr)->identifier);
-            if (((coda_expression_operation *)expr)->operand[0] != NULL)
-            {
-                ff_printf("[");
-                generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-                ff_printf("]");
-            }
-            ff_printf(" = ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
-            break;
-        case expr_variable_value:
-            ff_printf("<i>$%s</i>", ((coda_expression_operation *)expr)->identifier);
-            if (((coda_expression_operation *)expr)->operand[0] != NULL)
-            {
-                ff_printf("[");
-                generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-                ff_printf("]");
-            }
-            break;
-        case expr_with:
-            ff_printf("<b>with</b>(<i>%s</i> = ", ((coda_expression_operation *)expr)->identifier);
-            generate_html_expr(((coda_expression_operation *)expr)->operand[0], 15);
-            ff_printf(", ");
-            generate_html_expr(((coda_expression_operation *)expr)->operand[1], 15);
-            ff_printf(")");
-            break;
-    }
-}
 
 static void generate_html_named_type(const char *filename, coda_type *type)
 {
@@ -1580,8 +920,11 @@ static void generate_html_product_definition(const char *filename, coda_product_
         ff_printf("</p>\n");
     }
 
-    fi_printf("<h3>root type</h3>\n");
-    generate_html_type(product_definition->root_type, 1, 0);
+    if (product_definition->root_type != NULL)
+    {
+        fi_printf("<h3>root type</h3>\n");
+        generate_html_type(product_definition->root_type, 1, 0);
+    }
 
     fi_printf("<h3>detection rule</h3>\n");
 
@@ -1606,58 +949,19 @@ static void generate_html_product_definition(const char *filename, coda_product_
 
             for (j = 0; j < detection_rule->num_entries; j++)
             {
-                coda_detection_rule_entry *entry = detection_rule->entry[j];
-                char s1[21];
-                char s2[21];
-
-                coda_str64(entry->offset, s1);
-                coda_str64(entry->offset + entry->value_length, s2);
-
-                if (entry->use_filename)
+                if (detection_rule->entry[j]->path != NULL)
                 {
-                    fi_printf("<b>filename</b>[%s:%s] == \"", s1, s2);
-                    generate_escaped_html_string(entry->value, entry->value_length);
-                    ff_printf("\"");
+                    ff_printf("<b>exists</b>(");
+                    generate_escaped_html_string(detection_rule->entry[j]->path, -1);
+                    ff_printf(")");
                 }
-                else
+                if (detection_rule->entry[j]->expression != NULL)
                 {
-                    if (entry->offset != -1)
+                    if (detection_rule->entry[j]->path != NULL)
                     {
-                        if (entry->value != NULL)
-                        {
-                            fi_printf("<b>file</b>[%s:%s] == \"", s1, s2);
-                            generate_escaped_html_string(entry->value, entry->value_length);
-                            ff_printf("\"");
-                        }
-                        else
-                        {
-                            fi_printf("<b>filesize</b> >= %s", s1);
-                        }
+                        ff_printf(" <b>and</b><br />");
                     }
-                    else if (entry->path != NULL)
-                    {
-                        if (entry->value != NULL)
-                        {
-                            fi_printf("%s == \"", entry->path);
-                            generate_escaped_html_string(entry->value, entry->value_length);
-                            ff_printf("\"");
-                        }
-                        else
-                        {
-                            fi_printf("%s <b>exists</b>", entry->path);
-                        }
-                    }
-                    else if (entry->value != NULL)
-                    {
-                        fi_printf("<b>file</b> <b>contains</b> \"");
-                        generate_escaped_html_string(entry->value, entry->value_length);
-                        ff_printf("\"");
-                    }
-                    else
-                    {
-                        assert(0);
-                        exit(1);
-                    }
+                    coda_expression_print_html(detection_rule->entry[j]->expression, ff_printf);
                 }
                 if (j < detection_rule->num_entries - 1)
                 {
@@ -1693,11 +997,11 @@ static void generate_html_product_definition(const char *filename, coda_product_
             if (variable->size_expr != NULL)
             {
                 ff_printf("[");
-                generate_html_expr(variable->size_expr, 15);
+                coda_expression_print_html(variable->size_expr, ff_printf);
                 ff_printf("]");
             }
             ff_printf("</td><td>");
-            generate_html_expr(variable->init_expr, 15);
+            coda_expression_print_html(variable->init_expr, ff_printf);
             ff_printf("</td></tr>\n");
         }
         fi_printf("</table>\n");
@@ -1711,6 +1015,11 @@ static void generate_html_product_definition(const char *filename, coda_product_
 
 static int type_uses_type(const coda_type *type1, const coda_type *type2, int include_self)
 {
+    if (type1 == NULL)
+    {
+        return 0;
+    }
+
     if (type1 == type2 && include_self)
     {
         return 1;

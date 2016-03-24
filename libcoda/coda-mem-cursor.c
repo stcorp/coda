@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -20,7 +20,7 @@
 
 #include "coda-mem-internal.h"
 #include "coda-ascii-internal.h"
-#include "coda-ascbin-internal.h"
+#include "coda-ascbin.h"
 #include "coda-bin-internal.h"
 #include "coda-read-array.h"
 #include "coda-read-partial-array.h"
@@ -46,8 +46,8 @@ int coda_mem_cursor_goto_record_field_by_index(coda_cursor *cursor, long index)
     {
         if (index < 0 || index >= ((coda_mem_record *)type)->num_fields)
         {
-            coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
-                           ((coda_mem_record *)type)->num_fields, __FILE__, __LINE__);
+            coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld)", index,
+                           ((coda_mem_record *)type)->num_fields);
             return -1;
         }
         cursor->n++;
@@ -79,8 +79,8 @@ int coda_mem_cursor_goto_next_record_field(coda_cursor *cursor)
 
         if (index < 0 || index >= ((coda_mem_record *)type)->num_fields)
         {
-            coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
-                           ((coda_mem_record *)type)->num_fields, __FILE__, __LINE__);
+            coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld)", index,
+                           ((coda_mem_record *)type)->num_fields);
             return -1;
         }
         if (((coda_mem_record *)type)->field_type[index] != NULL)
@@ -117,8 +117,7 @@ int coda_mem_cursor_goto_array_element(coda_cursor *cursor, int num_subs, const 
         if (num_subs != 1)
         {
             coda_set_error(CODA_ERROR_ARRAY_NUM_DIMS_MISMATCH,
-                           "number of dimensions argument (%d) does not match rank of array (1) (%s:%u)", num_subs,
-                           __FILE__, __LINE__);
+                           "number of dimensions argument (%d) does not match rank of array (1)", num_subs);
             return -1;
         }
         /* check the range for index */
@@ -126,9 +125,8 @@ int coda_mem_cursor_goto_array_element(coda_cursor *cursor, int num_subs, const 
         {
             if (subs[0] < 0 || subs[0] >= ((coda_mem_array *)type)->num_elements)
             {
-                coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS,
-                               "array index (%ld) exceeds array range [0:%ld) (%s:%u)",
-                               subs[0], ((coda_mem_array *)type)->num_elements, __FILE__, __LINE__);
+                coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array index (%ld) exceeds array range [0:%ld)", subs[0],
+                               ((coda_mem_array *)type)->num_elements);
                 return -1;
             }
         }
@@ -155,9 +153,8 @@ int coda_mem_cursor_goto_array_element_by_index(coda_cursor *cursor, long index)
         {
             if (index < 0 || index >= ((coda_mem_array *)type)->num_elements)
             {
-                coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS,
-                               "array index (%ld) exceeds array range [0:%ld) (%s:%u)",
-                               index, ((coda_mem_array *)type)->num_elements, __FILE__, __LINE__);
+                coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array index (%ld) exceeds array range [0:%ld)", index,
+                               ((coda_mem_array *)type)->num_elements);
                 return -1;
             }
         }
@@ -183,8 +180,8 @@ int coda_mem_cursor_goto_next_array_element(coda_cursor *cursor)
 
         if (index < 0 || index >= ((coda_mem_array *)type)->num_elements)
         {
-            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array index (%ld) exceeds array range [0:%ld) (%s:%u)",
-                           index, ((coda_mem_array *)type)->num_elements, __FILE__, __LINE__);
+            coda_set_error(CODA_ERROR_ARRAY_OUT_OF_BOUNDS, "array index (%ld) exceeds array range [0:%ld)", index,
+                           ((coda_mem_array *)type)->num_elements);
             return -1;
         }
         if (((coda_mem_array *)type)->element[index] != NULL)
@@ -339,8 +336,8 @@ int coda_mem_cursor_get_record_field_available_status(const coda_cursor *cursor,
     assert(type->tag == tag_mem_record);
     if (index < 0 || index >= ((coda_mem_record *)type)->num_fields)
     {
-        coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld) (%s:%u)", index,
-                       ((coda_mem_record *)type)->num_fields, __FILE__, __LINE__);
+        coda_set_error(CODA_ERROR_INVALID_INDEX, "field index (%ld) is not in the range [0,%ld)", index,
+                       ((coda_mem_record *)type)->num_fields);
         return -1;
     }
     *available = (((coda_mem_record *)type)->field_type[index] != NULL);

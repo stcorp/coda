@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -41,6 +41,7 @@
 #include "coda-ascii.h"
 #include "coda-definition.h"
 #include "coda-type.h"
+#include "coda-expr.h"
 
 #define CODA_DEFINITION_NAMESPACE "http://www.stcorp.nl/coda/definition/2008/07"
 
@@ -78,6 +79,7 @@ typedef enum xml_element_tag_enum
     element_cd_little_endian,
     element_cd_mapping,
     element_cd_match_data,
+    element_cd_match_expression,
     element_cd_match_filename,
     element_cd_match_size,
     element_cd_named_type,
@@ -123,6 +125,7 @@ static const char *xml_full_element_name[] = {
     CODA_DEFINITION_NAMESPACE " LittleEndian",
     CODA_DEFINITION_NAMESPACE " Mapping",
     CODA_DEFINITION_NAMESPACE " MatchData",
+    CODA_DEFINITION_NAMESPACE " MatchExpression",
     CODA_DEFINITION_NAMESPACE " MatchFilename",
     CODA_DEFINITION_NAMESPACE " MatchSize",
     CODA_DEFINITION_NAMESPACE " NamedType",
@@ -212,6 +215,10 @@ static int cd_attribute_init(parser_info *info, const char **attr);
 static int cd_complex_init(parser_info *info, const char **attr);
 static int cd_conversion_init(parser_info *info, const char **attr);
 static int cd_detection_rule_init(parser_info *info, const char **attr);
+static int cd_field_set_type(parser_info *info);
+static int cd_field_set_hidden(parser_info *info);
+static int cd_field_set_optional(parser_info *info);
+static int cd_field_set_available(parser_info *info);
 static int cd_field_init(parser_info *info, const char **attr);
 static int cd_float_init(parser_info *info, const char **attr);
 static int cd_integer_init(parser_info *info, const char **attr);
@@ -219,6 +226,7 @@ static int cd_named_type_init(parser_info *info, const char **attr);
 static int cd_native_type_init(parser_info *info, const char **attr);
 static int cd_mapping_init(parser_info *info, const char **attr);
 static int cd_match_data_init(parser_info *info, const char **attr);
+static int cd_match_expression_init(parser_info *info, const char **attr);
 static int cd_match_filename_init(parser_info *info, const char **attr);
 static int cd_match_size_init(parser_info *info, const char **attr);
 static int cd_product_class_init(parser_info *info, const char **attr);
@@ -279,6 +287,132 @@ static int is_whitespace(const char *s, int len)
     }
 
     return 1;
+}
+
+static char *regexp_match_string(char *str)
+{
+    char *match_str;
+    int length;
+    int match_length;
+    int from, to;
+
+    length = strlen(str);
+    match_length = 0;
+    for (from = 0; from < length; from++)
+    {
+        switch (str[from])
+        {
+            case '\\':
+            case '^':
+            case '$':
+            case '.':
+            case '[':
+            case '|':
+            case '(':
+            case ')':
+            case '?':
+            case '*':
+            case '+':
+            case '{':
+                match_length++;
+                /* fall through */
+            default:
+                match_length++;
+                break;
+        }
+    }
+    match_str = malloc(match_length + 1);
+    if (match_str == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                       (long)match_length + 1, __FILE__, __LINE__);
+        return NULL;
+    }
+    to = 0;
+    for (from = 0; from < length; from++)
+    {
+        switch (str[from])
+        {
+            case '\\':
+            case '^':
+            case '$':
+            case '.':
+            case '[':
+            case '|':
+            case '(':
+            case ')':
+            case '?':
+            case '*':
+            case '+':
+            case '{':
+                match_str[to++] = '\\';
+                /* fall through */
+            default:
+                match_str[to++] = str[from];
+                break;
+        }
+    }
+    match_str[to] = '\0';
+
+    return match_str;
+
+}
+
+static int escaped_string_length(char *str)
+{
+    int from;
+    int to;
+
+    if (str == NULL)
+    {
+        return 0;
+    }
+
+    from = 0;
+    to = 0;
+
+    while (str[from] != '\0')
+    {
+        if (str[from] == '\\')
+        {
+            from++;
+            switch (str[from])
+            {
+                case 'e':
+                case 'a':
+                case 'b':
+                case 'f':
+                case 'n':
+                case 'r':
+                case 't':
+                case 'v':
+                case '\\':
+                    to++;
+                    break;
+                default:
+                    if (str[from] < '0' || str[from] > '9')
+                    {
+                        return -1;
+                    }
+                    if (str[from + 1] >= '0' && str[from + 1] <= '9')
+                    {
+                        from++;
+                        if (str[from + 1] >= '0' && str[from + 1] <= '9')
+                        {
+                            from++;
+                        }
+                    }
+                    to++;
+            }
+        }
+        else
+        {
+            to++;
+        }
+        from++;
+    }
+
+    return to;
 }
 
 static int decode_escaped_string(char *str)
@@ -420,61 +554,6 @@ static int decode_xml_string(char *str)
     return to;
 }
 
-static int format_from_string(const char *str, coda_format *format)
-{
-    if (strcmp(str, "ascii") == 0)
-    {
-        *format = coda_format_ascii;
-    }
-    else if (strcmp(str, "binary") == 0)
-    {
-        *format = coda_format_binary;
-    }
-    else if (strcmp(str, "xml") == 0)
-    {
-        *format = coda_format_xml;
-    }
-    else if (strcmp(str, "hdf4") == 0)
-    {
-        *format = coda_format_hdf4;
-    }
-    else if (strcmp(str, "hdf5") == 0)
-    {
-        *format = coda_format_hdf5;
-    }
-    else if (strcmp(str, "cdf") == 0)
-    {
-        *format = coda_format_cdf;
-    }
-    else if (strcmp(str, "netcdf") == 0)
-    {
-        *format = coda_format_netcdf;
-    }
-    else if (strcmp(str, "grib1") == 0)
-    {
-        *format = coda_format_grib1;
-    }
-    else if (strcmp(str, "grib2") == 0)
-    {
-        *format = coda_format_grib2;
-    }
-    else if (strcmp(str, "rinex") == 0)
-    {
-        *format = coda_format_rinex;
-    }
-    else if (strcmp(str, "sp3") == 0)
-    {
-        *format = coda_format_sp3;
-    }
-    else
-    {
-        coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid 'format' attribute value '%s'", str);
-        return -1;
-    }
-
-    return 0;
-}
-
 static const char *get_attribute_value(const char **attr, const char *name)
 {
     while (*attr != NULL)
@@ -552,7 +631,7 @@ static int handle_format_attribute_for_type(parser_info *info, const char **attr
         {
             return -1;
         }
-        if (format_from_string(format_string, &info->node->format) != 0)
+        if (coda_format_from_string(format_string, &info->node->format) != 0)
         {
             return -1;
         }
@@ -567,7 +646,7 @@ static int handle_format_attribute_for_type(parser_info *info, const char **attr
         }
         else
         {
-            if (format_from_string(format_string, &info->node->format) != 0)
+            if (coda_format_from_string(format_string, &info->node->format) != 0)
             {
                 return -1;
             }
@@ -588,11 +667,6 @@ static int handle_xml_name(parser_info *info, const char **attr)
     {
         return 0;
     }
-    xmlname = get_mandatory_attribute_value(attr, "namexml", info->node->tag);
-    if (xmlname == NULL)
-    {
-        return -1;
-    }
     node = info->node->parent;
     while (node->tag != element_cd_field)
     {
@@ -602,10 +676,21 @@ static int handle_xml_name(parser_info *info, const char **attr)
         }
         node = node->parent;
     }
-    if (coda_type_record_field_set_real_name((coda_type_record_field *)node->data, xmlname) != 0)
+    xmlname = get_attribute_value(attr, "namexml");
+    if (xmlname != NULL)
     {
-        return -1;
+        if (((coda_type_record_field *)node->data)->real_name != NULL)
+        {
+            coda_set_error(CODA_ERROR_DATA_DEFINITION,
+                           "attribute 'namexml' not allowed if 'real_name' is already set for field");
+            return -1;
+        }
+        if (coda_type_record_field_set_real_name((coda_type_record_field *)node->data, xmlname) != 0)
+        {
+            return -1;
+        }
     }
+
     return 0;
 }
 
@@ -926,6 +1011,40 @@ static int string_data_init(parser_info *info, const char **attr)
     return 0;
 }
 
+static int type_set_format(coda_type *type, coda_format format)
+{
+    type->format = format;
+    switch (type->type_class)
+    {
+        case coda_record_class:
+            {
+                long num_record_fields;
+                long i;
+
+                coda_type_get_num_record_fields(type, &num_record_fields);
+                for (i = 0; i < num_record_fields; i++)
+                {
+                    type_set_format(((coda_type_record *)type)->field[i]->type, format);
+                }
+            }
+            break;
+        case coda_array_class:
+            type_set_format(((coda_type_array *)type)->base_type, format);
+            break;
+        case coda_special_class:
+            type_set_format(((coda_type_special *)type)->base_type, format);
+            break;
+        default:
+            break;
+    }
+    if (type->attributes != NULL)
+    {
+        type_set_format((coda_type *)type->attributes, format);
+    }
+
+    return 0;
+}
+
 static int type_set_description(parser_info *info)
 {
     if (info->node->char_data == NULL)
@@ -1095,14 +1214,6 @@ static int cd_array_set_type(parser_info *info)
 
 static int cd_array_add_dimension(parser_info *info)
 {
-    if (info->node->parent->format != coda_format_ascii && info->node->parent->format != coda_format_binary &&
-        !info->node->empty)
-    {
-        coda_set_error(CODA_ERROR_DATA_DEFINITION, "dimension with size specification not allowed for %s array",
-                       coda_type_get_format_name(info->node->parent->format));
-        return -1;
-    }
-
     if (info->node->data != NULL || info->node->empty)
     {
         if (coda_type_array_add_variable_dimension((coda_type_array *)info->node->parent->data,
@@ -1150,6 +1261,7 @@ static int cd_array_init(parser_info *info, const char **attr)
     register_sub_element(info->node, element_cd_dimension, optional_integer_constant_or_expression_init,
                          cd_array_add_dimension);
     register_sub_element(info->node, element_cd_description, string_data_init, type_set_description);
+    register_sub_element(info->node, element_cd_attribute, cd_attribute_init, type_add_attribute);
     info->node->finalise_element = cd_array_finalise;
 
     return 0;
@@ -1236,14 +1348,9 @@ static int cd_ascii_white_space_init(parser_info *info, const char **attr)
     return 0;
 }
 
-static int cd_attribute_set_optional(parser_info *info)
-{
-    return coda_type_record_field_set_optional((coda_type_record_field *)info->node->parent->data);
-}
-
 static int cd_attribute_set_fixed_value(parser_info *info)
 {
-    coda_type *type;
+    coda_type *type = NULL;
 
     if (decode_escaped_string(info->node->char_data) < 0)
     {
@@ -1254,6 +1361,22 @@ static int cd_attribute_set_fixed_value(parser_info *info)
     {
         return -1;
     }
+    if (type != NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "fixed value should be provided as part of type");
+        return -1;
+    }
+    type = (coda_type *)coda_type_text_new(info->node->parent->format);
+    if (type == NULL)
+    {
+        return -1;
+    }
+    if (coda_type_record_field_set_type((coda_type_record_field *)info->node->parent->data, type) != 0)
+    {
+        coda_type_release(type);
+        return -1;
+    }
+    coda_type_release(type);
     if (coda_type_text_set_fixed_value((coda_type_text *)type, info->node->char_data) != 0)
     {
         return -1;
@@ -1265,50 +1388,94 @@ static int cd_attribute_set_fixed_value(parser_info *info)
     return 0;
 }
 
-static int cd_attribute_init(parser_info *info, const char **attr)
+static int cd_attribute_finalise(parser_info *info)
 {
-    char *name;
-    const char *xmlname;
-    coda_type *type;
+    coda_type *type = NULL;
 
-    assert(info->node->parent->format_set);
-    info->node->format = info->node->parent->format;
-    info->node->format_set = 1;
-    xmlname = get_mandatory_attribute_value(attr, "name", info->node->tag);
-    if (xmlname == NULL)
+    if (coda_type_record_field_get_type((coda_type_record_field *)info->node->data, &type) != 0)
     {
         return -1;
     }
-    name = coda_identifier_from_name(coda_element_name_from_xml_name(xmlname), NULL);
+    if (type == NULL)
+    {
+        type = (coda_type *)coda_type_text_new(info->node->format);
+        if (type == NULL)
+        {
+            return -1;
+        }
+        if (coda_type_record_field_set_type((coda_type_record_field *)info->node->data, type) != 0)
+        {
+            coda_type_release(type);
+            return -1;
+        }
+        coda_type_release(type);
+    }
+    return coda_type_record_field_validate((coda_type_record_field *)info->node->data);
+}
+
+static int cd_attribute_init(parser_info *info, const char **attr)
+{
+    const char *format = NULL;
+    const char *name = NULL;
+    const char *real_name = NULL;
+
+    format = get_attribute_value(attr, "format");
+    if (format != NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "attribute 'format' not allowed for Attribute");
+        return -1;
+    }
+    assert(info->node->parent->format_set);
+    info->node->format = info->node->parent->format;
+    info->node->format_set = 1;
+    if (get_attribute_value(attr, "namexml") != NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "attribute 'namexml' not allowed for Attribute");
+        return -1;
+    }
+    name = get_mandatory_attribute_value(attr, "name", info->node->tag);
     if (name == NULL)
     {
         return -1;
     }
+    real_name = get_attribute_value(attr, "real_name");
     info->node->free_data = (free_data_handler)coda_type_record_field_delete;
-    info->node->data = coda_type_record_field_new(name);
-    free(name);
+    if (info->node->format == coda_format_xml && real_name == NULL)
+    {
+        char *field_name;
+
+        /* still allow the old approach where 'name' could be the xml name of the attribute */
+        real_name = name;
+        field_name = coda_identifier_from_name(coda_element_name_from_xml_name(name), NULL);
+        if (field_name == NULL)
+        {
+            return -1;
+        }
+        info->node->data = coda_type_record_field_new(field_name);
+        free(field_name);
+    }
+    else
+    {
+        info->node->data = coda_type_record_field_new(name);
+    }
     if (info->node->data == NULL)
     {
         return -1;
     }
-    if (coda_type_record_field_set_real_name((coda_type_record_field *)info->node->data, xmlname) != 0)
+    if (real_name != NULL)
     {
-        return -1;
+        if (coda_type_record_field_set_real_name((coda_type_record_field *)info->node->data, real_name) != 0)
+        {
+            return -1;
+        }
     }
-    type = (coda_type *)coda_type_text_new(info->node->format);
-    if (type == NULL)
-    {
-        return -1;
-    }
-    if (coda_type_record_field_set_type((coda_type_record_field *)info->node->data, type) != 0)
-    {
-        coda_type_release(type);
-        return -1;
-    }
-    coda_type_release(type);
 
-    register_sub_element(info->node, element_cd_optional, dummy_init, cd_attribute_set_optional);
+    register_type_elements(info->node, cd_field_set_type);
+    register_sub_element(info->node, element_cd_hidden, dummy_init, cd_field_set_hidden);
+    register_sub_element(info->node, element_cd_optional, dummy_init, cd_field_set_optional);
+    register_sub_element(info->node, element_cd_available, bool_expression_init, cd_field_set_available);
     register_sub_element(info->node, element_cd_fixed_value, string_data_init, cd_attribute_set_fixed_value);
+    info->node->finalise_element = cd_attribute_finalise;
 
     return 0;
 }
@@ -1417,12 +1584,16 @@ static int cd_conversion_init(parser_info *info, const char **attr)
 
 static int cd_detection_rule_add_entry(parser_info *info)
 {
-    if (coda_detection_rule_add_entry((coda_detection_rule *)info->node->parent->data,
-                                      (coda_detection_rule_entry *)info->node->data) != 0)
+    if (info->node->data != NULL)
     {
-        return -1;
+        if (coda_detection_rule_add_entry((coda_detection_rule *)info->node->parent->data,
+                                          (coda_detection_rule_entry *)info->node->data) != 0)
+        {
+            return -1;
+        }
+        info->node->data = NULL;
     }
-    info->node->data = NULL;
+
     return 0;
 }
 
@@ -1437,6 +1608,8 @@ static int cd_detection_rule_init(parser_info *info, const char **attr)
         return -1;
     }
     register_sub_element(info->node, element_cd_match_data, cd_match_data_init, cd_detection_rule_add_entry);
+    register_sub_element(info->node, element_cd_match_expression, cd_match_expression_init,
+                         cd_detection_rule_add_entry);
     register_sub_element(info->node, element_cd_match_filename, cd_match_filename_init, cd_detection_rule_add_entry);
     register_sub_element(info->node, element_cd_match_size, cd_match_size_init, cd_detection_rule_add_entry);
 
@@ -1490,6 +1663,7 @@ static int cd_field_init(parser_info *info, const char **attr)
 {
     const char *format = NULL;
     const char *name = NULL;
+    const char *real_name = NULL;
 
     format = get_attribute_value(attr, "format");
     if (format != NULL)
@@ -1515,6 +1689,15 @@ static int cd_field_init(parser_info *info, const char **attr)
     if (info->node->data == NULL)
     {
         return -1;
+    }
+
+    real_name = get_attribute_value(attr, "real_name");
+    if (real_name != NULL)
+    {
+        if (coda_type_record_field_set_real_name((coda_type_record_field *)info->node->data, real_name) != 0)
+        {
+            return -1;
+        }
     }
 
     register_type_elements(info->node, cd_field_set_type);
@@ -1598,6 +1781,7 @@ static int cd_float_init(parser_info *info, const char **attr)
     register_sub_element(info->node, element_cd_little_endian, dummy_init, cd_float_set_little_endian);
     register_sub_element(info->node, element_cd_mapping, cd_mapping_init, cd_float_add_mapping);
     register_sub_element(info->node, element_cd_description, string_data_init, type_set_description);
+    register_sub_element(info->node, element_cd_attribute, cd_attribute_init, type_add_attribute);
     info->node->finalise_element = cd_float_finalise;
 
     return 0;
@@ -1674,6 +1858,7 @@ static int cd_integer_init(parser_info *info, const char **attr)
     register_sub_element(info->node, element_cd_native_type, cd_native_type_init, cd_integer_set_read_type);
     register_sub_element(info->node, element_cd_conversion, cd_conversion_init, cd_integer_set_conversion);
     register_sub_element(info->node, element_cd_mapping, cd_mapping_init, cd_integer_add_mapping);
+    register_sub_element(info->node, element_cd_attribute, cd_attribute_init, type_add_attribute);
     info->node->finalise_element = cd_integer_finalise;
 
     return 0;
@@ -1850,21 +2035,381 @@ static int cd_mapping_init(parser_info *info, const char **attr)
 
 static int cd_match_data_finalise(parser_info *info)
 {
+    coda_detection_rule_entry *entry;
+    coda_expression *lh_expr;
+    coda_expression *rh_expr;
+    coda_expression *expr;
+    char *string_value;
     long value_length;
 
-    value_length = decode_escaped_string(info->node->char_data);
+    entry = (coda_detection_rule_entry *)info->node->data;
+
+    value_length = escaped_string_length(info->node->char_data);
     if (value_length < 0)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid escape sequence in string");
         return -1;
     }
-    if (value_length > 0)
+    if (entry->expression == NULL)
     {
-        if (coda_detection_rule_entry_set_value(info->node->data, info->node->char_data, value_length) != 0)
+        if (entry->path != NULL)
+        {
+            coda_expression *here_expr;
+
+            /* path */
+            if (value_length == 0)
+            {
+                /* don't add anything else, we purely match on path */
+                return 0;
+            }
+            here_expr = coda_expression_new(expr_goto_here, NULL, NULL, NULL, NULL, NULL);
+            if (here_expr == NULL)
+            {
+                return -1;
+            }
+            lh_expr = coda_expression_new(expr_string, NULL, here_expr, NULL, NULL, NULL);
+            if (lh_expr == NULL)
+            {
+                return -1;
+            }
+            string_value = strdup(info->node->char_data);
+            if (string_value == NULL)
+            {
+                coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
+                               __LINE__);
+                coda_expression_delete(lh_expr);
+                return -1;
+            }
+            rh_expr = coda_expression_new(expr_constant_string, string_value, NULL, NULL, NULL, NULL);
+            if (rh_expr == NULL)
+            {
+                coda_expression_delete(lh_expr);
+                return -1;
+            }
+            expr = coda_expression_new(expr_equal, NULL, lh_expr, rh_expr, NULL, NULL);
+            if (expr == NULL)
+            {
+                return -1;
+            }
+            if (coda_detection_rule_entry_set_expression(entry, expr) != 0)
+            {
+                coda_expression_delete(expr);
+                return -1;
+            }
+        }
+        else
+        {
+            coda_expression *root_expr;
+            coda_expression *length_expr;
+
+            /* no offset/path (use regexp) */
+            if (value_length == 0)
+            {
+                coda_set_error(CODA_ERROR_DATA_DEFINITION, "empty string not allowed for data match value");
+                return -1;
+            }
+            root_expr = coda_expression_new(expr_goto_root, NULL, NULL, NULL, NULL, NULL);
+            if (root_expr == NULL)
+            {
+                return -1;
+            }
+            length_expr = coda_expression_new(expr_constant_integer, strdup("1024"), NULL, NULL, NULL, NULL);
+            if (length_expr == NULL)
+            {
+                coda_expression_delete(root_expr);
+                return -1;
+            }
+            rh_expr = coda_expression_new(expr_bytes, NULL, root_expr, length_expr, NULL, NULL);
+            if (rh_expr == NULL)
+            {
+                return -1;
+            }
+            string_value = regexp_match_string(info->node->char_data);
+            if (string_value == NULL)
+            {
+                coda_expression_delete(rh_expr);
+                return -1;
+            }
+            lh_expr = coda_expression_new(expr_constant_rawstring, string_value, NULL, NULL, NULL, NULL);
+            if (lh_expr == NULL)
+            {
+                coda_expression_delete(rh_expr);
+                return -1;
+            }
+            expr = coda_expression_new(expr_regex, NULL, lh_expr, rh_expr, NULL, NULL);
+            if (expr == NULL)
+            {
+                return -1;
+            }
+            if (coda_detection_rule_entry_set_expression(entry, expr) != 0)
+            {
+                coda_expression_delete(expr);
+                return -1;
+            }
+        }
+    }
+    else if (entry->expression->tag == expr_constant_integer)
+    {
+        char length_str[25];
+        coda_expression *root_expr;
+        coda_expression *length_expr;
+
+        /* offset */
+        if (value_length == 0)
+        {
+            coda_set_error(CODA_ERROR_DATA_DEFINITION, "empty string not allowed for data match value");
+            return -1;
+        }
+        root_expr = coda_expression_new(expr_goto_root, NULL, NULL, NULL, NULL, NULL);
+        if (root_expr == NULL)
+        {
+            return -1;
+        }
+        coda_str64(value_length, length_str);
+        string_value = strdup(length_str);
+        if (string_value == NULL)
+        {
+            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
+                           __LINE__);
+            coda_expression_delete(root_expr);
+            return -1;
+        }
+        length_expr = coda_expression_new(expr_constant_integer, string_value, NULL, NULL, NULL, NULL);
+        if (length_expr == NULL)
+        {
+            coda_expression_delete(root_expr);
+            return -1;
+        }
+        lh_expr = coda_expression_new(expr_bytes, NULL, root_expr, entry->expression, length_expr, NULL);
+        entry->expression = NULL;
+        if (lh_expr == NULL)
+        {
+            return -1;
+        }
+        string_value = strdup(info->node->char_data);
+        if (string_value == NULL)
+        {
+            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
+                           __LINE__);
+            coda_expression_delete(lh_expr);
+            return -1;
+        }
+        rh_expr = coda_expression_new(expr_constant_string, string_value, NULL, NULL, NULL, NULL);
+        if (rh_expr == NULL)
+        {
+            coda_expression_delete(lh_expr);
+            return -1;
+        }
+        entry->expression = coda_expression_new(expr_equal, NULL, lh_expr, rh_expr, NULL, NULL);
+        if (entry->expression == NULL)
         {
             return -1;
         }
     }
+
+    return 0;
+}
+
+static int add_detection_rule_entry_for_path(coda_detection_rule *rule, const char *xml_path, char **coda_path)
+{
+    const char *namespace;
+    const char *name;
+    int first_node = 1;
+    int last_node = 0;
+    int next_is_attribute = 0;
+    char *path;
+    char *cpath;
+    char *p;
+    char *cp;
+
+    assert(xml_path != NULL);
+
+    *coda_path = NULL;
+
+    /* create a version of the path that we can modify */
+    path = strdup(xml_path);
+    if (path == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
+                       __LINE__);
+        return -1;
+    }
+    p = path;
+
+    /* create a string in which we put the path in CODA node expression format
+     * add some extra space so we can temporarily add '@xmlns' for namespace matching rules
+     */
+    cpath = malloc(strlen(xml_path) + 6);
+    if (cpath == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
+                       __LINE__);
+        return -1;
+    }
+    cpath[0] = '\0';
+    cp = cpath;
+
+    if (*p == '/')
+    {
+        *cp = *p;
+        cp++;
+        p++;
+    }
+    if (*p == '@')
+    {
+        next_is_attribute = 1;
+        *cp = *p;
+        cp++;
+        p++;
+    }
+    while (!last_node)
+    {
+        int is_attribute = next_is_attribute;
+        coda_expression *detection_expr;
+        coda_expression *path_expr;
+        char *identifier;
+
+        if (!first_node)
+        {
+            *cp = is_attribute ? '@' : '/';
+            cp++;
+        }
+        else
+        {
+            first_node = 0;
+        }
+
+        namespace = NULL;
+        if (*p == '{')
+        {
+            /* parse namespace */
+            p++;
+            namespace = p;
+            while (*p != '}')
+            {
+                if (*p == '\0')
+                {
+                    coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "xml detection rule for '%s' has invalid path value",
+                                   rule->product_definition->name);
+                    free(cpath);
+                    free(path);
+                    return -1;
+                }
+                p++;
+            }
+            *p = '\0';
+            p++;
+        }
+        name = p;
+        while (*p != '/' && *p != '@' && *p != '\0')
+        {
+            p++;
+        }
+        next_is_attribute = (*p == '@');
+        last_node = (*p == '\0');
+        *p = '\0';
+        identifier = coda_identifier_from_name(name, NULL);
+        if (identifier == NULL)
+        {
+            free(cpath);
+            free(path);
+            return -1;
+        }
+        strcpy(cp, identifier);
+        cp += strlen(identifier);
+        free(identifier);
+
+        if (namespace)
+        {
+            coda_detection_rule_entry *entry;
+            coda_expression *lh_expr;
+            coda_expression *rh_expr;
+            char *string_value;
+
+            /* check value of namespace */
+            path_expr = coda_expression_new(expr_goto_here, NULL, NULL, NULL, NULL, NULL);
+            if (path_expr == NULL)
+            {
+                free(cpath);
+                free(path);
+                return -1;
+            }
+            lh_expr = coda_expression_new(expr_string, NULL, path_expr, NULL, NULL, NULL);
+            if (lh_expr == NULL)
+            {
+                free(cpath);
+                free(path);
+                return -1;
+            }
+            string_value = strdup(namespace);
+            if (string_value == NULL)
+            {
+                coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)",
+                               __FILE__, __LINE__);
+                coda_expression_delete(lh_expr);
+                free(cpath);
+                free(path);
+                return -1;
+            }
+            rh_expr = coda_expression_new(expr_constant_string, string_value, NULL, NULL, NULL, NULL);
+            if (rh_expr == NULL)
+            {
+                coda_expression_delete(lh_expr);
+                free(cpath);
+                free(path);
+                return -1;
+            }
+            detection_expr = coda_expression_new(expr_equal, NULL, lh_expr, rh_expr, NULL, NULL);
+            if (detection_expr == NULL)
+            {
+                free(cpath);
+                free(path);
+                return -1;
+            }
+            strcpy(cp, "@xmlns");
+            entry = coda_detection_rule_entry_new(cpath);
+            *cp = '\0';
+            if (entry == NULL)
+            {
+                coda_expression_delete(detection_expr);
+                free(cpath);
+                free(path);
+                return -1;
+            }
+            if (coda_detection_rule_entry_set_expression(entry, detection_expr) != 0)
+            {
+                coda_detection_rule_entry_delete(entry);
+                coda_expression_delete(detection_expr);
+                free(cpath);
+                free(path);
+                return -1;
+            }
+            if (coda_detection_rule_add_entry(rule, entry) != 0)
+            {
+                coda_detection_rule_entry_delete(entry);
+                free(cpath);
+                free(path);
+                return -1;
+            }
+        }
+
+        if (!last_node)
+        {
+            if (is_attribute)
+            {
+                coda_set_error(CODA_ERROR_INVALID_ARGUMENT,
+                               "xml detection rule for '%s' has invalid path (attribute should be last item in path)",
+                               rule->product_definition->name);
+                free(cpath);
+                free(path);
+                return -1;
+            }
+            p++;
+        }
+    }
+
+    free(path);
+    *coda_path = cpath;
 
     return 0;
 }
@@ -1873,31 +2418,61 @@ static int cd_match_data_init(parser_info *info, const char **attr)
 {
     const char *offset_string;
     const char *path;
-    int64_t offset = -1;
+    coda_expression *expr;
+    char *string_value;
+
+    info->node->free_data = (free_data_handler)coda_detection_rule_entry_delete;
 
     offset_string = get_attribute_value(attr, "offset");
+    path = get_attribute_value(attr, "path");
+
+    if (path == NULL)
+    {
+        info->node->data = coda_detection_rule_entry_new(NULL);
+        if (info->node->data == NULL)
+        {
+            return -1;
+        }
+    }
     if (offset_string != NULL)
     {
-        if (coda_ascii_parse_int64(offset_string, strlen(offset_string), &offset, 0) < 0)
+        if (path != NULL)
+        {
+            coda_set_error(CODA_ERROR_DATA_DEFINITION, "providing both 'path' and 'offset' attributes is not allowed");
+            return -1;
+        }
+        string_value = strdup(offset_string);
+        if (string_value == NULL)
+        {
+            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
+                           __LINE__);
+            return -1;
+        }
+        expr = coda_expression_new(expr_constant_integer, string_value, NULL, NULL, NULL, NULL);
+        if (expr == NULL)
         {
             coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid 'offset' attribute value '%s'", offset_string);
             return -1;
         }
+        if (coda_detection_rule_entry_set_expression((coda_detection_rule_entry *)info->node->data, expr) != 0)
+        {
+            coda_expression_delete(expr);
+            return -1;
+        }
     }
-    path = get_attribute_value(attr, "path");
-
-    info->node->free_data = (free_data_handler)coda_detection_rule_entry_delete;
-    if (offset == -1)
+    else if (path != NULL)
     {
-        info->node->data = coda_detection_rule_entry_with_path_new(path);
-    }
-    else
-    {
-        info->node->data = coda_detection_rule_entry_with_offset_new(offset, 0);
-    }
-    if (info->node->data == NULL)
-    {
-        return -1;
+        if (add_detection_rule_entry_for_path((coda_detection_rule *)info->node->parent->data, path, &string_value) !=
+            0)
+        {
+            return -1;
+        }
+        info->node->data = coda_detection_rule_entry_new(string_value);
+        free(string_value);
+        if (info->node->data == NULL)
+        {
+            return -1;
+        }
     }
 
     info->node->expect_char_data = 1;
@@ -1906,22 +2481,132 @@ static int cd_match_data_init(parser_info *info, const char **attr)
     return 0;
 }
 
+static int cd_match_expression_finalise(parser_info *info)
+{
+    coda_expression_type result_type;
+    coda_expression *expr;
+
+    if (info->node->char_data != NULL)
+    {
+        if (is_whitespace(info->node->char_data, strlen(info->node->char_data)))
+        {
+            free(info->node->char_data);
+            info->node->char_data = NULL;
+        }
+    }
+    if (info->node->char_data == NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "empty detection expression");
+        return -1;
+    }
+
+    if (coda_expression_from_string(info->node->char_data, &expr) != 0)
+    {
+        return -1;
+    }
+    free(info->node->char_data);
+    info->node->char_data = NULL;
+    ((coda_detection_rule_entry *)info->node->data)->expression = expr;
+    if (coda_expression_get_type(expr, &result_type) != 0)
+    {
+        return -1;
+    }
+    if (result_type != coda_expression_boolean)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "not a boolean expression");
+        return -1;
+    }
+
+    return 0;
+}
+
+static int cd_match_expression_init(parser_info *info, const char **attr)
+{
+    const char *path;
+
+    path = get_attribute_value(attr, "path");
+
+    info->node->free_data = (free_data_handler)coda_detection_rule_entry_delete;
+    info->node->data = coda_detection_rule_entry_new(path);
+    if (info->node->data == NULL)
+    {
+        return -1;
+    }
+
+    info->node->expect_char_data = 1;
+    info->node->finalise_element = cd_match_expression_finalise;
+
+    return 0;
+}
+
 static int cd_match_filename_finalise(parser_info *info)
 {
+    coda_detection_rule_entry *entry;
+    coda_expression *filename_expr;
+    coda_expression *length_expr;
+    coda_expression *lh_expr;
+    coda_expression *rh_expr;
+    char length_str[25];
+    char *string_value;
     long value_length;
 
-    value_length = decode_escaped_string(info->node->char_data);
+    entry = (coda_detection_rule_entry *)info->node->data;
+
+    value_length = escaped_string_length(info->node->char_data);
     if (value_length < 0)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid escape sequence in string");
         return -1;
     }
-    if (value_length > 0)
+    if (value_length == 0)
     {
-        if (coda_detection_rule_entry_set_value(info->node->data, info->node->char_data, value_length) != 0)
-        {
-            return -1;
-        }
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "empty string not allowed for filename match value");
+        return -1;
+    }
+
+    filename_expr = coda_expression_new(expr_filename, NULL, NULL, NULL, NULL, NULL);
+    if (filename_expr == NULL)
+    {
+        return -1;
+    }
+    coda_str64(value_length, length_str);
+    string_value = strdup(length_str);
+    if (string_value == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
+                       __LINE__);
+        return -1;
+    }
+    length_expr = coda_expression_new(expr_constant_integer, string_value, NULL, NULL, NULL, NULL);
+    if (length_expr == NULL)
+    {
+        coda_expression_delete(filename_expr);
+        return -1;
+    }
+    lh_expr = coda_expression_new(expr_substr, NULL, entry->expression, length_expr, filename_expr, NULL);
+    entry->expression = NULL;
+    if (lh_expr == NULL)
+    {
+        return -1;
+    }
+    string_value = strdup(info->node->char_data);
+    if (string_value == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
+                       __LINE__);
+        coda_expression_delete(lh_expr);
+        return -1;
+    }
+    rh_expr = coda_expression_new(expr_constant_string, string_value, NULL, NULL, NULL, NULL);
+    if (rh_expr == NULL)
+    {
+        coda_expression_delete(lh_expr);
+        return -1;
+    }
+    entry->expression = coda_expression_new(expr_equal, NULL, lh_expr, rh_expr, NULL, NULL);
+    if (entry->expression == NULL)
+    {
+        return -1;
     }
 
     return 0;
@@ -1930,23 +2615,38 @@ static int cd_match_filename_finalise(parser_info *info)
 static int cd_match_filename_init(parser_info *info, const char **attr)
 {
     const char *offset_string;
-    int64_t offset;
+    coda_expression *expr;
+    char *string_value;
 
     offset_string = get_mandatory_attribute_value(attr, "offset", info->node->tag);
     if (offset_string == NULL)
     {
         return -1;
     }
-    if (coda_ascii_parse_int64(offset_string, strlen(offset_string), &offset, 0) < 0)
+
+    info->node->free_data = (free_data_handler)coda_detection_rule_entry_delete;
+    info->node->data = coda_detection_rule_entry_new(NULL);
+    if (info->node->data == NULL)
+    {
+        return -1;
+    }
+
+    string_value = strdup(offset_string);
+    if (string_value == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
+                       __LINE__);
+        return -1;
+    }
+    expr = coda_expression_new(expr_constant_integer, string_value, NULL, NULL, NULL, NULL);
+    if (expr == NULL)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid 'offset' attribute value '%s'", offset_string);
         return -1;
     }
-
-    info->node->free_data = (free_data_handler)coda_detection_rule_entry_delete;
-    info->node->data = coda_detection_rule_entry_with_offset_new(offset, 1);
-    if (info->node->data == NULL)
+    if (coda_detection_rule_entry_set_expression((coda_detection_rule_entry *)info->node->data, expr) != 0)
     {
+        coda_expression_delete(expr);
         return -1;
     }
 
@@ -1959,22 +2659,50 @@ static int cd_match_filename_init(parser_info *info, const char **attr)
 static int cd_match_size_init(parser_info *info, const char **attr)
 {
     const char *size_string;
-    int64_t size;
+    coda_expression *lh_expr;
+    coda_expression *rh_expr;
+    coda_expression *expr;
+    char *string_value;
+
+    info->node->free_data = (free_data_handler)coda_detection_rule_entry_delete;
+    info->node->data = coda_detection_rule_entry_new(NULL);
+    if (info->node->data == NULL)
+    {
+        return -1;
+    }
 
     size_string = get_mandatory_attribute_value(attr, "size", info->node->tag);
     if (size_string == NULL)
     {
         return -1;
     }
-    if (coda_ascii_parse_int64(size_string, strlen(size_string), &size, 0) < 0)
+    string_value = strdup(size_string);
+    if (string_value == NULL)
+    {
+        coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)", __FILE__,
+                       __LINE__);
+        return -1;
+    }
+    rh_expr = coda_expression_new(expr_constant_integer, string_value, NULL, NULL, NULL, NULL);
+    if (rh_expr == NULL)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid 'size' attribute value '%s'", size_string);
         return -1;
     }
-    info->node->free_data = (free_data_handler)coda_detection_rule_entry_delete;
-    info->node->data = coda_detection_rule_entry_with_size_new(size);
-    if (info->node->data == NULL)
+    lh_expr = coda_expression_new(expr_file_size, NULL, NULL, NULL, NULL, NULL);
+    if (lh_expr == NULL)
     {
+        coda_expression_delete(rh_expr);
+        return -1;
+    }
+    expr = coda_expression_new(expr_equal, NULL, lh_expr, rh_expr, NULL, NULL);
+    if (expr == NULL)
+    {
+        return -1;
+    }
+    if (coda_detection_rule_entry_set_expression((coda_detection_rule_entry *)info->node->data, expr) != 0)
+    {
+        coda_expression_delete(expr);
         return -1;
     }
 
@@ -2187,7 +2915,7 @@ static int cd_product_definition_init(parser_info *info, const char **attr)
     {
         return -1;
     }
-    if (format_from_string(format_string, &info->node->format) != 0)
+    if (coda_format_from_string(format_string, &info->node->format) != 0)
     {
         return -1;
     }
@@ -2252,7 +2980,7 @@ static int cd_product_definition_sub_init(parser_info *info, const char **attr)
     {
         return -1;
     }
-    if (format_from_string(format_string, &info->node->format) != 0)
+    if (coda_format_from_string(format_string, &info->node->format) != 0)
     {
         return -1;
     }
@@ -2913,6 +3641,8 @@ static int cd_type_set_type(parser_info *info)
     {
         assert(((coda_type *)info->node->data)->attributes == NULL);
         ((coda_type *)info->node->data)->attributes = type->attributes;
+        /* update format of attributes to that of new type */
+        type_set_format((coda_type *)type->attributes, ((coda_type *)info->node->data)->format);
         type->attributes = NULL;
     }
     coda_type_release(type);
@@ -3001,6 +3731,7 @@ static int cd_union_init(parser_info *info, const char **attr)
     register_sub_element(info->node, element_cd_field_expression, integer_expression_init,
                          cd_union_set_field_expression);
     register_sub_element(info->node, element_cd_field, cd_field_init, cd_union_add_field);
+    register_sub_element(info->node, element_cd_attribute, cd_attribute_init, type_add_attribute);
     info->node->finalise_element = cd_union_finalise;
 
     if (handle_xml_name(info, attr) != 0)
@@ -3522,7 +4253,7 @@ int coda_read_product_definition(coda_product_definition *product_definition)
     coda_product_class *product_class;
     za_file *zf;
 
-    assert(product_definition->root_type == NULL);
+    assert(!product_definition->initialized);
 
     product_class = product_definition->product_type->product_class;
 

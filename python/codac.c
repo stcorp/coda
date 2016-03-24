@@ -5911,6 +5911,37 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_expression_is_equal(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  coda_expression *arg1 = (coda_expression *) 0 ;
+  coda_expression *arg2 = (coda_expression *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  int result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:expression_is_equal",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_coda_expression_struct, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "expression_is_equal" "', argument " "1"" of type '" "coda_expression const *""'"); 
+  }
+  arg1 = (coda_expression *)(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_coda_expression_struct, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "expression_is_equal" "', argument " "2"" of type '" "coda_expression const *""'"); 
+  }
+  arg2 = (coda_expression *)(argp2);
+  result = (int)coda_expression_is_equal((struct coda_expression_struct const *)arg1,(struct coda_expression_struct const *)arg2);
+  resultobj = SWIG_From_int((int)(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_init(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int result;
@@ -11038,6 +11069,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"isPlusInf", _wrap_isPlusInf, METH_VARARGS, NULL},
 	 { (char *)"isMinInf", _wrap_isMinInf, METH_VARARGS, NULL},
 	 { (char *)"expression_is_constant", _wrap_expression_is_constant, METH_VARARGS, NULL},
+	 { (char *)"expression_is_equal", _wrap_expression_is_equal, METH_VARARGS, NULL},
 	 { (char *)"init", _wrap_init, METH_VARARGS, NULL},
 	 { (char *)"set_option_bypass_special_types", _wrap_set_option_bypass_special_types, METH_VARARGS, NULL},
 	 { (char *)"set_option_perform_boundary_checks", _wrap_set_option_perform_boundary_checks, METH_VARARGS, NULL},

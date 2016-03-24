@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2016 S[&]T, The Netherlands.
  *
  * This file is part of CODA.
  *
@@ -265,14 +265,12 @@ static void print_data(coda_cursor *cursor, int compound_newline)
                 }
                 if (num_dims >= 0)
                 {
-                    int index[CODA_MAX_NUM_DIMS];
                     int i;
 
                     num_elements = 1;
                     for (i = 0; i < num_dims; i++)
                     {
                         num_elements *= dim[i];
-                        index[i] = 0;
                     }
                     if (num_elements > 0)
                     {
@@ -588,6 +586,7 @@ void print_yaml_data(int include_attributes)
         }
     }
 
+    coda_set_option_perform_boundary_checks(0);
     print_data(&cursor, 0);
 
     coda_close(pf);

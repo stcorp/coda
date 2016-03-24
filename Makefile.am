@@ -49,7 +49,7 @@ else
 # programs
 
 bin_PROGRAMS = codacheck codacmp codadd codadump codaeval codafind
-noinst_PROGRAMS = generate-finc findtypedef
+noinst_PROGRAMS = findtypedef
 
 # libraries (+ related files)
 
@@ -176,8 +176,6 @@ EXTRA_DIST += libcoda/zlib/COPYING libcoda/zlib/README
 
 libcoda_la_SOURCES = \
 	libcoda/coda-ascbin-cursor.c \
-	libcoda/coda-ascbin-internal.h \
-	libcoda/coda-ascbin.c \
 	libcoda/coda-ascbin.h \
 	libcoda/coda-ascii-cursor.c \
 	libcoda/coda-ascii-internal.h \
@@ -198,6 +196,7 @@ libcoda_la_SOURCES = \
 	libcoda/coda-definition-parse.c \
 	libcoda/coda-definition.c \
 	libcoda/coda-definition.h \
+	libcoda/coda-detection.c \
 	libcoda/coda-errno.c \
 	libcoda/coda-expr-parser.y \
 	libcoda/coda-expr-tokenizer.l \
@@ -282,8 +281,6 @@ BUILT_SOURCES += libcoda/coda-expr-parser.h
 
 libcoda_internal_la_SOURCES = \
 	libcoda/coda-ascbin-cursor.c \
-	libcoda/coda-ascbin-internal.h \
-	libcoda/coda-ascbin.c \
 	libcoda/coda-ascbin.h \
 	libcoda/coda-ascii-cursor.c \
 	libcoda/coda-ascii-internal.h \
@@ -304,6 +301,7 @@ libcoda_internal_la_SOURCES = \
 	libcoda/coda-definition-parse.c \
 	libcoda/coda-definition.c \
 	libcoda/coda-definition.h \
+	libcoda/coda-detection.c \
 	libcoda/coda-errno.c \
 	libcoda/coda-expr-parser.c \
 	libcoda/coda-expr-parser.h \
@@ -453,19 +451,10 @@ endif
 
 EXTRA_DIST += \
 	fortran/Makefile.in \
+	fortran/coda.inc \
 	fortran/coda_fortran.c \
 	fortran/checkf77.sh \
 	fortran/example.f
-
-generate_finc_SOURCES = fortran/generate-finc.c
-generate_finc_LDADD = @LIBOBJS@
-generate_finc_LDFLAGS = -static
-
-INDENTFILES += $(generate_finc_SOURCES)
-
-fortran/coda.inc: generate-finc$(EXEEXT)
-	./generate-finc > fortran/coda.inc
-CLEANFILES += fortran/coda.inc
 
 # idl
 
