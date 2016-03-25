@@ -108,7 +108,7 @@ find_package(BISON)
 find_package(FLEX)
 
 BISON_TARGET(coda-expr-parser ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/coda-expr-parser.y ${CMAKE_CURRENT_BINARY_DIR}/libcoda/coda-expr-parser.c)
-FLEX_TARGET(coda-expr-tokenizer ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/coda-expr-tokenizer.l ${CMAKE_CURRENT_SOURCE_DIR}/lex.yy.c)
+FLEX_TARGET(coda-expr-tokenizer ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/coda-expr-tokenizer.l ${CMAKE_CURRENT_BINARY_DIR}/lex.yy.c)
 add_flex_bison_dependency(coda-expr-tokenizer coda-expr-parser)
 
 # Required include files

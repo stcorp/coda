@@ -20,7 +20,6 @@
 
 /* *INDENT-OFF* */
 
-%option outfile="lex.yy.c"
 %option prefix="coda_expression_"
 %option noyywrap
 %option noinput

@@ -15,6 +15,7 @@ JAVAROOT = java
 
 AM_CPPFLAGS = -Ilibcoda -I$(srcdir)/libcoda
 AM_YFLAGS = -d
+AM_LFLAGS = -o lex.yy.c
 
 HDF4LIBS = @HDF4LIBS@
 HDF5LIBS = @HDF5LIBS@
