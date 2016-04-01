@@ -1,5 +1,7 @@
 * Updated embedded PCRE library to version 8.38.
 
+* Updated embedded expat library to version 2.1.1.
+
 2.16 2016-03-24
 ~~~~~~~~~~~~~~~
 
