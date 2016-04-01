@@ -159,6 +159,7 @@ libz_internal_la_SOURCES = \
 	libcoda/zlib/coda_zlib_mangle.h \
 	libcoda/zlib/crc32.c \
 	libcoda/zlib/crc32.h \
+	libcoda/zlib/gzguts.h \
 	libcoda/zlib/inffast.c \
 	libcoda/zlib/inffast.h \
 	libcoda/zlib/inffixed.h \

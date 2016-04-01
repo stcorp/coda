@@ -1,5 +1,5 @@
 
-These files are taken from libz, version 1.2.3.
+These files are taken from libz, version 1.2.8.
 
 Only the source files that are needed to perform an inflate have been
 included.
