@@ -1686,12 +1686,14 @@ XML_GetBuffer(XML_Parser parser, int len)
 
   if (len > bufferLim - bufferEnd) {
     int neededSize = len + (int)(bufferEnd - bufferPtr);
+#ifdef XML_CONTEXT_BYTES
+    int keep = (int)(bufferPtr - buffer);
+#endif  /* defined XML_CONTEXT_BYTES */
     if (neededSize < 0) {
       errorCode = XML_ERROR_NO_MEMORY;
       return NULL;
     }
 #ifdef XML_CONTEXT_BYTES
-    int keep = (int)(bufferPtr - buffer);
 
     if (keep > XML_CONTEXT_BYTES)
       keep = XML_CONTEXT_BYTES;
