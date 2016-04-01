@@ -12,8 +12,10 @@
 
 #define adler32 coda_adler32
 #define adler32_combine coda_adler32_combine
+#define adler32_combine64 coda_adler32_combine64
 #define crc32 coda_crc32
 #define crc32_combine coda_crc32_combine
+#define crc32_combine64 coda_crc32_combine64
 #define get_crc_table coda_get_crc_table
 #define inflate coda_inflate
 #define inflate_copyright coda_inflate_copyright
@@ -21,14 +23,19 @@
 #define inflate_table coda_inflate_table
 #define inflateCopy coda_inflateCopy
 #define inflateEnd coda_inflateEnd
+#define inflateGetDictionary coda_inflateGetDictionary
 #define inflateGetHeader coda_inflateGetHeader
 #define inflateInit_ coda_inflateInit_
 #define inflateInit2_ coda_inflateInit2_
+#define inflateMark coda_inflateMark
 #define inflatePrime coda_inflatePrime
 #define inflateReset coda_inflateReset
+#define inflateReset2 coda_inflateReset2
+#define inflateResetKeep coda_inflateResetKeep
 #define inflateSetDictionary coda_inflateSetDictionary
 #define inflateSync coda_inflateSync
 #define inflateSyncPoint coda_inflateSyncPoint
+#define inflateUndermine coda_inflateUndermine
 #define z_errmsg coda_z_errmsg
 #define zcalloc coda_zcalloc
 #define zcfree coda_zcfree
