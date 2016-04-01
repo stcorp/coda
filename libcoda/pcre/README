@@ -1,5 +1,5 @@
 
-These files are taken from PCRE, Version 8.00.
+These files are taken from PCRE, Version 8.38.
 
 The source files have been slightly modified in order to fit them into this
 build system. The changes that were made are:

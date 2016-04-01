@@ -212,6 +212,7 @@
 		<File RelativePath="..\libcoda\pcre\coda_pcre_config.h"/>
 		<File RelativePath="..\libcoda\pcre\coda_pcre_mangle.h"/>
 		<File RelativePath="..\libcoda\pcre\pcre.h"/>
+		<File RelativePath="..\libcoda\pcre\pcre_byte_order.c"/>
 		<File RelativePath="..\libcoda\pcre\pcre_chartables.c"/>
 		<File RelativePath="..\libcoda\pcre\pcre_compile.c"/>
 		<File RelativePath="..\libcoda\pcre\pcre_config.c"/>
@@ -220,15 +221,15 @@
 		<File RelativePath="..\libcoda\pcre\pcre_fullinfo.c"/>
 		<File RelativePath="..\libcoda\pcre\pcre_get.c"/>
 		<File RelativePath="..\libcoda\pcre\pcre_globals.c"/>
-		<File RelativePath="..\libcoda\pcre\pcre_info.c"/>
 		<File RelativePath="..\libcoda\pcre\pcre_internal.h"/>
 		<File RelativePath="..\libcoda\pcre\pcre_maketables.c"/>
 		<File RelativePath="..\libcoda\pcre\pcre_newline.c"/>
 		<File RelativePath="..\libcoda\pcre\pcre_ord2utf8.c"/>
+		<File RelativePath="..\libcoda\pcre\pcre_printint.c"/>
 		<File RelativePath="..\libcoda\pcre\pcre_refcount.c"/>
+		<File RelativePath="..\libcoda\pcre\pcre_string_utils.c"/>
 		<File RelativePath="..\libcoda\pcre\pcre_study.c"/>
 		<File RelativePath="..\libcoda\pcre\pcre_tables.c"/>
-		<File RelativePath="..\libcoda\pcre\pcre_try_flipped.c"/>
 		<File RelativePath="..\libcoda\pcre\pcre_ucd.c"/>
 		<File RelativePath="..\libcoda\pcre\pcre_valid_utf8.c"/>
 		<File RelativePath="..\libcoda\pcre\pcre_version.c"/>

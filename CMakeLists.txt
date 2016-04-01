@@ -600,6 +600,7 @@ set(LIBPCRE_SOURCES
   libcoda/pcre/coda_pcre_config.h
   libcoda/pcre/coda_pcre_mangle.h
   libcoda/pcre/pcre.h
+  libcoda/pcre/pcre_byte_order.c
   libcoda/pcre/pcre_chartables.c
   libcoda/pcre/pcre_compile.c
   libcoda/pcre/pcre_config.c
@@ -608,16 +609,15 @@ set(LIBPCRE_SOURCES
   libcoda/pcre/pcre_fullinfo.c
   libcoda/pcre/pcre_get.c
   libcoda/pcre/pcre_globals.c
-  libcoda/pcre/pcre_info.c
   libcoda/pcre/pcre_internal.h
   libcoda/pcre/pcre_maketables.c
   libcoda/pcre/pcre_newline.c
   libcoda/pcre/pcre_ord2utf8.c
-  libcoda/pcre/pcre_printint.src
+  libcoda/pcre/pcre_printint.c
   libcoda/pcre/pcre_refcount.c
+  libcoda/pcre/pcre_string_utils.c
   libcoda/pcre/pcre_study.c
   libcoda/pcre/pcre_tables.c
-  libcoda/pcre/pcre_try_flipped.c
   libcoda/pcre/pcre_ucd.c
   libcoda/pcre/pcre_valid_utf8.c
   libcoda/pcre/pcre_version.c
