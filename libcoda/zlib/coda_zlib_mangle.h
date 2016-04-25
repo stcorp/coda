@@ -11,10 +11,8 @@
  */
 
 #define adler32 coda_adler32
-#define adler32_combine coda_adler32_combine
 #define adler32_combine64 coda_adler32_combine64
 #define crc32 coda_crc32
-#define crc32_combine coda_crc32_combine
 #define crc32_combine64 coda_crc32_combine64
 #define get_crc_table coda_get_crc_table
 #define inflate coda_inflate
@@ -42,5 +40,12 @@
 #define zError coda_zError
 #define zlibCompileFlags coda_zlibCompileFlags
 #define zlibVersion coda_zlibVersion
+
+#if defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS-0 == 64 && defined(_LFS64_LARGEFILE) && _LFS64_LARGEFILE-0
+#else
+/* only perform our own defines if these functions are not already mapped to their 64-bit variants by zlib.h */
+#define adler32_combine coda_adler32_combine
+#define crc32_combine coda_crc32_combine
+#endif
 
 #endif
