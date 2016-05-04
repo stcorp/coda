@@ -20,25 +20,33 @@ include(CheckTypeSize)
 include(TestBigEndian)
 include(CMakeDependentOption)
 
+# Use RelWithDebInfo as default target 
+#
+IF(NOT CMAKE_BUILD_TYPE)
+  SET(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING
+      "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
+      FORCE)
+ENDIF(NOT CMAKE_BUILD_TYPE)
+
 # Option handling
 #
 option(CODA_BUILD_SUBPACKAGE_MODE "build CODA as sub-package" OFF)
 option(CODA_BUILD_IDL "build IDL interface" OFF)
 option(CODA_BUILD_MATLAB "build MATLAB interface" OFF)
+option(CODA_BUILD_PYTHON "build Python interface" OFF)
 option(CODA_WITH_HDF4 "use HDF4" OFF)
 option(CODA_WITH_HDF5 "use HDF5" OFF)
 cmake_dependent_option(
-  CODA_DISABLE_HDF4_VDATA_ATTRIBUTES "enable HDF4 Vdata attributes" OFF
+  CODA_ENABLE_HDF4_VDATA_ATTRIBUTES "enable HDF4 Vdata attributes" ON
   CODA_WITH_HDF4 ON)
-option(CODA_BUILD_PYTHON "build Python interface" OFF)
 
 # The following is done because in CMake options are always
 # ON/OFF only, but for config.h substition we need something with
 # value 1.
 #
-if(NOT CODA_DISABLE_HDF4_VDATA_ATTRIBUTES)
+if(CODA_ENABLE_HDF4_VDATA_ATTRIBUTES)
   set(ENABLE_HDF4_VDATA_ATTRIBUTES 1)
-endif(NOT CODA_DISABLE_HDF4_VDATA_ATTRIBUTES)
+endif(CODA_ENABLE_HDF4_VDATA_ATTRIBUTES)
 
 # Some autoconf variables that CMake does not use itself, but
 # that are used in the config file substitutions.
@@ -61,10 +69,6 @@ if(CMAKE_COMPILER_IS_GNUCC)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
   endif("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
 endif(CMAKE_COMPILER_IS_GNUCC)
-# CMake adds -DNDEBUG by default in the Release targets. We want
-# asserts enabled even in production releases, so we explicitly
-# re-enable them here.
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -UNDEBUG")
 
 # hdf
 #
@@ -73,7 +77,7 @@ if(CODA_WITH_HDF4)
   find_package(HDF4)
 
   if(NOT HDF4_FOUND)
-    message(FATAL_ERROR "HDF4 libraries and/or header files are not found. Try setting the HDF4_LIB and HDF4_INCLUDE environment variables to the location of your HDF4 library and include files.")
+    message(FATAL_ERROR "HDF4 libraries and/or header files are not found. Try setting the HDF4_LIBRARY_DIR and HDF4_INCLUDE_DIR cmake variables to the location of your HDF4 library and include files.")
   else(NOT HDF4_FOUND)
     include_directories(${HDF4_INCLUDE_DIR})
   endif(NOT HDF4_FOUND)
@@ -86,7 +90,7 @@ if(CODA_WITH_HDF5)
   find_package(HDF5)
 
   if(NOT HDF5_FOUND)
-    message(FATAL_ERROR "HDF5 libraries and/or header files are not found. Try setting the HDF5_LIB and HDF5_INCLUDE environment variables to the location of your HDF5 library and include files.")
+    message(FATAL_ERROR "HDF5 libraries and/or header files are not found. Try setting the HDF5_LIBRARY_DIR and HDF5_INCLUDE_DIR cmake variables to the location of your HDF5 library and include files.")
   else(NOT HDF5_FOUND)
     include_directories(${HDF5_INCLUDE_DIR})
   endif(NOT HDF5_FOUND)
