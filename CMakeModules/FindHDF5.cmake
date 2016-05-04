@@ -14,12 +14,12 @@ include(CheckIncludeFile)
 set(HDF5_INCLUDE_DIR CACHE STRING "Location of HDF5 include files")
 set(HDF5_LIBRARY_DIR CACHE STRING "Location of HDF5 library files")
 
+find_package(ZLIB)
+find_package(SZIP)
+
 if(HDF5_INCLUDE_DIR)
   set(CMAKE_REQUIRED_INCLUDES ${HDF5_INCLUDE_DIR})
 endif(HDF5_INCLUDE_DIR)
-
-find_package(ZLIB)
-find_package(SZIP)
 
 check_include_file(hdf5.h HAVE_HDF5_H)
 

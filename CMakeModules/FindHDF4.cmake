@@ -14,13 +14,13 @@ include(CheckIncludeFile)
 set(HDF4_INCLUDE_DIR CACHE STRING "Location of HDF4 include files")
 set(HDF4_LIBRARY_DIR CACHE STRING "Location of HDF4 library files")
 
-if(HDF4_INCLUDE_DIR)
-  set(CMAKE_REQUIRED_INCLUDES ${HDF4_INCLUDE_DIR})
-endif(HDF4_INCLUDE_DIR)
-
 find_package(JPEG)
 find_package(ZLIB)
 find_package(SZIP)
+
+if(HDF4_INCLUDE_DIR)
+  set(CMAKE_REQUIRED_INCLUDES ${HDF4_INCLUDE_DIR})
+endif(HDF4_INCLUDE_DIR)
 
 check_include_file(hdf.h HAVE_HDF_H)
 check_include_file(mfhdf.h HAVE_MFHDF_H)
