@@ -679,7 +679,8 @@ add_library(coda_static STATIC ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBPCRE_
 # On Windows, we want libcoda.lib for static, coda.dll & coda.lib for shared.
 # On Unix, we want libcoda.a and libcoda.so
 if(WIN32)
-  set_target_properties(coda_static PROPERTIES OUTPUT_NAME "libcoda")
+  # Also set XML_STATIC on Windows so expat is build for inclusion into a static library
+  set_target_properties(coda_static PROPERTIES OUTPUT_NAME "libcoda" COMPILE_FLAGS "-DXML_STATIC")
 else(WIN32)
   set_target_properties(coda_static PROPERTIES OUTPUT_NAME "coda")
 endif(WIN32)
