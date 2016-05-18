@@ -563,6 +563,9 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
     set_target_properties(coda_python
       PROPERTIES OUTPUT_NAME "_codac"
       PREFIX "")
+    if(WIN32)
+      set_target_properties(coda_python PROPERTIES SUFFIX pyd)
+    endif()
   
     install(TARGETS coda_python DESTINATION ${CODA_PYTHON_INSTALL_DIR}/coda)
     install(FILES
