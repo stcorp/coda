@@ -73,6 +73,59 @@ int vsnprintf(const char *, size_t, const char *, va_list ap);
 /* Make sure we build the PCRE library statically on Windows */
 #define PCRE_STATIC
 
+/* This is the relative path to CODA definitions for the IDL interface. */
+#undef CODA_DEFINITION_IDL
+
+/* This is the relative path to CODA definitions for the MATLAB interface. */
+#undef CODA_DEFINITION_MATLAB
+
+#ifdef WIN32
+
+/* include windows specific headers */
+#include <windows.h>
+#include <io.h>
+#include <direct.h>
+
+/* include sys/stat.h because we are going to override stat */
+#include <sys/stat.h>
+
+/* we need to redefine ELEMENT_TYPE because it conflicts with io.h contents */
+#define ELEMENT_TYPE ELEMENT_TYPE_RENAMED
+
+/* redefines for special string handling functions */
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
+#define snprintf _snprintf
+#if defined(_MSC_VER) && _MSC_VER < 1500
+#define vsnprintf _vsnprintf
+#endif
+
+/* redefines for file handling functions */
+#define open(arg1,arg2) _open(arg1,arg2)
+#define close(arg1) _close(arg1)
+#define read(arg1,arg2,arg3) _read(arg1,arg2,arg3)
+#define lseek(arg1,arg2,arg3) _lseeki64(arg1,arg2,arg3)
+#define off_t __int64
+#define stat _stati64
+#define S_IFREG _S_IFREG
+
+#define YYMALLOC malloc
+#define YYFREE free
+
+/* coda-idl defines */
+
+#ifndef CODA_DEFINITION_IDL
+#define CODA_DEFINITION_IDL "../definitions"
+#endif
+
+/* coda-matlab defines */
+
+#ifndef CODA_DEFINITION_MATLAB
+#define CODA_DEFINITION_MATLAB "../definitions"
+#endif
+
+#endif
+
 #endif /* !defined(CODA_CONFIG_H) */
 ])
 

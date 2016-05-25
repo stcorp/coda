@@ -818,12 +818,11 @@ EXTRA_DIST += \
 	CMakeModules/FindZLIB.cmake \
 	CMakeModules/FindJPEG.cmake \
 	CMakeModules/FindSZIP.cmake \
-	cmakeify-dot-infiles.pl \
 	config.h.cmake.in \
 	libcoda/coda.h.cmake.in 
 
-config.h.cmake.in: config.h.in cmakeify-dot-infiles.pl
-	$(srcdir)/cmakeify-dot-infiles.pl $(srcdir)/config.h.in config.h.cmake.in2
+config.h.cmake.in: config.h.in Makefile.am
+	cat $(srcdir)/config.h.in | sed -e 's/#[ ]*undef \(.*\)/#cmakedefine \1 \$${\1}/' > config.h.cmake.in2
 	@if diff $(srcdir)/config.h.cmake.in config.h.cmake.in2 >/dev/null 2>&1 ; then \
 	  echo "config.h.cmake.in is unchanged" ; \
 	  rm -f config.h.cmake.in2 ; \
@@ -831,8 +830,8 @@ config.h.cmake.in: config.h.in cmakeify-dot-infiles.pl
 	  mv config.h.cmake.in2 $(srcdir)/config.h.cmake.in ; \
 	fi
 
-libcoda/coda.h.cmake.in: libcoda/coda.h.in cmakeify-dot-infiles.pl
-	$(srcdir)/cmakeify-dot-infiles.pl $(srcdir)/libcoda/coda.h.in libcoda/coda.h.cmake.in2
+libcoda/coda.h.cmake.in: libcoda/coda.h.in Makefile.am
+	cat $(srcdir)/libcoda/coda.h.in | sed 's/#[ ]*undef \(.*\)/#cmakedefine \1 \$${\1}/' > libcoda/coda.h.cmake.in2
 	@if diff $(srcdir)/libcoda/coda.h.cmake.in libcoda/coda.h.cmake.in2 >/dev/null 2>&1 ; then \
 	  echo "libcoda/coda.h.cmake.in is unchanged" ; \
 	  rm -f libcoda/coda.h.cmake.in2 ; \
