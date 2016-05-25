@@ -228,6 +228,11 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/libcoda/doc/Doxyfile)
 
 
+if(MSVC)
+# Suppress warnings from VC on deprecated POSIX names
+add_definitions(-D_CRT_NONSTDC_NO_DEPRECATE)
+endif(MSVC)
+
 # libcoda sources
 #
 set(LIBCODA_SOURCES
