@@ -679,12 +679,14 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
   set_target_properties(coda PROPERTIES
     VERSION ${LIBCODA_MAJOR}.${LIBCODA_MINOR}.${LIBCODA_REVISION}
     SOVERSION ${LIBCODA_MAJOR})
-  if(CODA_WITH_HDF5)
-    # Also set H5_BUILT_AS_DYNAMIC_LIB since we link against the dynamic HDF5 library
-    set_target_properties(coda PROPERTIES COMPILE_FLAGS "-DH5_BUILT_AS_DYNAMIC_LIB -DLIBCODADLL -DLIBCODADLL_EXPORTS")
-  else(CODA_WITH_HDF5)
-    set_target_properties(coda PROPERTIES COMPILE_FLAGS "-DLIBCODADLL -DLIBCODADLL_EXPORTS")
-  endif(CODA_WITH_HDF5)
+  if(WIN32)
+    if(CODA_WITH_HDF5)
+      # Also set H5_BUILT_AS_DYNAMIC_LIB since we link against the dynamic HDF5 library
+      set_target_properties(coda PROPERTIES COMPILE_FLAGS "-DH5_BUILT_AS_DYNAMIC_LIB -DLIBCODADLL -DLIBCODADLL_EXPORTS")
+    else(CODA_WITH_HDF5)
+      set_target_properties(coda PROPERTIES COMPILE_FLAGS "-DLIBCODADLL -DLIBCODADLL_EXPORTS")
+    endif(CODA_WITH_HDF5)
+  endif(WIN32)
   install(TARGETS coda DESTINATION lib)
 endif(NOT CODA_BUILD_SUBPACKAGE_MODE)
 
