@@ -4320,7 +4320,7 @@ int coda_read_definitions(const char *definition_path)
                 if (pattern == NULL)
                 {
                     coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                                   (long)strlen(path) + 10 + 1, __FILE__, __LINE__);
+                                   (long)strlen(path_component) + 10 + 1, __FILE__, __LINE__);
                     free(path);
                     return -1;
                 }
