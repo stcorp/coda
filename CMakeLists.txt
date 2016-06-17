@@ -556,11 +556,7 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
     endif(NOT NUMPY_FOUND)
     include_directories(${NUMPY_INCLUDE_DIR})
   
-    if(WIN32)
-      set(PYTHON_INSTALL_DIR python)
-    else()
-      execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys; from distutils import sysconfig; sys.stdout.write(sysconfig.get_python_lib(1,0,prefix=''))" OUTPUT_VARIABLE PYTHON_INSTALL_DIR)
-    endif()
+    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys; from distutils import sysconfig; sys.stdout.write(sysconfig.get_python_lib(1,0,prefix=''))" OUTPUT_VARIABLE PYTHON_INSTALL_DIR)
     set(CODA_PYTHON_INSTALL_DIR "${PYTHON_INSTALL_DIR}" CACHE PATH "Install location for CODA Python package")
   
     add_library(coda_python MODULE python/codac.c)
