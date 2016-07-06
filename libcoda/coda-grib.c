@@ -1630,6 +1630,16 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
 
         file_offset += 6;
 
+        /* supported dataRepresentationType values
+         * 0: latitude/longitude grid (equidistant cylindrical or Plate Carree projection)
+         * 4: Gaussian latitude/longitude grid
+         * 10: rotated latitude/longitude grid
+         * 14: rotated Gaussian latitude/longitude grid
+         * 20: stretched latitude/longitude grid
+         * 24: stretched Gaussian latitude/longitude grid
+         * 30: stretched and rotated latitude/longitude grid
+         * 34: stretched and rotated Gaussian latitude/longitude grid
+         */
         if (buffer[5] == 0 || buffer[5] == 4 || buffer[5] == 10 || buffer[5] == 14 || buffer[5] == 20 ||
             buffer[5] == 24 || buffer[5] == 30 || buffer[5] == 34)
         {
@@ -2259,6 +2269,16 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
 
             file_offset += 9;
 
+            /* supported gridDefinitionTemplateNumber values
+             * 0: latitude/longitude grid (equidistant cylindrical or Plate Carree projection)
+             * 1: rotated latitude/longitude grid
+             * 2: stretched latitude/longitude grid
+             * 3: stretched and rotated latitude/longitude grid
+             * 40: Gaussian latitude/longitude grid
+             * 41: rotated Gaussian latitude/longitude grid
+             * 42: stretched Gaussian latitude/longitude grid
+             * 43: stretched and rotated Gaussian latitude/longitude grid
+             */
             if (buffer[0] == 0 && (template_number <= 3 || (template_number >= 40 && template_number <= 43)))
             {
                 uint32_t intvalue;
