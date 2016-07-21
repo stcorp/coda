@@ -1,3 +1,6 @@
+
+* Fixed enabling of HDF4/HDF5 in CMake build on Windows.
+
 2.17 2016-06-27
 ~~~~~~~~~~~~~~~
 
