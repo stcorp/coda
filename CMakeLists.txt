@@ -695,6 +695,10 @@ add_library(coda_static STATIC ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBPCRE_
 if(WIN32)
   # Also set XML_STATIC on Windows so expat is build for inclusion into a static library
   set_target_properties(coda_static PROPERTIES OUTPUT_NAME "libcoda" COMPILE_FLAGS "-DXML_STATIC")
+  if(CODA_WITH_HDF5)
+    # Also set H5_BUILT_AS_DYNAMIC_LIB since we link against the dynamic HDF5 library
+    set_target_properties(coda PROPERTIES COMPILE_FLAGS "-DH5_BUILT_AS_DYNAMIC_LIB")
+  endif(CODA_WITH_HDF5)
 else(WIN32)
   set_target_properties(coda_static PROPERTIES OUTPUT_NAME "coda")
 endif(WIN32)
