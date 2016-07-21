@@ -680,9 +680,9 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
   if(WIN32)
     if(CODA_WITH_HDF5)
       # Also set H5_BUILT_AS_DYNAMIC_LIB since we link against the dynamic HDF5 library
-      set_target_properties(coda PROPERTIES COMPILE_FLAGS "-DH5_BUILT_AS_DYNAMIC_LIB -DLIBCODADLL -DLIBCODADLL_EXPORTS")
+      set_target_properties(coda PROPERTIES COMPILE_FLAGS "-DH5_BUILT_AS_DYNAMIC_LIB -DXML_BUILDING_EXPAT -DLIBCODADLL -DLIBCODADLL_EXPORTS")
     else(CODA_WITH_HDF5)
-      set_target_properties(coda PROPERTIES COMPILE_FLAGS "-DLIBCODADLL -DLIBCODADLL_EXPORTS")
+      set_target_properties(coda PROPERTIES COMPILE_FLAGS "-DXML_BUILDING_EXPAT -DLIBCODADLL -DLIBCODADLL_EXPORTS")
     endif(CODA_WITH_HDF5)
   endif(WIN32)
   install(TARGETS coda DESTINATION lib)
@@ -694,10 +694,12 @@ add_library(coda_static STATIC ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBPCRE_
 # On Unix, we want libcoda.a and libcoda.so
 if(WIN32)
   # Also set XML_STATIC on Windows so expat is build for inclusion into a static library
-  set_target_properties(coda_static PROPERTIES OUTPUT_NAME "libcoda" COMPILE_FLAGS "-DXML_STATIC")
+  set_target_properties(coda_static PROPERTIES OUTPUT_NAME "libcoda")
   if(CODA_WITH_HDF5)
     # Also set H5_BUILT_AS_DYNAMIC_LIB since we link against the dynamic HDF5 library
-    set_target_properties(coda PROPERTIES COMPILE_FLAGS "-DH5_BUILT_AS_DYNAMIC_LIB")
+    set_target_properties(coda PROPERTIES COMPILE_FLAGS "-DH5_BUILT_AS_DYNAMIC_LIB -DXML_BUILDING_EXPAT")
+  else(CODA_WITH_HDF5)
+    set_target_properties(coda PROPERTIES COMPILE_FLAGS "-DXML_BUILDING_EXPAT")
   endif(CODA_WITH_HDF5)
 else(WIN32)
   set_target_properties(coda_static PROPERTIES OUTPUT_NAME "coda")
