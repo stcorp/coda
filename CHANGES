@@ -1,6 +1,10 @@
 
 * Fixed enabling of HDF4/HDF5 in CMake build on Windows.
 
+* Allow xml attributes with a namespace in xml products to be defined
+  in a codadef by a definition of an attribute without a namespace
+  (as was already possible for xml elements).
+
 2.17 2016-06-27
 ~~~~~~~~~~~~~~~
 
