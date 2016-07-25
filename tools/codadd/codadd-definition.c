@@ -353,7 +353,7 @@ static void generate_type(const coda_type *type, coda_format parent_format)
             if (field->real_name != NULL && strcmp(field->real_name, field->name) != 0)
             {
                 ff_printf(" real_name=\"");
-                generate_escaped_string(field->real_name, -1);
+                generate_xml_string(field->real_name, -1);
                 ff_printf("\"");
             }
             ff_printf(">\n");
@@ -403,7 +403,7 @@ static void generate_type(const coda_type *type, coda_format parent_format)
                     if (field->real_name != NULL && strcmp(field->real_name, field->name) != 0)
                     {
                         ff_printf(" real_name=\"");
-                        generate_escaped_string(field->real_name, -1);
+                        generate_xml_string(field->real_name, -1);
                         ff_printf("\"");
                     }
                     ff_printf(">\n");
