@@ -89,7 +89,7 @@ int coda_mem_type_add_attribute(coda_mem_type *type, const char *real_name, coda
 int coda_mem_type_set_attributes(coda_mem_type *type, coda_dynamic_type *attributes, int update_definition);
 
 coda_mem_record *coda_mem_record_new(coda_type_record *definition, coda_dynamic_type *attributes);
-int coda_mem_record_add_field(coda_mem_record *type, const char *name, coda_dynamic_type *field_type,
+int coda_mem_record_add_field(coda_mem_record *type, const char *real_name, coda_dynamic_type *field_type,
                               int update_definition);
 int coda_mem_record_validate(coda_mem_record *type);
 
