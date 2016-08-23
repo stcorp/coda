@@ -649,6 +649,7 @@ LIBCODA_API int coda_recognize_file(const char *filename, int64_t *file_size, co
 LIBCODA_API int coda_open(const char *filename, coda_product **product)
 {
     coda_product_definition *definition = NULL;
+    coda_product *product_file;
 
     if (filename == NULL)
     {
@@ -661,20 +662,22 @@ LIBCODA_API int coda_open(const char *filename, coda_product **product)
         return -1;
     }
 
-    if (open_file(filename, product) != 0)
+    if (open_file(filename, &product_file) != 0)
     {
         return -1;
     }
-    if (coda_data_dictionary_find_definition_for_product(*product, &definition) != 0)
+    if (coda_data_dictionary_find_definition_for_product(product_file, &definition) != 0)
     {
-        coda_close(*product);
+        coda_close(product_file);
         return -1;
     }
-    if (set_definition(product, definition) != 0)
+    if (set_definition(&product_file, definition) != 0)
     {
-        coda_close(*product);
+        coda_close(product_file);
         return -1;
     }
+
+    *product = product_file;
 
     return 0;
 }
@@ -696,6 +699,7 @@ LIBCODA_API int coda_open_as(const char *filename, const char *product_class, co
                              coda_product **product)
 {
     coda_product_definition *definition = NULL;
+    coda_product *product_file;
 
     if (filename == NULL)
     {
@@ -724,16 +728,18 @@ LIBCODA_API int coda_open_as(const char *filename, const char *product_class, co
         }
     }
 
-    if (open_file(filename, product) != 0)
+    if (open_file(filename, &product_file) != 0)
     {
         return -1;
     }
     /* make sure to also set definition if definition==NULL (to trigger checks on whether that is allowed) */
-    if (set_definition(product, definition) != 0)
+    if (set_definition(&product_file, definition) != 0)
     {
-        coda_close(*product);
+        coda_close(product_file);
         return -1;
     }
+
+    *product = product_file;
 
     return 0;
 }
