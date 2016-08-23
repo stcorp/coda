@@ -779,6 +779,7 @@ int coda_netcdf_reopen(coda_product **product)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
                        sizeof(coda_netcdf_product), __FILE__, __LINE__);
+        coda_close(*product);
         return -1;
     }
     product_file->filename = NULL;
