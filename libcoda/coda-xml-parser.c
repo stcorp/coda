@@ -262,7 +262,7 @@ static void parser_info_cleanup(parser_info *info)
     {
         XML_ParserFree(info->parser);
     }
-    for (i = 0; i < info->depth; i++)
+    for (i = 0; i <= info->depth; i++)
     {
         if (info->record[i] != NULL)
         {
@@ -846,7 +846,7 @@ int coda_xml_parse(coda_xml_product *product)
     }
 
     product->root_type = (coda_dynamic_type *)info.record[0];
-    info.depth = 0;
+    info.depth = -1;
 
     parser_info_cleanup(&info);
 
