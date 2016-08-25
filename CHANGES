@@ -1,3 +1,5 @@
+2.17.1 2016-08-25
+~~~~~~~~~~~~~~~~~
 
 * The open_as() function can now force a file using a self-describing format
   (e.g. HDF5, XML, etc.) to be opened as a raw binary/ascii file if the
@@ -11,6 +13,9 @@
 * Allow xml attributes with a namespace in xml products to be defined
   in a codadef by a definition of an attribute without a namespace
   (as was already possible for xml elements).
+
+* Fixed wrong types for fixed surface fields in format mapping
+  documentation for GRIB format.
 
 2.17 2016-06-27
 ~~~~~~~~~~~~~~~
