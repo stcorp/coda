@@ -512,7 +512,7 @@ static int set_definition(coda_product **product, coda_product_definition *defin
     return 0;
 }
 
-static int open_file(const char *filename, coda_product **product_file)
+static int open_file(const char *filename, coda_product **product_file, int force_binary)
 {
     coda_product *product;
     int64_t file_size;
@@ -529,10 +529,17 @@ static int open_file(const char *filename, coda_product **product_file)
         return -1;
     }
 
-    if (get_format(product, &format) != 0)
+    if (force_binary)
     {
-        coda_close(product);
-        return -1;
+        format = coda_format_binary;
+    }
+    else
+    {
+        if (get_format(product, &format) != 0)
+        {
+            coda_close(product);
+            return -1;
+        }
     }
 
     if (reopen_with_backend(&product, format) != 0)
@@ -579,7 +586,7 @@ LIBCODA_API int coda_recognize_file(const char *filename, int64_t *file_size, co
     coda_product_definition *definition = NULL;
     coda_product *product;
 
-    if (open_file(filename, &product) != 0)
+    if (open_file(filename, &product, 0) != 0)
     {
         return -1;
     }
@@ -662,7 +669,7 @@ LIBCODA_API int coda_open(const char *filename, coda_product **product)
         return -1;
     }
 
-    if (open_file(filename, &product_file) != 0)
+    if (open_file(filename, &product_file, 0) != 0)
     {
         return -1;
     }
@@ -700,6 +707,7 @@ LIBCODA_API int coda_open_as(const char *filename, const char *product_class, co
 {
     coda_product_definition *definition = NULL;
     coda_product *product_file;
+    int open_as_binary = 0;
 
     if (filename == NULL)
     {
@@ -726,9 +734,14 @@ LIBCODA_API int coda_open_as(const char *filename, const char *product_class, co
         {
             return -1;
         }
+        if (definition != NULL)
+        {
+            /* we allow self-describing file formats to be opened as a binary/ascii file with a definition */
+            open_as_binary = definition->format == coda_format_ascii || definition->format == coda_format_binary;
+        }
     }
 
-    if (open_file(filename, &product_file) != 0)
+    if (open_file(filename, &product_file, open_as_binary) != 0)
     {
         return -1;
     }

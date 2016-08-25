@@ -1,4 +1,8 @@
 
+* The open_as() function can now force a file using a self-describing format
+  (e.g. HDF5, XML, etc.) to be opened as a raw binary/ascii file if the
+  product definition is binary/ascii.
+
 * Fixed enabling of HDF4/HDF5 in CMake build on Windows.
 
 * Allow xml attributes with a namespace in xml products to be defined
