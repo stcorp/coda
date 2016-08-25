@@ -3,6 +3,9 @@
   (e.g. HDF5, XML, etc.) to be opened as a raw binary/ascii file if the
   product definition is binary/ascii.
 
+* Fixed open file handle counting leak in IDL interface when coda_open()
+  failed.
+
 * Fixed enabling of HDF4/HDF5 in CMake build on Windows.
 
 * Allow xml attributes with a namespace in xml products to be defined
