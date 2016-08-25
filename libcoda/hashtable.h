@@ -21,10 +21,12 @@
 #ifndef HASHTABLE_H
 #define HASHTABLE_H
 
+/* *INDENT-OFF* */
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+/* *INDENT-ON* */
 
 /* This hashtable is a special hash table in which 'name' is the key and 'index' is the value.
  * The index is the 0-based index that represents the order in which the names were added to the hash table.
@@ -50,8 +52,10 @@ long hashtable_get_index_from_name(hashtable *table, const char *name);
 long hashtable_get_index_from_name_n(hashtable *table, const char *name, int name_length);
 void hashtable_delete(hashtable *table);
 
+/* *INDENT-OFF* */
 #ifdef __cplusplus
 }
 #endif
 
 #endif
+/* *INDENT-ON* */
