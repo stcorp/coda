@@ -1,5 +1,5 @@
 # autoconf file for CODA
-AC_INIT([CODA],[2.17.1])
+AC_INIT([CODA],[2.17.2])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE(foreign subdir-objects 1.10 -Wall)
 

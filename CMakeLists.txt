@@ -2,7 +2,7 @@
 #
 project(CODA)
 
-set(VERSION 2.17.1)
+set(VERSION 2.17.2)
 set(CODA_VERSION \"${VERSION}\")
 
 # General setup

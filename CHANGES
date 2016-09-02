@@ -1,3 +1,8 @@
+2.17.2 2016-09-02
+~~~~~~~~~~~~~~~~~
+
+* Fix compatibility issue with different flex versions for autotools build.
+
 2.17.1 2016-08-25
 ~~~~~~~~~~~~~~~~~
 
