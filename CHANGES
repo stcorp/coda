@@ -1,3 +1,7 @@
+
+* Fix in autotools build where coda executables were incorrectly linking to
+  shared coda library if --disable-static was provided to configure script.
+
 2.17.2 2016-09-02
 ~~~~~~~~~~~~~~~~~
 
