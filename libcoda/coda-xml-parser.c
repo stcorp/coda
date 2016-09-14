@@ -487,9 +487,9 @@ static void XMLCALL start_element_handler(void *data, const char *el, const char
     if (definition->attributes == NULL)
     {
         info->attributes = NULL;
-        if (attr[0] != NULL)
+        if (info->update_definition)
         {
-            if (info->update_definition)
+            if (attr[0] != NULL || el != coda_element_name_from_xml_name(el))
             {
                 definition->attributes = coda_type_record_new(coda_format_xml);
                 if (definition->attributes == NULL)
@@ -505,7 +505,10 @@ static void XMLCALL start_element_handler(void *data, const char *el, const char
                     return;
                 }
             }
-            else
+        }
+        else
+        {
+            if (attr[0] != NULL)
             {
                 coda_set_error(CODA_ERROR_PRODUCT, "xml attribute '%s' is not allowed", attr[0]);
                 abort_parser(info);
