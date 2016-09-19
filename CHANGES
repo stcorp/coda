@@ -5,6 +5,8 @@
 * Fix issue where in a specific case (definition had no attributes and xml
   element had a namespace) no error was raised for and unallowed xml attribute.
 
+* Added entry for 2016-12-31 in leap second table.
+
 2.17.2 2016-09-02
 ~~~~~~~~~~~~~~~~~
 
