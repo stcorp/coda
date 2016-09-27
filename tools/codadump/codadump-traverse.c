@@ -565,7 +565,7 @@ void traverse_product()
     {
         handle_coda_error();
     }
-    if (coda_get_product_root_type(traverse_info.pf, &traverse_info.type[traverse_info.current_depth]) != 0)
+    if (coda_cursor_get_type(&traverse_info.cursor, &traverse_info.type[traverse_info.current_depth]) != 0)
     {
         handle_coda_error();
     }
