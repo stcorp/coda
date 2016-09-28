@@ -7,6 +7,10 @@
 
 * Added entry for 2016-12-31 in leap second table.
 
+* Fixed issue in codadump where for products with a self describing format it
+  was using the available codadef definition (if available) to navigate the
+  product, instead of using the actual (self described) format.
+
 2.17.2 2016-09-02
 ~~~~~~~~~~~~~~~~~
 
