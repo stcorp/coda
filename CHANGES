@@ -3,7 +3,7 @@
   shared coda library if --disable-static was provided to configure script.
 
 * Fix issue where in a specific case (definition had no attributes and xml
-  element had a namespace) no error was raised for and unallowed xml attribute.
+  element had a namespace) no error was raised for an unallowed xml attribute.
 
 * Added entry for 2016-12-31 in leap second table.
 
