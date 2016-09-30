@@ -1568,10 +1568,9 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
                                                     (coda_product *)product, buffer[21] * 256 + buffer[22]);
     coda_mem_record_add_field(message, "numberIncludedInAverage", type, 0);
 
-    type =
-        (coda_dynamic_type *)
-        coda_mem_uint8_new((coda_type_number *)grib_type[grib1_numberMissingFromAveragesOrAccumulations], NULL,
-                           (coda_product *)product, buffer[23]);
+    type = (coda_dynamic_type *)coda_mem_uint8_new
+        ((coda_type_number *)grib_type[grib1_numberMissingFromAveragesOrAccumulations], NULL,
+         (coda_product *)product, buffer[23]);
     coda_mem_record_add_field(message, "numberMissingFromAveragesOrAccumulations", type, 0);
 
     type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib1_centuryOfReferenceTimeOfData],
@@ -1651,10 +1650,9 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
             gds = coda_mem_record_new((coda_type_record *)grib_type[grib1_grid], NULL);
 
             NV = buffer[3];
-            type =
-                (coda_dynamic_type *)
-                coda_mem_uint8_new((coda_type_number *)grib_type[grib1_numberOfVerticalCoordinateValues], NULL,
-                                   (coda_product *)product, NV);
+            type = (coda_dynamic_type *)coda_mem_uint8_new
+                ((coda_type_number *)grib_type[grib1_numberOfVerticalCoordinateValues], NULL, (coda_product *)product,
+                 NV);
             coda_mem_record_add_field(gds, "numberOfVerticalCoordinateValues", type, 0);
 
             PVL = buffer[4];

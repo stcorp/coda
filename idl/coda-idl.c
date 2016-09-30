@@ -1232,9 +1232,9 @@ static int idl_coda_fetch_cursor_to_StructDefPtr(coda_cursor *cursor, IDL_Struct
                 {
                     case coda_record_class:
                         /* insert cursor type (recursive call) */
-                        result = idl_coda_fetch_cursor_to_StructDefPtr(cursor,
-                                                                       (IDL_StructDefPtr *)
-                                                                       &record_tags[field_index].type);
+                        result =
+                            idl_coda_fetch_cursor_to_StructDefPtr(cursor,
+                                                                  (IDL_StructDefPtr *)&record_tags[field_index].type);
                         break;
                     case coda_array_class:
                         {
