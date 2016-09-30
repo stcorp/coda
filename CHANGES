@@ -66,6 +66,9 @@
   This allows for codadef entries that are purely meant to detect the
   product type/version for a product using a self-describing data format.
 
+* codacheck can now verify the format of self-describing formats such as
+  netCDF, HDF4, HDF5, CDF, if a definition is provided in a codadef file.
+
 * Added coda_expression_is_equal(), coda_expression_print(), and 
   coda_cursor_print_path() functions.
 
