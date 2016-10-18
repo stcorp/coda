@@ -80,10 +80,6 @@ What you will need
     Windows you will need to have version 4.2.11 of HDF).
     You will also need the additional required libraries libjpeg, szlib, and
     zlib.
-    On some UNIX systems you can install HDF4 via the package manager on your
-    system. Make sure that this package also installs the netcdf.h include file
-    on your system. If this is not the case you will also have to install the
-    netcdf package on your system.
 
   - If you want to use the HDF5 features of CODA then you will need to have a
     recent version of HDF5 installed (for building the source package on
@@ -207,8 +203,8 @@ a Unix-based platform:
     then CODA will try to locate the HDF4 include files in the default
     locations for include files (/usr/local/include is usually not considered a
     default location!). If ./configure complains that it can't find the
-    'hdf.h', 'netcdf.h', or 'mfhdf.h' include files, pass this option to
-    ./configure with the location of these include files.
+    'hdf.h' or 'mfhdf.h' include files, pass this option to ./configure with
+    the location of these include files.
 
     --disable-hdf4-vdata-attributes : Pass this option if you are using HDF4
     version 4.2r1 or earlier. This option disables the support for vdata and
