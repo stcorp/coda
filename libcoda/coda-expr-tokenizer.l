@@ -27,9 +27,6 @@
 %option always-interactive
 
 %{
-
-/* *INDENT-ON* */
-
 #include "coda-expr.h"
 
 #include <math.h>
@@ -37,9 +34,6 @@
 #include <string.h>
 
 #include "coda-expr-parser.h"
-
-/* *INDENT-OFF* */
-
 %}
 
 INTEGER      [0-9]+
@@ -144,7 +138,7 @@ INDEX        "i"|"j"|"k"
                             yylval.stringval = strdup(yytext);                            
                             return FLOAT_VALUE;
                         }
-{WHITESPACE}           /* eat whitespace */
-.                      return (*yytext);
+{WHITESPACE}            /* eat whitespace */
+.                       return (*yytext);
 
 %%
