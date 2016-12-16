@@ -1,0 +1,41 @@
+{% set version = "2.17.3" %}
+{% set sha256 = "3060c5193643d84f81dfbea238ab80282f6668b4bc9e839dada047f6f9a06911" %}
+
+package:
+  name: coda
+  version: {{ version }} 
+
+source:
+  fn : coda-{{ version }}.tar.gz
+  url: https://github.com/stcorp/coda/releases/download/{{ version }}/coda-{{ version }}.tar.gz
+  sha256: {{ sha256 }}
+
+requirements:
+  build:
+    - python
+    - setuptools
+    - bison
+    - flex
+    - automake
+    - autoconf
+    - libtool
+    - numpy
+    - zlib
+    - hdf4
+    - hdf5
+    - jpeg
+
+  run:
+    - python
+    - numpy
+    - zlib
+    - hdf4
+    - hdf5
+    - jpeg
+
+about:
+  home: https://github.com/stcorp/coda
+  license: GNU GENERAL PUBLIC LICENSE Version 2, June 1991
+  license_family: GPL
+  license_file: COPYING
+
