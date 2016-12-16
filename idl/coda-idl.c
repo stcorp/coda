@@ -2181,28 +2181,11 @@ static int idl_coda_do_fetchspec_to_datahandle(int argc, IDL_VPTR *argv, struct 
                 coda_set_error(CODA_IDL_ERR_WRONG_DATA_ITEM_SELECTOR, NULL);
                 return -1;
 
-            case cmd_string:   /* handle 'goto record field' command */
+            case cmd_string:   /* handle 'goto' command */
                 {
-                    char *fieldname = IDL_STRING_STR(&argv[command]->value.str);
-                    int available_status;
-                    long field_index;
+                    char *path = IDL_STRING_STR(&argv[command]->value.str);
 
-                    if (coda_cursor_get_record_field_index_from_name(&datahandle->cursor, fieldname, &field_index) != 0)
-                    {
-                        return -1;
-                    }
-                    if (coda_cursor_get_record_field_available_status(&datahandle->cursor, field_index,
-                                                                      &available_status) != 0)
-                    {
-                        return -1;
-                    }
-                    if (available_status == 0)
-                    {
-                        coda_set_error(CODA_IDL_ERR_RECORD_FIELD_NOT_AVAILABLE, "record field %s is not available",
-                                       fieldname);
-                        return -1;
-                    }
-                    if (coda_cursor_goto_record_field_by_index(&datahandle->cursor, field_index) != 0)
+                    if (coda_cursor_goto(&datahandle->cursor, path) != 0)
                     {
                         return -1;
                     }

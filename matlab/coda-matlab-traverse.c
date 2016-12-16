@@ -109,137 +109,101 @@ void coda_matlab_traverse_data(int nrhs, const mxArray *prhs[], coda_cursor *cur
 
     for (arg_idx = 0; arg_idx < nrhs; arg_idx++)
     {
-        coda_type_class type_class;
-        char *name;
+        char *name = NULL;
+        int arg_type;
+        int length;
 
-        name = NULL;
+        coda_matlab_parse_arg(prhs[arg_idx], &arg_type, index, &name, &length);
 
-        if (coda_cursor_get_type_class(cursor, &type_class) != 0)
+        if (arg_type == 0)
         {
-            coda_matlab_coda_error();
-        }
-        switch (type_class)
-        {
-            case coda_array_class:
-                {
-                    long local_index[CODA_MAX_NUM_DIMS];
-                    int arg_type;
-                    int length;
-                    int i;
+            coda_type_class type_class;
+            long local_index[CODA_MAX_NUM_DIMS];
+            int i;
 
-                    coda_matlab_parse_arg(prhs[arg_idx], &arg_type, index, &name, &length);
+            if (coda_cursor_get_type_class(cursor, &type_class) != 0)
+            {
+                coda_matlab_coda_error();
+            }
 
-                    if (arg_type == 1)
-                    {
-                        /* name */
-                        mexPrintf("ERROR: \"%s\" not valid as array index\n", name);
-                        mexErrMsgTxt("Error in parameter");
-                    }
-                    if (arg_type != 0)
-                    {
-                        mexErrMsgTxt("Error in paramater");
-                    }
-
-                    for (i = 0; i < length; i++)
-                    {
-                        if (index[i] != -1)
-                        {
-                            index[i]--;
-                        }
-                        else if (info != NULL)
-                        {
-                            info->intermediate_cursor_flag = 1;
-                        }
-                    }
-
-                    if ((info != NULL) && (info->intermediate_cursor_flag))
-                    {
-                        info->argument_index = arg_idx;
-                        info->num_variable_indices = length;
-                        for (i = 0; i < length; i++)
-                        {
-                            info->variable_index[i] = index[i];
-                        }
-                        return; /* Return intermediate cursor */
-                    }
-
-                    if (length == 1 && index[0] == 0)
-                    {
-                        coda_type *type;
-                        int num_dims;
-
-                        /* convert to zero dimensional index if needed */
-                        if (coda_cursor_get_type(cursor, &type) != 0)
-                        {
-                            coda_matlab_coda_error();
-                        }
-                        if (coda_type_get_array_num_dims(type, &num_dims) != 0)
-                        {
-                            coda_matlab_coda_error();
-                        }
-                        if (num_dims == 0)
-                        {
-                            length = 0;
-                        }
-                    }
-
-                    for (i = 0; i < length; i++)
-                    {
-                        local_index[i] = coda_env.option_swap_dimensions ? index[i] : index[length - i + 1];
-                    }
-                    if (coda_cursor_goto_array_element(cursor, length, local_index) != 0)
-                    {
-                        if (coda_errno == CODA_ERROR_ARRAY_NUM_DIMS_MISMATCH)
-                        {
-                            mexPrintf("ERROR: array dimensions mismatch\n");
-                            mexErrMsgTxt("Error in parameter");
-                        }
-                        if (coda_errno == CODA_ERROR_ARRAY_OUT_OF_BOUNDS)
-                        {
-                            mexPrintf("ERROR: array index out of bounds\n");
-                            mexErrMsgTxt("Error in parameter");
-                        }
-                        coda_matlab_coda_error();
-                    }
-                }
-                break;
-            case coda_record_class:
-                {
-                    int available_status;
-                    int field_index;
-                    int arg_type;
-                    int length;
-
-                    coda_matlab_parse_arg(prhs[arg_idx], &arg_type, index, &name, &length);
-
-                    if (arg_type != 1)
-                    {
-                        mexErrMsgTxt("Error in paramater");
-                    }
-                    if (coda_cursor_get_record_field_index_from_name(cursor, name, index) != 0)
-                    {
-                        mexPrintf("ERROR: field \"%s\" not found\n", name);
-                        mexErrMsgTxt("Error in parameter");
-                    }
-                    field_index = index[0];
-                    if (coda_cursor_get_record_field_available_status(cursor, field_index, &available_status) != 0)
-                    {
-                        coda_matlab_coda_error();
-                    }
-                    if (available_status == 0)
-                    {
-                        mexPrintf("ERROR: field \"%s\" not available\n", name);
-                        mexErrMsgTxt("Error in parameter");
-                    }
-                    if (coda_cursor_goto_record_field_by_index(cursor, field_index) != 0)
-                    {
-                        coda_matlab_coda_error();
-                    }
-                }
-                break;
-            default:
+            if (type_class != coda_array_class)
+            {
                 mexErrMsgTxt("Error in paramater");
-                break;
+            }
+
+            for (i = 0; i < length; i++)
+            {
+                if (index[i] != -1)
+                {
+                    index[i]--;
+                }
+                else if (info != NULL)
+                {
+                    info->intermediate_cursor_flag = 1;
+                }
+            }
+
+            if ((info != NULL) && (info->intermediate_cursor_flag))
+            {
+                info->argument_index = arg_idx;
+                info->num_variable_indices = length;
+                for (i = 0; i < length; i++)
+                {
+                    info->variable_index[i] = index[i];
+                }
+                return; /* Return intermediate cursor */
+            }
+
+            if (length == 1 && index[0] == 0)
+            {
+                coda_type *type;
+                int num_dims;
+
+                /* convert to zero dimensional index if needed */
+                if (coda_cursor_get_type(cursor, &type) != 0)
+                {
+                    coda_matlab_coda_error();
+                }
+                if (coda_type_get_array_num_dims(type, &num_dims) != 0)
+                {
+                    coda_matlab_coda_error();
+                }
+                if (num_dims == 0)
+                {
+                    length = 0;
+                }
+            }
+
+            for (i = 0; i < length; i++)
+            {
+                local_index[i] = coda_env.option_swap_dimensions ? index[i] : index[length - i + 1];
+            }
+            if (coda_cursor_goto_array_element(cursor, length, local_index) != 0)
+            {
+                if (coda_errno == CODA_ERROR_ARRAY_NUM_DIMS_MISMATCH)
+                {
+                    mexPrintf("ERROR: array dimensions mismatch\n");
+                    mexErrMsgTxt("Error in parameter");
+                }
+                if (coda_errno == CODA_ERROR_ARRAY_OUT_OF_BOUNDS)
+                {
+                    mexPrintf("ERROR: array index out of bounds\n");
+                    mexErrMsgTxt("Error in parameter");
+                }
+                coda_matlab_coda_error();
+            }
+
+        }
+        else if (arg_type == 1)
+        {
+            if (coda_cursor_goto(cursor, name) != 0)
+            {
+                coda_matlab_coda_error();
+            }
+        }
+        else
+        {
+            mexErrMsgTxt("Error in paramater");
         }
 
         if (name != NULL)

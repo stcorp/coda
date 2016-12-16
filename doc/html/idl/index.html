@@ -248,9 +248,9 @@
       <p>Three forms of 'specification arguments' exist:</p>
 
       <ul>
-        <li>If the element is a record, it is possible to fetch a specific field of the record by providing the name of the field as a string argument.</li>
-        <li>If the element is an array, it is possible to fetch a specific element of the record by providing the array indices as an integer vector.</li>
-        <li>If the element is a one-dimensional array, it is possible to simply specify an integer value; this is equivalent to specifying '[i]' (a 1-element array-index vector).</li>
+        <li>Array index: You need to provide an array index that has the same number of elements as there are dimensions in the array that you are refering to. So if the array is two dimensional you have to pass indices for both dimensions like <code>[4,5]</code>. If the array is one dimensional you can just provide a single index value (without the '[]') to get to the k-th element. You can use <a href="#coda_size"><code>coda_size</code></a> to check the number of dimensions of an array and the size of each dimension.</li>
+        <li>Field name: To go to a certain field inside the record that you are pointing to, you can provide the field name as a string.</li>
+        <li>Path: You can provide a string containing a path reference, such as <code>"measurements[0]/time"</code>. Using paths will also allow you to navigate to attributes by using <code>"@"</code> as a path component. For instance, '<code>"temperature", "@", "units"</code>' or <code>"temperature@units"</code> will point to the units attribute of the temperature data. Note that array indices used in these string paths need to be 0-based indices on the flattened view of an array. This means that if an array is defined as having more than one dimension then the index as used in a path expression should be between 0 and the total number of array elements (exclusive). For example, for a <code>[10,8]</code> array, the index should be >= 0 and <= 79. For, instance <code>coda_fetch(pf, 'variable', [0,0])</code> is equivalent to <code>coda_fetch(pf, 'variable[0]')</code></li>
       </ul>
 
       <p>An example will help to understand all this. Suppose we have a product that contains a dataset called 'MEASUREMENTS', having 1000 records. Each of these records contains a field called 'samples' that is a 2-dimensional 101x101 array of doubles.</p>
@@ -263,6 +263,10 @@
 
       <p><code>result = CODA_FETCH(pf, 'MEASUREMENTS', 10, 'samples', [50,50])</code></p>
 
+      <p>Or we could use a single string parameter to provide the full path</p>
+
+      <p><code>result = CODA_FETCH(pf, 'MEASUREMENTS[10]/samples[5100]')</code></p>
+
       <p>For the <code>CODA_FETCH</code> and <code>CODA_FETCH_DATAHANDLE</code> functions (but not for the other CODA IDL interface functions that use data-item specification arguments) there is an additional feature. If you provide a <code>-1</code> for one or more of the dimensions of an array you will fetch all elements in this dimension. For example, with</p>
 
       <p><code>result = CODA_FETCH(pf, 'MEASUREMENTS', -1, 'samples', [50,50])</code></p>
@@ -273,7 +277,7 @@
 
       <p>to fetch the first samples column of the first measurement.</p>
       
-      <p>The <code>-1</code> parameter may only be used for one array in a fetch statement (e.g. <code>CODA_FETCH(pf, 'MEASUREMENTS', 0, 'samples', [-1,-1])</code> is allowed, but <code>CODA_FETCH(pf, 'MEASUREMENTS', -1, 'samples', [-1,0])</code> is not).</p>
+      <p>The <code>-1</code> parameter may only be used for one array in a fetch statement (e.g. <code>CODA_FETCH(pf, 'MEASUREMENTS', 0, 'samples', [-1,-1])</code> is allowed, but <code>CODA_FETCH(pf, 'MEASUREMENTS', -1, 'samples', [-1,0])</code> is not). Also, the -1 index only works when passing  it as an explicit argument (i.e. calling <code>coda_fetch(pf, "dataset[-1]/dsr_time[5100]")</code>, where the -1 index is part of a string argument, will not work; calling <code>coda_fetch(pf, "dataset", -1, "dsr_time[5100]")</code> will work).</p>
 
       <h4 id="coda_fetch_return"><code>CODA_FETCH</code> return type</h4>
 

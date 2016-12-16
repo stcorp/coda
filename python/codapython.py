@@ -170,36 +170,15 @@ def _traverse_path(cursor,path,start=0):
     """
 
     for pathIndex in range(start,len(path)):
-        # get type information about current node.
-        nodeType = cursor_get_type(cursor)
-        nodeClass = type_get_class(nodeType)
-
-        if nodeClass == coda_record_class:
-            # if the current node is a record, the path should specify
-            # a field. fields are always specified by name, so path[pathIndex]
-            # should be of type basestring.
-            if not isinstance(path[pathIndex],str):
-                raise ValueError("Record \"%s\" should be indexed by field name, yet the specified index (%s) is not of type string." % (type_get_name(nodeType),path[pathIndex]))
-
-            fieldIndex = type_get_record_field_index_from_name(nodeType,path[pathIndex])
-
-            if cursor_get_record_field_available_status(cursor,fieldIndex) != 1:
-                raise ValueError("Field \"%s\" is unavailable. Unavailable fields are not allowed in a path specification." % (path[pathIndex],))
-
-            cursor_goto_record_field_by_index(cursor,fieldIndex)
-
-        elif nodeClass == coda_array_class:
-            # if the current node is an array, the path should specify an
-            # index. path[pathIndex] should be either a tuple (multi-dimensional
-            # array) or an integer (one-dimensional array). an index of -1
-            # is legal and implies the dimension it corresponds to should
-            # be fetched in its entirety.
+        if isinstance(path[pathIndex],str):
+            cursor_goto(cursor,path[pathIndex])
+        else:
             if isinstance(path[pathIndex],int):
                 arrayIndex = [path[pathIndex]]
             elif isinstance(path[pathIndex],(list,tuple)):
                 arrayIndex = path[pathIndex]
             else:
-                raise ValueError("The specified array index (%s) should be an integer or a sequence of integers, but is neither." % (path[pathIndex],))
+                raise ValueError("path specification (%s) should be a string or (list of) integers" % (path[pathIndex],))
 
             # get the shape of the array from the cursor. the size of all
             # dynamic dimensions are computed by the coda library.
@@ -235,8 +214,6 @@ def _traverse_path(cursor,path,start=0):
                     cursor_goto_array_element(cursor,[])
                 else:
                     cursor_goto_array_element(cursor,arrayIndex)
-        else:
-            raise ValueError("Extra tokens in path specification: %s" % (path[pathIndex:],))
 
     # we've arrived at the end of the path.
     return (False,len(path) - 1)

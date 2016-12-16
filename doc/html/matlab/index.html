@@ -67,6 +67,8 @@
 
       <p>The <code>coda_file_id</code> parameter must be a valid CODA file handle that was retrieved with <code>coda_open</code>. The format for the data specification argument list <code>&lt;data spec args&gt;</code> is described in a separate section.</p>
 
+      <p>This function is deprecated. You can replace it by using <code>CODA_FETCH(CODA_FILE_ID, &lt;DATA SPEC ARGS&gt;, "@")</code>.</p>
+
       <p>See also <a href="#coda_fetch"><code>CODA_FETCH</code></a>, <a href="#coda_open"><code>CODA_OPEN</code></a>, <a href="#coda_param"><code>DATA SPEC ARGS</code></a></p>
 
       <h3 id="coda_class"><code>CODA_CLASS</code></h3>
@@ -126,12 +128,30 @@
 
       <p><code>CODA_FETCH</code> Retrieve data from a product file.</p>
 
-      <p><code>DATA = CODA_FETCH(CODA_FILE_ID, &lt;DATA SPEC ARGS&gt;)</code> reads the specified data element from the product file. Instead of just reading individual values, like strings, integers, doubles, etc. it is also possible to read complete arrays or records of data or even the full product. For instance if 'pf' is a valid file handle, then you can read the complete product by simply omitting the data specification argument:</p>
+      <p><code>DATA = CODA_FETCH(CODA_FILE_ID, &lt;DATA SPEC ARGS&gt;)</code> reads the specified data element from the product file. Instead of just reading individual values, like strings, integers, doubles, etc. it is also possible to read complete arrays or records of data or even the full product. For instance if 'pf' is a valid file handleand the product contains a dataset of records then you can retrieve a time field from the first record using:</p>
 
-      <p><code>mph = coda_fetch(pf)</code></p>
-      
-      <p>which gives you a MATLAB structure containing the full product content.</p>
-      
+      <p><code>value = coda_fetch(pf, "datasetname", 0, "time")</code></p>
+
+      <p>You can also combine the path into a single string parameter:</p>
+
+      <p><code>value = coda_fetch(pf, "datasetname[0]/time")</code></p>
+
+      <p>Which path to provide depends on the format of the product you are trying to access.</p>
+
+      <p>Instead of just reading individual values, like strings, integers, doubles, etc. it is also possible to read complete arrays or records of data. For instance, you could read the whole first record of the dataset using:</p>
+
+      <p><code>record = coda_fetch(pf, "datasetname", 0)</code></p>
+
+      <p>This gives you a MATLAB struct containing all the record fields.</p>
+
+      <p>It is also possible to read an entire product at once by leaving the data specification argument list empty:</p>
+
+      <p><code>product = coda_fetch(pf)</code></p>
+
+      <p>To read attributes, you can pass '@' as path element. For instance, the following command reads the 'units' attribute value from a temperature variable:</p>
+
+      <p><code>unit = coda_fetch(pf, "temperature@units")</code></p>
+
       <p>The <code>coda_file_id</code> parameter must be a valid CODA file handle that was retrieved with <code>coda_open</code>. The format for the data specification argument list <code>&lt;data spec args&gt;</code> is described in a separate section.</p>
 
       <p>See also <a href="#coda_open"><code>CODA_OPEN</code></a>, <a href="#coda_param"><code>DATA SPEC ARGS</code></a></p>
@@ -270,16 +290,15 @@
 
       <h2 id="coda_param">Data Specification Argument List</h2>
 
-      <p>Several functions from the CODA MATLAB interface take a data specification argument list to specify a certain data element in a product file. This argument list is a comma separated list of names and identifiers that allow you to walk to a certain point in a product. The list can be left empty if you want to point to the root of the product. There are two types of arguments you can use in the list of arguments:</p>
+      <p>Several functions from the CODA MATLAB interface take a data specification argument list to specify a certain data element in a product file. This argument list is a comma separated list of names and identifiers that allow you to walk to a certain point in a product. The list can be left empty if you want to point to the root of the product. There are three types of arguments you can use in the list of arguments:</p>
 
       <ul>
-        <li>Array index: You need to provide an array index that has the same number of elements as there are dimensions in the array that you are refering to. So if the array is two dimensional you have to pass indices for both dimensions like <code>[4 5]</code>. If the array is one dimensional (like the datasets) you can just provide a single index value (without the '[]') to get to the k-th element. You can use <a href="#coda_size"><code>coda_size</code></a> to check the number of dimensions of an array and the size of each dimension.</li>
+        <li>Array index: You need to provide an array index that has the same number of elements as there are dimensions in the array that you are refering to. So if the array is two dimensional you have to pass indices for both dimensions like <code>[4 5]</code>. If the array is one dimensional you can just provide a single index value (without the '[]') to get to the k-th element. You can use <a href="#coda_size"><code>coda_size</code></a> to check the number of dimensions of an array and the size of each dimension. Note that indices for an array index go from 1..N (and not from 0..(N-1)).</li>
         <li>Field name: To go to a certain field inside the record that you are pointing to, you can provide the field name as a string (which is case sensitive, so you should make sure that the name is exactly the same as is returned by <a href="#coda_fieldnames"><code>coda_fieldnames</code></a>).</li>
+        <li>Path: You can provide a string containing a path reference, such as <code>"measurements[0]/time"</code>. Using paths will also allow you to navigate to attributes by using <code>"@"</code> as a path component. For instance, '<code>"temperature", "@", "units"</code>' or <code>"temperature@units"</code> will point to the units attribute of the temperature data. Note that array indices used in these string paths need to be 0-based indices on the flattened view of an array. This means that if an array is defined as having more than one dimension then the index as used in a path expression should be between 0 and the total number of array elements (exclusive). For example, for a <code>[10 8]</code> array, the index should be >= 0 and <= 79. For, instance <code>coda_fetch(pf, 'variable', [1 1])</code> is equivalent to <code>coda_fetch(pf, 'variable[0]')</code></li>
       </ul>
       
-      <p>Note that all indices inside the data specification argument list go from 1..N (and not from 0..(N-1)).</p>
-
-      <p>For the <code>coda_fetch</code> function there is an additional feature. If you provide a -1 for one or more of the dimensions of an array you will fetch all elements in the specified dimension(s). For example, with <code>coda_fetch(pf,'datasetname',-1,'dsr_time')</code> you can fetch all <code>dsr_time</code> values for all measurements into a single array.</p>
+      <p>For the <code>coda_fetch</code> function there is an additional feature. If you provide a -1 for one or more of the dimensions of an array you will fetch all elements in the specified dimension(s). For example, with <code>coda_fetch(pf, 'datasetname', -1, 'dsr_time')</code> you can fetch all <code>dsr_time</code> values for all measurements into a single array. Note that passing -1 only works when passing it as an explicit argument (i.e. calling <code>coda_fetch(pf, 'dataset[-1]/dsr_time')</code>, where the -1 index is part of a string argument, will not work).</p>
 
       <p>See also <a href="#coda_class"><code>CODA_CLASS</code></a>, <a href="#coda_eval"><code>CODA_EVAL</code></a>, <a href="#coda_fetch"><code>CODA_FETCH</code></a>, <a href="#coda_fieldnames"><code>CODA_FIELDNAMES</code></a>, <a href="#coda_size"><code>CODA_SIZE</code></a></p>
 

@@ -279,12 +279,15 @@ import coda
 
       <p>The <code>start</code> parameter determines the offset in the product from which the <code>path</code> parameter is expanded. It can either be a file handle or a CODA Cursor (see <a href="#low_level_types">Low level CODA Data Types</a>). When a file handle is passed we start at the root of the product and when it is a cursor we start at the position of the cursor.</p>
 
-      <p>The <code>path</code> argument is actually a series of parameters (which can also be empty). Starting from the <code>start</code> position, the <code>path</code> parameters should provide valid fieldnames and array indices to navigate deeper into the product. For example, suppose we have a product that has a <code>measurements</code> data set with 100 data set records and in each data set record there is a <code>time</code> field containing a time value of type double. If we want to read the time value in the first data set record (using the file handle <code>filehandle</code> as <code>start</code> parameter) we would use: <code>coda.fetch(filehandle, "measurements", 0, "time")</code>. However, it is also possible to read several data elements at once. We can for instance read the full data set record using <code>coda.fetch(filehandle, "measurements", 0)</code> or even read the whole product using <code>coda.fetch(filehandle)</code>. When you read a group of data at once, CODA will create a dynamic data structure in Python (consisting of <code>coda.Record</code> and <code>numpy.array</code> objects to represent records and arrays) for the product data that is read.</p>
+      <p>The <code>path</code> argument is actually a series of parameters (which can also be empty). Starting from the <code>start</code> position, the <code>path</code> parameters should provide valid fieldnames and array indices to navigate deeper into the product. For example, suppose we have a product that has a <code>measurements</code> data set with 100 data set records and in each data set record there is a <code>time</code> field containing a time value of type double. If we want to read the time value in the first data set record (using the file handle <code>filehandle</code> as <code>start</code> parameter) we would use: <code>coda.fetch(filehandle, "measurements", 0, "time")</code>. You can provide each path argument as a separate parameter or combine them toghether into a single string argument. Alternative calls that have the same result could thus be <code>coda.fetch(filehandle, "measurements[0]", "time")</code> or <code>coda.fetch(filehandle, "measurements[0]/time")</code>.</p>
 
-      <p>The two types of arguments that you can use in the list of arguments for <code>path</code> are:</p>
+      <p>It is also possible to read several data elements at once. We can for instance read the full data set record using <code>coda.fetch(filehandle, "measurements", 0)</code> or even read the whole product using <code>coda.fetch(filehandle)</code>. When you read a group of data at once, CODA will create a dynamic data structure in Python (consisting of <code>coda.Record</code> and <code>numpy.array</code> objects to represent records and arrays) for the product data that is read.</p>
+
+      <p>The types of arguments that you can use in the list of arguments for <code>path</code> are:</p>
       <ul>
-        <li>Array index: You need to provide an array index that has the same number of elements as there are dimensions in the array that you are refering to. So if the array is two dimensional you have to pass indices for both dimensions like <code>[4,5]</code>. If the array is one dimensional (like the datasets) you can just provide a single index value (without the '[]') to get to the k-th element. You can use <a href="#coda_get_size"><code>coda.get_size</code></a> to check the number of dimensions of an array and the size of each dimension.</li>
+        <li>Array index: You need to provide an array index that has the same number of elements as there are dimensions in the array that you are refering to. So if the array is two dimensional you have to pass indices for both dimensions like <code>[4,5]</code>. If the array is one dimensional you can just provide a single index value (without the '[]') to get to the k-th element. You can use <a href="#coda_get_size"><code>coda.get_size</code></a> to check the number of dimensions of an array and the size of each dimension.</li>
         <li>Field name: To go to a certain field inside the record that you are pointing to, just provide the field name as a string. You should be aware that some record fields can be dynamically available. In such cases it is better to check in advance (using <a href="#coda_get_field_available"><code>coda.get_field_available</code></a>) whether the field is available, before traversing it.</li>
+        <li>Path: You can provide a string containing a path reference, such as <code>"measurements[0]/time"</code>. Using paths will also allow you to navigate to attributes by using <code>"@"</code> as a path component. For instance, '<code>"temperature", "@", "units"</code>' or <code>"temperature@units"</code> will point to the units attribute of the temperature data. Note that array indices used in these string paths need to be 0-based indices on the flattened view of an array. This means that if an array is defined as having more than one dimension then the index as used in a path expression should be between 0 and the total number of array elements (exclusive). For example, for a [10,8] array, the index should be >= 0 and <= 79.</li>
       </ul>
 
       <p>Just as the low level functions, the high level CODA Python functions will throw an exception when an error condition occurs. For the high level functions the exception will be of type <code>coda.CodaError</code>.</p>
@@ -318,6 +321,8 @@ import coda
       <p>This function returns a <a href="#high_level_types"><code>coda.Record</code></a> containing the attributes of the specified data item.</p>
     
       <p>The <code>start</code> parameter must be a valid CODA file handle that was retrieved with <code>coda.open()</code> <i>or</i> a valid <a href="#low_level_types">CODA Cursor</a>. If the start argument is a cursor, then the specified path is traversed starting from the position represented by the cursor. The format of the <code>path</code> argument is described at the <a href="#coda_path_argument">top of this section</a>.</p>
+      
+      <p>This function is deprecated. You can replace it by using <code>coda.fetch(start, *path, "@")</code>.</p>
 
       <h3 id="coda_get_description"><code>coda.get_description(start, *path)</code></h3>
 
@@ -331,17 +336,41 @@ import coda
       
       <p>Retrieve data from a product file.</p>
     
-      <p>Reads the specified data element from the product file. Instead of just reading individual values, like strings, integers, doubles, etc. it is also possible to read complete arrays or records of data. For instance if <code>pf</code> is a product file handle obtained by calling <code>coda.open()</code>, then you can read the complete MPH of a product with:</p>
+      <p>Reads the specified data element from the product file. For instance if <code>pf</code> is a product file handle obtained by calling <code>coda.open()</code> and the product contains a dataset of records then you can retrieve a time field from the first record using:</p>
 
 <div class="fragment"><pre>
->>> mph = coda.fetch(pf, 'mph')
+>>> value = coda.fetch(pf, "datasetname", 0, "time")
 </pre></div>
 
-      <p>which gives you a <a href="#high_level_types"><code>coda.Record</code></a> containing all the mph fields.</p>
+      <p>You can also combine the path into a single string parameter:</p>
 
-      <p>It is also possible to read an entire product at once by leaving the data specification argument list empty (<code>product = coda.fetch(pf)</code>).</p>
+<div class="fragment"><pre>
+>>> value = coda.fetch(pf, "datasetname[0]/time")
+</pre></div>
 
-      <p>For the <code>coda.fetch</code> function there is an additional feature. If you provide a -1 for one or more of the dimensions of an array you will fetch all elements in the specified dimension(s). For example, with <code>coda.fetch(pf,'datasetname',-1,'dsr_time')</code> you can fetch all <code>dsr_time</code> values for all measurements into a single array.</p>
+      <p>Which path to provide depends on the format of the product you are trying to access.</p>
+
+      <p>Instead of just reading individual values, like strings, integers, doubles, etc. it is also possible to read complete arrays or records of data. For instance, you could read the whole first record of the dataset using:</p>
+
+<div class="fragment"><pre>
+>>> record = coda.fetch(pf, "datasetname", 0)
+</pre></div>
+
+      <p>This gives you a <a href="#high_level_types"><code>coda.Record</code></a> containing all the record fields.</p>
+
+      <p>It is also possible to read an entire product at once by leaving the data specification argument list empty:</p>
+
+<div class="fragment"><pre>
+>>> product = coda.fetch(pf)
+</pre></div>
+
+      <p>To read attributes, you can pass '@' as path element. For instance, the following command reads the 'units' attribute value from a temperature variable:</p>
+
+<div class="fragment"><pre>
+>>> unit = coda.fetch(pf, "temperature@units")
+</pre></div>
+
+      <p>For the <code>coda.fetch</code> function there is an additional feature. If you provide a -1 for one or more of the dimensions of an array you will fetch all elements in the specified dimension(s). For example, with <code>coda.fetch(pf, "datasetname", -1, "dsr_time")</code> you can fetch all <code>dsr_time</code> values for all measurements into a single array. Note that passing -1 only works when passing it as an explicit argument (i.e. calling <code>coda.fetch(pf, "dataset[-1]/dsr_time")</code>, where it is part of a string argument, will not work).</p>
 
       <p>The <code>start</code> parameter must be a valid CODA file handle that was retrieved with <code>coda.open()</code> <i>or</i> a valid <a href="#low_level_types">CODA Cursor</a>. If the start argument is a cursor, then the specified path is traversed starting from the position represented by the cursor. The format of the <code>path</code> argument is described at the <a href="#coda_path_argument">top of this section</a>.</p>
 
