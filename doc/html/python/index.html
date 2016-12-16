@@ -370,7 +370,7 @@ import coda
 >>> unit = coda.fetch(pf, "temperature@units")
 </pre></div>
 
-      <p>For the <code>coda.fetch</code> function there is an additional feature. If you provide a -1 for one or more of the dimensions of an array you will fetch all elements in the specified dimension(s). For example, with <code>coda.fetch(pf, "datasetname", -1, "dsr_time")</code> you can fetch all <code>dsr_time</code> values for all measurements into a single array. Note that passing -1 only works when passing it as an explicit argument (i.e. calling <code>coda.fetch(pf, "dataset[-1]/dsr_time")</code>, where it is part of a string argument, will not work).</p>
+      <p>For the <code>coda.fetch</code> function there is an additional feature. If you provide a -1 for one or more of the dimensions of an array you will fetch all elements in the specified dimension(s). For example, with <code>coda.fetch(pf, "datasetname", -1, "dsr_time")</code> you can fetch all <code>dsr_time</code> values for all measurements into a single array. Note that passing -1 only works when passing it as an explicit argument (i.e. calling <code>coda.fetch(pf, "dataset[-1]/dsr_time")</code>, where the -1 index is part of a string argument, will not work).</p>
 
       <p>The <code>start</code> parameter must be a valid CODA file handle that was retrieved with <code>coda.open()</code> <i>or</i> a valid <a href="#low_level_types">CODA Cursor</a>. If the start argument is a cursor, then the specified path is traversed starting from the position represented by the cursor. The format of the <code>path</code> argument is described at the <a href="#coda_path_argument">top of this section</a>.</p>
 
