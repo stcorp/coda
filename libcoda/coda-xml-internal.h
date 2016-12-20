@@ -26,24 +26,16 @@
 #include "coda-mem-internal.h"
 #include "coda-definition.h"
 
-typedef enum xml_type_tag_enum
-{
-    tag_xml_root,
-    tag_xml_element     /* record, text, or any ascii format type */
-} xml_type_tag;
-
 typedef struct coda_xml_type_struct
 {
     coda_backend backend;
     coda_type *definition;
-    xml_type_tag tag;
 } coda_xml_type;
 
 typedef struct coda_xml_element_struct
 {
     coda_backend backend;
     coda_type *definition;
-    xml_type_tag tag;
 
     char *xml_name;     /* the xml name is a concatenation of namespace and element name, separated by a ' ' */
 
