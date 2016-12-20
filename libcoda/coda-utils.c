@@ -62,13 +62,9 @@ int coda_format_from_string(const char *str, coda_format *format)
     {
         *format = coda_format_netcdf;
     }
-    else if (strcmp(str, "grib1") == 0)
+    else if (strcmp(str, "grib") == 0)
     {
-        *format = coda_format_grib1;
-    }
-    else if (strcmp(str, "grib2") == 0)
-    {
-        *format = coda_format_grib2;
+        *format = coda_format_grib;
     }
     else if (strcmp(str, "rinex") == 0)
     {

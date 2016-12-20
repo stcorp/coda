@@ -12014,8 +12014,7 @@ SWIG_init(void) {
   SWIG_Python_SetConstant(d, "coda_format_hdf5",SWIG_From_int((int)(coda_format_hdf5)));
   SWIG_Python_SetConstant(d, "coda_format_cdf",SWIG_From_int((int)(coda_format_cdf)));
   SWIG_Python_SetConstant(d, "coda_format_netcdf",SWIG_From_int((int)(coda_format_netcdf)));
-  SWIG_Python_SetConstant(d, "coda_format_grib1",SWIG_From_int((int)(coda_format_grib1)));
-  SWIG_Python_SetConstant(d, "coda_format_grib2",SWIG_From_int((int)(coda_format_grib2)));
+  SWIG_Python_SetConstant(d, "coda_format_grib",SWIG_From_int((int)(coda_format_grib)));
   SWIG_Python_SetConstant(d, "coda_format_rinex",SWIG_From_int((int)(coda_format_rinex)));
   SWIG_Python_SetConstant(d, "coda_format_sp3",SWIG_From_int((int)(coda_format_sp3)));
   SWIG_Python_SetConstant(d, "coda_record_class",SWIG_From_int((int)(coda_record_class)));

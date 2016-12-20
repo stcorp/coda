@@ -3695,6 +3695,8 @@ static int cd_union_set_field_expression(parser_info *info)
 
 static int cd_union_add_field(parser_info *info)
 {
+    /* force union fields to be optional */
+    coda_type_record_field_set_optional((coda_type_record_field *)info->node->data);
     if (coda_type_record_add_field((coda_type_record *)info->node->parent->data,
                                    (coda_type_record_field *)info->node->data) != 0)
     {

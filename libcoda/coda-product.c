@@ -254,14 +254,9 @@ static int get_format(coda_product *raw_product, coda_format *format)
     /* GRIB */
     if (memcmp(buffer, "GRIB", 4) == 0)
     {
-        if (buffer[7] == '\001')
+        if (buffer[7] == '\001' || buffer[7] == '\002')
         {
-            *format = coda_format_grib1;
-            return 0;
-        }
-        if (buffer[7] == '\002')
-        {
-            *format = coda_format_grib2;
+            *format = coda_format_grib;
             return 0;
         }
     }
@@ -398,8 +393,7 @@ static int reopen_with_backend(coda_product **product_file, coda_format format)
                 return -1;
             }
             break;
-        case coda_format_grib1:
-        case coda_format_grib2:
+        case coda_format_grib:
             if (coda_grib_reopen(product_file) != 0)
             {
                 return -1;
@@ -806,8 +800,7 @@ LIBCODA_API int coda_close(coda_product *product)
             return coda_cdf_close(product);
         case coda_format_netcdf:
             return coda_netcdf_close(product);
-        case coda_format_grib1:
-        case coda_format_grib2:
+        case coda_format_grib:
             return coda_grib_close(product);
         case coda_format_hdf4:
 #ifdef HAVE_HDF4

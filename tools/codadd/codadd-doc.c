@@ -791,16 +791,14 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
                                 fi_printf("<br />\n");
                             }
                             html_attr_begin("available", &first_field_attribute);
-                            switch (type->format)
+                            if (((coda_type_record *)type)->field[i]->available_expr != NULL)
                             {
-                                case coda_format_ascii:
-                                case coda_format_binary:
-                                    coda_expression_print_html(((coda_type_record *)type)->field[i]->available_expr,
-                                                               ff_printf);
-                                    break;
-                                default:
-                                    ff_printf("optional");
-                                    break;
+                                coda_expression_print_html(((coda_type_record *)type)->field[i]->available_expr,
+                                                           ff_printf);
+                            }
+                            else
+                            {
+                                ff_printf("optional");
                             }
                             html_attr_end();
                         }

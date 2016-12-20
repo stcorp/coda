@@ -16,8 +16,7 @@ public enum FormatEnum {
   coda_format_hdf5,
   coda_format_cdf,
   coda_format_netcdf,
-  coda_format_grib1,
-  coda_format_grib2,
+  coda_format_grib,
   coda_format_rinex,
   coda_format_sp3;
 

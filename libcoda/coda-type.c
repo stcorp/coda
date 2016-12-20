@@ -1284,6 +1284,13 @@ int coda_type_record_insert_field(coda_type_record *type, long index, coda_type_
         return -1;
     }
 
+    if (type->is_union && !field->optional)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "fields added to a union need to be optional");
+        return -1;
+
+    }
+
     if (type->format != field->type->format)
     {
         /* we only allow switching from binary or xml to ascii */
@@ -2683,10 +2690,8 @@ LIBCODA_API const char *coda_type_get_format_name(coda_format format)
             return "xml";
         case coda_format_netcdf:
             return "netcdf";
-        case coda_format_grib1:
-            return "grib1";
-        case coda_format_grib2:
-            return "grib2";
+        case coda_format_grib:
+            return "grib";
         case coda_format_cdf:
             return "cdf";
         case coda_format_hdf4:

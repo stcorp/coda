@@ -107,7 +107,6 @@ enum
     grib1_grid,
     grib1_data,
     grib1_message,
-    grib1_root,
 
     grib2_localRecordIndex,
     grib2_gridRecordIndex,
@@ -178,7 +177,9 @@ enum
     grib2_grid_array,
     grib2_data_array,
     grib2_message,
-    grib2_root,
+
+    grib_message,
+    grib_root,
 
     num_grib_types
 };
@@ -217,17 +218,17 @@ static int grib_init(void)
 
     /* GRIB1 */
 
-    grib_type[grib1_localRecordIndex] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_localRecordIndex] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_localRecordIndex], endianness);
     coda_type_set_read_type(grib_type[grib1_localRecordIndex], coda_native_type_int32);
     coda_type_set_bit_size(grib_type[grib1_localRecordIndex], 32);
 
-    grib_type[grib1_gridRecordIndex] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_gridRecordIndex] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_gridRecordIndex], endianness);
     coda_type_set_read_type(grib_type[grib1_gridRecordIndex], coda_native_type_uint32);
     coda_type_set_bit_size(grib_type[grib1_gridRecordIndex], 32);
 
-    grib_type[grib1_table2Version] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_table2Version] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_table2Version], endianness);
     coda_type_set_read_type(grib_type[grib1_table2Version], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_table2Version], 8);
@@ -235,123 +236,123 @@ static int grib_init(void)
                               "Parameter Table Version number, currently 3 for international exchange. "
                               "(Parameter table version numbers 128-254 are reserved for local use.)");
 
-    grib_type[grib1_editionNumber] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_editionNumber] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_editionNumber], endianness);
     coda_type_set_read_type(grib_type[grib1_editionNumber], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_editionNumber], 8);
     coda_type_set_description(grib_type[grib1_editionNumber], "GRIB edition number");
 
-    grib_type[grib1_centre] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_centre] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_centre], endianness);
     coda_type_set_read_type(grib_type[grib1_centre], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_centre], 8);
     coda_type_set_description(grib_type[grib1_centre], "Identification of center");
 
-    grib_type[grib1_generatingProcessIdentifier] = (coda_type *)coda_type_number_new(coda_format_grib1,
+    grib_type[grib1_generatingProcessIdentifier] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                      coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_generatingProcessIdentifier], endianness);
     coda_type_set_read_type(grib_type[grib1_generatingProcessIdentifier], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_generatingProcessIdentifier], 8);
     coda_type_set_description(grib_type[grib1_generatingProcessIdentifier], "Generating process ID number");
 
-    grib_type[grib1_gridDefinition] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_gridDefinition] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_gridDefinition], endianness);
     coda_type_set_read_type(grib_type[grib1_gridDefinition], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_gridDefinition], 8);
     coda_type_set_description(grib_type[grib1_gridDefinition], "Grid Identification");
 
-    grib_type[grib1_indicatorOfParameter] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_indicatorOfParameter] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_indicatorOfParameter], endianness);
     coda_type_set_read_type(grib_type[grib1_indicatorOfParameter], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_indicatorOfParameter], 8);
     coda_type_set_description(grib_type[grib1_indicatorOfParameter], "Indicator of parameter and units");
 
-    grib_type[grib1_indicatorOfTypeOfLevel] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_indicatorOfTypeOfLevel] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_indicatorOfTypeOfLevel], endianness);
     coda_type_set_read_type(grib_type[grib1_indicatorOfTypeOfLevel], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_indicatorOfTypeOfLevel], 8);
     coda_type_set_description(grib_type[grib1_indicatorOfTypeOfLevel], "Indicator of type of level or layer");
 
-    grib_type[grib1_level] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_level] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_level], endianness);
     coda_type_set_read_type(grib_type[grib1_level], coda_native_type_uint16);
     coda_type_set_bit_size(grib_type[grib1_level], 16);
     coda_type_set_description(grib_type[grib1_level], "Height, pressure, etc. of the level or layer");
 
-    grib_type[grib1_yearOfCentury] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_yearOfCentury] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_yearOfCentury], endianness);
     coda_type_set_read_type(grib_type[grib1_yearOfCentury], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_yearOfCentury], 8);
     coda_type_set_description(grib_type[grib1_yearOfCentury], "Year of century");
 
-    grib_type[grib1_year] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_year] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_year], endianness);
     coda_type_set_read_type(grib_type[grib1_year], coda_native_type_uint16);
     coda_type_set_bit_size(grib_type[grib1_year], 16);
     coda_type_set_description(grib_type[grib1_year], "Year");
 
-    grib_type[grib1_month] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_month] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_month], endianness);
     coda_type_set_read_type(grib_type[grib1_month], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_month], 8);
     coda_type_set_description(grib_type[grib1_month], "Month of year");
 
-    grib_type[grib1_day] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_day] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_day], endianness);
     coda_type_set_read_type(grib_type[grib1_day], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_day], 8);
     coda_type_set_description(grib_type[grib1_day], "Day of month");
 
-    grib_type[grib1_hour] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_hour] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_hour], endianness);
     coda_type_set_read_type(grib_type[grib1_hour], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_hour], 8);
     coda_type_set_description(grib_type[grib1_hour], "Hour of day");
 
-    grib_type[grib1_minute] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_minute] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_minute], endianness);
     coda_type_set_read_type(grib_type[grib1_minute], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_minute], 8);
     coda_type_set_description(grib_type[grib1_minute], "Minute of hour");
 
-    grib_type[grib1_second] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_second] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_second], endianness);
     coda_type_set_read_type(grib_type[grib1_second], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_second], 8);
     coda_type_set_description(grib_type[grib1_second], "Second of minute");
 
-    grib_type[grib1_unitOfTimeRange] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_unitOfTimeRange] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_unitOfTimeRange], endianness);
     coda_type_set_read_type(grib_type[grib1_unitOfTimeRange], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_unitOfTimeRange], 8);
     coda_type_set_description(grib_type[grib1_unitOfTimeRange], "Forecast time unit");
 
-    grib_type[grib1_P1] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_P1] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_P1], endianness);
     coda_type_set_read_type(grib_type[grib1_P1], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_P1], 8);
     coda_type_set_description(grib_type[grib1_P1], "Period of time (Number of time units)");
 
-    grib_type[grib1_P2] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_P2] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_P2], endianness);
     coda_type_set_read_type(grib_type[grib1_P2], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_P2], 8);
     coda_type_set_description(grib_type[grib1_P2], "Period of time (Number of time units)");
 
-    grib_type[grib1_timeRangeIndicator] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_timeRangeIndicator] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_timeRangeIndicator], endianness);
     coda_type_set_read_type(grib_type[grib1_timeRangeIndicator], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_timeRangeIndicator], 8);
     coda_type_set_description(grib_type[grib1_timeRangeIndicator], "Time range indicator");
 
-    grib_type[grib1_numberIncludedInAverage] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_numberIncludedInAverage] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_numberIncludedInAverage], endianness);
     coda_type_set_read_type(grib_type[grib1_numberIncludedInAverage], coda_native_type_uint16);
     coda_type_set_bit_size(grib_type[grib1_numberIncludedInAverage], 16);
     coda_type_set_description(grib_type[grib1_numberIncludedInAverage], "Number included in average, when "
                               "timeRangeIndicator indicates an average or accumulation; otherwise set to zero.");
 
-    grib_type[grib1_numberMissingFromAveragesOrAccumulations] = (coda_type *)coda_type_number_new(coda_format_grib1,
+    grib_type[grib1_numberMissingFromAveragesOrAccumulations] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                                   coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_numberMissingFromAveragesOrAccumulations],
                                     endianness);
@@ -360,7 +361,7 @@ static int grib_init(void)
     coda_type_set_description(grib_type[grib1_numberMissingFromAveragesOrAccumulations], "Number Missing from "
                               "averages or accumulations.");
 
-    grib_type[grib1_centuryOfReferenceTimeOfData] = (coda_type *)coda_type_number_new(coda_format_grib1,
+    grib_type[grib1_centuryOfReferenceTimeOfData] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                       coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_centuryOfReferenceTimeOfData], endianness);
     coda_type_set_read_type(grib_type[grib1_centuryOfReferenceTimeOfData], coda_native_type_uint8);
@@ -368,45 +369,45 @@ static int grib_init(void)
     coda_type_set_description(grib_type[grib1_centuryOfReferenceTimeOfData], "Century of Initial (Reference) time "
                               "(=20 until Jan. 1, 2001)");
 
-    grib_type[grib1_subCentre] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_subCentre] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_subCentre], endianness);
     coda_type_set_read_type(grib_type[grib1_subCentre], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_subCentre], 8);
     coda_type_set_description(grib_type[grib1_subCentre], "Identification of sub-center (allocated by the originating "
                               "center; See Table C)");
 
-    grib_type[grib1_decimalScaleFactor] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_decimalScaleFactor] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_decimalScaleFactor], endianness);
     coda_type_set_read_type(grib_type[grib1_decimalScaleFactor], coda_native_type_int16);
     coda_type_set_bit_size(grib_type[grib1_decimalScaleFactor], 16);
     coda_type_set_description(grib_type[grib1_decimalScaleFactor], "The decimal scale factor D");
 
-    grib_type[grib1_discipline] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_discipline] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_discipline], endianness);
     coda_type_set_read_type(grib_type[grib1_discipline], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_discipline], 8);
     coda_type_set_description(grib_type[grib1_discipline], "GRIB Master Table Number");
 
-    grib_type[grib1_masterTablesVersion] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_masterTablesVersion] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_masterTablesVersion], endianness);
     coda_type_set_read_type(grib_type[grib1_masterTablesVersion], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_masterTablesVersion], 8);
     coda_type_set_description(grib_type[grib1_masterTablesVersion], "GRIB Master Tables Version Number");
 
-    grib_type[grib1_localTablesVersion] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_localTablesVersion] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_localTablesVersion], endianness);
     coda_type_set_read_type(grib_type[grib1_localTablesVersion], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_localTablesVersion], 8);
     coda_type_set_description(grib_type[grib1_localTablesVersion], "GRIB Local Tables Version Number");
 
-    grib_type[grib1_significanceOfReferenceTime] = (coda_type *)coda_type_number_new(coda_format_grib1,
+    grib_type[grib1_significanceOfReferenceTime] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                      coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_significanceOfReferenceTime], endianness);
     coda_type_set_read_type(grib_type[grib1_significanceOfReferenceTime], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_significanceOfReferenceTime], 8);
     coda_type_set_description(grib_type[grib1_significanceOfReferenceTime], "Significance of Reference Time");
 
-    grib_type[grib1_productionStatusOfProcessedData] = (coda_type *)coda_type_number_new(coda_format_grib1,
+    grib_type[grib1_productionStatusOfProcessedData] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                          coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_productionStatusOfProcessedData], endianness);
     coda_type_set_read_type(grib_type[grib1_productionStatusOfProcessedData], coda_native_type_uint8);
@@ -414,16 +415,16 @@ static int grib_init(void)
     coda_type_set_description(grib_type[grib1_productionStatusOfProcessedData],
                               "Production status of processed data in this GRIB message");
 
-    grib_type[grib1_typeOfProcessedData] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_typeOfProcessedData] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_typeOfProcessedData], endianness);
     coda_type_set_read_type(grib_type[grib1_typeOfProcessedData], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_typeOfProcessedData], 8);
     coda_type_set_description(grib_type[grib1_typeOfProcessedData], "Type of processed data in this GRIB message");
 
-    grib_type[grib1_local] = (coda_type *)coda_type_raw_new(coda_format_grib1);
+    grib_type[grib1_local] = (coda_type *)coda_type_raw_new(coda_format_grib);
     coda_type_set_description(grib_type[grib1_local], "Reserved for originating center use");
 
-    grib_type[grib1_numberOfVerticalCoordinateValues] = (coda_type *)coda_type_number_new(coda_format_grib1,
+    grib_type[grib1_numberOfVerticalCoordinateValues] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                           coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_numberOfVerticalCoordinateValues], endianness);
     coda_type_set_read_type(grib_type[grib1_numberOfVerticalCoordinateValues], coda_native_type_uint8);
@@ -431,81 +432,81 @@ static int grib_init(void)
     coda_type_set_description(grib_type[grib1_numberOfVerticalCoordinateValues],
                               "NV, the number of vertical coordinate parameter");
 
-    grib_type[grib1_dataRepresentationType] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_dataRepresentationType] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_dataRepresentationType], endianness);
     coda_type_set_read_type(grib_type[grib1_dataRepresentationType], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_dataRepresentationType], 8);
     coda_type_set_description(grib_type[grib1_dataRepresentationType], "Data representation type");
 
-    grib_type[grib1_shapeOfTheEarth] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_shapeOfTheEarth] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_shapeOfTheEarth], endianness);
     coda_type_set_read_type(grib_type[grib1_shapeOfTheEarth], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_shapeOfTheEarth], 8);
 
-    grib_type[grib1_scaleFactorOfRadiusOfSphericalEarth] = (coda_type *)coda_type_number_new(coda_format_grib1,
+    grib_type[grib1_scaleFactorOfRadiusOfSphericalEarth] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                              coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_scaleFactorOfRadiusOfSphericalEarth],
                                     endianness);
     coda_type_set_read_type(grib_type[grib1_scaleFactorOfRadiusOfSphericalEarth], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_scaleFactorOfRadiusOfSphericalEarth], 8);
 
-    grib_type[grib1_scaledValueOfRadiusOfSphericalEarth] = (coda_type *)coda_type_number_new(coda_format_grib1,
+    grib_type[grib1_scaledValueOfRadiusOfSphericalEarth] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                              coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_scaledValueOfRadiusOfSphericalEarth],
                                     endianness);
     coda_type_set_read_type(grib_type[grib1_scaledValueOfRadiusOfSphericalEarth], coda_native_type_uint32);
     coda_type_set_bit_size(grib_type[grib1_scaledValueOfRadiusOfSphericalEarth], 32);
 
-    grib_type[grib1_scaleFactorOfEarthMajorAxis] = (coda_type *)coda_type_number_new(coda_format_grib1,
+    grib_type[grib1_scaleFactorOfEarthMajorAxis] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                      coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_scaleFactorOfEarthMajorAxis], endianness);
     coda_type_set_read_type(grib_type[grib1_scaleFactorOfEarthMajorAxis], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_scaleFactorOfEarthMajorAxis], 8);
 
-    grib_type[grib1_scaledValueOfEarthMajorAxis] = (coda_type *)coda_type_number_new(coda_format_grib1,
+    grib_type[grib1_scaledValueOfEarthMajorAxis] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                      coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_scaledValueOfEarthMajorAxis], endianness);
     coda_type_set_read_type(grib_type[grib1_scaledValueOfEarthMajorAxis], coda_native_type_uint32);
     coda_type_set_bit_size(grib_type[grib1_scaledValueOfEarthMajorAxis], 32);
 
-    grib_type[grib1_scaleFactorOfEarthMinorAxis] = (coda_type *)coda_type_number_new(coda_format_grib1,
+    grib_type[grib1_scaleFactorOfEarthMinorAxis] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                      coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_scaleFactorOfEarthMinorAxis], endianness);
     coda_type_set_read_type(grib_type[grib1_scaleFactorOfEarthMinorAxis], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_scaleFactorOfEarthMinorAxis], 8);
 
-    grib_type[grib1_scaledValueOfEarthMinorAxis] = (coda_type *)coda_type_number_new(coda_format_grib1,
+    grib_type[grib1_scaledValueOfEarthMinorAxis] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                      coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_scaledValueOfEarthMinorAxis], endianness);
     coda_type_set_read_type(grib_type[grib1_scaledValueOfEarthMinorAxis], coda_native_type_uint32);
     coda_type_set_bit_size(grib_type[grib1_scaledValueOfEarthMinorAxis], 32);
 
-    grib_type[grib1_Ni] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_Ni] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_Ni], endianness);
     coda_type_set_read_type(grib_type[grib1_Ni], coda_native_type_uint16);
     coda_type_set_bit_size(grib_type[grib1_Ni], 16);
     coda_type_set_description(grib_type[grib1_Ni], "No. of points along a latitude circle");
 
-    grib_type[grib1_Nj] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_Nj] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_Nj], endianness);
     coda_type_set_read_type(grib_type[grib1_Nj], coda_native_type_uint16);
     coda_type_set_bit_size(grib_type[grib1_Nj], 16);
     coda_type_set_description(grib_type[grib1_Nj], "No. of points along a longitude meridian");
 
-    grib_type[grib1_basicAngleOfTheInitialProductionDomain] = (coda_type *)coda_type_number_new(coda_format_grib1,
+    grib_type[grib1_basicAngleOfTheInitialProductionDomain] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                                 coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_basicAngleOfTheInitialProductionDomain],
                                     endianness);
     coda_type_set_read_type(grib_type[grib1_basicAngleOfTheInitialProductionDomain], coda_native_type_uint32);
     coda_type_set_bit_size(grib_type[grib1_basicAngleOfTheInitialProductionDomain], 32);
 
-    grib_type[grib1_subdivisionsOfBasicAngle] = (coda_type *)coda_type_number_new(coda_format_grib1,
+    grib_type[grib1_subdivisionsOfBasicAngle] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                   coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_subdivisionsOfBasicAngle], endianness);
     coda_type_set_read_type(grib_type[grib1_subdivisionsOfBasicAngle], coda_native_type_uint32);
     coda_type_set_bit_size(grib_type[grib1_subdivisionsOfBasicAngle], 32);
 
-    grib_type[grib1_latitudeOfFirstGridPoint] = (coda_type *)coda_type_number_new(coda_format_grib1,
+    grib_type[grib1_latitudeOfFirstGridPoint] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                   coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_latitudeOfFirstGridPoint], endianness);
     coda_type_set_read_type(grib_type[grib1_latitudeOfFirstGridPoint], coda_native_type_int32);
@@ -513,7 +514,7 @@ static int grib_init(void)
     coda_type_set_description(grib_type[grib1_latitudeOfFirstGridPoint], "La1 - latitude of first grid point, units: "
                               "millidegrees (degrees x 1000), values limited to range 0 - 90,000");
 
-    grib_type[grib1_longitudeOfFirstGridPoint] = (coda_type *)coda_type_number_new(coda_format_grib1,
+    grib_type[grib1_longitudeOfFirstGridPoint] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                    coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_longitudeOfFirstGridPoint], endianness);
     coda_type_set_read_type(grib_type[grib1_longitudeOfFirstGridPoint], coda_native_type_int32);
@@ -521,21 +522,21 @@ static int grib_init(void)
     coda_type_set_description(grib_type[grib1_longitudeOfFirstGridPoint], "Lo1 - longitude of first grid point, "
                               "units: millidegrees (degrees x 1000), values limited to range 0 - 360,000");
 
-    grib_type[grib1_resolutionAndComponentFlags] = (coda_type *)coda_type_number_new(coda_format_grib1,
+    grib_type[grib1_resolutionAndComponentFlags] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                      coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_resolutionAndComponentFlags], endianness);
     coda_type_set_read_type(grib_type[grib1_resolutionAndComponentFlags], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_resolutionAndComponentFlags], 8);
     coda_type_set_description(grib_type[grib1_resolutionAndComponentFlags], "Resolution and component flags");
 
-    grib_type[grib1_latitudeOfLastGridPoint] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_latitudeOfLastGridPoint] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_latitudeOfLastGridPoint], endianness);
     coda_type_set_read_type(grib_type[grib1_latitudeOfLastGridPoint], coda_native_type_int32);
     coda_type_set_bit_size(grib_type[grib1_latitudeOfLastGridPoint], 32);
     coda_type_set_description(grib_type[grib1_latitudeOfLastGridPoint], "La2 - Latitude of last grid point (same "
                               "units and value range as latitudeOfFirstGridPoint)");
 
-    grib_type[grib1_longitudeOfLastGridPoint] = (coda_type *)coda_type_number_new(coda_format_grib1,
+    grib_type[grib1_longitudeOfLastGridPoint] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                   coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_longitudeOfLastGridPoint], endianness);
     coda_type_set_read_type(grib_type[grib1_longitudeOfLastGridPoint], coda_native_type_int32);
@@ -543,83 +544,83 @@ static int grib_init(void)
     coda_type_set_description(grib_type[grib1_longitudeOfLastGridPoint], "Lo2 - Longitude of last grid point (same "
                               "units and value range as longitudeOfFirstGridPoint)");
 
-    grib_type[grib1_iDirectionIncrement] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_iDirectionIncrement] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_iDirectionIncrement], endianness);
     coda_type_set_read_type(grib_type[grib1_iDirectionIncrement], coda_native_type_uint16);
     coda_type_set_bit_size(grib_type[grib1_iDirectionIncrement], 16);
     coda_type_set_description(grib_type[grib1_iDirectionIncrement], "Di - Longitudinal Direction Increment (same "
                               "units as longitudeOfFirstGridPoint) (if not given, all bits set = 1)");
 
-    grib_type[grib1_jDirectionIncrement] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_jDirectionIncrement] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_jDirectionIncrement], endianness);
     coda_type_set_read_type(grib_type[grib1_jDirectionIncrement], coda_native_type_uint16);
     coda_type_set_bit_size(grib_type[grib1_jDirectionIncrement], 16);
     coda_type_set_description(grib_type[grib1_jDirectionIncrement], "Dj - Latitudinal Direction Increment (same "
                               "units as latitudeOfFirstGridPoint) (if not given, all bits set = 1)");
 
-    grib_type[grib1_N] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_N] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_N], endianness);
     coda_type_set_read_type(grib_type[grib1_N], coda_native_type_uint16);
     coda_type_set_bit_size(grib_type[grib1_N], 16);
     coda_type_set_description(grib_type[grib1_N], "N - number of latitude circles between a pole and the equator, "
                               "Mandatory if Gaussian Grid specified");
 
-    grib_type[grib1_scanningMode] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_scanningMode] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_scanningMode], endianness);
     coda_type_set_read_type(grib_type[grib1_scanningMode], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_scanningMode], 8);
     coda_type_set_description(grib_type[grib1_scanningMode], "Scanning mode flags");
 
-    grib_type[grib1_coordinateValues] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_real_class);
+    grib_type[grib1_coordinateValues] = (coda_type *)coda_type_number_new(coda_format_grib, coda_real_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_coordinateValues], endianness);
     coda_type_set_read_type(grib_type[grib1_coordinateValues], coda_native_type_float);
     coda_type_set_bit_size(grib_type[grib1_coordinateValues], 32);
-    grib_type[grib1_coordinateValues_array] = (coda_type *)coda_type_array_new(coda_format_grib1);
+    grib_type[grib1_coordinateValues_array] = (coda_type *)coda_type_array_new(coda_format_grib);
     coda_type_set_description(grib_type[grib1_coordinateValues_array], "List of vertical coordinate parameters");
     coda_type_array_set_base_type((coda_type_array *)grib_type[grib1_coordinateValues_array],
                                   grib_type[grib1_coordinateValues]);
     coda_type_array_add_variable_dimension((coda_type_array *)grib_type[grib1_coordinateValues_array], NULL);
 
-    grib_type[grib1_sourceOfGridDefinition] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_sourceOfGridDefinition] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_sourceOfGridDefinition], endianness);
     coda_type_set_read_type(grib_type[grib1_sourceOfGridDefinition], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_sourceOfGridDefinition], 8);
     coda_type_set_description(grib_type[grib1_sourceOfGridDefinition], "Source of grid definition");
 
-    grib_type[grib1_numberOfDataPoints] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_numberOfDataPoints] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_numberOfDataPoints], endianness);
     coda_type_set_read_type(grib_type[grib1_numberOfDataPoints], coda_native_type_uint32);
     coda_type_set_bit_size(grib_type[grib1_numberOfDataPoints], 32);
     coda_type_set_description(grib_type[grib1_numberOfDataPoints], "Number of data points");
 
-    grib_type[grib1_gridDefinitionTemplateNumber] = (coda_type *)coda_type_number_new(coda_format_grib1,
+    grib_type[grib1_gridDefinitionTemplateNumber] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                       coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_gridDefinitionTemplateNumber], endianness);
     coda_type_set_read_type(grib_type[grib1_gridDefinitionTemplateNumber], coda_native_type_uint16);
     coda_type_set_bit_size(grib_type[grib1_gridDefinitionTemplateNumber], 16);
     coda_type_set_description(grib_type[grib1_gridDefinitionTemplateNumber], "Grid Definition Template Number");
 
-    grib_type[grib1_bitsPerValue] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_bitsPerValue] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_bitsPerValue], endianness);
     coda_type_set_read_type(grib_type[grib1_bitsPerValue], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib1_bitsPerValue], 8);
     coda_type_set_description(grib_type[grib1_bitsPerValue], "Number of bits into which a datum point is packed.");
 
-    grib_type[grib1_binaryScaleFactor] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_integer_class);
+    grib_type[grib1_binaryScaleFactor] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_binaryScaleFactor], endianness);
     coda_type_set_read_type(grib_type[grib1_binaryScaleFactor], coda_native_type_int16);
     coda_type_set_bit_size(grib_type[grib1_binaryScaleFactor], 16);
     coda_type_set_description(grib_type[grib1_binaryScaleFactor], "The binary scale factor (E).");
 
-    grib_type[grib1_referenceValue] = (coda_type *)coda_type_number_new(coda_format_grib1, coda_real_class);
+    grib_type[grib1_referenceValue] = (coda_type *)coda_type_number_new(coda_format_grib, coda_real_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_referenceValue], endianness);
     coda_type_set_read_type(grib_type[grib1_referenceValue], coda_native_type_float);
     coda_type_set_bit_size(grib_type[grib1_referenceValue], 32);
     coda_type_set_description(grib_type[grib1_referenceValue], "Reference value (minimum value). "
                               "This is the overall or 'global' minimum that has been subtracted from all the values.");
 
-    grib_type[grib1_values] = (coda_type *)coda_type_array_new(coda_format_grib1);
-    basic_type = (coda_type *)coda_type_number_new(coda_format_grib1, coda_real_class);
+    grib_type[grib1_values] = (coda_type *)coda_type_array_new(coda_format_grib);
+    basic_type = (coda_type *)coda_type_number_new(coda_format_grib, coda_real_class);
     coda_type_number_set_endianness((coda_type_number *)basic_type, endianness);
     coda_type_set_read_type(basic_type, coda_native_type_float);
     coda_type_set_bit_size(basic_type, 32);
@@ -627,7 +628,7 @@ static int grib_init(void)
     coda_type_release(basic_type);
     coda_type_array_add_variable_dimension((coda_type_array *)grib_type[grib1_values], NULL);
 
-    grib_type[grib1_grid] = (coda_type *)coda_type_record_new(coda_format_grib1);
+    grib_type[grib1_grid] = (coda_type *)coda_type_record_new(coda_format_grib);
     field = coda_type_record_field_new("numberOfVerticalCoordinateValues");
     coda_type_record_field_set_type(field, grib_type[grib1_numberOfVerticalCoordinateValues]);
     coda_type_record_add_field((coda_type_record *)grib_type[grib1_grid], field);
@@ -674,7 +675,7 @@ static int grib_init(void)
     coda_type_record_field_set_optional(field);
     coda_type_record_add_field((coda_type_record *)grib_type[grib1_grid], field);
 
-    grib_type[grib1_data] = (coda_type *)coda_type_record_new(coda_format_grib1);
+    grib_type[grib1_data] = (coda_type *)coda_type_record_new(coda_format_grib);
     field = coda_type_record_field_new("bitsPerValue");
     coda_type_record_field_set_type(field, grib_type[grib1_bitsPerValue]);
     coda_type_record_field_set_hidden(field);
@@ -691,7 +692,7 @@ static int grib_init(void)
     coda_type_record_field_set_type(field, grib_type[grib1_values]);
     coda_type_record_add_field((coda_type_record *)grib_type[grib1_data], field);
 
-    grib_type[grib1_message] = (coda_type *)coda_type_record_new(coda_format_grib1);
+    grib_type[grib1_message] = (coda_type *)coda_type_record_new(coda_format_grib);
     field = coda_type_record_field_new("editionNumber");
     coda_type_record_field_set_type(field, grib_type[grib1_editionNumber]);
     coda_type_record_add_field((coda_type_record *)grib_type[grib1_message], field);
@@ -771,110 +772,105 @@ static int grib_init(void)
     coda_type_record_field_set_type(field, grib_type[grib1_data]);
     coda_type_record_add_field((coda_type_record *)grib_type[grib1_message], field);
 
-    grib_type[grib1_root] = (coda_type *)coda_type_array_new(coda_format_grib1);
-    coda_type_array_set_base_type((coda_type_array *)grib_type[grib1_root], grib_type[grib1_message]);
-    coda_type_array_add_variable_dimension((coda_type_array *)grib_type[grib1_root], NULL);
-
-
     /* GRIB2 */
 
-    grib_type[grib2_localRecordIndex] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_localRecordIndex] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_localRecordIndex], endianness);
     coda_type_set_read_type(grib_type[grib2_localRecordIndex], coda_native_type_int32);
     coda_type_set_bit_size(grib_type[grib2_localRecordIndex], 32);
 
-    grib_type[grib2_gridRecordIndex] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_gridRecordIndex] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_gridRecordIndex], endianness);
     coda_type_set_read_type(grib_type[grib2_gridRecordIndex], coda_native_type_uint32);
     coda_type_set_bit_size(grib_type[grib2_gridRecordIndex], 32);
 
-    grib_type[grib2_editionNumber] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_editionNumber] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_editionNumber], endianness);
     coda_type_set_read_type(grib_type[grib2_editionNumber], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_editionNumber], 8);
     coda_type_set_description(grib_type[grib2_editionNumber], "GRIB edition number");
 
-    grib_type[grib2_centre] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_centre] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_centre], endianness);
     coda_type_set_read_type(grib_type[grib2_centre], coda_native_type_uint16);
     coda_type_set_bit_size(grib_type[grib2_centre], 16);
     coda_type_set_description(grib_type[grib2_centre], "Identification of originating/generating centre");
 
-    grib_type[grib2_year] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_year] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_year], endianness);
     coda_type_set_read_type(grib_type[grib2_year], coda_native_type_uint16);
     coda_type_set_bit_size(grib_type[grib2_year], 16);
     coda_type_set_description(grib_type[grib2_year], "Year");
 
-    grib_type[grib2_month] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_month] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_month], endianness);
     coda_type_set_read_type(grib_type[grib2_month], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_month], 8);
     coda_type_set_description(grib_type[grib2_month], "Month of year");
 
-    grib_type[grib2_day] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_day] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_day], endianness);
     coda_type_set_read_type(grib_type[grib2_day], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_day], 8);
     coda_type_set_description(grib_type[grib2_day], "Day of month");
 
-    grib_type[grib2_hour] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_hour] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_hour], endianness);
     coda_type_set_read_type(grib_type[grib2_hour], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_hour], 8);
     coda_type_set_description(grib_type[grib2_hour], "Hour of day");
 
-    grib_type[grib2_minute] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_minute] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_minute], endianness);
     coda_type_set_read_type(grib_type[grib2_minute], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_minute], 8);
     coda_type_set_description(grib_type[grib2_minute], "Minute of hour");
 
-    grib_type[grib2_second] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_second] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_second], endianness);
     coda_type_set_read_type(grib_type[grib2_second], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_second], 8);
     coda_type_set_description(grib_type[grib2_second], "Second of minute");
 
-    grib_type[grib2_subCentre] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_subCentre] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_subCentre], endianness);
     coda_type_set_read_type(grib_type[grib2_subCentre], coda_native_type_uint16);
     coda_type_set_bit_size(grib_type[grib2_subCentre], 16);
     coda_type_set_description(grib_type[grib2_subCentre], "Identification of originating/generating sub-centre "
                               "(allocated by originating/generating centre)");
 
-    grib_type[grib2_decimalScaleFactor] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_decimalScaleFactor] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_decimalScaleFactor], endianness);
     coda_type_set_read_type(grib_type[grib2_decimalScaleFactor], coda_native_type_int16);
     coda_type_set_bit_size(grib_type[grib2_decimalScaleFactor], 16);
     coda_type_set_description(grib_type[grib2_decimalScaleFactor], "The decimal scale factor D");
 
-    grib_type[grib2_discipline] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_discipline] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_discipline], endianness);
     coda_type_set_read_type(grib_type[grib2_discipline], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_discipline], 8);
     coda_type_set_description(grib_type[grib2_discipline], "GRIB Master Table Number");
 
-    grib_type[grib2_masterTablesVersion] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_masterTablesVersion] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_masterTablesVersion], endianness);
     coda_type_set_read_type(grib_type[grib2_masterTablesVersion], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_masterTablesVersion], 8);
     coda_type_set_description(grib_type[grib2_masterTablesVersion], "GRIB Master Tables Version Number");
 
-    grib_type[grib2_localTablesVersion] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_localTablesVersion] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_localTablesVersion], endianness);
     coda_type_set_read_type(grib_type[grib2_localTablesVersion], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_localTablesVersion], 8);
     coda_type_set_description(grib_type[grib2_localTablesVersion], "GRIB Local Tables Version Number");
 
-    grib_type[grib2_significanceOfReferenceTime] = (coda_type *)coda_type_number_new(coda_format_grib2,
+    grib_type[grib2_significanceOfReferenceTime] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                      coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_significanceOfReferenceTime], endianness);
     coda_type_set_read_type(grib_type[grib2_significanceOfReferenceTime], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_significanceOfReferenceTime], 8);
     coda_type_set_description(grib_type[grib2_significanceOfReferenceTime], "Significance of Reference Time");
 
-    grib_type[grib2_productionStatusOfProcessedData] = (coda_type *)coda_type_number_new(coda_format_grib2,
+    grib_type[grib2_productionStatusOfProcessedData] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                          coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_productionStatusOfProcessedData], endianness);
     coda_type_set_read_type(grib_type[grib2_productionStatusOfProcessedData], coda_native_type_uint8);
@@ -882,16 +878,16 @@ static int grib_init(void)
     coda_type_set_description(grib_type[grib2_productionStatusOfProcessedData],
                               "Production status of processed data in this GRIB message");
 
-    grib_type[grib2_typeOfProcessedData] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_typeOfProcessedData] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_typeOfProcessedData], endianness);
     coda_type_set_read_type(grib_type[grib2_typeOfProcessedData], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_typeOfProcessedData], 8);
     coda_type_set_description(grib_type[grib2_typeOfProcessedData], "Type of processed data in this GRIB message");
 
-    grib_type[grib2_local] = (coda_type *)coda_type_raw_new(coda_format_grib2);
+    grib_type[grib2_local] = (coda_type *)coda_type_raw_new(coda_format_grib);
     coda_type_set_description(grib_type[grib2_local], "Reserved for originating center use");
 
-    grib_type[grib2_numberOfVerticalCoordinateValues] = (coda_type *)coda_type_number_new(coda_format_grib2,
+    grib_type[grib2_numberOfVerticalCoordinateValues] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                           coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_numberOfVerticalCoordinateValues], endianness);
     coda_type_set_read_type(grib_type[grib2_numberOfVerticalCoordinateValues], coda_native_type_uint8);
@@ -899,81 +895,81 @@ static int grib_init(void)
     coda_type_set_description(grib_type[grib2_numberOfVerticalCoordinateValues],
                               "NV, the number of vertical coordinate parameter");
 
-    grib_type[grib2_dataRepresentationType] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_dataRepresentationType] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_dataRepresentationType], endianness);
     coda_type_set_read_type(grib_type[grib2_dataRepresentationType], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_dataRepresentationType], 8);
     coda_type_set_description(grib_type[grib2_dataRepresentationType], "Data representation type");
 
-    grib_type[grib2_shapeOfTheEarth] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_shapeOfTheEarth] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_shapeOfTheEarth], endianness);
     coda_type_set_read_type(grib_type[grib2_shapeOfTheEarth], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_shapeOfTheEarth], 8);
 
-    grib_type[grib2_scaleFactorOfRadiusOfSphericalEarth] = (coda_type *)coda_type_number_new(coda_format_grib2,
+    grib_type[grib2_scaleFactorOfRadiusOfSphericalEarth] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                              coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_scaleFactorOfRadiusOfSphericalEarth],
                                     endianness);
     coda_type_set_read_type(grib_type[grib2_scaleFactorOfRadiusOfSphericalEarth], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_scaleFactorOfRadiusOfSphericalEarth], 8);
 
-    grib_type[grib2_scaledValueOfRadiusOfSphericalEarth] = (coda_type *)coda_type_number_new(coda_format_grib2,
+    grib_type[grib2_scaledValueOfRadiusOfSphericalEarth] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                              coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_scaledValueOfRadiusOfSphericalEarth],
                                     endianness);
     coda_type_set_read_type(grib_type[grib2_scaledValueOfRadiusOfSphericalEarth], coda_native_type_uint32);
     coda_type_set_bit_size(grib_type[grib2_scaledValueOfRadiusOfSphericalEarth], 32);
 
-    grib_type[grib2_scaleFactorOfEarthMajorAxis] = (coda_type *)coda_type_number_new(coda_format_grib2,
+    grib_type[grib2_scaleFactorOfEarthMajorAxis] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                      coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_scaleFactorOfEarthMajorAxis], endianness);
     coda_type_set_read_type(grib_type[grib2_scaleFactorOfEarthMajorAxis], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_scaleFactorOfEarthMajorAxis], 8);
 
-    grib_type[grib2_scaledValueOfEarthMajorAxis] = (coda_type *)coda_type_number_new(coda_format_grib2,
+    grib_type[grib2_scaledValueOfEarthMajorAxis] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                      coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_scaledValueOfEarthMajorAxis], endianness);
     coda_type_set_read_type(grib_type[grib2_scaledValueOfEarthMajorAxis], coda_native_type_uint32);
     coda_type_set_bit_size(grib_type[grib2_scaledValueOfEarthMajorAxis], 32);
 
-    grib_type[grib2_scaleFactorOfEarthMinorAxis] = (coda_type *)coda_type_number_new(coda_format_grib2,
+    grib_type[grib2_scaleFactorOfEarthMinorAxis] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                      coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_scaleFactorOfEarthMinorAxis], endianness);
     coda_type_set_read_type(grib_type[grib2_scaleFactorOfEarthMinorAxis], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_scaleFactorOfEarthMinorAxis], 8);
 
-    grib_type[grib2_scaledValueOfEarthMinorAxis] = (coda_type *)coda_type_number_new(coda_format_grib2,
+    grib_type[grib2_scaledValueOfEarthMinorAxis] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                      coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_scaledValueOfEarthMinorAxis], endianness);
     coda_type_set_read_type(grib_type[grib2_scaledValueOfEarthMinorAxis], coda_native_type_uint32);
     coda_type_set_bit_size(grib_type[grib2_scaledValueOfEarthMinorAxis], 32);
 
-    grib_type[grib2_Ni] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_Ni] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_Ni], endianness);
     coda_type_set_read_type(grib_type[grib2_Ni], coda_native_type_uint32);
     coda_type_set_bit_size(grib_type[grib2_Ni], 32);
     coda_type_set_description(grib_type[grib2_Ni], "No. of points along a latitude circle");
 
-    grib_type[grib2_Nj] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_Nj] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_Nj], endianness);
     coda_type_set_read_type(grib_type[grib2_Nj], coda_native_type_uint32);
     coda_type_set_bit_size(grib_type[grib2_Nj], 32);
     coda_type_set_description(grib_type[grib2_Nj], "No. of points along a longitude meridian");
 
-    grib_type[grib2_basicAngleOfTheInitialProductionDomain] = (coda_type *)coda_type_number_new(coda_format_grib2,
+    grib_type[grib2_basicAngleOfTheInitialProductionDomain] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                                 coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_basicAngleOfTheInitialProductionDomain],
                                     endianness);
     coda_type_set_read_type(grib_type[grib2_basicAngleOfTheInitialProductionDomain], coda_native_type_uint32);
     coda_type_set_bit_size(grib_type[grib2_basicAngleOfTheInitialProductionDomain], 32);
 
-    grib_type[grib2_subdivisionsOfBasicAngle] = (coda_type *)coda_type_number_new(coda_format_grib2,
+    grib_type[grib2_subdivisionsOfBasicAngle] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                   coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_subdivisionsOfBasicAngle], endianness);
     coda_type_set_read_type(grib_type[grib2_subdivisionsOfBasicAngle], coda_native_type_uint32);
     coda_type_set_bit_size(grib_type[grib2_subdivisionsOfBasicAngle], 32);
 
-    grib_type[grib2_latitudeOfFirstGridPoint] = (coda_type *)coda_type_number_new(coda_format_grib2,
+    grib_type[grib2_latitudeOfFirstGridPoint] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                   coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_latitudeOfFirstGridPoint], endianness);
     coda_type_set_read_type(grib_type[grib2_latitudeOfFirstGridPoint], coda_native_type_int32);
@@ -981,7 +977,7 @@ static int grib_init(void)
     coda_type_set_description(grib_type[grib2_latitudeOfFirstGridPoint], "La1 - latitude of first grid point, units: "
                               "millidegrees (degrees x 1000), values limited to range 0 - 90,000");
 
-    grib_type[grib2_longitudeOfFirstGridPoint] = (coda_type *)coda_type_number_new(coda_format_grib2,
+    grib_type[grib2_longitudeOfFirstGridPoint] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                    coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_longitudeOfFirstGridPoint], endianness);
     coda_type_set_read_type(grib_type[grib2_longitudeOfFirstGridPoint], coda_native_type_int32);
@@ -989,21 +985,21 @@ static int grib_init(void)
     coda_type_set_description(grib_type[grib2_longitudeOfFirstGridPoint], "Lo1 - longitude of first grid point, "
                               "units: millidegrees (degrees x 1000), values limited to range 0 - 360,000");
 
-    grib_type[grib2_resolutionAndComponentFlags] = (coda_type *)coda_type_number_new(coda_format_grib2,
+    grib_type[grib2_resolutionAndComponentFlags] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                      coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_resolutionAndComponentFlags], endianness);
     coda_type_set_read_type(grib_type[grib2_resolutionAndComponentFlags], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_resolutionAndComponentFlags], 8);
     coda_type_set_description(grib_type[grib2_resolutionAndComponentFlags], "Resolution and component flags");
 
-    grib_type[grib2_latitudeOfLastGridPoint] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_latitudeOfLastGridPoint] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_latitudeOfLastGridPoint], endianness);
     coda_type_set_read_type(grib_type[grib2_latitudeOfLastGridPoint], coda_native_type_int32);
     coda_type_set_bit_size(grib_type[grib2_latitudeOfLastGridPoint], 32);
     coda_type_set_description(grib_type[grib2_latitudeOfLastGridPoint], "La2 - Latitude of last grid point (same "
                               "units and value range as latitudeOfFirstGridPoint)");
 
-    grib_type[grib2_longitudeOfLastGridPoint] = (coda_type *)coda_type_number_new(coda_format_grib2,
+    grib_type[grib2_longitudeOfLastGridPoint] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                   coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_longitudeOfLastGridPoint], endianness);
     coda_type_set_read_type(grib_type[grib2_longitudeOfLastGridPoint], coda_native_type_int32);
@@ -1011,70 +1007,70 @@ static int grib_init(void)
     coda_type_set_description(grib_type[grib2_longitudeOfLastGridPoint], "Lo2 - Longitude of last grid point (same "
                               "units and value range as longitudeOfFirstGridPoint)");
 
-    grib_type[grib2_iDirectionIncrement] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_iDirectionIncrement] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_iDirectionIncrement], endianness);
     coda_type_set_read_type(grib_type[grib2_iDirectionIncrement], coda_native_type_uint32);
     coda_type_set_bit_size(grib_type[grib2_iDirectionIncrement], 32);
     coda_type_set_description(grib_type[grib2_iDirectionIncrement], "Di - Longitudinal Direction Increment (same "
                               "units as longitudeOfFirstGridPoint) (if not given, all bits set = 1)");
 
-    grib_type[grib2_jDirectionIncrement] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_jDirectionIncrement] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_jDirectionIncrement], endianness);
     coda_type_set_read_type(grib_type[grib2_jDirectionIncrement], coda_native_type_uint32);
     coda_type_set_bit_size(grib_type[grib2_jDirectionIncrement], 32);
     coda_type_set_description(grib_type[grib2_jDirectionIncrement], "Dj - Latitudinal Direction Increment (same "
                               "units as latitudeOfFirstGridPoint) (if not given, all bits set = 1)");
 
-    grib_type[grib2_N] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_N] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_N], endianness);
     coda_type_set_read_type(grib_type[grib2_N], coda_native_type_uint32);
     coda_type_set_bit_size(grib_type[grib2_N], 32);
     coda_type_set_description(grib_type[grib2_N], "N - number of latitude circles between a pole and the equator, "
                               "Mandatory if Gaussian Grid specified");
 
-    grib_type[grib2_scanningMode] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_scanningMode] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_scanningMode], endianness);
     coda_type_set_read_type(grib_type[grib2_scanningMode], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_scanningMode], 8);
     coda_type_set_description(grib_type[grib2_scanningMode], "Scanning mode flags");
 
-    grib_type[grib2_sourceOfGridDefinition] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_sourceOfGridDefinition] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_sourceOfGridDefinition], endianness);
     coda_type_set_read_type(grib_type[grib2_sourceOfGridDefinition], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_sourceOfGridDefinition], 8);
     coda_type_set_description(grib_type[grib2_sourceOfGridDefinition], "Source of grid definition");
 
-    grib_type[grib2_numberOfDataPoints] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_numberOfDataPoints] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_numberOfDataPoints], endianness);
     coda_type_set_read_type(grib_type[grib2_numberOfDataPoints], coda_native_type_uint32);
     coda_type_set_bit_size(grib_type[grib2_numberOfDataPoints], 32);
     coda_type_set_description(grib_type[grib2_numberOfDataPoints], "Number of data points");
 
-    grib_type[grib2_parameterCategory] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_parameterCategory] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_parameterCategory], endianness);
     coda_type_set_read_type(grib_type[grib2_parameterCategory], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_parameterCategory], 8);
     coda_type_set_description(grib_type[grib2_parameterCategory], "Parameter Category");
 
-    grib_type[grib2_parameterNumber] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_parameterNumber] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_parameterNumber], endianness);
     coda_type_set_read_type(grib_type[grib2_parameterNumber], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_parameterNumber], 8);
     coda_type_set_description(grib_type[grib2_parameterNumber], "Parameter Number");
 
-    grib_type[grib2_typeOfGeneratingProcess] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_typeOfGeneratingProcess] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_typeOfGeneratingProcess], endianness);
     coda_type_set_read_type(grib_type[grib2_typeOfGeneratingProcess], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_typeOfGeneratingProcess], 8);
     coda_type_set_description(grib_type[grib2_typeOfGeneratingProcess], "Type of generating process");
 
-    grib_type[grib2_backgroundProcess] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_backgroundProcess] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_backgroundProcess], endianness);
     coda_type_set_read_type(grib_type[grib2_backgroundProcess], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_backgroundProcess], 8);
     coda_type_set_description(grib_type[grib2_backgroundProcess], "Background generating process identifier");
 
-    grib_type[grib2_generatingProcessIdentifier] = (coda_type *)coda_type_number_new(coda_format_grib2,
+    grib_type[grib2_generatingProcessIdentifier] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                      coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_generatingProcessIdentifier], endianness);
     coda_type_set_read_type(grib_type[grib2_generatingProcessIdentifier], coda_native_type_uint8);
@@ -1082,14 +1078,14 @@ static int grib_init(void)
     coda_type_set_description(grib_type[grib2_generatingProcessIdentifier],
                               "Analysis or forecast generating process identifier");
 
-    grib_type[grib2_hoursAfterDataCutoff] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_hoursAfterDataCutoff] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_hoursAfterDataCutoff], endianness);
     coda_type_set_read_type(grib_type[grib2_hoursAfterDataCutoff], coda_native_type_uint16);
     coda_type_set_bit_size(grib_type[grib2_hoursAfterDataCutoff], 16);
     coda_type_set_description(grib_type[grib2_hoursAfterDataCutoff],
                               "Hours of observational data cut-off after reference time");
 
-    grib_type[grib2_minutesAfterDataCutoff] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_minutesAfterDataCutoff] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_minutesAfterDataCutoff], endianness);
     coda_type_set_read_type(grib_type[grib2_minutesAfterDataCutoff], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_minutesAfterDataCutoff], 8);
@@ -1097,82 +1093,82 @@ static int grib_init(void)
                               "Minutes of observational data cut-off after reference time");
 
     grib_type[grib2_indicatorOfUnitOfTimeRange] =
-        (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+        (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_indicatorOfUnitOfTimeRange], endianness);
     coda_type_set_read_type(grib_type[grib2_indicatorOfUnitOfTimeRange], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_indicatorOfUnitOfTimeRange], 8);
     coda_type_set_description(grib_type[grib2_indicatorOfUnitOfTimeRange], "Indicator of unit of time range");
 
-    grib_type[grib2_forecastTime] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_forecastTime] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_forecastTime], endianness);
     coda_type_set_read_type(grib_type[grib2_forecastTime], coda_native_type_uint32);
     coda_type_set_bit_size(grib_type[grib2_forecastTime], 32);
     coda_type_set_description(grib_type[grib2_forecastTime],
                               "Forecast time in units defined by indicatorOfUnitOfTimeRange");
 
-    grib_type[grib2_typeOfFirstFixedSurface] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_typeOfFirstFixedSurface] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_typeOfFirstFixedSurface], endianness);
     coda_type_set_read_type(grib_type[grib2_typeOfFirstFixedSurface], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_typeOfFirstFixedSurface], 8);
     coda_type_set_description(grib_type[grib2_typeOfFirstFixedSurface], "Type of first fixed surface");
 
-    grib_type[grib2_firstFixedSurface] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_real_class);
+    grib_type[grib2_firstFixedSurface] = (coda_type *)coda_type_number_new(coda_format_grib, coda_real_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_firstFixedSurface], endianness);
     coda_type_set_read_type(grib_type[grib2_firstFixedSurface], coda_native_type_double);
     coda_type_set_bit_size(grib_type[grib2_firstFixedSurface], 64);
     coda_type_set_description(grib_type[grib2_firstFixedSurface], "First fixed surface");
 
-    grib_type[grib2_typeOfSecondFixedSurface] = (coda_type *)coda_type_number_new(coda_format_grib2,
+    grib_type[grib2_typeOfSecondFixedSurface] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                   coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_typeOfSecondFixedSurface], endianness);
     coda_type_set_read_type(grib_type[grib2_typeOfSecondFixedSurface], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_typeOfSecondFixedSurface], 8);
     coda_type_set_description(grib_type[grib2_typeOfSecondFixedSurface], "Type of second fixed surface");
 
-    grib_type[grib2_secondFixedSurface] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_real_class);
+    grib_type[grib2_secondFixedSurface] = (coda_type *)coda_type_number_new(coda_format_grib, coda_real_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_secondFixedSurface], endianness);
     coda_type_set_read_type(grib_type[grib2_secondFixedSurface], coda_native_type_double);
     coda_type_set_bit_size(grib_type[grib2_secondFixedSurface], 64);
     coda_type_set_description(grib_type[grib2_secondFixedSurface], "Second fixed surface");
 
-    grib_type[grib2_coordinateValues] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_real_class);
+    grib_type[grib2_coordinateValues] = (coda_type *)coda_type_number_new(coda_format_grib, coda_real_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_coordinateValues], endianness);
     coda_type_set_read_type(grib_type[grib2_coordinateValues], coda_native_type_float);
     coda_type_set_bit_size(grib_type[grib2_coordinateValues], 32);
-    grib_type[grib2_coordinateValues_array] = (coda_type *)coda_type_array_new(coda_format_grib2);
+    grib_type[grib2_coordinateValues_array] = (coda_type *)coda_type_array_new(coda_format_grib);
     coda_type_set_description(grib_type[grib2_coordinateValues_array], "List of vertical coordinate parameters");
     coda_type_array_set_base_type((coda_type_array *)grib_type[grib2_coordinateValues_array],
                                   grib_type[grib2_coordinateValues]);
     coda_type_array_add_variable_dimension((coda_type_array *)grib_type[grib2_coordinateValues_array], NULL);
 
-    grib_type[grib2_gridDefinitionTemplateNumber] = (coda_type *)coda_type_number_new(coda_format_grib2,
+    grib_type[grib2_gridDefinitionTemplateNumber] = (coda_type *)coda_type_number_new(coda_format_grib,
                                                                                       coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_gridDefinitionTemplateNumber], endianness);
     coda_type_set_read_type(grib_type[grib2_gridDefinitionTemplateNumber], coda_native_type_uint16);
     coda_type_set_bit_size(grib_type[grib2_gridDefinitionTemplateNumber], 16);
     coda_type_set_description(grib_type[grib2_gridDefinitionTemplateNumber], "Grid Definition Template Number");
 
-    grib_type[grib2_bitsPerValue] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_bitsPerValue] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_bitsPerValue], endianness);
     coda_type_set_read_type(grib_type[grib2_bitsPerValue], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_bitsPerValue], 8);
     coda_type_set_description(grib_type[grib2_bitsPerValue], "Number of bits into which a datum point is packed.");
 
-    grib_type[grib2_binaryScaleFactor] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_integer_class);
+    grib_type[grib2_binaryScaleFactor] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_binaryScaleFactor], endianness);
     coda_type_set_read_type(grib_type[grib2_binaryScaleFactor], coda_native_type_int16);
     coda_type_set_bit_size(grib_type[grib2_binaryScaleFactor], 16);
     coda_type_set_description(grib_type[grib2_binaryScaleFactor], "The binary scale factor (E).");
 
-    grib_type[grib2_referenceValue] = (coda_type *)coda_type_number_new(coda_format_grib2, coda_real_class);
+    grib_type[grib2_referenceValue] = (coda_type *)coda_type_number_new(coda_format_grib, coda_real_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_referenceValue], endianness);
     coda_type_set_read_type(grib_type[grib2_referenceValue], coda_native_type_float);
     coda_type_set_bit_size(grib_type[grib2_referenceValue], 32);
     coda_type_set_description(grib_type[grib2_referenceValue], "Reference value (minimum value). "
                               "This is the overall or 'global' minimum that has been subtracted from all the values.");
 
-    grib_type[grib2_values] = (coda_type *)coda_type_array_new(coda_format_grib2);
-    basic_type = (coda_type *)coda_type_number_new(coda_format_grib2, coda_real_class);
+    grib_type[grib2_values] = (coda_type *)coda_type_array_new(coda_format_grib);
+    basic_type = (coda_type *)coda_type_number_new(coda_format_grib, coda_real_class);
     coda_type_number_set_endianness((coda_type_number *)basic_type, endianness);
     coda_type_set_read_type(basic_type, coda_native_type_float);
     coda_type_set_bit_size(basic_type, 32);
@@ -1180,7 +1176,7 @@ static int grib_init(void)
     coda_type_release(basic_type);
     coda_type_array_add_variable_dimension((coda_type_array *)grib_type[grib2_values], NULL);
 
-    grib_type[grib2_grid] = (coda_type *)coda_type_record_new(coda_format_grib2);
+    grib_type[grib2_grid] = (coda_type *)coda_type_record_new(coda_format_grib);
     field = coda_type_record_field_new("localRecordIndex");
     coda_type_record_field_set_type(field, grib_type[grib2_localRecordIndex]);
     coda_type_record_add_field((coda_type_record *)grib_type[grib2_grid], field);
@@ -1256,7 +1252,7 @@ static int grib_init(void)
     coda_type_record_field_set_type(field, grib_type[grib2_scanningMode]);
     coda_type_record_add_field((coda_type_record *)grib_type[grib2_grid], field);
 
-    grib_type[grib2_data] = (coda_type *)coda_type_record_new(coda_format_grib2);
+    grib_type[grib2_data] = (coda_type *)coda_type_record_new(coda_format_grib);
     field = coda_type_record_field_new("gridRecordIndex");
     coda_type_record_field_set_type(field, grib_type[grib2_gridRecordIndex]);
     coda_type_record_add_field((coda_type_record *)grib_type[grib2_data], field);
@@ -1323,19 +1319,19 @@ static int grib_init(void)
     coda_type_record_field_set_type(field, grib_type[grib2_values]);
     coda_type_record_add_field((coda_type_record *)grib_type[grib2_data], field);
 
-    grib_type[grib2_local_array] = (coda_type *)coda_type_array_new(coda_format_grib2);
+    grib_type[grib2_local_array] = (coda_type *)coda_type_array_new(coda_format_grib);
     coda_type_array_set_base_type((coda_type_array *)grib_type[grib2_local_array], grib_type[grib2_local]);
     coda_type_array_add_variable_dimension((coda_type_array *)grib_type[grib2_local_array], NULL);
 
-    grib_type[grib2_grid_array] = (coda_type *)coda_type_array_new(coda_format_grib2);
+    grib_type[grib2_grid_array] = (coda_type *)coda_type_array_new(coda_format_grib);
     coda_type_array_set_base_type((coda_type_array *)grib_type[grib2_grid_array], grib_type[grib2_grid]);
     coda_type_array_add_variable_dimension((coda_type_array *)grib_type[grib2_grid_array], NULL);
 
-    grib_type[grib2_data_array] = (coda_type *)coda_type_array_new(coda_format_grib2);
+    grib_type[grib2_data_array] = (coda_type *)coda_type_array_new(coda_format_grib);
     coda_type_array_set_base_type((coda_type_array *)grib_type[grib2_data_array], grib_type[grib2_data]);
     coda_type_array_add_variable_dimension((coda_type_array *)grib_type[grib2_data_array], NULL);
 
-    grib_type[grib2_message] = (coda_type *)coda_type_record_new(coda_format_grib2);
+    grib_type[grib2_message] = (coda_type *)coda_type_record_new(coda_format_grib);
     field = coda_type_record_field_new("editionNumber");
     coda_type_record_field_set_type(field, grib_type[grib2_editionNumber]);
     coda_type_record_add_field((coda_type_record *)grib_type[grib2_message], field);
@@ -1391,10 +1387,23 @@ static int grib_init(void)
     coda_type_record_field_set_type(field, grib_type[grib2_data_array]);
     coda_type_record_add_field((coda_type_record *)grib_type[grib2_message], field);
 
-    grib_type[grib2_root] = (coda_type *)coda_type_array_new(coda_format_grib2);
-    coda_type_array_set_base_type((coda_type_array *)grib_type[grib2_root], grib_type[grib2_message]);
-    coda_type_array_add_variable_dimension((coda_type_array *)grib_type[grib2_root], NULL);
+    /* GRIB common */
 
+    grib_type[grib_message] = (coda_type *)coda_type_union_new(coda_format_grib);
+    field = coda_type_record_field_new("grib1");
+    coda_type_record_field_set_type(field, grib_type[grib1_message]);
+    coda_type_record_field_set_optional(field);
+    coda_type_record_add_field((coda_type_record *)grib_type[grib_message], field);
+    field = coda_type_record_field_new("grib2");
+    coda_type_record_field_set_type(field, grib_type[grib2_message]);
+    coda_type_record_field_set_optional(field);
+    coda_type_record_add_field((coda_type_record *)grib_type[grib_message], field);
+
+    grib_type[grib_root] = (coda_type *)coda_type_array_new(coda_format_grib);
+    coda_type_array_set_base_type((coda_type_array *)grib_type[grib_root], grib_type[grib_message]);
+    coda_type_array_add_variable_dimension((coda_type_array *)grib_type[grib_root], NULL);
+
+    
     return 0;
 }
 
@@ -2833,7 +2842,7 @@ int coda_grib_reopen(coda_product **product)
     }
     product_file->filename = NULL;
     product_file->file_size = (*product)->file_size;
-    product_file->format = coda_format_grib1;
+    product_file->format = coda_format_grib;
     product_file->root_type = NULL;
     product_file->product_definition = NULL;
     product_file->product_variable_size = NULL;
@@ -2842,8 +2851,6 @@ int coda_grib_reopen(coda_product **product)
     product_file->mem_ptr = NULL;
 
     product_file->raw_product = *product;
-    product_file->grib_version = -1;
-    product_file->record_size = 0;
 
     product_file->filename = strdup((*product)->filename);
     if (product_file->filename == NULL)
@@ -2853,11 +2860,14 @@ int coda_grib_reopen(coda_product **product)
         coda_grib_close((coda_product *)product_file);
         return -1;
     }
+    product_file->root_type = (coda_dynamic_type *)coda_mem_array_new((coda_type_array *)grib_type[grib_root], NULL);
 
     message_number = 0;
     while (file_offset < product_file->file_size - 1)
     {
+        coda_mem_record *message_union;
         coda_mem_record *message;
+        int grib_version;
 
         /* find start of Indicator Section */
         buffer[0] = '\0';
@@ -2889,55 +2899,37 @@ int coda_grib_reopen(coda_product **product)
             coda_grib_close((coda_product *)product_file);
             return -1;
         }
-        if (buffer[7] != 1 && buffer[7] != 2)
+
+        grib_version = buffer[7];
+        if (grib_version != 1 && grib_version != 2)
         {
             coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, "unsupported GRIB format version (%d) for message %ld",
-                           (int)buffer[7], message_number);
-            coda_grib_close((coda_product *)product_file);
-            return -1;
-        }
-        if (product_file->grib_version < 0)
-        {
-            product_file->grib_version = buffer[7];
-        }
-        else if (product_file->grib_version != buffer[7])
-        {
-            coda_set_error(CODA_ERROR_PRODUCT, "mixed GRIB versions within a single file not supported");
+                           grib_version, message_number);
             coda_grib_close((coda_product *)product_file);
             return -1;
         }
 
-        if (product_file->grib_version == 1)
+        message_union = coda_mem_record_new((coda_type_record *)grib_type[grib_message], NULL);
+        if (grib_version == 1)
         {
-            /* read product based on GRIB Edition Number 1 specification */
-            if (product_file->root_type == NULL)
-            {
-                product_file->root_type =
-                    (coda_dynamic_type *)coda_mem_array_new((coda_type_array *)grib_type[grib1_root], NULL);
-            }
+            /* read message based on GRIB Edition Number 1 specification */
             message_size = ((buffer[4] * 256) + buffer[5]) * 256 + buffer[6];
 
             message = coda_mem_record_new((coda_type_record *)grib_type[grib1_message], NULL);
+            message_union->field_type[0] = (coda_dynamic_type *)message;
             type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib1_editionNumber], NULL,
                                                            (coda_product *)product_file, 1);
             coda_mem_record_add_field(message, "editionNumber", type, 0);
             if (read_grib1_message(product_file, message, file_offset + 8) != 0)
             {
-                coda_dynamic_type_delete((coda_dynamic_type *)message);
+                coda_dynamic_type_delete((coda_dynamic_type *)message_union);
                 coda_grib_close((coda_product *)product_file);
                 return -1;
             }
         }
         else
         {
-            /* read product based on GRIB Edition Number 2 specification */
-            if (product_file->root_type == NULL)
-            {
-                product_file->format = coda_format_grib2;
-                product_file->root_type =
-                    (coda_dynamic_type *)coda_mem_array_new((coda_type_array *)grib_type[grib2_root], NULL);
-            }
-
+            /* read message based on GRIB Edition Number 2 specification */
             if (read_bytes(product_file->raw_product, file_offset + 8, 8, &message_size) < 0)
             {
                 coda_grib_close((coda_product *)product_file);
@@ -2946,8 +2938,8 @@ int coda_grib_reopen(coda_product **product)
 #ifndef WORDS_BIGENDIAN
             swap_int64(&message_size);
 #endif
-
             message = coda_mem_record_new((coda_type_record *)grib_type[grib2_message], NULL);
+            message_union->field_type[1] = (coda_dynamic_type *)message;
             type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib2_editionNumber], NULL,
                                                            (coda_product *)product_file, 2);
             coda_mem_record_add_field(message, "editionNumber", type, 0);
@@ -2957,13 +2949,14 @@ int coda_grib_reopen(coda_product **product)
 
             if (read_grib2_message(product_file, message, file_offset + 16) != 0)
             {
-                coda_dynamic_type_delete((coda_dynamic_type *)message);
+                coda_dynamic_type_delete((coda_dynamic_type *)message_union);
                 coda_grib_close((coda_product *)product_file);
                 return -1;
             }
         }
 
-        if (coda_mem_array_add_element((coda_mem_array *)product_file->root_type, (coda_dynamic_type *)message) != 0)
+        if (coda_mem_array_add_element((coda_mem_array *)product_file->root_type, (coda_dynamic_type *)message_union) !=
+            0)
         {
             coda_dynamic_type_delete((coda_dynamic_type *)message);
             coda_grib_close((coda_product *)product_file);

@@ -59,8 +59,6 @@ typedef struct coda_grib_product_struct
 
     /* 'grib' product specific fields */
     coda_product *raw_product;
-    int grib_version;
-    long record_size;
 } coda_grib_product;
 
 

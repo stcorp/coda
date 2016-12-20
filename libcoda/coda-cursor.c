@@ -332,8 +332,7 @@ LIBCODA_API int coda_cursor_set_product(coda_cursor *cursor, coda_product *produ
             return coda_cdf_cursor_set_product(cursor, product);
         case coda_format_netcdf:
             return coda_netcdf_cursor_set_product(cursor, product);
-        case coda_format_grib1:
-        case coda_format_grib2:
+        case coda_format_grib:
             return coda_grib_cursor_set_product(cursor, product);
         case coda_format_hdf4:
 #ifdef HAVE_HDF4
