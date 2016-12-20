@@ -39,15 +39,6 @@ typedef struct coda_xml_type_struct
     xml_type_tag tag;
 } coda_xml_type;
 
-typedef struct coda_xml_root_struct
-{
-    coda_backend backend;
-    coda_type_record *definition;
-    xml_type_tag tag;
-
-    struct coda_xml_element_struct *element;    /* root xml element */
-} coda_xml_root;
-
 typedef struct coda_xml_element_struct
 {
     coda_backend backend;
@@ -93,9 +84,6 @@ typedef struct coda_xml_product_struct coda_xml_product;
 
 int coda_xml_parse(coda_xml_product *product);
 
-coda_xml_root *coda_xml_root_new(coda_type_record *definition);
-int coda_xml_root_add_element(coda_xml_root *root, coda_xml_product *product, const char *el, const char **attr,
-                              int64_t outer_bit_offset, int64_t inner_bit_offset, int update_definition);
 int coda_xml_element_add_element(coda_xml_element *parent, coda_xml_product *product, const char *el, const char **attr,
                                  int64_t outer_bit_offset, int64_t inner_bit_offset, int update_definition,
                                  coda_xml_element **new_element);
