@@ -500,14 +500,12 @@ static int grib_init(void)
     coda_type_set_read_type(grib_type[grib1_basicAngleOfTheInitialProductionDomain], coda_native_type_uint32);
     coda_type_set_bit_size(grib_type[grib1_basicAngleOfTheInitialProductionDomain], 32);
 
-    grib_type[grib1_subdivisionsOfBasicAngle] = (coda_type *)coda_type_number_new(coda_format_grib,
-                                                                                  coda_integer_class);
+    grib_type[grib1_subdivisionsOfBasicAngle] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_subdivisionsOfBasicAngle], endianness);
     coda_type_set_read_type(grib_type[grib1_subdivisionsOfBasicAngle], coda_native_type_uint32);
     coda_type_set_bit_size(grib_type[grib1_subdivisionsOfBasicAngle], 32);
 
-    grib_type[grib1_latitudeOfFirstGridPoint] = (coda_type *)coda_type_number_new(coda_format_grib,
-                                                                                  coda_integer_class);
+    grib_type[grib1_latitudeOfFirstGridPoint] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_latitudeOfFirstGridPoint], endianness);
     coda_type_set_read_type(grib_type[grib1_latitudeOfFirstGridPoint], coda_native_type_int32);
     coda_type_set_bit_size(grib_type[grib1_latitudeOfFirstGridPoint], 32);
@@ -536,8 +534,7 @@ static int grib_init(void)
     coda_type_set_description(grib_type[grib1_latitudeOfLastGridPoint], "La2 - Latitude of last grid point (same "
                               "units and value range as latitudeOfFirstGridPoint)");
 
-    grib_type[grib1_longitudeOfLastGridPoint] = (coda_type *)coda_type_number_new(coda_format_grib,
-                                                                                  coda_integer_class);
+    grib_type[grib1_longitudeOfLastGridPoint] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_longitudeOfLastGridPoint], endianness);
     coda_type_set_read_type(grib_type[grib1_longitudeOfLastGridPoint], coda_native_type_int32);
     coda_type_set_bit_size(grib_type[grib1_longitudeOfLastGridPoint], 32);
@@ -963,14 +960,12 @@ static int grib_init(void)
     coda_type_set_read_type(grib_type[grib2_basicAngleOfTheInitialProductionDomain], coda_native_type_uint32);
     coda_type_set_bit_size(grib_type[grib2_basicAngleOfTheInitialProductionDomain], 32);
 
-    grib_type[grib2_subdivisionsOfBasicAngle] = (coda_type *)coda_type_number_new(coda_format_grib,
-                                                                                  coda_integer_class);
+    grib_type[grib2_subdivisionsOfBasicAngle] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_subdivisionsOfBasicAngle], endianness);
     coda_type_set_read_type(grib_type[grib2_subdivisionsOfBasicAngle], coda_native_type_uint32);
     coda_type_set_bit_size(grib_type[grib2_subdivisionsOfBasicAngle], 32);
 
-    grib_type[grib2_latitudeOfFirstGridPoint] = (coda_type *)coda_type_number_new(coda_format_grib,
-                                                                                  coda_integer_class);
+    grib_type[grib2_latitudeOfFirstGridPoint] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_latitudeOfFirstGridPoint], endianness);
     coda_type_set_read_type(grib_type[grib2_latitudeOfFirstGridPoint], coda_native_type_int32);
     coda_type_set_bit_size(grib_type[grib2_latitudeOfFirstGridPoint], 32);
@@ -999,8 +994,7 @@ static int grib_init(void)
     coda_type_set_description(grib_type[grib2_latitudeOfLastGridPoint], "La2 - Latitude of last grid point (same "
                               "units and value range as latitudeOfFirstGridPoint)");
 
-    grib_type[grib2_longitudeOfLastGridPoint] = (coda_type *)coda_type_number_new(coda_format_grib,
-                                                                                  coda_integer_class);
+    grib_type[grib2_longitudeOfLastGridPoint] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_longitudeOfLastGridPoint], endianness);
     coda_type_set_read_type(grib_type[grib2_longitudeOfLastGridPoint], coda_native_type_int32);
     coda_type_set_bit_size(grib_type[grib2_longitudeOfLastGridPoint], 32);
@@ -1118,8 +1112,7 @@ static int grib_init(void)
     coda_type_set_bit_size(grib_type[grib2_firstFixedSurface], 64);
     coda_type_set_description(grib_type[grib2_firstFixedSurface], "First fixed surface");
 
-    grib_type[grib2_typeOfSecondFixedSurface] = (coda_type *)coda_type_number_new(coda_format_grib,
-                                                                                  coda_integer_class);
+    grib_type[grib2_typeOfSecondFixedSurface] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_typeOfSecondFixedSurface], endianness);
     coda_type_set_read_type(grib_type[grib2_typeOfSecondFixedSurface], coda_native_type_uint8);
     coda_type_set_bit_size(grib_type[grib2_typeOfSecondFixedSurface], 8);
@@ -1403,7 +1396,6 @@ static int grib_init(void)
     coda_type_array_set_base_type((coda_type_array *)grib_type[grib_root], grib_type[grib_message]);
     coda_type_array_add_variable_dimension((coda_type_array *)grib_type[grib_root], NULL);
 
-    
     return 0;
 }
 
