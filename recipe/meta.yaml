@@ -35,7 +35,6 @@ requirements:
 
 about:
   home: https://github.com/stcorp/coda
-  license: GNU GENERAL PUBLIC LICENSE Version 2, June 1991
-  license_family: GPL
+  license: BSD
   license_file: COPYING
 

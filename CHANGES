@@ -1,3 +1,5 @@
+* Changed Open Source licence of CODA from GPLv2 to BSD (3-Clause).
+
 * Added support for using path references as a parameter to the CODA fetch()
   functions in the Python, Matlab, and IDL interfaces. You can now do things
   like 'coda_fetch(pf, "dataset[0]/variable@unit")'.

@@ -1,21 +1,31 @@
 C Copyright (C) 2007-2016 S[&]T, The Netherlands.
+C All rights reserved.
 C
-C This file is part of CODA.
+C Redistribution and use in source and binary forms, with or without
+C modification, are permitted provided that the following conditions are met:
 C
-C CODA is free software; you can redistribute it and/or modify
-C it under the terms of the GNU General Public License as published by
-C the Free Software Foundation; either version 2 of the License, or
-C (at your option) any later version.
+C 1. Redistributions of source code must retain the above copyright notice,
+C    this list of conditions and the following disclaimer.
 C
-C CODA is distributed in the hope that it will be useful,
-C but WITHOUT ANY WARRANTY; without even the implied warranty of
-C MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-C GNU General Public License for more details.
+C 2. Redistributions in binary form must reproduce the above copyright
+C    notice, this list of conditions and the following disclaimer in the
+C    documentation and/or other materials provided with the distribution.
 C
-C You should have received a copy of the GNU General Public License
-C along with CODA; if not, write to the Free Software
-C Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+C 3. Neither the name of the copyright holder nor the names of its
+C    contributors may be used to endorse or promote products derived from
+C    this software without specific prior written permission.
 C
+C THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+C AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+C IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+C ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+C LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+C CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+C SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+C INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+C CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+C ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+C POSSIBILITY OF SUCH DAMAGE.
 
 
       integer CODA_MAX_NUM_DIMS

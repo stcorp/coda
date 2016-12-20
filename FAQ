@@ -17,21 +17,6 @@ very specific requests) you might also consider to have it implemented
 commercially, either by us, or by someone else (after all, it's open source!).
 But, in that case, be sure to read the question about commercial use later on.
 
- * Can I use CODA for commercial purposes, or does the GPL prevent this?
-
-By all means, you can. It is a common misconception that the GPL in some way
-prevents code from being used in a commercial setting. There are some
-restrictions; most importantly, you can't take the source and use it in a
-closed-source program that you sell or give away. Please read the GPL for an
-exact statement of what you can and cannot do.
-If your application would benefit greatly from CODA, but you cannot comply to
-the terms of the GPL, there is still the option of contacting us to negotiate
-other terms. As the copyright holders of CODA, we are free to negotiate a
-different type of license with you; this includes the option of allowing you to
-use CODA in a proprietary (closed-source) application. By doing so, we will not
-(and cannot) take away the rights of users of the open-source version of the
-library.
-
  * How do I uninstall CODA?
 
 If you use Windows with the binary installer of CODA, then go to the
