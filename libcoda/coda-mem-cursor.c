@@ -103,7 +103,24 @@ int coda_mem_cursor_goto_next_record_field(coda_cursor *cursor)
 
 int coda_mem_cursor_goto_available_union_field(coda_cursor *cursor)
 {
-    assert(((coda_mem_type *)cursor->stack[cursor->n - 1].type)->tag == tag_mem_data);
+    coda_mem_type *type = (coda_mem_type *)cursor->stack[cursor->n - 1].type;
+
+    if (type->tag == tag_mem_record)
+    {
+        long index;
+
+        if (coda_mem_cursor_get_available_union_field_index(cursor, &index) != 0)
+        {
+            return -1;
+        }
+        cursor->stack[cursor->n - 1].type = ((coda_mem_record *)type)->field_type[index];
+        cursor->stack[cursor->n - 1].index = index;
+        cursor->stack[cursor->n - 1].bit_offset = -1;
+
+        return 0;
+    }
+
+    assert(type->tag == tag_mem_data);
     return coda_ascbin_cursor_goto_available_union_field(cursor);
 }
 
@@ -348,6 +365,26 @@ int coda_mem_cursor_get_record_field_available_status(const coda_cursor *cursor,
 
 int coda_mem_cursor_get_available_union_field_index(const coda_cursor *cursor, long *index)
 {
+    coda_mem_type *type = (coda_mem_type *)cursor->stack[cursor->n - 1].type;
+
+    if (type->tag == tag_mem_record)
+    {
+        long i;
+
+        /* return first available field */
+        for (i = 0; i < ((coda_mem_record *)type)->num_fields; i++)
+        {
+            if (((coda_mem_record *)type)->field_type[i] != NULL)
+            {
+                *index = i;
+                return 0;
+            }
+        }
+
+        coda_set_error(CODA_ERROR_PRODUCT, "union has no available fields");
+        return -1;
+    }
+
     assert(((coda_mem_type *)cursor->stack[cursor->n - 1].type)->tag == tag_mem_data);
     return coda_ascbin_cursor_get_available_union_field_index(cursor, index);
 }

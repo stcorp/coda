@@ -387,7 +387,7 @@ static void generate_type(const coda_type *type, coda_format parent_format)
             {
                 long num_record_fields;
 
-                if (is_union)
+                if (is_union && ((coda_type_record *)type)->union_field_expr != NULL)
                 {
                     fic_printf(&is_compound, "<cd:FieldExpression>");
                     coda_expression_print_xml(((coda_type_record *)type)->union_field_expr, ff_printf);

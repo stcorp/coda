@@ -3684,8 +3684,8 @@ static int cd_type_init(parser_info *info, const char **attr)
 
 static int cd_union_set_field_expression(parser_info *info)
 {
-    if (coda_type_record_set_union_field_expression((coda_type_record *)info->node->parent->data,
-                                                    (coda_expression *)info->node->data) != 0)
+    if (coda_type_union_set_field_expression((coda_type_record *)info->node->parent->data,
+                                             (coda_expression *)info->node->data) != 0)
     {
         return -1;
     }
@@ -3716,7 +3716,7 @@ static int cd_union_init(parser_info *info, const char **attr)
         return -1;
     }
     info->node->free_data = (free_data_handler)coda_type_release;
-    info->node->data = coda_type_record_new(info->node->format);
+    info->node->data = coda_type_union_new(info->node->format);
     if (info->node->data == NULL)
     {
         return -1;

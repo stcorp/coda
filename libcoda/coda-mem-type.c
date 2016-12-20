@@ -417,6 +417,13 @@ coda_mem_record *coda_mem_record_new(coda_type_record *definition, coda_dynamic_
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "definition argument is NULL (%s:%u)", __FILE__, __LINE__);
         return NULL;
     }
+    if (definition->is_union && definition->union_field_expr != NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT,
+                       "union definition with field expression is not allowed for memory backend");
+        return NULL;
+    }
+
     type = (coda_mem_record *)malloc(sizeof(coda_mem_record));
     if (type == NULL)
     {

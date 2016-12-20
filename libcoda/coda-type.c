@@ -1208,6 +1208,7 @@ coda_type_record *coda_type_record_new(coda_format format)
     type->field = NULL;
     type->has_hidden_fields = 0;
     type->has_optional_fields = 0;
+    type->is_union = 0;
     type->union_field_expr = NULL;
 
     if (format == coda_format_ascii || format == coda_format_binary)
@@ -1232,6 +1233,19 @@ coda_type_record *coda_type_record_new(coda_format format)
                        __LINE__);
         record_delete(type);
         return NULL;
+    }
+
+    return type;
+}
+
+coda_type_record *coda_type_union_new(coda_format format)
+{
+    coda_type_record *type;
+
+    type = coda_type_record_new(format);
+    if (type != NULL)
+    {
+        type->is_union = 1;
     }
 
     return type;
@@ -1318,7 +1332,7 @@ int coda_type_record_insert_field(coda_type_record *type, long index, coda_type_
 
     if (type->format == coda_format_ascii || type->format == coda_format_binary)
     {
-        if (type->union_field_expr != NULL)
+        if (type->is_union)
         {
             /* set bit_offset */
             if (field->bit_offset_expr != NULL)
@@ -1450,7 +1464,7 @@ int coda_type_record_create_field(coda_type_record *type, const char *real_name,
     return 0;
 }
 
-int coda_type_record_set_union_field_expression(coda_type_record *type, coda_expression *field_expr)
+int coda_type_union_set_field_expression(coda_type_record *type, coda_expression *field_expr)
 {
     if (type == NULL)
     {
@@ -1460,6 +1474,11 @@ int coda_type_record_set_union_field_expression(coda_type_record *type, coda_exp
     if (field_expr == NULL)
     {
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "field_expr argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+    if (!type->is_union)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "record type is not a union");
         return -1;
     }
     if (type->union_field_expr != NULL)
@@ -1504,10 +1523,21 @@ int coda_type_record_validate(const coda_type_record *type)
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
-    if (type->union_field_expr != NULL && type->num_fields == 0)
+    if (type->is_union)
     {
-        coda_set_error(CODA_ERROR_DATA_DEFINITION, "number of fields should be >= 1 for union type");
-        return -1;
+        if (type->num_fields == 0)
+        {
+            coda_set_error(CODA_ERROR_DATA_DEFINITION, "number of fields should be >= 1 for union type");
+            return -1;
+        }
+        if (type->format == coda_format_ascii || type->format == coda_format_binary)
+        {
+            if (type->union_field_expr == NULL)
+            {
+                coda_set_error(CODA_ERROR_DATA_DEFINITION, "missing union field expression");
+                return -1;
+            }
+        }
     }
     return 0;
 }
@@ -3572,7 +3602,7 @@ LIBCODA_API int coda_type_get_record_union_status(const coda_type *type, int *is
         return -1;
     }
 
-    *is_union = (((coda_type_record *)type)->union_field_expr != NULL);
+    *is_union = ((coda_type_record *)type)->is_union;
     return 0;
 }
 
