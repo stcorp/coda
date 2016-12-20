@@ -43,7 +43,7 @@
             <li><a href="#coda_get_option_filter_record_fields"><code>coda.get_option_filter_record_fields</code></a></li>
           </ul>
         </li>
-      	<li><a href="#low_level_types">Low level CODA Data Types</a></li>
+        <li><a href="#low_level_types">Low level CODA Data Types</a></li>
         <li><a href="#low_level_functions">Low level CODA Functions</a>
           <ul>
             <li><a href="#coda_init"><code>coda.init</code></a></li>
@@ -321,7 +321,7 @@ import coda
       <p>This function returns a <a href="#high_level_types"><code>coda.Record</code></a> containing the attributes of the specified data item.</p>
     
       <p>The <code>start</code> parameter must be a valid CODA file handle that was retrieved with <code>coda.open()</code> <i>or</i> a valid <a href="#low_level_types">CODA Cursor</a>. If the start argument is a cursor, then the specified path is traversed starting from the position represented by the cursor. The format of the <code>path</code> argument is described at the <a href="#coda_path_argument">top of this section</a>.</p>
-      
+
       <p>This function is deprecated. You can replace it by using <code>coda.fetch(start, *path, "@")</code>.</p>
 
       <h3 id="coda_get_description"><code>coda.get_description(start, *path)</code></h3>
