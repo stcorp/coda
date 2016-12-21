@@ -565,9 +565,9 @@ def get_attributes(start, *path):
     The start argument must be a valid CODA file handle that was
     retrieved with coda.open() _or_ a valid CODA cursor. If the start
     argument is a cursor, then the specified path is traversed starting from
-    the position represented by the cursor. The format of the path argument is
-    described in a separate section of the CODA-Python documentation.
-    (http://www.stcorp.nl/coda/documentation/coda-python/)
+    the position represented by the cursor.
+
+    More information can be found in the CODA Python documentation.
     """
 
     cursor = _get_cursor(start)
@@ -596,9 +596,9 @@ def get_description(start, *path):
     The start argument must be a valid CODA file handle that was
     retrieved with coda.open() _or_ a valid CODA cursor. If the start
     argument is a cursor, then the specified path is traversed starting from
-    the position represented by the cursor. The format of the path argument is
-    described in a separate section of the CODA-Python documentation.
-    (http://www.stcorp.nl/coda/documentation/coda-python/)
+    the position represented by the cursor.
+
+    More information can be found in the CODA Python documentation.
     """
 
     cursor = _get_cursor(start)
@@ -641,9 +641,9 @@ def fetch(start,*path):
     The start argument must be a valid CODA file handle that was
     retrieved with coda.open() _or_ a valid CODA cursor. If the start
     argument is a cursor, then the specified path is traversed starting from
-    the position represented by the cursor. The format of the path argument is
-    described in a separate section of the CODA-Python documentation.
-    (http://www.stcorp.nl/coda/documentation/coda-python/)
+    the position represented by the cursor.
+
+    More information can be found in the CODA Python documentation.
     """
 
     cursor = _get_cursor(start)
@@ -673,9 +673,9 @@ def get_field_available(start, *path):
     The start argument must be a valid CODA file handle that was
     retrieved with coda.open() _or_ a valid CODA cursor. If the start
     argument is a cursor, then the specified path is traversed starting from
-    the position represented by the cursor. The format of the path argument is
-    described in a separate section of the CODA-Python documentation.
-    (http://www.stcorp.nl/coda/documentation/coda-python/)
+    the position represented by the cursor.
+
+    More information can be found in the CODA Python documentation.
     """
 
     if len(path) == 0 or not isinstance(path[-1],str):
@@ -712,9 +712,9 @@ def get_field_count(start, *path):
     The start argument must be a valid CODA file handle that was
     retrieved with coda.open() _or_ a valid CODA cursor. If the start
     argument is a cursor, then the specified path is traversed starting from
-    the position represented by the cursor. The format of the path argument is
-    described in a separate section of the CODA-Python documentation.
-    (http://www.stcorp.nl/coda/documentation/coda-python/)
+    the position represented by the cursor.
+
+    More information can be found in the CODA Python documentation.
     """
 
     cursor = _get_cursor(start)
@@ -751,9 +751,9 @@ def get_field_names(start, *path):
     The start argument must be a valid CODA file handle that was
     retrieved with coda.open() _or_ a valid CODA cursor. If the start
     argument is a cursor, then the specified path is traversed starting from
-    the position represented by the cursor. The format of the path argument is
-    described in a separate section of the CODA-Python documentation.
-    (http://www.stcorp.nl/coda/documentation/coda-python/)
+    the position represented by the cursor.
+
+    More information can be found in the CODA Python documentation.
     """
 
     cursor = _get_cursor(start)
@@ -793,9 +793,9 @@ def get_size(start, *path):
     The start argument must be a valid CODA file handle that was
     retrieved with coda.open() _or_ a valid CODA cursor. If the start
     argument is a cursor, then the specified path is traversed starting from
-    the position represented by the cursor. The format of the path argument is
-    described in a separate section of the CODA-Python documentation.
-    (http://www.stcorp.nl/coda/documentation/coda-python/)
+    the position represented by the cursor.
+
+    More information can be found in the CODA Python documentation.
     """
 
     cursor = _get_cursor(start)
@@ -874,9 +874,9 @@ def get_unit(start, *path):
     The start argument must be a valid CODA file handle that was
     retrieved with coda.open() _or_ a valid CODA cursor. If the start
     argument is a cursor, then the specified path is traversed starting from
-    the position represented by the cursor. The format of the path argument is
-    described in a separate section of the CODA-Python documentation.
-    (http://www.stcorp.nl/coda/documentation/coda-python/)
+    the position represented by the cursor.
+
+    More information can be found in the CODA Python documentation.
     """
 
     cursor = _get_cursor(start)
