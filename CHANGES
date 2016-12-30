@@ -4,11 +4,11 @@
   functions in the Python, Matlab, and IDL interfaces. You can now do things
   like 'coda_fetch(pf, "dataset[0]/variable@unit")'.
 
-* CODA now supports grib files that contain a mix of GRIB1 and GRIB2 messages.
-  This required a backward compatibility breaking change. All software that
-  uses CODA to read grib data will have to be adapted to use the new mapping.
-  Also, grib files are now indicated as grib (coda_format_grib) and no longer
-  as either grib1 (coda_format_grib1) or grib2 (coda_format_grib2).
+* CODA now supports GRIB files that contain a mix of GRIB1 and GRIB2 messages.
+  GRIB files are now also indicated as plain GRIB (coda_format_grib) and no
+  longer as either GRIB1 (coda_format_grib1) or GRIB2 (coda_format_grib2).
+  These changes are backward compatibility breaking. If you read GRIB data you
+  will have to adapt to the new mapping.
 
 * Fixed issue where fields of a union were not marked as optional.
 
