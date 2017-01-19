@@ -72,7 +72,7 @@
       <tr><td>/[]/grib1/centuryOfReferenceTimeOfData</td><td>integer</td><td>uint8</td><td></td></tr>
       <tr><td>/[]/grib1/decimalScaleFactor</td><td>integer</td><td>uint8</td><td></td></tr>
       <tr><td>/[]/grib1/subCentre</td><td>integer</td><td>int16</td><td>(hidden field)</td></tr>
-      <tr><td>/[]/grib1/local</td><td>raw</td><td>bytes</td><td>the originating center specific data at the end of the PDS is made available as raw data via this field if it is available</td></tr>
+      <tr><td>/[]/grib1/local</td><td>raw</td><td>bytes</td><td>optional; the originating center specific data at the end of the PDS is made available as raw data via this field if it is available</td></tr>
       <tr><td>/[]/grib1/grid/numberOfVerticalCoordinateValues</td><td>integer</td><td>uint8</td><td></td></tr>
       <tr><td>/[]/grib1/grid/dataRepresentationType</td><td>integer</td><td>uint8</td><td></td></tr>
       <tr><td>/[]/grib1/grid/Ni</td><td>integer</td><td>uint16</td><td></td></tr>
@@ -83,10 +83,11 @@
       <tr><td>/[]/grib1/grid/latitudeOfLastGridPoint</td><td>integer</td><td>int32</td><td></td></tr>
       <tr><td>/[]/grib1/grid/longitudeOfLastGridPoint</td><td>integer</td><td>int32</td><td></td></tr>
       <tr><td>/[]/grib1/grid/iDirectionIncrement</td><td>integer</td><td>int16</td><td></td></tr>
-      <tr><td>/[]/grib1/grid/jDirectionIncrement</td><td>integer</td><td>int16</td><td></td></tr>
-      <tr><td>/[]/grib1/grid/N</td><td>integer</td><td>int16</td><td></td></tr>
+      <tr><td>/[]/grib1/grid/jDirectionIncrement</td><td>integer</td><td>int16</td><td>optional</td></tr>
+      <tr><td>/[]/grib1/grid/N</td><td>integer</td><td>int16</td><td>optional</td></tr>
       <tr><td>/[]/grib1/grid/scanningMode</td><td>integer</td><td>uint8</td><td></td></tr>
-      <tr><td>/[]/grib1/grid/coordinateValues[]</td><td>real</td><td>float</td><td></td></tr>
+      <tr><td>/[]/grib1/grid/coordinateValues[]</td><td>real</td><td>float</td><td>optional</td></tr>
+      <tr><td>/[]/grib1/grid/listOfNumbers[]</td><td>integer</td><td>uint16</td><td>optional</td></tr>
       <tr><td>/[]/grib1/data/bitsPerValue</td><td>integer</td><td>uint8</td><td>(hidden field)</td></tr>
       <tr><td>/[]/grib1/data/binaryScaleFactor</td><td>integer</td><td>int16</td><td>(hidden field)</td></tr>
       <tr><td>/[]/grib1/data/referenceValue</td><td>real</td><td>float</td><td>(hidden field)</td></tr>
@@ -137,6 +138,7 @@
       <tr><td>/[]/grib2/grid[]/localRecordIndex</td><td>integer</td><td>int32</td><td>index into /[]/local[] to find associated local use data. Will be -1 if no local use data is available</td></tr>
       <tr><td>/[]/grib2/grid[]/sourceOfGridDefinition</td><td>integer</td><td>uint8</td><td></td></tr>
       <tr><td>/[]/grib2/grid[]/numberOfDataPoints</td><td>integer</td><td>uint32</td><td></td></tr>
+      <tr><td>/[]/grib2/grid[]/interpretationOfListOfNumbers</td><td>integer</td><td>uint8</td><td></td></tr>
       <tr><td>/[]/grib2/grid[]/gridDefinitionTemplateNumber</td><td>integer</td><td>uint16</td><td></td></tr>
       <tr><td>/[]/grib2/grid[]/shapeOfTheEarth</td><td>integer</td><td>uint8</td><td></td></tr>
       <tr><td>/[]/grib2/grid[]/scaleFactorOfRadiusOfSphericalEarth</td><td>integer</td><td>uint8</td><td></td></tr>
@@ -155,9 +157,10 @@
       <tr><td>/[]/grib2/grid[]/latitudeOfLastGridPoint</td><td>integer</td><td>int32</td><td></td></tr>
       <tr><td>/[]/grib2/grid[]/longitudeOfLastGridPoint</td><td>integer</td><td>int32</td><td></td></tr>
       <tr><td>/[]/grib2/grid[]/iDirectionIncrement</td><td>integer</td><td>uint32</td><td></td></tr>
-      <tr><td>/[]/grib2/grid[]/jDirectionIncrement</td><td>integer</td><td>uint32</td><td></td></tr>
-      <tr><td>/[]/grib2/grid[]/N</td><td>integer</td><td>uint32</td><td></td></tr>
+      <tr><td>/[]/grib2/grid[]/jDirectionIncrement</td><td>integer</td><td>uint32</td><td>optional</td></tr>
+      <tr><td>/[]/grib2/grid[]/N</td><td>integer</td><td>uint32</td><td>optional</td></tr>
       <tr><td>/[]/grib2/grid[]/scanningMode</td><td>integer</td><td>uint8</td><td></td></tr>
+      <tr><td>/[]/grib2/grid[]/listOfNumbers</td><td>integer</td><td>uint32</td><td>optional</td></tr>
       <tr><td>/[]/grib2/data[]/gridRecordIndex</td><td>integer</td><td>uint32</td><td>index into /[]/grid[] to find associated grid definition data</td></tr>
       <tr><td>/[]/grib2/data[]/parameterCategory</td><td>integer</td><td>uint8</td><td></td></tr>
       <tr><td>/[]/grib2/data[]/parameterNumber</td><td>integer</td><td>uint8</td><td></td></tr>
@@ -172,7 +175,7 @@
       <tr><td>/[]/grib2/data[]/firstFixedSurface</td><td>real</td><td>double</td><td></td></tr>
       <tr><td>/[]/grib2/data[]/typeOfSecondFixedSurface</td><td>integer</td><td>uint8</td><td></td></tr>
       <tr><td>/[]/grib2/data[]/secondFixedSurface</td><td>real</td><td>double</td><td></td></tr>
-      <tr><td>/[]/grib2/data[]/coordinateValues[]</td><td>real</td><td>float</td><td></td></tr>
+      <tr><td>/[]/grib2/data[]/coordinateValues[]</td><td>real</td><td>float</td><td>optional</td></tr>
       <tr><td>/[]/grib2/data[]/bitsPerValue</td><td>integer</td><td>uint8</td><td>(hidden field)</td></tr>
       <tr><td>/[]/grib2/data[]/decimalScaleFactor</td><td>integer</td><td>int16</td><td>(hidden field)</td></tr>
       <tr><td>/[]/grib2/data[]/binaryScaleFactor</td><td>integer</td><td>int16</td><td>(hidden field)</td></tr>

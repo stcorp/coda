@@ -10,6 +10,9 @@
   These changes are backward compatibility breaking. If you read GRIB data you
   will have to adapt to the new mapping.
 
+* Added listOfNumbers field to GRIB mapping which provides the list of numbers
+  of points in each row for quasi-regular grids.
+
 * Fixed issue where fields of a union were not marked as optional.
 
 2.17.3 2016-09-30

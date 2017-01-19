@@ -108,6 +108,8 @@ enum
     grib1_scanningMode,
     grib1_coordinateValues,
     grib1_coordinateValues_array,
+    grib1_listOfNumbers,
+    grib1_listOfNumbers_array,
     grib1_sourceOfGridDefinition,
     grib1_numberOfDataPoints,
     grib1_gridDefinitionTemplateNumber,
@@ -160,8 +162,11 @@ enum
     grib2_jDirectionIncrement,
     grib2_N,
     grib2_scanningMode,
+    grib2_listOfNumbers,
+    grib2_listOfNumbers_array,
     grib2_sourceOfGridDefinition,
     grib2_numberOfDataPoints,
+    grib2_interpretationOfListOfNumbers,
     grib2_parameterCategory,
     grib2_parameterNumber,
     grib2_typeOfGeneratingProcess,
@@ -589,6 +594,17 @@ static int grib_init(void)
                                   grib_type[grib1_coordinateValues]);
     coda_type_array_add_variable_dimension((coda_type_array *)grib_type[grib1_coordinateValues_array], NULL);
 
+    grib_type[grib1_listOfNumbers] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_listOfNumbers], endianness);
+    coda_type_set_read_type(grib_type[grib1_listOfNumbers], coda_native_type_uint16);
+    coda_type_set_bit_size(grib_type[grib1_listOfNumbers], 16);
+    grib_type[grib1_listOfNumbers_array] = (coda_type *)coda_type_array_new(coda_format_grib);
+    coda_type_set_description(grib_type[grib1_listOfNumbers_array],
+                              "List of numbers of points for each row, used for quasi-regular grids");
+    coda_type_array_set_base_type((coda_type_array *)grib_type[grib1_listOfNumbers_array],
+                                  grib_type[grib1_listOfNumbers]);
+    coda_type_array_add_variable_dimension((coda_type_array *)grib_type[grib1_listOfNumbers_array], NULL);
+
     grib_type[grib1_sourceOfGridDefinition] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib1_sourceOfGridDefinition], endianness);
     coda_type_set_read_type(grib_type[grib1_sourceOfGridDefinition], coda_native_type_uint8);
@@ -680,6 +696,10 @@ static int grib_init(void)
     coda_type_record_add_field((coda_type_record *)grib_type[grib1_grid], field);
     field = coda_type_record_field_new("coordinateValues");
     coda_type_record_field_set_type(field, grib_type[grib1_coordinateValues_array]);
+    coda_type_record_field_set_optional(field);
+    coda_type_record_add_field((coda_type_record *)grib_type[grib1_grid], field);
+    field = coda_type_record_field_new("listOfNumbers");
+    coda_type_record_field_set_type(field, grib_type[grib1_listOfNumbers_array]);
     coda_type_record_field_set_optional(field);
     coda_type_record_add_field((coda_type_record *)grib_type[grib1_grid], field);
 
@@ -1039,6 +1059,17 @@ static int grib_init(void)
     coda_type_set_bit_size(grib_type[grib2_scanningMode], 8);
     coda_type_set_description(grib_type[grib2_scanningMode], "Scanning mode flags");
 
+    grib_type[grib2_listOfNumbers] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_listOfNumbers], endianness);
+    coda_type_set_read_type(grib_type[grib2_listOfNumbers], coda_native_type_uint32);
+    coda_type_set_bit_size(grib_type[grib2_listOfNumbers], 32);
+    grib_type[grib2_listOfNumbers_array] = (coda_type *)coda_type_array_new(coda_format_grib);
+    coda_type_set_description(grib_type[grib2_listOfNumbers_array],
+                              "List of numbers of points for each row, used for quasi-regular grids");
+    coda_type_array_set_base_type((coda_type_array *)grib_type[grib2_listOfNumbers_array],
+                                  grib_type[grib2_listOfNumbers]);
+    coda_type_array_add_variable_dimension((coda_type_array *)grib_type[grib2_listOfNumbers_array], NULL);
+
     grib_type[grib2_sourceOfGridDefinition] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_sourceOfGridDefinition], endianness);
     coda_type_set_read_type(grib_type[grib2_sourceOfGridDefinition], coda_native_type_uint8);
@@ -1050,6 +1081,13 @@ static int grib_init(void)
     coda_type_set_read_type(grib_type[grib2_numberOfDataPoints], coda_native_type_uint32);
     coda_type_set_bit_size(grib_type[grib2_numberOfDataPoints], 32);
     coda_type_set_description(grib_type[grib2_numberOfDataPoints], "Number of data points");
+
+    grib_type[grib2_interpretationOfListOfNumbers] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_interpretationOfListOfNumbers], endianness);
+    coda_type_set_read_type(grib_type[grib2_interpretationOfListOfNumbers], coda_native_type_uint8);
+    coda_type_set_bit_size(grib_type[grib2_interpretationOfListOfNumbers],8);
+    coda_type_set_description(grib_type[grib2_interpretationOfListOfNumbers],
+                              "Interpretation of list of numbers defining number of points");
 
     grib_type[grib2_parameterCategory] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_parameterCategory], endianness);
@@ -1190,6 +1228,9 @@ static int grib_init(void)
     field = coda_type_record_field_new("numberOfDataPoints");
     coda_type_record_field_set_type(field, grib_type[grib2_numberOfDataPoints]);
     coda_type_record_add_field((coda_type_record *)grib_type[grib2_grid], field);
+    field = coda_type_record_field_new("interpretationOfListOfNumbers");
+    coda_type_record_field_set_type(field, grib_type[grib2_interpretationOfListOfNumbers]);
+    coda_type_record_add_field((coda_type_record *)grib_type[grib2_grid], field);
     field = coda_type_record_field_new("gridDefinitionTemplateNumber");
     coda_type_record_field_set_type(field, grib_type[grib2_gridDefinitionTemplateNumber]);
     coda_type_record_add_field((coda_type_record *)grib_type[grib2_grid], field);
@@ -1254,6 +1295,10 @@ static int grib_init(void)
     coda_type_record_add_field((coda_type_record *)grib_type[grib2_grid], field);
     field = coda_type_record_field_new("scanningMode");
     coda_type_record_field_set_type(field, grib_type[grib2_scanningMode]);
+    coda_type_record_add_field((coda_type_record *)grib_type[grib2_grid], field);
+    field = coda_type_record_field_new("listOfNumbers");
+    coda_type_record_field_set_type(field, grib_type[grib2_listOfNumbers_array]);
+    coda_type_record_field_set_optional(field);
     coda_type_record_add_field((coda_type_record *)grib_type[grib2_grid], field);
 
     grib_type[grib2_data] = (coda_type *)coda_type_record_new(coda_format_grib);
@@ -1657,6 +1702,7 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
             int is_gaussian = (buffer[5] == 4 || buffer[5] == 14 || buffer[5] == 24 || buffer[5] == 34);
             uint8_t NV;
             uint8_t PVL;
+            int Ni, Nj;
 
             /* data representation type is Latitude/Longitude Grid */
             gds = coda_mem_record_new((coda_type_record *)grib_type[grib1_grid], NULL);
@@ -1680,25 +1726,26 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
                 return -1;
             }
 
-            type = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)grib_type[grib1_Ni], NULL,
-                                                            (coda_product *)product, buffer[0] * 256 + buffer[1]);
-            coda_mem_record_add_field(gds, "Ni", type, 0);
-            if (buffer[0] * 256 + buffer[1] == 65535)
+            Ni = buffer[0] * 256 + buffer[1];
+            Nj = buffer[2] * 256 + buffer[3];
+            if (Ni == 65535 && Nj == 65535)
             {
-                coda_set_error(CODA_ERROR_PRODUCT, "grid definition with MISSING value (65535) for Ni not supported");
+                coda_set_error(CODA_ERROR_PRODUCT,
+                               "grid definition with MISSING value (65535) for both Ni and Nj not supported");
                 return -1;
             }
-            num_elements = buffer[0] * 256 + buffer[1];
+            if (Ni != 65535 && Nj != 65535)
+            {
+                num_elements = Ni * Nj;
+            }
+
+            type = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)grib_type[grib1_Ni], NULL,
+                                                            (coda_product *)product, Ni);
+            coda_mem_record_add_field(gds, "Ni", type, 0);
 
             type = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)grib_type[grib1_Nj], NULL,
-                                                            (coda_product *)product, buffer[2] * 256 + buffer[3]);
+                                                            (coda_product *)product, Nj);
             coda_mem_record_add_field(gds, "Nj", type, 0);
-            if (buffer[2] * 256 + buffer[3] == 65535)
-            {
-                coda_set_error(CODA_ERROR_PRODUCT, "grid definition with MISSING value (65535) for Nj not supported");
-                return -1;
-            }
-            num_elements *= buffer[2] * 256 + buffer[3];
 
             intvalue = (buffer[4] & 0x80 ? -1 : 1) * (((buffer[4] & 0x7F) * 256 + buffer[5]) * 256 + buffer[6]);
             type =
@@ -1758,12 +1805,13 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
 
             if (PVL != 255)
             {
+                int i;
+
                 PVL--;  /* make offset zero based */
                 file_offset += PVL - 32;
                 if (NV > 0)
                 {
                     coda_mem_array *coordinateArray;
-                    int i;
 
                     coordinateArray = coda_mem_array_new((coda_type_array *)grib_type[grib1_coordinateValues_array],
                                                          NULL);
@@ -1787,12 +1835,76 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
                 }
                 if (section_size > PVL + NV * 4)
                 {
-                    file_offset += section_size - (PVL + NV * 4);
+                    coda_mem_array *listOfNumbersArray;
+                    long N;
+
+                    if (Ni == 65535)
+                    {
+                        N = Nj;
+                    }
+                    else if (Nj == 65535)
+                    {
+                        N = Ni;
+                    }
+                    else
+                    {
+                        coda_set_error(CODA_ERROR_PRODUCT, "'list of numbers' in GDS should only be present if Ni or "
+                                       "Nj have a MISSING value (65535)");
+                        coda_dynamic_type_delete((coda_dynamic_type *)gds);
+                        return -1;
+                    }
+
+                    /* remaining bytes should provide 'list of numbers of points in each row' */
+                    if (section_size - (PVL + NV * 4) != 2 * N)
+                    {
+                        coda_set_error(CODA_ERROR_PRODUCT, "invalid length (%d) for 'list of numbers' in GDS "
+                                       "(expected %d)", (int)(section_size - (PVL + NV * 4)), 2 * N);
+                        coda_dynamic_type_delete((coda_dynamic_type *)gds);
+                        return -1;
+                    }
+
+                    listOfNumbersArray = coda_mem_array_new((coda_type_array *)grib_type[grib1_listOfNumbers_array],
+                                                         NULL);
+                    num_elements = 0;
+                    for (i = 0; i < N; i++)
+                    {
+                        if (read_bytes(product->raw_product, file_offset, 2, buffer) < 0)
+                        {
+                            coda_dynamic_type_delete((coda_dynamic_type *)listOfNumbersArray);
+                            coda_dynamic_type_delete((coda_dynamic_type *)gds);
+                            return -1;
+                        }
+                        num_elements += buffer[0] * 256 + buffer[1];
+                        type =
+                            (coda_dynamic_type *)
+                            coda_mem_uint16_new((coda_type_number *)grib_type[grib1_listOfNumbers], NULL,
+                                                (coda_product *)product, buffer[0] * 256 + buffer[1]);
+                        coda_mem_array_add_element(listOfNumbersArray, type);
+                        file_offset += 2;
+                    }
+                    coda_mem_record_add_field(gds, "listOfNumbers", (coda_dynamic_type *)listOfNumbersArray, 0);
+                }
+                else if (Ni == 65535 || Nj == 65535)
+                {
+                    coda_set_error(CODA_ERROR_PRODUCT, "grid definition with MISSING value (65535) for Ni or Nj "
+                                   "without 'List of numbers' not supported");
+                    coda_dynamic_type_delete((coda_dynamic_type *)gds);
+                    return -1;
                 }
             }
-            else if (section_size > 32)
+            else
             {
-                file_offset += section_size - 32;
+                if (Ni == 65535 || Nj == 65535)
+                {
+                    coda_set_error(CODA_ERROR_PRODUCT, "grid definition with MISSING value (65535) for Ni or Nj "
+                                   "without 'List of numbers' not supported");
+                    coda_dynamic_type_delete((coda_dynamic_type *)gds);
+                    return -1;
+                }
+                if (section_size > 32)
+                {
+                    file_offset += section_size - 32;
+                }
             }
 
             coda_mem_record_add_field(message, "grid", (coda_dynamic_type *)gds, 0);
@@ -2240,6 +2352,8 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
             coda_mem_record *grid;
             uint32_t num_data_points;
             uint16_t template_number;
+            uint8_t number_size;
+            uint8_t number_interpretation;
 
             /* Section 3: Grid Definition Section */
             if (prev_section != 1 && prev_section != 2 && prev_section != 7)
@@ -2270,6 +2384,14 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                                                             NULL, (coda_product *)product, num_data_points);
             coda_mem_record_add_field(grid, "numberOfDataPoints", type, 0);
 
+            number_size = buffer[5];
+            number_interpretation = buffer[6];
+            type =
+                (coda_dynamic_type *)
+                coda_mem_uint8_new((coda_type_number *)grib_type[grib2_interpretationOfListOfNumbers], NULL,
+                                   (coda_product *)product, number_interpretation);
+            coda_mem_record_add_field(grid, "interpretationOfListOfNumbers", type, 0);
+
             template_number = buffer[7] * 256 + buffer[8];
             type =
                 (coda_dynamic_type *)
@@ -2292,6 +2414,7 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
             if (buffer[0] == 0 && (template_number <= 3 || (template_number >= 40 && template_number <= 43)))
             {
                 uint32_t intvalue;
+                uint32_t Ni, Nj;
 
                 if (read_bytes(product->raw_product, file_offset, 58, buffer) < 0)
                 {
@@ -2342,14 +2465,14 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                                         (coda_product *)product, intvalue);
                 coda_mem_record_add_field(grid, "scaledValueOfEarthMinorAxis", type, 0);
 
-                intvalue = ((buffer[16] * 256 + buffer[17]) * 256 + buffer[18]) * 256 + buffer[19];
+                Ni = ((buffer[16] * 256 + buffer[17]) * 256 + buffer[18]) * 256 + buffer[19];
                 type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)grib_type[grib2_Ni], NULL,
-                                                                (coda_product *)product, intvalue);
+                                                                (coda_product *)product, Ni);
                 coda_mem_record_add_field(grid, "Ni", type, 0);
 
-                intvalue = ((buffer[20] * 256 + buffer[21]) * 256 + buffer[22]) * 256 + buffer[23];
+                Nj = ((buffer[20] * 256 + buffer[21]) * 256 + buffer[22]) * 256 + buffer[23];
                 type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)grib_type[grib2_Nj], NULL,
-                                                                (coda_product *)product, intvalue);
+                                                                (coda_product *)product, Nj);
                 coda_mem_record_add_field(grid, "Nj", type, 0);
 
                 intvalue = ((buffer[24] * 256 + buffer[25]) * 256 + buffer[26]) * 256 + buffer[27];
@@ -2431,9 +2554,88 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
 
                 file_offset += 58;
 
-                if (section_size > 72)
+                if (number_interpretation > 0)
                 {
-                    file_offset += section_size - 72;
+                    coda_mem_array *listOfNumbersArray;
+                    long N;
+                    long i;
+
+                    if (Ni == 4294967295)
+                    {
+                        N = Nj;
+                    }
+                    else if (Nj == 4294967295)
+                    {
+                        N = Ni;
+                    }
+                    else
+                    {
+                        coda_set_error(CODA_ERROR_PRODUCT, "'list of numbers' in GDS should only be present if Ni or "
+                                       "Nj have a MISSING value (4294967295)");
+                        return -1;
+                    }
+
+                    /* remaining bytes should provide 'list of numbers of points in each row' */
+                    if (section_size - 72 != number_size * N)
+                    {
+                        coda_set_error(CODA_ERROR_PRODUCT, "invalid length (%ld) for 'list of numbers' in GDS "
+                                       "(expected %ld)", (long)(section_size - 72), number_size * N);
+                        coda_dynamic_type_delete((coda_dynamic_type *)grid);
+                        return -1;
+                    }
+
+                    listOfNumbersArray = coda_mem_array_new((coda_type_array *)grib_type[grib2_listOfNumbers_array],
+                                                         NULL);
+                    for (i = 0; i < N; i++)
+                    {
+                        uint32_t value;
+
+                        if (read_bytes(product->raw_product, file_offset, 2, buffer) < 0)
+                        {
+                            coda_dynamic_type_delete((coda_dynamic_type *)listOfNumbersArray);
+                            coda_dynamic_type_delete((coda_dynamic_type *)grid);
+                            return -1;
+                        }
+                        switch (number_size)
+                        {
+                            case 1:
+                                value = buffer[0];
+                                break;
+                            case 2:
+                                value = buffer[0] * 256 + buffer[1];
+                                break;
+                            case 4:
+                                value = ((buffer[0] * 256 + buffer[1]) * 256 + buffer[2]) * 256 + buffer[3];
+                                break;
+                            default:
+                                coda_set_error(CODA_ERROR_PRODUCT, "unsupported octect size (%d) for numbers in 'list "
+                                               "of numbers' in GDS", (int)number_size);
+                                coda_dynamic_type_delete((coda_dynamic_type *)listOfNumbersArray);
+                                coda_dynamic_type_delete((coda_dynamic_type *)grid);
+                                return -1;
+                        }
+                        type =
+                            (coda_dynamic_type *)
+                            coda_mem_uint32_new((coda_type_number *)grib_type[grib2_listOfNumbers], NULL,
+                                                (coda_product *)product, value);
+                        coda_mem_array_add_element(listOfNumbersArray, type);
+                        file_offset += number_size;
+                    }
+                    coda_mem_record_add_field(grid, "listOfNumbers", (coda_dynamic_type *)listOfNumbersArray, 0);
+                }
+                else
+                {
+                    if (Ni == 4294967295 || Nj == 4294967295)
+                    {
+                        coda_set_error(CODA_ERROR_PRODUCT, "grid definition with MISSING value (4294967295) for Ni or Nj "
+                                       "without 'List of numbers' not supported");
+                        coda_dynamic_type_delete((coda_dynamic_type *)grid);
+                        return -1;
+                    }
+                    if (section_size > 72)
+                    {
+                        file_offset += section_size - 72;
+                    }
                 }
             }
             else
