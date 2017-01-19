@@ -1082,10 +1082,11 @@ static int grib_init(void)
     coda_type_set_bit_size(grib_type[grib2_numberOfDataPoints], 32);
     coda_type_set_description(grib_type[grib2_numberOfDataPoints], "Number of data points");
 
-    grib_type[grib2_interpretationOfListOfNumbers] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
+    grib_type[grib2_interpretationOfListOfNumbers] =
+        (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_interpretationOfListOfNumbers], endianness);
     coda_type_set_read_type(grib_type[grib2_interpretationOfListOfNumbers], coda_native_type_uint8);
-    coda_type_set_bit_size(grib_type[grib2_interpretationOfListOfNumbers],8);
+    coda_type_set_bit_size(grib_type[grib2_interpretationOfListOfNumbers], 8);
     coda_type_set_description(grib_type[grib2_interpretationOfListOfNumbers],
                               "Interpretation of list of numbers defining number of points");
 
@@ -1864,7 +1865,7 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
                     }
 
                     listOfNumbersArray = coda_mem_array_new((coda_type_array *)grib_type[grib1_listOfNumbers_array],
-                                                         NULL);
+                                                            NULL);
                     num_elements = 0;
                     for (i = 0; i < N; i++)
                     {
@@ -1876,9 +1877,9 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
                         }
                         num_elements += buffer[0] * 256 + buffer[1];
                         type =
-                            (coda_dynamic_type *)
-                            coda_mem_uint16_new((coda_type_number *)grib_type[grib1_listOfNumbers], NULL,
-                                                (coda_product *)product, buffer[0] * 256 + buffer[1]);
+                            (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)grib_type[grib1_listOfNumbers],
+                                                                     NULL, (coda_product *)product,
+                                                                     buffer[0] * 256 + buffer[1]);
                         coda_mem_array_add_element(listOfNumbersArray, type);
                         file_offset += 2;
                     }
@@ -2585,7 +2586,7 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                     }
 
                     listOfNumbersArray = coda_mem_array_new((coda_type_array *)grib_type[grib2_listOfNumbers_array],
-                                                         NULL);
+                                                            NULL);
                     for (i = 0; i < N; i++)
                     {
                         uint32_t value;
@@ -2615,9 +2616,8 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                                 return -1;
                         }
                         type =
-                            (coda_dynamic_type *)
-                            coda_mem_uint32_new((coda_type_number *)grib_type[grib2_listOfNumbers], NULL,
-                                                (coda_product *)product, value);
+                            (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)grib_type[grib2_listOfNumbers],
+                                                                     NULL, (coda_product *)product, value);
                         coda_mem_array_add_element(listOfNumbersArray, type);
                         file_offset += number_size;
                     }
@@ -2627,7 +2627,8 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                 {
                     if (Ni == 4294967295 || Nj == 4294967295)
                     {
-                        coda_set_error(CODA_ERROR_PRODUCT, "grid definition with MISSING value (4294967295) for Ni or Nj "
+                        coda_set_error(CODA_ERROR_PRODUCT,
+                                       "grid definition with MISSING value (4294967295) for Ni or Nj "
                                        "without 'List of numbers' not supported");
                         coda_dynamic_type_delete((coda_dynamic_type *)grid);
                         return -1;
