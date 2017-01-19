@@ -1,6 +1,6 @@
 // CodaTest.java - Sample file for the CODA Java library interface
 //
-// Copyright (C) 2007-2016 S[&]T, The Netherlands.
+// Copyright (C) 2007-2017 S[&]T, The Netherlands.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
