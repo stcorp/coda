@@ -1,3 +1,6 @@
+2.18 2017-01-20
+~~~~~~~~~~~~~~~
+
 * Changed Open Source licence of CODA from GPLv2 to BSD (3-Clause).
 
 * Added support for using path references as a parameter to the CODA fetch()
