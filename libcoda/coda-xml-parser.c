@@ -816,6 +816,16 @@ int coda_xml_parse(coda_xml_product *product)
         }
         else
         {
+            if (lseek(((coda_bin_product *)product->raw_product)->fd, (off_t)i * BUFFSIZE, SEEK_SET) < 0)
+            {
+                char byte_offset_str[21];
+
+                coda_str64(i * BUFFSIZE, byte_offset_str);
+                coda_set_error(CODA_ERROR_FILE_READ, "could not move to byte position %s (%s)", byte_offset_str,
+                               strerror(errno));
+                parser_info_cleanup(&info);
+                return -1;
+            }
             length = read(((coda_bin_product *)product->raw_product)->fd, buff, BUFFSIZE);
             if (length < 0)
             {
