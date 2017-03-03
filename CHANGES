@@ -1,6 +1,9 @@
 * Fixed issue with reading of XML files using a codadef definition when mmap
   is disabled.
 
+* Fixed issue where asciiline length of last line was 1 byte too short if
+  line did not end with an end-of-line.
+
 2.18 2017-01-20
 ~~~~~~~~~~~~~~~
 

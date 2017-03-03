@@ -250,12 +250,11 @@ int coda_ascii_init_asciilines(coda_product *product)
                     }
                     asciiline_end_offset = new_offset;
                 }
-                asciiline_end_offset[num_asciilines] = (long)byte_offset + i;
+                asciiline_end_offset[num_asciilines] = (long)byte_offset + i + 1;
                 num_asciilines++;
                 lastline_ending = eol_unknown;
                 if (buffer[i] == '\n')
                 {
-                    asciiline_end_offset[num_asciilines - 1]++;
                     lastline_ending = eol_lf;
                     if (verify_eol_type(product_file, eol_lf) != 0)
                     {
@@ -265,7 +264,6 @@ int coda_ascii_init_asciilines(coda_product *product)
                 }
                 else if (buffer[i] == '\r')
                 {
-                    asciiline_end_offset[num_asciilines - 1]++;
                     lastline_ending = eol_cr;
                     if (i < blocksize - 1)
                     {
