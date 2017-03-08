@@ -4,6 +4,8 @@
 * Fixed issue where asciiline length of last line was 1 byte too short if
   line did not end with an end-of-line.
 
+* Improved Python coda.fetch() performance.
+
 2.18 2017-01-20
 ~~~~~~~~~~~~~~~
 

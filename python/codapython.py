@@ -308,11 +308,10 @@ def _fetch_intermediate_array(cursor,path,pathIndex=0):
             cursor_goto_next_array_element(cursor)
             currentElementIndex += 1
 
-        # copy the cursor.
-        copiedCursor = copy.deepcopy(cursor)
+        depth = cursor_get_depth(cursor)
 
         # traverse the path.
-        (intermediateNode,copiedPathIndex) = _traverse_path(copiedCursor,path,pathIndex+1)
+        (intermediateNode,copiedPathIndex) = _traverse_path(cursor,path,pathIndex+1)
 
         # create the result array by examining the type of the first element.
         # This is equivalent to i == 0
@@ -322,7 +321,7 @@ def _fetch_intermediate_array(cursor,path,pathIndex=0):
             scalar = False
 
             # check for scalar types.
-            nodeType = cursor_get_type(copiedCursor)
+            nodeType = cursor_get_type(cursor)
             nodeClass = type_get_class(nodeType)
 
             if ((nodeClass == coda_array_class)
@@ -365,14 +364,11 @@ def _fetch_intermediate_array(cursor,path,pathIndex=0):
         # result stored.
         if intermediateNode:
             # an intermediate array was encountered.
-            array.flat[i] = _fetch_intermediate_array(copiedCursor,path,copiedPathIndex)
+            array.flat[i] = _fetch_intermediate_array(cursor,path,copiedPathIndex)
         else:
             # the end of the path was reached. from this point on,
             # the entire subtree is fetched.
-            array.flat[i] = _fetch_subtree(copiedCursor)
-
-        # clean up the copied cursor
-        del copiedCursor
+            array.flat[i] = _fetch_subtree(cursor)
 
         # update fetchIndex and nextElementIndex.
         for j in range(0,len(fetchShape)):
@@ -385,6 +381,9 @@ def _fetch_intermediate_array(cursor,path,pathIndex=0):
             fetchIndex[j] = 0
             nextElementIndex -= fetchStep[j+1]
 
+        for j in range(cursor_get_depth(cursor) - depth):
+            cursor_goto_parent(cursor)
+            
     cursor_goto_parent(cursor)
     return array
 
