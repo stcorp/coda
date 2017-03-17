@@ -34,6 +34,7 @@
 #include "coda-ascii-internal.h"
 #include "coda-mem-internal.h"
 #include "coda-read-bytes.h"
+#include "coda-definition.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -891,9 +892,9 @@ LIBCODA_API int coda_product_check(coda_product *product, int full_read_check,
     if (format != coda_format_ascii && format != coda_format_binary && format != coda_format_xml)
     {
         /* we only need to check against the format definition for self describing data formats */
-        if (coda_get_product_root_type(product, &definition) != 0)
+        if (product->product_definition != NULL && product->product_definition->root_type != NULL)
         {
-            return -1;
+            definition = product->product_definition->root_type;
         }
     }
 
