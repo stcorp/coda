@@ -1,3 +1,6 @@
+2.18.1 2017-03-23
+~~~~~~~~~~~~~~~~~
+
 * Fixed issue with reading of XML files using a codadef definition when mmap
   is disabled.
 
