@@ -383,7 +383,7 @@ def _fetch_intermediate_array(cursor,path,pathIndex=0):
 
         for j in range(cursor_get_depth(cursor) - depth):
             cursor_goto_parent(cursor)
-            
+
     cursor_goto_parent(cursor)
     return array
 
