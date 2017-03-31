@@ -491,6 +491,7 @@ LIBCODA_API int coda_init(void)
         }
         if (coda_data_dictionary_init() != 0)
         {
+            coda_leap_second_table_done();
             return -1;
         }
         if (coda_definition_path == NULL)
@@ -513,7 +514,7 @@ LIBCODA_API int coda_init(void)
             if (coda_read_definitions(coda_definition_path) != 0)
             {
                 coda_data_dictionary_done();
-                free(coda_definition_path);
+                /* don't clear coda_definition_path */
                 coda_leap_second_table_done();
                 return -1;
             }
@@ -524,11 +525,7 @@ LIBCODA_API int coda_init(void)
         if (coda_hdf5_init() != 0)
         {
             coda_data_dictionary_done();
-            if (coda_definition_path != NULL)
-            {
-                free(coda_definition_path);
-                coda_definition_path = NULL;
-            }
+            /* don't clear coda_definition_path */
             coda_leap_second_table_done();
             return -1;
         }
@@ -548,7 +545,8 @@ LIBCODA_API int coda_init(void)
  * the actual initialization and all following calls to coda_init() will only increase an initialization counter.
  * Each call to coda_init() needs to be matched by a call to coda_done() at clean-up time (i.e. the amount of calls
  * to coda_done() needs to be equal to the amount of calls to coda_init()). Only the last coda_done() call (when
- * the initialization counter has reached 0) will do the actual clean-up of CODA.
+ * the initialization counter has reached 0) will do the actual clean-up of CODA. The clean-up will also reset any
+ * definition path that was set with coda_set_definition_path() or coda_set_definition_path_conditional().
  *
  * Calling a CODA function other than coda_init() after the final coda_done() will result in undefined behavior.
  * After reinitializing CODA again, accessing a product that was left open from a previous CODA 'session' will also
