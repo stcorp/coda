@@ -47,27 +47,6 @@
 #include "coda-grib-internal.h"
 #include "coda-bin.h"
 
-/* return a ^ b, where a and b are integers and the result is a floating point value */
-static double fpow(long a, long b)
-{
-    double r = 1.0;
-
-    if (b < 0)
-    {
-        b = -b;
-        while (b--)
-        {
-            r *= a;
-        }
-        return 1.0 / r;
-    }
-    while (b--)
-    {
-        r *= a;
-    }
-    return r;
-}
-
 int coda_grib_cursor_set_product(coda_cursor *cursor, coda_product *product)
 {
     cursor->product = product;
@@ -169,13 +148,11 @@ int coda_grib_cursor_read_float(const coda_cursor *cursor, float *dst)
     if (array->simple_packing)
     {
         int64_t ivalue = 0;
-        double fvalue = 0;
         uint8_t *buffer;
 
-        fvalue = array->referenceValue;
         if (array->element_bit_size == 0)
         {
-            *((float *)dst) = (float)fvalue;
+            *((float *)dst) = array->referenceValue;
             return 0;
         }
         if (array->bitmask != NULL)
@@ -220,9 +197,7 @@ int coda_grib_cursor_read_float(const coda_cursor *cursor, float *dst)
 #ifndef WORDS_BIGENDIAN
         swap8(&ivalue);
 #endif
-        fvalue += ivalue * fpow(2, array->binaryScaleFactor);
-        fvalue *= fpow(10, -array->decimalScaleFactor);
-        *((float *)dst) = (float)fvalue;
+        *((float *)dst) = (float)(ivalue * array->scalefactor + array->offset);
     }
     else
     {

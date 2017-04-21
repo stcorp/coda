@@ -1,3 +1,5 @@
+* Improved reading performance of GRIB messages that use 'simple packing'.
+
 2.18.1 2017-03-23
 ~~~~~~~~~~~~~~~~~
 

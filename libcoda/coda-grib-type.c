@@ -35,6 +35,27 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* return a ^ b, where a and b are integers and the result is a floating point value */
+static double fpow(long a, long b)
+{
+    double r = 1.0;
+
+    if (b < 0)
+    {
+        b = -b;
+        while (b--)
+        {
+            r *= a;
+        }
+        return 1.0 / r;
+    }
+    while (b--)
+    {
+        r *= a;
+    }
+    return r;
+}
+
 void coda_grib_type_delete(coda_dynamic_type *type)
 {
     assert(type != NULL);
@@ -96,6 +117,8 @@ coda_grib_value_array *coda_grib_value_array_new(coda_type_array *definition, lo
     type->decimalScaleFactor = 0;
     type->binaryScaleFactor = 0;
     type->referenceValue = 0.0;
+    type->scalefactor = 0.0;
+    type->offset = 0.0;
     type->bitmask = NULL;
     type->bitmask_cumsum128 = NULL;
 
@@ -134,6 +157,8 @@ coda_grib_value_array *coda_grib_value_array_simple_packing_new(coda_type_array 
     type->decimalScaleFactor = decimalScaleFactor;
     type->binaryScaleFactor = binaryScaleFactor;
     type->referenceValue = referenceValue;
+    type->scalefactor = fpow(2, binaryScaleFactor) * fpow(10, -decimalScaleFactor);
+    type->offset = referenceValue * fpow(10, -decimalScaleFactor);
     type->bitmask = NULL;
     type->bitmask_cumsum128 = NULL;
 

@@ -50,6 +50,8 @@ typedef struct coda_grib_value_array_struct
     int16_t decimalScaleFactor;
     int16_t binaryScaleFactor;
     float referenceValue;
+    double scalefactor; /* combination of binaryScaleFactor and decimalScaleFactor */
+    double offset;      /* combination of referenceValue and decimalScaleFactor */
     uint8_t *bitmask;
     uint8_t *bitmask_cumsum128;
 } coda_grib_value_array;
