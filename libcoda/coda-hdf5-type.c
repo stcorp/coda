@@ -32,6 +32,7 @@
 #include "coda-internal.h"
 
 #include <assert.h>
+#include <string.h>
 #include <stdlib.h>
 
 #include "coda-hdf5-internal.h"
@@ -572,10 +573,6 @@ static int new_hdf5AttributeDefinition(hid_t attr_id, coda_type **type)
                         {
                             result = coda_type_set_read_type(definition, coda_native_type_uint8);
                         }
-                        if (result == 0)
-                        {
-                            result = coda_type_set_byte_size(definition, 1);
-                        }
                         break;
                     case 2:
                         if (sign)
@@ -585,10 +582,6 @@ static int new_hdf5AttributeDefinition(hid_t attr_id, coda_type **type)
                         else
                         {
                             result = coda_type_set_read_type(definition, coda_native_type_uint16);
-                        }
-                        if (result == 0)
-                        {
-                            result = coda_type_set_byte_size(definition, 2);
                         }
                         break;
                     case 3:
@@ -600,10 +593,6 @@ static int new_hdf5AttributeDefinition(hid_t attr_id, coda_type **type)
                         else
                         {
                             result = coda_type_set_read_type(definition, coda_native_type_uint32);
-                        }
-                        if (result == 0)
-                        {
-                            result = coda_type_set_byte_size(definition, 4);
                         }
                         break;
                     case 5:
@@ -618,16 +607,16 @@ static int new_hdf5AttributeDefinition(hid_t attr_id, coda_type **type)
                         {
                             result = coda_type_set_read_type(definition, coda_native_type_uint64);
                         }
-                        if (result == 0)
-                        {
-                            result = coda_type_set_byte_size(definition, 8);
-                        }
                         break;
                     default:
                         /* the integer type is larger than what CODA can support */
                         coda_type_release(definition);
                         H5Tclose(datatype_id);
                         return 1;
+                }
+                if (result == 0)
+                {
+                    result = coda_type_set_byte_size(definition, H5Tget_size(datatype_id));
                 }
                 H5Tclose(datatype_id);
                 if (result != 0)
@@ -747,7 +736,8 @@ static int new_hdf5AttributeDefinition(hid_t attr_id, coda_type **type)
     return 0;
 }
 
-static int new_hdf5Attribute(coda_product *product, hid_t attr_id, coda_dynamic_type **type)
+static int new_hdf5Attribute(coda_product *product, hid_t attr_id, const char *name, coda_conversion *conversion,
+                             coda_dynamic_type **type)
 {
     coda_type *definition;
     hid_t datatype_id;
@@ -793,6 +783,95 @@ static int new_hdf5Attribute(coda_product *product, hid_t attr_id, coda_dynamic_
         return -1;
     }
     H5Tclose(datatype_id);
+
+    if (conversion != NULL && num_elements == 1)
+    {
+        coda_native_type read_type;
+
+        if (definition->type_class == coda_array_class)
+        {
+            read_type = ((coda_type_array *)definition)->base_type->read_type;
+        }
+        else
+        {
+            read_type = definition->read_type;
+        }
+        if (strcmp(name, "scale_factor") == 0)
+        {
+            if (read_type == coda_native_type_float && size == 4)
+            {
+                conversion->numerator = *(float *)buffer;
+            }
+            else if (read_type == coda_native_type_double && size == 8)
+            {
+                conversion->numerator = *(double *)buffer;
+            }
+        }
+        else if (strcmp(name, "add_offset") == 0)
+        {
+            if (read_type == coda_native_type_float && size == 4)
+            {
+                conversion->add_offset = *(float *)buffer;
+            }
+            else if (read_type == coda_native_type_double && size == 8)
+            {
+                conversion->add_offset = *(double *)buffer;
+            }
+        }
+        /* note that missing_value has preference over _FillValue */
+        /* We therefore don't modify fill_value for _FillValue if fill_value was already set */
+        else if (strcmp(name, "missing_value") == 0 || (strcmp(name, "_FillValue") == 0 &&
+                                                        coda_isNaN(conversion->invalid_value)))
+        {
+            switch (read_type)
+            {
+                case coda_native_type_int8:
+                    conversion->invalid_value = (double)*(int8_t *)buffer;
+                    break;
+                case coda_native_type_uint8:
+                    conversion->invalid_value = (double)*(uint8_t *)buffer;
+                    break;
+                case coda_native_type_int16:
+                    conversion->invalid_value = (double)*(int16_t *)buffer;
+                    break;
+                case coda_native_type_uint16:
+                    conversion->invalid_value = (double)*(uint16_t *)buffer;
+                    break;
+                case coda_native_type_int32:
+                    if (size == 4)
+                    {
+                        conversion->invalid_value = (double)*(int32_t *)buffer;
+                    }
+                    break;
+                case coda_native_type_uint32:
+                    if (size == 4)
+                    {
+                        conversion->invalid_value = (double)*(uint32_t *)buffer;
+                    }
+                    break;
+                case coda_native_type_int64:
+                    if (size == 8)
+                    {
+                        conversion->invalid_value = (double)*(int64_t *)buffer;
+                    }
+                    break;
+                case coda_native_type_uint64:
+                    if (size == 8)
+                    {
+                        conversion->invalid_value = (double)*(uint64_t *)buffer;
+                    }
+                    break;
+                case coda_native_type_float:
+                    conversion->invalid_value = (double)*(float *)buffer;
+                    break;
+                case coda_native_type_double:
+                    conversion->invalid_value = *(double *)buffer;
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
 
     if (definition->type_class == coda_array_class)
     {
@@ -899,7 +978,7 @@ static int new_hdf5Attribute(coda_product *product, hid_t attr_id, coda_dynamic_
     return 0;
 }
 
-static coda_mem_record *new_hdf5AttributeRecord(coda_product *product, hid_t obj_id)
+static coda_mem_record *new_hdf5AttributeRecord(coda_product *product, hid_t obj_id, coda_conversion *conversion)
 {
     coda_type_record *definition;
     coda_mem_record *attrs;
@@ -975,7 +1054,7 @@ static coda_mem_record *new_hdf5AttributeRecord(coda_product *product, hid_t obj
             return NULL;
         }
 
-        result = new_hdf5Attribute(product, attr_id, &attribute);
+        result = new_hdf5Attribute(product, attr_id, name, conversion, &attribute);
         H5Aclose(attr_id);
         if (result < 0)
         {
@@ -1086,7 +1165,7 @@ int coda_hdf5_create_tree(coda_hdf5_product *product, hid_t loc_id, const char *
                     group->object[i] = NULL;
                 }
 
-                group->attributes = new_hdf5AttributeRecord((coda_product *)product, group->group_id);
+                group->attributes = new_hdf5AttributeRecord((coda_product *)product, group->group_id, NULL);
                 if (group->attributes == NULL)
                 {
                     coda_hdf5_type_delete((coda_dynamic_type *)group);
@@ -1104,6 +1183,7 @@ int coda_hdf5_create_tree(coda_hdf5_product *product, hid_t loc_id, const char *
         case H5G_DATASET:
             {
                 coda_hdf5_dataset *dataset;
+                coda_conversion *conversion = NULL;
                 hsize_t dim[CODA_MAX_NUM_DIMS];
                 int num_dims;
 
@@ -1194,11 +1274,44 @@ int coda_hdf5_create_tree(coda_hdf5_product *product, hid_t loc_id, const char *
                     return -1;
                 }
 
-                dataset->attributes = new_hdf5AttributeRecord((coda_product *)product, dataset->dataset_id);
+                if (dataset->base_type->tag == tag_hdf5_basic_datatype)
+                {
+                    if (dataset->base_type->definition->type_class == coda_integer_class ||
+                        dataset->base_type->definition->type_class == coda_real_class)
+                    {
+                        conversion = coda_conversion_new(1.0, 1.0, 0.0, coda_NaN());
+                        if (conversion == NULL)
+                        {
+                            coda_hdf5_type_delete((coda_dynamic_type *)dataset);
+                            return -1;
+                        }
+                    }
+                }
+                dataset->attributes = new_hdf5AttributeRecord((coda_product *)product, dataset->dataset_id, conversion);
                 if (dataset->attributes == NULL)
                 {
                     coda_hdf5_type_delete((coda_dynamic_type *)dataset);
+                    if (conversion != NULL)
+                    {
+                        coda_conversion_delete(conversion);
+                    }
                     return -1;
+                }
+                /* check if we need to use a conversion */
+                if (conversion != NULL)
+                {
+                    /* don't create conversions for integer data if we only have an 'invalid_value' attribute */
+                    if (conversion->numerator != 1.0 || conversion->add_offset != 0.0 ||
+                        (!coda_isNaN(conversion->invalid_value) &&
+                          dataset->base_type->definition->type_class == coda_real_class))
+                    {
+                        if (coda_hdf5_basic_type_set_conversion(dataset->base_type, conversion) != 0)
+                        {
+                            coda_hdf5_type_delete((coda_dynamic_type *)dataset);
+                            coda_conversion_delete(conversion);
+                            return -1;
+                        }
+                    }
                 }
                 if (coda_type_set_attributes((coda_type *)dataset->definition, dataset->attributes->definition) != 0)
                 {
@@ -1307,4 +1420,10 @@ int coda_hdf5_create_tree(coda_hdf5_product *product, hid_t loc_id, const char *
     }
 
     return 0;
+}
+
+int coda_hdf5_basic_type_set_conversion(coda_hdf5_data_type *type, coda_conversion *conversion)
+{
+    assert(type->definition->type_class == coda_integer_class || type->definition->type_class == coda_real_class);
+    return coda_type_number_set_conversion((coda_type_number *)type->definition, conversion);
 }

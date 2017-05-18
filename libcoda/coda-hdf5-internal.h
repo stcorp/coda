@@ -152,5 +152,6 @@ struct coda_hdf5_product_struct
 typedef struct coda_hdf5_product_struct coda_hdf5_product;
 
 int coda_hdf5_create_tree(coda_hdf5_product *product, hid_t loc_id, const char *path, coda_hdf5_object **object);
+int coda_hdf5_basic_type_set_conversion(coda_hdf5_data_type *type, coda_conversion *conversion);
 
 #endif
