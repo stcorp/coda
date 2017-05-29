@@ -272,7 +272,7 @@ long coda_ascii_parse_int64(const char *buffer, long buffer_length, int64_t *dst
 
     length = buffer_length;
 
-    while (length > 0 && *buffer == ' ')
+    while (length > 0 && (*buffer == ' ' || *buffer == '\t'))
     {
         buffer++;
         length--;
@@ -313,7 +313,7 @@ long coda_ascii_parse_int64(const char *buffer, long buffer_length, int64_t *dst
     }
     if (!ignore_trailing_bytes && length != 0)
     {
-        while (length > 0 && *buffer == ' ')
+        while (length > 0 && (*buffer == ' ' || *buffer == '\t'))
         {
             buffer++;
             length--;
@@ -343,7 +343,7 @@ long coda_ascii_parse_uint64(const char *buffer, long buffer_length, uint64_t *d
 
     length = buffer_length;
 
-    while (length > 0 && *buffer == ' ')
+    while (length > 0 && (*buffer == ' ' || *buffer == '\t'))
     {
         buffer++;
         length--;
@@ -383,7 +383,7 @@ long coda_ascii_parse_uint64(const char *buffer, long buffer_length, uint64_t *d
     }
     if (!ignore_trailing_bytes && length != 0)
     {
-        while (length > 0 && *buffer == ' ')
+        while (length > 0 && (*buffer == ' ' || *buffer == '\t'))
         {
             buffer++;
             length--;
@@ -412,7 +412,7 @@ long coda_ascii_parse_double(const char *buffer, long buffer_length, double *dst
 
     length = buffer_length;
 
-    while (length > 0 && *buffer == ' ')
+    while (length > 0 && (*buffer == ' ' || *buffer == '\t'))
     {
         buffer++;
         length--;
@@ -550,7 +550,7 @@ long coda_ascii_parse_double(const char *buffer, long buffer_length, double *dst
 
     if (!ignore_trailing_bytes && length != 0)
     {
-        while (length > 0 && *buffer == ' ')
+        while (length > 0 && (*buffer == ' ' || *buffer == '\t'))
         {
             buffer++;
             length--;

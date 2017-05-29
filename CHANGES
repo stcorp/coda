@@ -1,6 +1,10 @@
 * Added automatic scale_factor/add_offset/missing_value/_FillValue conversion
   for HDF5 (similar to what was already done for netcdf and HDF4).
 
+* Leading and trailing whitespace that is allowed when parsing numerical
+  values from ascii data can now consist of either space or a tab characters
+  (instead of just space characters).
+
 * Improved reading performance of GRIB messages that use 'simple packing'.
 
 2.18.1 2017-03-23
