@@ -1,3 +1,6 @@
+2.18.2 2017-06-20
+~~~~~~~~~~~~~~~~~
+
 * Added automatic scale_factor/add_offset/missing_value/_FillValue conversion
   for HDF5 (similar to what was already done for netcdf and HDF4).
 
