@@ -1303,7 +1303,7 @@ int coda_hdf5_create_tree(coda_hdf5_product *product, hid_t loc_id, const char *
                     /* don't create conversions for integer data if we only have an 'invalid_value' attribute */
                     if (conversion->numerator != 1.0 || conversion->add_offset != 0.0 ||
                         (!coda_isNaN(conversion->invalid_value) &&
-                          dataset->base_type->definition->type_class == coda_real_class))
+                         dataset->base_type->definition->type_class == coda_real_class))
                     {
                         if (coda_hdf5_basic_type_set_conversion(dataset->base_type, conversion) != 0)
                         {
