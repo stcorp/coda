@@ -307,7 +307,7 @@ done outside IDL by setting the environment variable globally, but you can also
 do this inside IDL before you call any CODA functions using:
     IDL> SETENV, 'CODA_DEFINITION=/path/to/codadefs/'
 Information on how to set environment variables on Mac OS X can be found at:
-http://developer.apple.com/mac/library/documentation/MacOSX/Conceptual/BPRuntimeConfig/Articles/EnvironmentVars.html
+https://apple.stackexchange.com/questions/106355/setting-the-system-wide-path-environment-variable-in-mavericks
 
 For MATLAB you should create a startup.m file in a 'matlab' directory in your
 home directory (~/matlab/startup.m) that contains the line:
