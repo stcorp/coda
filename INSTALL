@@ -462,6 +462,36 @@ installation directory (/usr/local by default).
 For the Windows binary package all documentation can be found in the
 subdirectory doc\html of your installation directory (C:\CODA by default).
 
+Known issues
+============
+
+When compiling with HDF4 enabled, and where HDF4 is build with only static
+libraries (which is the default), you may get the following error during
+compilation:
+
+    Undefined symbols:
+      "_GRreftoindex", referenced from:
+          _init_hdf4Vgroups in libcoda.a(libcoda_la-coda-hdf4-definition.o)
+      "_VFnfields", referenced from:
+          _init_hdf4Vdatas in libcoda.a(libcoda_la-coda-hdf4-definition.o)
+      "_SDend", referenced from:
+          _coda_hdf4_close in libcoda.a(libcoda_la-coda-hdf4-definition.o)
+      "_GRstart", referenced from:
+          _coda_hdf4_open in libcoda.a(libcoda_la-coda-hdf4-definition.o)
+
+This is due to an issue with GNU libtool, a tool to deal with shared/static
+libraries and which is used by various open source packages (including CODA).
+There are (at least) three ways of working around this problem:
+
+  - Remove the libdf.la and libmfhdf.la files after installation of HDF4
+    (these files are only used by libtool, so this should not introduce any
+    other problems on your system)
+  - Build HDF4 with shared libraries enabled (add '--enable-shared' as option
+    to the call to ./configure when configuring your HDF4 source package)
+  - Explicitly add 'LIBS="-L<path_to_hdf4_libraries> -lmfhdf -ldf"' as an
+    option to the configure script of CODA, where <path_to_hdf4_libraries>
+    should be replaced with the directory location of the HDF4 libraries.
+
 Feedback
 ========
 
