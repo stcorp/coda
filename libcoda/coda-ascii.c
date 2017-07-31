@@ -95,6 +95,7 @@ int coda_ascii_reopen_with_definition(coda_product **product, const coda_product
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate filename string) (%s:%u)",
                        __FILE__, __LINE__);
+        free(product_file);
         return -1;
     }
 
