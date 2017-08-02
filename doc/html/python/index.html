@@ -210,10 +210,12 @@
 
       <h2 id="codadef">CODA Definition Path</h2>
       
-      <p>Note that in order to access products whose formats are defined using .codadef files, you should let CODA now where these .codadef files are stored. You can do this  by setting the CODA_DEFINITION environment variable. This environment variable should be a ':' separated (';' on Windows) list of absolute paths to directories containing .codadef files or absolute paths to .codadef files themselves (or a mix of those).</p>
+      <p>Note that in order to access products whose formats are defined using .codadef files, you should let CODA now where these .codadef files are stored. By default the CODA Python interface will look for .codadef files in a directory relative to the location of the CODA Python package (<code>../../../../share/coda/definitions</code>).
 
-      <p>When you import the CODA Python package this will trigger an initialisation of CODA, so you should make sure that the CODA_DEFINITION environment variable is set  before you import the CODA Python package. Setting the environment variable can be performed from within Python using:</p>
-      
+      <p>You can override the default location by setting the CODA_DEFINITION environment variable. This environment variable should be a ':' separated (';' on Windows) list of absolute paths to directories containing .codadef files or absolute paths to .codadef files themselves (or a mix of those).</p>
+
+      <p>When you import the CODA Python package this will trigger an initialisation of CODA, so you should make sure that the CODA_DEFINITION environment variable is set before you import the CODA Python package. Setting the environment variable can be performed from within Python using:</p>
+
 <div class="fragment"><pre>
 import os
 

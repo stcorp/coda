@@ -5962,6 +5962,66 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_coda_set_definition_path_conditional(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  char *arg1 = (char *) 0 ;
+  char *arg2 = (char *) 0 ;
+  char *arg3 = (char *) 0 ;
+  int res1 ;
+  char *buf1 = 0 ;
+  int alloc1 = 0 ;
+  int res2 ;
+  char *buf2 = 0 ;
+  int alloc2 = 0 ;
+  int res3 ;
+  char *buf3 = 0 ;
+  int alloc3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  int result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:coda_set_definition_path_conditional",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_AsCharPtrAndSize(obj0, &buf1, NULL, &alloc1);
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "coda_set_definition_path_conditional" "', argument " "1"" of type '" "char const *""'");
+  }
+  arg1 = (char *)(buf1);
+  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "coda_set_definition_path_conditional" "', argument " "2"" of type '" "char const *""'");
+  }
+  arg2 = (char *)(buf2);
+  res3 = SWIG_AsCharPtrAndSize(obj2, &buf3, NULL, &alloc3);
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "coda_set_definition_path_conditional" "', argument " "3"" of type '" "char const *""'");
+  }
+  arg3 = (char *)(buf3);
+  {
+    result = (int)coda_set_definition_path_conditional((char const *)arg1,(char const *)arg2,(char const *)arg3);
+    
+    if (result < 0)
+    {
+      if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
+      if (alloc2 == SWIG_NEWOBJ) free((char*)buf2);
+      if (alloc3 == SWIG_NEWOBJ) free((char*)buf3);
+      
+      return PyErr_Format(codacError,"coda_set_definition_path_conditional(): %s", coda_errno_to_string(coda_errno));
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
+  if (alloc2 == SWIG_NEWOBJ) free((char*)buf2);
+  if (alloc3 == SWIG_NEWOBJ) free((char*)buf3);
+  return resultobj;
+fail:
+  if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
+  if (alloc2 == SWIG_NEWOBJ) free((char*)buf2);
+  if (alloc3 == SWIG_NEWOBJ) free((char*)buf3);
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_set_option_bypass_special_types(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int arg1 ;
@@ -11071,6 +11131,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"expression_is_constant", _wrap_expression_is_constant, METH_VARARGS, NULL},
 	 { (char *)"expression_is_equal", _wrap_expression_is_equal, METH_VARARGS, NULL},
 	 { (char *)"init", _wrap_init, METH_VARARGS, NULL},
+	 { (char *)"coda_set_definition_path_conditional", _wrap_coda_set_definition_path_conditional, METH_VARARGS, NULL},
 	 { (char *)"set_option_bypass_special_types", _wrap_set_option_bypass_special_types, METH_VARARGS, NULL},
 	 { (char *)"set_option_perform_boundary_checks", _wrap_set_option_perform_boundary_checks, METH_VARARGS, NULL},
 	 { (char *)"set_option_perform_conversions", _wrap_set_option_perform_conversions, METH_VARARGS, NULL},

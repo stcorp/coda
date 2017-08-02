@@ -358,6 +358,10 @@ def init():
   return _codac.init()
 init = _codac.init
 
+def coda_set_definition_path_conditional(*args):
+  return _codac.coda_set_definition_path_conditional(*args)
+coda_set_definition_path_conditional = _codac.coda_set_definition_path_conditional
+
 def set_option_bypass_special_types(*args):
   return _codac.set_option_bypass_special_types(*args)
 set_option_bypass_special_types = _codac.set_option_bypass_special_types

@@ -64,7 +64,6 @@
 %ignore coda_errno;
 
 %ignore coda_set_definition_path;
-%ignore coda_set_definition_path_conditional;
 %ignore coda_free;
 %ignore coda_str64;
 %ignore coda_str64u;

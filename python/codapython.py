@@ -32,6 +32,7 @@ POSSIBILITY OF SUCH DAMAGE.
 from .codac import *
 import numpy
 import copy
+import os
 import io
 
 #
@@ -994,5 +995,13 @@ def get_option_filter_record_fields():
 # MODULE INITIALIZATION
 #
 
+def _init():
+    if os.getenv('CODA_DEFINITION') is None:
+        # Set coda definition path relative to coda python package
+        relpath = "../../../../share/coda/definitions"
+        coda_set_definition_path_conditional(os.path.basename(__file__), os.path.dirname(__file__), relpath)
+        print os.path.abspath(os.path.dirname(__file__) + relpath)
+    init()
+
 # initialize libcoda by calling coda_init()
-init()
+_init()
