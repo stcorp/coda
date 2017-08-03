@@ -1000,7 +1000,6 @@ def _init():
         # Set coda definition path relative to coda python package
         relpath = "../../../../share/coda/definitions"
         coda_set_definition_path_conditional(os.path.basename(__file__), os.path.dirname(__file__), relpath)
-        print os.path.abspath(os.path.dirname(__file__) + relpath)
     init()
 
 # initialize libcoda by calling coda_init()
