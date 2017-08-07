@@ -1312,6 +1312,10 @@ int coda_hdf5_create_tree(coda_hdf5_product *product, hid_t loc_id, const char *
                             return -1;
                         }
                     }
+                    else
+                    {
+                        coda_conversion_delete(conversion);
+                    }
                 }
                 if (coda_type_set_attributes((coda_type *)dataset->definition, dataset->attributes->definition) != 0)
                 {
