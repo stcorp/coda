@@ -683,25 +683,39 @@ int coda_mem_array_add_element(coda_mem_array *type, coda_dynamic_type *element)
     }
     if (type->definition->num_elements > 0)
     {
-        coda_set_error(CODA_ERROR_DATA_DEFINITION, "cannot add element to array of fixed length (%ld) (%s:%u)",
-                       type->num_elements, __FILE__, __LINE__);
-        return -1;
-    }
-    if (type->num_elements % BLOCK_SIZE == 0)
-    {
-        coda_dynamic_type **new_element;
+        long index = 0;
 
-        new_element = realloc(type->element, (type->num_elements + BLOCK_SIZE) * sizeof(coda_dynamic_type *));
-        if (new_element == NULL)
+        /* use the first free array element */
+        while (index < type->num_elements && type->element[index] != NULL)
         {
-            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                           (type->num_elements + BLOCK_SIZE) * sizeof(coda_dynamic_type *), __FILE__, __LINE__);
+            index++;
+        }
+        if (index >= type->num_elements)
+        {
+            coda_set_error(CODA_ERROR_INVALID_INDEX, "array index (%ld) is not in the range [0,%ld) (%s:%u)", index,
+                           type->num_elements, __FILE__, __LINE__);
             return -1;
         }
-        type->element = new_element;
+        type->element[index] = element;
     }
-    type->num_elements++;
-    type->element[type->num_elements - 1] = element;
+    else
+    {
+        if (type->num_elements % BLOCK_SIZE == 0)
+        {
+            coda_dynamic_type **new_element;
+
+            new_element = realloc(type->element, (type->num_elements + BLOCK_SIZE) * sizeof(coda_dynamic_type *));
+            if (new_element == NULL)
+            {
+                coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                               (type->num_elements + BLOCK_SIZE) * sizeof(coda_dynamic_type *), __FILE__, __LINE__);
+                return -1;
+            }
+            type->element = new_element;
+        }
+        type->num_elements++;
+        type->element[type->num_elements - 1] = element;
+    }
 
     return 0;
 }
