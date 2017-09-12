@@ -681,6 +681,12 @@ int coda_mem_array_add_element(coda_mem_array *type, coda_dynamic_type *element)
                        type->num_elements, __FILE__, __LINE__);
         return -1;
     }
+    if (type->definition->num_elements > 0)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "cannot add element to array of fixed length (%ld) (%s:%u)",
+                       type->num_elements, __FILE__, __LINE__);
+        return -1;
+    }
     if (type->num_elements % BLOCK_SIZE == 0)
     {
         coda_dynamic_type **new_element;
