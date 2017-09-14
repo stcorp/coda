@@ -1,6 +1,10 @@
 * The CODA Python interface now automatically sets a default CODA_DEFINITION
   path relative to the CODA Python package.
 
+* Fixed memory leak in HDF5 backend.
+
+* Allow fixed length array dimension definitions for XML formatted products.
+
 2.18.2 2017-06-20
 ~~~~~~~~~~~~~~~~~
 
