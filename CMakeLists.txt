@@ -2,7 +2,7 @@
 #
 project(CODA)
 
-set(VERSION 2.18.2)
+set(VERSION 2.18.3)
 set(CODA_VERSION \"${VERSION}\")
 
 # General setup
@@ -667,7 +667,7 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
   # Set dynamic library version
   #
   set(LIBCODA_CURRENT 14)
-  set(LIBCODA_REVISION 2)
+  set(LIBCODA_REVISION 3)
   set(LIBCODA_AGE 0)
   math(EXPR LIBCODA_MAJOR "${LIBCODA_CURRENT} - ${LIBCODA_AGE}")
   set(LIBCODA_MINOR ${LIBCODA_AGE})
