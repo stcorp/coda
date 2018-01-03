@@ -330,7 +330,7 @@ int coda_hdf5_cursor_get_string_length(const coda_cursor *cursor, long *length)
         long array_index;
         hsize_t size;
 
-        /* in CODA, variable strings should only exist when the parent is a dataset */
+        /* in CODA, variable strings only exist when the parent is a dataset (attributes are cached in memory) */
         dataset = (coda_hdf5_dataset *)cursor->stack[cursor->n - 2].type;
         assert(dataset->tag == tag_hdf5_dataset);
         array_index = cursor->stack[cursor->n - 1].index;
@@ -349,6 +349,34 @@ int coda_hdf5_cursor_get_string_length(const coda_cursor *cursor, long *length)
                 coda_set_error(CODA_ERROR_HDF5, NULL);
                 return -1;
             }
+        }
+        else
+        {
+            hid_t mem_space_id;
+            char *buffer = NULL;
+
+            /* since we can't use H5Dvlen_get_buf_size() on a scalar we just read the string and return its length */
+            mem_space_id = H5Screate_simple(0, NULL, NULL);
+            if (mem_space_id < 0)
+            {
+                coda_set_error(CODA_ERROR_HDF5, NULL);
+                return -1;
+            }
+            if (H5Dread(dataset->dataset_id, base_type->datatype_id, mem_space_id, dataset->dataspace_id, H5P_DEFAULT,
+                        &buffer) < 0)
+            {
+                coda_set_error(CODA_ERROR_HDF5, NULL);
+                H5Sclose(mem_space_id);
+                return -1;
+            }
+            *length = strlen(buffer);
+            if (H5Dvlen_reclaim(base_type->datatype_id, mem_space_id, H5P_DEFAULT, &buffer) < 0)
+            {
+                coda_set_error(CODA_ERROR_HDF5, NULL);
+                H5Sclose(mem_space_id);
+                return -1;
+            }
+            return 0;
         }
 
         if (H5Dvlen_get_buf_size(dataset->dataset_id, base_type->datatype_id, dataset->dataspace_id, &size) < 0)
@@ -661,6 +689,46 @@ static int read_basic_type(const coda_cursor *cursor, void *dst, long dst_size)
             coda_set_error(CODA_ERROR_HDF5, NULL);
             return -1;
         }
+    }
+    else if (base_type->is_variable_string)
+    {
+        long num_chars;
+
+        /* we need to treat scalar strings separately, since we can't use H5Dvlen_get_buf_size() on a scalar dataset */
+
+        mem_space_id = H5Screate_simple(0, NULL, NULL);
+        if (mem_space_id < 0)
+        {
+            coda_set_error(CODA_ERROR_HDF5, NULL);
+            return -1;
+        }
+        if (H5Dread(dataset->dataset_id, datatype_to, mem_space_id, dataset->dataspace_id, H5P_DEFAULT, &buffer) < 0)
+        {
+            coda_set_error(CODA_ERROR_HDF5, NULL);
+            H5Sclose(mem_space_id);
+            return -1;
+        }
+        size = strlen(buffer);
+
+        /* limit the number of returned characters */
+        if (size > dst_size - 1)
+        {
+            num_chars = dst_size - 1;
+        }
+        else
+        {
+            num_chars = size;
+        }
+        memcpy(dst, buffer, num_chars);
+        ((char *)dst)[num_chars] = '\0';
+
+        if (H5Dvlen_reclaim(datatype_to, mem_space_id, H5P_DEFAULT, &buffer) < 0)
+        {
+            coda_set_error(CODA_ERROR_HDF5, NULL);
+            H5Sclose(mem_space_id);
+            return -1;
+        }
+        return 0;
     }
 
     if (base_type->is_variable_string)
