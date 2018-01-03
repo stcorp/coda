@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2017 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2018 S[&]T, The Netherlands.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -219,7 +219,7 @@ static int get_format(coda_product *raw_product, coda_format *format)
     }
 
     /* netCDF */
-    if (memcmp(buffer, "CDF", 3) == 0 && (buffer[3] == '\001' || buffer[3] == '\002'))
+    if (memcmp(buffer, "CDF", 3) == 0 && (buffer[3] == '\001' || buffer[3] == '\002' || buffer[3] == '\005'))
     {
         *format = coda_format_netcdf;
         return 0;
