@@ -51,8 +51,39 @@
 #include <unistd.h>
 #endif
 
-static int read_dim_array(coda_netcdf_product *product, int64_t *offset, int32_t num_records, int32_t *num_dims,
-                          int32_t **dim_length, int *appendable_dim)
+static int read_length_value(coda_netcdf_product *product, int64_t *offset, int64_t *value)
+{
+    if (product->netcdf_version != 5)
+    {
+        int32_t value32;
+
+        if (read_bytes(product->raw_product, *offset, 4, &value32) < 0)
+        {
+            return -1;
+        }
+#ifndef WORDS_BIGENDIAN
+        swap_int32(&value32);
+#endif
+        *value = (int64_t)value32;
+        *offset += 4;
+    }
+    else
+    {
+        if (read_bytes(product->raw_product, *offset, 8, value) < 0)
+        {
+            return -1;
+        }
+#ifndef WORDS_BIGENDIAN
+        swap_int64(value);
+#endif
+        *offset += 8;
+    }
+
+    return 0;
+}
+
+static int read_dim_array(coda_netcdf_product *product, int64_t *offset, int64_t num_records, int64_t *num_dims,
+                          int64_t **dim_length, int *appendable_dim)
 {
     int32_t tag;
     long i;
@@ -66,15 +97,10 @@ static int read_dim_array(coda_netcdf_product *product, int64_t *offset, int32_t
 #endif
     *offset += 4;
 
-    if (read_bytes(product->raw_product, *offset, 4, num_dims) < 0)
+    if (read_length_value(product, offset, num_dims) != 0)
     {
         return -1;
     }
-#ifndef WORDS_BIGENDIAN
-    swap_int32(num_dims);
-#endif
-    *offset += 4;
-
     if (tag == 0)
     {
         if (*num_dims != 0)
@@ -91,28 +117,23 @@ static int read_dim_array(coda_netcdf_product *product, int64_t *offset, int32_t
         return -1;
     }
 
-    *dim_length = malloc((*num_dims) * sizeof(int32_t));
+    *dim_length = malloc((*num_dims) * sizeof(int64_t));
     if (*dim_length == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
-                       (*num_dims) * sizeof(int32_t), __FILE__, __LINE__);
+                       (*num_dims) * sizeof(int64_t), __FILE__, __LINE__);
         return -1;
     }
 
     for (i = 0; i < *num_dims; i++)
     {
-        int32_t string_length;
+        int64_t string_length;
 
-        /* nelems */
-        if (read_bytes(product->raw_product, *offset, 4, &string_length) < 0)
+        if (read_length_value(product, offset, &string_length) != 0)
         {
             free(*dim_length);
             return -1;
         }
-#ifndef WORDS_BIGENDIAN
-        swap_int32(&string_length);
-#endif
-        *offset += 4;
         /* skip chars + padding */
         *offset += string_length;
         if ((string_length & 3) != 0)
@@ -120,14 +141,11 @@ static int read_dim_array(coda_netcdf_product *product, int64_t *offset, int32_t
             *offset += 4 - (string_length & 3);
         }
         /* dim_length */
-        if (read_bytes(product->raw_product, *offset, 4, &(*dim_length)[i]) < 0)
+        if (read_length_value(product, offset, &(*dim_length)[i]) != 0)
         {
+            free(*dim_length);
             return -1;
         }
-#ifndef WORDS_BIGENDIAN
-        swap_int32(&(*dim_length)[i]);
-#endif
-        *offset += 4;
         if ((*dim_length)[i] == 0)
         {
             /* appendable dimension */
@@ -144,7 +162,7 @@ static int read_att_array(coda_netcdf_product *product, int64_t *offset, coda_me
 {
     coda_type_record *attributes_definition;
     int32_t tag;
-    int32_t num_att;
+    int64_t num_att;
     long i;
 
     if (read_bytes(product->raw_product, *offset, 4, &tag) < 0)
@@ -156,15 +174,10 @@ static int read_att_array(coda_netcdf_product *product, int64_t *offset, coda_me
 #endif
     *offset += 4;
 
-    if (read_bytes(product->raw_product, *offset, 4, &num_att) < 0)
+    if (read_length_value(product, offset, &num_att) != 0)
     {
         return -1;
     }
-#ifndef WORDS_BIGENDIAN
-    swap_int32(&num_att);
-#endif
-    *offset += 4;
-
     if (tag == 0)
     {
         *attributes = NULL;
@@ -197,22 +210,17 @@ static int read_att_array(coda_netcdf_product *product, int64_t *offset, coda_me
     for (i = 0; i < num_att; i++)
     {
         coda_netcdf_basic_type *basic_type;
-        int32_t string_length;
+        int64_t string_length;
         int32_t nc_type;
-        int32_t nelems;
+        int64_t nelems;
         long value_length;
         char *name;
 
         /* nelems */
-        if (read_bytes(product->raw_product, *offset, 4, &string_length) < 0)
+        if (read_length_value(product, offset, &string_length) != 0)
         {
-            coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
             return -1;
         }
-#ifndef WORDS_BIGENDIAN
-        swap_int32(&string_length);
-#endif
-        *offset += 4;
         /* chars */
         name = malloc(string_length + 1);
         if (name == NULL)
@@ -247,16 +255,10 @@ static int read_att_array(coda_netcdf_product *product, int64_t *offset, coda_me
 #endif
         *offset += 4;
         /* nelems */
-        if (read_bytes(product->raw_product, *offset, 4, &nelems) < 0)
+        if (read_length_value(product, offset, &nelems) != 0)
         {
-            free(name);
-            coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
             return -1;
         }
-#ifndef WORDS_BIGENDIAN
-        swap_int32(&nelems);
-#endif
-        *offset += 4;
         value_length = nelems;
         switch (nc_type)
         {
@@ -338,9 +340,13 @@ static int read_att_array(coda_netcdf_product *product, int64_t *offset, coda_me
                 union
                 {
                     int8_t as_int8[8];
+                    uint8_t as_uint8[8];
                     int16_t as_int16[4];
+                    uint16_t as_uint16[4];
                     int32_t as_int32[2];
+                    uint32_t as_uint32[2];
                     int64_t as_int64[1];
+                    uint64_t as_uint64[1];
                     float as_float[2];
                     double as_double[1];
                 } value;
@@ -379,6 +385,33 @@ static int read_att_array(coda_netcdf_product *product, int64_t *offset, coda_me
                         swap_double(value.as_double);
 #endif
                         conversion->invalid_value = value.as_double[0];
+                        break;
+                    case 7:
+                        conversion->invalid_value = (double)value.as_uint8[0];
+                        break;
+                    case 8:
+#ifndef WORDS_BIGENDIAN
+                        swap_uint16(value.as_uint16);
+#endif
+                        conversion->invalid_value = (double)value.as_uint16[0];
+                        break;
+                    case 9:
+#ifndef WORDS_BIGENDIAN
+                        swap_uint32(value.as_uint32);
+#endif
+                        conversion->invalid_value = (double)value.as_uint32[0];
+                        break;
+                    case 10:
+#ifndef WORDS_BIGENDIAN
+                        swap_int64(value.as_int64);
+#endif
+                        conversion->invalid_value = (double)value.as_int64[0];
+                        break;
+                    case 11:
+#ifndef WORDS_BIGENDIAN
+                        swap_uint64(value.as_uint64);
+#endif
+                        conversion->invalid_value = (double)value.as_uint64[0];
                         break;
                     default:
                         assert(0);
@@ -444,11 +477,11 @@ static int read_att_array(coda_netcdf_product *product, int64_t *offset, coda_me
     return 0;
 }
 
-static int read_var_array(coda_netcdf_product *product, int64_t *offset, int32_t num_dim_lengths, int32_t *dim_length,
+static int read_var_array(coda_netcdf_product *product, int64_t *offset, int64_t num_dim_lengths, int64_t *dim_length,
                           int appendable_dim, coda_mem_record *root)
 {
     int32_t tag;
-    int32_t num_var;
+    int64_t num_var;
     long i;
 
     if (read_bytes(product->raw_product, *offset, 4, &tag) < 0)
@@ -461,15 +494,10 @@ static int read_var_array(coda_netcdf_product *product, int64_t *offset, int32_t
 #endif
     *offset += 4;
 
-    if (read_bytes(product->raw_product, *offset, 4, &num_var) < 0)
+    if (read_length_value(product, offset, &num_var) != 0)
     {
-        coda_set_error(CODA_ERROR_FILE_READ, "could not read from file (%s)", strerror(errno));
         return -1;
     }
-#ifndef WORDS_BIGENDIAN
-    swap_int32(&num_var);
-#endif
-    *offset += 4;
 
     if (tag == 0)
     {
@@ -494,11 +522,11 @@ static int read_var_array(coda_netcdf_product *product, int64_t *offset, int32_t
         coda_conversion *conversion;
         long dim[CODA_MAX_NUM_DIMS];
         int64_t var_offset;
-        int32_t string_length;
+        int64_t string_length;
         int32_t nc_type;
-        int32_t nelems;
-        int32_t vsize;
-        int32_t dim_id;
+        int64_t nelems;
+        int64_t vsize;
+        int64_t dim_id;
         char *name;
         long last_dim_length = 0;
         int last_dim_set = 0;
@@ -506,15 +534,10 @@ static int read_var_array(coda_netcdf_product *product, int64_t *offset, int32_t
         int num_dims;
         long j;
 
-        /* nelems */
-        if (read_bytes(product->raw_product, *offset, 4, &string_length) < 0)
+        if (read_length_value(product, offset, &string_length) != 0)
         {
             return -1;
         }
-#ifndef WORDS_BIGENDIAN
-        swap_int32(&string_length);
-#endif
-        *offset += 4;
         /* chars */
         name = malloc(string_length + 1);
         if (name == NULL)
@@ -536,28 +559,18 @@ static int read_var_array(coda_netcdf_product *product, int64_t *offset, int32_t
             *offset += 4 - (string_length & 3);
         }
         /* nelems */
-        if (read_bytes(product->raw_product, *offset, 4, &nelems) < 0)
+        if (read_length_value(product, offset, &nelems) != 0)
         {
-            free(name);
             return -1;
         }
-#ifndef WORDS_BIGENDIAN
-        swap_int32(&nelems);
-#endif
-        *offset += 4;
         num_dims = 0;
         for (j = 0; j < nelems; j++)
         {
             /* dimid */
-            if (read_bytes(product->raw_product, *offset, 4, &dim_id) < 0)
+            if (read_length_value(product, offset, &dim_id) != 0)
             {
-                free(name);
                 return -1;
             }
-#ifndef WORDS_BIGENDIAN
-            swap_int32(&dim_id);
-#endif
-            *offset += 4;
             if (dim_id < 0 || dim_id >= num_dim_lengths)
             {
                 free(name);
@@ -626,17 +639,13 @@ static int read_var_array(coda_netcdf_product *product, int64_t *offset, int32_t
         }
 
         /* vsize */
-        if (read_bytes(product->raw_product, *offset, 4, &vsize) < 0)
+        if (read_length_value(product, offset, &vsize) != 0)
         {
             coda_dynamic_type_delete((coda_dynamic_type *)attributes);
             coda_conversion_delete(conversion);
             free(name);
             return -1;
         }
-#ifndef WORDS_BIGENDIAN
-        swap_int32(&vsize);
-#endif
-        *offset += 4;
         if (record_var)
         {
             product->record_size += vsize;
@@ -779,9 +788,9 @@ int coda_netcdf_reopen(coda_product **product)
     coda_mem_record *attributes;
     coda_mem_record *root;
     char magic[4];
-    int32_t num_records;
-    int32_t num_dims;
-    int32_t *dim_length = NULL;
+    int64_t num_records;
+    int64_t num_dims;
+    int64_t *dim_length = NULL;
     int64_t offset = 0;
     int appendable_dim = -1;
 
@@ -841,7 +850,7 @@ int coda_netcdf_reopen(coda_product **product)
     }
     assert(magic[0] == 'C' && magic[1] == 'D' && magic[2] == 'F');
     product_file->netcdf_version = magic[3];
-    if (product_file->netcdf_version != 1 && product_file->netcdf_version != 2)
+    if (product_file->netcdf_version != 1 && product_file->netcdf_version != 2 && product_file->netcdf_version != 5)
     {
         coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, "not a supported format version (%d) of the netCDF format",
                        product_file->netcdf_version);
@@ -851,16 +860,12 @@ int coda_netcdf_reopen(coda_product **product)
     offset += 4;
 
     /* numrecs */
-    if (read_bytes(product_file->raw_product, offset, 4, &num_records) < 0)
+    if (read_length_value(product_file, &offset, &num_records) != 0)
     {
         coda_set_error(CODA_ERROR_FILE_READ, "could not read from file (%s)", strerror(errno));
         coda_netcdf_close((coda_product *)product_file);
         return -1;
     }
-#ifndef WORDS_BIGENDIAN
-    swap_int32(&num_records);
-#endif
-    offset += 4;
 
     /* dim_array */
     if (read_dim_array(product_file, &offset, num_records, &num_dims, &dim_length, &appendable_dim) != 0)

@@ -111,11 +111,11 @@ int coda_netcdf_array_set_attributes(coda_netcdf_array *type, coda_mem_record *a
     return 0;
 }
 
-coda_netcdf_basic_type *coda_netcdf_basic_type_new(int nc_type, int64_t offset, int record_var, int length)
+coda_netcdf_basic_type *coda_netcdf_basic_type_new(int nc_type, int64_t offset, int record_var, int64_t length)
 {
     coda_netcdf_basic_type *type;
     coda_native_type read_type;
-    int byte_size;
+    int64_t byte_size;
 
     type = malloc(sizeof(coda_netcdf_basic_type));
     if (type == NULL)

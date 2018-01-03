@@ -82,7 +82,7 @@ typedef struct coda_netcdf_product_struct
 coda_netcdf_array *coda_netcdf_array_new(int num_dims, long dim[CODA_MAX_NUM_DIMS], coda_netcdf_basic_type *base_type);
 int coda_netcdf_array_set_attributes(coda_netcdf_array *type, coda_mem_record *attributes);
 
-coda_netcdf_basic_type *coda_netcdf_basic_type_new(int nc_type, int64_t offset, int record_var, int length);
+coda_netcdf_basic_type *coda_netcdf_basic_type_new(int nc_type, int64_t offset, int record_var, int64_t length);
 int coda_netcdf_basic_type_set_attributes(coda_netcdf_basic_type *type, coda_mem_record *attributes);
 int coda_netcdf_basic_type_set_conversion(coda_netcdf_basic_type *type, coda_conversion *conversion);
 
