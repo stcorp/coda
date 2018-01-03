@@ -219,7 +219,7 @@ static int get_format(coda_product *raw_product, coda_format *format)
     }
 
     /* netCDF */
-    if (memcmp(buffer, "CDF", 3) == 0 && (buffer[3] == '\001' || buffer[3] == '\002' || buffer[3] == '\005'))
+    if (memcmp(buffer, "CDF", 3) == 0 && (buffer[3] == '\001' || buffer[3] == '\002'))
     {
         *format = coda_format_netcdf;
         return 0;
