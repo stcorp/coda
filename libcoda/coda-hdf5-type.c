@@ -476,12 +476,11 @@ static int new_hdf5DataType(hid_t datatype_id, coda_hdf5_data_type **type, int a
     return 1;
 }
 
-static int new_hdf5AttributeDefinition(hid_t attr_id, coda_type **type)
+static int new_hdf5AttributeDefinition(hid_t attr_id, coda_type **type, long *num_elements)
 {
     coda_type *definition = NULL;
     hid_t dataspace_id;
     hid_t datatype_id;
-    hid_t enum_datatype_id = -1;
     hsize_t dim[CODA_MAX_NUM_DIMS];
     int num_dims;
     int i;
@@ -491,6 +490,33 @@ static int new_hdf5AttributeDefinition(hid_t attr_id, coda_type **type)
     {
         coda_set_error(CODA_ERROR_HDF5, NULL);
         return -1;
+    }
+    if (H5Sget_simple_extent_type(dataspace_id) == H5S_NULL)
+    {
+        /* we only support empty attributes if they are strings -> empty string */
+        H5Sclose(dataspace_id);
+
+        datatype_id = H5Aget_type(attr_id);
+        if (datatype_id < 0)
+        {
+            coda_set_error(CODA_ERROR_HDF5, NULL);
+            return -1;
+        }
+        if (H5Tget_class(datatype_id) == H5T_STRING)
+        {
+            H5Tclose(datatype_id);
+            definition = (coda_type *)coda_type_text_new(coda_format_hdf5);
+            if (definition == NULL)
+            {
+                return -1;
+            }
+            *type = definition;
+            *num_elements = 0;
+            return 0;
+        }
+        H5Tclose(datatype_id);
+        /* attribute is not a string */
+        return 1;
     }
     if (!H5Sis_simple(dataspace_id))
     {
@@ -523,16 +549,24 @@ static int new_hdf5AttributeDefinition(hid_t attr_id, coda_type **type)
     H5Sclose(dataspace_id);
 
     datatype_id = H5Aget_type(attr_id);
+    if (datatype_id < 0)
+    {
+        coda_set_error(CODA_ERROR_HDF5, NULL);
+        return -1;
+    }
     switch (H5Tget_class(datatype_id))
     {
         case H5T_ENUM:
-            enum_datatype_id = datatype_id;
-            datatype_id = H5Tget_super(enum_datatype_id);
-            H5Tclose(enum_datatype_id);
-            if (datatype_id < 0)
             {
-                coda_set_error(CODA_ERROR_HDF5, NULL);
-                return -1;
+                hid_t enum_datatype_id = datatype_id;
+
+                datatype_id = H5Tget_super(enum_datatype_id);
+                H5Tclose(enum_datatype_id);
+                if (datatype_id < 0)
+                {
+                    coda_set_error(CODA_ERROR_HDF5, NULL);
+                    return -1;
+                }
             }
             /* pass through and determine native type from super type of enumeration */
         case H5T_INTEGER:
@@ -690,9 +724,9 @@ static int new_hdf5AttributeDefinition(hid_t attr_id, coda_type **type)
             break;
         case H5T_STRING:
             definition = (coda_type *)coda_type_text_new(coda_format_hdf5);
+            H5Tclose(datatype_id);
             if (definition == NULL)
             {
-                H5Tclose(datatype_id);
                 return -1;
             }
             break;
@@ -702,6 +736,7 @@ static int new_hdf5AttributeDefinition(hid_t attr_id, coda_type **type)
             return 1;
     }
 
+    *num_elements = 1;
     if (num_dims > 0)
     {
         coda_type_array *array = NULL;
@@ -729,6 +764,7 @@ static int new_hdf5AttributeDefinition(hid_t attr_id, coda_type **type)
             }
         }
         definition = (coda_type *)array;
+        *num_elements = array->num_elements;
     }
 
     *type = definition;
@@ -748,21 +784,31 @@ static int new_hdf5Attribute(coda_product *product, hid_t attr_id, const char *n
     int result;
     int k;
 
-    result = new_hdf5AttributeDefinition(attr_id, &definition);
+    result = new_hdf5AttributeDefinition(attr_id, &definition, &num_elements);
     if (result != 0)
     {
         return result;
     }
 
+    if (num_elements == 0)
+    {
+        coda_mem_data *element;
+
+        /* treat empty string attributes separately */
+        assert(definition->read_type == coda_native_type_string);
+        element = coda_mem_string_new((coda_type_text *)definition, NULL, product, NULL);
+        coda_type_release(definition);
+        if (element == NULL)
+        {
+            return -1;
+        }
+        *type = (coda_dynamic_type *)element;
+        return 0;
+    }
+
     datatype_id = H5Aget_type(attr_id);
     size = H5Tget_size(datatype_id);
     is_variable_string = H5Tis_variable_str(datatype_id);
-
-    num_elements = 1;
-    if (definition->type_class == coda_array_class)
-    {
-        num_elements = ((coda_type_array *)definition)->num_elements;
-    }
 
     buffer = malloc((size_t)num_elements * size);
     if (buffer == NULL)
@@ -1214,6 +1260,12 @@ int coda_hdf5_create_tree(coda_hdf5_product *product, hid_t loc_id, const char *
                     H5Dclose(dataset->dataset_id);
                     free(dataset);
                     return -1;
+                }
+                if (H5Sget_simple_extent_type(dataset->dataspace_id) == H5S_NULL)
+                {
+                    /* we don't support empty datasets */
+                    coda_hdf5_type_delete((coda_dynamic_type *)dataset);
+                    return 1;
                 }
                 if (!H5Sis_simple(dataset->dataspace_id))
                 {

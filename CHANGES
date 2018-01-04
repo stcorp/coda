@@ -2,6 +2,8 @@
 
 * Fixed issue reading variable length strings from a scalar dataset in HDF5.
 
+* Added support for empty string attributes in HDF5 (i.e. using H5S_NULL).
+
 2.18.3 2017-09-22
 ~~~~~~~~~~~~~~~~~
 
