@@ -1532,7 +1532,9 @@ static float ibmfloat_to_iee754(uint8_t bytes[4])
 
 static int read_grib1_message(coda_grib_product *product, coda_mem_record *message, int64_t file_offset)
 {
+    coda_product *cproduct = (coda_product *)product;
     coda_dynamic_type *type;
+    coda_type *gtype;
     coda_mem_record *bds;
     uint8_t *bitmask = NULL;
     uint8_t buffer[28];
@@ -1554,94 +1556,95 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
 
     section_size = ((buffer[0] * 256) + buffer[1]) * 256 + buffer[2];
 
-    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib1_table2Version], NULL,
-                                                   (coda_product *)product, buffer[3]);
+    gtype = grib_type[grib1_table2Version];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[3]);
     coda_mem_record_add_field(message, "table2Version", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib1_centre], NULL,
-                                                   (coda_product *)product, buffer[4]);
+    gtype = grib_type[grib1_centre];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[4]);
     coda_mem_record_add_field(message, "centre", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib1_generatingProcessIdentifier],
-                                                   NULL, (coda_product *)product, buffer[5]);
+    gtype = grib_type[grib1_generatingProcessIdentifier];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[5]);
     coda_mem_record_add_field(message, "generatingProcessIdentifier", type, 0);
 
     gridDefinition = buffer[6];
-    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib1_gridDefinition], NULL,
-                                                   (coda_product *)product, gridDefinition);
+    gtype = grib_type[grib1_gridDefinition];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, gridDefinition);
     coda_mem_record_add_field(message, "gridDefinition", type, 0);
 
     has_gds = buffer[7] & 0x80 ? 1 : 0;
     has_bms = buffer[7] & 0x40 ? 1 : 0;
 
-    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib1_indicatorOfParameter], NULL,
-                                                   (coda_product *)product, buffer[8]);
+    gtype = grib_type[grib1_indicatorOfParameter];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[8]);
     coda_mem_record_add_field(message, "indicatorOfParameter", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib1_indicatorOfTypeOfLevel], NULL,
-                                                   (coda_product *)product, buffer[9]);
+    gtype = grib_type[grib1_indicatorOfTypeOfLevel];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[9]);
     coda_mem_record_add_field(message, "indicatorOfTypeOfLevel", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)grib_type[grib1_level], NULL,
-                                                    (coda_product *)product, buffer[10] * 256 + buffer[11]);
+    gtype = grib_type[grib1_level];
+    type = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)gtype, NULL, cproduct,
+                                                    buffer[10] * 256 + buffer[11]);
     coda_mem_record_add_field(message, "level", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib1_yearOfCentury], NULL,
-                                                   (coda_product *)product, buffer[12]);
+    gtype = grib_type[grib1_yearOfCentury];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[12]);
     coda_mem_record_add_field(message, "yearOfCentury", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib1_month], NULL,
-                                                   (coda_product *)product, buffer[13]);
+    gtype = grib_type[grib1_month];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[13]);
     coda_mem_record_add_field(message, "month", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib1_day], NULL,
-                                                   (coda_product *)product, buffer[14]);
+    gtype = grib_type[grib1_day];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[14]);
     coda_mem_record_add_field(message, "day", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib1_hour], NULL,
-                                                   (coda_product *)product, buffer[15]);
+    gtype = grib_type[grib1_hour];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[15]);
     coda_mem_record_add_field(message, "hour", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib1_minute], NULL,
-                                                   (coda_product *)product, buffer[16]);
+    gtype = grib_type[grib1_minute];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[16]);
     coda_mem_record_add_field(message, "minute", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib1_unitOfTimeRange], NULL,
-                                                   (coda_product *)product, buffer[17]);
+    gtype = grib_type[grib1_unitOfTimeRange];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[17]);
     coda_mem_record_add_field(message, "unitOfTimeRange", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib1_P1], NULL,
-                                                   (coda_product *)product, buffer[18]);
+    gtype = grib_type[grib1_P1];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[18]);
     coda_mem_record_add_field(message, "P1", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib1_P2], NULL,
-                                                   (coda_product *)product, buffer[19]);
+    gtype = grib_type[grib1_P2];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[19]);
     coda_mem_record_add_field(message, "P2", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib1_timeRangeIndicator], NULL,
-                                                   (coda_product *)product, buffer[20]);
+    gtype = grib_type[grib1_timeRangeIndicator];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[20]);
     coda_mem_record_add_field(message, "timeRangeIndicator", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)grib_type[grib1_numberIncludedInAverage], NULL,
-                                                    (coda_product *)product, buffer[21] * 256 + buffer[22]);
+    gtype = grib_type[grib1_numberIncludedInAverage];
+    type = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)gtype, NULL, cproduct,
+                                                    buffer[21] * 256 + buffer[22]);
     coda_mem_record_add_field(message, "numberIncludedInAverage", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint8_new
-        ((coda_type_number *)grib_type[grib1_numberMissingFromAveragesOrAccumulations], NULL,
-         (coda_product *)product, buffer[23]);
+    gtype = grib_type[grib1_numberMissingFromAveragesOrAccumulations];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[23]);
     coda_mem_record_add_field(message, "numberMissingFromAveragesOrAccumulations", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib1_centuryOfReferenceTimeOfData],
-                                                   NULL, (coda_product *)product, buffer[24]);
+    gtype = grib_type[grib1_centuryOfReferenceTimeOfData];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[24]);
     coda_mem_record_add_field(message, "centuryOfReferenceTimeOfData", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib1_subCentre], NULL,
-                                                   (coda_product *)product, buffer[25]);
+    gtype = grib_type[grib1_subCentre];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[25]);
     coda_mem_record_add_field(message, "subCentre", type, 0);
 
     decimalScaleFactor = (buffer[26] & 0x80 ? -1 : 1) * ((buffer[26] & 0x7F) * 256 + buffer[27]);
-    type = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)grib_type[grib1_decimalScaleFactor], NULL,
-                                                   (coda_product *)product, decimalScaleFactor);
+    gtype = grib_type[grib1_decimalScaleFactor];
+    type = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)gtype, NULL, cproduct, decimalScaleFactor);
     coda_mem_record_add_field(message, "decimalScaleFactor", type, 0);
 
     file_offset += 28;
@@ -1665,8 +1668,8 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
                 free(raw_data);
                 return -1;
             }
-            type = (coda_dynamic_type *)coda_mem_raw_new((coda_type_raw *)grib_type[grib1_local], NULL,
-                                                         (coda_product *)product, section_size - 40, raw_data);
+            type = (coda_dynamic_type *)coda_mem_raw_new((coda_type_raw *)grib_type[grib1_local], NULL, cproduct,
+                                                         section_size - 40, raw_data);
             free(raw_data);
             coda_mem_record_add_field(message, "local", type, 0);
         }
@@ -1709,16 +1712,14 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
             gds = coda_mem_record_new((coda_type_record *)grib_type[grib1_grid], NULL);
 
             NV = buffer[3];
-            type = (coda_dynamic_type *)coda_mem_uint8_new
-                ((coda_type_number *)grib_type[grib1_numberOfVerticalCoordinateValues], NULL, (coda_product *)product,
-                 NV);
+            gtype = grib_type[grib1_numberOfVerticalCoordinateValues];
+            type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, NV);
             coda_mem_record_add_field(gds, "numberOfVerticalCoordinateValues", type, 0);
 
             PVL = buffer[4];
 
-            type =
-                (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib1_dataRepresentationType],
-                                                        NULL, (coda_product *)product, buffer[5]);
+            gtype = grib_type[grib1_dataRepresentationType];
+            type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[5]);
             coda_mem_record_add_field(gds, "dataRepresentationType", type, 0);
 
             if (read_bytes(product->raw_product, file_offset, 26, buffer) < 0)
@@ -1740,66 +1741,60 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
                 num_elements = Ni * Nj;
             }
 
-            type = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)grib_type[grib1_Ni], NULL,
-                                                            (coda_product *)product, Ni);
+            gtype = grib_type[grib1_Ni];
+            type = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)gtype, NULL, cproduct, Ni);
             coda_mem_record_add_field(gds, "Ni", type, 0);
 
-            type = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)grib_type[grib1_Nj], NULL,
-                                                            (coda_product *)product, Nj);
+            gtype = grib_type[grib1_Nj];
+            type = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)gtype, NULL, cproduct, Nj);
             coda_mem_record_add_field(gds, "Nj", type, 0);
 
             intvalue = (buffer[4] & 0x80 ? -1 : 1) * (((buffer[4] & 0x7F) * 256 + buffer[5]) * 256 + buffer[6]);
-            type =
-                (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)grib_type[grib1_latitudeOfFirstGridPoint],
-                                                        NULL, (coda_product *)product, intvalue);
+            gtype = grib_type[grib1_latitudeOfFirstGridPoint];
+            type = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)gtype, NULL, cproduct, intvalue);
             coda_mem_record_add_field(gds, "latitudeOfFirstGridPoint", type, 0);
 
             intvalue = (buffer[7] & 0x80 ? -1 : 1) * (((buffer[7] & 0x7F) * 256 + buffer[8]) * 256 + buffer[9]);
-            type =
-                (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)grib_type[grib1_longitudeOfFirstGridPoint],
-                                                        NULL, (coda_product *)product, intvalue);
+            gtype = grib_type[grib1_longitudeOfFirstGridPoint];
+            type = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)gtype, NULL, cproduct, intvalue);
             coda_mem_record_add_field(gds, "longitudeOfFirstGridPoint", type, 0);
 
-            type =
-                (coda_dynamic_type *)
-                coda_mem_uint8_new((coda_type_number *)grib_type[grib1_resolutionAndComponentFlags], NULL,
-                                   (coda_product *)product, buffer[10]);
+            gtype = grib_type[grib1_resolutionAndComponentFlags];
+            type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[10]);
             coda_mem_record_add_field(gds, "resolutionAndComponentFlags", type, 0);
 
             intvalue = (buffer[11] & 0x80 ? -1 : 1) * (((buffer[11] & 0x7F) * 256 + buffer[12]) * 256 + buffer[13]);
-            type =
-                (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)grib_type[grib1_latitudeOfLastGridPoint],
-                                                        NULL, (coda_product *)product, intvalue);
+            gtype = grib_type[grib1_latitudeOfLastGridPoint];
+            type = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)gtype, NULL, cproduct, intvalue);
             coda_mem_record_add_field(gds, "latitudeOfLastGridPoint", type, 0);
 
             intvalue = (buffer[14] & 0x80 ? -1 : 1) * (((buffer[14] & 0x7F) * 256 + buffer[15]) * 256 + buffer[16]);
-            type =
-                (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)grib_type[grib1_longitudeOfLastGridPoint],
-                                                        NULL, (coda_product *)product, intvalue);
+            gtype = grib_type[grib1_longitudeOfLastGridPoint];
+            type = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)gtype, NULL, cproduct, intvalue);
             coda_mem_record_add_field(gds, "longitudeOfLastGridPoint", type, 0);
 
-            type = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)grib_type[grib1_iDirectionIncrement],
-                                                            NULL, (coda_product *)product,
+            gtype = grib_type[grib1_iDirectionIncrement];
+            type = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)gtype, NULL, cproduct,
                                                             buffer[17] * 256 + buffer[18]);
             coda_mem_record_add_field(gds, "iDirectionIncrement", type, 0);
 
             if (is_gaussian)
             {
-                type = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)grib_type[grib1_N], NULL,
-                                                                (coda_product *)product, buffer[19] * 256 + buffer[20]);
+                gtype = grib_type[grib1_N];
+                type = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)gtype, NULL, cproduct,
+                                                                buffer[19] * 256 + buffer[20]);
                 coda_mem_record_add_field(gds, "N", type, 0);
             }
             else
             {
-                type =
-                    (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)grib_type[grib1_jDirectionIncrement],
-                                                             NULL, (coda_product *)product,
-                                                             buffer[19] * 256 + buffer[20]);
+                gtype = grib_type[grib1_jDirectionIncrement];
+                type = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)gtype, NULL, cproduct,
+                                                                buffer[19] * 256 + buffer[20]);
                 coda_mem_record_add_field(gds, "jDirectionIncrement", type, 0);
             }
 
-            type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib1_scanningMode], NULL,
-                                                           (coda_product *)product, buffer[21]);
+            gtype = grib_type[grib1_scanningMode];
+            type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[21]);
             coda_mem_record_add_field(gds, "scanningMode", type, 0);
 
             file_offset += 26;
@@ -1814,8 +1809,8 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
                 {
                     coda_mem_array *coordinateArray;
 
-                    coordinateArray = coda_mem_array_new((coda_type_array *)grib_type[grib1_coordinateValues_array],
-                                                         NULL);
+                    gtype = grib_type[grib1_coordinateValues_array];
+                    coordinateArray = coda_mem_array_new((coda_type_array *)gtype, NULL);
                     for (i = 0; i < NV; i++)
                     {
                         if (read_bytes(product->raw_product, file_offset, 4, buffer) < 0)
@@ -1824,10 +1819,9 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
                             coda_dynamic_type_delete((coda_dynamic_type *)gds);
                             return -1;
                         }
-                        type =
-                            (coda_dynamic_type *)
-                            coda_mem_float_new((coda_type_number *)grib_type[grib1_coordinateValues], NULL,
-                                               (coda_product *)product, ibmfloat_to_iee754(buffer));
+                        gtype = grib_type[grib1_coordinateValues];
+                        type = (coda_dynamic_type *)coda_mem_float_new((coda_type_number *)gtype, NULL, cproduct,
+                                                                       ibmfloat_to_iee754(buffer));
                         coda_mem_array_add_element(coordinateArray, type);
 
                         file_offset += 4;
@@ -1864,8 +1858,8 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
                         return -1;
                     }
 
-                    listOfNumbersArray = coda_mem_array_new((coda_type_array *)grib_type[grib1_listOfNumbers_array],
-                                                            NULL);
+                    gtype = grib_type[grib1_listOfNumbers_array];
+                    listOfNumbersArray = coda_mem_array_new((coda_type_array *)gtype, NULL);
                     num_elements = 0;
                     for (i = 0; i < N; i++)
                     {
@@ -1876,10 +1870,9 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
                             return -1;
                         }
                         num_elements += buffer[0] * 256 + buffer[1];
-                        type =
-                            (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)grib_type[grib1_listOfNumbers],
-                                                                     NULL, (coda_product *)product,
-                                                                     buffer[0] * 256 + buffer[1]);
+                        gtype = grib_type[grib1_listOfNumbers];
+                        type = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)gtype, NULL, cproduct,
+                                                                        buffer[0] * 256 + buffer[1]);
                         coda_mem_array_add_element(listOfNumbersArray, type);
                         file_offset += 2;
                     }
@@ -2130,14 +2123,14 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
         return -1;
     }
     bds = coda_mem_record_new((coda_type_record *)grib_type[grib1_data], NULL);
-    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib1_bitsPerValue], NULL,
-                                                   (coda_product *)product, bitsPerValue);
+    gtype = grib_type[grib1_bitsPerValue];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, bitsPerValue);
     coda_mem_record_add_field(bds, "bitsPerValue", type, 0);
-    type = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)grib_type[grib1_binaryScaleFactor], NULL,
-                                                   (coda_product *)product, binaryScaleFactor);
+    gtype = grib_type[grib1_binaryScaleFactor];
+    type = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)gtype, NULL, cproduct, binaryScaleFactor);
     coda_mem_record_add_field(bds, "binaryScaleFactor", type, 0);
-    type = (coda_dynamic_type *)coda_mem_float_new((coda_type_number *)grib_type[grib1_referenceValue], NULL,
-                                                   (coda_product *)product, referenceValue);
+    gtype = grib_type[grib1_referenceValue];
+    type = (coda_dynamic_type *)coda_mem_float_new((coda_type_number *)gtype, NULL, cproduct, referenceValue);
     coda_mem_record_add_field(bds, "referenceValue", type, 0);
 
     file_offset += 11;
@@ -2176,10 +2169,12 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
 
 static int read_grib2_message(coda_grib_product *product, coda_mem_record *message, int64_t file_offset)
 {
+    coda_product *cproduct = (coda_product *)product;
     coda_mem_array *localArray;
     coda_mem_array *gridArray;
     coda_mem_array *dataArray;
     coda_dynamic_type *type;
+    coda_type *gtype;
     int has_bitmask = 0;
     int64_t bitmask_offset = -1;
     int64_t bitmask_length = 0;
@@ -2228,57 +2223,59 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
     }
     prev_section = 1;
 
-    type = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)grib_type[grib2_centre], NULL,
-                                                    (coda_product *)product, buffer[5] * 256 + buffer[6]);
+    gtype = grib_type[grib2_centre];
+    type = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)gtype, NULL, cproduct,
+                                                    buffer[5] * 256 + buffer[6]);
     coda_mem_record_add_field(message, "centre", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)grib_type[grib2_subCentre], NULL,
-                                                    (coda_product *)product, buffer[7] * 256 + buffer[8]);
+    gtype = grib_type[grib2_subCentre];
+    type = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)gtype, NULL, cproduct,
+                                                    buffer[7] * 256 + buffer[8]);
     coda_mem_record_add_field(message, "subCentre", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib2_masterTablesVersion], NULL,
-                                                   (coda_product *)product, buffer[9]);
+    gtype = grib_type[grib2_masterTablesVersion];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[9]);
     coda_mem_record_add_field(message, "masterTablesVersion", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib2_localTablesVersion], NULL,
-                                                   (coda_product *)product, buffer[10]);
+    gtype = grib_type[grib2_localTablesVersion];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[10]);
     coda_mem_record_add_field(message, "localTablesVersion", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib2_significanceOfReferenceTime],
-                                                   NULL, (coda_product *)product, buffer[11]);
+    gtype = grib_type[grib2_significanceOfReferenceTime];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[11]);
     coda_mem_record_add_field(message, "significanceOfReferenceTime", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)grib_type[grib2_year], NULL,
-                                                    (coda_product *)product, buffer[12] * 256 + buffer[13]);
+    gtype = grib_type[grib2_year];
+    type = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)gtype, NULL, cproduct,
+                                                    buffer[12] * 256 + buffer[13]);
     coda_mem_record_add_field(message, "year", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib2_month], NULL,
-                                                   (coda_product *)product, buffer[14]);
+    gtype = grib_type[grib2_month];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[14]);
     coda_mem_record_add_field(message, "month", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib2_day], NULL,
-                                                   (coda_product *)product, buffer[15]);
+    gtype = grib_type[grib2_day];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[15]);
     coda_mem_record_add_field(message, "day", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib2_hour], NULL,
-                                                   (coda_product *)product, buffer[16]);
+    gtype = grib_type[grib2_hour];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[16]);
     coda_mem_record_add_field(message, "hour", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib2_minute], NULL,
-                                                   (coda_product *)product, buffer[17]);
+    gtype = grib_type[grib2_minute];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[17]);
     coda_mem_record_add_field(message, "minute", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib2_second], NULL,
-                                                   (coda_product *)product, buffer[18]);
+    gtype = grib_type[grib2_second];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[18]);
     coda_mem_record_add_field(message, "second", type, 0);
 
-    type =
-        (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib2_productionStatusOfProcessedData],
-                                                NULL, (coda_product *)product, buffer[19]);
+    gtype = grib_type[grib2_productionStatusOfProcessedData];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[19]);
     coda_mem_record_add_field(message, "productionStatusOfProcessedData", type, 0);
 
-    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib2_typeOfProcessedData], NULL,
-                                                   (coda_product *)product, buffer[20]);
+    gtype = grib_type[grib2_typeOfProcessedData];
+    type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[20]);
     coda_mem_record_add_field(message, "typeOfProcessedData", type, 0);
 
     localArray = coda_mem_array_new((coda_type_array *)grib_type[grib2_local_array], NULL);
@@ -2340,8 +2337,9 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                     free(raw_data);
                     return -1;
                 }
-                type = (coda_dynamic_type *)coda_mem_raw_new((coda_type_raw *)grib_type[grib2_local], NULL,
-                                                             (coda_product *)product, section_size - 5, raw_data);
+                gtype = grib_type[grib2_local];
+                type = (coda_dynamic_type *)coda_mem_raw_new((coda_type_raw *)gtype, NULL, cproduct, section_size - 5,
+                                                             raw_data);
                 coda_mem_array_add_element(localArray, type);
                 file_offset += section_size - 5;
                 localRecordIndex++;
@@ -2371,33 +2369,29 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
 
             grid = coda_mem_record_new((coda_type_record *)grib_type[grib2_grid], NULL);
 
-            type = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)grib_type[grib2_localRecordIndex],
-                                                           NULL, (coda_product *)product, localRecordIndex);
+            gtype = grib_type[grib2_localRecordIndex];
+            type = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)gtype, NULL, cproduct, localRecordIndex);
             coda_mem_record_add_field(grid, "localRecordIndex", type, 0);
 
-            type =
-                (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib2_sourceOfGridDefinition],
-                                                        NULL, (coda_product *)product, buffer[0]);
+            gtype = grib_type[grib2_sourceOfGridDefinition];
+            type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[0]);
             coda_mem_record_add_field(grid, "sourceOfGridDefinition", type, 0);
 
             num_data_points = ((buffer[1] * 256 + buffer[2]) * 256 + buffer[3]) * 256 + buffer[4];
-            type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)grib_type[grib2_numberOfDataPoints],
-                                                            NULL, (coda_product *)product, num_data_points);
+            gtype = grib_type[grib2_numberOfDataPoints];
+            type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)gtype, NULL, cproduct, num_data_points);
             coda_mem_record_add_field(grid, "numberOfDataPoints", type, 0);
 
             number_size = buffer[5];
             number_interpretation = buffer[6];
-            type =
-                (coda_dynamic_type *)
-                coda_mem_uint8_new((coda_type_number *)grib_type[grib2_interpretationOfListOfNumbers], NULL,
-                                   (coda_product *)product, number_interpretation);
+            gtype = grib_type[grib2_interpretationOfListOfNumbers];
+            type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct,
+                                                           number_interpretation);
             coda_mem_record_add_field(grid, "interpretationOfListOfNumbers", type, 0);
 
             template_number = buffer[7] * 256 + buffer[8];
-            type =
-                (coda_dynamic_type *)
-                coda_mem_uint16_new((coda_type_number *)grib_type[grib2_gridDefinitionTemplateNumber], NULL,
-                                    (coda_product *)product, template_number);
+            gtype = grib_type[grib2_gridDefinitionTemplateNumber];
+            type = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)gtype, NULL, cproduct, template_number);
             coda_mem_record_add_field(grid, "gridDefinitionTemplateNumber", type, 0);
 
             file_offset += 9;
@@ -2423,134 +2417,108 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                     return -1;
                 }
 
-                type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib2_shapeOfTheEarth],
-                                                               NULL, (coda_product *)product, buffer[0]);
+                gtype = grib_type[grib2_shapeOfTheEarth];
+                type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[0]);
                 coda_mem_record_add_field(grid, "shapeOfTheEarth", type, 0);
 
-                type =
-                    (coda_dynamic_type *)
-                    coda_mem_uint8_new((coda_type_number *)grib_type[grib2_scaleFactorOfRadiusOfSphericalEarth], NULL,
-                                       (coda_product *)product, buffer[1]);
+                gtype = grib_type[grib2_scaleFactorOfRadiusOfSphericalEarth];
+                type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[1]);
                 coda_mem_record_add_field(grid, "scaleFactorOfRadiusOfSphericalEarth", type, 0);
 
                 intvalue = ((buffer[2] * 256 + buffer[3]) * 256 + buffer[4]) * 256 + buffer[5];
-                type =
-                    (coda_dynamic_type *)
-                    coda_mem_uint32_new((coda_type_number *)grib_type[grib2_scaledValueOfRadiusOfSphericalEarth], NULL,
-                                        (coda_product *)product, intvalue);
+                gtype = grib_type[grib2_scaledValueOfRadiusOfSphericalEarth];
+                type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)gtype, NULL, cproduct, intvalue);
                 coda_mem_record_add_field(grid, "scaledValueOfRadiusOfSphericalEarth", type, 0);
 
-                type =
-                    (coda_dynamic_type *)
-                    coda_mem_uint8_new((coda_type_number *)grib_type[grib2_scaleFactorOfEarthMajorAxis], NULL,
-                                       (coda_product *)product, buffer[6]);
+                gtype = grib_type[grib2_scaleFactorOfEarthMajorAxis];
+                type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[6]);
                 coda_mem_record_add_field(grid, "scaleFactorOfEarthMajorAxis", type, 0);
 
                 intvalue = ((buffer[7] * 256 + buffer[8]) * 256 + buffer[9]) * 256 + buffer[10];
-                type =
-                    (coda_dynamic_type *)
-                    coda_mem_uint32_new((coda_type_number *)grib_type[grib2_scaledValueOfEarthMajorAxis], NULL,
-                                        (coda_product *)product, intvalue);
+                gtype = grib_type[grib2_scaledValueOfEarthMajorAxis];
+                type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)gtype, NULL, cproduct, intvalue);
                 coda_mem_record_add_field(grid, "scaledValueOfEarthMajorAxis", type, 0);
 
-                type =
-                    (coda_dynamic_type *)
-                    coda_mem_uint8_new((coda_type_number *)grib_type[grib2_scaleFactorOfEarthMinorAxis], NULL,
-                                       (coda_product *)product, buffer[11]);
+                gtype = grib_type[grib2_scaleFactorOfEarthMinorAxis];
+                type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[11]);
                 coda_mem_record_add_field(grid, "scaleFactorOfEarthMinorAxis", type, 0);
 
                 intvalue = ((buffer[12] * 256 + buffer[13]) * 256 + buffer[14]) * 256 + buffer[15];
-                type =
-                    (coda_dynamic_type *)
-                    coda_mem_uint32_new((coda_type_number *)grib_type[grib2_scaledValueOfEarthMinorAxis], NULL,
-                                        (coda_product *)product, intvalue);
+                gtype = grib_type[grib2_scaledValueOfEarthMinorAxis];
+                type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)gtype, NULL, cproduct, intvalue);
                 coda_mem_record_add_field(grid, "scaledValueOfEarthMinorAxis", type, 0);
 
                 Ni = ((buffer[16] * 256 + buffer[17]) * 256 + buffer[18]) * 256 + buffer[19];
-                type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)grib_type[grib2_Ni], NULL,
-                                                                (coda_product *)product, Ni);
+                gtype = grib_type[grib2_Ni];
+                type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)gtype, NULL, cproduct, Ni);
                 coda_mem_record_add_field(grid, "Ni", type, 0);
 
                 Nj = ((buffer[20] * 256 + buffer[21]) * 256 + buffer[22]) * 256 + buffer[23];
-                type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)grib_type[grib2_Nj], NULL,
-                                                                (coda_product *)product, Nj);
+                gtype = grib_type[grib2_Nj];
+                type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)gtype, NULL, cproduct, Nj);
                 coda_mem_record_add_field(grid, "Nj", type, 0);
 
                 intvalue = ((buffer[24] * 256 + buffer[25]) * 256 + buffer[26]) * 256 + buffer[27];
-                type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)grib_type
-                                                                [grib2_basicAngleOfTheInitialProductionDomain], NULL,
-                                                                (coda_product *)product, intvalue);
+                gtype = grib_type[grib2_basicAngleOfTheInitialProductionDomain];
+                type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)gtype, NULL, cproduct, intvalue);
                 coda_mem_record_add_field(grid, "basicAngleOfTheInitialProductionDomain", type, 0);
 
                 intvalue = ((buffer[28] * 256 + buffer[29]) * 256 + buffer[30]) * 256 + buffer[31];
-                type =
-                    (coda_dynamic_type *)
-                    coda_mem_uint32_new((coda_type_number *)grib_type[grib2_subdivisionsOfBasicAngle], NULL,
-                                        (coda_product *)product, intvalue);
+                gtype = grib_type[grib2_subdivisionsOfBasicAngle];
+                type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)gtype, NULL, cproduct, intvalue);
                 coda_mem_record_add_field(grid, "subdivisionsOfBasicAngle", type, 0);
 
                 intvalue = ((buffer[32] * 256 + buffer[33]) * 256 + buffer[34]) * 256 + buffer[35];
-                type =
-                    (coda_dynamic_type *)
-                    coda_mem_int32_new((coda_type_number *)grib_type[grib2_latitudeOfFirstGridPoint], NULL,
-                                       (coda_product *)product,
-                                       (buffer[32] & 0x80 ? -((int64_t)intvalue - (1 << 31)) : intvalue));
+                intvalue = buffer[32] & 0x80 ? -((int64_t)intvalue - (1 << 31)) : intvalue;
+                gtype = grib_type[grib2_latitudeOfFirstGridPoint];
+                type = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)gtype, NULL, cproduct, intvalue);
                 coda_mem_record_add_field(grid, "latitudeOfFirstGridPoint", type, 0);
 
                 intvalue = ((buffer[36] * 256 + buffer[37]) * 256 + buffer[38]) * 256 + buffer[39];
-                type =
-                    (coda_dynamic_type *)
-                    coda_mem_int32_new((coda_type_number *)grib_type[grib2_longitudeOfFirstGridPoint], NULL,
-                                       (coda_product *)product,
-                                       (buffer[36] & 0x80 ? -((int64_t)intvalue - (1 << 31)) : intvalue));
+                intvalue = buffer[36] & 0x80 ? -((int64_t)intvalue - (1 << 31)) : intvalue;
+                gtype = grib_type[grib2_longitudeOfFirstGridPoint];
+                type = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)gtype, NULL, cproduct, intvalue);
                 coda_mem_record_add_field(grid, "longitudeOfFirstGridPoint", type, 0);
 
-                type =
-                    (coda_dynamic_type *)
-                    coda_mem_uint8_new((coda_type_number *)grib_type[grib2_resolutionAndComponentFlags], NULL,
-                                       (coda_product *)product, buffer[40]);
+                gtype = grib_type[grib2_resolutionAndComponentFlags];
+                type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[40]);
                 coda_mem_record_add_field(grid, "resolutionAndComponentFlags", type, 0);
 
                 intvalue = ((buffer[41] * 256 + buffer[42]) * 256 + buffer[43]) * 256 + buffer[44];
-                type =
-                    (coda_dynamic_type *)
-                    coda_mem_int32_new((coda_type_number *)grib_type[grib2_latitudeOfLastGridPoint], NULL,
-                                       (coda_product *)product,
-                                       (buffer[41] & 0x80 ? -((int64_t)intvalue - (1 << 31)) : intvalue));
+                intvalue = buffer[41] & 0x80 ? -((int64_t)intvalue - (1 << 31)) : intvalue;
+                gtype = grib_type[grib2_latitudeOfLastGridPoint];
+                type = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)gtype, NULL, cproduct, intvalue);
                 coda_mem_record_add_field(grid, "latitudeOfLastGridPoint", type, 0);
 
                 intvalue = ((buffer[45] * 256 + buffer[46]) * 256 + buffer[47]) * 256 + buffer[48];
-                type =
-                    (coda_dynamic_type *)
-                    coda_mem_int32_new((coda_type_number *)grib_type[grib2_longitudeOfLastGridPoint], NULL,
-                                       (coda_product *)product,
-                                       (buffer[45] & 0x80 ? -((int64_t)intvalue - (1 << 31)) : intvalue));
+                intvalue = buffer[45] & 0x80 ? -((int64_t)intvalue - (1 << 31)) : intvalue;
+                gtype = grib_type[grib2_longitudeOfLastGridPoint];
+                type = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)gtype, NULL, cproduct, intvalue);
                 coda_mem_record_add_field(grid, "longitudeOfLastGridPoint", type, 0);
 
                 intvalue = ((buffer[49] * 256 + buffer[50]) * 256 + buffer[51]) * 256 + buffer[52];
-                type =
-                    (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)grib_type[grib2_iDirectionIncrement],
-                                                             NULL, (coda_product *)product, intvalue);
+                gtype = grib_type[grib2_iDirectionIncrement];
+                type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)gtype, NULL, cproduct, intvalue);
                 coda_mem_record_add_field(grid, "iDirectionIncrement", type, 0);
 
                 intvalue = ((buffer[53] * 256 + buffer[54]) * 256 + buffer[55]) * 256 + buffer[56];
                 if (template_number >= 40 && template_number <= 43)
                 {
-                    type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)grib_type[grib2_N], NULL,
-                                                                    (coda_product *)product, intvalue);
+                    gtype = grib_type[grib2_N];
+                    type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)gtype, NULL, cproduct,
+                                                                    intvalue);
                     coda_mem_record_add_field(grid, "N", type, 0);
                 }
                 else
                 {
-                    type =
-                        (coda_dynamic_type *)
-                        coda_mem_uint32_new((coda_type_number *)grib_type[grib2_jDirectionIncrement], NULL,
-                                            (coda_product *)product, intvalue);
+                    gtype = grib_type[grib2_jDirectionIncrement];
+                    type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)gtype, NULL, cproduct,
+                                                                    intvalue);
                     coda_mem_record_add_field(grid, "jDirectionIncrement", type, 0);
                 }
 
-                type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib2_scanningMode],
-                                                               NULL, (coda_product *)product, buffer[57]);
+                gtype = grib_type[grib2_scanningMode];
+                type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[57]);
                 coda_mem_record_add_field(grid, "scanningMode", type, 0);
 
                 file_offset += 58;
@@ -2585,8 +2553,8 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                         return -1;
                     }
 
-                    listOfNumbersArray = coda_mem_array_new((coda_type_array *)grib_type[grib2_listOfNumbers_array],
-                                                            NULL);
+                    gtype = grib_type[grib2_listOfNumbers_array];
+                    listOfNumbersArray = coda_mem_array_new((coda_type_array *)gtype, NULL);
                     for (i = 0; i < N; i++)
                     {
                         uint32_t value;
@@ -2615,9 +2583,9 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                                 coda_dynamic_type_delete((coda_dynamic_type *)grid);
                                 return -1;
                         }
-                        type =
-                            (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)grib_type[grib2_listOfNumbers],
-                                                                     NULL, (coda_product *)product, value);
+                        gtype = grib_type[grib2_listOfNumbers];
+                        type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)gtype, NULL, cproduct,
+                                                                        value);
                         coda_mem_array_add_element(listOfNumbersArray, type);
                         file_offset += number_size;
                     }
@@ -2868,93 +2836,98 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
 
             data = coda_mem_record_new((coda_type_record *)grib_type[grib2_data], NULL);
 
-            type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)grib_type[grib2_gridRecordIndex], NULL,
-                                                            (coda_product *)product, gridSectionIndex);
+            gtype = grib_type[grib2_gridRecordIndex];
+            type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)gtype, NULL, cproduct,
+                                                            gridSectionIndex);
             coda_mem_record_add_field(data, "gridRecordIndex", type, 0);
 
-            type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib2_parameterCategory],
-                                                           NULL, (coda_product *)product, parameterCategory);
+            gtype = grib_type[grib2_parameterCategory];
+            type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct,
+                                                           parameterCategory);
             coda_mem_record_add_field(data, "parameterCategory", type, 0);
 
-            type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib2_parameterNumber], NULL,
-                                                           (coda_product *)product, parameterNumber);
+            gtype = grib_type[grib2_parameterNumber];
+            type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, parameterNumber);
             coda_mem_record_add_field(data, "parameterNumber", type, 0);
 
-            type =
-                (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib2_typeOfGeneratingProcess],
-                                                        NULL, (coda_product *)product, typeOfGeneratingProcess);
+            gtype = grib_type[grib2_typeOfGeneratingProcess];
+            type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct,
+                                                           typeOfGeneratingProcess);
             coda_mem_record_add_field(data, "typeOfGeneratingProcess", type, 0);
 
-            type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib2_backgroundProcess],
-                                                           NULL, (coda_product *)product, backgroundProcess);
+            gtype = grib_type[grib2_backgroundProcess];
+            type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct,
+                                                           backgroundProcess);
             coda_mem_record_add_field(data, "backgroundProcess", type, 0);
 
-            type =
-                (coda_dynamic_type *)
-                coda_mem_uint8_new((coda_type_number *)grib_type[grib2_generatingProcessIdentifier], NULL,
-                                   (coda_product *)product, generatingProcessIdentifier);
+            gtype = grib_type[grib2_generatingProcessIdentifier];
+            type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct,
+                                                           generatingProcessIdentifier);
             coda_mem_record_add_field(data, "generatingProcessIdentifier", type, 0);
 
-            type = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)grib_type[grib2_hoursAfterDataCutoff],
-                                                            NULL, (coda_product *)product, hoursAfterDataCutoff);
+            gtype = grib_type[grib2_hoursAfterDataCutoff];
+            type = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)gtype, NULL, cproduct,
+                                                            hoursAfterDataCutoff);
             coda_mem_record_add_field(data, "hoursAfterDataCutoff", type, 0);
 
-            type =
-                (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib2_minutesAfterDataCutoff],
-                                                        NULL, (coda_product *)product, minutesAfterDataCutoff);
+            gtype = grib_type[grib2_minutesAfterDataCutoff];
+            type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct,
+                                                           minutesAfterDataCutoff);
             coda_mem_record_add_field(data, "minutesAfterDataCutoff", type, 0);
 
-            type =
-                (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib2_indicatorOfUnitOfTimeRange],
-                                                        NULL, (coda_product *)product, indicatorOfUnitOfTimeRange);
+            gtype = grib_type[grib2_indicatorOfUnitOfTimeRange];
+            type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct,
+                                                           indicatorOfUnitOfTimeRange);
             coda_mem_record_add_field(data, "indicatorOfUnitOfTimeRange", type, 0);
 
-            type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)grib_type[grib2_forecastTime], NULL,
-                                                            (coda_product *)product, forecastTime);
+            gtype = grib_type[grib2_forecastTime];
+            type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)gtype, NULL, cproduct, forecastTime);
             coda_mem_record_add_field(data, "forecastTime", type, 0);
 
-            type =
-                (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib2_typeOfFirstFixedSurface],
-                                                        NULL, (coda_product *)product, typeOfFirstFixedSurface);
+            gtype = grib_type[grib2_typeOfFirstFixedSurface];
+            type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct,
+                                                           typeOfFirstFixedSurface);
             coda_mem_record_add_field(data, "typeOfFirstFixedSurface", type, 0);
 
-            type = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)grib_type[grib2_firstFixedSurface],
-                                                            NULL, (coda_product *)product, firstFixedSurface);
+            gtype = grib_type[grib2_firstFixedSurface];
+            type = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)gtype, NULL, cproduct,
+                                                            firstFixedSurface);
             coda_mem_record_add_field(data, "firstFixedSurface", type, 0);
 
-            type =
-                (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib2_typeOfSecondFixedSurface],
-                                                        NULL, (coda_product *)product, typeOfSecondFixedSurface);
+            gtype = grib_type[grib2_typeOfSecondFixedSurface];
+            type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct,
+                                                           typeOfSecondFixedSurface);
             coda_mem_record_add_field(data, "typeOfSecondFixedSurface", type, 0);
 
-            type = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)grib_type[grib2_secondFixedSurface],
-                                                            NULL, (coda_product *)product, secondFixedSurface);
+            gtype = grib_type[grib2_secondFixedSurface];
+            type = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)gtype, NULL, cproduct,
+                                                            secondFixedSurface);
             coda_mem_record_add_field(data, "secondFixedSurface", type, 0);
 
             if (num_coordinate_values > 0)
             {
-                type =
-                    (coda_dynamic_type *)
-                    coda_grib_value_array_new((coda_type_array *)grib_type[grib2_coordinateValues_array],
-                                              num_coordinate_values, coordinate_values_offset);
-
+                gtype = grib_type[grib2_coordinateValues_array];
+                type = (coda_dynamic_type *)coda_grib_value_array_new((coda_type_array *)gtype, num_coordinate_values,
+                                                                      coordinate_values_offset);
                 coda_mem_record_add_field(data, "coordinateValues", type, 0);
             }
 
-            type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)grib_type[grib2_bitsPerValue], NULL,
-                                                           (coda_product *)product, bitsPerValue);
+            gtype = grib_type[grib2_bitsPerValue];
+            type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, bitsPerValue);
             coda_mem_record_add_field(data, "bitsPerValue", type, 0);
 
-            type = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)grib_type[grib2_decimalScaleFactor],
-                                                           NULL, (coda_product *)product, decimalScaleFactor);
+            gtype = grib_type[grib2_decimalScaleFactor];
+            type = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)gtype, NULL, cproduct,
+                                                           decimalScaleFactor);
             coda_mem_record_add_field(data, "decimalScaleFactor", type, 0);
 
-            type = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)grib_type[grib2_binaryScaleFactor],
-                                                           NULL, (coda_product *)product, binaryScaleFactor);
+            gtype = grib_type[grib2_binaryScaleFactor];
+            type = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)gtype, NULL, cproduct,
+                                                           binaryScaleFactor);
             coda_mem_record_add_field(data, "binaryScaleFactor", type, 0);
 
-            type = (coda_dynamic_type *)coda_mem_float_new((coda_type_number *)grib_type[grib2_referenceValue], NULL,
-                                                           (coda_product *)product, referenceValue);
+            gtype = grib_type[grib2_referenceValue];
+            type = (coda_dynamic_type *)coda_mem_float_new((coda_type_number *)gtype, NULL, cproduct, referenceValue);
             coda_mem_record_add_field(data, "referenceValue", type, 0);
 
             if (has_bitmask)
@@ -2974,11 +2947,11 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                 }
             }
 
-            type =
-                (coda_dynamic_type *)
-                coda_grib_value_array_simple_packing_new((coda_type_array *)grib_type[grib2_values], num_elements,
-                                                         file_offset, bitsPerValue, decimalScaleFactor,
-                                                         binaryScaleFactor, referenceValue, bitmask);
+            gtype = grib_type[grib2_values];
+            type = (coda_dynamic_type *)coda_grib_value_array_simple_packing_new((coda_type_array *)gtype, num_elements,
+                                                                                 file_offset, bitsPerValue,
+                                                                                 decimalScaleFactor, binaryScaleFactor,
+                                                                                 referenceValue, bitmask);
             if (bitmask != NULL)
             {
                 free(bitmask);
