@@ -698,10 +698,10 @@ static void read_array_data(int depth, int array_depth, int record_depth)
                                                                    coda_array_ordering_c);
                             break;
                         case coda_special_complex:
-                            result = coda_cursor_read_complex_double_pairs_array(&traverse_info.cursor,
-                                                                                 (double *)&hdf4_info.data[hdf4_info.
-                                                                                                           offset],
-                                                                                 coda_array_ordering_c);
+                            result =
+                                coda_cursor_read_complex_double_pairs_array(&traverse_info.cursor,
+                                                                            (double *)&hdf4_info.data[hdf4_info.offset],
+                                                                            coda_array_ordering_c);
                             break;
                         case coda_special_no_data:
                             assert(0);
