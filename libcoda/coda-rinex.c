@@ -1984,6 +1984,7 @@ static int handle_observation_definition(ingest_info *info, char *line)
 static int read_observation_header(ingest_info *info)
 {
     coda_dynamic_type *value;
+    coda_type *rtype;
     char line[MAX_LINE_LENGTH];
     long linelength;
     double double_value;
@@ -2015,25 +2016,25 @@ static int read_observation_header(ingest_info *info)
             memcpy(str, line, 20);
             str[20] = '\0';
             rtrim(str);
-            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_program], NULL,
-                                                             info->product, str);
+            rtype = rinex_type[rinex_program];
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
             coda_mem_record_add_field(info->header, "program", value, 0);
             memcpy(str, &line[20], 20);
             rtrim(str);
-            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_run_by], NULL,
-                                                             info->product, str);
+            rtype = rinex_type[rinex_run_by];
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
             coda_mem_record_add_field(info->header, "run_by", value, 0);
             memcpy(str, &line[40], 15);
             str[15] = '\0';
-            base_type = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_datetime_string],
-                                                                 NULL, info->product, str);
-            value = (coda_dynamic_type *)coda_mem_time_new((coda_type_special *)rinex_type[rinex_datetime], NULL,
-                                                           base_type);
+            rtype = rinex_type[rinex_datetime_string];
+            base_type = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
+            rtype = rinex_type[rinex_datetime];
+            value = (coda_dynamic_type *)coda_mem_time_new((coda_type_special *)rtype, NULL, base_type);
             coda_mem_record_add_field(info->header, "datetime", value, 0);
             memcpy(str, &line[56], 3);
             str[3] = '\0';
-            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_datetime_time_zone],
-                                                             NULL, info->product, str);
+            rtype = rinex_type[rinex_datetime_time_zone];
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
             coda_mem_record_add_field(info->header, "datetime_time_zone", value, 0);
         }
         else if (strncmp(&line[60], "COMMENT", 7) == 0)
@@ -2045,8 +2046,8 @@ static int read_observation_header(ingest_info *info)
             memcpy(str, line, 60);
             str[60] = '\0';
             rtrim(str);
-            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_marker_name], NULL,
-                                                             info->product, str);
+            rtype = rinex_type[rinex_marker_name];
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
             coda_mem_record_add_field(info->header, "marker_name", value, 0);
         }
         else if (strncmp(&line[60], "MARKER NUMBER", 13) == 0)
@@ -2054,8 +2055,8 @@ static int read_observation_header(ingest_info *info)
             memcpy(str, line, 20);
             str[20] = '\0';
             rtrim(str);
-            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_marker_number], NULL,
-                                                             info->product, str);
+            rtype = rinex_type[rinex_marker_number];
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
             coda_mem_record_add_field(info->header, "marker_number", value, 0);
         }
         else if (strncmp(&line[60], "MARKER TYPE", 10) == 0)
@@ -2063,8 +2064,8 @@ static int read_observation_header(ingest_info *info)
             memcpy(str, line, 20);
             str[20] = '\0';
             rtrim(str);
-            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_marker_type], NULL,
-                                                             info->product, str);
+            rtype = rinex_type[rinex_marker_type];
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
             coda_mem_record_add_field(info->header, "marker_type", value, 0);
         }
         else if (strncmp(&line[60], "OBSERVER / AGENCY", 17) == 0)
@@ -2072,14 +2073,14 @@ static int read_observation_header(ingest_info *info)
             memcpy(str, line, 20);
             str[20] = '\0';
             rtrim(str);
-            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_observer], NULL,
-                                                             info->product, str);
+            rtype = rinex_type[rinex_observer];
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
             coda_mem_record_add_field(info->header, "observer", value, 0);
             memcpy(str, &line[20], 40);
             str[40] = '\0';
             rtrim(str);
-            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_agency], NULL,
-                                                             info->product, str);
+            rtype = rinex_type[rinex_agency];
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
             coda_mem_record_add_field(info->header, "agency", value, 0);
         }
         else if (strncmp(&line[60], "REC # / TYPE / VERS", 19) == 0)
@@ -2087,20 +2088,20 @@ static int read_observation_header(ingest_info *info)
             memcpy(str, line, 20);
             str[20] = '\0';
             rtrim(str);
-            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_receiver_number], NULL,
-                                                             info->product, str);
+            rtype = rinex_type[rinex_receiver_number];
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
             coda_mem_record_add_field(info->header, "receiver_number", value, 0);
             memcpy(str, &line[20], 20);
             str[20] = '\0';
             rtrim(str);
-            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_receiver_type], NULL,
-                                                             info->product, str);
+            rtype = rinex_type[rinex_receiver_type];
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
             coda_mem_record_add_field(info->header, "receiver_type", value, 0);
             memcpy(str, &line[40], 20);
             str[20] = '\0';
             rtrim(str);
-            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_receiver_version], NULL,
-                                                             info->product, str);
+            rtype = rinex_type[rinex_receiver_version];
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
             coda_mem_record_add_field(info->header, "receiver_version", value, 0);
         }
         else if (strncmp(&line[60], "ANT # / TYPE", 10) == 0)
@@ -2108,14 +2109,14 @@ static int read_observation_header(ingest_info *info)
             memcpy(str, line, 20);
             str[20] = '\0';
             rtrim(str);
-            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_antenna_number], NULL,
-                                                             info->product, str);
+            rtype = rinex_type[rinex_antenna_number];
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
             coda_mem_record_add_field(info->header, "antenna_number", value, 0);
             memcpy(str, &line[20], 20);
             str[20] = '\0';
             rtrim(str);
-            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_antenna_type], NULL,
-                                                             info->product, str);
+            rtype = rinex_type[rinex_antenna_type];
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
             coda_mem_record_add_field(info->header, "antenna_type", value, 0);
         }
         else if (strncmp(&line[60], "APPROX POSITION XYZ", 19) == 0)
@@ -2125,24 +2126,27 @@ static int read_observation_header(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_float_new((coda_type_number *)rinex_type[rinex_approx_position_x],
-                                                            NULL, info->product, (float)double_value);
+            rtype = rinex_type[rinex_approx_position_x];
+            value = (coda_dynamic_type *)coda_mem_float_new((coda_type_number *)rtype, NULL, info->product,
+                                                            (float)double_value);
             coda_mem_record_add_field(info->header, "approx_position_x", value, 0);
             if (coda_ascii_parse_double(&line[14], 14, &double_value, 0) < 0)
             {
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 14);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_float_new((coda_type_number *)rinex_type[rinex_approx_position_y],
-                                                            NULL, info->product, (float)double_value);
+            rtype = rinex_type[rinex_approx_position_y];
+            value = (coda_dynamic_type *)coda_mem_float_new((coda_type_number *)rtype, NULL, info->product,
+                                                            (float)double_value);
             coda_mem_record_add_field(info->header, "approx_position_y", value, 0);
             if (coda_ascii_parse_double(&line[28], 14, &double_value, 0) < 0)
             {
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 28);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_float_new((coda_type_number *)rinex_type[rinex_approx_position_z],
-                                                            NULL, info->product, (float)double_value);
+            rtype = rinex_type[rinex_approx_position_z];
+            value = (coda_dynamic_type *)coda_mem_float_new((coda_type_number *)rtype, NULL, info->product,
+                                                            (float)double_value);
             coda_mem_record_add_field(info->header, "approx_position_z", value, 0);
         }
         else if (strncmp(&line[60], "ANTENNA: DELTA H/E/N", 20) == 0)
@@ -2152,24 +2156,27 @@ static int read_observation_header(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->product, info->offset);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_float_new((coda_type_number *)rinex_type[rinex_antenna_delta_h], NULL,
-                                                            info->product, (float)double_value);
+            rtype = rinex_type[rinex_antenna_delta_h];
+            value = (coda_dynamic_type *)coda_mem_float_new((coda_type_number *)rtype, NULL, info->product,
+                                                            (float)double_value);
             coda_mem_record_add_field(info->header, "antenna_delta_h", value, 0);
             if (coda_ascii_parse_double(&line[14], 14, &double_value, 0) < 0)
             {
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 14);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_float_new((coda_type_number *)rinex_type[rinex_antenna_delta_e], NULL,
-                                                            info->product, (float)double_value);
+            rtype = rinex_type[rinex_antenna_delta_e];
+            value = (coda_dynamic_type *)coda_mem_float_new((coda_type_number *)rtype, NULL, info->product,
+                                                            (float)double_value);
             coda_mem_record_add_field(info->header, "antenna_delta_e", value, 0);
             if (coda_ascii_parse_double(&line[28], 14, &double_value, 0) < 0)
             {
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 28);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_float_new((coda_type_number *)rinex_type[rinex_antenna_delta_n], NULL,
-                                                            info->product, (float)double_value);
+            rtype = rinex_type[rinex_antenna_delta_n];
+            value = (coda_dynamic_type *)coda_mem_float_new((coda_type_number *)rtype, NULL, info->product,
+                                                            (float)double_value);
             coda_mem_record_add_field(info->header, "antenna_delta_n", value, 0);
         }
         else if (strncmp(&line[60], "ANTENNA: DELTA X/Y/Z", 20) == 0)
@@ -2202,8 +2209,8 @@ static int read_observation_header(ingest_info *info)
             memcpy(str, line, 20);
             str[20] = '\0';
             rtrim(str);
-            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_signal_strength_unit],
-                                                             NULL, info->product, str);
+            rtype = rinex_type[rinex_signal_strength_unit];
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
             coda_mem_record_add_field(info->header, "signal_strength_unit", value, 0);
         }
         else if (strncmp(&line[60], "INTERVAL", 8) == 0)
@@ -2213,8 +2220,9 @@ static int read_observation_header(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_obs_interval], NULL,
-                                                             info->product, double_value);
+            rtype = rinex_type[rinex_obs_interval];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             double_value);
             coda_mem_record_add_field(info->header, "obs_interval", value, 0);
         }
         else if (strncmp(&line[60], "TIME OF FIRST OBS", 17) == 0)
@@ -2223,12 +2231,10 @@ static int read_observation_header(ingest_info *info)
 
             memcpy(str, line, 43);
             str[43] = '\0';
-            base_type =
-                (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_time_of_first_obs_string],
-                                                         NULL, info->product, str);
-            value =
-                (coda_dynamic_type *)coda_mem_time_new((coda_type_special *)rinex_type[rinex_time_of_first_obs], NULL,
-                                                       base_type);
+            rtype = rinex_type[rinex_time_of_first_obs_string];
+            base_type = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
+            rtype = rinex_type[rinex_time_of_first_obs];
+            value = (coda_dynamic_type *)coda_mem_time_new((coda_type_special *)rtype, NULL, base_type);
             coda_mem_record_add_field(info->header, "time_of_first_obs", value, 0);
             memcpy(str, &line[48], 3);
             str[3] = '\0';
@@ -2247,8 +2253,8 @@ static int read_observation_header(ingest_info *info)
                         break;
                 }
             }
-            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_time_of_obs_time_zone],
-                                                             NULL, info->product, str);
+            rtype = rinex_type[rinex_time_of_obs_time_zone];
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
             coda_mem_record_add_field(info->header, "time_of_first_obs_time_zone", value, 0);
         }
         else if (strncmp(&line[60], "TIME OF LAST OBS", 16) == 0)
@@ -2257,12 +2263,10 @@ static int read_observation_header(ingest_info *info)
 
             memcpy(str, line, 43);
             str[43] = '\0';
-            base_type =
-                (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_time_of_last_obs_string],
-                                                         NULL, info->product, str);
-            value =
-                (coda_dynamic_type *)coda_mem_time_new((coda_type_special *)rinex_type[rinex_time_of_last_obs], NULL,
-                                                       base_type);
+            rtype = rinex_type[rinex_time_of_last_obs_string];
+            base_type = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
+            rtype = rinex_type[rinex_time_of_last_obs];
+            value = (coda_dynamic_type *)coda_mem_time_new((coda_type_special *)rtype, NULL, base_type);
             coda_mem_record_add_field(info->header, "time_of_last_obs", value, 0);
             memcpy(str, &line[48], 3);
             str[3] = '\0';
@@ -2281,8 +2285,8 @@ static int read_observation_header(ingest_info *info)
                         break;
                 }
             }
-            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_time_of_obs_time_zone],
-                                                             NULL, info->product, str);
+            rtype = rinex_type[rinex_time_of_obs_time_zone];
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
             coda_mem_record_add_field(info->header, "time_of_last_obs_time_zone", value, 0);
         }
         else if (strncmp(&line[60], "RCV CLOCK OFFS APPL", 19) == 0)
@@ -2292,8 +2296,9 @@ static int read_observation_header(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)rinex_type[rinex_rcv_clock_offs_appl],
-                                                            NULL, info->product, (uint8_t)int_value);
+            rtype = rinex_type[rinex_rcv_clock_offs_appl];
+            value = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)rtype, NULL, info->product,
+                                                            (uint8_t)int_value);
             coda_mem_record_add_field(info->header, "rcv_clock_offs_appl", value, 0);
         }
         else if (strncmp(&line[60], "SYS / DCBS APPLIED", 18) == 0)
@@ -2312,8 +2317,9 @@ static int read_observation_header(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)rinex_type[rinex_leap_seconds],
-                                                            NULL, info->product, (int32_t)int_value);
+            rtype = rinex_type[rinex_leap_seconds];
+            value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)rtype, NULL, info->product,
+                                                            (int32_t)int_value);
             coda_mem_record_add_field(info->header, "leap_seconds", value, 0);
         }
         else if (strncmp(&line[60], "# OF SATELLITES", 15) == 0)
@@ -2323,8 +2329,9 @@ static int read_observation_header(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)rinex_type[rinex_num_satellites],
-                                                             NULL, info->product, (uint16_t)int_value);
+            rtype = rinex_type[rinex_num_satellites];
+            value = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)rtype, NULL, info->product,
+                                                             (uint16_t)int_value);
             coda_mem_record_add_field(info->header, "num_satellites", value, 0);
         }
         else if (strncmp(&line[60], "PRN / # OF OBS", 14) == 0)
@@ -2466,8 +2473,8 @@ static int read_observation_record_for_satellite(ingest_info *info)
         value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_observation], NULL,
                                                          info->product, observation);
         coda_mem_record_add_field(observation_record, "observation", value, 0);
-        value = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)rinex_type[rinex_lli], NULL,
-                                                        info->product, (uint8_t)lli);
+        value = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)rinex_type[rinex_lli], NULL, info->product,
+                                                        (uint8_t)lli);
         coda_mem_record_add_field(observation_record, "lli", value, 0);
         value = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)rinex_type[rinex_signal_strength], NULL,
                                                         info->product, (uint8_t)signal_strength);
@@ -2499,6 +2506,7 @@ static int read_observation_records(ingest_info *info)
     {
         coda_dynamic_type *base_type;
         coda_dynamic_type *value;
+        coda_type *rtype;
         char epoch_string[28];
         char epoch_flag;
         int num_satellites;
@@ -2520,15 +2528,16 @@ static int read_observation_records(ingest_info *info)
 
         memcpy(epoch_string, &line[2], 27);
         epoch_string[27] = '\0';
-        base_type = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_epoch_string], NULL,
-                                                             info->product, epoch_string);
-        value = (coda_dynamic_type *)coda_mem_time_new((coda_type_special *)rinex_type[rinex_obs_epoch], NULL,
-                                                       base_type);
+        rtype = rinex_type[rinex_epoch_string];
+        base_type = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product,
+                                                             epoch_string);
+        rtype = rinex_type[rinex_obs_epoch];
+        value = (coda_dynamic_type *)coda_mem_time_new((coda_type_special *)rtype, NULL, base_type);
         coda_mem_record_add_field(info->epoch_record, "epoch", value, 0);
 
         epoch_flag = line[31];
-        value = (coda_dynamic_type *)coda_mem_char_new((coda_type_text *)rinex_type[rinex_obs_epoch_flag], NULL,
-                                                       info->product, epoch_flag);
+        rtype = rinex_type[rinex_obs_epoch_flag];
+        value = (coda_dynamic_type *)coda_mem_char_new((coda_type_text *)rtype, NULL, info->product, epoch_flag);
         coda_mem_record_add_field(info->epoch_record, "flag", value, 0);
 
         memcpy(str, &line[32], 3);
@@ -2552,8 +2561,8 @@ static int read_observation_records(ingest_info *info)
         {
             double_value = 0;
         }
-        value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_receiver_clock_offset],
-                                                         NULL, info->product, double_value);
+        rtype = rinex_type[rinex_receiver_clock_offset];
+        value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product, double_value);
         coda_mem_record_add_field(info->epoch_record, "receiver_clock_offset", value, 0);
 
         if (info->gps.sat_obs_array_definition != NULL)
@@ -2606,14 +2615,14 @@ static int read_observation_records(ingest_info *info)
         }
         if (info->glonass.sat_obs_array != NULL)
         {
-            coda_mem_record_add_field(info->epoch_record, "glonass",
-                                      (coda_dynamic_type *)info->glonass.sat_obs_array, 0);
+            coda_mem_record_add_field(info->epoch_record, "glonass", (coda_dynamic_type *)info->glonass.sat_obs_array,
+                                      0);
             info->glonass.sat_obs_array = NULL;
         }
         if (info->galileo.sat_obs_array != NULL)
         {
-            coda_mem_record_add_field(info->epoch_record, "galileo",
-                                      (coda_dynamic_type *)info->galileo.sat_obs_array, 0);
+            coda_mem_record_add_field(info->epoch_record, "galileo", (coda_dynamic_type *)info->galileo.sat_obs_array,
+                                      0);
             info->galileo.sat_obs_array = NULL;
         }
         if (info->sbas.sat_obs_array != NULL)
@@ -2639,16 +2648,17 @@ static int read_observation_records(ingest_info *info)
 static int read_navigation_header(ingest_info *info)
 {
     coda_dynamic_type *value;
+    coda_type *rtype;
     char line[MAX_LINE_LENGTH];
     long linelength;
     double double_value;
     int64_t int_value;
     char str[61];
 
-    info->ionospheric_corr_array = coda_mem_array_new((coda_type_array *)rinex_type[rinex_ionospheric_corr_array],
-                                                      NULL);
-    info->time_system_corr_array = coda_mem_array_new((coda_type_array *)rinex_type[rinex_time_system_corr_array],
-                                                      NULL);
+    rtype = rinex_type[rinex_ionospheric_corr_array];
+    info->ionospheric_corr_array = coda_mem_array_new((coda_type_array *)rtype, NULL);
+    rtype = rinex_type[rinex_time_system_corr_array];
+    info->time_system_corr_array = coda_mem_array_new((coda_type_array *)rtype, NULL);
 
     info->offset = ftell(info->f);
     info->linenumber++;
@@ -2673,25 +2683,25 @@ static int read_navigation_header(ingest_info *info)
             memcpy(str, line, 20);
             str[20] = '\0';
             rtrim(str);
-            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_program], NULL,
-                                                             info->product, str);
+            rtype = rinex_type[rinex_program];
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
             coda_mem_record_add_field(info->header, "program", value, 0);
             memcpy(str, &line[20], 20);
             rtrim(str);
-            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_run_by], NULL,
-                                                             info->product, str);
+            rtype = rinex_type[rinex_run_by];
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
             coda_mem_record_add_field(info->header, "run_by", value, 0);
             memcpy(str, &line[40], 15);
             str[15] = '\0';
-            base_type = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_datetime_string],
-                                                                 NULL, info->product, str);
-            value = (coda_dynamic_type *)coda_mem_time_new((coda_type_special *)rinex_type[rinex_datetime], NULL,
-                                                           base_type);
+            rtype = rinex_type[rinex_datetime_string];
+            base_type = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
+            rtype = rinex_type[rinex_datetime];
+            value = (coda_dynamic_type *)coda_mem_time_new((coda_type_special *)rtype, NULL, base_type);
             coda_mem_record_add_field(info->header, "datetime", value, 0);
             memcpy(str, &line[56], 3);
             str[3] = '\0';
-            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_datetime_time_zone],
-                                                             NULL, info->product, str);
+            rtype = rinex_type[rinex_datetime_time_zone];
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
             coda_mem_record_add_field(info->header, "datetime_time_zone", value, 0);
         }
         else if (strncmp(&line[60], "COMMENT", 7) == 0)
@@ -2709,12 +2719,12 @@ static int read_navigation_header(ingest_info *info)
             memcpy(str, line, 4);
             str[4] = '\0';
             rtrim(str);
-            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_ionospheric_corr_type],
-                                                             NULL, info->product, str);
+            rtype = rinex_type[rinex_ionospheric_corr_type];
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
             coda_mem_record_add_field(ionospheric_corr, "type", value, 0);
 
-            parameter_array = coda_mem_array_new((coda_type_array *)rinex_type[rinex_ionospheric_corr_parameter_array],
-                                                 NULL);
+            rtype = rinex_type[rinex_ionospheric_corr_parameter_array];
+            parameter_array = coda_mem_array_new((coda_type_array *)rtype, NULL);
             for (i = 0; i < 4; i++)
             {
                 if (coda_ascii_parse_double(&line[5 + i * 12], 12, &double_value, 0) < 0)
@@ -2724,10 +2734,9 @@ static int read_navigation_header(ingest_info *info)
                     coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset);
                     return -1;
                 }
-                value =
-                    (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)
-                                                             rinex_type[rinex_ionospheric_corr_parameter], NULL,
-                                                             info->product, double_value);
+                rtype = rinex_type[rinex_ionospheric_corr_parameter];
+                value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                                 double_value);
                 coda_mem_array_set_element(parameter_array, i, value);
             }
             coda_mem_record_add_field(ionospheric_corr, "parameter", (coda_dynamic_type *)parameter_array, 0);
@@ -2744,8 +2753,8 @@ static int read_navigation_header(ingest_info *info)
             memcpy(str, line, 4);
             str[4] = '\0';
             rtrim(str);
-            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_time_system_corr_type],
-                                                             NULL, info->product, str);
+            rtype = rinex_type[rinex_time_system_corr_type];
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
             coda_mem_record_add_field(time_system_corr, "type", value, 0);
             is_sbas = (str[0] == 'S' && str[1] == 'B');
 
@@ -2755,8 +2764,9 @@ static int read_navigation_header(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 5);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_time_system_corr_a0],
-                                                             NULL, info->product, double_value);
+            rtype = rinex_type[rinex_time_system_corr_a0];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             double_value);
             coda_mem_record_add_field(time_system_corr, "a0", value, 0);
 
             if (coda_ascii_parse_double(&line[22], 16, &double_value, 0) < 0)
@@ -2765,8 +2775,9 @@ static int read_navigation_header(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 22);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_time_system_corr_a1],
-                                                             NULL, info->product, double_value);
+            rtype = rinex_type[rinex_time_system_corr_a1];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             double_value);
             coda_mem_record_add_field(time_system_corr, "a1", value, 0);
 
             if (coda_ascii_parse_int64(&line[38], 7, &int_value, 0) < 0)
@@ -2775,8 +2786,9 @@ static int read_navigation_header(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 38);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)rinex_type[rinex_time_system_corr_t],
-                                                            NULL, info->product, (int32_t)int_value);
+            rtype = rinex_type[rinex_time_system_corr_t];
+            value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)rtype, NULL, info->product,
+                                                            (int32_t)int_value);
             coda_mem_record_add_field(time_system_corr, "T", value, 0);
 
             if (coda_ascii_parse_int64(&line[45], 5, &int_value, 0) < 0)
@@ -2785,8 +2797,9 @@ static int read_navigation_header(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 45);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)rinex_type[rinex_time_system_corr_w],
-                                                            NULL, info->product, (int16_t)int_value);
+            rtype = rinex_type[rinex_time_system_corr_w];
+            value = (coda_dynamic_type *)coda_mem_int16_new((coda_type_number *)rtype, NULL, info->product,
+                                                            (int16_t)int_value);
             coda_mem_record_add_field(time_system_corr, "W", value, 0);
 
             if (is_sbas)
@@ -2794,8 +2807,8 @@ static int read_navigation_header(ingest_info *info)
                 memcpy(str, &line[51], 5);
                 str[5] = '\0';
                 rtrim(str);
-                value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_time_system_corr_s],
-                                                                 NULL, info->product, str);
+                rtype = rinex_type[rinex_time_system_corr_s];
+                value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
                 coda_mem_record_add_field(time_system_corr, "S", value, 0);
 
                 if (coda_ascii_parse_int64(&line[57], 2, &int_value, 0) < 0)
@@ -2804,9 +2817,9 @@ static int read_navigation_header(ingest_info *info)
                     coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset + 57);
                     return -1;
                 }
-                value =
-                    (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)rinex_type[rinex_time_system_corr_u],
-                                                            NULL, info->product, (uint8_t)int_value);
+                rtype = rinex_type[rinex_time_system_corr_u];
+                value = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)rtype, NULL, info->product,
+                                                                (uint8_t)int_value);
                 coda_mem_record_add_field(time_system_corr, "U", value, 0);
             }
 
@@ -2819,8 +2832,9 @@ static int read_navigation_header(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)rinex_type[rinex_leap_seconds], NULL,
-                                                            info->product, (int32_t)int_value);
+            rtype = rinex_type[rinex_leap_seconds];
+            value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)rtype, NULL, info->product,
+                                                            (int32_t)int_value);
             coda_mem_record_add_field(info->header, "leap_seconds", value, 0);
         }
         else if (strncmp(&line[60], "END OF HEADER", 13) == 0)
@@ -2914,6 +2928,7 @@ static int read_navigation_records(ingest_info *info)
         coda_mem_record *record;
         coda_dynamic_type *base_type;
         coda_dynamic_type *value;
+        coda_type *rtype;
         char epoch_string[20];
         int number;
         double record_value[31];
@@ -2956,16 +2971,18 @@ static int read_navigation_records(ingest_info *info)
                            info->linenumber, info->offset + 1);
             return -1;
         }
-        value = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)rinex_type[rinex_satellite_number],
-                                                        NULL, info->product, (uint8_t)number);
+        rtype = rinex_type[rinex_satellite_number];
+        value = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)rtype, NULL, info->product,
+                                                        (uint8_t)number);
         coda_mem_record_add_field(record, "number", value, 0);
 
         memcpy(epoch_string, &line[4], 19);
         epoch_string[19] = '\0';
-        base_type = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_epoch_string], NULL,
-                                                             info->product, epoch_string);
-        value = (coda_dynamic_type *)coda_mem_time_new((coda_type_special *)rinex_type[rinex_nav_epoch], NULL,
-                                                       base_type);
+        rtype = rinex_type[rinex_epoch_string];
+        base_type = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product,
+                                                             epoch_string);
+        rtype = rinex_type[rinex_nav_epoch];
+        value = (coda_dynamic_type *)coda_mem_time_new((coda_type_special *)rtype, NULL, base_type);
         coda_mem_record_add_field(record, "epoch", value, 0);
 
         if (satellite_system == 'G')
@@ -2975,95 +2992,121 @@ static int read_navigation_records(ingest_info *info)
                 coda_dynamic_type_delete((coda_dynamic_type *)record);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sv_clock_bias],
-                                                             NULL, info->product, record_value[0]);
+            rtype = rinex_type[rinex_nav_sv_clock_bias];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[0]);
             coda_mem_record_add_field(record, "sv_clock_bias", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sv_clock_drift],
-                                                             NULL, info->product, record_value[1]);
+            rtype = rinex_type[rinex_nav_sv_clock_drift];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[1]);
             coda_mem_record_add_field(record, "sv_clock_drift", value, 0);
-            value =
-                (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sv_clock_drift_rate],
-                                                         NULL, info->product, record_value[2]);
+            rtype = rinex_type[rinex_nav_sv_clock_drift_rate];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[2]);
             coda_mem_record_add_field(record, "sv_clock_drift_rate", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_iode], NULL,
-                                                             info->product, record_value[3]);
+            rtype = rinex_type[rinex_nav_iode];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[3]);
             coda_mem_record_add_field(record, "iode", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_crs], NULL,
-                                                             info->product, record_value[4]);
+            rtype = rinex_type[rinex_nav_crs];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[4]);
             coda_mem_record_add_field(record, "crs", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_delta_n], NULL,
-                                                             info->product, record_value[5]);
+            rtype = rinex_type[rinex_nav_delta_n];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[5]);
             coda_mem_record_add_field(record, "delta_n", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_m0], NULL,
-                                                             info->product, record_value[6]);
+            rtype = rinex_type[rinex_nav_m0];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[6]);
             coda_mem_record_add_field(record, "m0", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_cuc], NULL,
-                                                             info->product, record_value[7]);
+            rtype = rinex_type[rinex_nav_cuc];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[7]);
             coda_mem_record_add_field(record, "cuc", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_e], NULL,
-                                                             info->product, record_value[8]);
+            rtype = rinex_type[rinex_nav_e];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[8]);
             coda_mem_record_add_field(record, "e", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_cus], NULL,
-                                                             info->product, record_value[9]);
+            rtype = rinex_type[rinex_nav_cus];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[9]);
             coda_mem_record_add_field(record, "cus", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sqrt_a], NULL,
-                                                             info->product, record_value[10]);
+            rtype = rinex_type[rinex_nav_sqrt_a];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[10]);
             coda_mem_record_add_field(record, "sqrt_a", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_toe], NULL,
-                                                             info->product, record_value[11]);
+            rtype = rinex_type[rinex_nav_toe];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[11]);
             coda_mem_record_add_field(record, "toe", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_cic], NULL,
-                                                             info->product, record_value[12]);
+            rtype = rinex_type[rinex_nav_cic];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[12]);
             coda_mem_record_add_field(record, "cic", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_omega0], NULL,
-                                                             info->product, record_value[13]);
+            rtype = rinex_type[rinex_nav_omega0];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[13]);
             coda_mem_record_add_field(record, "omega0", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_cis], NULL,
-                                                             info->product, record_value[14]);
+            rtype = rinex_type[rinex_nav_cis];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[14]);
             coda_mem_record_add_field(record, "cis", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_i0], NULL,
-                                                             info->product, record_value[15]);
+            rtype = rinex_type[rinex_nav_i0];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[15]);
             coda_mem_record_add_field(record, "i0", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_crc], NULL,
-                                                             info->product, record_value[16]);
+            rtype = rinex_type[rinex_nav_crc];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[16]);
             coda_mem_record_add_field(record, "crc", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_omega], NULL,
-                                                             info->product, record_value[17]);
+            rtype = rinex_type[rinex_nav_omega];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[17]);
             coda_mem_record_add_field(record, "omega", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_omega_dot], NULL,
-                                                             info->product, record_value[18]);
+            rtype = rinex_type[rinex_nav_omega_dot];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[18]);
             coda_mem_record_add_field(record, "omega_dot", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_idot], NULL,
-                                                             info->product, record_value[19]);
+            rtype = rinex_type[rinex_nav_idot];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[19]);
             coda_mem_record_add_field(record, "idot", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_l2_codes], NULL,
-                                                             info->product, record_value[20]);
+            rtype = rinex_type[rinex_nav_l2_codes];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[20]);
             coda_mem_record_add_field(record, "l2_codes", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_gps_week], NULL,
-                                                             info->product, record_value[21]);
+            rtype = rinex_type[rinex_nav_gps_week];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[21]);
             coda_mem_record_add_field(record, "gps_week", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_l2_p_data_flag],
-                                                             NULL, info->product, record_value[22]);
+            rtype = rinex_type[rinex_nav_l2_p_data_flag];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[22]);
             coda_mem_record_add_field(record, "l2_p_data_flag", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sv_accuracy],
-                                                             NULL, info->product, record_value[23]);
+            rtype = rinex_type[rinex_nav_sv_accuracy];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[23]);
             coda_mem_record_add_field(record, "sv_accuracy", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sv_health_gps],
-                                                             NULL, info->product, record_value[24]);
+            rtype = rinex_type[rinex_nav_sv_health_gps];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[24]);
             coda_mem_record_add_field(record, "sv_health_gps", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_tgd], NULL,
-                                                             info->product, record_value[25]);
+            rtype = rinex_type[rinex_nav_tgd];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[25]);
             coda_mem_record_add_field(record, "tgd", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_iodc], NULL,
-                                                             info->product, record_value[26]);
+            rtype = rinex_type[rinex_nav_iodc];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[26]);
             coda_mem_record_add_field(record, "iodc", value, 0);
-            value =
-                (coda_dynamic_type *)
-                coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_transmission_time_gps], NULL,
-                                    info->product, record_value[27]);
+            rtype = rinex_type[rinex_nav_transmission_time_gps];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[27]);
             coda_mem_record_add_field(record, "transmission_time", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_fit_interval],
-                                                             NULL, info->product, record_value[28]);
+            rtype = rinex_type[rinex_nav_fit_interval];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[28]);
             coda_mem_record_add_field(record, "fit_interval", value, 0);
             coda_mem_array_add_element(info->gps.records, (coda_dynamic_type *)record);
         }
@@ -3074,51 +3117,65 @@ static int read_navigation_records(ingest_info *info)
                 coda_dynamic_type_delete((coda_dynamic_type *)record);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sv_clock_bias],
-                                                             NULL, info->product, record_value[0]);
+            rtype = rinex_type[rinex_nav_sv_clock_bias];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[0]);
             coda_mem_record_add_field(record, "sv_clock_bias", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sv_rel_freq_bias],
-                                                             NULL, info->product, record_value[1]);
+            rtype = rinex_type[rinex_nav_sv_rel_freq_bias];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[1]);
             coda_mem_record_add_field(record, "sv_rel_freq_bias", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_msg_frame_time],
-                                                             NULL, info->product, record_value[2]);
+            rtype = rinex_type[rinex_nav_msg_frame_time];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[2]);
             coda_mem_record_add_field(record, "msg_frame_time", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sat_pos_x], NULL,
-                                                             info->product, record_value[3]);
+            rtype = rinex_type[rinex_nav_sat_pos_x];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[3]);
             coda_mem_record_add_field(record, "sat_pos_x", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sat_vel_x], NULL,
-                                                             info->product, record_value[4]);
+            rtype = rinex_type[rinex_nav_sat_vel_x];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[4]);
             coda_mem_record_add_field(record, "sat_vel_x", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sat_acc_x], NULL,
-                                                             info->product, record_value[5]);
+            rtype = rinex_type[rinex_nav_sat_acc_x];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[5]);
             coda_mem_record_add_field(record, "sat_acc_x", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sat_health], NULL,
-                                                             info->product, record_value[6]);
+            rtype = rinex_type[rinex_nav_sat_health];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[6]);
             coda_mem_record_add_field(record, "sat_health", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sat_pos_y], NULL,
-                                                             info->product, record_value[7]);
+            rtype = rinex_type[rinex_nav_sat_pos_y];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[7]);
             coda_mem_record_add_field(record, "sat_pos_y", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sat_vel_y], NULL,
-                                                             info->product, record_value[8]);
+            rtype = rinex_type[rinex_nav_sat_vel_y];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[8]);
             coda_mem_record_add_field(record, "sat_vel_y", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sat_acc_y], NULL,
-                                                             info->product, record_value[9]);
+            rtype = rinex_type[rinex_nav_sat_acc_y];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[9]);
             coda_mem_record_add_field(record, "sat_acc_y", value, 0);
-            value =
-                (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sat_frequency_number],
-                                                         NULL, info->product, record_value[10]);
+            rtype = rinex_type[rinex_nav_sat_frequency_number];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[10]);
             coda_mem_record_add_field(record, "sat_frequency_number", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sat_pos_z], NULL,
-                                                             info->product, record_value[11]);
+            rtype = rinex_type[rinex_nav_sat_pos_z];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[11]);
             coda_mem_record_add_field(record, "sat_pos_z", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sat_vel_z], NULL,
-                                                             info->product, record_value[12]);
+            rtype = rinex_type[rinex_nav_sat_vel_z];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[12]);
             coda_mem_record_add_field(record, "sat_vel_z", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sat_acc_z], NULL,
-                                                             info->product, record_value[13]);
+            rtype = rinex_type[rinex_nav_sat_acc_z];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[13]);
             coda_mem_record_add_field(record, "sat_acc_z", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_age_of_oper_info],
-                                                             NULL, info->product, record_value[14]);
+            rtype = rinex_type[rinex_nav_age_of_oper_info];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[14]);
             coda_mem_record_add_field(record, "age_of_oper_info", value, 0);
             coda_mem_array_add_element(info->glonass.records, (coda_dynamic_type *)record);
         }
@@ -3129,90 +3186,113 @@ static int read_navigation_records(ingest_info *info)
                 coda_dynamic_type_delete((coda_dynamic_type *)record);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sv_clock_bias],
-                                                             NULL, info->product, record_value[0]);
+            rtype = rinex_type[rinex_nav_sv_clock_bias];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[0]);
             coda_mem_record_add_field(record, "sv_clock_bias", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sv_clock_drift],
-                                                             NULL, info->product, record_value[1]);
+            rtype = rinex_type[rinex_nav_sv_clock_drift];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[1]);
             coda_mem_record_add_field(record, "sv_clock_drift", value, 0);
-            value =
-                (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sv_clock_drift_rate],
-                                                         NULL, info->product, record_value[2]);
+            rtype = rinex_type[rinex_nav_sv_clock_drift_rate];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[2]);
             coda_mem_record_add_field(record, "sv_clock_drift_rate", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_iodnav], NULL,
-                                                             info->product, record_value[3]);
+            rtype = rinex_type[rinex_nav_iodnav];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[3]);
             coda_mem_record_add_field(record, "iodnav", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_crs], NULL,
-                                                             info->product, record_value[4]);
+            rtype = rinex_type[rinex_nav_crs];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[4]);
             coda_mem_record_add_field(record, "crs", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_delta_n], NULL,
-                                                             info->product, record_value[5]);
+            rtype = rinex_type[rinex_nav_delta_n];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[5]);
             coda_mem_record_add_field(record, "delta_n", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_m0], NULL,
-                                                             info->product, record_value[6]);
+            rtype = rinex_type[rinex_nav_m0];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[6]);
             coda_mem_record_add_field(record, "m0", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_cuc], NULL,
-                                                             info->product, record_value[7]);
+            rtype = rinex_type[rinex_nav_cuc];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[7]);
             coda_mem_record_add_field(record, "cuc", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_e], NULL,
-                                                             info->product, record_value[8]);
+            rtype = rinex_type[rinex_nav_e];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[8]);
             coda_mem_record_add_field(record, "e", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_cus], NULL,
-                                                             info->product, record_value[9]);
+            rtype = rinex_type[rinex_nav_cus];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[9]);
             coda_mem_record_add_field(record, "cus", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sqrt_a], NULL,
-                                                             info->product, record_value[10]);
+            rtype = rinex_type[rinex_nav_sqrt_a];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[10]);
             coda_mem_record_add_field(record, "sqrt_a", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_toe], NULL,
-                                                             info->product, record_value[11]);
+            rtype = rinex_type[rinex_nav_toe];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[11]);
             coda_mem_record_add_field(record, "toe", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_cic], NULL,
-                                                             info->product, record_value[12]);
+            rtype = rinex_type[rinex_nav_cic];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[12]);
             coda_mem_record_add_field(record, "cic", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_omega0], NULL,
-                                                             info->product, record_value[13]);
+            rtype = rinex_type[rinex_nav_omega0];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[13]);
             coda_mem_record_add_field(record, "omega0", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_cis], NULL,
-                                                             info->product, record_value[14]);
+            rtype = rinex_type[rinex_nav_cis];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[14]);
             coda_mem_record_add_field(record, "cis", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_i0], NULL,
-                                                             info->product, record_value[15]);
+            rtype = rinex_type[rinex_nav_i0];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[15]);
             coda_mem_record_add_field(record, "i0", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_crc], NULL,
-                                                             info->product, record_value[16]);
+            rtype = rinex_type[rinex_nav_crc];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[16]);
             coda_mem_record_add_field(record, "crc", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_omega], NULL,
-                                                             info->product, record_value[17]);
+            rtype = rinex_type[rinex_nav_omega];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[17]);
             coda_mem_record_add_field(record, "omega", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_omega_dot], NULL,
-                                                             info->product, record_value[18]);
+            rtype = rinex_type[rinex_nav_omega_dot];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[18]);
             coda_mem_record_add_field(record, "omega_dot", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_idot], NULL,
-                                                             info->product, record_value[19]);
+            rtype = rinex_type[rinex_nav_idot];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[19]);
             coda_mem_record_add_field(record, "idot", value, 0);
-            value = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)rinex_type[rinex_nav_data_sources],
-                                                             NULL, info->product, (uint32_t)record_value[20]);
+            rtype = rinex_type[rinex_nav_data_sources];
+            value = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)rtype, NULL, info->product,
+                                                             (uint32_t)record_value[20]);
             coda_mem_record_add_field(record, "data_sources", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_gal_week], NULL,
-                                                             info->product, record_value[21]);
+            rtype = rinex_type[rinex_nav_gal_week];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[21]);
             coda_mem_record_add_field(record, "gal_week", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sisa], NULL,
-                                                             info->product, record_value[23]);
+            rtype = rinex_type[rinex_nav_sisa];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[23]);
             coda_mem_record_add_field(record, "sisa", value, 0);
-            value =
-                (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)rinex_type[rinex_nav_sv_health_galileo],
-                                                         NULL, info->product, (uint32_t)record_value[24]);
+            rtype = rinex_type[rinex_nav_sv_health_galileo];
+            value = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)rtype, NULL, info->product,
+                                                             (uint32_t)record_value[24]);
             coda_mem_record_add_field(record, "sv_health", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_bgd_e5a_e1],
-                                                             NULL, info->product, record_value[25]);
+            rtype = rinex_type[rinex_nav_bgd_e5a_e1];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[25]);
             coda_mem_record_add_field(record, "bgd_e5a_e1", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_bgd_e5b_e1], NULL,
-                                                             info->product, record_value[26]);
+            rtype = rinex_type[rinex_nav_bgd_e5b_e1];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[26]);
             coda_mem_record_add_field(record, "bgd_e5b_e1", value, 0);
-            value =
-                (coda_dynamic_type *)
-                coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_transmission_time_galileo], NULL,
-                                    info->product, record_value[27]);
+            rtype = rinex_type[rinex_nav_transmission_time_galileo];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[27]);
             coda_mem_record_add_field(record, "transmission_time", value, 0);
             coda_mem_array_add_element(info->galileo.records, (coda_dynamic_type *)record);
         }
@@ -3223,53 +3303,65 @@ static int read_navigation_records(ingest_info *info)
                 coda_dynamic_type_delete((coda_dynamic_type *)record);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sv_clock_bias],
-                                                             NULL, info->product, record_value[0]);
+            rtype = rinex_type[rinex_nav_sv_clock_bias];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[0]);
             coda_mem_record_add_field(record, "sv_clock_bias", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sv_rel_freq_bias],
-                                                             NULL, info->product, record_value[1]);
+            rtype = rinex_type[rinex_nav_sv_rel_freq_bias];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[1]);
             coda_mem_record_add_field(record, "sv_rel_freq_bias", value, 0);
-            value =
-                (coda_dynamic_type *)
-                coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_transmission_time_sbas], NULL,
-                                    info->product, record_value[2]);
+            rtype = rinex_type[rinex_nav_transmission_time_sbas];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[2]);
             coda_mem_record_add_field(record, "transmission_time", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sat_pos_x], NULL,
-                                                             info->product, record_value[3]);
+            rtype = rinex_type[rinex_nav_sat_pos_x];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[3]);
             coda_mem_record_add_field(record, "sat_pos_x", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sat_vel_x], NULL,
-                                                             info->product, record_value[4]);
+            rtype = rinex_type[rinex_nav_sat_vel_x];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[4]);
             coda_mem_record_add_field(record, "sat_vel_x", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sat_acc_x], NULL,
-                                                             info->product, record_value[5]);
+            rtype = rinex_type[rinex_nav_sat_acc_x];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[5]);
             coda_mem_record_add_field(record, "sat_acc_x", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sat_health], NULL,
-                                                             info->product, record_value[6]);
+            rtype = rinex_type[rinex_nav_sat_health];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[6]);
             coda_mem_record_add_field(record, "sat_health", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sat_pos_y], NULL,
-                                                             info->product, record_value[7]);
+            rtype = rinex_type[rinex_nav_sat_pos_y];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[7]);
             coda_mem_record_add_field(record, "sat_pos_y", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sat_vel_y], NULL,
-                                                             info->product, record_value[8]);
+            rtype = rinex_type[rinex_nav_sat_vel_y];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[8]);
             coda_mem_record_add_field(record, "sat_vel_y", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sat_acc_y], NULL,
-                                                             info->product, record_value[9]);
+            rtype = rinex_type[rinex_nav_sat_acc_y];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[9]);
             coda_mem_record_add_field(record, "sat_acc_y", value, 0);
-            value =
-                (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sat_accuracy_code],
-                                                         NULL, info->product, record_value[10]);
+            rtype = rinex_type[rinex_nav_sat_accuracy_code];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[10]);
             coda_mem_record_add_field(record, "sat_accuracy_code", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sat_pos_z], NULL,
-                                                             info->product, record_value[11]);
+            rtype = rinex_type[rinex_nav_sat_pos_z];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[11]);
             coda_mem_record_add_field(record, "sat_pos_z", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sat_vel_z], NULL,
-                                                             info->product, record_value[12]);
+            rtype = rinex_type[rinex_nav_sat_vel_z];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[12]);
             coda_mem_record_add_field(record, "sat_vel_z", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_sat_acc_z], NULL,
-                                                             info->product, record_value[13]);
+            rtype = rinex_type[rinex_nav_sat_acc_z];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[13]);
             coda_mem_record_add_field(record, "sat_acc_z", value, 0);
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_nav_iodn], NULL,
-                                                             info->product, record_value[14]);
+            rtype = rinex_type[rinex_nav_iodn];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             record_value[14]);
             coda_mem_record_add_field(record, "iodn", value, 0);
             coda_mem_array_add_element(info->sbas.records, (coda_dynamic_type *)record);
         }
@@ -3289,6 +3381,7 @@ static int read_navigation_records(ingest_info *info)
 static int read_clock_header(ingest_info *info)
 {
     coda_dynamic_type *value;
+    coda_type *rtype;
     char line[MAX_LINE_LENGTH];
     long linelength;
     int64_t int_value;
@@ -3319,25 +3412,25 @@ static int read_clock_header(ingest_info *info)
             memcpy(str, line, 20);
             str[20] = '\0';
             rtrim(str);
-            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_program], NULL,
-                                                             info->product, str);
+            rtype = rinex_type[rinex_program];
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
             coda_mem_record_add_field(info->header, "program", value, 0);
             memcpy(str, &line[20], 20);
             rtrim(str);
-            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_run_by], NULL,
-                                                             info->product, str);
+            rtype = rinex_type[rinex_run_by];
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
             coda_mem_record_add_field(info->header, "run_by", value, 0);
             memcpy(str, &line[40], 15);
             str[15] = '\0';
-            base_type = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_datetime_string],
-                                                                 NULL, info->product, str);
-            value = (coda_dynamic_type *)coda_mem_time_new((coda_type_special *)rinex_type[rinex_datetime], NULL,
-                                                           base_type);
+            rtype = rinex_type[rinex_datetime_string];
+            base_type = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
+            rtype = rinex_type[rinex_datetime];
+            value = (coda_dynamic_type *)coda_mem_time_new((coda_type_special *)rtype, NULL, base_type);
             coda_mem_record_add_field(info->header, "datetime", value, 0);
             memcpy(str, &line[56], 3);
             str[3] = '\0';
-            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_datetime_time_zone],
-                                                             NULL, info->product, str);
+            rtype = rinex_type[rinex_datetime_time_zone];
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
             coda_mem_record_add_field(info->header, "datetime_time_zone", value, 0);
         }
         else if (strncmp(&line[60], "COMMENT", 7) == 0)
@@ -3356,8 +3449,8 @@ static int read_clock_header(ingest_info *info)
             memcpy(str, &line[3], 3);
             str[3] = '\0';
             rtrim(str);
-            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_time_system_id], NULL,
-                                                             info->product, str);
+            rtype = rinex_type[rinex_time_system_id];
+            value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
             coda_mem_record_add_field(info->header, "time_system_id", value, 0);
         }
         else if (strncmp(&line[60], "LEAP SECONDS", 12) == 0)
@@ -3367,8 +3460,9 @@ static int read_clock_header(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)rinex_type[rinex_leap_seconds], NULL,
-                                                            info->product, (int32_t)int_value);
+            rtype = rinex_type[rinex_leap_seconds];
+            value = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)rtype, NULL, info->product,
+                                                            (int32_t)int_value);
             coda_mem_record_add_field(info->header, "leap_seconds", value, 0);
         }
         else if (strncmp(&line[60], "SYS / DCBS APPLIED", 18) == 0)
@@ -3454,6 +3548,7 @@ static int read_clock_records(ingest_info *info)
     {
         coda_dynamic_type *base_type;
         coda_dynamic_type *value;
+        coda_type *rtype;
         char epoch_string[28];
         int num_values;
 
@@ -3469,23 +3564,24 @@ static int read_clock_records(ingest_info *info)
         memcpy(str, line, 2);
         str[2] = '\0';
         rtrim(str);
-        value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_clk_type], NULL,
-                                                         info->product, str);
+        rtype = rinex_type[rinex_clk_type];
+        value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
         coda_mem_record_add_field(info->epoch_record, "type", value, 0);
 
         memcpy(str, &line[3], 4);
         str[4] = '\0';
         rtrim(str);
-        value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_clk_name], NULL,
-                                                         info->product, str);
+        rtype = rinex_type[rinex_clk_name];
+        value = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product, str);
         coda_mem_record_add_field(info->epoch_record, "name", value, 0);
 
         memcpy(epoch_string, &line[8], 27);
         epoch_string[27] = '\0';
-        base_type = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rinex_type[rinex_epoch_string], NULL,
-                                                             info->product, epoch_string);
-        value = (coda_dynamic_type *)coda_mem_time_new((coda_type_special *)rinex_type[rinex_clk_epoch], NULL,
-                                                       base_type);
+        rtype = rinex_type[rinex_epoch_string];
+        base_type = (coda_dynamic_type *)coda_mem_string_new((coda_type_text *)rtype, NULL, info->product,
+                                                             epoch_string);
+        rtype = rinex_type[rinex_clk_epoch];
+        value = (coda_dynamic_type *)coda_mem_time_new((coda_type_special *)rtype, NULL, base_type);
         coda_mem_record_add_field(info->epoch_record, "epoch", value, 0);
 
         memcpy(str, &line[34], 3);
@@ -3502,8 +3598,8 @@ static int read_clock_records(ingest_info *info)
             coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset);
             return -1;
         }
-        value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_clk_bias], NULL,
-                                                         info->product, double_value);
+        rtype = rinex_type[rinex_clk_bias];
+        value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product, double_value);
         coda_mem_record_add_field(info->epoch_record, "bias", value, 0);
         if (num_values > 1)
         {
@@ -3518,8 +3614,9 @@ static int read_clock_records(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_clk_bias_sigma], NULL,
-                                                             info->product, double_value);
+            rtype = rinex_type[rinex_clk_bias_sigma];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             double_value);
             coda_mem_record_add_field(info->epoch_record, "bias_sigma", value, 0);
         }
 
@@ -3544,8 +3641,9 @@ static int read_clock_records(ingest_info *info)
                 coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset);
                 return -1;
             }
-            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_clk_rate], NULL,
-                                                             info->product, double_value);
+            rtype = rinex_type[rinex_clk_rate];
+            value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                             double_value);
             coda_mem_record_add_field(info->epoch_record, "rate", value, 0);
             if (num_values > 3)
             {
@@ -3554,8 +3652,9 @@ static int read_clock_records(ingest_info *info)
                     coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset);
                     return -1;
                 }
-                value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_clk_rate_sigma],
-                                                                 NULL, info->product, double_value);
+                rtype = rinex_type[rinex_clk_rate_sigma];
+                value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                                 double_value);
                 coda_mem_record_add_field(info->epoch_record, "rate_sigma", value, 0);
             }
             if (num_values > 4)
@@ -3565,8 +3664,9 @@ static int read_clock_records(ingest_info *info)
                     coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset);
                     return -1;
                 }
-                value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rinex_type[rinex_clk_acceleration],
-                                                                 NULL, info->product, double_value);
+                rtype = rinex_type[rinex_clk_acceleration];
+                value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                                 double_value);
                 coda_mem_record_add_field(info->epoch_record, "acceleration", value, 0);
             }
             if (num_values > 5)
@@ -3576,10 +3676,9 @@ static int read_clock_records(ingest_info *info)
                     coda_add_error_message(" (line: %ld, byte offset: %ld)", info->linenumber, info->offset);
                     return -1;
                 }
-                value =
-                    (coda_dynamic_type *)
-                    coda_mem_double_new((coda_type_number *)rinex_type[rinex_clk_acceleration_sigma], NULL,
-                                        info->product, double_value);
+                rtype = rinex_type[rinex_clk_acceleration_sigma];
+                value = (coda_dynamic_type *)coda_mem_double_new((coda_type_number *)rtype, NULL, info->product,
+                                                                 double_value);
                 coda_mem_record_add_field(info->epoch_record, "acceleration_sigma", value, 0);
             }
         }
