@@ -529,8 +529,16 @@ intexpr:
             $$ = coda_expression_new(expr_abs, NULL, $3, NULL, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
+    | FUNC_MAX '(' node ',' intexpr ')' {
+            $$ = coda_expression_new(expr_array_max, NULL, $3, $5, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
     | FUNC_MAX '(' intexpr ',' intexpr ')' {
             $$ = coda_expression_new(expr_max, NULL, $3, $5, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_MIN '(' node ',' intexpr ')' {
+            $$ = coda_expression_new(expr_array_min, NULL, $3, $5, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
     | FUNC_MIN '(' intexpr ',' intexpr ')' {
@@ -749,6 +757,10 @@ floatexpr:
             $$ = coda_expression_new(expr_round, NULL, $3, NULL, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
+    | FUNC_MAX '(' node ',' floatexpr ')' {
+            $$ = coda_expression_new(expr_array_max, NULL, $3, $5, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
     | FUNC_MAX '(' floatexpr ',' floatexpr ')' {
             $$ = coda_expression_new(expr_max, NULL, $3, $5, NULL, NULL);
             if ($$ == NULL) YYERROR;
@@ -759,6 +771,10 @@ floatexpr:
         }
     | FUNC_MAX '(' intexpr ',' floatexpr ')' {
             $$ = coda_expression_new(expr_max, NULL, $3, $5, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_MIN '(' node ',' floatexpr ')' {
+            $$ = coda_expression_new(expr_array_min, NULL, $3, $5, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
     | FUNC_MIN '(' floatexpr ',' floatexpr ')' {
@@ -857,6 +873,22 @@ stringexpr:
         }
     | FUNC_TRIM '(' stringexpr ')' {
             $$ = coda_expression_new(expr_trim, NULL, $3, NULL, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_MAX '(' node ',' stringexpr ')' {
+            $$ = coda_expression_new(expr_array_max, NULL, $3, $5, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_MAX '(' stringexpr ',' stringexpr ')' {
+            $$ = coda_expression_new(expr_max, NULL, $3, $5, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_MIN '(' node ',' stringexpr ')' {
+            $$ = coda_expression_new(expr_array_min, NULL, $3, $5, NULL, NULL);
+            if ($$ == NULL) YYERROR;
+        }
+    | FUNC_MIN '(' stringexpr ',' stringexpr ')' {
+            $$ = coda_expression_new(expr_min, NULL, $3, $5, NULL, NULL);
             if ($$ == NULL) YYERROR;
         }
     | FUNC_ADD '(' node ',' stringexpr ')' {

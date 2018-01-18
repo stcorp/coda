@@ -109,6 +109,29 @@ static int iswhitespace(char a)
     return (a == ' ' || a == '\t' || a == '\n' || a == '\r');
 }
 
+static int compare_strings(long off_a, long len_a, char *a, long off_b, long len_b, char *b)
+{
+    long index = 0;
+
+    while (index < len_a && index < len_b && a[off_a + index] == b[off_b + index])
+    {
+        index++;
+    }
+    if (index == len_a)
+    {
+        if (index == len_b)
+        {
+            return 0;
+        }
+        return -1;
+    }
+    if (index == len_b || ((uint8_t)a[off_a + index]) > ((uint8_t)b[off_b + index]))
+    {
+        return 1;
+    }
+    return -1;
+}
+
 static long decode_escaped_string(char *str)
 {
     long from;
@@ -493,6 +516,8 @@ coda_expression *coda_expression_new(coda_expression_node_type tag, char *string
             }
             break;
         case expr_array_add:
+        case expr_array_max:
+        case expr_array_min:
         case expr_at:
         case expr_if:
         case expr_with:
@@ -628,18 +653,7 @@ static int eval_boolean(eval_info *info, const coda_expression *expr, int *value
                     free(a);
                     return -1;
                 }
-                if (len_a != len_b)
-                {
-                    *value = 0;
-                }
-                else if (len_a == 0)
-                {
-                    *value = 1;
-                }
-                else
-                {
-                    *value = (memcmp(&a[off_a], &b[off_b], len_a) == 0);
-                }
+                *value = (compare_strings(off_a, len_a, a, off_b, len_b, b) == 0);
                 if (len_a > 0)
                 {
                     free(a);
@@ -701,18 +715,7 @@ static int eval_boolean(eval_info *info, const coda_expression *expr, int *value
                     free(a);
                     return -1;
                 }
-                if (len_a != len_b)
-                {
-                    *value = 1;
-                }
-                else if (len_a == 0)
-                {
-                    *value = 0;
-                }
-                else
-                {
-                    *value = (memcmp(&a[off_a], &b[off_b], len_a) != 0);
-                }
+                *value = (compare_strings(off_a, len_a, a, off_b, len_b, b) != 0);
                 if (len_a > 0)
                 {
                     free(a);
@@ -762,7 +765,6 @@ static int eval_boolean(eval_info *info, const coda_expression *expr, int *value
             {
                 long off_a, off_b;
                 long len_a, len_b;
-                long index;
                 char *a;
                 char *b;
 
@@ -775,13 +777,7 @@ static int eval_boolean(eval_info *info, const coda_expression *expr, int *value
                     free(a);
                     return -1;
                 }
-                index = 0;
-                while (index < len_a && index < len_b && a[off_a + index] == b[off_b + index])
-                {
-                    index++;
-                }
-                *value = (index < len_a &&
-                          (index == len_b || ((uint8_t)a[off_a + index]) > ((uint8_t)b[off_b + index])));
+                *value = (compare_strings(off_a, len_a, a, off_b, len_b, b) > 0);
                 if (len_a > 0)
                 {
                     free(a);
@@ -831,7 +827,6 @@ static int eval_boolean(eval_info *info, const coda_expression *expr, int *value
             {
                 long off_a, off_b;
                 long len_a, len_b;
-                long index;
                 char *a;
                 char *b;
 
@@ -844,13 +839,7 @@ static int eval_boolean(eval_info *info, const coda_expression *expr, int *value
                     free(a);
                     return -1;
                 }
-                index = 0;
-                while (index < len_a && index < len_b && a[off_a + index] == b[off_b + index])
-                {
-                    index++;
-                }
-                *value = (index == len_b ||
-                          (index < len_a && ((uint8_t)a[off_a + index]) > ((uint8_t)b[off_b + index])));
+                *value = (compare_strings(off_a, len_a, a, off_b, len_b, b) >= 0);
                 if (len_a > 0)
                 {
                     free(a);
@@ -900,7 +889,6 @@ static int eval_boolean(eval_info *info, const coda_expression *expr, int *value
             {
                 long off_a, off_b;
                 long len_a, len_b;
-                long index;
                 char *a;
                 char *b;
 
@@ -913,13 +901,7 @@ static int eval_boolean(eval_info *info, const coda_expression *expr, int *value
                     free(a);
                     return -1;
                 }
-                index = 0;
-                while (index < len_a && index < len_b && a[off_a + index] == b[off_b + index])
-                {
-                    index++;
-                }
-                *value = (index < len_b &&
-                          (index == len_a || ((uint8_t)a[off_a + index]) < ((uint8_t)b[off_b + index])));
+                *value = (compare_strings(off_a, len_a, a, off_b, len_b, b) < 0);
                 if (len_a > 0)
                 {
                     free(a);
@@ -969,7 +951,6 @@ static int eval_boolean(eval_info *info, const coda_expression *expr, int *value
             {
                 long off_a, off_b;
                 long len_a, len_b;
-                long index;
                 char *a;
                 char *b;
 
@@ -982,13 +963,7 @@ static int eval_boolean(eval_info *info, const coda_expression *expr, int *value
                     free(a);
                     return -1;
                 }
-                index = 0;
-                while (index < len_a && index < len_b && a[off_a + index] == b[off_b + index])
-                {
-                    index++;
-                }
-                *value = (index == len_a ||
-                          (index < len_b && ((uint8_t)a[off_a + index]) < ((uint8_t)b[off_b + index])));
+                *value = (compare_strings(off_a, len_a, a, off_b, len_b, b) <= 0);
                 if (len_a > 0)
                 {
                     free(a);
@@ -1800,6 +1775,102 @@ static int eval_float(eval_info *info, const coda_expression *expr, double *valu
                 info->cursor = prev_cursor;
             }
             break;
+        case expr_array_max:
+            {
+                coda_cursor prev_cursor;
+                long num_elements;
+
+                assert(info->orig_cursor != NULL);
+                prev_cursor = info->cursor;
+                if (eval_cursor(info, opexpr->operand[0]) != 0)
+                {
+                    return -1;
+                }
+                if (coda_cursor_get_num_elements(&info->cursor, &num_elements) != 0)
+                {
+                    return -1;
+                }
+                *value = coda_NaN();
+                if (num_elements > 0)
+                {
+                    long i;
+
+                    if (coda_cursor_goto_first_array_element(&info->cursor) != 0)
+                    {
+                        return -1;
+                    }
+                    for (i = 0; i < num_elements; i++)
+                    {
+                        double element_value;
+
+                        if (eval_float(info, opexpr->operand[1], &element_value) != 0)
+                        {
+                            return -1;
+                        }
+                        if (i == 0 || element_value > *value)
+                        {
+                            *value = element_value;
+                        }
+                        if (i < num_elements - 1)
+                        {
+                            if (coda_cursor_goto_next_array_element(&info->cursor) != 0)
+                            {
+                                return -1;
+                            }
+                        }
+                    }
+                }
+                info->cursor = prev_cursor;
+            }
+            break;
+        case expr_array_min:
+            {
+                coda_cursor prev_cursor;
+                long num_elements;
+
+                assert(info->orig_cursor != NULL);
+                prev_cursor = info->cursor;
+                if (eval_cursor(info, opexpr->operand[0]) != 0)
+                {
+                    return -1;
+                }
+                if (coda_cursor_get_num_elements(&info->cursor, &num_elements) != 0)
+                {
+                    return -1;
+                }
+                *value = coda_NaN();
+                if (num_elements > 0)
+                {
+                    long i;
+
+                    if (coda_cursor_goto_first_array_element(&info->cursor) != 0)
+                    {
+                        return -1;
+                    }
+                    for (i = 0; i < num_elements; i++)
+                    {
+                        double element_value;
+
+                        if (eval_float(info, opexpr->operand[1], &element_value) != 0)
+                        {
+                            return -1;
+                        }
+                        if (i == 0 || element_value < *value)
+                        {
+                            *value = element_value;
+                        }
+                        if (i < num_elements - 1)
+                        {
+                            if (coda_cursor_goto_next_array_element(&info->cursor) != 0)
+                            {
+                                return -1;
+                            }
+                        }
+                    }
+                }
+                info->cursor = prev_cursor;
+            }
+            break;
         case expr_at:
             {
                 coda_cursor prev_cursor;
@@ -2196,6 +2267,102 @@ static int eval_integer(eval_info *info, const coda_expression *expr, int64_t *v
                             return -1;
                         }
                         *value += element_value;
+                        if (i < num_elements - 1)
+                        {
+                            if (coda_cursor_goto_next_array_element(&info->cursor) != 0)
+                            {
+                                return -1;
+                            }
+                        }
+                    }
+                }
+                info->cursor = prev_cursor;
+            }
+            break;
+        case expr_array_max:
+            {
+                coda_cursor prev_cursor;
+                long num_elements;
+
+                assert(info->orig_cursor != NULL);
+                prev_cursor = info->cursor;
+                if (eval_cursor(info, opexpr->operand[0]) != 0)
+                {
+                    return -1;
+                }
+                if (coda_cursor_get_num_elements(&info->cursor, &num_elements) != 0)
+                {
+                    return -1;
+                }
+                *value = 0;
+                if (num_elements > 0)
+                {
+                    long i;
+
+                    if (coda_cursor_goto_first_array_element(&info->cursor) != 0)
+                    {
+                        return -1;
+                    }
+                    for (i = 0; i < num_elements; i++)
+                    {
+                        int64_t element_value;
+
+                        if (eval_integer(info, opexpr->operand[1], &element_value) != 0)
+                        {
+                            return -1;
+                        }
+                        if (i == 0 || element_value > *value)
+                        {
+                            *value = element_value;
+                        }
+                        if (i < num_elements - 1)
+                        {
+                            if (coda_cursor_goto_next_array_element(&info->cursor) != 0)
+                            {
+                                return -1;
+                            }
+                        }
+                    }
+                }
+                info->cursor = prev_cursor;
+            }
+            break;
+        case expr_array_min:
+            {
+                coda_cursor prev_cursor;
+                long num_elements;
+
+                assert(info->orig_cursor != NULL);
+                prev_cursor = info->cursor;
+                if (eval_cursor(info, opexpr->operand[0]) != 0)
+                {
+                    return -1;
+                }
+                if (coda_cursor_get_num_elements(&info->cursor, &num_elements) != 0)
+                {
+                    return -1;
+                }
+                *value = 0;
+                if (num_elements > 0)
+                {
+                    long i;
+
+                    if (coda_cursor_goto_first_array_element(&info->cursor) != 0)
+                    {
+                        return -1;
+                    }
+                    for (i = 0; i < num_elements; i++)
+                    {
+                        int64_t element_value;
+
+                        if (eval_integer(info, opexpr->operand[1], &element_value) != 0)
+                        {
+                            return -1;
+                        }
+                        if (i == 0 || element_value < *value)
+                        {
+                            *value = element_value;
+                        }
                         if (i < num_elements - 1)
                         {
                             if (coda_cursor_goto_next_array_element(&info->cursor) != 0)
@@ -2877,8 +3044,90 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                 {
                     *value = NULL;
                 }
-                free(a);
-                free(b);
+                if (len_a > 0)
+                {
+                    free(a);
+                }
+                if (len_b > 0)
+                {
+                    free(b);
+                }
+            }
+            break;
+        case expr_min:
+            {
+                long off_a, off_b;
+                long len_a, len_b;
+                char *a;
+                char *b;
+
+                if (eval_string(info, opexpr->operand[0], &off_a, &len_a, &a) != 0)
+                {
+                    return -1;
+                }
+                if (eval_string(info, opexpr->operand[1], &off_b, &len_b, &b) != 0)
+                {
+                    free(a);
+                    return -1;
+                }
+                if (compare_strings(off_a, len_a, a, off_b, len_b, b) <= 0)
+                {
+                    *offset = off_a;
+                    *length = len_a;
+                    *value = a;
+                    if (len_b > 0)
+                    {
+                        free(b);
+                    }
+                }
+                else
+                {
+                    *offset = off_b;
+                    *length = len_b;
+                    *value = b;
+                    if (len_a > 0)
+                    {
+                        free(a);
+                    }
+                }
+            }
+            break;
+        case expr_max:
+            {
+                long off_a, off_b;
+                long len_a, len_b;
+                char *a;
+                char *b;
+
+                if (eval_string(info, opexpr->operand[0], &off_a, &len_a, &a) != 0)
+                {
+                    return -1;
+                }
+                if (eval_string(info, opexpr->operand[1], &off_b, &len_b, &b) != 0)
+                {
+                    free(a);
+                    return -1;
+                }
+                if (compare_strings(off_a, len_a, a, off_b, len_b, b) >= 0)
+                {
+                    *offset = off_a;
+                    *length = len_a;
+                    *value = a;
+                    if (len_b > 0)
+                    {
+                        free(b);
+                    }
+                }
+                else
+                {
+                    *offset = off_b;
+                    *length = len_b;
+                    *value = b;
+                    if (len_a > 0)
+                    {
+                        free(a);
+                    }
+                }
             }
             break;
         case expr_substr:
@@ -3031,6 +3280,130 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                             free(el_value);
                             *length += el_length;
                             *value = new_value;
+                        }
+                        if (i < num_elements - 1)
+                        {
+                            if (coda_cursor_goto_next_array_element(&info->cursor) != 0)
+                            {
+                                return -1;
+                            }
+                        }
+                    }
+                }
+                info->cursor = prev_cursor;
+            }
+            break;
+        case expr_array_min:
+            {
+                coda_cursor prev_cursor;
+                long num_elements;
+
+                assert(info->orig_cursor != NULL);
+                prev_cursor = info->cursor;
+                if (eval_cursor(info, opexpr->operand[0]) != 0)
+                {
+                    return -1;
+                }
+                if (coda_cursor_get_num_elements(&info->cursor, &num_elements) != 0)
+                {
+                    return -1;
+                }
+                *offset = 0;
+                *length = 0;
+                *value = NULL;
+                if (num_elements > 0)
+                {
+                    long i;
+
+                    if (coda_cursor_goto_first_array_element(&info->cursor) != 0)
+                    {
+                        return -1;
+                    }
+                    for (i = 0; i < num_elements; i++)
+                    {
+                        long el_offset;
+                        long el_length;
+                        char *el_value;
+
+                        if (eval_string(info, opexpr->operand[1], &el_offset, &el_length, &el_value) != 0)
+                        {
+                            return -1;
+                        }
+                        if (compare_strings(el_offset, el_length, el_value, *offset, *length, *value) < 0)
+                        {
+                            if (*length > 0)
+                            {
+                                free(value);
+                            }
+                            *offset = el_offset;
+                            *length = el_length;
+                            *value = el_value;
+                        }
+                        else if (el_length > 0)
+                        {
+                            free(el_value);
+                        }
+                        if (i < num_elements - 1)
+                        {
+                            if (coda_cursor_goto_next_array_element(&info->cursor) != 0)
+                            {
+                                return -1;
+                            }
+                        }
+                    }
+                }
+                info->cursor = prev_cursor;
+            }
+            break;
+        case expr_array_max:
+            {
+                coda_cursor prev_cursor;
+                long num_elements;
+
+                assert(info->orig_cursor != NULL);
+                prev_cursor = info->cursor;
+                if (eval_cursor(info, opexpr->operand[0]) != 0)
+                {
+                    return -1;
+                }
+                if (coda_cursor_get_num_elements(&info->cursor, &num_elements) != 0)
+                {
+                    return -1;
+                }
+                *offset = 0;
+                *length = 0;
+                *value = NULL;
+                if (num_elements > 0)
+                {
+                    long i;
+
+                    if (coda_cursor_goto_first_array_element(&info->cursor) != 0)
+                    {
+                        return -1;
+                    }
+                    for (i = 0; i < num_elements; i++)
+                    {
+                        long el_offset;
+                        long el_length;
+                        char *el_value;
+
+                        if (eval_string(info, opexpr->operand[1], &el_offset, &el_length, &el_value) != 0)
+                        {
+                            return -1;
+                        }
+                        if (compare_strings(el_offset, el_length, el_value, *offset, *length, *value) > 0)
+                        {
+                            if (*length > 0)
+                            {
+                                free(*value);
+                            }
+                            *offset = el_offset;
+                            *length = el_length;
+                            *value = el_value;
+                        }
+                        else if (el_length > 0)
+                        {
+                            free(el_value);
                         }
                         if (i < num_elements - 1)
                         {
@@ -3844,6 +4217,20 @@ static int print_expression(const coda_expression *expr, int (*print) (const cha
             break;
         case expr_array_add:
             print(html ? "<b>add</b>(" : "add(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(", ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_array_max:
+            print(html ? "<b>max</b>(" : "max(");
+            print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
+            print(", ");
+            print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 15);
+            print(")");
+            break;
+        case expr_array_min:
+            print(html ? "<b>min</b>(" : "min(");
             print_expression(((coda_expression_operation *)expr)->operand[0], print, xml, html, 15);
             print(", ");
             print_expression(((coda_expression_operation *)expr)->operand[1], print, xml, html, 15);

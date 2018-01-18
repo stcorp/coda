@@ -4,6 +4,9 @@
 
 * Added support for empty string attributes in HDF5 (i.e. using H5S_NULL).
 
+* Allow min() and max() coda expression functions to work on arrays and on
+  (arrays of) string values.
+
 2.18.3 2017-09-22
 ~~~~~~~~~~~~~~~~~
 

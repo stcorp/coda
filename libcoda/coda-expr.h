@@ -44,6 +44,8 @@ enum coda_expression_node_type_enum
     expr_array_count,
     expr_array_exists,
     expr_array_index,
+    expr_array_max,
+    expr_array_min,
     expr_asciiline,
     expr_at,
     expr_bit_offset,

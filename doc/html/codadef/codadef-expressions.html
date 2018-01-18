@@ -13,19 +13,19 @@
     <div class="main">
 
       <h1>CODA Expressions</h1>
-      
+
       <p>CODA comes with an advanced expression language that is able to perform calculations on product data. The expression language is primarilay used in the definitions of the product formats to formally describe how variable sizes, offsets, etc. are calculated. However, the expression language is also used within e.g. the codafind and codaeval tools to formulate queries on data products. The expression language provides a means to specify locations in a file, read values from a file and apply calculations on these values.</p>
 
       <p>The expression language is a basic language in ASCII format. In this document we will describe the language and provide a <a href="#bnf">formal definition</a> using the ISO/IEC 14977 EBNF (Extended Backus-Naur Form) format.</p>
-      
+
       <p>The expression language knows 5 different types: <i>integer</i>, <i>float</i>, <i>string</i>, <i>boolean</i>, and <i>node</i>. <i>integer</i> and <i>float</i> represent integer and floating point values, <i>string</i> represents text data, <i>boolean</i> represents logical values (true/false), and <i>node</i> represents locations in a data file.</p>
-      
+
       <p>When we talk about the 'type of an expression' we refer to the type of the value that will result from evaluating the expression. A float expression will thus result in a floating point value and a boolean expression in a true/false value.</p>
-      
+
       <p>Expressions can range from being very simple (specifying just a constant value) to very complex (using various functions/operations to calculate the resulting value). An expression of one type can make use of sub-expressions of another type. For instance, a boolean expresssion can return the result of a comparison of two string expressions.</p>
 
       <p>In addition to expressions for each of the five data types there is also a sixth category of expressions, those that do not return any value. These expressions are refered to as <i>void</i> expressions (i.e. statements).</p>
-      
+
       <p>The CODA expressions can thus be categorized in the following six groups:</p>
 
       <ul>
@@ -40,17 +40,17 @@
       <p>It should be noted that the expression language allows arbitrary whitespace (in the form of space characters) between the components of an expression.</p>
 
       <h2 id="void">void expressions</h2>
-      
+
       <p>void expressions are statements. They won't return a value and can only be used at the topmost level of an expression.</p>
-      
+
       <h3>operators</h3>
-      
+
       <p>There are two void operators. One is the sequence operator '<code>;</code>'. This operator is used to instruct the sequential execution of two or more statements. The other operator is the assignment operator '<code>=</code>', which is used to assign values to product variables.</p>
-      
+
       <p>Example:</p>
       <div class="fragment"><code><i>$count</i>[0] = 100; <i>$count</i>[1] = 200; <i>$count</i>[2] = 300</code></div>
       <p>This will set the first three elements of the 1-dimensional product variable 'count' to 100, 200, and 300 respectively.</p>
-      
+
       <p>Product variables can be either scalars or 1-dimensional arrays. The array subscript '<code>[]</code>' is only used for product variables that are arrays. For scalar product variables one should use e.g. '<code><i>$count</i> = 100</code>'.</p>
 
       <h3>functions</h3>
@@ -64,17 +64,17 @@
       <p>This expression has the same effect as the example provided in the previous section.</p>
 
       <h2 id="boolean">boolean expressions</h2>
-      
+
       <p>A boolean expression is an expression that results in a true or false value.</p>
-      
+
       <h3>constant values</h3>
-      
+
       <p>There are two possible constant values '<code>true</code>' and '<code>false</code>'.</p>
 
       <h3>operators</h3>
-      
+
       <p>There are three logical operators that operate on boolean values: AND, OR, and NOT ('<code>&amp;&amp;</code>', '<code>||</code>', and '<code>!</code>'). Boolean expressions can be put between braces ( '<code>(</code>' and '<code>)</code>' ) in order to guide the evaluation order.</p>
-      
+
       <p>The AND and OR expressions are lazy evaluated. This means that the second argument to AND will not be evaluated if the first argument already evaluated to false, and for OR similarly if the first argument already evaluated to true.</p>
 
       <p>Integer, float, and string expressions can be compared using the following relations: equality ('<code>==</code>'), inequality ('<code>!=</code>'), less than ('<code>&lt;</code>'), less than or equal ('<code>&lt;=</code>'), greater than ('<code>&gt;</code>'), or greater than or equal ('<code>&gt;=</code>'). The relative ordering of strings (to determine whether one string is larger than the other) will be based on the (unsigned) integer value of each byte character.</p>
@@ -82,25 +82,25 @@
       <p>Integers cannot be compared directly to floats. To compare a float value with an integer value, first convert the integer value to a float using the 'float()' function.</p>
 
       <h3>functions</h3>
-    
+
       <h5>isnan(float)</h5>
-      
+
       <p>Returns true if (and only if) the floating point value is NaN (the special 'Not a Number' value).</p>
 
       <h5>isinf(float)</h5>
-      
+
       <p>Returns true if (and only if) the floating point value is +Inf or -Inf (minus or plus infinity).</p>
 
       <h5>ismininf(float)</h5>
-      
+
       <p>Returns true if (and only if) the floating point value is -Inf (minus infinity).</p>
 
       <h5>isplusinf(float)</h5>
-      
+
       <p>Returns true if (and only if) the floating point value is +Inf (plus infinity).</p>
 
       <h5>regex(string, string)</h5>
-      
+
       <p>Matches a string against a regular expression pattern. The first parameter is the pattern and the second parameter is the string that it should match against.</p>
 
       <p>The function will return true if the pattern matches (and false otherwise).</p>
@@ -108,27 +108,27 @@
       <p>Note that if you want to use '\' characters in your pattern you should either provide the pattern as a 'raw string' (using the 'r' prefix) or use double escaping. For example, if you want to match for a "word" character (\w) you should either use 'r"\w"' or '"\\w"'</p>
 
       <p>The regular expression engine that is used is <a href="http://www.pcre.org/">PCRE</a>. Please refer to the manual of this software package for an overview of the syntax and options for constructing a pattern. Note that the version of PCRE that ships with CODA has been build using default options. The pattern is <i>compiled</i> with the <code>PCRE_DOTALL</code> and <code>PCRE_DOLLAR_ENDONLY</code> options.</p>
-      
+
       <h5>exists(node)</h5>
 
       <p>With the '<code>exists</code>' function it is possible to check whether a path exists inside a product. This can be used to check the availability of optional available record fields or to just check whether a certain path exists at all. The function will only return true if it is possible to traverse the path and false otherwise.</p>
-      
+
       <p>Example:</p>
       <div class="fragment"><code><b>if</b>(<b>exists</b>(/calibration), <b>int</b>(/calibration/num_values), 0)</code></div>
       <p>This will return the value of the num_values parameter if the calibration data set exists and 0 otherwise.</p>
 
       <h5>exists(node, boolean)</h5>
-      
+
       <p>This function only works if node points to an array in the product. It will then walk the elements of the array (in ascending order) until it finds an element for which the boolean expression returns true, or, if none of the array elements match, will return false.</p>
-      
+
       <p>Example:</p>
       <div class="fragment"><code><b>exists</b>(/calibration/value, <b>float</b>(.) &gt; 10.0)</code></div>
       <p>This will return true if any of the elements '/calibration/value[]' has a value > 10, and false otherwise.</p>
 
       <h5>all(node, boolean)</h5>
-      
+
       <p>This function works just as the previous function, but will return false as soon as it finds an element for which the boolean expression returns false, or, if all elements match, will return true.</p>
-      
+
       <p>Example:</p>
       <div class="fragment"><code><b>all</b>(/calibration/value, <b>float</b>(.) &gt; 10.0)</code></div>
       <p>This will return true if all of the elements '/calibration/value[]' have a value > 10, and false otherwise.</p>
@@ -157,20 +157,20 @@
       <p>All integer expressions are evaluated using a signed 64 bit integer.</p>
 
       <h3>constant values</h3>
-      
+
       <p>Constants can be any integer number. However, it should be possible to represent the number by a 64 bit signed integer.</p>
-      
+
       <h3>variables</h3>
-      
+
       <p>There are two kinds of variables that can be used as integer expression: product variables and index variables. CODA only supports integer variables (i.e. variables can not contain boolean, floating point, or string data).</p>
-      
+
       <p>Product variables can be seen as a caching mechanism for expression results. A product variable is a named scalar or a one-dimensional array that is attached to an open product. Note that product variables can only be refered to if they have been defined in the CODA product format definition for the open product file. The initialisation expression for a product variable is fixed and defined as part of the product format definition. Product variables are initialized the first time a value is requested from it (it will thus not impact the performance of opening a product file).<br />
       Product variables are referenced using a '<code>$</code>' character followed by the name of the product variable. If the product variable is an array then an additional (zero-based) array subscript should also be provided using '<code>[]</code>'. For example '<code>$foo</code>' will return the value of the scalar product variable 'foo' and '<code>$bar[10]</code>' will return the 11-th array element from the 1-dimensional product variable 'bar'.</p>
 
       <p>Inside a for loop or '<code>with</code>' function the current value of the loop/with index can be retrieved by using the corresponding '<code><i>i</i></code>', '<code><i>j</i></code>', or '<code><i>k</i></code>' expression. These are called index variables.</p>
 
       <h3>operators</h3>
-      
+
       <p>The following operations are provided: addition ('<code>+</code>'), subtraction ('<code>-</code>'), multiplication ('<code>*</code>'), division ('<code>/</code>'), modulo ('<code>%</code>'), bitwise and ('<code>&amp;</code>'), and bitwise or ('<code>|</code>').</p>
 
       <p>A unary '<code>-</code>' before an integer expression can be used to turn the sign of an integer.</p>
@@ -205,9 +205,17 @@
 
       <p>Returns the maximum of both integers.</p>
 
+      <h5>max(node, integer)</h5>
+
+      <p>This function only works if node points to an array in the product. It will then walk the elements of the array, evaluate the integer expression for each element and return the maximum of those results.</p>
+
       <h5>min(integer, integer)</h5>
 
       <p>Returns the minimum of both integers.</p>
+
+      <h5>min(node, integer)</h5>
+
+      <p>This function only works if node points to an array in the product. It will then walk the elements of the array, evaluate the integer expression for each element and return the minimum of those results.</p>
 
       <h5>dim(node, integer)</h5>
 
@@ -318,9 +326,9 @@
       <h5>unboundindex(node, boolean, boolean)</h5>
 
       <p>This function is similar to <code><b>unboundindex(node, boolean)</b></code>, but has an additional argument at the end to explicitly provide a termination condition.</p>
-      
+
       <p>You should provide an explicit termination condition if you want the function to return -1 if no elements were found matching the boolean expression of the second argument.</p>
-      
+
       <p>The function will, for each array element, always first evaluate the termination condition. Only if that evaluates to false will the boolean expression of the second argument be evaluated (otherwise the function will return -1).</p>
 
       <h5>at(node, integer)</h5>
@@ -345,7 +353,7 @@
       <p>Any expression that expects a float expression as input will also except an integer expression. In these cases the resulting integer value will be silently cast to a floating point value (e.g. as if the <code>float(integer)</code> function was used).</p>
 
       <h3>constant values</h3>
-      
+
       <p>Floating point constant values should have a '<code>.</code>' and/or an exponent. The exponent should start with either a '<code>D</code>' (fortran style) or '<code>E</code>' character (case insensitive). The special values '<code>nan</code>', and '<code>inf</code>' can be used to represent the IEEE754 special cases not-a-number and infinity.</p>
 
       <p>Examples:</p>
@@ -365,7 +373,7 @@ inf
 </pre></code></div>
 
       <h3>operators</h3>
-      
+
       <p>The following operations are provided: addition ('<code>+</code>'), subtraction ('<code>-</code>'), multiplication ('<code>*</code>'), division ('<code>/</code>'), modulo ('<code>%</code>'), and power ('<code>^</code>').</p>
 
       <p>A unary '<code>-</code>' before a float expression can be used to turn the sign of the value.</p>
@@ -410,9 +418,17 @@ inf
 
       <p>Returns the maximum of both floating point values.</p>
 
+      <h5>max(node, float)</h5>
+
+      <p>This function only works if node points to an array in the product. It will then walk the elements of the array, evaluate the floating point expression for each element and return the maximum of those results.</p>
+
       <h5>min(float, float)</h5>
 
       <p>Returns the minimum of both floating point values.</p>
+
+      <h5>min(node, float)</h5>
+
+      <p>This function only works if node points to an array in the product. It will then walk the elements of the array, evaluate the floating point expression for each element and return the minimum of those results.</p>
 
       <h5>time(string, string)</h5>
 
@@ -452,9 +468,9 @@ inf
       <p>A string value is simply a sequence of bytes. No special character encoding interpretation is used and all byte values (0-255) are allowed for a character (e.g. no special string termination character is applied).</p>
 
       <h3>constant values</h3>
-      
+
       <p>A string constant is provided by a sequence of printable ASCII characters between double quote characters. The double quote character itself or any characters that are not ASCII printable characters can be included in string constants by using an escape sequence. An escape sequence is a '\' followed by either a character or by a 3 digit octal number of the byte value (for instance, '\060' is equal to 'A'). The following table lists the possible escape sequences that are allowed:</p>
-      
+
       <table class="fancy" width="60%">
         <tr><th>Escape sequence</th><th>ASCII Character</th><th>Decimal code</th></tr>
         <tr><td align="center">\a</td><td>Bell</td><td align="right">7</td></tr>
@@ -469,7 +485,7 @@ inf
         <tr><td align="center">\\</td><td>\</td><td align="right">92</td></tr>
         <tr><td align="center">\nnn</td><td>A byte value equal to the octal number 'nnn'</td><td align="right">&nbsp;</td></tr>
       </table>
-      
+
       <p>Examples:</p>
 
 <div class="fragment"><code><pre>
@@ -483,7 +499,7 @@ inf
       <p>By default all escaped characters are interpreted and turned into their single character equivalents. However, if you precede a string constant by the letter 'r' this translation will not be performed and you will get the raw string value. For instance, '"abc \\ \" "' will be translated to 'abc \ " ', whereas 'r"abc \\ \" "' will remain as 'abc \\ \" '.</p>
 
       <h3>operators</h3>
-      
+
       <p>Strings can be concatenated using the '<code>+</code>' operator.</p>
 
       <h3>functions</h3>
@@ -542,28 +558,44 @@ inf
 
       <p>This function only works if node points to an array in the product. It will then walk the elements of the array (in ascending order), evaluate the string expression for each element and return the concatenated string of the results.</p>
 
+      <h5>max(string, string)</h5>
+
+      <p>Returns the maximum of both string values.</p>
+
+      <h5>max(node, string)</h5>
+
+      <p>This function only works if node points to an array in the product. It will then walk the elements of the array, evaluate the string expression for each element and return the maximum of those results.</p>
+
+      <h5>min(string, string)</h5>
+
+      <p>Returns the minimum of both string values.</p>
+
+      <h5>min(node, string)</h5>
+
+      <p>This function only works if node points to an array in the product. It will then walk the elements of the array, evaluate the string expression for each element and return the minimum of those results.</p>
+
       <h5>regex(string, string, integer)</h5>
-      
+
       <p>Matches a string against a regular expression pattern. The first parameter is the pattern, the second parameter is the string that it should match against and the third parameter is the index of the substring whos value should be returned.</p>
-      
+
       <p>Note that an index value of 0 will give the full match of the pattern, and indices 1..n are the indices for the substrings.</p>
 
       <p>If no match for the specified substring was found an empty string will be returned.</p>
 
       <p>The regular expression engine that is used is <a href="http://www.pcre.org/">PCRE</a>. Please refer to the manual of this software package for an overview of the syntax and options for constructing a pattern and for an explanation of the concept of 'substrings'. Note that the version of PCRE that ships with CODA has been build using default options. The pattern is <i>compiled</i> with the <code>PCRE_DOTALL</code> and <code>PCRE_DOLLAR_ENDONLY</code> options.</p>
-      
+
       <p>For example, <code>regex(r"a+(\d+)", "aaa1234aaa", 0)</code> will return <code>"aaa1234"</code> and <code>regex(r"a+(\d+)", "aaa1234aaa", 1)</code> will return <code>"1234"</code>.</p>
 
       <h5>regex(string, string, string)</h5>
-      
+
       <p>Matches a string against a regular expression pattern. The first parameter is the pattern, the second parameter is the string that it should match against and the third parameter is the name of the substring whos value should be returned.</p>
 
       <p>If no match for the specified substring was found an empty string will be returned.</p>
-      
+
       <p>The regular expression engine that is used is <a href="http://www.pcre.org/">PCRE</a>. Please refer to the manual of this software package for an overview of the syntax and options for constructing a pattern and for an explanation of the concept of 'substrings'. Note that the version of PCRE that ships with CODA has been build using default options. The pattern is <i>compiled</i> with the <code>PCRE_DOTALL</code> and <code>PCRE_DOLLAR_ENDONLY</code> options.</p>
-      
+
       <p>For example, <code>regex(r"a+(?'foo'\d+)", "aaa1234aaa", "foo")</code> will return <code>"1234"</code>.</p>
-      
+
       <h5>productformat()</h5>
 
       <p>Returns the name of the underlying format (e.g. 'binary', 'xml', 'hdf5') of the file. A file that can be opened by CODA will always have an associated product format.</p>
@@ -613,7 +645,7 @@ inf
       <p>This will be faster than using '<code><b>substr</b>(<b>length</b>(/some/data) / 2, <b>length</b>(/some/data) - (<b>length</b>(/some/data) / 2), <b>str</b>(/some/data))</code>'.</p>
 
       <h2 id="node">node expressions</h2>
-      
+
       <p>A node describes a path into a product file similar to XPath for XML.</p>
 
       <p>How to construct a path (i.e. which identifiers to use) depends entirely on the format of the data product. The basis is that a product is composed of compound elements that can be traversed using identifiers (i.e. fields in a record) or using indices (i.e. elements of an array).</p>
@@ -627,11 +659,11 @@ inf
       <p>There is a special node expression '<code>asciiline</code>' that can only be used in expressions for product format definitions for ASCII products. The '<code>asciiline</code>' expression can only be used as start point of a node expression and will map the view of a file to an array of strings where each string corresponds with a single line (including end of line character(s)) of the ascii file. For example the expression <code><b>bitoffset</b>(<b>asciiline</b>[<b>index</b>(<b>asciiline</b>, <b>str</b>(., 1) != "#")])</code> will give the bitoffset in the file of the first line that does not start with a '#' character.</p>
 
       <h2 id="timeformat">date/time format patterns</h2>
-      
+
       <p>For parsing and printing date/time values in textual format, CODA uses a pattern description that is largely based on the Unicode Technical Standard #35 regarding Date Format Patterns. Note that only a very specific subset of patterns are supported and that the pattern for the abbreviated month deviates from the standard.</p>
 
       <p>In a date/time format pattern certain character series have special meaning and correspond to the various components of a date/time value. Characters that need to be matched literally can be included between two single quote characters ('). Any alphabetical character that is to be treated literally <i>has</i> to be included between quotes. This includes the special characters '|' and '*'. Other characters may be included between quotes (but don't have to). Two single quotes represents a literal single quote, either inside or outside single quotes.</p>
-      
+
       <p>To provide a list of multiple patterns that are tried in sequence until one succeeds, provide the list of patterns separated by '|' (vertical bar) characters in a single format string. When converting a time value to a string, the first pattern of a list will be used for the conversion.</p>
 
       <p>A pattern for a date/time component can have a '*' appended to the format to indicate that it should use leading spaces instead of leading zeros (both for parsing and for printing).</p>
@@ -661,18 +693,18 @@ inf
       </ul>
 
       <h2 id="bnf">formal definition</h2>
-      
+
       <p><pre>
 alpha =
-	'a'|'b'|'c'|'d'|'e'|'f'|'g'|'h'|'i'|'j'|'k'|'l'|'m'|
-	'n'|'o'|'p'|'q'|'r'|'s'|'t'|'u'|'v'|'w'|'x'|'y'|'z'|
-	'A'|'B'|'C'|'D'|'E'|'F'|'G'|'H'|'I'|'J'|'K'|'L'|'M'|
-	'N'|'O'|'P'|'Q'|'R'|'S'|'T'|'U'|'V'|'W'|'X'|'Y'|'Z' ;
+    'a'|'b'|'c'|'d'|'e'|'f'|'g'|'h'|'i'|'j'|'k'|'l'|'m'|
+    'n'|'o'|'p'|'q'|'r'|'s'|'t'|'u'|'v'|'w'|'x'|'y'|'z'|
+    'A'|'B'|'C'|'D'|'E'|'F'|'G'|'H'|'I'|'J'|'K'|'L'|'M'|
+    'N'|'O'|'P'|'Q'|'R'|'S'|'T'|'U'|'V'|'W'|'X'|'Y'|'Z' ;
 
 character = alpha | digit |
-	' '|'!'|'"'|'#'|'$'|'%'|'&amp;'|"'"|'('|')'|'*'|'+'|','|
-	'-'|'.'|'/'|':'|';'|'&lt;'|'='|'&gt;'|'?'|'@'|'['|'\'|']'|
-	'^'|'_'|'`'|'{'|'|'|'}'|'~' ;
+    ' '|'!'|'"'|'#'|'$'|'%'|'&amp;'|"'"|'('|')'|'*'|'+'|','|
+    '-'|'.'|'/'|':'|';'|'&lt;'|'='|'&gt;'|'?'|'@'|'['|'\'|']'|
+    '^'|'_'|'`'|'{'|'|'|'}'|'~' ;
 
 identifier = alpha, [{alpha | digit | '_'}] ;
 
@@ -688,199 +720,207 @@ floatvalue = (intvalue, '.', [intvalue] | '.', intvalue), [('E' | 'e' | 'D' | 'd
 stringvalue = '"', [{character-('\', '"') | '\' character}], '"' ;
 
 voidexpr =
-	'$' identifier '=' intexpr |
-	'$' identifier '[' intexpr ']' '=' intexpr |
-	voidexpr ';' voidexpr |
-	'for' indexvar '=' intexpr 'to' intexpr 'do' voidexpr |
-	'for' indexvar '=' intexpr 'to' intexpr 'step' intexpr 'do' voidexpr |
-	'for' indexvar '=' intexpr 'to' intexpr 'step' intexpr 'do' voidexpr |
-	'goto' '(' node ')' |
-	'with', '(', indexvar, '=', intexpr, ',', voidexpr, ')' ;
+    '$' identifier '=' intexpr |
+    '$' identifier '[' intexpr ']' '=' intexpr |
+    voidexpr ';' voidexpr |
+    'for' indexvar '=' intexpr 'to' intexpr 'do' voidexpr |
+    'for' indexvar '=' intexpr 'to' intexpr 'step' intexpr 'do' voidexpr |
+    'for' indexvar '=' intexpr 'to' intexpr 'step' intexpr 'do' voidexpr |
+    'goto' '(' node ')' |
+    'with', '(', indexvar, '=', intexpr, ',', voidexpr, ')' ;
 
 boolexpr =
-	'true' |
-	'false' |
-	boolexpr, '&amp;&amp;', boolexpr |
-	boolexpr, '||', boolexpr |
-	'!', boolexpr |
-	intexpr, '==', intexpr |
-	intexpr, '!=', intexpr |
-	intexpr, '&gt;', intexpr |
-	intexpr, '&gt;=', intexpr |
-	intexpr, '&lt;', intexpr |
-	intexpr, '&lt;=', intexpr |
-	floatexpr, '==', floatexpr |
-	floatexpr, '==', intexpr |
-	intexpr, '==', floatexpr |
-	floatexpr, '!=', floatexpr |
-	floatexpr, '!=', intexpr |
-	intexpr, '!=', floatexpr |
-	floatexpr, '&gt;', floatexpr |
-	floatexpr, '&gt;', intexpr |
-	intexpr, '&gt;', floatexpr |
-	floatexpr, '&gt;=', floatexpr |
-	floatexpr, '&gt;=', intexpr |
-	intexpr, '&gt;=', floatexpr |
-	floatexpr, '&lt;', floatexpr |
-	floatexpr, '&lt;', intexpr |
-	intexpr, '&lt;', floatexpr |
-	floatexpr, '&lt;=', floatexpr |
-	floatexpr, '&lt;=', intexpr |
-	intexpr, '&lt;=', floatexpr |
-	stringexpr, '==', stringexpr |
-	stringexpr, '!=', stringexpr |
-	stringexpr, '&gt;', stringexpr |
-	stringexpr, '&gt;=', stringexpr |
-	stringexpr, '&lt;', stringexpr |
-	stringexpr, '&lt;=', stringexpr |
-	'(', boolexpr, ')' |
-	'regex', '(', stringexpr, ',', stringexpr ')' |
-	'exists', '(', node, ')' |
-	'exists', '(', node, ',', boolexpr, ')' |
-	'all', '(', node, ',', boolexpr, ')' |
-	'if', '(' boolexpr, ',', boolexpr, ',', boolexpr, ')' |
-	'with', '(', indexvar, '=', intexpr, ',', boolexpr, ')' ;
+    'true' |
+    'false' |
+    boolexpr, '&amp;&amp;', boolexpr |
+    boolexpr, '||', boolexpr |
+    '!', boolexpr |
+    intexpr, '==', intexpr |
+    intexpr, '!=', intexpr |
+    intexpr, '&gt;', intexpr |
+    intexpr, '&gt;=', intexpr |
+    intexpr, '&lt;', intexpr |
+    intexpr, '&lt;=', intexpr |
+    floatexpr, '==', floatexpr |
+    floatexpr, '==', intexpr |
+    intexpr, '==', floatexpr |
+    floatexpr, '!=', floatexpr |
+    floatexpr, '!=', intexpr |
+    intexpr, '!=', floatexpr |
+    floatexpr, '&gt;', floatexpr |
+    floatexpr, '&gt;', intexpr |
+    intexpr, '&gt;', floatexpr |
+    floatexpr, '&gt;=', floatexpr |
+    floatexpr, '&gt;=', intexpr |
+    intexpr, '&gt;=', floatexpr |
+    floatexpr, '&lt;', floatexpr |
+    floatexpr, '&lt;', intexpr |
+    intexpr, '&lt;', floatexpr |
+    floatexpr, '&lt;=', floatexpr |
+    floatexpr, '&lt;=', intexpr |
+    intexpr, '&lt;=', floatexpr |
+    stringexpr, '==', stringexpr |
+    stringexpr, '!=', stringexpr |
+    stringexpr, '&gt;', stringexpr |
+    stringexpr, '&gt;=', stringexpr |
+    stringexpr, '&lt;', stringexpr |
+    stringexpr, '&lt;=', stringexpr |
+    '(', boolexpr, ')' |
+    'regex', '(', stringexpr, ',', stringexpr ')' |
+    'exists', '(', node, ')' |
+    'exists', '(', node, ',', boolexpr, ')' |
+    'all', '(', node, ',', boolexpr, ')' |
+    'if', '(' boolexpr, ',', boolexpr, ',', boolexpr, ')' |
+    'with', '(', indexvar, '=', intexpr, ',', boolexpr, ')' ;
 
 intexpr = 
-	intvalue |
-	'int', '(', intexpr, ')' |
-	'int', '(', boolexpr, ')' |
-	'int', '(', node, ')' |
-	'int', '(', stringexpr, ')' |
-	'$', identifier |
-	'$', identifier, '[', intexpr, ']' |
-	indexvar |
-	'-', intexpr |
-	'+', intexpr |
-	intexpr, '+', intexpr |
-	intexpr, '-', intexpr |
-	intexpr, '*', intexpr |
-	intexpr, '/', intexpr |
-	intexpr, '%', intexpr |
-	intexpr, '&amp;', intexpr |
-	intexpr, '|', intexpr |
-	'(', intexpr, ')' |
-	'abs', '(', intexpr, ')' |
-	'max', '(', intexpr, ',', intexpr, ')' |
-	'min', '(', intexpr, ',', intexpr, ')' |
-	'dim', '(', node, ',', intexpr ')' |
-	'numdims', '(', node, ')' |
-	'numelements', '(', node, ')' |
-	'count', '(' node, ',', boolexpr, ')' |
-	'add', '(' node, ',', intexpr, ')' |
-	'length', '(', stringexpr, ')' |
-	'length', '(', node, ')' |
-	'bitsize', '(', node, ')' |
-	'bytesize', '(', node, ')' |
-	'productversion', '(', ')' |
-	'filesize', '(', ')' |
-	'bitoffset', '(', node, ')' |
-	'byteoffset', '(', node, ')' |
-	'index', '(', node, ')' |
-	'index', '(', node, ',', boolexpr, ')' |
-	'if', '(', boolexpr, ',', intexpr, ',' intexpr, ')' |
-	'unboundindex', '(', node, ',', boolexpr, ')' |
-	'unboundindex', '(', node, ',', boolexpr, ',', boolexpr, ')' |
-	'at', '(', node, ',', intexpr, ')' |
-	'with', '(', indexvar, '=', intexpr, ',', intexpr, ')' ;
+    intvalue |
+    'int', '(', intexpr, ')' |
+    'int', '(', boolexpr, ')' |
+    'int', '(', node, ')' |
+    'int', '(', stringexpr, ')' |
+    '$', identifier |
+    '$', identifier, '[', intexpr, ']' |
+    indexvar |
+    '-', intexpr |
+    '+', intexpr |
+    intexpr, '+', intexpr |
+    intexpr, '-', intexpr |
+    intexpr, '*', intexpr |
+    intexpr, '/', intexpr |
+    intexpr, '%', intexpr |
+    intexpr, '&amp;', intexpr |
+    intexpr, '|', intexpr |
+    '(', intexpr, ')' |
+    'abs', '(', intexpr, ')' |
+    'max', '(', node, ',', intexpr, ')' |
+    'max', '(', intexpr, ',', intexpr, ')' |
+    'min', '(', node, ',', intexpr, ')' |
+    'min', '(', intexpr, ',', intexpr, ')' |
+    'dim', '(', node, ',', intexpr ')' |
+    'numdims', '(', node, ')' |
+    'numelements', '(', node, ')' |
+    'count', '(' node, ',', boolexpr, ')' |
+    'add', '(' node, ',', intexpr, ')' |
+    'length', '(', stringexpr, ')' |
+    'length', '(', node, ')' |
+    'bitsize', '(', node, ')' |
+    'bytesize', '(', node, ')' |
+    'productversion', '(', ')' |
+    'filesize', '(', ')' |
+    'bitoffset', '(', node, ')' |
+    'byteoffset', '(', node, ')' |
+    'index', '(', node, ')' |
+    'index', '(', node, ',', boolexpr, ')' |
+    'if', '(', boolexpr, ',', intexpr, ',' intexpr, ')' |
+    'unboundindex', '(', node, ',', boolexpr, ')' |
+    'unboundindex', '(', node, ',', boolexpr, ',', boolexpr, ')' |
+    'at', '(', node, ',', intexpr, ')' |
+    'with', '(', indexvar, '=', intexpr, ',', intexpr, ')' ;
 
 floatexpr = 
-	floatvalue |
-	'nan' |
-	'inf' |
-	'float', '(', floatexpr, ')' |
-	'float', '(', node, ')' |
-	'float', '(', intexpr, ')' |
-	'float', '(', stringexpr, ')' |
-	'-', floatexpr |
-	'+', floatexpr |
-	floatexpr, '+', floatexpr |
-	floatexpr, '+', intexpr |
-	intexpr, '+', floatexpr |
-	floatexpr, '-', floatexpr |
-	floatexpr, '-', intexpr |
-	intexpr, '-', floatexpr |
-	floatexpr, '*', floatexpr |
-	floatexpr, '*', intexpr |
-	intexpr, '*', floatexpr |
-	floatexpr, '/', floatexpr |
-	floatexpr, '/', intexpr |
-	intexpr, '/', floatexpr |
-	floatexpr, '%', floatexpr |
-	floatexpr, '%', intexpr |
-	intexpr, '%', floatexpr |
-	floatexpr, '^', floatexpr |
-	floatexpr, '^', intexpr |
-	intexpr, '^', floatexpr |
-	intexpr, '^', intexpr |
-	'(', floatexpr, ')' |
-	'abs', '(', floatexpr, ')' |
-	'ceil', '(', floatexpr, ')' |
-	'floor', '(', floatexpr, ')' |
-	'round', '(', floatexpr, ')' |
-	'max', '(', floatexpr, ',', floatexpr, ')' |
-	'max', '(', floatexpr, ',', intexpr, ')' |
-	'max', '(', intexpr, ',', floatexpr, ')' |
-	'min', '(', floatexpr, ',', floatexpr, ')' |
-	'min', '(', floatexpr, ',', intexpr, ')' |
-	'min', '(', intexpr, ',', floatexpr, ')' |
-	'time', '(', stringepxr, ',', stringexpr, ')' |
-	'add', '(' node, ',', floatexpr, ')' |
-	'if', '(' boolexpr, ',', floatexpr, ',', floatexpr, ')' |
-	'if', '(' boolexpr, ',', floatexpr, ',', intexpr, ')' |
-	'if', '(' boolexpr, ',', intexpr, ',', floatexpr, ')' |
-	'with', '(', indexvar, '=', intexpr, ',', floatexpr, ')' ;
+    floatvalue |
+    'nan' |
+    'inf' |
+    'float', '(', floatexpr, ')' |
+    'float', '(', node, ')' |
+    'float', '(', intexpr, ')' |
+    'float', '(', stringexpr, ')' |
+    '-', floatexpr |
+    '+', floatexpr |
+    floatexpr, '+', floatexpr |
+    floatexpr, '+', intexpr |
+    intexpr, '+', floatexpr |
+    floatexpr, '-', floatexpr |
+    floatexpr, '-', intexpr |
+    intexpr, '-', floatexpr |
+    floatexpr, '*', floatexpr |
+    floatexpr, '*', intexpr |
+    intexpr, '*', floatexpr |
+    floatexpr, '/', floatexpr |
+    floatexpr, '/', intexpr |
+    intexpr, '/', floatexpr |
+    floatexpr, '%', floatexpr |
+    floatexpr, '%', intexpr |
+    intexpr, '%', floatexpr |
+    floatexpr, '^', floatexpr |
+    floatexpr, '^', intexpr |
+    intexpr, '^', floatexpr |
+    intexpr, '^', intexpr |
+    '(', floatexpr, ')' |
+    'abs', '(', floatexpr, ')' |
+    'ceil', '(', floatexpr, ')' |
+    'floor', '(', floatexpr, ')' |
+    'round', '(', floatexpr, ')' |
+    'max', '(', node, ',', floatexpr, ')' |
+    'max', '(', floatexpr, ',', floatexpr, ')' |
+    'max', '(', floatexpr, ',', intexpr, ')' |
+    'max', '(', intexpr, ',', floatexpr, ')' |
+    'min', '(', node, ',', floatexpr, ')' |
+    'min', '(', floatexpr, ',', floatexpr, ')' |
+    'min', '(', floatexpr, ',', intexpr, ')' |
+    'min', '(', intexpr, ',', floatexpr, ')' |
+    'time', '(', stringepxr, ',', stringexpr, ')' |
+    'add', '(' node, ',', floatexpr, ')' |
+    'if', '(' boolexpr, ',', floatexpr, ',', floatexpr, ')' |
+    'if', '(' boolexpr, ',', floatexpr, ',', intexpr, ')' |
+    'if', '(' boolexpr, ',', intexpr, ',', floatexpr, ')' |
+    'with', '(', indexvar, '=', intexpr, ',', floatexpr, ')' ;
 
 stringexpr = 
-	stringvalue |
-	'r', stringvalue |
-	'str', '(', stringexpr, ')' |
-	'str', '(', node, ')' |
-	'str', '(', node, ',', intexpr, ')' |
-	'bytes', '(', node, ')' |
-	'bytes', '(', node, ',', intexpr, ')' |
-	'bytes', '(', node, ',', intexpr, ',', intexpr, ')' |
-	stringexpr, '+', stringexpr |
-	'substr', '(', intexpr, ',', intexpr, ',', stringexpr, ')' |
-	'ltrim', '(', stringexpr, ')' |
-	'rtrim', '(', stringexpr, ')' |
-	'trim', '(', stringexpr, ')' |
-	'add', '(', node, ',', stringexpr, ')' |
-	'regex', '(', stringexpr, ',', stringexpr, ',', intexpr ')' |
-	'regex', '(', stringexpr, ',', stringexpr, ',', stringexpr ')' |
-	'productformat', '(', ')' |
-	'productclass', '(', ')' |
-	'producttype', '(', ')' |
-	'filename', '(', ')' |
-	'strtime', '(', intexpr, ')' |
-	'strtime', '(', floatexpr, ')' |
-	'strtime', '(', intexpr, ',', stringexpr ')' |
-	'strtime', '(', floatexpr, ',', stringexpr ')' |
-	'if', '(' boolexpr, ',', stringexpr, ',', stringexpr, ')' |
-	'with', '(', indexvar, '=', intexpr, ',', stringexpr, ')' ;
+    stringvalue |
+    'r', stringvalue |
+    'str', '(', stringexpr, ')' |
+    'str', '(', node, ')' |
+    'str', '(', node, ',', intexpr, ')' |
+    'bytes', '(', node, ')' |
+    'bytes', '(', node, ',', intexpr, ')' |
+    'bytes', '(', node, ',', intexpr, ',', intexpr, ')' |
+    stringexpr, '+', stringexpr |
+    'substr', '(', intexpr, ',', intexpr, ',', stringexpr, ')' |
+    'ltrim', '(', stringexpr, ')' |
+    'rtrim', '(', stringexpr, ')' |
+    'trim', '(', stringexpr, ')' |
+    'add', '(', node, ',', stringexpr, ')' |
+    'max', '(', node, ',', stringexpr, ')' |
+    'max', '(', stringexpr, ',', stringexpr, ')' |
+    'min', '(', node, ',', stringexpr, ')' |
+    'min', '(', stringexpr, ',', stringexpr, ')' |
+    'regex', '(', stringexpr, ',', stringexpr, ',', intexpr ')' |
+    'regex', '(', stringexpr, ',', stringexpr, ',', stringexpr ')' |
+    'productformat', '(', ')' |
+    'productclass', '(', ')' |
+    'producttype', '(', ')' |
+    'filename', '(', ')' |
+    'strtime', '(', intexpr, ')' |
+    'strtime', '(', floatexpr, ')' |
+    'strtime', '(', intexpr, ',', stringexpr ')' |
+    'strtime', '(', floatexpr, ',', stringexpr ')' |
+    'if', '(' boolexpr, ',', stringexpr, ',', stringexpr, ')' |
+    'with', '(', indexvar, '=', intexpr, ',', stringexpr, ')' ;
 
 rootnode = '/'
 
 nonrootnode =
-	'.' |
-	':' |
-	'..' |
-	'asciiline' |
-	rootnode, identifier |
-	rootnode, '{', intexpr, '}' |
-	nonrootnode, '/..' |
-	nonrootnode, '/', identifier |
-	nonrootnode, '/', '{', intexpr, '}' |
-	'[', intexpr, ']' |
-	node, '[', intexpr, ']' |
-	'@', identifier |
-	'@', '{', intexpr, '}' |
-	node, '@', identifier |
-	node, '@', '{', intexpr, '}' ;
+    '.' |
+    ':' |
+    '..' |
+    'asciiline' |
+    rootnode, identifier |
+    rootnode, '{', intexpr, '}' |
+    nonrootnode, '/..' |
+    nonrootnode, '/', identifier |
+    nonrootnode, '/', '{', intexpr, '}' |
+    '[', intexpr, ']' |
+    node, '[', intexpr, ']' |
+    '@', identifier |
+    '@', '{', intexpr, '}' |
+    node, '@', identifier |
+    node, '@', '{', intexpr, '}' ;
 
 node =
-	rootnode |
-	nonrootnode ;
+    rootnode |
+    nonrootnode ;
 </pre></p>
 
       <div class="footer">
