@@ -688,7 +688,7 @@ static int read_var_array(coda_netcdf_product *product, int64_t *offset, int64_t
             if (nc_type == 2 && !(num_dims == 0 && record_var))
             {
                 /* we treat the last dimension of a char array as a string */
-                /* except if it is a one dimensional char array were the first dimension is the appendable dimension */
+                /* except if it is a one dimensional char array where the first dimension is the appendable dimension */
                 basic_type = coda_netcdf_basic_type_new(nc_type, var_offset, record_var, last_dim_length);
             }
             else
