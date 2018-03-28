@@ -3454,7 +3454,7 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                 filename = filepath;
                 while (*filepath != '\0')
                 {
-                    if (*filepath == '/')
+                    if (*filepath == '/' || *filepath == '\\')
                     {
                         filename = &filepath[1];
                     }

@@ -1,5 +1,9 @@
 * Added support for netCDF CDF-5 (NC_64BIT_DATA).
 
+* Fixed issue where filename() expression would provide full filename path
+  on Windows (instead of just the filename). This impacted product type
+  detection on Windows when the detection expression was using the filename.
+
 * Fixed issue reading variable length strings from a scalar dataset in HDF5.
 
 * Added support for empty string attributes in HDF5 (i.e. using H5S_NULL).
