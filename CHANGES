@@ -1,3 +1,6 @@
+2.19 2018-03-28
+~~~~~~~~~~~~~~~
+
 * Added support for netCDF CDF-5 (NC_64BIT_DATA).
 
 * Fixed issue where filename() expression would provide full filename path
