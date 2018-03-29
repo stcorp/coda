@@ -140,14 +140,22 @@ extern "C"
 
 #endif /* CODA_CONFIG_H */
 
+#ifndef CODA_INTERNAL
+
+LIBCODA_API extern const char *coda_get_libcoda_version(void);
+#define libcoda_version (coda_get_libcoda_version())
+
+LIBCODA_API extern int *coda_get_errno(void);
+#define coda_errno (*coda_get_errno())
+
+#endif
+
 #ifndef PRINTF_ATTR
 #cmakedefine PRINTF_ATTR ${PRINTF_ATTR}
 #ifndef PRINTF_ATTR
 #define PRINTF_ATTR
 #endif
 #endif
-
-LIBCODA_API extern const char *libcoda_version;
 
 /** Maximum number of dimensions of a multidimensional array 
  * \ingroup coda_general
@@ -158,8 +166,6 @@ LIBCODA_API extern const char *libcoda_version;
 #define coda_ProductFile coda_product
 #define coda_Cursor coda_cursor
 #define coda_Type coda_type
-
-LIBCODA_API extern int coda_errno;
 
 #define CODA_SUCCESS                                          (0)
 #define CODA_ERROR_OUT_OF_MEMORY                             (-1)

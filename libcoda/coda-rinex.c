@@ -204,7 +204,7 @@ enum
     num_rinex_types
 };
 
-static coda_type **rinex_type = NULL;
+static THREAD_LOCAL coda_type **rinex_type = NULL;
 
 typedef struct satellite_info_struct
 {

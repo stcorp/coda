@@ -51,15 +51,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-static coda_expression *parsed_expression;
+static THREAD_LOCAL coda_expression *parsed_expression;
 
 /* tokenizer declarations */
-int coda_expression_lex(void);
-void *coda_expression__scan_string(const char *yy_str);
-void coda_expression__delete_buffer(void *);
+int coda_expression_lex(void *yylval, void *scanner);
+int coda_expression_lex_init(void *scanner_ptr);
+int coda_expression_lex_destroy(void *scanner);
+void *coda_expression__scan_string(const char *yy_str, void *scanner);
+void coda_expression__delete_buffer(void *buffer, void *scanner);
 
-static void coda_expression_error(const char *error)
+static void coda_expression_error(void *scanner, const char *error)
 {
+    (void)scanner;
+
     coda_set_error(CODA_ERROR_EXPRESSION, "%s", error);
 }
 
@@ -156,6 +160,10 @@ static void coda_expression_error(const char *error)
 %type     <stringval> reserved_identifier
 %destructor { coda_expression_delete($$); } node voidexpr boolexpr intexpr floatexpr stringexpr
 %destructor { free($$); } INT_VALUE FLOAT_VALUE STRING_VALUE NAME identifier
+
+%define api.pure full
+%lex-param { void *scanner }
+%parse-param { void *scanner }
 
 %error-verbose
 
@@ -1030,6 +1038,7 @@ node:
 
 LIBCODA_API int coda_expression_from_string(const char *exprstring, coda_expression **expr)
 {
+    void *scanner;
     void *bufstate;
 
     if (exprstring == NULL)
@@ -1045,17 +1054,20 @@ LIBCODA_API int coda_expression_from_string(const char *exprstring, coda_express
 
     coda_errno = 0;
     parsed_expression = NULL;
-    bufstate = (void *)coda_expression__scan_string(exprstring);
-    if (coda_expression_parse() != 0)
+    coda_expression_lex_init(&scanner);
+    bufstate = (void *)coda_expression__scan_string(exprstring, scanner);
+    if (coda_expression_parse(scanner) != 0)
     {
         if (coda_errno == 0)
         {
             coda_set_error(CODA_ERROR_EXPRESSION, NULL);
         }
-        coda_expression__delete_buffer(bufstate);
+        coda_expression__delete_buffer(bufstate, scanner);
+        coda_expression_lex_destroy(scanner);
         return -1;
     }
-    coda_expression__delete_buffer(bufstate);
+    coda_expression__delete_buffer(bufstate, scanner);
+    coda_expression_lex_destroy(scanner);
     *expr = parsed_expression;
 
     return 0;

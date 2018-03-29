@@ -36,6 +36,8 @@
 %option noinput
 %option nounput
 %option always-interactive
+%option reentrant
+%option bison-bridge
 
 %{
 #include "coda-expr.h"
@@ -59,9 +61,9 @@ INDEX        "i"|"j"|"k"
 %%
 
 "\""([^\"\\]|\\.)*"\""  {
-                            yylval.stringval = (char *)malloc(yyleng - 1);
-                            memcpy(yylval.stringval, yytext + 1, yyleng - 2);
-                            yylval.stringval[yyleng - 2] = '\0';
+                            yylval->stringval = (char *)malloc(yyleng - 1);
+                            memcpy(yylval->stringval, yytext + 1, yyleng - 2);
+                            yylval->stringval[yyleng - 2] = '\0';
                             return STRING_VALUE;
                         }
 
@@ -134,19 +136,19 @@ INDEX        "i"|"j"|"k"
 "with"                  return FUNC_WITH;
 
 {INDEX}                 {
-                            yylval.stringval = strdup(yytext);
+                            yylval->stringval = strdup(yytext);
                             return INDEX_VAR;
                         }
 {IDENTIFIER}            {
-                            yylval.stringval = strdup(yytext);
+                            yylval->stringval = strdup(yytext);
                             return NAME;
                         }
 {INTEGER}               {
-                            yylval.stringval = strdup(yytext);                            
+                            yylval->stringval = strdup(yytext);
                             return INT_VALUE;
                         }
 {FLOAT}                 {
-                            yylval.stringval = strdup(yytext);                            
+                            yylval->stringval = strdup(yytext);
                             return FLOAT_VALUE;
                         }
 {WHITESPACE}            /* eat whitespace */

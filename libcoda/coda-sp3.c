@@ -129,7 +129,7 @@ enum
     num_sp3_types
 };
 
-static coda_type **sp3_type = NULL;
+static THREAD_LOCAL coda_type **sp3_type = NULL;
 
 typedef struct ingest_info_struct
 {

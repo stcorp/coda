@@ -200,7 +200,7 @@ enum
     num_grib_types
 };
 
-static coda_type **grib_type = NULL;
+static THREAD_LOCAL coda_type **grib_type = NULL;
 
 static int grib_init(void)
 {

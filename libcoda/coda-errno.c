@@ -43,7 +43,7 @@
 
 #define MAX_ERROR_INFO_LENGTH	4096
 
-static char coda_error_message_buffer[MAX_ERROR_INFO_LENGTH + 1];
+static THREAD_LOCAL char coda_error_message_buffer[MAX_ERROR_INFO_LENGTH + 1];
 
 /** \defgroup coda_error CODA Error
  * With a few exceptions almost all CODA functions return an integer that indicate whether the function was able to
@@ -156,7 +156,13 @@ static char coda_error_message_buffer[MAX_ERROR_INFO_LENGTH + 1];
  * If no error has occurred the variable contains #CODA_SUCCESS (0).
  * \hideinitializer
  */
-LIBCODA_API int coda_errno = CODA_SUCCESS;
+THREAD_LOCAL int coda_errno = CODA_SUCCESS;
+
+
+LIBCODA_API int *coda_get_errno(void)
+{
+    return &coda_errno;
+}
 
 void coda_add_error_message_vargs(const char *message, va_list ap)
 {

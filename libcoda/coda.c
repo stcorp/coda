@@ -86,16 +86,21 @@
 /** Current version of CODA as a string.
  * \hideinitializer
  */
-LIBCODA_API const char *libcoda_version = CODA_VERSION;
+THREAD_LOCAL const char *libcoda_version = CODA_VERSION;
 
-static int coda_init_counter = 0;
+LIBCODA_API const char *coda_get_libcoda_version(void)
+{
+    return libcoda_version;
+}
 
-int coda_option_bypass_special_types = 0;
-int coda_option_perform_boundary_checks = 1;
-int coda_option_perform_conversions = 1;
-int coda_option_read_all_definitions = 0;
-int coda_option_use_fast_size_expressions = 1;
-int coda_option_use_mmap = 1;
+static THREAD_LOCAL int coda_init_counter = 0;
+
+THREAD_LOCAL int coda_option_bypass_special_types = 0;
+THREAD_LOCAL int coda_option_perform_boundary_checks = 1;
+THREAD_LOCAL int coda_option_perform_conversions = 1;
+THREAD_LOCAL int coda_option_read_all_definitions = 0;
+THREAD_LOCAL int coda_option_use_fast_size_expressions = 1;
+THREAD_LOCAL int coda_option_use_mmap = 1;
 
 /** Enable/Disable the use of special types.
  * The CODA type system contains a series of special types that were introduced to make it easier for the user to
@@ -330,7 +335,7 @@ LIBCODA_API int coda_get_option_use_mmap(void)
 }
 
 
-static char *coda_definition_path = NULL;
+static THREAD_LOCAL char *coda_definition_path = NULL;
 
 /** Set the searchpath for CODA product definition files.
  * This function should be called before coda_init() is called.

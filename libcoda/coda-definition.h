@@ -141,7 +141,7 @@ struct coda_data_dictionary_struct
 };
 typedef struct coda_data_dictionary_struct coda_data_dictionary;
 
-extern coda_data_dictionary *coda_global_data_dictionary;
+extern THREAD_LOCAL coda_data_dictionary *coda_global_data_dictionary;
 
 coda_detection_rule_entry *coda_detection_rule_entry_new(const char *path);
 int coda_detection_rule_entry_set_expression(coda_detection_rule_entry *entry, coda_expression *expression);

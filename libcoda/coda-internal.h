@@ -102,12 +102,16 @@ struct coda_product_struct
     uint8_t *mem_ptr;
 };
 
-extern int coda_option_bypass_special_types;
-extern int coda_option_perform_boundary_checks;
-extern int coda_option_perform_conversions;
-extern int coda_option_read_all_definitions;
-extern int coda_option_use_fast_size_expressions;
-extern int coda_option_use_mmap;
+extern THREAD_LOCAL const char *libcoda_version;
+
+extern THREAD_LOCAL int coda_errno;
+
+extern THREAD_LOCAL int coda_option_bypass_special_types;
+extern THREAD_LOCAL int coda_option_perform_boundary_checks;
+extern THREAD_LOCAL int coda_option_perform_conversions;
+extern THREAD_LOCAL int coda_option_read_all_definitions;
+extern THREAD_LOCAL int coda_option_use_fast_size_expressions;
+extern THREAD_LOCAL int coda_option_use_mmap;
 
 #define coda_get_type_for_dynamic_type(dynamic_type) (((coda_dynamic_type *)dynamic_type)->backend < first_dynamic_backend_id ? (coda_type *)dynamic_type : ((coda_dynamic_type *)dynamic_type)->definition)
 

@@ -100,6 +100,6 @@ ff_result coda_filefilter_eval_expr(coda_cursor *cursor, ff_expr *expr);
 /* parser declarations */
 int coda_filefilter_parse(void);
 int coda_filefilter_error(char *error);
-extern ff_expr *coda_filefilter_tree;
+extern THREAD_LOCAL ff_expr *coda_filefilter_tree;
 
 #endif

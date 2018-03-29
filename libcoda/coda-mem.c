@@ -34,11 +34,13 @@
 #include <stdio.h>
 #include <assert.h>
 
-static coda_mem_record *empty_record_singleton[] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+static THREAD_LOCAL coda_mem_record *empty_record_singleton[] =
+    { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
 #define num_empty_record_singletons ((int)(sizeof(empty_record_singleton)/sizeof(empty_record_singleton[0])))
 
-static coda_mem_special *no_data_singleton[] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+static THREAD_LOCAL coda_mem_special *no_data_singleton[] =
+    { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
 #define num_no_data_singletons ((int)(sizeof(no_data_singleton)/sizeof(no_data_singleton[0])))
 

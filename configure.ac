@@ -79,6 +79,11 @@ int vsnprintf(const char *, size_t, const char *, va_list ap);
 /* This is the relative path to CODA definitions for the MATLAB interface. */
 #undef CODA_DEFINITION_MATLAB
 
+/* Make sure that THREAD_LOCAL is always defined */
+#ifndef THREAD_LOCAL
+#define THREAD_LOCAL
+#endif
+
 #ifdef WIN32
 
 /* include windows specific headers */
@@ -257,6 +262,9 @@ AC_C_BIGENDIAN
 
 # defines _FILE_OFFSET_BITS and _LARGE_FILES if necessary
 AC_SYS_LARGEFILE
+
+# check for thread local storage specifier
+ST_THREAD_LOCAL_STORAGE
 
 # *** checks for structures ***
 

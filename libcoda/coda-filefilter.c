@@ -51,7 +51,7 @@ typedef struct NameBuffer_struct
     char *buffer;
 } NameBuffer;
 
-ff_expr *coda_filefilter_tree;
+THREAD_LOCAL ff_expr *coda_filefilter_tree;
 
 static int coda_match_filepath(int ignore_other_file_types, coda_expression *expr, NameBuffer *path_name,
                                int (*callback) (const char *, coda_filefilter_status, const char *, void *),

@@ -159,6 +159,9 @@
 /* Define to 1 if you have the ANSI C header files. */
 #cmakedefine STDC_HEADERS ${STDC_HEADERS}
 
+/* thread local storage (TLS) keyword */
+#cmakedefine THREAD_LOCAL ${THREAD_LOCAL}
+
 /* Define to 1 if your <sys/time.h> declares `struct tm'. */
 #cmakedefine TM_IN_SYS_TIME ${TM_IN_SYS_TIME}
 
@@ -330,6 +333,11 @@ int vsnprintf(const char *, size_t, const char *, va_list ap);
 
 /* This is the relative path to CODA definitions for the MATLAB interface. */
 #cmakedefine CODA_DEFINITION_MATLAB ${CODA_DEFINITION_MATLAB}
+
+/* Make sure that THREAD_LOCAL is always defined */
+#ifndef THREAD_LOCAL
+#define THREAD_LOCAL
+#endif
 
 #ifdef WIN32
 

@@ -100,6 +100,7 @@ typedef long long int	uint64_t;
   Java.
 */
 %ignore coda_errno;
+%ignore coda_get_errno;
 %ignore coda_set_error;
 %ignore coda_errno_to_string;
 
@@ -144,6 +145,7 @@ typedef long long int	uint64_t;
     }
 %}
 %ignore libcoda_version;
+%ignore coda_get_libcoda_version;
 
 
 /*

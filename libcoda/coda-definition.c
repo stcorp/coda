@@ -36,7 +36,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-coda_data_dictionary *coda_global_data_dictionary = NULL;
+THREAD_LOCAL coda_data_dictionary *coda_global_data_dictionary = NULL;
 
 void coda_detection_tree_delete(void *detection_tree);
 int coda_detection_tree_add_rule(void *detection_tree, coda_detection_rule *detection_rule);

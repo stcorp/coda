@@ -118,8 +118,8 @@
  * @{
  */
 
-static int num_leap_seconds = 0;
-static double *leap_second_table = NULL;
+static THREAD_LOCAL int num_leap_seconds = 0;
+static THREAD_LOCAL double *leap_second_table = NULL;
 
 int coda_month_to_integer(const char month[3])
 {

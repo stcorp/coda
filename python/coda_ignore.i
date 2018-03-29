@@ -63,6 +63,9 @@
 
 %ignore coda_errno;
 
+%ignore coda_get_errno;
+%ignore coda_get_libcoda_version;
+
 %ignore coda_set_definition_path;
 %ignore coda_free;
 %ignore coda_str64;

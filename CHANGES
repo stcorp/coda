@@ -1,3 +1,8 @@
+* The CODA C library now uses thread-local storage (TLS) variables
+  internally to allow CODA to be used in multi-threaded applications.
+  You will still have to call coda_init() separately for each thread and
+  can't reuse products/cursors/etc. from one thread in another.
+
 2.19 2018-03-28
 ~~~~~~~~~~~~~~~
 
