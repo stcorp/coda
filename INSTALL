@@ -101,7 +101,7 @@ Additional software that you will need:
   - automake
   - libtool
   - flex (>=2.5.20)
-  - bison (>=2.7)
+  - bison
   - doxygen
   - swig (for python and java interfaces)
 

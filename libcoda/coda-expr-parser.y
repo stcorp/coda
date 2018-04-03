@@ -161,7 +161,7 @@ static void coda_expression_error(void *scanner, const char *error)
 %destructor { coda_expression_delete($$); } node voidexpr boolexpr intexpr floatexpr stringexpr
 %destructor { free($$); } INT_VALUE FLOAT_VALUE STRING_VALUE NAME identifier
 
-%define api.pure full
+%pure-parser
 %lex-param { void *scanner }
 %parse-param { void *scanner }
 
