@@ -79,11 +79,6 @@ int vsnprintf(const char *, size_t, const char *, va_list ap);
 /* This is the relative path to CODA definitions for the MATLAB interface. */
 #undef CODA_DEFINITION_MATLAB
 
-/* Make sure that THREAD_LOCAL is always defined */
-#ifndef THREAD_LOCAL
-#define THREAD_LOCAL
-#endif
-
 #ifdef WIN32
 
 /* include windows specific headers */

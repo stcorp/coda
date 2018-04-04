@@ -75,10 +75,4 @@
 #define CODA_DEFINITION_MATLAB "../definitions"
 #endif
 
-/* Make sure that THREAD_LOCAL is always defined */
-
-#ifndef THREAD_LOCAL
-#define THREAD_LOCAL
-#endif
-
 #endif /* !defined(CODA_CONFIG_WIN_H) */

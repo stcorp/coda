@@ -43,6 +43,11 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#ifndef THREAD_LOCAL
+#define THREAD_LOCAL
+#endif
+
 #include "coda-expr.h"
 
 #include <assert.h>

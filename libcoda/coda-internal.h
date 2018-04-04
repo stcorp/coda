@@ -36,6 +36,10 @@
 #include "config.h"
 #endif
 
+#ifndef THREAD_LOCAL
+#define THREAD_LOCAL
+#endif
+
 #include <stdarg.h>
 
 #define CODA_INTERNAL
