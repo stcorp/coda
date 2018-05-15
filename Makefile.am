@@ -94,8 +94,8 @@ endif
 
 # *** SWIG dependencies ***
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/codac.Pc@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/coda_jni.Pc@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/codac.Pc@am__quote@ @AM_INCLUDE_MARKER@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/coda_jni.Pc@am__quote@ @AM_INCLUDE_MARKER@
 
 local_depfiles = ./$(DEPDIR)/codac.Pc ./$(DEPDIR)/coda_jni.Pc
 

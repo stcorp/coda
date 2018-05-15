@@ -504,4 +504,17 @@ if test $ac_cv_enable_printf_warnings = yes && test "$GCC" = yes ; then
             [Define to the compiler attribute to test for printf format compliance])
 fi
 
+# *** automake 1.16 depfile handling ***
+
+# With automake>=1.16 we need to add '# am--include-marker' to our depfile includes
+# check with which automake version Makefile.in was created
+function version_le() { test "$(printf '%s\n' "$@" | sort -V | head -n 1)" == "$1"; }
+automake_version=`head -1 Makefile.in | sed -e 's:.*automake \([[^ ]]*\).*:\1:'`
+if version_le $automake_version 1.16 ; then
+  AM_INCLUDE_MARKER=
+else
+  AM_INCLUDE_MARKER="# am--include-marker"
+fi
+AC_SUBST(AM_INCLUDE_MARKER)
+
 AC_OUTPUT
