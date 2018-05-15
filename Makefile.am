@@ -92,8 +92,8 @@ endif
 # *** SWIG dependencies ***
 
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/codac.Pc ./$(DEPDIR)/coda_jni.Pc
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/codac.Pc@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/coda_jni.Pc@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/codac.Pc@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/coda_jni.Pc@am__quote@ # am--include-marker
 
 # *** build rules ***
 
