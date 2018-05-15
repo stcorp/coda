@@ -38,6 +38,9 @@ clean-local: $(CLEAN_LOCAL_TARGETS)
 ALL_LOCAL_TARGETS =
 all-local: $(ALL_LOCAL_TARGETS)
 
+DISTCLEAN_LOCAL_TARGETS =
+distclean-local: $(DISTCLEAN_LOCAL_TARGETS)
+
 # *** targets ***
 
 if SUBPACKAGE_MODE
@@ -91,9 +94,20 @@ endif
 
 # *** SWIG dependencies ***
 
-@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/codac.Pc ./$(DEPDIR)/coda_jni.Pc
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/codac.Pc@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/coda_jni.Pc@am__quote@ # am--include-marker
+
+local_depfiles = ./$(DEPDIR)/codac.Pc ./$(DEPDIR)/coda_jni.Pc
+
+$(local_depfiles):
+	@$(MKDIR_P) $(@D)
+	@echo '# dummy' >$@-t && $(am__mv) $@-t $@
+
+am--depfiles: $(am__depfiles_remade) $(local_depfiles)
+
+DISTCLEAN_LOCAL_TARGETS += clean_depfiles
+clean_depfiles:
+	-rm -f $(local_depfiles)
 
 # *** build rules ***
 
