@@ -28,18 +28,10 @@ EXTRA_DIST =
 INDENTFILES =
 
 INSTALL_DATA_HOOK_TARGETS =
-UNINSTALL_HOOK_TARGETS =
 install-data-hook: $(INSTALL_DATA_HOOK_TARGETS)
-uninstall-hook: $(UNINSTALL_HOOK_TARGETS)
 
 CLEAN_LOCAL_TARGETS =
 clean-local: $(CLEAN_LOCAL_TARGETS)
-
-ALL_LOCAL_TARGETS =
-all-local: $(ALL_LOCAL_TARGETS)
-
-DISTCLEAN_LOCAL_TARGETS =
-distclean-local: $(DISTCLEAN_LOCAL_TARGETS)
 
 # *** targets ***
 
@@ -91,23 +83,6 @@ INSTALL_DATA_HOOK_TARGETS += install_codadefdir
 nodist_include_HEADERS = coda.h
 
 endif
-
-# *** SWIG dependencies ***
-
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/codac.Pc@am__quote@ @AM_INCLUDE_MARKER@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/coda_jni.Pc@am__quote@ @AM_INCLUDE_MARKER@
-
-local_depfiles = ./$(DEPDIR)/codac.Pc ./$(DEPDIR)/coda_jni.Pc
-
-$(local_depfiles):
-	@$(MKDIR_P) $(@D)
-	@echo '# dummy' >$@-t && $(am__mv) $@-t $@
-
-am--depfiles: $(am__depfiles_remade) $(local_depfiles)
-
-DISTCLEAN_LOCAL_TARGETS += clean_depfiles
-clean_depfiles:
-	-rm -f $(local_depfiles)
 
 # *** build rules ***
 
@@ -508,10 +483,6 @@ python/codac.c: libcoda/coda.h.in $(srcdir)/python/codac.i \
     $(srcdir)/python/coda_ignore.i \
     $(srcdir)/python/coda_rename.i 
 	@$(MKDIR_P) python
-@AMDEP_TRUE@	source='$(srcdir)/python/codac.i' object='python/codac.c' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@	depfile='$(DEPDIR)/codac.Pc' tmpdepfile='$(DEPDIR)/codac.TPc' @AMDEPBACKSLASH@
-@AMDEP_TRUE@	depmode='none' $(depcomp) @AMDEPBACKSLASH@
-@AMDEP_TRUE@	$(SWIG) $(PYTHON_SWIGFLAGS) -M $(srcdir)/python/codac.i > $(DEPDIR)/codac.Pc
 	$(SWIG) $(PYTHON_SWIGFLAGS) -o python/codac.c $(srcdir)/python/codac.i
 
 EXTRA_DIST += \
@@ -535,10 +506,6 @@ java/coda_jni.c: libcoda/coda.h.in $(srcdir)/java/codac.i \
     $(srcdir)/java/coda_ignore.i \
     $(srcdir)/java/coda_rename.i 
 	@$(MKDIR_P) java/nl/stcorp/coda
-@AMDEP_TRUE@	source='$(srcdir)/java/codac.i' object='java/coda_jni.c' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@	depfile='$(DEPDIR)/coda_jni.Pc' tmpdepfile='$(DEPDIR)/coda_jni.TPc' @AMDEPBACKSLASH@
-@AMDEP_TRUE@	depmode='none' $(depcomp) @AMDEPBACKSLASH@
-@AMDEP_TRUE@	$(SWIG) $(JAVA_SWIGFLAGS) -M $(srcdir)/java/codac.i > $(DEPDIR)/coda_jni.Pc
 	$(SWIG) $(JAVA_SWIGFLAGS) -o java/coda_jni.c  $(srcdir)/java/codac.i
 
 java_files = \
