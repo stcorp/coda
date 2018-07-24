@@ -954,6 +954,7 @@ static void generate_html_product_definition(const char *filename, coda_product_
         for (i = 0; i < product_definition->num_detection_rules; i++)
         {
             coda_detection_rule *detection_rule = product_definition->detection_rule[i];
+            int path_state = 0;
             int j;
 
             for (j = 0; j < detection_rule->num_entries; j++)
@@ -963,14 +964,29 @@ static void generate_html_product_definition(const char *filename, coda_product_
                     ff_printf("<b>exists</b>(");
                     generate_escaped_html_string(detection_rule->entry[j]->path, -1);
                     ff_printf(")");
+                    path_state = 1;
                 }
                 if (detection_rule->entry[j]->expression != NULL)
                 {
                     if (detection_rule->entry[j]->path != NULL)
                     {
                         ff_printf(" <b>and</b><br />");
+                        if (path_state == 1)
+                        {
+                            ff_printf("<b>at</b>(");
+                            generate_escaped_html_string(detection_rule->entry[j]->path, -1);
+                            ff_printf(",<br />");
+                            path_state = 2;
+                        }
                     }
                     coda_expression_print_html(detection_rule->entry[j]->expression, ff_printf);
+                }
+                if (path_state == 2)
+                {
+                    if (j == detection_rule->num_entries - 1 || detection_rule->entry[j + 1]->path != NULL)
+                    {
+                        ff_printf(")");
+                    }
                 }
                 if (j < detection_rule->num_entries - 1)
                 {
