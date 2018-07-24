@@ -3,6 +3,8 @@
   You will still have to call coda_init() separately for each thread and
   can't reuse products/cursors/etc. from one thread in another.
 
+* Fixed issue in generated documentation of detection expressions.
+
 * Fixed build system to work with automake 1.16.
 
 2.19 2018-03-28
