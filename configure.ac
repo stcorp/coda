@@ -166,7 +166,7 @@ AC_CONFIG_HEADERS([windows/config.h])
 AC_CONFIG_FILES([Makefile fortran/Makefile])
 AC_CONFIG_FILES([java/build.xml])
 AC_CONFIG_FILES([libcoda/doc/Doxyfile java/doc/Doxyfile])
-AC_CONFIG_FILES([idl/coda-idl.dlm])
+AC_CONFIG_FILES([idl/coda_idl.dlm])
 AC_CONFIG_FILES([windows/codawin32.iss windows/codawin64.iss windows/setup.py])
 
 # Set dynamic library version

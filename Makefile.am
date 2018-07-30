@@ -53,7 +53,7 @@ lib_LTLIBRARIES = libcoda.la
 noinst_LTLIBRARIES = libcoda_internal.la libexpat_internal.la libpcre_internal.la libz_internal.la
 
 if BUILD_IDL
-idldlmexec_LTLIBRARIES = coda-idl.la
+idldlmexec_LTLIBRARIES = coda_idl.la
 endif
 
 if BUILD_MATLAB
@@ -449,7 +449,7 @@ EXTRA_DIST += \
 
 # idl
 
-CODA_IDL_SOURCE_FILES = idl/coda-idl.c
+CODA_IDL_SOURCE_FILES = idl/coda_idl.c
 INDENTFILES += $(CODA_IDL_SOURCE_FILES)
 
 if BUILD_IDL
@@ -607,9 +607,11 @@ EXTRA_DIST += \
 
 # *** idl data ***
 
-CODA_IDL_DLMFILES = idl/coda-idl.dlm
+CODA_IDL_DLMFILES = idl/coda_idl.dlm
 
-EXTRA_DIST += $(CODA_IDL_DLMFILES) idl/coda-idl.dlm.in
+EXTRA_DIST += $(CODA_IDL_DLMFILES) \
+	idl/coda_idl.def \
+	idl/coda_idl.dlm.in
 
 if BUILD_IDL
 idldlmexec_DATA = $(CODA_IDL_DLMFILES)
@@ -642,7 +644,8 @@ CODA_MATLAB_MFILES = \
 	matlab/coda_unit.m \
 	matlab/coda_version.m
 
-EXTRA_DIST += $(CODA_MATLAB_MFILES)
+EXTRA_DIST += $(CODA_MATLAB_MFILES) \
+	matlab/coda_matlab.def
 
 if BUILD_MATLAB
 matlabmexexec_DATA = $(CODA_MATLAB_MFILES)

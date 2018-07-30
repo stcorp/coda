@@ -34,7 +34,7 @@ stamp-*
 /findtypedef
 /findtypedef.c
 /fortran/Makefile
-/idl/coda-idl.dlm
+/idl/coda_idl.dlm
 /install-sh
 /java/build.xml
 /java/coda.jar
