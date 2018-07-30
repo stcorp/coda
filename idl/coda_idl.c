@@ -91,9 +91,9 @@ static void idl_coda_set_definition_path(void)
     if (getenv("IDL_DLM_PATH") != NULL)
     {
 #ifdef CODA_DEFINITION_IDL
-        coda_set_definition_path_conditional("coda-idl.dlm", getenv("IDL_DLM_PATH"), CODA_DEFINITION_IDL);
+        coda_set_definition_path_conditional("coda_idl.dlm", getenv("IDL_DLM_PATH"), CODA_DEFINITION_IDL);
 #else
-        coda_set_definition_path_conditional("coda-idl.dlm", getenv("IDL_DLM_PATH"),
+        coda_set_definition_path_conditional("coda_idl.dlm", getenv("IDL_DLM_PATH"),
                                              "../../../share/" PACKAGE "/definitions");
 #endif
     }
@@ -2724,7 +2724,7 @@ static IDL_VPTR x_coda_fetch(int argc, IDL_VPTR *argv)
     int num_dims;
     long dim[CODA_MAX_NUM_DIMS];
 
-    assert(argc > 0);   /* this is guaranteed by the limits set in 'coda-idl.dlm' */
+    assert(argc > 0);   /* this is guaranteed by the limits set in 'coda_idl.dlm' */
     if (idl_coda_init() != 0)
     {
         return mk_coda_error(coda_errno);
@@ -2766,7 +2766,7 @@ static IDL_VPTR x_coda_fetch_datahandle(int argc, IDL_VPTR *argv)
     int num_dims;
     long dim[CODA_MAX_NUM_DIMS];
 
-    assert(argc > 0);   /* this is guaranteed by the limits set in 'coda-idl.dlm' */
+    assert(argc > 0);   /* this is guaranteed by the limits set in 'coda_idl.dlm' */
     if (idl_coda_init() != 0)
     {
         return mk_coda_error(coda_errno);
@@ -2806,7 +2806,7 @@ static IDL_VPTR x_coda_attributes(int argc, IDL_VPTR *argv)
     IDL_VPTR retval;
     struct IDL_CodaDataHandle datahandle;
 
-    assert(argc > 0);   /* this is guaranteed by the limits set in 'coda-idl.dlm' */
+    assert(argc > 0);   /* this is guaranteed by the limits set in 'coda_idl.dlm' */
     if (idl_coda_init() != 0)
     {
         return mk_coda_error(coda_errno);
@@ -2839,7 +2839,7 @@ static IDL_VPTR x_coda_eval(int argc, IDL_VPTR *argv)
     IDL_VPTR retval;
     char *exprstring;
 
-    assert(argc > 0);   /* this is guaranteed by the limits set in 'coda-idl.dlm' */
+    assert(argc > 0);   /* this is guaranteed by the limits set in 'coda_idl.dlm' */
     if (idl_coda_init() != 0)
     {
         return mk_coda_error(coda_errno);
@@ -2963,7 +2963,7 @@ static IDL_VPTR x_coda_size(int argc, IDL_VPTR *argv)
     int num_dims;
     int i;
 
-    assert(argc > 0);   /* this is guaranteed by the limits set in 'coda-idl.dlm' */
+    assert(argc > 0);   /* this is guaranteed by the limits set in 'coda_idl.dlm' */
     if (idl_coda_init() != 0)
     {
         return mk_coda_error(coda_errno);
@@ -3011,7 +3011,7 @@ static IDL_VPTR x_coda_unit(int argc, IDL_VPTR *argv)
     coda_type *type;
     const char *unit;
 
-    assert(argc > 0);   /* this is guaranteed by the limits set in 'coda-idl.dlm' */
+    assert(argc > 0);   /* this is guaranteed by the limits set in 'coda_idl.dlm' */
     if (idl_coda_init() != 0)
     {
         return mk_coda_error(coda_errno);
@@ -3041,7 +3041,7 @@ static IDL_VPTR x_coda_description(int argc, IDL_VPTR *argv)
     coda_type *type;
     const char *description;
 
-    assert(argc > 0);   /* this is guaranteed by the limits set in 'coda-idl.dlm' */
+    assert(argc > 0);   /* this is guaranteed by the limits set in 'coda_idl.dlm' */
     if (idl_coda_init() != 0)
     {
         return mk_coda_error(coda_errno);
@@ -3226,7 +3226,7 @@ static IDL_VPTR x_coda_fieldavailable(int argc, IDL_VPTR *argv)
     int available_status;
     long field_index;
 
-    assert(argc > 1);   /* this is guaranteed by the limits set in 'coda-idl.dlm' */
+    assert(argc > 1);   /* this is guaranteed by the limits set in 'coda_idl.dlm' */
     if (idl_coda_init() != 0)
     {
         return mk_coda_error(coda_errno);
@@ -3289,7 +3289,7 @@ static IDL_VPTR x_coda_fieldcount(int argc, IDL_VPTR *argv)
     int num_fields_create;
     int i;
 
-    assert(argc > 0);   /* this is guaranteed by the limits set in 'coda-idl.dlm' */
+    assert(argc > 0);   /* this is guaranteed by the limits set in 'coda_idl.dlm' */
     if (idl_coda_init() != 0)
     {
         return mk_coda_error(coda_errno);
@@ -3373,7 +3373,7 @@ static IDL_VPTR x_coda_fieldnames(int argc, IDL_VPTR *argv)
     int num_fields_create;
     int i;
 
-    assert(argc > 0);   /* this is guaranteed by the limits set in 'coda-idl.dlm' */
+    assert(argc > 0);   /* this is guaranteed by the limits set in 'coda_idl.dlm' */
     if (idl_coda_init() != 0)
     {
         return mk_coda_error(coda_errno);

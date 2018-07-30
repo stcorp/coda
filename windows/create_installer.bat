@@ -104,7 +104,7 @@ if %errorlevel% neq 0 exit /b %errorlevel%
 
 xcopy    "%CODA_SOURCE_DIR%\idl\*.dlm"                    "%CODA_INSTALLER_DIR%\idl"         >> "%LOG_FILE%"
 if %errorlevel% neq 0 exit /b %errorlevel%
-xcopy    "%CODA_BINARY_DIR%\coda-idl.dll"                 "%CODA_INSTALLER_DIR%\idl"         >> "%LOG_FILE%"
+xcopy    "%CODA_BINARY_DIR%\coda_idl.dll"                 "%CODA_INSTALLER_DIR%\idl"         >> "%LOG_FILE%"
 if %errorlevel% neq 0 exit /b %errorlevel%
 xcopy    "%CODA_SOURCE_DIR%\java\*.java"                  "%CODA_INSTALLER_DIR%\java"        >> "%LOG_FILE%"
 if %errorlevel% neq 0 exit /b %errorlevel%

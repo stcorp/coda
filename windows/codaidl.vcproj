@@ -34,12 +34,12 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/EXPORT:IDL_Load,@1"
 				AdditionalDependencies="libhdf.lib libmfhdf.lib libxdr.lib libhdf5.lib libjpeg.lib libszip.lib zlib.lib idl.lib libcoda.lib ws2_32.lib"
-				OutputFile="$(OutDir)coda-idl.dll"
+				OutputFile="$(OutDir)coda_idl.dll"
 				LinkIncremental="1"
 				IgnoreDefaultLibraryNames="libcmt.lib"
 				AdditionalLibraryDirectories="$(OutDir),$(HDF4_LIB),$(HDF5_LIB),$(JPEG_LIB),$(SZIP_LIB),$(ZLIB_LIB),$(IDL_HOME)\bin\bin.x86"
-				ProgramDatabaseFile="$(OutDir)coda-idl.pdb"
-				ImportLibrary="$(OutDir)coda-idl.lib"
+				ProgramDatabaseFile="$(OutDir)coda_idl.pdb"
+				ImportLibrary="$(OutDir)coda_idl.lib"
 				TargetMachine="1"
 			/>
 		</Configuration>
@@ -65,13 +65,13 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/EXPORT:IDL_Load,@1"
 				AdditionalDependencies="libhdf.lib libmfhdf.lib libxdr.lib libhdf5.lib libjpeg.lib libszip.lib zlib.lib idl.lib libcoda_d.lib ws2_32.lib"
-				OutputFile="$(OutDir)coda-idl.dll"
+				OutputFile="$(OutDir)coda_idl.dll"
 				LinkIncremental="2"
 				IgnoreDefaultLibraryNames="libcmtd.lib"
 				AdditionalLibraryDirectories="$(OutDir),$(HDF4_LIB),$(HDF5_LIB),$(JPEG_LIB),$(SZIP_LIB),$(ZLIB_LIB),$(IDL_HOME)\bin\bin.x86"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(OutDir)coda-idl.pdb"
-				ImportLibrary="$(OutDir)coda-idl.lib"
+				ProgramDatabaseFile="$(OutDir)coda_idl.pdb"
+				ImportLibrary="$(OutDir)coda_idl.lib"
 				TargetMachine="1"
 			/>
 		</Configuration>
@@ -98,12 +98,12 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/EXPORT:IDL_Load,@1"
 				AdditionalDependencies="libhdf.lib libmfhdf.lib libxdr.lib libhdf5.lib libjpeg.lib libszip.lib zlib.lib idl.lib libcoda.lib ws2_32.lib"
-				OutputFile="$(OutDir)coda-idl.dll"
+				OutputFile="$(OutDir)coda_idl.dll"
 				LinkIncremental="1"
 				IgnoreDefaultLibraryNames="libcmt.lib"
 				AdditionalLibraryDirectories="$(OutDir),$(HDF4_LIB),$(HDF5_LIB),$(JPEG_LIB),$(SZIP_LIB),$(ZLIB_LIB),$(IDL_HOME)\bin\bin.x86_64"
-				ProgramDatabaseFile="$(OutDir)coda-idl.pdb"
-				ImportLibrary="$(OutDir)coda-idl.lib"
+				ProgramDatabaseFile="$(OutDir)coda_idl.pdb"
+				ImportLibrary="$(OutDir)coda_idl.lib"
 				TargetMachine="17"
 			/>
 		</Configuration>
@@ -129,18 +129,18 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/EXPORT:IDL_Load,@1"
 				AdditionalDependencies="libhdf.lib libmfhdf.lib libxdr.lib libhdf5.lib libjpeg.lib libszip.lib zlib.lib idl.lib libcoda_d.lib ws2_32.lib"
-				OutputFile="$(OutDir)coda-idl.dll"
+				OutputFile="$(OutDir)coda_idl.dll"
 				LinkIncremental="2"
 				IgnoreDefaultLibraryNames="libcmtd.lib"
 				AdditionalLibraryDirectories="$(OutDir),$(HDF4_LIB),$(HDF5_LIB),$(JPEG_LIB),$(SZIP_LIB),$(ZLIB_LIB),$(IDL_HOME)\bin\bin.x86_64"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(OutDir)coda-idl.pdb"
-				ImportLibrary="$(OutDir)coda-idl.lib"
+				ProgramDatabaseFile="$(OutDir)coda_idl.pdb"
+				ImportLibrary="$(OutDir)coda_idl.lib"
 				TargetMachine="17"
 			/>
 		</Configuration>
 	</Configurations>
 	<Files>
-		<File RelativePath="..\idl\coda-idl.c"/>
+		<File RelativePath="..\idl\coda_idl.c"/>
 	</Files>
 </VisualStudioProject>
