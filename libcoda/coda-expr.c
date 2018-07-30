@@ -247,7 +247,7 @@ static coda_expression *float_constant_new(char *string_value)
     coda_expression_float_constant *expr;
     double value;
 
-    if (coda_ascii_parse_double(string_value, strlen(string_value), &value, 0) < 0)
+    if (coda_ascii_parse_double(string_value, (long)strlen(string_value), &value, 0) < 0)
     {
         free(string_value);
         return NULL;
@@ -274,7 +274,7 @@ static coda_expression *integer_constant_new(char *string_value)
     coda_expression_integer_constant *expr;
     int64_t value;
 
-    if (coda_ascii_parse_int64(string_value, strlen(string_value), &value, 0) < 0)
+    if (coda_ascii_parse_int64(string_value, (long)strlen(string_value), &value, 0) < 0)
     {
         free(string_value);
         return NULL;
@@ -310,7 +310,7 @@ static coda_expression *rawstring_constant_new(char *string_value)
     expr->tag = expr_constant_rawstring;
     expr->result_type = coda_expression_string;
     expr->is_constant = 1;
-    expr->length = strlen(string_value);
+    expr->length = (long)strlen(string_value);
     expr->value = string_value;
 
     return (coda_expression *)expr;
@@ -2925,7 +2925,7 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                     return -1;
                 }
                 *offset = 0;
-                *length = strlen(s);
+                *length = (long)strlen(s);
             }
             break;
         case expr_bytes:
@@ -3461,7 +3461,7 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                     filepath++;
                 }
                 *offset = 0;
-                *length = strlen(filename);
+                *length = (long)strlen(filename);
                 *value = malloc(*length + 1);   /* add room for zero termination at a later time */
                 if (*value == NULL)
                 {
@@ -3630,7 +3630,7 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                 *length = 0;
                 if (product_class != NULL)
                 {
-                    *length = strlen(product_class);
+                    *length = (long)strlen(product_class);
                     *value = malloc(*length + 1);       /* add room for zero termination at the end */
                     if (*value == NULL)
                     {
@@ -3657,7 +3657,7 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                 *length = 0;
                 if (product_format != NULL)
                 {
-                    *length = strlen(product_format);
+                    *length = (long)strlen(product_format);
                     *value = malloc(*length + 1);       /* add room for zero termination at the end */
                     if (*value == NULL)
                     {
@@ -3682,7 +3682,7 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                 *length = 0;
                 if (product_type != NULL)
                 {
-                    *length = strlen(product_type);
+                    *length = (long)strlen(product_type);
                     *value = malloc(*length + 1);       /* add room for zero termination at the end */
                     if (*value == NULL)
                     {
@@ -3726,7 +3726,7 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                 else
                 {
                     format = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS";
-                    len_format = strlen(format);
+                    len_format = (long)strlen(format);
                     off_format = 0;
                 }
                 *value = malloc(len_format + 1);        /* add room for zero termination at the end */
@@ -3749,7 +3749,7 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                     return -1;
                 }
                 *offset = 0;
-                *length = strlen(*value);
+                *length = (long)strlen(*value);
                 if (opexpr->operand[1] != NULL)
                 {
                     free(format);
@@ -3964,7 +3964,7 @@ static int eval_cursor(eval_info *info, const coda_expression *expr)
                     {
                         return -1;
                     }
-                    if (coda_cursor_goto_record_field_by_index(&info->cursor, index) != 0)
+                    if (coda_cursor_goto_record_field_by_index(&info->cursor, (long)index) != 0)
                     {
                         return -1;
                     }
@@ -4113,7 +4113,7 @@ static void print_escaped_string(const char *str, int length, int (*print) (cons
 
     if (length < 0)
     {
-        length = strlen(str);
+        length = (int)strlen(str);
     }
 
     while (i < length)

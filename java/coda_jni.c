@@ -1318,7 +1318,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1double(JNIEnv
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_double");
+      int namelen = (int)strlen("coda_cursor_read_double");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -1365,7 +1365,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1uint64(JNIEnv
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_uint64");
+      int namelen = (int)strlen("coda_cursor_read_uint64");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -1412,7 +1412,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1char(JNIEnv *
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_char");
+      int namelen = (int)strlen("coda_cursor_read_char");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -1450,7 +1450,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1char_1array(J
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_char_array");
+      int namelen = (int)strlen("coda_cursor_read_char_array");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -1487,7 +1487,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1char_1partial
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_char_partial_array");
+      int namelen = (int)strlen("coda_cursor_read_char_partial_array");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -1515,7 +1515,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_init(JNIEnv *jenv, jclass j
     
     if (result < 0)
     {
-      int namelen = strlen("coda_init");
+      int namelen = (int)strlen("coda_init");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -1547,7 +1547,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_set_1definition_1path(JNIEn
     
     if (result < 0)
     {
-      int namelen = strlen("coda_set_definition_path");
+      int namelen = (int)strlen("coda_set_definition_path");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -1592,7 +1592,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_set_1definition_1path_1cond
     
     if (result < 0)
     {
-      int namelen = strlen("coda_set_definition_path_conditional");
+      int namelen = (int)strlen("coda_set_definition_path_conditional");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -1623,7 +1623,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_set_1option_1bypass_1specia
     
     if (result < 0)
     {
-      int namelen = strlen("coda_set_option_bypass_special_types");
+      int namelen = (int)strlen("coda_set_option_bypass_special_types");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -1651,7 +1651,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_set_1option_1perform_1bound
     
     if (result < 0)
     {
-      int namelen = strlen("coda_set_option_perform_boundary_checks");
+      int namelen = (int)strlen("coda_set_option_perform_boundary_checks");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -1679,7 +1679,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_set_1option_1perform_1conve
     
     if (result < 0)
     {
-      int namelen = strlen("coda_set_option_perform_conversions");
+      int namelen = (int)strlen("coda_set_option_perform_conversions");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -1707,7 +1707,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_set_1option_1use_1fast_1siz
     
     if (result < 0)
     {
-      int namelen = strlen("coda_set_option_use_fast_size_expressions");
+      int namelen = (int)strlen("coda_set_option_use_fast_size_expressions");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -1735,7 +1735,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_set_1option_1use_1mmap(JNIE
     
     if (result < 0)
     {
-      int namelen = strlen("coda_set_option_use_mmap");
+      int namelen = (int)strlen("coda_set_option_use_mmap");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -1768,7 +1768,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_c_1index_1to_1fortran_1inde
     
     if (result < 0)
     {
-      int namelen = strlen("coda_c_index_to_fortran_index");
+      int namelen = (int)strlen("coda_c_index_to_fortran_index");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -1897,7 +1897,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_time_1double_1to_1parts(JNI
     
     if (result < 0)
     {
-      int namelen = strlen("coda_time_double_to_parts");
+      int namelen = (int)strlen("coda_time_double_to_parts");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -2058,7 +2058,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_time_1double_1to_1parts_1ut
     
     if (result < 0)
     {
-      int namelen = strlen("coda_time_double_to_parts_utc");
+      int namelen = (int)strlen("coda_time_double_to_parts_utc");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -2147,7 +2147,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_time_1parts_1to_1double(JNI
     
     if (result < 0)
     {
-      int namelen = strlen("coda_time_parts_to_double");
+      int namelen = (int)strlen("coda_time_parts_to_double");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -2206,7 +2206,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_time_1parts_1to_1double_1ut
     
     if (result < 0)
     {
-      int namelen = strlen("coda_time_parts_to_double_utc");
+      int namelen = (int)strlen("coda_time_parts_to_double_utc");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -2347,7 +2347,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_time_1string_1to_1parts(JNI
     
     if (result < 0)
     {
-      int namelen = strlen("coda_time_string_to_parts");
+      int namelen = (int)strlen("coda_time_string_to_parts");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -2436,7 +2436,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_time_1string_1to_1double(JN
     
     if (result < 0)
     {
-      int namelen = strlen("coda_time_string_to_double");
+      int namelen = (int)strlen("coda_time_string_to_double");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -2495,7 +2495,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_time_1string_1to_1double_1u
     
     if (result < 0)
     {
-      int namelen = strlen("coda_time_string_to_double_utc");
+      int namelen = (int)strlen("coda_time_string_to_double_utc");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -2556,7 +2556,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_datetime_1to_1double(JNIEnv
     
     if (result < 0)
     {
-      int namelen = strlen("coda_datetime_to_double");
+      int namelen = (int)strlen("coda_datetime_to_double");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -2687,7 +2687,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_double_1to_1datetime(JNIEnv
     
     if (result < 0)
     {
-      int namelen = strlen("coda_double_to_datetime");
+      int namelen = (int)strlen("coda_double_to_datetime");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -2768,7 +2768,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_string_1to_1time(JNIEnv *je
     
     if (result < 0)
     {
-      int namelen = strlen("coda_string_to_time");
+      int namelen = (int)strlen("coda_string_to_time");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -2828,7 +2828,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_utcdatetime_1to_1double(JNI
     
     if (result < 0)
     {
-      int namelen = strlen("coda_utcdatetime_to_double");
+      int namelen = (int)strlen("coda_utcdatetime_to_double");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -2959,7 +2959,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_double_1to_1utcdatetime(JNI
     
     if (result < 0)
     {
-      int namelen = strlen("coda_double_to_utcdatetime");
+      int namelen = (int)strlen("coda_double_to_utcdatetime");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -3040,7 +3040,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_utcstring_1to_1time(JNIEnv 
     
     if (result < 0)
     {
-      int namelen = strlen("coda_utcstring_to_time");
+      int namelen = (int)strlen("coda_utcstring_to_time");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -3083,7 +3083,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_open(JNIEnv *jenv, jclass j
     
     if (result < 0)
     {
-      int namelen = strlen("coda_open");
+      int namelen = (int)strlen("coda_open");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -3143,7 +3143,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_open_1as(JNIEnv *jenv, jcla
     
     if (result < 0)
     {
-      int namelen = strlen("coda_open_as");
+      int namelen = (int)strlen("coda_open_as");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -3182,7 +3182,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_close(JNIEnv *jenv, jclass 
     
     if (result < 0)
     {
-      int namelen = strlen("coda_close");
+      int namelen = (int)strlen("coda_close");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -3224,7 +3224,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_get_1product_1filename(JNIE
     
     if (result < 0)
     {
-      int namelen = strlen("coda_get_product_filename");
+      int namelen = (int)strlen("coda_get_product_filename");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -3273,7 +3273,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_get_1product_1file_1size(JN
     
     if (result < 0)
     {
-      int namelen = strlen("coda_get_product_file_size");
+      int namelen = (int)strlen("coda_get_product_file_size");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -3320,7 +3320,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_get_1product_1format(JNIEnv
     
     if (result < 0)
     {
-      int namelen = strlen("coda_get_product_format");
+      int namelen = (int)strlen("coda_get_product_format");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -3367,7 +3367,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_get_1product_1class(JNIEnv 
     
     if (result < 0)
     {
-      int namelen = strlen("coda_get_product_class");
+      int namelen = (int)strlen("coda_get_product_class");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -3416,7 +3416,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_get_1product_1type(JNIEnv *
     
     if (result < 0)
     {
-      int namelen = strlen("coda_get_product_type");
+      int namelen = (int)strlen("coda_get_product_type");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -3465,7 +3465,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_get_1product_1version(JNIEn
     
     if (result < 0)
     {
-      int namelen = strlen("coda_get_product_version");
+      int namelen = (int)strlen("coda_get_product_version");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -3512,7 +3512,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_get_1product_1definition_1f
     
     if (result < 0)
     {
-      int namelen = strlen("coda_get_product_definition_file");
+      int namelen = (int)strlen("coda_get_product_definition_file");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -3552,7 +3552,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_get_1product_1root_1type(JN
     
     if (result < 0)
     {
-      int namelen = strlen("coda_get_product_root_type");
+      int namelen = (int)strlen("coda_get_product_root_type");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -3610,7 +3610,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_get_1product_1variable_1val
     
     if (result < 0)
     {
-      int namelen = strlen("coda_get_product_variable_value");
+      int namelen = (int)strlen("coda_get_product_variable_value");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -3658,7 +3658,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1has_1attributes(JNIEn
     
     if (result < 0)
     {
-      int namelen = strlen("coda_type_has_attributes");
+      int namelen = (int)strlen("coda_type_has_attributes");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -3705,7 +3705,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1format(JNIEnv *j
     
     if (result < 0)
     {
-      int namelen = strlen("coda_type_get_format");
+      int namelen = (int)strlen("coda_type_get_format");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -3752,7 +3752,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1class(JNIEnv *je
     
     if (result < 0)
     {
-      int namelen = strlen("coda_type_get_class");
+      int namelen = (int)strlen("coda_type_get_class");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -3799,7 +3799,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1read_1type(JNIEn
     
     if (result < 0)
     {
-      int namelen = strlen("coda_type_get_read_type");
+      int namelen = (int)strlen("coda_type_get_read_type");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -3846,7 +3846,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1string_1length(J
     
     if (result < 0)
     {
-      int namelen = strlen("coda_type_get_string_length");
+      int namelen = (int)strlen("coda_type_get_string_length");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -3893,7 +3893,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1bit_1size(JNIEnv
     
     if (result < 0)
     {
-      int namelen = strlen("coda_type_get_bit_size");
+      int namelen = (int)strlen("coda_type_get_bit_size");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -3940,7 +3940,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1name(JNIEnv *jen
     
     if (result < 0)
     {
-      int namelen = strlen("coda_type_get_name");
+      int namelen = (int)strlen("coda_type_get_name");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -3989,7 +3989,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1description(JNIE
     
     if (result < 0)
     {
-      int namelen = strlen("coda_type_get_description");
+      int namelen = (int)strlen("coda_type_get_description");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -4038,7 +4038,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1unit(JNIEnv *jen
     
     if (result < 0)
     {
-      int namelen = strlen("coda_type_get_unit");
+      int namelen = (int)strlen("coda_type_get_unit");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -4101,7 +4101,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1fixed_1value(JNI
     
     if (result < 0)
     {
-      int namelen = strlen("coda_type_get_fixed_value");
+      int namelen = (int)strlen("coda_type_get_fixed_value");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -4146,7 +4146,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1attributes(JNIEn
     
     if (result < 0)
     {
-      int namelen = strlen("coda_type_get_attributes");
+      int namelen = (int)strlen("coda_type_get_attributes");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -4196,7 +4196,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1num_1record_1fie
     
     if (result < 0)
     {
-      int namelen = strlen("coda_type_get_num_record_fields");
+      int namelen = (int)strlen("coda_type_get_num_record_fields");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -4249,7 +4249,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1record_1field_1i
     
     if (result < 0)
     {
-      int namelen = strlen("coda_type_get_record_field_index_from_name");
+      int namelen = (int)strlen("coda_type_get_record_field_index_from_name");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -4303,7 +4303,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1record_1field_1i
     
     if (result < 0)
     {
-      int namelen = strlen("coda_type_get_record_field_index_from_real_name");
+      int namelen = (int)strlen("coda_type_get_record_field_index_from_real_name");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -4344,7 +4344,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1record_1field_1t
     
     if (result < 0)
     {
-      int namelen = strlen("coda_type_get_record_field_type");
+      int namelen = (int)strlen("coda_type_get_record_field_type");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -4396,7 +4396,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1record_1field_1n
     
     if (result < 0)
     {
-      int namelen = strlen("coda_type_get_record_field_name");
+      int namelen = (int)strlen("coda_type_get_record_field_name");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -4447,7 +4447,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1record_1field_1r
     
     if (result < 0)
     {
-      int namelen = strlen("coda_type_get_record_field_real_name");
+      int namelen = (int)strlen("coda_type_get_record_field_real_name");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -4498,7 +4498,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1record_1field_1h
     
     if (result < 0)
     {
-      int namelen = strlen("coda_type_get_record_field_hidden_status");
+      int namelen = (int)strlen("coda_type_get_record_field_hidden_status");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -4547,7 +4547,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1record_1field_1a
     
     if (result < 0)
     {
-      int namelen = strlen("coda_type_get_record_field_available_status");
+      int namelen = (int)strlen("coda_type_get_record_field_available_status");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -4594,7 +4594,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1record_1union_1s
     
     if (result < 0)
     {
-      int namelen = strlen("coda_type_get_record_union_status");
+      int namelen = (int)strlen("coda_type_get_record_union_status");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -4641,7 +4641,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1array_1num_1dims
     
     if (result < 0)
     {
-      int namelen = strlen("coda_type_get_array_num_dims");
+      int namelen = (int)strlen("coda_type_get_array_num_dims");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -4691,7 +4691,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1array_1dim(JNIEn
     
     if (result < 0)
     {
-      int namelen = strlen("coda_type_get_array_dim");
+      int namelen = (int)strlen("coda_type_get_array_dim");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -4731,7 +4731,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1array_1base_1typ
     
     if (result < 0)
     {
-      int namelen = strlen("coda_type_get_array_base_type");
+      int namelen = (int)strlen("coda_type_get_array_base_type");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -4781,7 +4781,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1special_1type(JN
     
     if (result < 0)
     {
-      int namelen = strlen("coda_type_get_special_type");
+      int namelen = (int)strlen("coda_type_get_special_type");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -4819,7 +4819,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_type_1get_1special_1base_1t
     
     if (result < 0)
     {
-      int namelen = strlen("coda_type_get_special_base_type");
+      int namelen = (int)strlen("coda_type_get_special_base_type");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -4857,7 +4857,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1set_1product(JNIEnv
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_set_product");
+      int namelen = (int)strlen("coda_cursor_set_product");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -4891,7 +4891,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1goto(JNIEnv *jenv, 
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_goto");
+      int namelen = (int)strlen("coda_cursor_goto");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -4920,7 +4920,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1goto_1first_1record
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_goto_first_record_field");
+      int namelen = (int)strlen("coda_cursor_goto_first_record_field");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -4948,7 +4948,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1goto_1next_1record_
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_goto_next_record_field");
+      int namelen = (int)strlen("coda_cursor_goto_next_record_field");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -4978,7 +4978,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1goto_1record_1field
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_goto_record_field_by_index");
+      int namelen = (int)strlen("coda_cursor_goto_record_field_by_index");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -5012,7 +5012,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1goto_1record_1field
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_goto_record_field_by_name");
+      int namelen = (int)strlen("coda_cursor_goto_record_field_by_name");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -5041,7 +5041,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1goto_1available_1un
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_goto_available_union_field");
+      int namelen = (int)strlen("coda_cursor_goto_available_union_field");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -5069,7 +5069,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1goto_1first_1array_
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_goto_first_array_element");
+      int namelen = (int)strlen("coda_cursor_goto_first_array_element");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -5097,7 +5097,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1goto_1next_1array_1
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_goto_next_array_element");
+      int namelen = (int)strlen("coda_cursor_goto_next_array_element");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -5130,7 +5130,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1goto_1array_1elemen
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_goto_array_element");
+      int namelen = (int)strlen("coda_cursor_goto_array_element");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -5162,7 +5162,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1goto_1array_1elemen
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_goto_array_element_by_index");
+      int namelen = (int)strlen("coda_cursor_goto_array_element_by_index");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -5190,7 +5190,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1goto_1attributes(JN
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_goto_attributes");
+      int namelen = (int)strlen("coda_cursor_goto_attributes");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -5218,7 +5218,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1goto_1root(JNIEnv *
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_goto_root");
+      int namelen = (int)strlen("coda_cursor_goto_root");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -5246,7 +5246,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1goto_1parent(JNIEnv
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_goto_parent");
+      int namelen = (int)strlen("coda_cursor_goto_parent");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -5274,7 +5274,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1use_1base_1type_1of
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_use_base_type_of_special_type");
+      int namelen = (int)strlen("coda_cursor_use_base_type_of_special_type");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -5316,7 +5316,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1has_1ascii_1content
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_has_ascii_content");
+      int namelen = (int)strlen("coda_cursor_has_ascii_content");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -5363,7 +5363,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1has_1attributes(JNI
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_has_attributes");
+      int namelen = (int)strlen("coda_cursor_has_attributes");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -5410,7 +5410,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1get_1string_1length
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_get_string_length");
+      int namelen = (int)strlen("coda_cursor_get_string_length");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -5457,7 +5457,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1get_1bit_1size(JNIE
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_get_bit_size");
+      int namelen = (int)strlen("coda_cursor_get_bit_size");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -5504,7 +5504,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1get_1byte_1size(JNI
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_get_byte_size");
+      int namelen = (int)strlen("coda_cursor_get_byte_size");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -5551,7 +5551,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1get_1num_1elements(
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_get_num_elements");
+      int namelen = (int)strlen("coda_cursor_get_num_elements");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -5589,7 +5589,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1get_1product_1file(
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_get_product_file");
+      int namelen = (int)strlen("coda_cursor_get_product_file");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -5639,7 +5639,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1get_1depth(JNIEnv *
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_get_depth");
+      int namelen = (int)strlen("coda_cursor_get_depth");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -5686,7 +5686,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1get_1index(JNIEnv *
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_get_index");
+      int namelen = (int)strlen("coda_cursor_get_index");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -5733,7 +5733,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1get_1file_1bit_1off
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_get_file_bit_offset");
+      int namelen = (int)strlen("coda_cursor_get_file_bit_offset");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -5780,7 +5780,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1get_1file_1byte_1of
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_get_file_byte_offset");
+      int namelen = (int)strlen("coda_cursor_get_file_byte_offset");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -5827,7 +5827,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1get_1format(JNIEnv 
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_get_format");
+      int namelen = (int)strlen("coda_cursor_get_format");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -5874,7 +5874,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1get_1type_1class(JN
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_get_type_class");
+      int namelen = (int)strlen("coda_cursor_get_type_class");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -5921,7 +5921,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1get_1read_1type(JNI
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_get_read_type");
+      int namelen = (int)strlen("coda_cursor_get_read_type");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -5968,7 +5968,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1get_1special_1type(
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_get_special_type");
+      int namelen = (int)strlen("coda_cursor_get_special_type");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -6006,7 +6006,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1get_1type(JNIEnv *j
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_get_type");
+      int namelen = (int)strlen("coda_cursor_get_type");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -6062,7 +6062,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1get_1record_1field_
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_get_record_field_index_from_name");
+      int namelen = (int)strlen("coda_cursor_get_record_field_index_from_name");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -6112,7 +6112,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1get_1record_1field_
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_get_record_field_available_status");
+      int namelen = (int)strlen("coda_cursor_get_record_field_available_status");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -6159,7 +6159,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1get_1available_1uni
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_get_available_union_field_index");
+      int namelen = (int)strlen("coda_cursor_get_available_union_field_index");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -6209,7 +6209,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1get_1array_1dim(JNI
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_get_array_dim");
+      int namelen = (int)strlen("coda_cursor_get_array_dim");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -6247,7 +6247,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1int8(JNIEnv *
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_int8");
+      int namelen = (int)strlen("coda_cursor_read_int8");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -6280,7 +6280,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1uint8(JNIEnv 
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_uint8");
+      int namelen = (int)strlen("coda_cursor_read_uint8");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -6313,7 +6313,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1int16(JNIEnv 
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_int16");
+      int namelen = (int)strlen("coda_cursor_read_int16");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -6346,7 +6346,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1uint16(JNIEnv
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_uint16");
+      int namelen = (int)strlen("coda_cursor_read_uint16");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -6379,7 +6379,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1int32(JNIEnv 
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_int32");
+      int namelen = (int)strlen("coda_cursor_read_int32");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -6412,7 +6412,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1uint32(JNIEnv
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_uint32");
+      int namelen = (int)strlen("coda_cursor_read_uint32");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -6445,7 +6445,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1int64(JNIEnv 
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_int64");
+      int namelen = (int)strlen("coda_cursor_read_int64");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -6478,7 +6478,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1float(JNIEnv 
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_float");
+      int namelen = (int)strlen("coda_cursor_read_float");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -6515,7 +6515,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1bits(JNIEnv *
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_bits");
+      int namelen = (int)strlen("coda_cursor_read_bits");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -6552,7 +6552,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1bytes(JNIEnv 
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_bytes");
+      int namelen = (int)strlen("coda_cursor_read_bytes");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -6587,7 +6587,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1int8_1array(J
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_int8_array");
+      int namelen = (int)strlen("coda_cursor_read_int8_array");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -6622,7 +6622,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1uint8_1array(
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_uint8_array");
+      int namelen = (int)strlen("coda_cursor_read_uint8_array");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -6657,7 +6657,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1int16_1array(
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_int16_array");
+      int namelen = (int)strlen("coda_cursor_read_int16_array");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -6692,7 +6692,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1uint16_1array
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_uint16_array");
+      int namelen = (int)strlen("coda_cursor_read_uint16_array");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -6727,7 +6727,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1int32_1array(
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_int32_array");
+      int namelen = (int)strlen("coda_cursor_read_int32_array");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -6762,7 +6762,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1uint32_1array
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_uint32_array");
+      int namelen = (int)strlen("coda_cursor_read_uint32_array");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -6797,7 +6797,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1int64_1array(
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_int64_array");
+      int namelen = (int)strlen("coda_cursor_read_int64_array");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -6843,7 +6843,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1uint64_1array
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_uint64_array");
+      int namelen = (int)strlen("coda_cursor_read_uint64_array");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -6881,7 +6881,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1float_1array(
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_float_array");
+      int namelen = (int)strlen("coda_cursor_read_float_array");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -6916,7 +6916,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1double_1array
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_double_array");
+      int namelen = (int)strlen("coda_cursor_read_double_array");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -6953,7 +6953,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1int8_1partial
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_int8_partial_array");
+      int namelen = (int)strlen("coda_cursor_read_int8_partial_array");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -6990,7 +6990,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1uint8_1partia
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_uint8_partial_array");
+      int namelen = (int)strlen("coda_cursor_read_uint8_partial_array");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -7027,7 +7027,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1int16_1partia
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_int16_partial_array");
+      int namelen = (int)strlen("coda_cursor_read_int16_partial_array");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -7064,7 +7064,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1uint16_1parti
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_uint16_partial_array");
+      int namelen = (int)strlen("coda_cursor_read_uint16_partial_array");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -7101,7 +7101,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1int32_1partia
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_int32_partial_array");
+      int namelen = (int)strlen("coda_cursor_read_int32_partial_array");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -7138,7 +7138,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1uint32_1parti
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_uint32_partial_array");
+      int namelen = (int)strlen("coda_cursor_read_uint32_partial_array");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -7175,7 +7175,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1int64_1partia
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_int64_partial_array");
+      int namelen = (int)strlen("coda_cursor_read_int64_partial_array");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -7223,7 +7223,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1uint64_1parti
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_uint64_partial_array");
+      int namelen = (int)strlen("coda_cursor_read_uint64_partial_array");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -7263,7 +7263,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1float_1partia
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_float_partial_array");
+      int namelen = (int)strlen("coda_cursor_read_float_partial_array");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -7300,7 +7300,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1double_1parti
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_double_partial_array");
+      int namelen = (int)strlen("coda_cursor_read_double_partial_array");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -7333,7 +7333,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1complex_1doub
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_complex_double_pair");
+      int namelen = (int)strlen("coda_cursor_read_complex_double_pair");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -7368,7 +7368,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1complex_1doub
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_complex_double_pairs_array");
+      int namelen = (int)strlen("coda_cursor_read_complex_double_pairs_array");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -7426,7 +7426,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1complex_1doub
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_complex_double_split");
+      int namelen = (int)strlen("coda_cursor_read_complex_double_split");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -7494,7 +7494,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_cursor_1read_1complex_1doub
     
     if (result < 0)
     {
-      int namelen = strlen("coda_cursor_read_complex_double_split_array");
+      int namelen = (int)strlen("coda_cursor_read_complex_double_split_array");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -7541,7 +7541,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_expression_1from_1string(JN
     
     if (result < 0)
     {
-      int namelen = strlen("coda_expression_from_string");
+      int namelen = (int)strlen("coda_expression_from_string");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -7592,7 +7592,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_expression_1get_1type(JNIEn
     
     if (result < 0)
     {
-      int namelen = strlen("coda_expression_get_type");
+      int namelen = (int)strlen("coda_expression_get_type");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -7641,7 +7641,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_expression_1eval_1bool(JNIE
     
     if (result < 0)
     {
-      int namelen = strlen("coda_expression_eval_bool");
+      int namelen = (int)strlen("coda_expression_eval_bool");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -7690,7 +7690,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_expression_1eval_1integer(J
     
     if (result < 0)
     {
-      int namelen = strlen("coda_expression_eval_integer");
+      int namelen = (int)strlen("coda_expression_eval_integer");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -7739,7 +7739,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_expression_1eval_1float(JNI
     
     if (result < 0)
     {
-      int namelen = strlen("coda_expression_eval_float");
+      int namelen = (int)strlen("coda_expression_eval_float");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -7802,7 +7802,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_expression_1eval_1string(JN
     
     if (result < 0)
     {
-      int namelen = strlen("coda_expression_eval_string");
+      int namelen = (int)strlen("coda_expression_eval_string");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");
@@ -7847,7 +7847,7 @@ SWIGEXPORT jint JNICALL Java_nl_stcorp_coda_codacJNI_expression_1eval_1node(JNIE
     
     if (result < 0)
     {
-      int namelen = strlen("coda_expression_eval_node");
+      int namelen = (int)strlen("coda_expression_eval_node");
       const char *codamsg = coda_errno_to_string(coda_errno);
       char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
       jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");

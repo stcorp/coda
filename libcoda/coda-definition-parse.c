@@ -307,7 +307,7 @@ static char *regexp_match_string(char *str)
     int match_length;
     int from, to;
 
-    length = strlen(str);
+    length = (int)strlen(str);
     match_length = 0;
     for (from = 0; from < length; from++)
     {
@@ -785,7 +785,7 @@ static int bool_expression_finalise(parser_info *info)
 
     if (info->node->char_data != NULL)
     {
-        if (is_whitespace(info->node->char_data, strlen(info->node->char_data)))
+        if (is_whitespace(info->node->char_data, (int)strlen(info->node->char_data)))
         {
             free(info->node->char_data);
             info->node->char_data = NULL;
@@ -834,7 +834,7 @@ static int integer_expression_finalise(parser_info *info)
 
     if (info->node->char_data != NULL)
     {
-        if (is_whitespace(info->node->char_data, strlen(info->node->char_data)))
+        if (is_whitespace(info->node->char_data, (int)strlen(info->node->char_data)))
         {
             free(info->node->char_data);
             info->node->char_data = NULL;
@@ -883,7 +883,7 @@ static int integer_constant_or_expression_finalise(parser_info *info)
 
     if (info->node->char_data != NULL)
     {
-        if (is_whitespace(info->node->char_data, strlen(info->node->char_data)))
+        if (is_whitespace(info->node->char_data, (int)strlen(info->node->char_data)))
         {
             free(info->node->char_data);
             info->node->char_data = NULL;
@@ -943,7 +943,7 @@ static int optional_integer_constant_or_expression_finalise(parser_info *info)
 
     if (info->node->char_data != NULL)
     {
-        if (is_whitespace(info->node->char_data, strlen(info->node->char_data)))
+        if (is_whitespace(info->node->char_data, (int)strlen(info->node->char_data)))
         {
             free(info->node->char_data);
             info->node->char_data = NULL;
@@ -1114,7 +1114,7 @@ static int void_expression_finalise(parser_info *info)
 
     if (info->node->char_data != NULL)
     {
-        if (is_whitespace(info->node->char_data, strlen(info->node->char_data)))
+        if (is_whitespace(info->node->char_data, (int)strlen(info->node->char_data)))
         {
             free(info->node->char_data);
             info->node->char_data = NULL;
@@ -1556,12 +1556,12 @@ static int cd_conversion_init(parser_info *info, const char **attr)
     {
         return -1;
     }
-    if (coda_ascii_parse_double(numerator_string, strlen(numerator_string), &numerator, 1) < 0)
+    if (coda_ascii_parse_double(numerator_string, (long)strlen(numerator_string), &numerator, 1) < 0)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid value '%s' for 'numerator' attribute", numerator_string);
         return -1;
     }
-    if (coda_ascii_parse_double(denominator_string, strlen(denominator_string), &denominator, 1) < 0)
+    if (coda_ascii_parse_double(denominator_string, (long)strlen(denominator_string), &denominator, 1) < 0)
     {
         coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid value '%s' for 'denominator' attribute",
                        denominator_string);
@@ -1570,7 +1570,7 @@ static int cd_conversion_init(parser_info *info, const char **attr)
     offset_string = get_attribute_value(attr, "offset");
     if (offset_string != NULL)
     {
-        if (coda_ascii_parse_double(offset_string, strlen(offset_string), &offset, 1) < 0)
+        if (coda_ascii_parse_double(offset_string, (long)strlen(offset_string), &offset, 1) < 0)
         {
             coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid value '%s' for 'offset' attribute", offset_string);
             return -1;
@@ -1579,7 +1579,7 @@ static int cd_conversion_init(parser_info *info, const char **attr)
     invalid_string = get_attribute_value(attr, "invalid");
     if (invalid_string != NULL)
     {
-        if (coda_ascii_parse_double(invalid_string, strlen(invalid_string), &invalid, 1) < 0)
+        if (coda_ascii_parse_double(invalid_string, (long)strlen(invalid_string), &invalid, 1) < 0)
         {
             coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid value '%s' for 'invalid' attribute", invalid_string);
             return -1;
@@ -1995,7 +1995,7 @@ static int cd_mapping_init(parser_info *info, const char **attr)
     {
         int64_t value;
 
-        if (coda_ascii_parse_int64(value_string, strlen(value_string), &value, 0) < 0)
+        if (coda_ascii_parse_int64(value_string, (long)strlen(value_string), &value, 0) < 0)
         {
             coda_set_error(CODA_ERROR_DATA_DEFINITION, "invalid 'value' attribute integer value '%s'", value_string);
             return -1;
@@ -2499,7 +2499,7 @@ static int cd_match_expression_finalise(parser_info *info)
 
     if (info->node->char_data != NULL)
     {
-        if (is_whitespace(info->node->char_data, strlen(info->node->char_data)))
+        if (is_whitespace(info->node->char_data, (int)strlen(info->node->char_data)))
         {
             free(info->node->char_data);
             info->node->char_data = NULL;
@@ -3848,7 +3848,7 @@ static void XMLCALL string_handler(void *data, const char *s, int len)
     else
     {
         char *char_data;
-        long current_length = strlen(info->node->char_data);
+        long current_length = (long)strlen(info->node->char_data);
 
         char_data = malloc(current_length + len + 1);
         if (char_data == NULL)

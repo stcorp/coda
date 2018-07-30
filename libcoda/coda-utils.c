@@ -163,7 +163,7 @@ char *coda_identifier_from_name(const char *name, hashtable *hash_data)
         }
     }
 
-    length = strlen(name);
+    length = (int)strlen(name);
     /* allow some space for _### postfixes */
     identifier = malloc(length + postfix_length + 1);
     if (identifier == NULL)
@@ -376,7 +376,7 @@ int coda_path_find_file(const char *searchpath, const char *filename, char **loc
     char *path_component;
     char *filepath = NULL;
     int filepath_length = 0;
-    int filename_length = strlen(filename);
+    int filename_length = (int)strlen(filename);
 
     if (searchpath == NULL || searchpath[0] == '\0')
     {
@@ -409,7 +409,7 @@ int coda_path_find_file(const char *searchpath, const char *filename, char **loc
             p++;
         }
 
-        path_component_length = strlen(path_component);
+        path_component_length = (int)strlen(path_component);
         if (filepath_length < path_component_length + filename_length + 1)
         {
             char *new_filepath;
@@ -461,8 +461,8 @@ int coda_path_from_path(const char *initialpath, int is_filepath, const char *ap
     int initialpath_length;
     int appendpath_length;
 
-    initialpath_length = strlen(initialpath);
-    appendpath_length = (appendpath == NULL ? 0 : strlen(appendpath));
+    initialpath_length = (int)strlen(initialpath);
+    appendpath_length = (appendpath == NULL ? 0 : (int)strlen(appendpath));
 
     if (is_filepath && initialpath_length > 0)
     {
@@ -542,7 +542,7 @@ int coda_path_for_program(const char *argv0, char **location)
     {
         /* use PATH */
 #ifdef WIN32
-        int argv0_length = strlen(argv0);
+        int argv0_length = (int)strlen(argv0);
 
         if (argv0_length <= 4 || strcmp(&argv0[argv0_length - 4], ".exe") != 0)
         {

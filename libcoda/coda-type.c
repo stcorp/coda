@@ -287,7 +287,7 @@ coda_ascii_integer_mapping *coda_ascii_integer_mapping_new(const char *str, int6
         free(mapping);
         return NULL;
     }
-    mapping->length = strlen(str);
+    mapping->length = (int)strlen(str);
 
     return mapping;
 }
@@ -331,7 +331,7 @@ coda_ascii_float_mapping *coda_ascii_float_mapping_new(const char *str, double v
         free(mapping);
         return NULL;
     }
-    mapping->length = strlen(str);
+    mapping->length = (int)strlen(str);
 
     return mapping;
 }
@@ -3145,7 +3145,7 @@ LIBCODA_API int coda_type_get_fixed_value(const coda_type *type, const char **fi
             *fixed_value = ((coda_type_text *)type)->fixed_value;
             if (length != NULL)
             {
-                *length = ((*fixed_value == NULL) ? 0 : strlen(*fixed_value));
+                *length = ((*fixed_value == NULL) ? 0 : (long)strlen(*fixed_value));
             }
             break;
         case coda_raw_class:

@@ -59,7 +59,7 @@ static void coda_matlab_parse_arg(const mxArray *arg, int *arg_type, long *index
 
     *arg_type = -1;
 
-    arg_num_dims = mxGetNumberOfDimensions(arg);
+    arg_num_dims = (int)mxGetNumberOfDimensions(arg);
     arg_dim = mxGetDimensions(arg);
 
     if (mxGetClassID(arg) == mxCHAR_CLASS)
@@ -68,7 +68,7 @@ static void coda_matlab_parse_arg(const mxArray *arg, int *arg_type, long *index
 
         if (arg_num_dims == 2 && arg_dim[0] == 1 && arg_dim[1] > 0)
         {
-            *length = (arg_dim[0] * arg_dim[1] * sizeof(mxChar)) + 1;
+            *length = (int)(arg_dim[0] * arg_dim[1] * sizeof(mxChar)) + 1;
             *name = mxCalloc(*length, 1);
             if (mxGetString(arg, *name, *length) != 0)
             {
@@ -103,7 +103,7 @@ static void coda_matlab_parse_arg(const mxArray *arg, int *arg_type, long *index
             }
         }
 
-        *length = arg_dim[1];
+        *length = (int)arg_dim[1];
         *arg_type = 0;
     }
 }

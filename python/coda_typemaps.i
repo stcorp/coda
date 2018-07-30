@@ -76,9 +76,9 @@
     }
     else if (PySequence_Check($input))
     {
-        int i;
+        long i;
 
-        $1 = PySequence_Size($input);
+        $1 = (int)PySequence_Size($input);
 
         /*
             malloc(0) may not work as expected on every
@@ -160,7 +160,7 @@
     {
         long i;
 
-        $1 = PySequence_Size($input);
+        $1 = (long)PySequence_Size($input);
 
         /* malloc(0) may not work as expected on every platform. */
         if ($1 > 0)

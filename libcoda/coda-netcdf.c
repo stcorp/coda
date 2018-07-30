@@ -259,7 +259,7 @@ static int read_att_array(coda_netcdf_product *product, int64_t *offset, coda_me
         {
             return -1;
         }
-        value_length = nelems;
+        value_length = (long)nelems;
         switch (nc_type)
         {
             case 1:
@@ -453,7 +453,7 @@ static int read_att_array(coda_netcdf_product *product, int64_t *offset, coda_me
         else
         {
             coda_netcdf_array *array;
-            long size = nelems;
+            long size = (long)nelems;
 
             array = coda_netcdf_array_new(1, &size, basic_type);
             if (array == NULL)
@@ -579,19 +579,19 @@ static int read_var_array(coda_netcdf_product *product, int64_t *offset, int64_t
             }
             if (j == nelems - 1)
             {
-                last_dim_length = dim_length[dim_id];
+                last_dim_length = (long)dim_length[dim_id];
                 last_dim_set = 1;
             }
             else
             {
                 if (j < CODA_MAX_NUM_DIMS)
                 {
-                    dim[j] = dim_length[dim_id];
+                    dim[j] = (long)dim_length[dim_id];
                     num_dims++;
                 }
                 else
                 {
-                    dim[CODA_MAX_NUM_DIMS - 1] *= dim_length[dim_id];
+                    dim[CODA_MAX_NUM_DIMS - 1] *= (long)dim_length[dim_id];
                 }
             }
             if (j == 0)
@@ -648,7 +648,7 @@ static int read_var_array(coda_netcdf_product *product, int64_t *offset, int64_t
         }
         if (record_var)
         {
-            product->record_size += vsize;
+            product->record_size += (long)vsize;
         }
 
         /* offset */

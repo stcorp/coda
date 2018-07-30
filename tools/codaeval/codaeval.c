@@ -59,7 +59,7 @@ static void generate_escaped_string(const char *str, int length)
 
     if (length < 0)
     {
-        length = strlen(str);
+        length = (int)strlen(str);
     }
 
     while (i < length)

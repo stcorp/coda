@@ -4394,9 +4394,9 @@ SWIGINTERN PyObject *_wrap_match_filefilter(PyObject *SWIGUNUSEDPARM(self), PyOb
     }
     else if (PySequence_Check(obj1))
     {
-      int i;
+      long i;
       
-      arg2 = PySequence_Size(obj1);
+      arg2 = (int)PySequence_Size(obj1);
       
       /*
                   malloc(0) may not work as expected on every
@@ -5629,7 +5629,7 @@ SWIGINTERN PyObject *_wrap_c_index_to_fortran_index(PyObject *SWIGUNUSEDPARM(sel
     {
       long i;
       
-      arg1 = PySequence_Size(obj0);
+      arg1 = (long)PySequence_Size(obj0);
       
       /* malloc(0) may not work as expected on every platform. */
       if (arg1 > 0)
@@ -9177,7 +9177,7 @@ SWIGINTERN PyObject *_wrap_cursor_goto_array_element(PyObject *SWIGUNUSEDPARM(se
     {
       long i;
       
-      arg2 = PySequence_Size(obj1);
+      arg2 = (long)PySequence_Size(obj1);
       
       /* malloc(0) may not work as expected on every platform. */
       if (arg2 > 0)

@@ -128,7 +128,7 @@ static void generate_escaped_string(const char *str, int length)
 
     if (length < 0)
     {
-        length = strlen(str);
+        length = (int)strlen(str);
     }
 
     while (length > 0)
@@ -202,7 +202,7 @@ static void generate_xml_string(const char *str, int length)
 
     if (length < 0)
     {
-        length = strlen(str);
+        length = (int)strlen(str);
     }
 
     while (length > 0)

@@ -1712,7 +1712,7 @@ static void rtrim(char *str)
 {
     long length;
 
-    length = strlen(str);
+    length = (long)strlen(str);
     while (length > 0 && str[length - 1] == ' ')
     {
         str[length - 1] = '\0';
@@ -1735,7 +1735,7 @@ static int get_line(FILE *f, char *line)
         line[0] = '\0';
         return 0;
     }
-    length = strlen(line);
+    length = (long)strlen(line);
 
     /* remove 'linefeed' character if available */
     if (length > 0 && line[length - 1] == '\n')

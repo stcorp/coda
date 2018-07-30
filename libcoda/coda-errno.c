@@ -174,7 +174,7 @@ void coda_add_error_message_vargs(const char *message, va_list ap)
         return;
     }
 
-    current_length = strlen(coda_error_message_buffer);
+    current_length = (int)strlen(coda_error_message_buffer);
     if (current_length >= MAX_ERROR_INFO_LENGTH)
     {
         return;
@@ -183,7 +183,7 @@ void coda_add_error_message_vargs(const char *message, va_list ap)
     {
         /* populate the message buffer with the default error message */
         strcpy(message_buffer, coda_errno_to_string(coda_errno));
-        current_length = strlen(message_buffer);
+        current_length = (int)strlen(message_buffer);
     }
     /* write to local buffer in order to allow using the result of coda_errno_to_string inside the va_list */
     vsnprintf(message_buffer, MAX_ERROR_INFO_LENGTH - current_length, message, ap);

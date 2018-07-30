@@ -369,7 +369,7 @@ int coda_hdf5_cursor_get_string_length(const coda_cursor *cursor, long *length)
                 H5Sclose(mem_space_id);
                 return -1;
             }
-            *length = strlen(buffer);
+            *length = (long)strlen(buffer);
             if (H5Dvlen_reclaim(base_type->datatype_id, mem_space_id, H5P_DEFAULT, &buffer) < 0)
             {
                 coda_set_error(CODA_ERROR_HDF5, NULL);
@@ -401,7 +401,7 @@ int coda_hdf5_cursor_get_string_length(const coda_cursor *cursor, long *length)
     }
     else
     {
-        *length = H5Tget_size(base_type->datatype_id);
+        *length = (long)H5Tget_size(base_type->datatype_id);
     }
 
     return 0;
@@ -441,7 +441,7 @@ static int read_array(const coda_cursor *cursor, void *dst)
     if (H5Tget_class(base_type->datatype_id) == H5T_ENUM)
     {
         /* we read the data as an enumeration and perform the conversion to a native type after reading */
-        element_to_size = H5Tget_size(base_type->datatype_id);
+        element_to_size = (int)H5Tget_size(base_type->datatype_id);
         /* we make a copy to ease the cleanup process */
         mem_type_id = H5Tcopy(base_type->datatype_id);
     }
@@ -560,7 +560,7 @@ static int read_partial_array(const coda_cursor *cursor, long offset, long lengt
     if (H5Tget_class(base_type->datatype_id) == H5T_ENUM)
     {
         /* we read the data as an enumeration and perform the conversion to a native type after reading */
-        element_to_size = H5Tget_size(base_type->datatype_id);
+        element_to_size = (int)H5Tget_size(base_type->datatype_id);
         /* we make a copy to ease the cleanup process */
         mem_type_id = H5Tcopy(base_type->datatype_id);
     }
@@ -669,7 +669,7 @@ static int read_basic_type(const coda_cursor *cursor, void *dst, long dst_size)
 
     if (!base_type->is_variable_string)
     {
-        size = H5Tget_size(datatype_to);
+        size = (long)H5Tget_size(datatype_to);
     }
 
     dataset = (coda_hdf5_dataset *)cursor->stack[array_depth].type;
@@ -708,7 +708,7 @@ static int read_basic_type(const coda_cursor *cursor, void *dst, long dst_size)
             H5Sclose(mem_space_id);
             return -1;
         }
-        size = strlen(buffer);
+        size = (long)strlen(buffer);
 
         /* limit the number of returned characters */
         if (size > dst_size - 1)

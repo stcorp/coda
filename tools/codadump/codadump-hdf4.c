@@ -277,7 +277,7 @@ void hdf4_enter_record()
         if ((description != NULL) && (description[0] != '\0'))
         {
             if (Vsetattr(hdf4_info.vgroup_id[hdf4_info.vgroup_depth], "description", DFNT_CHAR,
-                         strlen(description), description) != 0)
+                         (int32_t)strlen(description), description) != 0)
             {
                 handle_hdf4_error();
             }
@@ -1185,7 +1185,7 @@ void export_data_element_to_hdf4()
         }
         if ((description != NULL) && (description[0] != '\0'))
         {
-            if (SDsetattr(hdf4_info.sds_id, "description", DFNT_CHAR, strlen(description), description) != 0)
+            if (SDsetattr(hdf4_info.sds_id, "description", DFNT_CHAR, (int32_t)strlen(description), description) != 0)
             {
                 handle_hdf4_error();
             }
@@ -1197,7 +1197,7 @@ void export_data_element_to_hdf4()
         }
         if ((unit != NULL) && (unit[0] != '\0'))
         {
-            if (SDsetattr(hdf4_info.sds_id, "unit", DFNT_CHAR, strlen(unit), unit) != 0)
+            if (SDsetattr(hdf4_info.sds_id, "unit", DFNT_CHAR, (int32_t)strlen(unit), unit) != 0)
             {
                 handle_hdf4_error();
             }

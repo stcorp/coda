@@ -192,7 +192,7 @@ static void coda_matlab_set_definition_path(void)
         }
         mxDestroyArray(arg);
 
-        path_length = mxGetN(mxpath) * mxGetM(mxpath) + 1;
+        path_length = (int)mxGetN(mxpath) * mxGetM(mxpath) + 1;
         path = mxCalloc(path_length + 1, 1);
         if (mxGetString(mxpath, path, path_length + 1) != 0)
         {
@@ -691,7 +691,7 @@ static void coda_matlab_eval(int nlhs, mxArray *plhs[], int nrhs, const mxArray 
         mexErrMsgTxt("First argument should be a row vector.");
     }
 
-    buflen = mxGetN(prhs[0]) + 1;
+    buflen = (int)mxGetN(prhs[0]) + 1;
     exprstring = (char *)mxCalloc(buflen, sizeof(char));
     if (mxGetString(prhs[0], exprstring, buflen) != 0)
     {
@@ -852,7 +852,7 @@ static void coda_matlab_fieldavailable(int nlhs, mxArray *plhs[], int nrhs, cons
         long field_index;
         int available;
 
-        arg_num_dims = mxGetNumberOfDimensions(prhs[nrhs - 1]);
+        arg_num_dims = (int)mxGetNumberOfDimensions(prhs[nrhs - 1]);
         arg_dim = mxGetDimensions(prhs[nrhs - 1]);
         if (mxGetClassID(prhs[nrhs - 1]) != mxCHAR_CLASS || !(arg_num_dims == 2 && arg_dim[0] == 1 && arg_dim[1] > 0))
         {
@@ -1161,7 +1161,7 @@ static void coda_matlab_open(int nlhs, mxArray *plhs[], int nrhs, const mxArray 
         mexErrMsgTxt("First argument should be a row vector.");
     }
 
-    buflen = mxGetN(prhs[0]) + 1;
+    buflen = (int)mxGetN(prhs[0]) + 1;
     filename = (char *)mxCalloc(buflen, sizeof(char));
     if (mxGetString(prhs[0], filename, buflen) != 0)
     {
@@ -1225,19 +1225,19 @@ static void coda_matlab_open_as(int nlhs, mxArray *plhs[], int nrhs, const mxArr
         mexErrMsgTxt("Fourth argument should be a numerical value.");
     }
 
-    buflen = mxGetN(prhs[0]) + 1;
+    buflen = (int)mxGetN(prhs[0]) + 1;
     filename = (char *)mxCalloc(buflen, sizeof(char));
     if (mxGetString(prhs[0], filename, buflen) != 0)
     {
         mexErrMsgTxt("Unable to copy the filename string.");
     }
-    buflen = mxGetN(prhs[1]) + 1;
+    buflen = (int)mxGetN(prhs[1]) + 1;
     product_class = (char *)mxCalloc(buflen, sizeof(char));
     if (mxGetString(prhs[1], product_class, buflen) != 0)
     {
         mexErrMsgTxt("Unable to copy the product_class string.");
     }
-    buflen = mxGetN(prhs[2]) + 1;
+    buflen = (int)mxGetN(prhs[2]) + 1;
     product_type = (char *)mxCalloc(buflen, sizeof(char));
     if (mxGetString(prhs[2], product_type, buflen) != 0)
     {
@@ -1532,7 +1532,7 @@ static void coda_matlab_time_to_string(int nlhs, mxArray *plhs[], int nrhs, cons
         mexErrMsgTxt("First argument should be a double.");
     }
 
-    num_elements = mxGetNumberOfElements(prhs[0]);
+    num_elements = (int)mxGetNumberOfElements(prhs[0]);
     if (num_elements == 1)
     {
         if (coda_time_double_to_string(mxGetScalar(prhs[0]), "yyyy-MM-dd HH:mm:ss.SSSSSS", str) != 0)
@@ -1548,7 +1548,7 @@ static void coda_matlab_time_to_string(int nlhs, mxArray *plhs[], int nrhs, cons
         const mwSize *dim;
         int i;
 
-        num_dims = mxGetNumberOfDimensions(prhs[0]);
+        num_dims = (int)mxGetNumberOfDimensions(prhs[0]);
         dim = mxGetDimensions(prhs[0]);
         time_value = (double *)mxGetData(prhs[0]);
 

@@ -807,7 +807,7 @@ static int new_hdf5Attribute(coda_product *product, hid_t attr_id, const char *n
     }
 
     datatype_id = H5Aget_type(attr_id);
-    size = H5Tget_size(datatype_id);
+    size = (long)H5Tget_size(datatype_id);
     is_variable_string = H5Tis_variable_str(datatype_id);
 
     buffer = malloc((size_t)num_elements * size);
@@ -1068,7 +1068,7 @@ static coda_mem_record *new_hdf5AttributeRecord(coda_product *product, hid_t obj
             return NULL;
         }
 
-        length = H5Aget_name(attr_id, 0, NULL);
+        length = (int)H5Aget_name(attr_id, 0, NULL);
         if (length < 0)
         {
             coda_set_error(CODA_ERROR_HDF5, NULL);
@@ -1425,7 +1425,7 @@ int coda_hdf5_create_tree(coda_hdf5_product *product, hid_t loc_id, const char *
             char *name;
             int length;
 
-            length = H5Gget_objname_by_idx(group->group_id, i, NULL, 0);
+            length = (int)H5Gget_objname_by_idx(group->group_id, i, NULL, 0);
             if (length < 0)
             {
                 coda_set_error(CODA_ERROR_HDF5, NULL);

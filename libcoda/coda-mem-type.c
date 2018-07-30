@@ -933,7 +933,7 @@ coda_mem_data *coda_mem_string_new(coda_type_text *definition, coda_dynamic_type
                                    const char *str)
 {
     assert(definition->read_type == coda_native_type_string);
-    return coda_mem_data_new((coda_type *)definition, attributes, product, str == NULL ? 0 : strlen(str),
+    return coda_mem_data_new((coda_type *)definition, attributes, product, str == NULL ? 0 : (long)strlen(str),
                              (const uint8_t *)str);
 }
 

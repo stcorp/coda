@@ -84,7 +84,7 @@ static void append_string_to_name_buffer(NameBuffer *name, const char *str)
     assert(name != NULL);
     assert(str != NULL);
 
-    length = strlen(str);
+    length = (int)strlen(str);
 
     if (name->length + length >= name->room)
     {

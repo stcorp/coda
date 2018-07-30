@@ -367,7 +367,7 @@ int coda_expression_is_equal(const coda_expression *expr1, const coda_expression
 
     if (result < 0)
     {
-        int namelen = strlen("$name");
+        int namelen = (int)strlen("$name");
         const char *codamsg = coda_errno_to_string(coda_errno);
         char *fullMessage = malloc(namelen + 4 + strlen(codamsg) + 1);
         jclass clazz = (*jenv)->FindClass(jenv, "nl/stcorp/coda/CodaException");

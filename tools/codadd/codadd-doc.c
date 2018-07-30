@@ -136,7 +136,7 @@ static void generate_escaped_html_string(const char *str, int length)
 
     if (length < 0)
     {
-        length = strlen(str);
+        length = (int)strlen(str);
     }
 
     while (length > 0)
@@ -210,7 +210,7 @@ static void generate_xml_string(const char *str, int length)
 
     if (length < 0)
     {
-        length = strlen(str);
+        length = (int)strlen(str);
     }
 
     while (length > 0)
@@ -666,7 +666,7 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
                     {
                         html_attr_begin("fixed&nbsp;value", &first_attribute);
                         ff_printf("\"");
-                        generate_escaped_html_string(text->fixed_value, strlen(text->fixed_value));
+                        generate_escaped_html_string(text->fixed_value, (int)strlen(text->fixed_value));
                         ff_printf("\"");
                         html_attr_end();
                     }
