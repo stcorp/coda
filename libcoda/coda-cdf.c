@@ -54,7 +54,7 @@ static void rtrim(char *str)
 {
     long length;
 
-    length = strlen(str);
+    length = (long)strlen(str);
     while (length > 0 && str[length - 1] == ' ')
     {
         str[length - 1] = '\0';

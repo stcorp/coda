@@ -2076,7 +2076,7 @@ static int idl_coda_parse_vector_dimensions(IDL_VPTR arg, int *num_dims, long *i
 {
     int i;
 
-    *num_dims = arg->value.arr->dim[0];
+    *num_dims = (int)arg->value.arr->dim[0];
 
     if (*num_dims > CODA_MAX_NUM_DIMS)
     {
@@ -2586,13 +2586,13 @@ static int idl_coda_fetch_datahandle_fill_multi_VPTR(int argc, IDL_VPTR *argv, I
     if ((retval->flags & IDL_V_STRUCT) == IDL_V_STRUCT)
     {
         dataptr = (char *)retval->value.s.arr->data;
-        stride = retval->value.s.arr->elt_len;
+        stride = (long)retval->value.s.arr->elt_len;
         sdef = retval->value.s.sdef;
     }
     else
     {
         dataptr = (char *)retval->value.arr->data;
-        stride = retval->value.arr->elt_len;
+        stride = (long)retval->value.arr->elt_len;
         sdef = NULL;
     }
 

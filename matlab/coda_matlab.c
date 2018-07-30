@@ -192,7 +192,7 @@ static void coda_matlab_set_definition_path(void)
         }
         mxDestroyArray(arg);
 
-        path_length = (int)mxGetN(mxpath) * mxGetM(mxpath) + 1;
+        path_length = (int)(mxGetN(mxpath) * mxGetM(mxpath) + 1);
         path = mxCalloc(path_length + 1, 1);
         if (mxGetString(mxpath, path, path_length + 1) != 0)
         {
