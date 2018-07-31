@@ -40,7 +40,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "export.h"
+#include "idl_export.h"
 #include "coda.h"
 
 static int coda_idl_option_filter_record_fields = 1;
