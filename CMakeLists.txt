@@ -610,6 +610,7 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
       matlab/coda_clearall.m
       matlab/coda_close.m
       matlab/coda_description.m
+      matlab/coda_eval.m
       matlab/coda_fetch.m
       matlab/coda_fieldavailable.m
       matlab/coda_fieldcount.m
