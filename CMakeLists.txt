@@ -43,6 +43,7 @@ option(CODA_BUILD_MATLAB "build MATLAB interface" OFF)
 option(CODA_BUILD_PYTHON "build Python interface" OFF)
 option(CODA_WITH_HDF4 "use HDF4" OFF)
 option(CODA_WITH_HDF5 "use HDF5" OFF)
+option(CODA_ENABLE_CONDA_INSTALL OFF)
 set(CODA_EXPAT_NAME_MANGLE 1)
 
 cmake_dependent_option(
@@ -59,14 +60,49 @@ set(XML_LARGE_SIZE 1)
 set(XML_CONTEXT_BYTES 1024)
 
 if(MSVC)
-# Suppress warnings from VC on deprecated POSIX names and unsafe functions
-add_definitions(-D_CRT_NONSTDC_NO_DEPRECATE -D_CRT_SECURE_NO_WARNINGS)
+  # Suppress warnings from VC on deprecated POSIX names and unsafe functions
+  add_definitions(-D_CRT_NONSTDC_NO_DEPRECATE -D_CRT_SECURE_NO_WARNINGS)
 endif(MSVC)
+
+if(NOT CODA_BUILD_SUBPACKAGE_MODE)
+  if(CODA_BUILD_PYTHON)
+    find_package(PythonInterp)
+    if(NOT PYTHONINTERP_FOUND)
+      message(FATAL_ERROR "PYTHON interpreter not found.")
+    endif(NOT PYTHONINTERP_FOUND)
+    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys; from distutils import sysconfig; sys.stdout.write(sysconfig.get_python_lib(1,0,prefix=''))" OUTPUT_VARIABLE PYTHON_INSTALL_DIR)
+    set(CODA_PYTHON_INSTALL_DIR "${PYTHON_INSTALL_DIR}" CACHE STRING "Install location for CODA Python package")
+  endif()
+
+  set(BIN_PREFIX bin)
+  set(LIB_PREFIX lib)
+  set(INCLUDE_PREFIX include)
+  set(DOC_PREFIX share/coda/doc)
+  set(PYTHON_PREFIX ${CODA_PYTHON_INSTALL_DIR}/coda)
+  set(MATLAB_PREFIX lib/coda/matlab)
+  set(IDL_PREFIX lib/coda/idl)
+  if(WIN32)
+    # we use a different installation directory structure on Windows
+    if(CODA_ENABLE_CONDA_INSTALL)
+      # all non-python components need to be installed in a Library sub-directory for Conda on Windows
+      set(BIN_PREFIX Library/bin)
+      set(LIB_PREFIX Library/libs)
+      set(INCLUDE_PREFIX Library/include)
+      set(DOC_PREFIX Library/share/coda/doc)
+      set(MATLAB_PREFIX Library/lib/coda/matlab)
+      set(IDL_PREFIX Library/lib/coda/idl)
+    else()
+      set(LIB_PREFIX libs)
+      set(DOC_PREFIX doc)
+      set(MATLAB_PREFIX matlab)
+      set(IDL_PREFIX idl)
+    endif()
+  endif()
+endif()
 
 if(NOT MSVC)
 set(MATHLIB m)
 endif(NOT MSVC)
-
 
 set(INCLUDES "")
 
@@ -443,26 +479,26 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
     else(CODA_WITH_HDF5)
       set_target_properties(coda PROPERTIES COMPILE_FLAGS "-DXML_BUILDING_EXPAT -DLIBCODADLL -DLIBCODADLL_EXPORTS -DYY_NO_UNISTD_H")
     endif(CODA_WITH_HDF5)
-    install(TARGETS coda RUNTIME DESTINATION bin ARCHIVE DESTINATION libs)
-    install(TARGETS coda_static DESTINATION libs)
+    install(TARGETS coda RUNTIME DESTINATION ${BIN_PREFIX} ARCHIVE DESTINATION ${LIB_PREFIX})
+    install(TARGETS coda_static DESTINATION ${LIB_PREFIX})
   else(WIN32)
-    install(TARGETS coda DESTINATION lib)
-    install(TARGETS coda_static DESTINATION lib)
+    install(TARGETS coda DESTINATION ${LIB_PREFIX})
+    install(TARGETS coda_static DESTINATION ${LIB_PREFIX})
   endif(WIN32)
 
-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/coda.h DESTINATION include)
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/coda.h DESTINATION ${INCLUDE_PREFIX})
 
   # codacheck
   set(codacheck_SOURCES tools/codacheck/codacheck.c)
   add_executable(codacheck ${codacheck_SOURCES})
   target_link_libraries(codacheck coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${MATHLIB})
-  install(TARGETS codacheck DESTINATION bin)
+  install(TARGETS codacheck DESTINATION ${BIN_PREFIX})
 
   # codacmp
   set(codacmp_SOURCES tools/codacmp/codacmp.c)
   add_executable(codacmp ${codacmp_SOURCES})
   target_link_libraries(codacmp coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${MATHLIB})
-  install(TARGETS codacmp DESTINATION bin)
+  install(TARGETS codacmp DESTINATION ${BIN_PREFIX})
 
   # codadump
   set(codadump_SOURCES
@@ -482,19 +518,19 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
   endif(CODA_WITH_HDF4)
   add_executable(codadump ${codadump_SOURCES})
   target_link_libraries(codadump coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${MATHLIB})
-  install(TARGETS codadump DESTINATION bin)
+  install(TARGETS codadump DESTINATION ${BIN_PREFIX})
 
   # codaeval
   set(codaeval_SOURCES tools/codaeval/codaeval.c)
   add_executable(codaeval ${codaeval_SOURCES})
   target_link_libraries(codaeval coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${MATHLIB})
-  install(TARGETS codaeval DESTINATION bin)
+  install(TARGETS codaeval DESTINATION ${BIN_PREFIX})
 
   # codafind
   set(codafind_SOURCES tools/codafind/codafind.c)
   add_executable(codafind ${codafind_SOURCES})
   target_link_libraries(codafind coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${MATHLIB})
-  install(TARGETS codafind DESTINATION bin)
+  install(TARGETS codafind DESTINATION ${BIN_PREFIX})
 
 endif(NOT CODA_BUILD_SUBPACKAGE_MODE)
 
@@ -509,7 +545,7 @@ set(codadd_SOURCES
 add_executable(codadd ${codadd_SOURCES})
 target_link_libraries(codadd coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${MATHLIB})
 if(NOT CODA_BUILD_SUBPACKAGE_MODE)
-  install(TARGETS codadd DESTINATION bin)
+  install(TARGETS codadd DESTINATION ${BIN_PREFIX})
 endif(NOT CODA_BUILD_SUBPACKAGE_MODE)
 
 
@@ -540,11 +576,11 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
       ${CMAKE_CURRENT_SOURCE_DIR}/idl/coda_idl.dlm.in
       ${CMAKE_CURRENT_BINARY_DIR}/idl/coda_idl.dlm)
     if(WIN32)
-      install(TARGETS coda_idl DESTINATION idl)
-      install(FILES ${CMAKE_CURRENT_BINARY_DIR}/idl/coda_idl.dlm DESTINATION idl)
+      install(TARGETS coda_idl DESTINATION ${IDL_PREFIX})
+      install(FILES ${CMAKE_CURRENT_BINARY_DIR}/idl/coda_idl.dlm DESTINATION ${IDL_PREFIX})
     else(WIN32)
-      install(TARGETS coda_idl DESTINATION lib/coda/idl)
-      install(FILES ${CMAKE_CURRENT_BINARY_DIR}/idl/coda_idl.dlm DESTINATION lib/coda/idl)
+      install(TARGETS coda_idl DESTINATION ${IDL_PREFIX})
+      install(FILES ${CMAKE_CURRENT_BINARY_DIR}/idl/coda_idl.dlm DESTINATION ${IDL_PREFIX})
     endif(WIN32)
   endif(CODA_BUILD_IDL)
 
@@ -592,20 +628,16 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
       matlab/coda_unit.m
       matlab/coda_version.m)
     if(WIN32)
-      install(TARGETS coda_matlab DESTINATION matlab)
-      install(FILES ${CODA_MATLAB_M_FILES} DESTINATION matlab)
+      install(TARGETS coda_matlab DESTINATION ${MATLAB_PREFIX})
+      install(FILES ${CODA_MATLAB_M_FILES} DESTINATION ${MATLAB_PREFIX})
     else(WIN32)
-      install(TARGETS coda_matlab DESTINATION lib/coda/matlab)
-      install(FILES ${CODA_MATLAB_M_FILES} DESTINATION lib/coda/matlab)
+      install(TARGETS coda_matlab DESTINATION ${MATLAB_PREFIX})
+      install(FILES ${CODA_MATLAB_M_FILES} DESTINATION ${MATLAB_PREFIX})
     endif(WIN32)
   endif(CODA_BUILD_MATLAB)
 
   # python
   if(CODA_BUILD_PYTHON)
-    find_package(PythonInterp)
-    if(NOT PYTHONINTERP_FOUND)
-      message(FATAL_ERROR "PYTHON interpreter not found.")
-    endif(NOT PYTHONINTERP_FOUND)
     find_package(PythonLibs)
     if(NOT PYTHONLIBS_FOUND)
       message(FATAL_ERROR "PYTHON libraries or include files not found.")
@@ -616,8 +648,6 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
       message(FATAL_ERROR "Python numpy package is needed for the Python interface. Please install 'numpy' or, if you have already installed this package, set the NUMPY_INCLUDE environment variable and make sure that the file $NUMPY_INCLUDE/numpy/ndarrayobject.h exists.")
     endif(NOT NUMPY_FOUND)
     include_directories(${NUMPY_INCLUDE_DIR})
-    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys; from distutils import sysconfig; sys.stdout.write(sysconfig.get_python_lib(1,0,prefix=''))" OUTPUT_VARIABLE PYTHON_INSTALL_DIR)
-    set(CODA_PYTHON_INSTALL_DIR "${PYTHON_INSTALL_DIR}" CACHE STRING "Install location for CODA Python package")
     add_library(coda_python MODULE python/codac.c)
     target_link_libraries(coda_python coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${PYTHON_LIBRARIES})
     set_target_properties(coda_python
@@ -626,7 +656,7 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
     if(WIN32)
       set_target_properties(coda_python PROPERTIES SUFFIX .pyd)
     endif()
-    install(TARGETS coda_python DESTINATION ${CODA_PYTHON_INSTALL_DIR}/coda)
+    install(TARGETS coda_python DESTINATION ${PYTHON_PREFIX})
     install(FILES
       python/__init__.py
       python/codac.py
@@ -635,13 +665,13 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
   endif(CODA_BUILD_PYTHON)
 
   # documentation
-  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/doc/html DESTINATION share/coda/doc)
+  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/doc/html DESTINATION ${DOC_PREFIX})
 
   # installer
   SET(CPACK_PACKAGE_NAME "coda")
   set(CPACK_PACKAGE_VENDOR "S&T")
   if(WIN32)
-    install(FILES ${HDF4_DLLS} ${HDF5_DLLS} DESTINATION bin)
+    install(FILES ${HDF4_DLLS} ${HDF5_DLLS} DESTINATION ${BIN_PREFIX})
     set(CPACK_GENERATOR "WIX")
     configure_file(COPYING copying.txt COPYONLY)
     set(CPACK_RESOURCE_FILE_LICENSE copying.txt)
