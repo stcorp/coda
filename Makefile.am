@@ -800,6 +800,7 @@ EXTRA_DIST += \
 	CMakeModules/FindNumPy.cmake \
 	CMakeModules/FindHDF4.cmake \
 	CMakeModules/FindHDF5.cmake \
+	CMakeModules/FindIDL.cmake \
 	CMakeModules/FindZLIB.cmake \
 	CMakeModules/FindJPEG.cmake \
 	CMakeModules/FindSZIP.cmake \
