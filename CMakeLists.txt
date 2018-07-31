@@ -569,8 +569,7 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
     set(CODA_IDL_SOURCES idl/coda_idl.c idl/coda_idl.def)
     add_library(coda_idl MODULE ${CODA_IDL_SOURCES})
     set_target_properties(coda_idl PROPERTIES
-      PREFIX ""
-      COMPILE_FLAGS "-DLIBCODADLL")
+      PREFIX "")
     target_link_libraries(coda_idl coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${MATHLIB} ${IDL_LIBRARIES})
     configure_file(
       ${CMAKE_CURRENT_SOURCE_DIR}/idl/coda_idl.dlm.in
@@ -601,8 +600,7 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
     set_target_properties(coda_matlab PROPERTIES
       PREFIX ""
       SUFFIX ".${Matlab_MEX_EXTENSION}"
-      COMPILE_DEFINITIONS MATLAB_MEX_FILE
-      COMPILE_FLAGS "-DLIBCODADLL")
+      COMPILE_DEFINITIONS MATLAB_MEX_FILE)
     target_link_libraries(coda_matlab coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${MATHLIB} ${Matlab_LIBRARIES})
     set(CODA_MATLAB_M_FILES
       matlab/coda_attributes.m
@@ -650,13 +648,13 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
     endif(NOT NUMPY_FOUND)
     include_directories(${NUMPY_INCLUDE_DIR})
     add_library(coda_python MODULE python/codac.c)
-    target_link_libraries(coda_python coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${PYTHON_LIBRARIES})
-    set_target_properties(coda_python
-      PROPERTIES OUTPUT_NAME "_codac"
+    set_target_properties(coda_python PROPERTIES
+      OUTPUT_NAME "_codac"
       PREFIX "")
     if(WIN32)
       set_target_properties(coda_python PROPERTIES SUFFIX .pyd)
     endif()
+    target_link_libraries(coda_python coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${PYTHON_LIBRARIES})
     install(TARGETS coda_python DESTINATION ${PYTHON_PREFIX})
     install(FILES
       python/__init__.py
