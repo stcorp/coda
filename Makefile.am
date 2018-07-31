@@ -360,15 +360,13 @@ libcoda_internal_la_LIBADD = $(libcoda_la_LIBADD)
 # tools/codacheck
 
 codacheck_SOURCES = tools/codacheck/codacheck.c
-codacheck_LDADD = libcoda_internal.la
-codacheck_LDFLAGS = -static
+codacheck_LDADD = libcoda.la
 INDENTFILES += $(codacheck_SOURCES)
 
 # tools/codacmp
 
 codacmp_SOURCES = tools/codacmp/codacmp.c
-codacmp_LDADD = libcoda_internal.la
-codacmp_LDFLAGS = -static
+codacmp_LDADD = libcoda.la
 INDENTFILES += $(codacmp_SOURCES)
 
 # tools/codadd
@@ -405,24 +403,21 @@ else
 INDENTFILES += $(codadump_hdf4_files)
 endif
 codadump_CPPFLAGS = -Itools/codadump -I$(srcdir)/tools/codadump $(AM_CPPFLAGS)
-codadump_LDADD = libcoda_internal.la $(HDF4LIBS)
-codadump_LDFLAGS = -static
+codadump_LDADD = libcoda.la
 INDENTFILES += $(codadump_SOURCES)
 
 # tools/codaeval
 
 codaeval_SOURCES = \
 	tools/codaeval/codaeval.c
-codaeval_LDFLAGS = -static
-codaeval_LDADD = libcoda_internal.la
+codaeval_LDADD = libcoda.la
 INDENTFILES += $(codaeval_SOURCES)
 
 # tools/codafind
 
 codafind_SOURCES = \
 	tools/codafind/codafind.c
-codafind_LDFLAGS = -static
-codafind_LDADD = libcoda_internal.la
+codafind_LDADD = libcoda.la
 INDENTFILES += $(codafind_SOURCES)
 
 # fortran

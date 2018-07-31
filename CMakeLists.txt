@@ -491,13 +491,13 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
   # codacheck
   set(codacheck_SOURCES tools/codacheck/codacheck.c)
   add_executable(codacheck ${codacheck_SOURCES})
-  target_link_libraries(codacheck coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${MATHLIB})
+  target_link_libraries(codacheck coda ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${MATHLIB})
   install(TARGETS codacheck DESTINATION ${BIN_PREFIX})
 
   # codacmp
   set(codacmp_SOURCES tools/codacmp/codacmp.c)
   add_executable(codacmp ${codacmp_SOURCES})
-  target_link_libraries(codacmp coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${MATHLIB})
+  target_link_libraries(codacmp coda ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${MATHLIB})
   install(TARGETS codacmp DESTINATION ${BIN_PREFIX})
 
   # codadump
@@ -517,19 +517,19 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
     set(codadump_SOURCES ${codadump_SOURCES} ${codadump_hdf4_files})
   endif(CODA_WITH_HDF4)
   add_executable(codadump ${codadump_SOURCES})
-  target_link_libraries(codadump coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${MATHLIB})
+  target_link_libraries(codadump coda ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${MATHLIB})
   install(TARGETS codadump DESTINATION ${BIN_PREFIX})
 
   # codaeval
   set(codaeval_SOURCES tools/codaeval/codaeval.c)
   add_executable(codaeval ${codaeval_SOURCES})
-  target_link_libraries(codaeval coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${MATHLIB})
+  target_link_libraries(codaeval coda ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${MATHLIB})
   install(TARGETS codaeval DESTINATION ${BIN_PREFIX})
 
   # codafind
   set(codafind_SOURCES tools/codafind/codafind.c)
   add_executable(codafind ${codafind_SOURCES})
-  target_link_libraries(codafind coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${MATHLIB})
+  target_link_libraries(codafind coda ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${MATHLIB})
   install(TARGETS codafind DESTINATION ${BIN_PREFIX})
 
 endif(NOT CODA_BUILD_SUBPACKAGE_MODE)
