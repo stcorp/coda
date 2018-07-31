@@ -480,11 +480,10 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
       set_target_properties(coda PROPERTIES COMPILE_FLAGS "-DXML_BUILDING_EXPAT -DLIBCODADLL -DLIBCODADLL_EXPORTS -DYY_NO_UNISTD_H")
     endif(CODA_WITH_HDF5)
     install(TARGETS coda RUNTIME DESTINATION ${BIN_PREFIX} ARCHIVE DESTINATION ${LIB_PREFIX})
-    install(TARGETS coda_static DESTINATION ${LIB_PREFIX})
   else(WIN32)
     install(TARGETS coda DESTINATION ${LIB_PREFIX})
-    install(TARGETS coda_static DESTINATION ${LIB_PREFIX})
   endif(WIN32)
+  install(TARGETS coda_static DESTINATION ${LIB_PREFIX})
 
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/coda.h DESTINATION ${INCLUDE_PREFIX})
 
@@ -574,13 +573,8 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
     configure_file(
       ${CMAKE_CURRENT_SOURCE_DIR}/idl/coda_idl.dlm.in
       ${CMAKE_CURRENT_BINARY_DIR}/idl/coda_idl.dlm)
-    if(WIN32)
-      install(TARGETS coda_idl DESTINATION ${IDL_PREFIX})
-      install(FILES ${CMAKE_CURRENT_BINARY_DIR}/idl/coda_idl.dlm DESTINATION ${IDL_PREFIX})
-    else(WIN32)
-      install(TARGETS coda_idl DESTINATION ${IDL_PREFIX})
-      install(FILES ${CMAKE_CURRENT_BINARY_DIR}/idl/coda_idl.dlm DESTINATION ${IDL_PREFIX})
-    endif(WIN32)
+    install(TARGETS coda_idl DESTINATION ${IDL_PREFIX})
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/idl/coda_idl.dlm DESTINATION ${IDL_PREFIX})
   endif(CODA_BUILD_IDL)
 
   # matlab
@@ -626,13 +620,8 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
       matlab/coda_time_to_string.m
       matlab/coda_unit.m
       matlab/coda_version.m)
-    if(WIN32)
-      install(TARGETS coda_matlab DESTINATION ${MATLAB_PREFIX})
-      install(FILES ${CODA_MATLAB_M_FILES} DESTINATION ${MATLAB_PREFIX})
-    else(WIN32)
-      install(TARGETS coda_matlab DESTINATION ${MATLAB_PREFIX})
-      install(FILES ${CODA_MATLAB_M_FILES} DESTINATION ${MATLAB_PREFIX})
-    endif(WIN32)
+    install(TARGETS coda_matlab DESTINATION ${MATLAB_PREFIX})
+    install(FILES ${CODA_MATLAB_M_FILES} DESTINATION ${MATLAB_PREFIX})
   endif(CODA_BUILD_MATLAB)
 
   # python
