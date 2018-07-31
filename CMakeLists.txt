@@ -496,7 +496,8 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
   # codacmp
   set(codacmp_SOURCES tools/codacmp/codacmp.c)
   add_executable(codacmp ${codacmp_SOURCES})
-  target_link_libraries(codacmp coda ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${MATHLIB})
+  # we need to link against coda_static because codacmp uses internal coda functions
+  target_link_libraries(codacmp coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${MATHLIB})
   install(TARGETS codacmp DESTINATION ${BIN_PREFIX})
 
   # codadump
