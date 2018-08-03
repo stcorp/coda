@@ -823,6 +823,7 @@ libcoda/coda.h.cmake.in: libcoda/coda.h.in Makefile.am
 # *** windows-specific ***
 
 EXTRA_DIST += \
+	cpack_wix_patch.xml \
 	unix2dos \
 	windows/clean_dir.bat \
 	windows/coda.h \
