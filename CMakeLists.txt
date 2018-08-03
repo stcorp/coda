@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 2.8.8)
+cmake_policy(SET CMP0075 NEW)
 
 project(CODA)
 
@@ -231,26 +232,7 @@ endif(CODA_WITH_HDF5)
 
 include_directories(BEFORE ${CODA_BINARY_DIR} ${CODA_BINARY_DIR}/libcoda ${CODA_SOURCE_DIR}/libcoda)
 
-# Some autoconf variables that CMake does not use itself, but
-# that are used in the config file substitutions.
-#
-set(PACKAGE_NAME \"${CMAKE_PROJECT_NAME}\")
-string(TOLOWER ${PACKAGE_NAME} PACKAGE)
-set(PACKAGE_VERSION ${CODA_VERSION})
-string(REPLACE "\"" "" PACKAGE_STRING "${PACKAGE_NAME} ${PACKAGE_VERSION}")
-set(PACKAGE_STRING \"${PACKAGE_STRING}\")
-set(VERSION \"${VERSION}\")
-set(PACKAGE_TARNAME ${PACKAGE})
-set(PACKAGE_BUGREPORT \"\")
-
 add_definitions(-DHAVE_CONFIG_H)
-
-configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/config.h)
-configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/coda.h.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/coda.h)
 
 # The Doxyfile uses some autoconf variables CMake does not have.
 # We set them here manually, so that we can use the same .in
@@ -673,3 +655,22 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
   include(CPack)
 
 endif(NOT CODA_BUILD_SUBPACKAGE_MODE)
+
+# Some autoconf variables that CMake does not use itself, but that are used in the config file substitutions.
+# (leave this section at the end so other rules will use the unquoted VERSION value)
+#
+set(PACKAGE_NAME \"${CMAKE_PROJECT_NAME}\")
+string(TOLOWER ${PACKAGE_NAME} PACKAGE)
+set(PACKAGE_VERSION ${CODA_VERSION})
+string(REPLACE "\"" "" PACKAGE_STRING "${PACKAGE_NAME} ${PACKAGE_VERSION}")
+set(PACKAGE_STRING \"${PACKAGE_STRING}\")
+set(VERSION \"${VERSION}\")
+set(PACKAGE_TARNAME ${PACKAGE})
+set(PACKAGE_BUGREPORT \"\")
+
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/coda.h.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/coda.h)
