@@ -378,7 +378,6 @@ codadd_SOURCES = \
 	tools/codadd/codadd-doc.c \
 	tools/codadd/codadd-list.c \
 	tools/codadd/codadd-xmlschema.c
-codadd_LDFLAGS = -static
 # keep this linked to libcoda_internal.la because of SUBPACKAGE_MODE
 codadd_LDADD = libcoda_internal.la
 INDENTFILES += $(codadd_SOURCES)
