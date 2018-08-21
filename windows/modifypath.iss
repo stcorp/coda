@@ -97,7 +97,7 @@ begin
   // Split old path in individual directory names
   SplitPath(OldPath, Dirs);
 
-  // Check if dir is allready in path
+  // Check if dir is already in path
   DirNotInPath := True;
   for i:=Dirs.Count-1 downto 0 do
   begin
@@ -123,7 +123,7 @@ begin
     // Add dir to path
     if (((Method and pmAddAllways) > 0) or DirNotInPath) then
     begin
-      // Dir is not in path allready or should be added anyway
+      // Dir is not in path already or should be added anyway
       if (((Method and pmAddOnlyIfDirExists) = 0) or (DirExists(DirName))) then
       begin
         // Dir actually exsists or should be added anyway

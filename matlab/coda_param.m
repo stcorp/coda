@@ -10,7 +10,7 @@
 %
 %    - Array index: You need to provide an array index that has the
 %      same number of elements as there are dimensions in the array
-%      that you are refering to. So if the array is two dimensional you
+%      that you are referring to. So if the array is two dimensional you
 %      have to pass indices for both dimensions like [4 5]. If the
 %      array is one dimensional (like the datasets) you can just
 %      provide a single index value (without the '[]') to get to the

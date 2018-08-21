@@ -2,7 +2,7 @@ function varargout = coda_open(varargin)
 % CODA_OPEN  Open a product file.
 %
 %   CODA_FILE_ID = CODA_OPEN(FILEPATH) opens the product file pointed to
-%   by filepath. Upon successfull opening the function returns a file
+%   by filepath. Upon successful opening the function returns a file
 %   handle that should be passed to other CODA MATLAB interface functions
 %   that need to read data/information from this product file.
 %

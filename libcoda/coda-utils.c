@@ -173,7 +173,7 @@ char *coda_identifier_from_name(const char *name, hashtable *hash_data)
         return NULL;
     }
 
-    /* create indentifier */
+    /* create identifier */
 
     /* first character is guaranteed to be an alpha character because of our previous test */
     identifier[0] = name[0];
@@ -191,7 +191,7 @@ char *coda_identifier_from_name(const char *name, hashtable *hash_data)
     }
     identifier[length] = '\0';
 
-    /* check for double occurences */
+    /* check for double occurrences */
     if (hash_data != NULL)
     {
         int counter;

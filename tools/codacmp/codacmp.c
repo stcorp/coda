@@ -271,7 +271,7 @@ static int compare_arrays_as_records_sub(coda_cursor *cursor1, coda_cursor *curs
             }
             if (hashtable_add_name(table1, keys1[index1]) != 0)
             {
-                coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "multiple occurence of array key '%s'", keys1[index1]);
+                coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "multiple occurrence of array key '%s'", keys1[index1]);
                 fprintf(stderr, "%sERROR: %s\n", pre[0], coda_errno_to_string(coda_errno));
                 return -1;
             }
@@ -304,7 +304,7 @@ static int compare_arrays_as_records_sub(coda_cursor *cursor1, coda_cursor *curs
             }
             if (hashtable_add_name(table2, keys2[index2]) != 0)
             {
-                coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "multiple occurence of array key '%s'", keys2[index2]);
+                coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "multiple occurrence of array key '%s'", keys2[index2]);
                 fprintf(stderr, "%sERROR: %s\n", pre[1], coda_errno_to_string(coda_errno));
                 return -1;
             }

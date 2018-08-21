@@ -4,7 +4,7 @@ function varargout = coda_clearall(varargin)
 %
 %   CODA_CLEARALL will close all currently open product files (similar
 %   to calling coda_close for all open product files). This can be
-%   especially helpfull to close files for which you have lost the file
+%   especially helpful to close files for which you have lost the file
 %   handle (something that can occur if you were running an M file that
 %   opened a product file, but terminated halfway and thus left the file
 %   open).

@@ -259,7 +259,7 @@
 * Fixed sorting of product classes (last product class was not allways
   included in the sorting).
 
-* Fixed memory issue in gracefull handling of HDF5 files with invalid
+* Fixed memory issue in graceful handling of HDF5 files with invalid
   content.
 
 * Fixed issue where coda_cursor_goto() could navigate to the wrong record
@@ -330,7 +330,7 @@
   higher offsets are still not supported.
 
 * Error messages for offset/size/availability expressions now show at
-  which cursor position the error occured.
+  which cursor position the error occurred.
 
 * Updates to windows build systems.
   - Fixed building against latest version of HDF5 (hdf5-1.8.13).

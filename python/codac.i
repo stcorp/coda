@@ -727,7 +727,7 @@ NUMPY_OUTPUT_HELPER(cursor_read_complex_array,coda_cursor_read_complex_double_pa
     first, those declarations to which the exception clause should
     not be attached are declared here and subsequently %ignore'd.
     (i.e. these declarations are ignored when parsing the coda.h
-    file; see below). the declarations can be devided into
+    file; see below). the declarations can be divided into
     two classes:
         - functions that do not return an int (0/-1) flag
         - functions that _do_ return an int, but the return value

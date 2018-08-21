@@ -111,7 +111,7 @@
       
       <p>Within a message, sequences 3-7, 4-7, and/or 5-7 can be repeated several times.</p>
 
-      <p>The contents of the Identification Section are mapped directly as fields in the message <i>record</i>. For the Local Use, Grid Definition, and Data Sections special 'local', 'grid', and 'data' fields are available, with each being an array of the contents of each occurence of the section. Each 'data' record will contain a 0-based index into the 'grid' array to reference the applicable grid for the parameter. Similary, for each 'grid' record a 0-based index into the 'local' array will be available. The visible content of the Product Definition and Data Representation Section are available in the 'data' record of the associated Data Section (Product Definition Section information can thus end up appearing replicated).</p>
+      <p>The contents of the Identification Section are mapped directly as fields in the message <i>record</i>. For the Local Use, Grid Definition, and Data Sections special 'local', 'grid', and 'data' fields are available, with each being an array of the contents of each occurrence of the section. Each 'data' record will contain a 0-based index into the 'grid' array to reference the applicable grid for the parameter. Similary, for each 'grid' record a 0-based index into the 'local' array will be available. The visible content of the Product Definition and Data Representation Section are available in the 'data' record of the associated Data Section (Product Definition Section information can thus end up appearing replicated).</p>
       
       <p>As for GRIB1, for the naming of fields, CODA tries to stay as close as possible to the naming scheme that is used by the ECMWF GRIB API software.</p>
       

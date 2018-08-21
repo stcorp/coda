@@ -24,7 +24,7 @@
 
       <p>Expressions can range from being very simple (specifying just a constant value) to very complex (using various functions/operations to calculate the resulting value). An expression of one type can make use of sub-expressions of another type. For instance, a boolean expresssion can return the result of a comparison of two string expressions.</p>
 
-      <p>In addition to expressions for each of the five data types there is also a sixth category of expressions, those that do not return any value. These expressions are refered to as <i>void</i> expressions (i.e. statements).</p>
+      <p>In addition to expressions for each of the five data types there is also a sixth category of expressions, those that do not return any value. These expressions are referred to as <i>void</i> expressions (i.e. statements).</p>
 
       <p>The CODA expressions can thus be categorized in the following six groups:</p>
 
@@ -164,7 +164,7 @@
 
       <p>There are two kinds of variables that can be used as integer expression: product variables and index variables. CODA only supports integer variables (i.e. variables can not contain boolean, floating point, or string data).</p>
 
-      <p>Product variables can be seen as a caching mechanism for expression results. A product variable is a named scalar or a one-dimensional array that is attached to an open product. Note that product variables can only be refered to if they have been defined in the CODA product format definition for the open product file. The initialisation expression for a product variable is fixed and defined as part of the product format definition. Product variables are initialized the first time a value is requested from it (it will thus not impact the performance of opening a product file).<br />
+      <p>Product variables can be seen as a caching mechanism for expression results. A product variable is a named scalar or a one-dimensional array that is attached to an open product. Note that product variables can only be referred to if they have been defined in the CODA product format definition for the open product file. The initialisation expression for a product variable is fixed and defined as part of the product format definition. Product variables are initialized the first time a value is requested from it (it will thus not impact the performance of opening a product file).<br />
       Product variables are referenced using a '<code>$</code>' character followed by the name of the product variable. If the product variable is an array then an additional (zero-based) array subscript should also be provided using '<code>[]</code>'. For example '<code>$foo</code>' will return the value of the scalar product variable 'foo' and '<code>$bar[10]</code>' will return the 11-th array element from the 1-dimensional product variable 'bar'.</p>
 
       <p>Inside a for loop or '<code>with</code>' function the current value of the loop/with index can be retrieved by using the corresponding '<code><i>i</i></code>', '<code><i>j</i></code>', or '<code><i>k</i></code>' expression. These are called index variables.</p>

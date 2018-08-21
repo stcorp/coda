@@ -2585,7 +2585,7 @@ static int read_observation_records(ingest_info *info)
         /* check epoch flag */
         if (epoch_flag != '0')
         {
-            /* we skip the remaing part of this record if epoch flag != 0 */
+            /* we skip the remaining part of this record if epoch flag != 0 */
             for (i = 0; i < num_satellites; i++)
             {
                 info->offset = ftell(info->f);

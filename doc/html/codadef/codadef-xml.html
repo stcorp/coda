@@ -16,7 +16,7 @@
 
       <p>CODA provides access to XML by creating a view on the XML files using the CODA <a href="codadef-format.html">data types</a>. Below we will describe how CODA maps the XML product structure to one that is based on the CODA data types.</p>
 
-      <p>XML products are partial self describing products. When an XML file is opened the structure of a product can be retrieved from the file itself. However, in order to properly interpret the ASCII data within an XML element (i.e. is it an integer, real, string, etc.?) an external definition is required. With an external definition one can also prescribe the occurence of each xml element.</p>
+      <p>XML products are partial self describing products. When an XML file is opened the structure of a product can be retrieved from the file itself. However, in order to properly interpret the ASCII data within an XML element (i.e. is it an integer, real, string, etc.?) an external definition is required. With an external definition one can also prescribe the occurrence of each xml element.</p>
 
       <p>A common way of providing such external definitions is by means of an XML Schema file. However, CODA does not rely on XML Schema files for the XML definitions but uses its own description mechansim for XML files. The main reason behind this choice is that the regular CODA product format descriptions (for raw ascii/binary files) can then be reused to describe the ASCII content of XML leaf elements (allowing for non-standard time or boolean formats, multi-dimensional arrays of numbers, etc.).</p>
 
