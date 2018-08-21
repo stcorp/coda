@@ -230,8 +230,8 @@ static int int_mod(int a, int b)
  * --> (1,1,-4713) yields 0; earlier dates yield negative numbers; later dates yield positive numbers.
  *                           Please note that the zero-day is basically arbitrary; we can extend the system
  *                           to include dates before it.
- * --> Note that the Julian calender was introduced in 45BC, but some initial problems meant that
- *     only after 4AD the Julian calender was kept properly. Therefore, earlier dates do not reflect
+ * --> Note that the Julian calendar was introduced in 45BC, but some initial problems meant that
+ *     only after 4AD the Julian calendar was kept properly. Therefore, earlier dates do not reflect
  *     dates that were in common use at the time.
  *
  * return value:

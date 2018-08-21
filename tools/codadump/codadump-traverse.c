@@ -324,7 +324,7 @@ static void traverse_record(int index, int traverse_hidden)
         }
         if (available == -1)
         {
-            /* traverse all occurences of this field to check whether at least one is available */
+            /* traverse all occurrences of this field to check whether at least one is available */
             if (!dim_record_field_available())
             {
                 return;

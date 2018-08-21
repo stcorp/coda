@@ -581,7 +581,7 @@ LIBCODA_API void coda_done(void)
 }
 
 /** Free a memory block that was allocated by the CODA library.
- * In some enviroments the library that performs the malloc is also the one that needs to perform the free.
+ * In some environments the library that performs the malloc is also the one that needs to perform the free.
  * With this function memory that was allocated within the CODA library can be deallocated for such environments.
  * It should be used in the following cases:
  * - to deallocate the memory for the 'value' variables of coda_expression_eval_string()

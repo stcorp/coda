@@ -55,7 +55,7 @@
 /** \defgroup coda_types CODA Types
  * Each data element or group of data elements (such as an array or record) in a product file has a unique description,
  * in CODA. This description is independent of the file format of the product (e.g. ascii, binary, XML, netCDF, etc.)
- * Each of those descriptions is refered to as a CODA type (which is of type #coda_type).
+ * Each of those descriptions is referred to as a CODA type (which is of type #coda_type).
  * For self describing formats such as netCDF, HDF4, and HDF5 files the type definition is taken from the products
  * themselves. For other formats, such as ascii and binary products the type definition is fixed and is provided by
  * .codadef files.
@@ -3657,7 +3657,7 @@ LIBCODA_API int coda_type_get_array_num_dims(const coda_type *type, int *num_dim
 /** Retrieve the dimensions with a constant value for an array.
  * The function returns both the number of dimensions \a num_dims and the size for each of the dimensions \a dim that
  * have a constant/fixed size.
- * \note If the size of a dimension is variable (it differs per product or differs per occurence inside one product)
+ * \note If the size of a dimension is variable (it differs per product or differs per occurrence inside one product)
  * then this function will set the value for that dimension to \c -1. Otherwise it will set the dimension
  * entry in \a dim to the constant value for that dimension as defined by the CODA product format definition.
  * Variable dimension sizes can only occur when a CODA product format definition is used.

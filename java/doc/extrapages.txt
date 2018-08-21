@@ -17,7 +17,7 @@
  * now all exist in the scope of a particular Class that generally corresponds to that prefix (e.g. 'coda_init()' becomes 'Coda.init()', not 'Coda.coda_init()').
  *
  * A final difference is that the error return codes of the C interface have been replaced by an exception mechanism at the Java layer.
- * Most CODA methods need to be wrapped in a try-catch pair that tests for a CodaException occurrance.
+ * Most CODA methods need to be wrapped in a try-catch pair that tests for a CodaException occurrence.
  * If something goes wrong, that exception will be thrown, its message containing the original CODA error message returned by the underlying C function.
  *
  * The underlying <a href="../libcoda/index.html">CODA C interface</a> API documentation remains the authoritative reference documentation source for CODA functionality.

@@ -189,7 +189,7 @@ static coda_mem_record *attribute_record_new(coda_type_record *definition, coda_
             }
             else if (attributes->field_type[attribute_index] != NULL)
             {
-                /* we only add the first occurence when there are multiple attributes with the same attribute name */
+                /* we only add the first occurrence when there are multiple attributes with the same attribute name */
                 continue;
             }
             else

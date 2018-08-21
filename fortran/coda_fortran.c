@@ -213,7 +213,7 @@ int UFNAME(CODA_C_INDEX_TO_FORTRAN_INDEX,coda_c_index_to_fortran_index)(int *n_d
 double UFNAME(CODA_TIME,coda_time)(void)
 {
     /* time() returns the amount of seconds since 1-JAN-1970.
-     * We convert this to an amount of seconds since 1-JAN-2000 by substracting
+     * We convert this to an amount of seconds since 1-JAN-2000 by subtracting
      * 10957 days times 86400 seconds per day.
      */
     return time(NULL) - 10957 * 86400;

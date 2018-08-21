@@ -303,7 +303,7 @@ LIBCODA_API const char *coda_errno_to_string(int err)
             case CODA_ERROR_NO_HDF5_SUPPORT:
                 return "HDF5 is not supported (this version of CODA was not built with HDF5 support)";
             case CODA_ERROR_XML:
-                return "unkown error while parsing XML data";
+                return "unknown error while parsing XML data";
 
             case CODA_ERROR_FILE_NOT_FOUND:
                 return "file not found";

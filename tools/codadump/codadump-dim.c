@@ -736,6 +736,6 @@ static int get_record_field_available_status(int depth, int array_depth, int rec
 
 int dim_record_field_available()
 {
-    /* find out whether there is at least one occurence where this field is available */
+    /* find out whether there is at least one occurrence where this field is available */
     return get_record_field_available_status(0, 0, 0);
 }

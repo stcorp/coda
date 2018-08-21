@@ -29,7 +29,7 @@
  * The following are some things to try that may help to improve the performance of reading data with CODA
  * - Disable boundary checks with coda_set_option_perform_boundary_checks().
  *   This can be a huge speed improvement, but only disable this once you have fully tested your program
- *   and are sure that all coda cursor navigation and reading function calls return succesfully
+ *   and are sure that all coda cursor navigation and reading function calls return successfully
  *   (i.e. return value equals 0).
  * - Disable special types with coda_set_option_bypass_special_types() and use the base type of the data.
  *   This can particularly increase performance for variable scale factor integers (::coda_special_vsf_integer).

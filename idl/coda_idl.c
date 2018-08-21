@@ -79,7 +79,7 @@ struct IDL_CodaDataHandle
     int64_t product_id; /* used to check if the product in slot [product_id] still matches */
 };
 
-static int64_t unique_id_counter;       /* incremented each time a product is succesfully opened */
+static int64_t unique_id_counter;       /* incremented each time a product is successfully opened */
 static int idl_coda_loaded = 0;
 
 IDL_StructDefPtr coda_datahandle_sdef;
@@ -345,7 +345,7 @@ static IDL_VPTR x_coda_open(int argc, IDL_VPTR *argv)
         return mk_coda_error(coda_errno);
     }
 
-    /* opened succesfully! Update unique_id_counter */
+    /* opened successfully! Update unique_id_counter */
 
     do
     {
@@ -406,7 +406,7 @@ static IDL_VPTR x_coda_open_as(int argc, IDL_VPTR *argv)
         return mk_coda_error(coda_errno);
     }
 
-    /* opened succesfully! Update unique_id_counter */
+    /* opened successfully! Update unique_id_counter */
 
     do
     {
