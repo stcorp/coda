@@ -1,4 +1,4 @@
-// CodaTest.java - Sample file for the CODA Java library interface
+// CodaExample.java - Sample file for the CODA Java library interface
 //
 // Copyright (C) 2007-2018 S[&]T, The Netherlands.
 // All rights reserved.
@@ -45,10 +45,9 @@ import nl.stcorp.coda.TypeClassEnum;
 
 
 /**
- * CodaTest class.
+ * CodaExample class.
  *
- * This is not a unit-testing or regression-testing class, but
- * rather an example class / starting point that illustrates some
+ * This is an example class / starting point that illustrates some
  * of the techniques of working with CODA through the Java
  * interface.
  *
@@ -67,7 +66,7 @@ import nl.stcorp.coda.TypeClassEnum;
  * codadef files for your particular product in it.
  *
  */
-public class CodaTest
+public class CodaExample
 {
 
     static
@@ -350,7 +349,7 @@ public class CodaTest
     {
         if (argv.length < 1)
         {
-            System.err.println("Usage: CodaTest <product file ...>");
+            System.err.println("Usage: CodaExample <product file ...>");
             System.exit(1);
         }
 

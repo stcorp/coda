@@ -1,4 +1,4 @@
-<project name="CodaTest" default="jar">
+<project name="CodaExample" default="jar">
 
   <description>
 This is the Ant build file for the CODA Java library example program.
@@ -76,7 +76,7 @@ This is the Ant build file for the CODA Java library example program.
     <jar jarfile="${jarfile}">
       <fileset dir="${build.dir}" includes="**/*" />
       <manifest>
-        <attribute name="Main-Class" value="CodaTest" />
+        <attribute name="Main-Class" value="CodaExample" />
         <attribute name="Class-Path" value="${lib.list}" />
       </manifest>
     </jar>

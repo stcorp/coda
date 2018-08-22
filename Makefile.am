@@ -527,7 +527,7 @@ java_files = \
 EXTRA_DIST += \
 	java/coda_jni.c \
 	$(java_files) \
-	java/CodaTest.java \
+	java/CodaExample.java \
 	$(srcdir)/java/codac.i \
 	$(srcdir)/java/coda_ignore.i \
 	$(srcdir)/java/coda_rename.i
@@ -569,7 +569,7 @@ java/coda.jar: classnoinst.stamp
 	cd java && $(JAR) -cf coda.jar $(java_class_files)
 
 java_DATA = \
-	java/CodaTest.java \
+	java/CodaExample.java \
 	java/build.xml \
 	java/coda.jar
 
