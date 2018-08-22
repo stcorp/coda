@@ -129,7 +129,7 @@ static void check_file(char *filename)
         return;
     }
 
-    if (option_require_definition && (product_class == NULL || product_class == NULL))
+    if (option_require_definition && (product_class == NULL || product_type == NULL))
     {
         printf("  ERROR: could not determine product type\n\n");
         found_errors = 1;
