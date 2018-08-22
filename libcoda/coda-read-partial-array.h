@@ -32,6 +32,8 @@
 #ifndef CODA_READ_PARTIAL_ARRAY_H
 #define CODA_READ_PARTIAL_ARRAY_H
 
+#include "coda.h"
+
 #ifndef CODA_READ_FUNC_TYPE_DEF
 #define CODA_READ_FUNC_TYPE_DEF
 typedef int (*read_function) (const coda_cursor *, void *);
