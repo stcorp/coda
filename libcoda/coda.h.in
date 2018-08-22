@@ -59,42 +59,6 @@ extern "C"
  * define below is encapsulated by a #ifndef - #endif block.
  */
 
-#ifndef HAVE_INTTYPES_H
-#undef HAVE_INTTYPES_H
-#endif
-#ifndef HAVE_STDINT_H
-#undef HAVE_STDINT_H
-#endif
-#ifndef HAVE_SYS_TYPES_H
-#undef HAVE_SYS_TYPES_H
-#endif
-
-#ifndef int8_t
-#undef int8_t
-#endif
-#ifndef int16_t
-#undef int16_t
-#endif
-#ifndef int32_t
-#undef int32_t
-#endif
-#ifndef int64_t
-#undef int64_t
-#endif
-
-#ifndef uint8_t
-#undef uint8_t
-#endif
-#ifndef uint16_t
-#undef uint16_t
-#endif
-#ifndef uint32_t
-#undef uint32_t
-#endif
-#ifndef uint64_t
-#undef uint64_t
-#endif
-
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
 #else
