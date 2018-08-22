@@ -32,6 +32,8 @@
 #ifndef CODA_TRANSPOSE_ARRAY_H
 #define CODA_TRANSPOSE_ARRAY_H
 
+#include "coda.h"
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
