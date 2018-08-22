@@ -45,6 +45,7 @@ stamp-*
 /libcoda/doc/Doxyfile
 /libtool
 /ltmain.sh
+/m4/depend.am
 /m4/libtool.m4
 /m4/ltoptions.m4
 /m4/ltsugar.m4
