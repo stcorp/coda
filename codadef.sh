@@ -3,6 +3,10 @@
 # and write them to an (optional) output directory. The default output
 # directory is the current directory
 
+# It is recommended to run the following command inside the directory
+# to align the format of .xml files before creating the .codadef file.
+# $ find . -name "*.xml" -type f -exec xmllint --output '{}' --format '{}' \;
+
 if test $# -eq 0 -o $# -gt 2 ; then
   echo "Usage: $0 [--date] <input directory> [<output directory>]"
   exit 1
