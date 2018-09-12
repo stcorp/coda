@@ -277,7 +277,7 @@ set(LIBCODA_SOURCES
   libcoda/coda-bin.c
   libcoda/coda-bin.h
   libcoda/coda-cdf-cursor.c
-  libcoda/coda-cdf-internal.h 
+  libcoda/coda-cdf-internal.h
   libcoda/coda-cdf-type.c
   libcoda/coda-cdf.c
   libcoda/coda-cdf.h
@@ -653,10 +653,12 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
     configure_file(README readme.txt @ONLY NEWLINE_STYLE WIN32)
     set(CPACK_RESOURCE_FILE_LICENSE copying.txt)
     install(FILES copying.txt faq.txt install.txt licenses.txt readme.txt DESTINATION .)
+    set(CPACK_PACKAGE_NAME "CODA ${VERSION}")
+    set(CPACK_PACKAGE_FILE_NAME "CODA-${CPACK_PACKAGE_VERSION}-${CPACK_SYSTEM_NAME}")
     set(CPACK_PACKAGE_INSTALL_DIRECTORY "CODA")
     set(CPACK_WIX_UPGRADE_GUID "873ec1cd-f35a-407b-af00-9f85e740d1a0")
     set(CPACK_WIX_PRODUCT_GUID "2caa4283-49bc-4709-ae12-c5f41c1346d1")
-    set(CPACK_WIX_PATCH_FILE "${CMAKE_CURRENT_SOURCE_DIR}/cpack_wix_patch.xml") 
+    set(CPACK_WIX_PATCH_FILE "${CMAKE_CURRENT_SOURCE_DIR}/cpack_wix_patch.xml")
   endif(WIN32)
   include(CPack)
 
