@@ -11,6 +11,9 @@
 
 * Fixed build system to work with automake 1.16.
 
+* Updated build system to link against HDF4 installations that use libhdf
+  instead of libdf as library name.
+
 2.19 2018-03-28
 ~~~~~~~~~~~~~~~
 
