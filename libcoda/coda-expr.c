@@ -1500,7 +1500,7 @@ static int eval_float(eval_info *info, const coda_expression *expr, double *valu
             }
             if (*value < 0)
             {
-                *value = floor(*value - 0.5);
+                *value = ceil(*value - 0.5);
             }
             else
             {

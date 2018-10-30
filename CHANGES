@@ -11,6 +11,9 @@
 
 * Fixed build system to work with automake 1.16.
 
+* Fixed round() coda expression function for negative values
+  (round(-0.6) was returning -2 instead of -1).
+
 * Updated build system to link against HDF4 installations that use libhdf
   instead of libdf as library name.
 
