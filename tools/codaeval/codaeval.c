@@ -203,7 +203,7 @@ static int eval_expression(coda_cursor *cursor)
                                    coda_errno_to_string(coda_errno));
                     return -1;
                 }
-                printf("%g\n", value);
+                printf("%.16g\n", value);
             }
             break;
         case coda_expression_string:   /* string */
