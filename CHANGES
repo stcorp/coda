@@ -7,6 +7,8 @@
   You will still have to call coda_init() separately for each thread and
   can't reuse products/cursors/etc. from one thread in another.
 
+* Added -p/--path option to codacmp.
+
 * Fixed issue in generated documentation of detection expressions.
 
 * Fixed build system to work with automake 1.16.

@@ -15,7 +15,7 @@
       <h1>codacmp</h1>
 
       <p>This documentation describes the functionality of the codacmp tool which is part of CODA.</p>
-    
+
       <h2 id="general">General description</h2>
 
       <p>With codacmp one can compare two product files. The tool is primarily intended for verification purposes.</p>
@@ -26,6 +26,11 @@
         Options:
             -d, --disable_conversions
                     do not perform unit/value conversions
+            -p, --path &lt;path&gt;
+                    path (in the form of a CODA node expression) to the
+                    location in the product where the comparison should begin.
+                    This path should be available in both products. If this
+                    parameter is not provided the full products are compared.
             -k, --key &lt;path_to_array&gt; &lt;key_string_expr&gt;
                     for the given array in the product use the string
                     expression as a unique key to line up the array elements in

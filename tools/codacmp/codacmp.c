@@ -75,6 +75,11 @@ static void print_help()
     printf("        Options:\n");
     printf("            -d, --disable_conversions\n");
     printf("                    do not perform unit/value conversions\n");
+    printf("            -p, --path <path>\n");
+    printf("                    path (in the form of a CODA node expression) to the\n");
+    printf("                    location in the product where the comparison should begin.\n");
+    printf("                    This path should be available in both products. If this\n");
+    printf("                    parameter is not provided the full products are compared.\n");
     printf("            -k, --key <path_to_array> <key_string_expr>\n");
     printf("                    for the given array in the product use the string\n");
     printf("                    expression as a unique key to line up the array elements in\n");
@@ -1273,7 +1278,7 @@ static int compare_data(coda_cursor *cursor1, coda_cursor *cursor2)
     return 0;
 }
 
-static int compare_files(char *filename1, char *filename2)
+static int compare_files(char *filename1, char *filename2, char *starting_path)
 {
     coda_product *pf1;
     coda_product *pf2;
@@ -1319,6 +1324,7 @@ static int compare_files(char *filename1, char *filename2)
 
     if (coda_cursor_set_product(&cursor1, pf1) != 0)
     {
+        fprintf(stderr, "%sERROR: %s\n", pre[0], coda_errno_to_string(coda_errno));
         coda_close(pf1);
         coda_close(pf2);
         return -1;
@@ -1326,9 +1332,30 @@ static int compare_files(char *filename1, char *filename2)
 
     if (coda_cursor_set_product(&cursor2, pf2) != 0)
     {
+        fprintf(stderr, "%sERROR: %s\n", pre[1], coda_errno_to_string(coda_errno));
         coda_close(pf1);
         coda_close(pf2);
         return -1;
+    }
+
+    if (starting_path != NULL)
+    {
+        if (coda_cursor_goto(&cursor1, starting_path) != 0)
+        {
+            fprintf(stderr, "%sERROR: %s\n", pre[0], coda_errno_to_string(coda_errno));
+            coda_close(pf1);
+            coda_close(pf2);
+            return -1;
+        }
+
+        if (coda_cursor_goto(&cursor2, starting_path) != 0)
+        {
+            fprintf(stderr, "%sERROR: %s\n", pre[1], coda_errno_to_string(coda_errno));
+            coda_close(pf1);
+            coda_close(pf2);
+            return -1;
+        }
+
     }
 
     result = compare_data(&cursor1, &cursor2);
@@ -1342,11 +1369,13 @@ static int compare_files(char *filename1, char *filename2)
 int main(int argc, char **argv)
 {
     int perform_conversions;
+    char *starting_path;
     int result;
     int i;
 
     option_verbose = 0;
     perform_conversions = 1;
+    starting_path = NULL;
 
     if (argc == 1 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)
     {
@@ -1391,6 +1420,12 @@ int main(int argc, char **argv)
         else if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--disable_conversions") == 0)
         {
             perform_conversions = 0;
+        }
+        else if ((strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "--path") == 0) && i + 1 < argc &&
+                 argv[i + 1][0] != '-')
+        {
+            starting_path = argv[i + 1];
+            i++;
         }
         else if ((strcmp(argv[i], "-k") == 0 || strcmp(argv[i], "--keys") == 0) && i + 2 < argc)
         {
@@ -1438,7 +1473,7 @@ int main(int argc, char **argv)
     coda_set_option_perform_conversions(perform_conversions);
 
     /* compare files */
-    result = compare_files(argv[argc - 2], argv[argc - 1]);
+    result = compare_files(argv[argc - 2], argv[argc - 1], starting_path);
 
     coda_done();
 
