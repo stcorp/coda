@@ -475,7 +475,7 @@ endif
 python/codac.c: libcoda/coda.h.in $(srcdir)/python/codac.i \
     $(srcdir)/python/coda_typemaps.i \
     $(srcdir)/python/coda_ignore.i \
-    $(srcdir)/python/coda_rename.i 
+    $(srcdir)/python/coda_rename.i
 	@$(MKDIR_P) python
 	$(SWIG) $(PYTHON_SWIGFLAGS) -o python/codac.c $(srcdir)/python/codac.i
 
@@ -498,7 +498,7 @@ endif
 
 java/coda_jni.c: libcoda/coda.h.in $(srcdir)/java/codac.i \
     $(srcdir)/java/coda_ignore.i \
-    $(srcdir)/java/coda_rename.i 
+    $(srcdir)/java/coda_rename.i
 	@$(MKDIR_P) java/nl/stcorp/coda
 	$(SWIG) $(JAVA_SWIGFLAGS) -o java/coda_jni.c  $(srcdir)/java/codac.i
 
@@ -709,7 +709,7 @@ libcoda_doc: coda.h libcoda/doc/Doxyfile
 	  cd libcoda/doc ; \
 	  $(DOXYGEN) Doxyfile ; \
 	  cd ../.. ; \
-	  rm -rf doc/html/libcoda/doxygen.* doc/html/libcoda/tab* ; \
+	  rm -rf doc/html/libcoda/doxygen.* doc/html/libcoda/tab* doc/html/libcoda/*.png ; \
 	  echo "creating doclibcoda.mk" ; \
 	  $(MAKE) doclibcoda_include ; \
 	fi
@@ -739,7 +739,7 @@ java_doc: $(java_files) java/doc/Doxyfile
 	  cd java/doc ; \
 	  $(DOXYGEN) Doxyfile ; \
 	  cd ../.. ; \
-	  rm -rf doc/html/java/doxygen.* doc/html/java/tab* doc/html/java/dir_*.html ; \
+	  rm -rf doc/html/java/doxygen.* doc/html/java/tab* doc/html/java/dir_*.html doc/html/java/*.png ; \
 	  echo "creating docjava.mk" ; \
 	  $(MAKE) docjava_include ; \
 	fi
@@ -799,7 +799,7 @@ EXTRA_DIST += \
 	CMakeModules/FindJPEG.cmake \
 	CMakeModules/FindSZIP.cmake \
 	config.h.cmake.in \
-	libcoda/coda.h.cmake.in 
+	libcoda/coda.h.cmake.in
 
 config.h.cmake.in: config.h.in Makefile.am
 	cat $(srcdir)/config.h.in | sed -e 's/#[ ]*undef \(.*\)/#cmakedefine \1 \$${\1}/' > config.h.cmake.in2

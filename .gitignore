@@ -29,8 +29,6 @@ stamp-*
 /config.sub
 /configure
 /depcomp
-/doc/html/java
-/doc/html/libcoda
 /findtypedef
 /findtypedef.c
 /fortran/Makefile
