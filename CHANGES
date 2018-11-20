@@ -11,6 +11,9 @@
 
 * Fixed issue in generated documentation of detection expressions.
 
+* Fixed memory issue when trying to access (non-existing) attributes of an
+  HDF5 dataset element.
+
 * Fixed build system to work with automake 1.16.
 
 * Fixed round() coda expression function for negative values

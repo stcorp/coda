@@ -278,13 +278,14 @@ int coda_hdf5_cursor_goto_attributes(coda_cursor *cursor)
     cursor->n++;
     switch (type->tag)
     {
-        case tag_hdf5_basic_datatype:
-        case tag_hdf5_compound_datatype:
         case tag_hdf5_group:
             cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)((coda_hdf5_group *)type)->attributes;
             break;
         case tag_hdf5_dataset:
             cursor->stack[cursor->n - 1].type = (coda_dynamic_type *)((coda_hdf5_dataset *)type)->attributes;
+            break;
+        default:
+            cursor->stack[cursor->n - 1].type = coda_mem_empty_record(coda_format_hdf5);
             break;
     }
 
