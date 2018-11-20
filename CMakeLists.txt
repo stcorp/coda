@@ -22,7 +22,7 @@ set(CMAKE_MODULE_PATH
   ${CODA_SOURCE_DIR}/CMakeModules
   ${CMAKE_MODULE_PATH}
   CACHE INTERNAL "Local CMake modules")
-set(CMAKE_MACOSX_RPATH ON)
+set(CMAKE_MACOSX_RPATH OFF)
 
 include(CheckFunctionExists)
 include(CheckLibraryExists)
