@@ -2,6 +2,13 @@
   (to better support CMake builds on Windows). Remove any old coda-idl.*
   files from the installation directory to prevent errors.
 
+* The IDL, MATLAB, Python, and Java interface modules now link against the
+  shared CODA library instead of the static version. The modules use an
+  rpath setting based on the installation prefix to find the library.
+
+* Removed the libcoda_internal.la target from the autotools build.
+  Builds that used SUBPACKAGE_MODE should now use libcoda.la.
+
 * The CODA C library now uses thread-local storage (TLS) variables
   internally to allow CODA to be used in multi-threaded applications.
   You will still have to call coda_init() separately for each thread and

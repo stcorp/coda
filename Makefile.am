@@ -38,7 +38,7 @@ clean-local: $(CLEAN_LOCAL_TARGETS)
 if SUBPACKAGE_MODE
 
 noinst_PROGRAMS = codadd
-noinst_LTLIBRARIES = libcoda_internal.la libexpat_internal.la libpcre_internal.la libz_internal.la
+noinst_LTLIBRARIES = libcoda.la libexpat_internal.la libpcre_internal.la libz_internal.la
 
 else
 
@@ -50,7 +50,7 @@ noinst_PROGRAMS = findtypedef
 # libraries (+ related files)
 
 lib_LTLIBRARIES = libcoda.la
-noinst_LTLIBRARIES = libcoda_internal.la libexpat_internal.la libpcre_internal.la libz_internal.la
+noinst_LTLIBRARIES = libexpat_internal.la libpcre_internal.la libz_internal.la
 
 if BUILD_IDL
 idldlmexec_LTLIBRARIES = coda_idl.la
@@ -270,93 +270,6 @@ libcoda_la_LIBADD = @LTLIBOBJS@ libexpat_internal.la libpcre_internal.la libz_in
 INDENTFILES += $(libcoda_la_SOURCES) libcoda/coda.h.in
 BUILT_SOURCES += libcoda/coda-expr-parser.h
 
-libcoda_internal_la_SOURCES = \
-	libcoda/coda-ascbin-cursor.c \
-	libcoda/coda-ascbin.h \
-	libcoda/coda-ascii-cursor.c \
-	libcoda/coda-ascii-internal.h \
-	libcoda/coda-ascii.c \
-	libcoda/coda-ascii.h \
-	libcoda/coda-bin-cursor.c \
-	libcoda/coda-bin-internal.h \
-	libcoda/coda-bin.c \
-	libcoda/coda-bin.h \
-	libcoda/coda-cdf-cursor.c \
-	libcoda/coda-cdf-internal.h \
-	libcoda/coda-cdf-type.c \
-	libcoda/coda-cdf.c \
-	libcoda/coda-cdf.h \
-	libcoda/coda-check.c \
-	libcoda/coda-cursor-read.c \
-	libcoda/coda-cursor.c \
-	libcoda/coda-definition-parse.c \
-	libcoda/coda-definition.c \
-	libcoda/coda-definition.h \
-	libcoda/coda-detection.c \
-	libcoda/coda-errno.c \
-	libcoda/coda-expr-parser.c \
-	libcoda/coda-expr-parser.h \
-	libcoda/coda-expr-tokenizer.l \
-	libcoda/coda-expr.c \
-	libcoda/coda-expr.h \
-	libcoda/coda-filefilter.c \
-	libcoda/coda-filefilter.h \
-	libcoda/coda-grib-cursor.c \
-	libcoda/coda-grib-internal.h \
-	libcoda/coda-grib-type.c \
-	libcoda/coda-grib.c \
-	libcoda/coda-grib.h \
-	libcoda/coda-internal.h \
-	libcoda/coda-mem-cursor.c \
-	libcoda/coda-mem-internal.h \
-	libcoda/coda-mem-type.c \
-	libcoda/coda-mem.c \
-	libcoda/coda-mem.h \
-	libcoda/coda-netcdf-cursor.c \
-	libcoda/coda-netcdf-internal.h \
-	libcoda/coda-netcdf-type.c \
-	libcoda/coda-netcdf.c \
-	libcoda/coda-netcdf.h \
-	libcoda/coda-path.h \
-	libcoda/coda-product.c \
-	libcoda/coda-read-array.h \
-	libcoda/coda-read-bits.h \
-	libcoda/coda-read-bytes.h \
-	libcoda/coda-read-bytes-in-bounds.h \
-	libcoda/coda-read-partial-array.h \
-	libcoda/coda-rinex.c \
-	libcoda/coda-rinex.h \
-	libcoda/coda-sp3.c \
-	libcoda/coda-sp3.h \
-	libcoda/coda-swap2.h \
-	libcoda/coda-swap4.h \
-	libcoda/coda-swap8.h \
-	libcoda/coda-time.c \
-	libcoda/coda-transpose-array.h \
-	libcoda/coda-tree.c \
-	libcoda/coda-tree.h \
-	libcoda/coda-type.c \
-	libcoda/coda-type.h \
-	libcoda/coda-utils.c \
-	libcoda/coda-xml-internal.h \
-	libcoda/coda-xml-parser.c \
-	libcoda/coda-xml.c \
-	libcoda/coda-xml.h \
-	libcoda/coda.c \
-	libcoda/hashtable.c \
-	libcoda/hashtable.h \
-	libcoda/ipow.h \
-	libcoda/ziparchive.c \
-	libcoda/ziparchive.h
-if WITH_HDF4
-libcoda_internal_la_SOURCES += $(libcoda_hdf4_files)
-endif
-if WITH_HDF5
-libcoda_internal_la_SOURCES += $(libcoda_hdf5_files)
-endif
-libcoda_internal_la_CPPFLAGS = -Ilibcoda/expat -I$(srcdir)/libcoda/expat -Ilibcoda/pcre -I$(srcdir)/libcoda/pcre -Ilibcoda/zlib -I$(srcdir)/libcoda/zlib $(AM_CPPFLAGS)
-libcoda_internal_la_LIBADD = $(libcoda_la_LIBADD)
-
 # tools/codacheck
 
 codacheck_SOURCES = tools/codacheck/codacheck.c
@@ -378,8 +291,10 @@ codadd_SOURCES = \
 	tools/codadd/codadd-doc.c \
 	tools/codadd/codadd-list.c \
 	tools/codadd/codadd-xmlschema.c
-# keep this linked to libcoda_internal.la because of SUBPACKAGE_MODE
-codadd_LDADD = libcoda_internal.la
+if SUBPACKAGE_MODE
+codadd_LDFLAGS = -all-static
+endif
+codadd_LDADD = libcoda.la
 INDENTFILES += $(codadd_SOURCES)
 
 # tools/codadump
@@ -449,8 +364,8 @@ INDENTFILES += $(CODA_IDL_SOURCE_FILES)
 if BUILD_IDL
 coda_idl_la_SOURCES = $(CODA_IDL_SOURCE_FILES)
 coda_idl_la_LDFLAGS = -module -shared -avoid-version
-coda_idl_la_LIBADD = libcoda_internal.la
-coda_idl_la_DEPENDENCIES = libcoda_internal.la
+coda_idl_la_LIBADD = libcoda.la
+coda_idl_la_DEPENDENCIES = libcoda.la
 endif
 
 # matlab
@@ -466,8 +381,8 @@ if BUILD_MATLAB
 coda_matlab_la_SOURCES = $(CODA_MATLAB_SOURCE_FILES)
 coda_matlab_la_CPPFLAGS = -DMATLAB_MEX_FILE
 coda_matlab_la_LDFLAGS = -module -shared -avoid-version -export-symbols-regex mexFunction -shrext @MEXEXT@
-coda_matlab_la_LIBADD = libcoda_internal.la
-coda_matlab_la_DEPENDENCIES = libcoda_internal.la
+coda_matlab_la_LIBADD = libcoda.la
+coda_matlab_la_DEPENDENCIES = libcoda.la
 endif
 
 # python
@@ -490,8 +405,8 @@ EXTRA_DIST += \
 if BUILD_PYTHON
 _codac_la_SOURCES = python/codac.c
 _codac_la_LDFLAGS = -module -shared -avoid-version
-_codac_la_LIBADD = libcoda_internal.la
-_codac_la_DEPENDENCIES = libcoda_internal.la
+_codac_la_LIBADD = libcoda.la
+_codac_la_DEPENDENCIES = libcoda.la
 endif
 
 # java
@@ -576,8 +491,8 @@ java_DATA = \
 libcoda_jni_la_SOURCES = java/coda_jni.c
 libcoda_jni_la_CPPFLAGS = $(JNICPPFLAGS) $(AM_CPPFLAGS) -fno-strict-aliasing
 libcoda_jni_la_LDFLAGS = -module -shared -avoid-version -shrext $(JNIEXT)
-libcoda_jni_la_LIBADD = libcoda_internal.la
-libcoda_jni_la_DEPENDENCIES = libcoda_internal.la
+libcoda_jni_la_LIBADD = libcoda.la
+libcoda_jni_la_DEPENDENCIES = libcoda.la
 
 CLEANFILES += java/coda.jar
 

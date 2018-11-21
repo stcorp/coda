@@ -474,7 +474,7 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
   # codacheck
   set(codacheck_SOURCES tools/codacheck/codacheck.c)
   add_executable(codacheck ${codacheck_SOURCES})
-  target_link_libraries(codacheck coda ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${MATHLIB})
+  target_link_libraries(codacheck coda ${MATHLIB})
   install(TARGETS codacheck DESTINATION ${BIN_PREFIX})
 
   # codacmp
@@ -501,19 +501,19 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
     set(codadump_SOURCES ${codadump_SOURCES} ${codadump_hdf4_files})
   endif(CODA_WITH_HDF4)
   add_executable(codadump ${codadump_SOURCES})
-  target_link_libraries(codadump coda ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${MATHLIB})
+  target_link_libraries(codadump coda ${HDF4_LIBRARIES} ${MATHLIB})
   install(TARGETS codadump DESTINATION ${BIN_PREFIX})
 
   # codaeval
   set(codaeval_SOURCES tools/codaeval/codaeval.c)
   add_executable(codaeval ${codaeval_SOURCES})
-  target_link_libraries(codaeval coda ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${MATHLIB})
+  target_link_libraries(codaeval coda ${MATHLIB})
   install(TARGETS codaeval DESTINATION ${BIN_PREFIX})
 
   # codafind
   set(codafind_SOURCES tools/codafind/codafind.c)
   add_executable(codafind ${codafind_SOURCES})
-  target_link_libraries(codafind coda ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${MATHLIB})
+  target_link_libraries(codafind coda ${MATHLIB})
   install(TARGETS codafind DESTINATION ${BIN_PREFIX})
 
 endif(NOT CODA_BUILD_SUBPACKAGE_MODE)
@@ -554,7 +554,7 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
     add_library(coda_idl MODULE ${CODA_IDL_SOURCES})
     set_target_properties(coda_idl PROPERTIES
       PREFIX "")
-    target_link_libraries(coda_idl coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${MATHLIB} ${IDL_LIBRARIES})
+    target_link_libraries(coda_idl coda ${IDL_LIBRARIES})
     configure_file(
       ${CMAKE_CURRENT_SOURCE_DIR}/idl/coda_idl.dlm.in
       ${CMAKE_CURRENT_BINARY_DIR}/idl/coda_idl.dlm)
@@ -580,7 +580,7 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
       PREFIX ""
       SUFFIX ".${Matlab_MEX_EXTENSION}"
       COMPILE_DEFINITIONS MATLAB_MEX_FILE)
-    target_link_libraries(coda_matlab coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${MATHLIB} ${Matlab_LIBRARIES})
+    target_link_libraries(coda_matlab coda ${Matlab_LIBRARIES})
     set(CODA_MATLAB_M_FILES
       matlab/coda_attributes.m
       matlab/coda_class.m
@@ -628,7 +628,7 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
     if(WIN32)
       set_target_properties(coda_python PROPERTIES SUFFIX .pyd)
     endif()
-    target_link_libraries(coda_python coda_static ${HDF4_LIBRARIES} ${HDF5_LIBRARIES} ${PYTHON_LIBRARIES})
+    target_link_libraries(coda_python coda ${PYTHON_LIBRARIES})
     install(TARGETS coda_python DESTINATION ${PYTHON_PREFIX})
     install(FILES
       python/__init__.py
