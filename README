@@ -33,6 +33,22 @@ Changes
 An overview of the changes in this release can be found in the CHANGES file.
 
 
+Installation
+============
+
+Installation instructions can be found in the INSTALL file.
+
+
+Documentation
+=============
+
+Full documentation in HTML is included with the CODA software.
+
+A version matching the latest development status on GitHub can be viewed at:
+
+    http://stcorp.github.io/coda/doc/html/index.html
+
+
 Download
 ========
 
