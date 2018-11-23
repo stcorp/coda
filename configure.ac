@@ -126,8 +126,8 @@ int vsnprintf(const char *, size_t, const char *, va_list ap);
 /* redefines for special string handling functions */
 #define strcasecmp _stricmp
 #define strncasecmp _strnicmp
+#if defined(_MSC_VER) && _MSC_VER < 1400
 #define snprintf _snprintf
-#if defined(_MSC_VER) && _MSC_VER < 1500
 #define vsnprintf _vsnprintf
 #endif
 
@@ -173,7 +173,7 @@ AC_CONFIG_FILES([windows/codawin32.iss windows/codawin64.iss windows/setup.py])
 # Set dynamic library version
 
 # Rules to update the library version information:
-# 1. Start with version information of `0:0:0' for each libtool library. 
+# 1. Start with version information of `0:0:0' for each libtool library.
 # 2. Update the version information only immediately before a public release.
 # 3. If the library source code has changed at all since the last update,
 #    then increment revision (`c:r:a' becomes `c:r+1:a').
@@ -430,7 +430,7 @@ Try setting the JAVA and JAVAC environment variables to the full paths to your j
       JNICPPFLAGS=-I/System/Library/Frameworks/JavaVM.framework/Headers
     fi
   else
-    AC_CHECK_FILE($JAVA_HOME/include/jni.h, , 
+    AC_CHECK_FILE($JAVA_HOME/include/jni.h, ,
       [AC_MSG_ERROR([BOXED_TEXT([ERROR: The Java Native Interface (jni.h) is required for the Java interface. Make sure you have the full JDK installed, not just the Runtime Environment (JRE).])])])
     JNICPPFLAGS="-I$JAVA_HOME/include -I$JAVA_HOME/include/"`uname -s | tr A-Z a-z`" $CPPFLAGS"
     JNIEXT=.so
@@ -480,7 +480,7 @@ if test $ac_cv_with_hdf5 = yes ; then
 Try setting the HDF5_LIB and HDF5_INCLUDE environment variables to the
 location of your HDF5 library and include files.]))
   fi
-fi 
+fi
 AC_SUBST(HDF5LIBS)
 AM_CONDITIONAL(WITH_HDF5, test $ac_cv_with_hdf5 = yes)
 
