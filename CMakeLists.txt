@@ -44,6 +44,7 @@ option(CODA_BUILD_SUBPACKAGE_MODE "build CODA as sub-package" OFF)
 option(CODA_BUILD_IDL "build IDL interface" OFF)
 option(CODA_BUILD_MATLAB "build MATLAB interface" OFF)
 option(CODA_BUILD_PYTHON "build Python interface" OFF)
+option(CODA_BUILD_JAVA "build Java interface" OFF)
 option(CODA_WITH_HDF4 "use HDF4" OFF)
 option(CODA_WITH_HDF5 "use HDF5" OFF)
 option(CODA_ENABLE_CONDA_INSTALL OFF)
@@ -84,6 +85,7 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
   set(PYTHON_PREFIX ${CODA_PYTHON_INSTALL_DIR}/coda)
   set(MATLAB_PREFIX lib/coda/matlab)
   set(IDL_PREFIX lib/coda/idl)
+  set(JAVA_PREFIX share/coda/java)
   if(WIN32)
     # we use a different installation directory structure on Windows
     if(CODA_ENABLE_CONDA_INSTALL)
@@ -94,11 +96,13 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
       set(DOC_PREFIX Library/share/coda/doc)
       set(MATLAB_PREFIX Library/lib/coda/matlab)
       set(IDL_PREFIX Library/lib/coda/idl)
+      set(JAVA_PREFIX Library/share/coda/java)
     else()
       set(LIB_PREFIX libs)
       set(DOC_PREFIX doc)
       set(MATLAB_PREFIX matlab)
       set(IDL_PREFIX idl)
+      set(JAVA_PREFIX java)
     endif()
   endif()
 endif()
@@ -636,6 +640,53 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
       python/codapython.py
       DESTINATION ${CODA_PYTHON_INSTALL_DIR}/coda)
   endif(CODA_BUILD_PYTHON)
+
+  # Java
+  if(CODA_BUILD_JAVA)
+    find_package(Java)
+    if(NOT Java_FOUND)
+      message(FATAL_ERROR "Java not found.")
+    endif(NOT Java_FOUND)
+    find_package(JNI)
+    if(NOT JNI_FOUND)
+      message(FATAL_ERROR "Java JNI interfaces not found. Make sure you have the full JDK installed, not just the Runtime Environment (JRE).")
+    endif(NOT JNI_FOUND)
+    include(UseJava)
+    include_directories(${JAVA_INCLUDE_PATH})
+    add_library(coda_jni MODULE java/coda_jni.c)
+    if(APPLE)
+      set_target_properties(coda_jni PROPERTIES SUFFIX ".jnilib")
+    endif(APPLE)
+    set(CODA_JAVA_FILES
+      java/nl/stcorp/coda/CodaException.java
+      java/nl/stcorp/coda/Product.java
+      java/nl/stcorp/coda/Type.java
+      java/nl/stcorp/coda/Cursor.java
+      java/nl/stcorp/coda/Expression.java
+      java/nl/stcorp/coda/Coda.java
+      java/nl/stcorp/coda/ArrayOrderingEnum.java
+      java/nl/stcorp/coda/FilefilterStatusEnum.java
+      java/nl/stcorp/coda/FormatEnum.java
+      java/nl/stcorp/coda/NativeTypeEnum.java
+      java/nl/stcorp/coda/SpecialTypeEnum.java
+      java/nl/stcorp/coda/ExpressionTypeEnum.java
+      java/nl/stcorp/coda/TypeClassEnum.java
+      java/nl/stcorp/coda/codacConstants.java
+      java/nl/stcorp/coda/codac.java
+      java/nl/stcorp/coda/codacJNI.java
+      java/nl/stcorp/coda/SWIGTYPE_p_coda_product_struct.java
+      java/nl/stcorp/coda/SWIGTYPE_p_coda_expression_struct.java
+      java/nl/stcorp/coda/SWIGTYPE_p_coda_cursor_struct.java
+      java/nl/stcorp/coda/SWIGTYPE_p_coda_type_struct.java)
+    add_jar(codajar SOURCE ${CODA_JAVA_FILES} OUTPUT_NAME coda)
+    target_link_libraries(coda_jni coda)
+    install_jar(codajar DESTINATION ${JAVA_PREFIX})
+    install(TARGETS coda_jni DESTINATION ${JAVA_PREFIX})
+    install(FILES
+      java/CodaExample.java
+      java/build.xml
+      DESTINATION ${JAVA_PREFIX})
+  endif(CODA_BUILD_JAVA)
 
   # documentation
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/doc/html DESTINATION ${DOC_PREFIX})
