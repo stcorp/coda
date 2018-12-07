@@ -422,8 +422,12 @@ if test $ac_cv_enable_java = yes ; then
     AC_MSG_ERROR(BOXED_TEXT([ERROR: The Sun Java Development Kit (JDK) is required to build the Java interface.
 Try setting the JAVA and JAVAC environment variables to the full paths to your java and javac executables if you have Java installed.]))
   fi
-  if test `uname -s` = Darwin && ! test -e $JAVA_HOME/include; then
+  if test `uname -s` = Darwin; then
     JNIEXT=.jnilib
+  else
+    JNIEXT=.so
+  fi
+  if test `uname -s` = Darwin && ! test -e $JAVA_HOME/include; then
     if test -x /usr/bin/javaconfig; then
       JNICPPFLAGS=-I`javaconfig Headers`
     elif test -e /System/Library/Frameworks/JavaVM.framework/Headers; then # javaconfig does not exist on Mac 10.8
@@ -433,7 +437,6 @@ Try setting the JAVA and JAVAC environment variables to the full paths to your j
     AC_CHECK_FILE($JAVA_HOME/include/jni.h, ,
       [AC_MSG_ERROR([BOXED_TEXT([ERROR: The Java Native Interface (jni.h) is required for the Java interface. Make sure you have the full JDK installed, not just the Runtime Environment (JRE).])])])
     JNICPPFLAGS="-I$JAVA_HOME/include -I$JAVA_HOME/include/"`uname -s | tr A-Z a-z`" $CPPFLAGS"
-    JNIEXT=.so
   fi
   AC_SUBST(JNICPPFLAGS)
   AC_SUBST(JNIEXT)
