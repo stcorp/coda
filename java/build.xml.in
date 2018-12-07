@@ -16,8 +16,8 @@ This is the Ant build file for the CODA Java library example program.
 
   <property name="javac.debug"        value="on"/>
   <property name="javac.deprecation"  value="on"/>
-  <property name="javac.source"       value="1.6"/>
-  <property name="javac.target"       value="1.6"/>
+  <property name="javac.source"       value="1.8"/>
+  <property name="javac.target"       value="1.8"/>
 
   <property name="jarfile" value="${ant.project.name}.jar"/>
 
