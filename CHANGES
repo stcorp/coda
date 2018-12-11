@@ -23,6 +23,8 @@
 
 * Fixed build system to work with automake 1.16.
 
+* Updated SWIG generated files (for Java/Python interfaces) to SWIG 3.0.12.
+
 * Fixed round() coda expression function for negative values
   (round(-0.6) was returning -2 instead of -1).
 
