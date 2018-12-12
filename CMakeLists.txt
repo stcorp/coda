@@ -656,7 +656,7 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
       python/__init__.py
       python/codac.py
       python/codapython.py
-      DESTINATION ${CODA_PYTHON_INSTALL_DIR}/coda)
+      DESTINATION ${PYTHON_PREFIX})
   endif(CODA_BUILD_PYTHON)
 
   # Java
