@@ -9,6 +9,9 @@
 * Removed the libcoda_internal.la target from the autotools build.
   Builds that used SUBPACKAGE_MODE should now use libcoda.la.
 
+* The build system for Windows is now fully based on CMake and the binary
+  installer is now created using WIX.
+
 * The CODA C library now uses thread-local storage (TLS) variables
   internally to allow CODA to be used in multi-threaded applications.
   You will still have to call coda_init() separately for each thread and
