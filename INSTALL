@@ -70,7 +70,8 @@ What you will need
 
   - A C compiler: Most Unix platforms come with their own C compiler so this
     should not be a problem. For macOS you should make sure you have installed
-    the Developer Tools. For Windows you need Microsoft Visual C++ 2015 (v14).
+    the Developer Tools. For Windows you need Microsoft Visual C++ 2009 (v9)
+    or higher.
 
   - If you want to use the HDF4 features of CODA then you will need to have a
     recent version of HDF4 installed (for building the source package on
