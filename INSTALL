@@ -109,7 +109,7 @@ script in the root of the source directory::
 After that you can follow the steps as usual for building the source package.
 
 Note that the CMake build scripts that come with CODA can also be used to
-build HARP, but they do not allow regeneration of automatically generated
+build CODA, but they do not allow regeneration of automatically generated
 files (such as the documentation), so they are not recommended for performing
 co-development of CODA.
 
@@ -385,12 +385,12 @@ will guide you through the installation process. After a successful
 installation you will have to perform some last steps if you want to use the
 IDL, MATLAB and/or Python interfaces.
 
-For IDL you will have to add ``<CODA installdir>\idl`` to your ``DLM_PATH``.
-You do this by setting an ``IDL_DLM_PATH`` environment variable.
+For IDL you will have to add ``<CODA installdir>\lib\coda\idl`` to your
+``DLM_PATH``. You do this by setting an ``IDL_DLM_PATH`` environment variable.
 On Windows open the 'System' control panel of your Windows operating system and
 goto the 'Advanced' tab. Then click on 'Environment Variables' and create a new
 system variable with the name ``IDL_DLM_PATH`` and value
-``<IDL_DEFAULT>;C:\Program Files\CODA\idl``.
+``<IDL_DEFAULT>;C:\Program Files\CODA\lib\coda\idl``.
 If you have installed CODA in a location different from
 ``C:\Program Files\CODA`` then replace this part in the value by the
 installation directory you chose when installing CODA.
@@ -408,18 +408,18 @@ functions using::
 
 For MATLAB you will have to start MATLAB and goto the 'Set Path...' menu item
 in the 'File' menu. Here you should add the directory
-``C:\Program Files\CODA\matlab``. If you have installed CODA in a location
-different from ``C:\Program Files\CODA`` then replace this part of the
+``C:\Program Files\CODA\lib\coda\matlab``. If you have installed CODA in a
+location different from ``C:\Program Files\CODA`` then replace this part of the
 directory by the installation directory you had chosen when you installed CODA.
 
 For Python you will have to copy the
-``C:\Program Files\CODA\Lib\site-packages\coda`` directory to the site-packages
+``C:\Program Files\CODA\python\coda`` directory to the site-packages
 folder of your Python installation.
 However, if you want to use the Python interfaces on Windows, it is recommended
 to just install the Anaconda package of CODA.
 
 For Java you can find the CODA jni/jar files, an example script and an Ant
-build script in ``C:\Program Files\CODA\java``.
+build script in ``C:\Program Files\CODA\share\coda\java``.
 
 Note: The binary installer for Windows comes with full HDF4 and HDF5 support
 included in all CODA modules.
@@ -427,11 +427,11 @@ included in all CODA modules.
 Next, you may want to install one or more product format definition files
 (.codadef files). There are no .codadef files included with CODA, but they are
 available from several other sources. If you put them in the default definition
-directory (``<CODA installdir>\definitions``) then the CODA command line tools
-and the IDL and MATLAB interfaces will automatically find them. You can also
-install the .codadef files in a different location and set the
-``CODA_DEFINITION`` environment to point to a ``;`` separated list of paths.
-Each path can either be a full path to a .codadef file or a directory
+directory (``<CODA installdir>\share\coda\definitions``) then the CODA command
+line tools and the IDL, MATLAB, and Pythno interfaces will automatically find
+them. You can also install the .codadef files in a different location and set
+the ``CODA_DEFINITION`` environment to point to a ``;`` separated list of
+paths. Each path can either be a full path to a .codadef file or a directory
 (containing only .codadef files). When you use the ``CODA_DEFINITION``
 environment variable then also the C, Fortran and Python interfaces of CODA
 will be able to find the .codadef files.
@@ -440,7 +440,7 @@ Building the source package (Windows)
 -------------------------------------
 
 To build the source package, make sure to download the official CODA source
-package, which is named ``harp-x.y.z.tar.gz``.
+package, which is named ``coda-x.y.z.tar.gz``.
 
 The official and only supported build system on Windows is CMake.
 You will need to have builds of HDF4 and HDF5 (and their dependencies)

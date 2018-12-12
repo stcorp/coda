@@ -90,12 +90,8 @@ static void idl_coda_set_definition_path(void)
 {
     if (getenv("IDL_DLM_PATH") != NULL)
     {
-#ifdef CODA_DEFINITION_IDL
-        coda_set_definition_path_conditional("coda_idl.dlm", getenv("IDL_DLM_PATH"), CODA_DEFINITION_IDL);
-#else
         coda_set_definition_path_conditional("coda_idl.dlm", getenv("IDL_DLM_PATH"),
                                              "../../../share/" PACKAGE "/definitions");
-#endif
     }
 }
 

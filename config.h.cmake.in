@@ -328,12 +328,6 @@ int vsnprintf(const char *, size_t, const char *, va_list ap);
 /* Make sure we build the PCRE library statically on Windows */
 #define PCRE_STATIC
 
-/* This is the relative path to CODA definitions for the IDL interface. */
-#cmakedefine CODA_DEFINITION_IDL ${CODA_DEFINITION_IDL}
-
-/* This is the relative path to CODA definitions for the MATLAB interface. */
-#cmakedefine CODA_DEFINITION_MATLAB ${CODA_DEFINITION_MATLAB}
-
 #ifdef WIN32
 
 /* include windows specific headers */
@@ -398,18 +392,6 @@ int vsnprintf(const char *, size_t, const char *, va_list ap);
 
 #define YYMALLOC malloc
 #define YYFREE free
-
-/* coda-idl defines */
-
-#ifndef CODA_DEFINITION_IDL
-#define CODA_DEFINITION_IDL "../definitions"
-#endif
-
-/* coda-matlab defines */
-
-#ifndef CODA_DEFINITION_MATLAB
-#define CODA_DEFINITION_MATLAB "../definitions"
-#endif
 
 #endif
 

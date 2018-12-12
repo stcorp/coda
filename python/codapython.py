@@ -34,6 +34,7 @@ import numpy
 import copy
 import os
 import io
+import sys
 
 #
 # EXCEPTION HIERARCHY
@@ -997,9 +998,16 @@ def get_option_filter_record_fields():
 
 def _init():
     if os.getenv('CODA_DEFINITION') is None:
-        # Set coda definition path relative to coda python package
-        relpath = "../../../../share/coda/definitions"
-        coda_set_definition_path_conditional(os.path.basename(__file__), os.path.dirname(__file__), relpath)
+        if sys.platform == "win32":
+            # Set coda definition path relative to coda C library
+            # path is relative to <prefix>/bin
+            relpath = "../share/coda/definitions"
+            coda_set_definition_path_conditional("coda.dll", None, relpath)
+        else:
+            # Set coda definition path relative to coda python package
+            # path is relative to <prefix>/lib/python<x.y>/site-packages/coda
+            relpath = "../../../../share/coda/definitions"
+            coda_set_definition_path_conditional(os.path.basename(__file__), os.path.dirname(__file__), relpath)
     init()
 
 # initialize libcoda by calling coda_init()

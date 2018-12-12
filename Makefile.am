@@ -714,6 +714,7 @@ EXTRA_DIST += \
 	CMakeModules/FindJPEG.cmake \
 	CMakeModules/FindSZIP.cmake \
 	config.h.cmake.in \
+	cpack_wix_patch.xml \
 	libcoda/coda.h.cmake.in
 
 config.h.cmake.in: config.h.in Makefile.am
@@ -733,56 +734,6 @@ libcoda/coda.h.cmake.in: libcoda/coda.h.in Makefile.am
 	else \
 	  mv libcoda/coda.h.cmake.in2 $(srcdir)/libcoda/coda.h.cmake.in ; \
 	fi
-
-# *** windows-specific ***
-
-EXTRA_DIST += \
-	cpack_wix_patch.xml \
-	unix2dos \
-	windows/clean_dir.bat \
-	windows/coda.h \
-	windows/codawin32.iss \
-	windows/codawin32.iss.in \
-	windows/codawin64.iss \
-	windows/codawin64.iss.in \
-	windows/coda.sln \
-	windows/codacheck.vcproj \
-	windows/codacmp.vcproj \
-	windows/codadd.vcproj \
-	windows/codadll.vcproj \
-	windows/codadump.vcproj \
-	windows/codaeval.vcproj \
-	windows/codafind.vcproj \
-	windows/codaidl.vcproj \
-	windows/codajava.vcproj \
-	windows/codalib.vcproj \
-	windows/codamatlab.vcproj \
-	windows/codapython.vcproj \
-	windows/config.h \
-	windows/config.h.in \
-	windows/create_installer.bat \
-	windows/make_coda_all.bat \
-	windows/make_coda_idl.bat \
-	windows/make_coda_java.bat \
-	windows/make_coda_matlab.bat \
-	windows/make_coda_python.bat \
-	windows/make_coda_libraries.bat \
-	windows/make_coda_tools.bat \
-	windows/modifypath.iss \
-	windows/removepath.iss \
-	windows/setup.py \
-	windows/setup.py.in \
-	windows/build.xml \
-	windows/readme.txt
-
-windows/coda.h: $(srcdir)/libcoda/coda.h.in
-	cp $(srcdir)/libcoda/coda.h.in windows/coda.h
-
-windows/readme.txt: $(srcdir)/README
-	$(srcdir)/unix2dos $(srcdir)/README > windows/readme.txt
-
-windows/build.xml: $(srcdir)/java/build.xml.in
-	cat $(srcdir)/java/build.xml.in | sed 's/\@JAVA\@/C:\\jdk1.6.0_07\\bin\\java/' | sed 's/\@JAVAC\@/C:\\jdk1.6.0_07\\bin\\javac/' > windows/build.xml
 
 # *** development install targets to avoid long installs ***
 

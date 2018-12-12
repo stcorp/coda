@@ -91,26 +91,23 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
     if(CODA_ENABLE_CONDA_INSTALL)
       # all non-python components need to be installed in a Library sub-directory for Conda on Windows
       set(BIN_PREFIX Library/bin)
-      set(LIB_PREFIX Library/libs)
+      set(LIB_PREFIX Library/lib)
       set(INCLUDE_PREFIX Library/include)
       set(DOC_PREFIX Library/share/coda/doc)
       set(MATLAB_PREFIX Library/lib/coda/matlab)
       set(IDL_PREFIX Library/lib/coda/idl)
       set(JAVA_PREFIX Library/share/coda/java)
-    else()
-      set(LIB_PREFIX libs)
+    else(CODA_ENABLE_CONDA_INSTALL)
       set(DOC_PREFIX doc)
-      set(MATLAB_PREFIX matlab)
-      set(IDL_PREFIX idl)
-      set(JAVA_PREFIX java)
-    endif()
-  endif()
-endif()
+      set(PYTHON_PREFIX python/coda)
+    endif(CODA_ENABLE_CONDA_INSTALL)
+  endif(WIN32)
+endif(NOT CODA_BUILD_SUBPACKAGE_MODE)
 
 SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${LIB_PREFIX}")
 
 if(NOT MSVC)
-set(MATHLIB m)
+  set(MATHLIB m)
 endif(NOT MSVC)
 
 set(INCLUDES "")
@@ -440,7 +437,6 @@ set(LIBZLIB_SOURCES
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/zlib)
 
 add_library(coda_static STATIC ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBPCRE_SOURCES} ${LIBZLIB_SOURCES})
-
 # On Windows, we want libcoda.lib for static, coda.dll & coda.lib for shared.
 # On Unix, we want libcoda.a and libcoda.so
 if(WIN32)
@@ -481,6 +477,9 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
   set(codacheck_SOURCES tools/codacheck/codacheck.c)
   add_executable(codacheck ${codacheck_SOURCES})
   target_link_libraries(codacheck coda ${MATHLIB})
+  if(WIN32)
+    set_target_properties(codacheck PROPERTIES COMPILE_FLAGS "-DLIBCODADLL")
+  endif(WIN32)
   install(TARGETS codacheck DESTINATION ${BIN_PREFIX})
 
   # codacmp
@@ -508,18 +507,27 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
   endif(CODA_WITH_HDF4)
   add_executable(codadump ${codadump_SOURCES})
   target_link_libraries(codadump coda ${HDF4_LIBRARIES} ${MATHLIB})
+  if(WIN32)
+    set_target_properties(codadump PROPERTIES COMPILE_FLAGS "-DLIBCODADLL")
+  endif(WIN32)
   install(TARGETS codadump DESTINATION ${BIN_PREFIX})
 
   # codaeval
   set(codaeval_SOURCES tools/codaeval/codaeval.c)
   add_executable(codaeval ${codaeval_SOURCES})
   target_link_libraries(codaeval coda ${MATHLIB})
+  if(WIN32)
+    set_target_properties(codaeval PROPERTIES COMPILE_FLAGS "-DLIBCODADLL")
+  endif(WIN32)
   install(TARGETS codaeval DESTINATION ${BIN_PREFIX})
 
   # codafind
   set(codafind_SOURCES tools/codafind/codafind.c)
   add_executable(codafind ${codafind_SOURCES})
   target_link_libraries(codafind coda ${MATHLIB})
+  if(WIN32)
+    set_target_properties(codafind_SOURCES PROPERTIES COMPILE_FLAGS "-DLIBCODADLL")
+  endif(WIN32)
   install(TARGETS codafind DESTINATION ${BIN_PREFIX})
 
 endif(NOT CODA_BUILD_SUBPACKAGE_MODE)
@@ -558,9 +566,11 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
     include_directories(AFTER ${IDL_INCLUDE_DIRS})
     set(CODA_IDL_SOURCES idl/coda_idl.c idl/coda_idl.def)
     add_library(coda_idl MODULE ${CODA_IDL_SOURCES})
-    set_target_properties(coda_idl PROPERTIES
-      PREFIX "")
+    set_target_properties(coda_idl PROPERTIES PREFIX "")
     target_link_libraries(coda_idl coda ${IDL_LIBRARIES})
+    if(WIN32)
+      set_target_properties(coda_idl PROPERTIES COMPILE_FLAGS "-DLIBCODADLL")
+    endif(WIN32)
     configure_file(
       ${CMAKE_CURRENT_SOURCE_DIR}/idl/coda_idl.dlm.in
       ${CMAKE_CURRENT_BINARY_DIR}/idl/coda_idl.dlm)
@@ -587,6 +597,9 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
       SUFFIX ".${Matlab_MEX_EXTENSION}"
       COMPILE_DEFINITIONS MATLAB_MEX_FILE)
     target_link_libraries(coda_matlab coda ${Matlab_LIBRARIES})
+    if(WIN32)
+      set_target_properties(coda_matlab PROPERTIES COMPILE_FLAGS "-DLIBCODADLL")
+    endif(WIN32)
     set(CODA_MATLAB_M_FILES
       matlab/coda_attributes.m
       matlab/coda_class.m
@@ -635,6 +648,9 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
       set_target_properties(coda_python PROPERTIES SUFFIX .pyd)
     endif()
     target_link_libraries(coda_python coda ${PYTHON_LIBRARIES})
+    if(WIN32)
+      set_target_properties(coda_python PROPERTIES COMPILE_FLAGS "-DLIBCODADLL")
+    endif(WIN32)
     install(TARGETS coda_python DESTINATION ${PYTHON_PREFIX})
     install(FILES
       python/__init__.py
@@ -645,7 +661,7 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
 
   # Java
   if(CODA_BUILD_JAVA)
-    find_package(Java)
+    find_package(Java 1.8)
     if(NOT Java_FOUND)
       message(FATAL_ERROR "Java not found.")
     endif(NOT Java_FOUND)
@@ -682,6 +698,9 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
       java/nl/stcorp/coda/SWIGTYPE_p_coda_type_struct.java)
     add_jar(codajar SOURCE ${CODA_JAVA_FILES} OUTPUT_NAME coda)
     target_link_libraries(coda_jni coda)
+    if(WIN32)
+      set_target_properties(coda_jni PROPERTIES COMPILE_FLAGS "-DLIBCODADLL")
+    endif(WIN32)
     install_jar(codajar DESTINATION ${JAVA_PREFIX})
     install(TARGETS coda_jni DESTINATION ${JAVA_PREFIX})
     install(FILES
