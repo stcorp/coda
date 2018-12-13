@@ -526,7 +526,7 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
   add_executable(codafind ${codafind_SOURCES})
   target_link_libraries(codafind coda ${MATHLIB})
   if(WIN32)
-    set_target_properties(codafind_SOURCES PROPERTIES COMPILE_FLAGS "-DLIBCODADLL")
+    set_target_properties(codafind PROPERTIES COMPILE_FLAGS "-DLIBCODADLL")
   endif(WIN32)
   install(TARGETS codafind DESTINATION ${BIN_PREFIX})
 
