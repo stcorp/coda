@@ -701,11 +701,16 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
       java/nl/stcorp/coda/SWIGTYPE_p_coda_cursor_struct.java
       java/nl/stcorp/coda/SWIGTYPE_p_coda_type_struct.java)
     add_jar(codajar SOURCE ${CODA_JAVA_FILES} OUTPUT_NAME coda)
+    set(JAVA ${Java_JAVA_EXECUTABLE})
+    set(JAVAC ${Java_JAVAC_EXECUTABLE})
+    configure_file(
+      ${CMAKE_CURRENT_SOURCE_DIR}/java/build.xml.in
+      ${CMAKE_CURRENT_BINARY_DIR}/java/build.xml @ONLY)
     install(TARGETS coda_jni DESTINATION ${JAVA_PREFIX})
     install_jar(codajar DESTINATION ${JAVA_PREFIX})
     install(FILES
       java/CodaExample.java
-      java/build.xml
+      ${CMAKE_CURRENT_BINARY_DIR}/java/build.xml
       DESTINATION ${JAVA_PREFIX})
   endif(CODA_BUILD_JAVA)
 
