@@ -22,7 +22,6 @@ set(CMAKE_MODULE_PATH
   ${CODA_SOURCE_DIR}/CMakeModules
   ${CMAKE_MODULE_PATH}
   CACHE INTERNAL "Local CMake modules")
-set(CMAKE_MACOSX_RPATH ON)
 
 include(CheckFunctionExists)
 include(CheckLibraryExists)
@@ -48,7 +47,10 @@ option(CODA_BUILD_JAVA "build Java interface" OFF)
 option(CODA_WITH_HDF4 "use HDF4" OFF)
 option(CODA_WITH_HDF5 "use HDF5" OFF)
 option(CODA_ENABLE_CONDA_INSTALL OFF)
+option(CODA_MACOSX_RPATH ON)
+
 set(CODA_EXPAT_NAME_MANGLE 1)
+set(CMAKE_MACOSX_RPATH ${CODA_MACOSX_RPATH})
 
 cmake_dependent_option(
   CODA_ENABLE_HDF4_VDATA_ATTRIBUTES "enable HDF4 Vdata attributes" ON
