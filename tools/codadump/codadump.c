@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2018 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2019 S[&]T, The Netherlands.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,7 +57,7 @@ int show_description;
 static void print_version()
 {
     printf("codadump version %s\n", libcoda_version);
-    printf("Copyright (C) 2007-2018 S[&]T, The Netherlands.\n");
+    printf("Copyright (C) 2007-2019 S[&]T, The Netherlands.\n");
     printf("\n");
 }
 
