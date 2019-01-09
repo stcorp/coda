@@ -711,7 +711,7 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
       ${CMAKE_CURRENT_SOURCE_DIR}/java/build.xml.in
       ${CMAKE_CURRENT_BINARY_DIR}/java/build.xml @ONLY)
     install(TARGETS coda_jni DESTINATION ${JAVA_PREFIX})
-    install_jar(codajar DESTINATION ${JAVA_PREFIX})
+    install_jar(codajar ${JAVA_PREFIX})
     install(FILES
       java/CodaExample.java
       ${CMAKE_CURRENT_BINARY_DIR}/java/build.xml
