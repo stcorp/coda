@@ -51,11 +51,4 @@ stamp-*
 /m4/lt~obsolete.m4
 /missing
 /py-compile
-/windows/build.xml
-/windows/coda.h
-/windows/codawin32.iss
-/windows/codawin64.iss
-/windows/config.h
-/windows/readme.txt
-/windows/setup.py
 /ylwrap
