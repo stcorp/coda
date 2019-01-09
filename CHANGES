@@ -1,3 +1,8 @@
+* Default CODA definition path for CODA command line tools on Windows is
+  now also ../share/coda/definitions instead of ../definitions.
+
+* Fix wrong installation location of coda.jar on Windows.
+
 2.20 2018-12-17
 ~~~~~~~~~~~~~~~
 
