@@ -87,6 +87,7 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
   set(MATLAB_PREFIX lib/coda/matlab)
   set(IDL_PREFIX lib/coda/idl)
   set(JAVA_PREFIX share/coda/java)
+  set(CODADEF_PREFIX share/coda/definitions)
   if(WIN32)
     # we use a different installation directory structure on Windows
     if(CODA_ENABLE_CONDA_INSTALL)
@@ -98,6 +99,7 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
       set(MATLAB_PREFIX Library/lib/coda/matlab)
       set(IDL_PREFIX Library/lib/coda/idl)
       set(JAVA_PREFIX Library/share/coda/java)
+      set(CODADEF_PREFIX Library/share/coda/definitions)
     else(CODA_ENABLE_CONDA_INSTALL)
       set(DOC_PREFIX doc)
       set(PYTHON_PREFIX python/coda)
@@ -720,6 +722,12 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
 
   # documentation
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/doc/html DESTINATION ${DOC_PREFIX})
+
+  # codadef directory
+  get_filename_component(CODADEF_PREFIX_DIRECTORY ${CODADEF_PREFIX} DIRECTORY)
+  get_filename_component(CODADEF_PREFIX_BASENAME ${CODADEF_PREFIX} NAME)
+  file(MAKE_DIRECTORY ${CODADEF_PREFIX_BASENAME})
+  install(DIRECTORY ${CODADEF_PREFIX_BASENAME} DESTINATION ${CODADEF_PREFIX_DIRECTORY})
 
   # installer
   set(CPACK_PACKAGE_NAME "coda")

@@ -1,6 +1,9 @@
 * Default CODA definition path for CODA command line tools on Windows is
   now also ../share/coda/definitions instead of ../definitions.
 
+* CMake build now also creates share/coda/definitions directory when
+  installing CODA.
+
 * Fix wrong installation location of coda.jar on Windows.
 
 2.20 2018-12-17
