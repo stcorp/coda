@@ -1611,5 +1611,5 @@ static void coda_matlab_version(int nlhs, mxArray *plhs[], int nrhs, const mxArr
         mexErrMsgTxt("Function takes no arguments.");
     }
 
-    plhs[0] = mxCreateString(VERSION);
+    plhs[0] = mxCreateString(coda_get_libcoda_version());
 }

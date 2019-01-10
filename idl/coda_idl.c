@@ -464,7 +464,7 @@ static IDL_VPTR x_coda_version(int argc, IDL_VPTR *argv)
         return mk_coda_error(coda_errno);
     }
 
-    return IDL_StrToSTRING(VERSION);
+    return IDL_StrToSTRING(coda_get_libcoda_version());
 }
 
 static IDL_VPTR x_coda_product_class(int argc, IDL_VPTR *argv)
