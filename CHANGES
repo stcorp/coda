@@ -4,6 +4,9 @@
 * CMake build now also creates share/coda/definitions directory when
   installing CODA.
 
+* Fix problem in matlab mex extenion determination on linux when using
+  the configure script.
+
 * Fix wrong installation location of coda.jar on Windows.
 
 2.20 2018-12-17
