@@ -429,7 +429,7 @@ Next, you may want to install one or more product format definition files
 (.codadef files). There are no .codadef files included with CODA, but they are
 available from several other sources. If you put them in the default definition
 directory (``<CODA installdir>\share\coda\definitions``) then the CODA command
-line tools and the IDL, MATLAB, and Pythno interfaces will automatically find
+line tools and the IDL, MATLAB, and Python interfaces will automatically find
 them. You can also install the .codadef files in a different location and set
 the ``CODA_DEFINITION`` environment to point to a ``;`` separated list of
 paths. Each path can either be a full path to a .codadef file or a directory
