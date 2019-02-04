@@ -120,7 +120,7 @@ Using Anaconda
 CODA is also available as a conda package for Windows, Linux, and macOS
 (only 64bit and Python3). You can install CODA using conda with::
 
-    % conda install -c stcorp -c conda-forge coda
+    $ conda install -c stcorp -c conda-forge coda
 
 
 Building the source package (Unix)
@@ -143,14 +143,14 @@ interfaces) on a Unix-based platform:
  1) Go to the directory that contains the downloaded coda-x.y.z.tar.gz
     file and unpack this package::
 
-        % gzip -d coda-x.y.z.tar.gz
-        % tar xf coda-x.y.z.tar
+        $ gzip -d coda-x.y.z.tar.gz
+        $ tar xf coda-x.y.z.tar
 
     Make sure you replace ``x.y.z`` with the appropriate version number.
 
  2) You should now have a ``coda-x.y.z`` directory. Go to this directory::
 
-        % cd coda-x.y.z
+        $ cd coda-x.y.z
 
  3) Next you will have to execute the ``configure`` script that checks what
     system you are on and sets up the build environment. There are several
@@ -286,12 +286,12 @@ interfaces) on a Unix-based platform:
     ``/usr/local/itt/idl`` and if you don't need to have the HDF4 and HDF5
     capability of CODA then your invocation of configure would be::
 
-        % ./configure --enable-idl IDL=/usr/local/itt/idl
+        $ ./configure --enable-idl IDL=/usr/local/itt/idl
 
  4) If this completes successfully, you are now able to build the library by
     executing the ``make`` command::
 
-        % make
+        $ make
 
  5) In order to make use of the CODA library and interfaces, you should install
     the CODA software. Please make sure you have provided the appropriate
@@ -300,7 +300,7 @@ interfaces) on a Unix-based platform:
     CODA in its default location ``/usr/local``. After running the configure
     script, issue the following command::
 
-        % make install
+        $ make install
 
  6) Next, you may want to install one or more product format definition files
     (.codadef files). There are no .codadef files included with CODA, but they
