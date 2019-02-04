@@ -120,7 +120,7 @@ Using Anaconda
 CODA is also available as a conda package for Windows, Linux, and macOS
 (only 64bit and Python3). You can install coda using conda with::
 
-    % conda install -c stcorp coda
+    % conda install -c stcorp -c conda-forge coda
 
 
 Building the source package (Unix)
