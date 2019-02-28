@@ -379,6 +379,7 @@ set(LIBEXPAT_SOURCES
   libcoda/expat/internal.h
   libcoda/expat/latin1tab.h
   libcoda/expat/nametab.h
+  libcoda/expat/siphash.h
   libcoda/expat/utf8tab.h
   libcoda/expat/xmlparse.c
   libcoda/expat/xmlrole.c

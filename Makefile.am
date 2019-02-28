@@ -101,6 +101,7 @@ libexpat_internal_la_SOURCES = \
 	libcoda/expat/internal.h \
 	libcoda/expat/latin1tab.h \
 	libcoda/expat/nametab.h \
+	libcoda/expat/siphash.h \
 	libcoda/expat/utf8tab.h \
 	libcoda/expat/xmlrole.h \
 	libcoda/expat/xmltok.h \
