@@ -9,6 +9,8 @@
 
 * Fix wrong installation location of coda.jar on Windows.
 
+* Updated embedded PCRE library to version 8.43.
+
 * Updated embedded expat library to version 2.2.6.
 
 * Updated embedded zlib library to version 1.2.11.

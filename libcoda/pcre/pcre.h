@@ -44,9 +44,9 @@ POSSIBILITY OF SUCH DAMAGE.
 /* The current PCRE version information. */
 
 #define PCRE_MAJOR          8
-#define PCRE_MINOR          38
-#define PCRE_PRERELEASE     
-#define PCRE_DATE           2015-11-23
+#define PCRE_MINOR          43
+#define PCRE_PRERELEASE
+#define PCRE_DATE           2019-02-23
 
 /* When an application links to a PCRE DLL in Windows, the symbols that are
 imported have to be identified as such. When building PCRE, the appropriate
@@ -323,11 +323,11 @@ these bits, just add new ones on the end, in order to remain compatible. */
 
 /* Types */
 
-struct real_pcre;                 /* declaration; the definition is private  */
-typedef struct real_pcre pcre;
+struct real_pcre8_or_16;          /* declaration; the definition is private  */
+typedef struct real_pcre8_or_16 pcre;
 
-struct real_pcre16;               /* declaration; the definition is private  */
-typedef struct real_pcre16 pcre16;
+struct real_pcre8_or_16;          /* declaration; the definition is private  */
+typedef struct real_pcre8_or_16 pcre16;
 
 struct real_pcre32;               /* declaration; the definition is private  */
 typedef struct real_pcre32 pcre32;
