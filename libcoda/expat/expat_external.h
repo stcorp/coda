@@ -33,9 +33,6 @@
 #ifndef Expat_External_INCLUDED
 #define Expat_External_INCLUDED 1
 
-#undef uint8_t
-#undef uint32_t
-#undef uint64_t
 #ifdef WORDS_BIGENDIAN
 #define BYTEORDER 4321
 #else
