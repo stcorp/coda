@@ -37,6 +37,14 @@ AH_BOTTOM([
 # endif
 #endif
 
+/* needed for expat */
+#ifdef WORDS_BIGENDIAN
+#define BYTEORDER 4321
+#else
+#define BYTEORDER 1234
+#endif
+#define XML_DEV_URANDOM 1
+
 #ifndef HAVE_STRDUP
 char *strdup(const char *);
 #endif
