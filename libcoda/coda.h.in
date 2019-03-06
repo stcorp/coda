@@ -143,9 +143,11 @@ extern "C"
 #ifndef CODA_INTERNAL
 
 LIBCODA_API extern const char *coda_get_libcoda_version(void);
+
 #define libcoda_version (coda_get_libcoda_version())
 
 LIBCODA_API extern int *coda_get_errno(void);
+
 #define coda_errno (*coda_get_errno())
 
 #endif
