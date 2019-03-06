@@ -4340,63 +4340,63 @@ int coda_read_definitions(const char *definition_path)
                 sprintf(pattern, "%s\\*.codadef", path_component);
                 hSearch = FindFirstFile(pattern, &FileData);
                 free(pattern);
-
                 if (hSearch == INVALID_HANDLE_VALUE)
                 {
-                    if (GetLastError() == ERROR_FILE_NOT_FOUND || GetLastError() == ERROR_NO_MORE_FILES)
+                    if (GetLastError() != ERROR_FILE_NOT_FOUND && GetLastError() != ERROR_NO_MORE_FILES)
                     {
-                        /* no files found */
-                        continue;
+                        coda_set_error(CODA_ERROR_DATA_DEFINITION, "could not access directory '%s'", path_component);
+                        free(path);
+                        return -1;
                     }
-                    coda_set_error(CODA_ERROR_DATA_DEFINITION, "could not access directory '%s'", path_component);
-                    free(path);
-                    return -1;
                 }
-
-                fFinished = FALSE;
-                while (!fFinished)
+                else
                 {
-                    /* skip directories with a .codadef extension */
-                    if (!(FileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+                    fFinished = FALSE;
+                    while (!fFinished)
                     {
-                        char *filepath;
+                        /* skip directories with a .codadef extension */
+                        if (!(FileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+                        {
+                            char *filepath;
 
-                        filepath = malloc(strlen(path_component) + 1 + strlen(FileData.cFileName) + 1);
-                        if (filepath == NULL)
-                        {
-                            coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) "
-                                           "(%s:%u)", (long)strlen(path_component) + 1 + strlen(FileData.cFileName) + 1,
-                                           __FILE__, __LINE__);
-                            free(path);
-                            return -1;
-                        }
-                        sprintf(filepath, "%s\\%s", path_component, FileData.cFileName);
-                        if (read_definition_file(filepath) != 0)
-                        {
+                            filepath = malloc(strlen(path_component) + 1 + strlen(FileData.cFileName) + 1);
+                            if (filepath == NULL)
+                            {
+                                coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) "
+                                               "(%s:%u)",
+                                               (long)strlen(path_component) + 1 + strlen(FileData.cFileName) + 1,
+                                               __FILE__, __LINE__);
+                                free(path);
+                                return -1;
+                            }
+                            sprintf(filepath, "%s\\%s", path_component, FileData.cFileName);
+                            if (read_definition_file(filepath) != 0)
+                            {
+                                free(filepath);
+                                free(path);
+                                FindClose(hSearch);
+                                return -1;
+                            }
                             free(filepath);
-                            free(path);
-                            FindClose(hSearch);
-                            return -1;
                         }
-                        free(filepath);
-                    }
 
-                    if (!FindNextFile(hSearch, &FileData))
-                    {
-                        if (GetLastError() == ERROR_NO_MORE_FILES)
+                        if (FindNextFile(hSearch, &FileData) != INVALID_HANDLE_VALUE)
                         {
-                            fFinished = TRUE;
-                        }
-                        else
-                        {
-                            FindClose(hSearch);
-                            coda_set_error(CODA_ERROR_DATA_DEFINITION, "could not retrieve directory entry");
-                            free(path);
-                            return -1;
+                            if (GetLastError() == ERROR_NO_MORE_FILES)
+                            {
+                                fFinished = TRUE;
+                            }
+                            else
+                            {
+                                FindClose(hSearch);
+                                coda_set_error(CODA_ERROR_DATA_DEFINITION, "could not retrieve directory entry");
+                                free(path);
+                                return -1;
+                            }
                         }
                     }
+                    FindClose(hSearch);
                 }
-                FindClose(hSearch);
 #else
                 DIR *dirp;
                 struct dirent *dp;

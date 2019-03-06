@@ -9,6 +9,9 @@
 
 * Fix wrong installation location of coda.jar on Windows.
 
+* Fix issue where CODA could end up in an infinite loop on Windows
+  when trying to traverse coda definition path.
+
 * Allow building the MATLAB interface using MATLAB R2018a or higher
   (similar to using mex with the -R2017b option).
 
