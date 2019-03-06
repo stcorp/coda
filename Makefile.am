@@ -381,7 +381,7 @@ INDENTFILES += $(CODA_MATLAB_SOURCE_FILES)
 
 if BUILD_MATLAB
 coda_matlab_la_SOURCES = $(CODA_MATLAB_SOURCE_FILES)
-coda_matlab_la_CPPFLAGS = -DMATLAB_MEX_FILE
+coda_matlab_la_CPPFLAGS = -DMATLAB_MEX_FILE -DMATLAB_MEXCMD_RELEASE=700
 coda_matlab_la_LDFLAGS = -module -shared -avoid-version -export-symbols-regex mexFunction -shrext @MEXEXT@
 coda_matlab_la_LIBADD = libcoda.la
 coda_matlab_la_DEPENDENCIES = libcoda.la

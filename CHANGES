@@ -9,6 +9,9 @@
 
 * Fix wrong installation location of coda.jar on Windows.
 
+* Allow building the MATLAB interface using MATLAB R2018a or higher
+  (similar to using mex with the -R2017b option).
+
 * Updated embedded PCRE library to version 8.43.
 
 * Updated embedded expat library to version 2.2.6.

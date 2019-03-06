@@ -600,7 +600,7 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
     set_target_properties(coda_matlab PROPERTIES
       PREFIX ""
       SUFFIX ".${Matlab_MEX_EXTENSION}"
-      COMPILE_DEFINITIONS MATLAB_MEX_FILE)
+      COMPILE_DEFINITIONS "MATLAB_MEX_FILE;MATLAB_MEXCMD_RELEASE=700")
     target_link_libraries(coda_matlab coda ${Matlab_LIBRARIES})
     if(WIN32)
       set_target_properties(coda_matlab PROPERTIES COMPILE_FLAGS "-DLIBCODADLL")
