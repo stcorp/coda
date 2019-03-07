@@ -231,9 +231,12 @@ static int detection_node_add_node(coda_detection_node *node, coda_detection_nod
     node->subnode[node->num_subnodes] = new_node;
     node->num_subnodes++;
 
-    /* make sure 'path' tests come before 'expression' tests */
+    /* make sure 'path' tests come before 'expression' tests and attribute paths come before other paths */
     i = node->num_subnodes - 1;
-    while (i > 0 && node->subnode[i]->path != NULL && node->subnode[i - 1]->expression != NULL)
+    while (i > 0 && node->subnode[i]->path != NULL &&
+           (node->subnode[i - 1]->expression != NULL ||
+            (node->subnode[i - 1]->path != NULL && node->subnode[i]->path[0] == '@' &&
+             node->subnode[i - 1]->path[0] != '@')))
     {
         coda_detection_node *swapnode;
 
