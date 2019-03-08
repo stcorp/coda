@@ -35,8 +35,8 @@ What you will need
     and all documentation and examples. For the IDL and MATLAB interfaces,
     pre-built versions are included for IDL 6.3 and higher for Windows, and
     MATLAB R2007b (v7.5) and higher for Windows. For the Python interface, a
-    pre-built version for Python 2.7 is included. For the Java interface, a
-    pre-built version for JDK 6.0 is included. All CODA interfaces have been
+    pre-built version for Python 3.7 is included. For the Java interface, a
+    pre-built version for JDK 8 is included. All CODA interfaces have been
     compiled with HDF4 and HDF5 support built in.
 
     If you do not have the CODA package you need, you can download it from the
@@ -74,15 +74,12 @@ What you will need
     or higher.
 
   - If you want to use the HDF4 features of CODA then you will need to have a
-    recent version of HDF4 installed (for building the source package on
-    Windows you will need to have version 4.2.11 of HDF).
-    You will also need the additional required libraries libjpeg, szlib, and
-    zlib.
+    recent version of HDF4 installed. You will also need the additional
+    required libraries libjpeg and zlib.
 
   - If you want to use the HDF5 features of CODA then you will need to have a
-    recent version of HDF5 installed (for building the source package on
-    Windows you will need to have version 1.8.16 of HDF5).
-    You will also need the additional required libraries szlib and zlib.
+    recent version of HDF5 installed.  You will also need the additional
+    required library zlib (and optionally szip).
 
 Using GitHub
 ------------
@@ -121,6 +118,10 @@ CODA is also available as a conda package for Windows, Linux, and macOS
 (only 64bit and Python3). You can install CODA using conda with::
 
     $ conda install -c stcorp -c conda-forge coda
+
+Note that this version of CODA does not include the Fortran, Java, MATLAB,
+and IDL interfaces. It only includes the Python interfaces, C library, and
+command line tools.
 
 
 Building the source package (Unix)
@@ -348,14 +349,14 @@ interfaces) on a Unix-based platform:
     CODA in the same directory as you installed Python (e.g. if both are
     installed under ``/usr/local`` for instance). You can verify whether this
     is the case by checking that the file
-    ``<CODA installdir>/lib/python2.7/os.py`` exists. (the python2.x directory
+    ``<CODA installdir>/lib/python3.7/os.py`` exists. (the pythonx.y directory
     name will depend on the Python version that you are using).
     If you installed CODA in another location then you should create a
     ``coda.pth`` file in the directory
-    ``<Python installdir>/lib/python2.7/site-packages`` containing one text
+    ``<Python installdir>/lib/python3.7/site-packages`` containing one text
     line with the location of the Python package::
 
-        <CODA installdir>/lib/python2.7/site-packages
+        <CODA installdir>/lib/python3.7/site-packages
 
     Python will then automatically load the coda.pth file at startup and add
     the path to the Python package to the Python searchpath. You can also
@@ -363,7 +364,7 @@ interfaces) on a Unix-based platform:
     Python commands:
 
         >>> import sys
-        >>> sys.path.append('<CODA installdir>/lib/python2.7/site-packages')
+        >>> sys.path.append('<CODA installdir>/lib/python3.7/site-packages')
 
     But this manual modification will be lost as soon as you quit Python.
 
@@ -385,6 +386,11 @@ To install the binary package of CODA for Windows just run the executable which
 will guide you through the installation process. After a successful
 installation you will have to perform some last steps if you want to use the
 IDL, MATLAB and/or Python interfaces.
+
+For Python you will have to copy the ``C:\Program Files\CODA\python\coda``
+directory to the site-packages folder of your Python installation.
+However, if you want to use the Python interfaces on Windows, it is recommended
+to just install the Anaconda package of CODA.
 
 For IDL you will have to add ``<CODA installdir>\lib\coda\idl`` to your
 ``DLM_PATH``. You do this by setting an ``IDL_DLM_PATH`` environment variable.
@@ -412,12 +418,6 @@ in the 'File' menu. Here you should add the directory
 ``C:\Program Files\CODA\lib\coda\matlab``. If you have installed CODA in a
 location different from ``C:\Program Files\CODA`` then replace this part of the
 directory by the installation directory you had chosen when you installed CODA.
-
-For Python you will have to copy the
-``C:\Program Files\CODA\python\coda`` directory to the site-packages
-folder of your Python installation.
-However, if you want to use the Python interfaces on Windows, it is recommended
-to just install the Anaconda package of CODA.
 
 For Java you can find the CODA jni/jar files, an example script and an Ant
 build script in ``C:\Program Files\CODA\share\coda\java``.
