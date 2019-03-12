@@ -4380,7 +4380,7 @@ int coda_read_definitions(const char *definition_path)
                             free(filepath);
                         }
 
-                        if (FindNextFile(hSearch, &FileData) != INVALID_HANDLE_VALUE)
+                        if (!FindNextFile(hSearch, &FileData))
                         {
                             if (GetLastError() == ERROR_NO_MORE_FILES)
                             {
