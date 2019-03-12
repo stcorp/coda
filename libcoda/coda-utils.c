@@ -544,7 +544,19 @@ int coda_path_for_program(const char *argv0, char **location)
 #ifdef WIN32
         int argv0_length = (int)strlen(argv0);
 
-        if (argv0_length <= 4 || strcmp(&argv0[argv0_length - 4], ".exe") != 0)
+        if (coda_path_find_file(".", argv0, location) != 0)
+        {
+            return -1;
+        }
+        if (*location == NULL && getenv("PATH") != NULL)
+        {
+            if (coda_path_find_file(getenv("PATH"), argv0, location) != 0)
+            {
+                return -1;
+            }
+        }
+
+        if (*location == NULL && (argv0_length <= 4 || strcmp(&argv0[argv0_length - 4], ".exe") != 0))
         {
             char *filepath;
 
@@ -571,20 +583,6 @@ int coda_path_for_program(const char *argv0, char **location)
                 }
             }
             free(filepath);
-        }
-        else
-        {
-            if (coda_path_find_file(".", argv0, location) != 0)
-            {
-                return -1;
-            }
-            if (*location == NULL && getenv("PATH") != NULL)
-            {
-                if (coda_path_find_file(getenv("PATH"), argv0, location) != 0)
-                {
-                    return -1;
-                }
-            }
         }
 #else
         if (getenv("PATH") != NULL)
