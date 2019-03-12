@@ -602,17 +602,17 @@ int coda_path_for_program(const char *argv0, char **location)
     if (*location != NULL && (*location)[0] != '/' && (*location)[0] != '\\' &&
         !(isalpha((*location)[0]) && (*location)[1] == ':'))
     {
-        char cwd[1024 + 1];
+        char cwd[4096 + 1];
         char *relative_location;
 
         /* change relative path into absolute path */
 
-        if (getcwd(cwd, 1024) == NULL)
+        if (getcwd(cwd, 4096) == NULL)
         {
             /* there is a problem with the current working directory -> return 'not found' */
             return 0;
         }
-        cwd[1024] = '\0';
+        cwd[4096] = '\0';
 
         relative_location = *location;
         if (coda_path_from_path(cwd, 0, relative_location, location) != 0)
