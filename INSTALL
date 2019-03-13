@@ -117,7 +117,7 @@ Using Anaconda
 CODA is also available as a conda package for Windows, Linux, and macOS
 (only 64bit and Python3). You can install CODA using conda with::
 
-    $ conda install -c stcorp -c conda-forge coda
+    $ conda install -c stcorp coda
 
 Note that this version of CODA does not include the Fortran, Java, MATLAB,
 and IDL interfaces. It only includes the Python interfaces, C library, and
