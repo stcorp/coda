@@ -65,7 +65,7 @@
 %}
 
 %init %{
-    codacError = PyErr_NewException("codac.CodacError",NULL,NULL);
+    codacError = PyErr_NewException("codac.CodacError", NULL, NULL);
     /*
         ensure we keep a reference, as PyModule_AddObject steals references.
     */
@@ -827,14 +827,16 @@ int coda_utcstring_to_time(const char *INPUT, double *OUTPUT);
 %include "coda.h"
 
 %pythoncode %{
-
 # wrap expression eval functions such that the cursor argument becomes optional
 def expression_eval_bool(expr, cursor=None):
     return _codac.expression_eval_bool(expr, cursor)
+
 def expression_eval_integer(expr, cursor=None):
     return _codac.expression_eval_integer(expr, cursor)
+
 def expression_eval_double(expr, cursor=None):
     return _codac.expression_eval_double(expr, cursor)
+
 def expression_eval_string(expr, cursor=None):
     return _codac.expression_eval_string(expr, cursor)
 
@@ -845,4 +847,3 @@ def cursor_read_bytes(cursor, offset=None, length=None):
         length = cursor_get_byte_size(cursor)
     return _codac.cursor_read_bytes(cursor, offset, length)
 %}
-

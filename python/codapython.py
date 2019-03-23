@@ -36,6 +36,7 @@ import os
 import io
 import sys
 
+
 #
 # EXCEPTION HIERARCHY
 #
@@ -82,28 +83,28 @@ class Record(object):
     # dictionary to convert from numpy types to
     # a string representation of the corresponding CODA type.
     _typeToString = {
-        numpy.int8:   "int8",
-        numpy.uint8:  "uint8",
-        numpy.int16:  "int16",
+        numpy.int8: "int8",
+        numpy.uint8: "uint8",
+        numpy.int16: "int16",
         numpy.uint16: "uint16",
-        numpy.int32:  "int32",
+        numpy.int32: "int32",
         numpy.uint32: "uint32",
-        numpy.int64:  "int64",
+        numpy.int64: "int64",
         numpy.float32: "float",
         numpy.float64: "double",
         numpy.complex128: "complex",
-        numpy.object_: "object" }
+        numpy.object_: "object"}
 
     def __init__(self):
         self._registeredFields = []
 
-    def _registerField(self,name,data):
+    def _registerField(self, name, data):
         """
         _registerField() is a private method that is used to populate
         the Record with fields read from the product file.
         """
         self._registeredFields.append(name)
-        self.__setattr__(name,data)
+        self.__setattr__(name, data)
 
     def __len__(self):
         """
@@ -126,7 +127,7 @@ class Record(object):
     def __repr__(self):
         """
         Return the canonical string representation of the instance.
-        
+
         This is always the identifying string '<coda record>'.
         """
         return "<coda record>"
@@ -147,18 +148,18 @@ class Record(object):
 
             out.write(u"%32s:" % (field))
 
-            if isinstance(data,Record):
+            if isinstance(data, Record):
                 out.write(u"record (%i fields)\n" % (len(data),))
 
-            elif isinstance(data,numpy.ndarray):
+            elif isinstance(data, numpy.ndarray):
                 dim = data.shape
                 dimString = ""
                 for d in dim[:-1]:
                     dimString += "%ix" % (d,)
                 dimString += "%i" % (dim[-1],)
-                out.write(u"[%s %s]\n" % (dimString,self._typeToString[data.dtype.type]))
+                out.write(u"[%s %s]\n" % (dimString, self._typeToString[data.dtype.type]))
 
-            elif isinstance(data,str):
+            elif isinstance(data, str):
                 out.write(u"\"%s\"\n" % (data,))
 
             else:
@@ -172,7 +173,7 @@ class Record(object):
 #
 # PATH TRAVERSAL
 #
-def _traverse_path(cursor,path,start=0):
+def _traverse_path(cursor, path, start=0):
     """
     _traverse_path() traverses the specified path until
     an array with variable indices is encountered or the
@@ -181,13 +182,13 @@ def _traverse_path(cursor,path,start=0):
     thrown when a check fails.
     """
 
-    for pathIndex in range(start,len(path)):
-        if isinstance(path[pathIndex],str):
-            cursor_goto(cursor,path[pathIndex])
+    for pathIndex in range(start, len(path)):
+        if isinstance(path[pathIndex], str):
+            cursor_goto(cursor, path[pathIndex])
         else:
-            if isinstance(path[pathIndex],int):
+            if isinstance(path[pathIndex], int):
                 arrayIndex = [path[pathIndex]]
-            elif isinstance(path[pathIndex],(list,tuple)):
+            elif isinstance(path[pathIndex], (list, tuple)):
                 arrayIndex = path[pathIndex]
             else:
                 raise ValueError("path specification (%s) should be a string or (list of) integers" % (path[pathIndex],))
@@ -211,30 +212,30 @@ def _traverse_path(cursor,path,start=0):
             # check for variable indices and perform range checks on all
             # non-variable indices.
             intermediateArray = False
-            for i in range(0,len(arrayIndex)):
+            for i in range(0, len(arrayIndex)):
                 if arrayIndex[i] == -1:
                     intermediateArray = True
                 elif (arrayIndex[i] < 0) or (arrayIndex[i] >= arrayShape[i]):
                     raise ValueError("array index (%i) exceeds array range [0:%i)" % (arrayIndex[i], arrayShape[i]))
 
             if intermediateArray:
-                return (True,pathIndex)
+                return (True, pathIndex)
             else:
                 # if all indices are non-variable, just move the cursor
                 # to the indicated element.
                 if rankZeroArray:
-                    cursor_goto_array_element(cursor,[])
+                    cursor_goto_array_element(cursor, [])
                 else:
-                    cursor_goto_array_element(cursor,arrayIndex)
+                    cursor_goto_array_element(cursor, arrayIndex)
 
     # we've arrived at the end of the path.
-    return (False,len(path) - 1)
+    return (False, len(path) - 1)
 
 
 #
 # HELPER FUNCTIONS FOR CODA.FETCH()
 #
-def _fetch_intermediate_array(cursor,path,pathIndex=0):
+def _fetch_intermediate_array(cursor, path, pathIndex=0):
     """
     _fetch_intermediate_array calls _traverse_path() to traverse the path
     until the end is reached or an intermediate array is encountered.
@@ -257,7 +258,7 @@ def _fetch_intermediate_array(cursor,path,pathIndex=0):
     nextElementIndex = 0
     elementCount = 1
 
-    if isinstance(path[pathIndex],int):
+    if isinstance(path[pathIndex], int):
         # if the current path element is of type int, then
         # the intermediate array must be of rank 1. hence
         # the int in question must equal -1.
@@ -271,7 +272,7 @@ def _fetch_intermediate_array(cursor,path,pathIndex=0):
         step = 1
         arrayIndex = path[pathIndex]
 
-        for i in reversed(list(range(0,len(arrayIndex)))):
+        for i in reversed(list(range(0, len(arrayIndex)))):
             if arrayIndex[i] == -1:
                 fetchShape.append(arrayShape[i])
                 fetchStep.append(step)
@@ -296,7 +297,7 @@ def _fetch_intermediate_array(cursor,path,pathIndex=0):
     # 'basetype' of the intermediate array can only be determined after traversing the path
     # to a (i.e. the first) array element.
     array = None
-    
+
     # currentElementIndex represents an index into the flattened array from which elements
     # will be _read_. however, iteration is performed over the flattened array into which
     # elements will be _stored_. at the beginning of each iteration, (nextElementIndex -
@@ -304,7 +305,7 @@ def _fetch_intermediate_array(cursor,path,pathIndex=0):
     currentElementIndex = 0
 
     cursor_goto_first_array_element(cursor)
-    for i in range(0,elementCount):
+    for i in range(0, elementCount):
         # move the cursor to the next required array element.
         while currentElementIndex < nextElementIndex:
             cursor_goto_next_array_element(cursor)
@@ -313,12 +314,12 @@ def _fetch_intermediate_array(cursor,path,pathIndex=0):
         depth = cursor_get_depth(cursor)
 
         # traverse the path.
-        (intermediateNode,copiedPathIndex) = _traverse_path(cursor,path,pathIndex+1)
+        (intermediateNode, copiedPathIndex) = _traverse_path(cursor, path, pathIndex + 1)
 
         # create the result array by examining the type of the first element.
         # This is equivalent to i == 0
         if array is None:
-            assert i == 0 
+            assert i == 0
             # everything is an object until proven a scalar. :-)
             scalar = False
 
@@ -326,26 +327,22 @@ def _fetch_intermediate_array(cursor,path,pathIndex=0):
             nodeType = cursor_get_type(cursor)
             nodeClass = type_get_class(nodeType)
 
-            if ((nodeClass == coda_array_class)
-                or (nodeClass == coda_record_class)):
-                    # records and arrays are non-scalar.
-                    scalar = False
+            if ((nodeClass == coda_array_class) or (nodeClass == coda_record_class)):
+                # records and arrays are non-scalar.
+                scalar = False
 
-            elif  ((nodeClass == coda_integer_class)
-                or (nodeClass == coda_real_class) 
-                or (nodeClass == coda_text_class)
-                or (nodeClass == coda_raw_class)):
-
+            elif ((nodeClass == coda_integer_class) or (nodeClass == coda_real_class) or
+                  (nodeClass == coda_text_class) or (nodeClass == coda_raw_class)):
                 nodeReadType = type_get_read_type(nodeType)
 
                 if nodeReadType == coda_native_type_not_available:
                     raise FetchError("cannot read array (not all elements are available)")
                 else:
-                    (scalar,numpyType) = _numpyNativeTypeDictionary[nodeReadType]
+                    (scalar, numpyType) = _numpyNativeTypeDictionary[nodeReadType]
 
             elif nodeClass == coda_special_class:
                 nodeSpecialType = type_get_special_type(nodeType)
-                (scalar,numpyType) = _numpySpecialTypeDictionary[nodeSpecialType]
+                (scalar, numpyType) = _numpySpecialTypeDictionary[nodeSpecialType]
 
             # for convenience, fetchShape is constructed in reverse order. however,
             # numpy's array creation functions expect a shape argument in regular
@@ -355,10 +352,9 @@ def _fetch_intermediate_array(cursor,path,pathIndex=0):
 
             # instantiate the required array class.
             if scalar:
-                array = numpy.empty(dtype=numpyType,shape=tmpShape)
+                array = numpy.empty(dtype=numpyType, shape=tmpShape)
             else:
-                #element_dtype = numpy.dtype(first_element)
-                array = numpy.empty(dtype=object,shape=tmpShape)
+                array = numpy.empty(dtype=object, shape=tmpShape)
 
         # when this point is reached, a result array has been allocated
         # and the flatArrayIter is set.
@@ -366,14 +362,14 @@ def _fetch_intermediate_array(cursor,path,pathIndex=0):
         # result stored.
         if intermediateNode:
             # an intermediate array was encountered.
-            array.flat[i] = _fetch_intermediate_array(cursor,path,copiedPathIndex)
+            array.flat[i] = _fetch_intermediate_array(cursor, path, copiedPathIndex)
         else:
             # the end of the path was reached. from this point on,
             # the entire subtree is fetched.
             array.flat[i] = _fetch_subtree(cursor)
 
         # update fetchIndex and nextElementIndex.
-        for j in range(0,len(fetchShape)):
+        for j in range(0, len(fetchShape)):
             fetchIndex[j] += 1
             nextElementIndex += fetchStep[j]
 
@@ -381,7 +377,7 @@ def _fetch_intermediate_array(cursor,path,pathIndex=0):
                 break
 
             fetchIndex[j] = 0
-            nextElementIndex -= fetchStep[j+1]
+            nextElementIndex -= fetchStep[j + 1]
 
         for j in range(cursor_get_depth(cursor) - depth):
             cursor_goto_parent(cursor)
@@ -404,8 +400,8 @@ def _fetch_object_array(cursor):
         arrayShape.append(1)
 
     # now create the (empty) array of the correct type and shape
-    array = numpy.empty(dtype=object,shape=arrayShape)
-    
+    array = numpy.empty(dtype=object, shape=arrayShape)
+
     # goto the first element
     cursor_goto_first_array_element(cursor)
 
@@ -444,25 +440,25 @@ def _fetch_subtree(cursor):
 
         # get information about the record fields.
         skipField = [False] * fieldCount
-        for i in range(0,fieldCount):
-            if cursor_get_record_field_available_status(cursor,i) != 1:
-                    # skip field if unavailable.
-                    skipField[i] = True
-                    continue
+        for i in range(0, fieldCount):
+            if cursor_get_record_field_available_status(cursor, i) != 1:
+                # skip field if unavailable.
+                skipField[i] = True
+                continue
 
             if _filterRecordFields:
-                skipField[i] = bool(type_get_record_field_hidden_status(nodeType,i))
+                skipField[i] = bool(type_get_record_field_hidden_status(nodeType, i))
 
         # create a new Record.
         record = Record()
 
         # read data.
         cursor_goto_first_record_field(cursor)
-        for i in range(0,fieldCount):
+        for i in range(0, fieldCount):
             if not skipField[i]:
                 data = _fetch_subtree(cursor)
-                fieldName = type_get_record_field_name(nodeType,i)
-                record._registerField(fieldName,data)
+                fieldName = type_get_record_field_name(nodeType, i)
+                record._registerField(fieldName, data)
 
             # avoid calling cursor_goto_next_record_field() after reading
             # the final field. otherwise, the cursor would get positioned
@@ -482,18 +478,14 @@ def _fetch_subtree(cursor):
         arrayBaseType = type_get_array_base_type(nodeType)
         arrayBaseClass = type_get_class(arrayBaseType)
 
-        if ((arrayBaseClass == coda_array_class)
-            or (arrayBaseClass == coda_record_class)):
-                # neither an array of arrays nor an array of records can be read directly.
-                # therefore, the elements of the array are read one at a time and stored
-                # in a numpy array.
-                return _fetch_object_array(cursor)
+        if ((arrayBaseClass == coda_array_class) or (arrayBaseClass == coda_record_class)):
+            # neither an array of arrays nor an array of records can be read directly.
+            # therefore, the elements of the array are read one at a time and stored
+            # in a numpy array.
+            return _fetch_object_array(cursor)
 
-        elif ((arrayBaseClass == coda_integer_class)
-            or (arrayBaseClass == coda_real_class)
-            or (arrayBaseClass == coda_text_class)
-            or (arrayBaseClass == coda_raw_class)):
-
+        elif ((arrayBaseClass == coda_integer_class) or (arrayBaseClass == coda_real_class) or
+              (arrayBaseClass == coda_text_class) or (arrayBaseClass == coda_raw_class)):
             # scalar base type.
             arrayBaseReadType = type_get_read_type(arrayBaseType)
             return _readNativeTypeArrayFunctionDictionary[arrayBaseReadType](cursor)
@@ -512,18 +504,15 @@ def _fetch_subtree(cursor):
                 if len(arrayShape) == 0:
                     arrayShape.append(1)
 
-                return numpy.empty(None,shape=arrayShape)
+                return numpy.empty(None, shape=arrayShape)
             else:
                 return _readSpecialTypeArrayFunctionDictionary[arrayBaseSpecialType](cursor)
 
         else:
             raise FetchError("array of unknown base type")
 
-    elif ((nodeClass == coda_integer_class)
-         or (nodeClass == coda_real_class) 
-         or (nodeClass == coda_text_class)
-         or (nodeClass == coda_raw_class)):
-
+    elif ((nodeClass == coda_integer_class) or (nodeClass == coda_real_class) or
+          (nodeClass == coda_text_class) or (nodeClass == coda_raw_class)):
         # scalar type.
         nodeReadType = type_get_read_type(nodeType)
         return _readNativeTypeScalarFunctionDictionary[nodeReadType](cursor)
@@ -546,10 +535,10 @@ def _get_cursor(start):
     cursor as input and returns a new cursor object.
     """
 
-    if not isinstance(start,Cursor):
+    if not isinstance(start, Cursor):
         # create a cursor
         cursor = Cursor()
-        cursor_set_product(cursor,start)
+        cursor_set_product(cursor, start)
         return cursor
     else:
         # copy the cursor passed in by the user
@@ -573,7 +562,7 @@ def get_attributes(start, *path):
 
     cursor = _get_cursor(start)
 
-    (intermediateNode,pathIndex) = _traverse_path(cursor,path)
+    (intermediateNode, pathIndex) = _traverse_path(cursor, path)
     if intermediateNode:
         # we encountered an array with variable (-1) indices.
         # this is only allowed when calling coda.fetch().
@@ -592,7 +581,7 @@ def get_description(start, *path):
     Retrieve the description of a field.
 
     This function returns a string containing the description in the
-    product format definition of the specified data item. 
+    product format definition of the specified data item.
 
     The start argument must be a valid CODA file handle that was
     retrieved with coda.open() _or_ a valid CODA cursor. If the start
@@ -604,7 +593,7 @@ def get_description(start, *path):
 
     cursor = _get_cursor(start)
 
-    (intermediateNode,pathIndex) = _traverse_path(cursor,path)
+    (intermediateNode, pathIndex) = _traverse_path(cursor, path)
     if intermediateNode:
         # we encountered an array with variable (-1) indices.
         # this is only allowed when calling coda.fetch().
@@ -621,7 +610,7 @@ def get_description(start, *path):
         return nodeDescription
 
 
-def fetch(start,*path):
+def fetch(start, *path):
     """
     Retrieve data from a product file.
 
@@ -650,10 +639,10 @@ def fetch(start,*path):
     cursor = _get_cursor(start)
 
     # traverse the path
-    (intermediateNode,pathIndex) = _traverse_path(cursor,path)
+    (intermediateNode, pathIndex) = _traverse_path(cursor, path)
 
     if (intermediateNode):
-        result = _fetch_intermediate_array(cursor,path,pathIndex)
+        result = _fetch_intermediate_array(cursor, path, pathIndex)
     else:
         result = _fetch_subtree(cursor)
 
@@ -679,13 +668,13 @@ def get_field_available(start, *path):
     More information can be found in the CODA Python documentation.
     """
 
-    if len(path) == 0 or not isinstance(path[-1],str):
+    if len(path) == 0 or not isinstance(path[-1], str):
         raise ValueError("path argument should not be empty and should end with name of a record field")
 
     cursor = _get_cursor(start)
 
     # traverse up until the last node of the path.
-    (intermediateNode,pathIndex) = _traverse_path(cursor,path[:-1])
+    (intermediateNode, pathIndex) = _traverse_path(cursor, path[:-1])
     if intermediateNode:
         # we encountered an array with variable (-1) indices.
         # this is only allowed when calling coda.fetch().
@@ -693,10 +682,10 @@ def get_field_available(start, *path):
 
     # get the field index.
     nodeType = cursor_get_type(cursor)
-    fieldIndex = type_get_record_field_index_from_name(nodeType,path[-1])
+    fieldIndex = type_get_record_field_index_from_name(nodeType, path[-1])
 
     # get field availability.
-    result = bool(cursor_get_record_field_available_status(cursor,fieldIndex))
+    result = bool(cursor_get_record_field_available_status(cursor, fieldIndex))
 
     del cursor
     return result
@@ -720,7 +709,7 @@ def get_field_count(start, *path):
 
     cursor = _get_cursor(start)
 
-    (intermediateNode,pathIndex) = _traverse_path(cursor,path)
+    (intermediateNode, pathIndex) = _traverse_path(cursor, path)
     if intermediateNode:
         # we encountered an array with variable (-1) indices.
         # this is only allowed when calling coda.fetch().
@@ -729,12 +718,12 @@ def get_field_count(start, *path):
     nodeType = cursor_get_type(cursor)
     fieldCount = type_get_num_record_fields(nodeType)
     instanceFieldCount = fieldCount
-    for i in range(0,fieldCount):
-        if cursor_get_record_field_available_status(cursor,i) != 1:
+    for i in range(0, fieldCount):
+        if cursor_get_record_field_available_status(cursor, i) != 1:
             instanceFieldCount -= 1
             continue
 
-        if _filterRecordFields and bool(type_get_record_field_hidden_status(nodeType,i)):
+        if _filterRecordFields and bool(type_get_record_field_hidden_status(nodeType, i)):
             instanceFieldCount -= 1
 
     del cursor
@@ -759,7 +748,7 @@ def get_field_names(start, *path):
 
     cursor = _get_cursor(start)
 
-    (intermediateNode,pathIndex) = _traverse_path(cursor,path)
+    (intermediateNode, pathIndex) = _traverse_path(cursor, path)
     if intermediateNode:
         # we encountered an array with variable (-1) indices.
         # this is only allowed when calling coda.fetch().
@@ -768,14 +757,14 @@ def get_field_names(start, *path):
     nodeType = cursor_get_type(cursor)
     fieldCount = type_get_num_record_fields(nodeType)
     fieldNames = []
-    for i in range(0,fieldCount):
-        if cursor_get_record_field_available_status(cursor,i) != 1:
+    for i in range(0, fieldCount):
+        if cursor_get_record_field_available_status(cursor, i) != 1:
             continue
 
-        if _filterRecordFields and bool(type_get_record_field_hidden_status(nodeType,i)):
+        if _filterRecordFields and bool(type_get_record_field_hidden_status(nodeType, i)):
             continue
 
-        fieldNames.append(type_get_record_field_name(nodeType,i))
+        fieldNames.append(type_get_record_field_name(nodeType, i))
 
     del cursor
     return fieldNames
@@ -801,7 +790,7 @@ def get_size(start, *path):
 
     cursor = _get_cursor(start)
 
-    (intermediateNode,pathIndex) = _traverse_path(cursor,path)
+    (intermediateNode, pathIndex) = _traverse_path(cursor, path)
     if intermediateNode:
         # we encountered an array with variable (-1) indices.
         # this is only allowed when calling coda.fetch().
@@ -882,7 +871,7 @@ def get_unit(start, *path):
 
     cursor = _get_cursor(start)
 
-    (intermediateNode,pathIndex) = _traverse_path(cursor,path)
+    (intermediateNode, pathIndex) = _traverse_path(cursor, path)
     if intermediateNode:
         # we encountered an array with variable (-1) indices.
         # this is only allowed when calling coda.fetch().
@@ -902,69 +891,69 @@ def get_unit(start, *path):
 # scalars with type coda_native_type_bytes require extra code to find out their size, so this
 # type is omitted here.
 _readNativeTypeScalarFunctionDictionary = {
-    coda_native_type_int8:   cursor_read_int8,
-    coda_native_type_uint8:  cursor_read_uint8,
-    coda_native_type_int16:  cursor_read_int16,
+    coda_native_type_int8: cursor_read_int8,
+    coda_native_type_uint8: cursor_read_uint8,
+    coda_native_type_int16: cursor_read_int16,
     coda_native_type_uint16: cursor_read_uint16,
-    coda_native_type_int32:  cursor_read_int32,
+    coda_native_type_int32: cursor_read_int32,
     coda_native_type_uint32: cursor_read_uint32,
-    coda_native_type_int64:  cursor_read_int64,
+    coda_native_type_int64: cursor_read_int64,
     coda_native_type_uint64: cursor_read_uint64,
-    coda_native_type_float:  cursor_read_float,
+    coda_native_type_float: cursor_read_float,
     coda_native_type_double: cursor_read_double,
-    coda_native_type_char:   cursor_read_char,
+    coda_native_type_char: cursor_read_char,
     coda_native_type_string: cursor_read_string,
-    coda_native_type_bytes:  cursor_read_bytes }
+    coda_native_type_bytes: cursor_read_bytes}
 
 # dictionary (a.k.a. switch construct ;) for native type array read functions.
 _readNativeTypeArrayFunctionDictionary = {
-    coda_native_type_int8:   cursor_read_int8_array,
-    coda_native_type_uint8:  cursor_read_uint8_array,
-    coda_native_type_int16:  cursor_read_int16_array,
+    coda_native_type_int8: cursor_read_int8_array,
+    coda_native_type_uint8: cursor_read_uint8_array,
+    coda_native_type_int16: cursor_read_int16_array,
     coda_native_type_uint16: cursor_read_uint16_array,
-    coda_native_type_int32:  cursor_read_int32_array,
+    coda_native_type_int32: cursor_read_int32_array,
     coda_native_type_uint32: cursor_read_uint32_array,
-    coda_native_type_int64:  cursor_read_int64_array,
+    coda_native_type_int64: cursor_read_int64_array,
     coda_native_type_uint64: cursor_read_uint64_array,
-    coda_native_type_float:  cursor_read_float_array,
+    coda_native_type_float: cursor_read_float_array,
     coda_native_type_double: cursor_read_double_array,
-    coda_native_type_char:   _fetch_object_array,
+    coda_native_type_char: _fetch_object_array,
     coda_native_type_string: _fetch_object_array,
-    coda_native_type_bytes:  _fetch_object_array }
+    coda_native_type_bytes: _fetch_object_array}
 
 # dictionary (a.k.a. switch construct ;) for special type scalar read functions.
 _readSpecialTypeScalarFunctionDictionary = {
-    coda_special_no_data:      lambda x: None,
-    coda_special_vsf_integer:  cursor_read_double,
-    coda_special_time:         cursor_read_double,
-    coda_special_complex:      cursor_read_complex }
+    coda_special_no_data: lambda x: None,
+    coda_special_vsf_integer: cursor_read_double,
+    coda_special_time: cursor_read_double,
+    coda_special_complex: cursor_read_complex}
 
 # dictionary (a.k.a. switch construct ;) for special type array read functions.
 # scalars with type coda_special_no_data is a special case that requires extra code, and
 # is therefore omitted here.
 _readSpecialTypeArrayFunctionDictionary = {
-    coda_special_vsf_integer:  cursor_read_double_array,
-    coda_special_time:         cursor_read_double_array,
-    coda_special_complex:      cursor_read_complex_array }
+    coda_special_vsf_integer: cursor_read_double_array,
+    coda_special_time: cursor_read_double_array,
+    coda_special_complex: cursor_read_complex_array}
 
 # dictionary used as a 'typemap'. a tuple is returned, of which the first element is a
 # boolean that indicates if the type is considered to be scalar. if so, the second
 # element gives the numpy type that matches the specified CODA type. otherwise the second
 # element is None.
 _numpyNativeTypeDictionary = {
-    coda_native_type_int8:   (True,numpy.int8),
-    coda_native_type_uint8:  (True,numpy.uint8),
-    coda_native_type_int16:  (True,numpy.int16),
-    coda_native_type_uint16: (True,numpy.uint16),
-    coda_native_type_int32:  (True,numpy.int32),
-    coda_native_type_uint32: (True,numpy.uint32),
-    coda_native_type_int64:  (True,numpy.int64),
-    coda_native_type_uint64: (True,numpy.uint64),
-    coda_native_type_float:  (True,numpy.float32),
-    coda_native_type_double: (True,numpy.float64),
-    coda_native_type_char:   (False,None),
-    coda_native_type_string: (False,None),
-    coda_native_type_bytes:  (False,None) }
+    coda_native_type_int8: (True, numpy.int8),
+    coda_native_type_uint8: (True, numpy.uint8),
+    coda_native_type_int16: (True, numpy.int16),
+    coda_native_type_uint16: (True, numpy.uint16),
+    coda_native_type_int32: (True, numpy.int32),
+    coda_native_type_uint32: (True, numpy.uint32),
+    coda_native_type_int64: (True, numpy.int64),
+    coda_native_type_uint64: (True, numpy.uint64),
+    coda_native_type_float: (True, numpy.float32),
+    coda_native_type_double: (True, numpy.float64),
+    coda_native_type_char: (False, None),
+    coda_native_type_string: (False, None),
+    coda_native_type_bytes: (False, None)}
 
 
 # dictionary used as a 'typemap'. a tuple is returned, of which the first element is a
@@ -972,30 +961,32 @@ _numpyNativeTypeDictionary = {
 # element gives the numpy type that matches the specified CODA type. otherwise the second
 # element is None.
 _numpySpecialTypeDictionary = {
-    coda_special_no_data:     (False,None),
-    coda_special_vsf_integer: (True,numpy.float64),
-    coda_special_time:        (True,numpy.float64),
-    coda_special_complex:     (True,numpy.complex128) }
+    coda_special_no_data: (False, None),
+    coda_special_vsf_integer: (True, numpy.float64),
+    coda_special_time: (True, numpy.float64),
+    coda_special_complex: (True, numpy.complex128)}
+
 
 #
 # MODULE OPTIONS
 #
-
 # _filterRecordFields: if set to True, hidden record fields are ignored.
 _filterRecordFields = True
+
 
 def set_option_filter_record_fields(enable):
     global _filterRecordFields
 
     _filterRecordFields = bool(enable)
 
+
 def get_option_filter_record_fields():
     return _filterRecordFields
+
 
 #
 # MODULE INITIALIZATION
 #
-
 def _init():
     if os.getenv('CODA_DEFINITION') is None:
         if sys.platform == "win32":
@@ -1009,6 +1000,7 @@ def _init():
             relpath = "../../../../share/coda/definitions"
             coda_set_definition_path_conditional(os.path.basename(__file__), os.path.dirname(__file__), relpath)
     init()
+
 
 # initialize libcoda by calling coda_init()
 _init()

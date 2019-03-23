@@ -12152,7 +12152,7 @@ SWIG_init(void) {
   import_array();
   
   
-  codacError = PyErr_NewException("codac.CodacError",NULL,NULL);
+  codacError = PyErr_NewException("codac.CodacError", NULL, NULL);
   /*
           ensure we keep a reference, as PyModule_AddObject steals references.
       */
