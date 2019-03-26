@@ -4,13 +4,13 @@
 * CMake build now also creates share/coda/definitions directory when
   installing CODA.
 
-* Fixed problem in matlab mex extenion determination on linux when using
+* Fixed problem in matlab mex extension determination on linux when using
   the configure script.
 
 * Fixed wrong installation location of coda.jar on Windows.
 
 * Fixed issue where CODA could end up in an infinite loop on Windows
-  when trying to traverse coda definition path.
+  when trying to traverse the coda definition path.
 
 * Fixed setting of default CODA definition path for Python on Windows.
 
