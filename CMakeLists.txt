@@ -238,7 +238,8 @@ if(CODA_WITH_HDF5)
   endif(NOT HDF5_FOUND)
 endif(CODA_WITH_HDF5)
 
-include_directories(BEFORE ${CODA_BINARY_DIR} ${CODA_BINARY_DIR}/libcoda ${CODA_SOURCE_DIR}/libcoda)
+include_directories(BEFORE ${CODA_SOURCE_DIR}/libcoda)
+include_directories(BEFORE ${CODA_BINARY_DIR} ${CODA_BINARY_DIR}/libcoda)
 
 add_definitions(-DHAVE_CONFIG_H)
 
