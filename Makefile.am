@@ -518,14 +518,12 @@ EXTRA_DIST += \
 
 # *** idl data ***
 
-CODA_IDL_DLMFILES = idl/coda_idl.dlm
-
-EXTRA_DIST += $(CODA_IDL_DLMFILES) \
+EXTRA_DIST += \
 	idl/coda_idl.def \
 	idl/coda_idl.dlm.in
 
 if BUILD_IDL
-idldlmexec_DATA = $(CODA_IDL_DLMFILES)
+idldlmexec_DATA = idl/coda_idl.dlm
 endif
 
 # *** matlab data ***

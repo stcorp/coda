@@ -828,14 +828,16 @@ def expression_eval_node(expr, cursor):
     return _codac.expression_eval_node(expr, cursor)
 expression_eval_node = _codac.expression_eval_node
 
-
 # wrap expression eval functions such that the cursor argument becomes optional
 def expression_eval_bool(expr, cursor=None):
     return _codac.expression_eval_bool(expr, cursor)
+
 def expression_eval_integer(expr, cursor=None):
     return _codac.expression_eval_integer(expr, cursor)
+
 def expression_eval_double(expr, cursor=None):
     return _codac.expression_eval_double(expr, cursor)
+
 def expression_eval_string(expr, cursor=None):
     return _codac.expression_eval_string(expr, cursor)
 
