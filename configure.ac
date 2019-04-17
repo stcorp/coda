@@ -1,5 +1,5 @@
 # autoconf file for CODA
-AC_INIT([CODA],[2.20])
+AC_INIT([CODA],[2.21])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE(foreign subdir-objects 1.10 -Wall)
 
@@ -172,7 +172,7 @@ AC_CONFIG_FILES([idl/coda_idl.dlm])
 # 6. If any interfaces have been removed or changed since the last public
 #    release, then set age to 0.
 LIBCODA_CURRENT=15
-LIBCODA_REVISION=0
+LIBCODA_REVISION=1
 LIBCODA_AGE=0
 AC_SUBST(LIBCODA_CURRENT)
 AC_SUBST(LIBCODA_REVISION)

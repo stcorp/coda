@@ -1,3 +1,6 @@
+2.21 2019-04-17
+~~~~~~~~~~~~~~~
+
 * Default CODA definition path for CODA command line tools on Windows is
   now also ../share/coda/definitions instead of ../definitions.
 
@@ -13,6 +16,9 @@
   when trying to traverse the coda definition path.
 
 * Fixed setting of default CODA definition path for Python on Windows.
+
+* Fixed issue where tests on attributes were not evaluated before tests on
+  sub-paths in codadef detection rules (important for e.g. xmlns tests).
 
 * Allow building the MATLAB interface using MATLAB R2018a or higher
   (similar to using mex with the -R2017b option).
