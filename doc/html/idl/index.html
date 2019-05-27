@@ -70,7 +70,7 @@
 
       <h2 id="codadef">CODA Definition Path</h2>
 
-      <p>Note that in order to access products whose formats are defined using .codadef files, you should let CODA now where these .codadef files are stored. By default the CODA IDL interface will look for .codadef files in a directory relative to the location of the CODA IDL DLM file (<code>../definitions</code> on Windows and <code>../../../share/coda/definitions</code> on other systems; note that software that embed CODA may sometimes override this default location). However, this will only work if you have set the IDL_DLM_PATH environment variable as specified in the CODA installation instructions for the IDL interface (otherwise no default location will be set).</p>
+      <p>Note that in order to access products whose formats are defined using .codadef files, you should let CODA now where these .codadef files are stored. By default the CODA IDL interface will look for .codadef files in a directory relative to the location of the CODA IDL DLM file (<code>../../../share/coda/definitions</code>; note that software that embed CODA may sometimes override this default location). However, this will only work if you have set the IDL_DLM_PATH environment variable as specified in the CODA installation instructions for the IDL interface (otherwise no default location will be set).</p>
       
       <p>You can override the default location by setting the CODA_DEFINITION environment variable. This environment variable should be a ':' separated (';' on Windows) list of absolute paths to directories containing .codadef files or absolute paths to .codadef files themselves (or a mix of those).</p>
       
