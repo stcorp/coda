@@ -242,16 +242,16 @@ static int int_mod(int a, int b)
  */
 static int dmy_to_mjd2000_julian(int D, int M, int Y, int *jd)
 {
-    const int tabel[13] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
+    const int offset[13] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
 
     /* check input */
-    if (Y == 0 || M < 1 || M > 12 || D < 1 || D > tabel[M] - tabel[M - 1] + ((M == 2) && (y(Y) % 4 == 0)))
+    if (Y == 0 || M < 1 || M > 12 || D < 1 || D > offset[M] - offset[M - 1] + ((M == 2) && (y(Y) % 4 == 0)))
     {
         coda_set_error(CODA_ERROR_INVALID_DATETIME, "invalid date/time argument (%02d-%02d-%04d)", D, M, Y);
         return -1;
     }
 
-    *jd = D + 365 * y(Y) + int_div(y(Y), 4) + tabel[M - 1] - ((M <= 2) && (y(Y) % 4 == 0)) + 1721058;
+    *jd = D + 365 * y(Y) + int_div(y(Y), 4) + offset[M - 1] - ((M <= 2) && (y(Y) % 4 == 0)) + 1721058;
 
     return 0;
 }
@@ -273,17 +273,17 @@ static int dmy_to_mjd2000_julian(int D, int M, int Y, int *jd)
  */
 static int dmy_to_mjd2000_gregorian(int D, int M, int Y, int *gd)
 {
-    const int tabel[13] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
+    const int offset[13] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
 
     /* check input */
     if (Y == 0 || M < 1 || M > 12 || D < 1 ||
-        D > tabel[M] - tabel[M - 1] + ((M == 2) && ((y(Y) % 4 == 0) ^ (y(Y) % 100 == 0) ^ (y(Y) % 400 == 0))))
+        D > offset[M] - offset[M - 1] + ((M == 2) && ((y(Y) % 4 == 0) ^ (y(Y) % 100 == 0) ^ (y(Y) % 400 == 0))))
     {
         coda_set_error(CODA_ERROR_INVALID_DATETIME, "invalid date/time argument (%02d-%02d-%04d)", D, M, Y);
         return -1;
     }
 
-    *gd = D + tabel[M - 1] + 365 * y(Y) + int_div(y(Y), 4) - int_div(y(Y), 100) + int_div(y(Y), 400) +
+    *gd = D + offset[M - 1] + 365 * y(Y) + int_div(y(Y), 4) - int_div(y(Y), 100) + int_div(y(Y), 400) +
         -((M <= 2) && ((y(Y) % 4 == 0) - (y(Y) % 100 == 0) + (y(Y) % 400 == 0))) - 579551;
 
     return 0;
@@ -352,7 +352,7 @@ static int dmy_to_mjd2000(int D, int M, int Y, int *mjd2000)
 
 static void getday_leapyear(int dayno, int *D, int *M)
 {
-    const int tabel[13] = { 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 };
+    const int offset[13] = { 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 };
     int i;
 
     assert(dayno >= 0);
@@ -360,18 +360,18 @@ static void getday_leapyear(int dayno, int *D, int *M)
 
     for (i = 1; i <= 12; i++)
     {
-        if (dayno < tabel[i])
+        if (dayno < offset[i])
         {
             break;
         }
     }
     *M = i;
-    *D = 1 + dayno - tabel[i - 1];
+    *D = 1 + dayno - offset[i - 1];
 }
 
 static void getday_nonleapyear(int dayno, int *D, int *M)
 {
-    const int tabel[13] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
+    const int offset[13] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
     int i;
 
     assert(dayno >= 0);
@@ -379,13 +379,13 @@ static void getday_nonleapyear(int dayno, int *D, int *M)
 
     for (i = 1; i <= 12; i++)
     {
-        if (dayno < tabel[i])
+        if (dayno < offset[i])
         {
             break;
         }
     }
     *M = i;
-    *D = 1 + dayno - tabel[i - 1];
+    *D = 1 + dayno - offset[i - 1];
 }
 
 static void mjd2000_to_dmy_julian(int mjd, int *D, int *M, int *Y)
