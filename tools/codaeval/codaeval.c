@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2019 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2020 S[&]T, The Netherlands.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -114,7 +114,7 @@ static void generate_escaped_string(const char *str, int length)
 static void print_version()
 {
     printf("codaeval %s\n", libcoda_version);
-    printf("Copyright (C) 2007-2019 S[&]T, The Netherlands\n");
+    printf("Copyright (C) 2007-2020 S[&]T, The Netherlands\n");
     printf("\n");
 }
 
