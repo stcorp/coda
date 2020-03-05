@@ -16,6 +16,7 @@
 
 #ifdef CODA_EXPAT_NAME_MANGLE
 
+#define _INTERNAL_trim_to_complete_utf8_characters coda_INTERNAL_trim_to_complete_utf8_characters
 #define XML_DefaultCurrent coda_XML_DefaultCurrent
 #define XML_ErrorString coda_XML_ErrorString
 #define XML_ExpatVersion coda_XML_ExpatVersion
