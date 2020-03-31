@@ -1,3 +1,8 @@
+2.21.1 2020-03-31
+~~~~~~~~~~~~~~~~~
+
+* Fixed issue in name mangling of embedded expat/zlib libraries.
+
 2.21 2019-04-17
 ~~~~~~~~~~~~~~~
 
