@@ -24,7 +24,7 @@ of GNU indent.
 Release checklist
 -----------------
 - make sure all 'commit steps' (see above) have been performed
-- ensure automake, CMake, and Windows .sln/.vcproj builds are consistent
+- ensure automake and CMake builds are consistent
 - check compiler warnings
 - increase CODA version number in configure.ac + CMakeLists.txt
   format version is x.y(.z).
