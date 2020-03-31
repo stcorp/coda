@@ -956,5 +956,3 @@ int coda_ascbin_cursor_get_array_dim(const coda_cursor *cursor, int *num_dims, l
 
     return 0;
 }
-
-/** @} */

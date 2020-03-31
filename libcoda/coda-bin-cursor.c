@@ -1333,5 +1333,3 @@ int coda_bin_cursor_read_char_partial_array(const coda_cursor *cursor, long offs
     return read_partial_array(cursor, (read_function)&coda_ascii_cursor_read_char, offset, length, (uint8_t *)dst,
                               sizeof(char));
 }
-
-/** @} */
