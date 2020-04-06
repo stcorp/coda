@@ -52,24 +52,14 @@ A version matching the latest development status on GitHub can be viewed at:
 Download
 ========
 
-The latest release of CODA can be downloaded from the CODA website:
+The latest release of CODA can be downloaded from the CODA GitHub website:
 
-  http://www.stcorp.nl/coda/
+    https://github.com/stcorp/coda/releases
 
 If you encounter any issues with CODA or if you would like to see certain
-functionality added, be sure to let us know at:
+functionality added then create a topic on the Atmospheric Toolbox Forum:
 
-    coda@stcorp.nl
-
-
-GitHub
-======
-
-CODA is also available on GitHub at https://github.com/stcorp/coda
-
-Note that, compared to using the CODA source package, additional steps are
-needed to build CODA from the git repository. These steps are detailed in the
-INSTALL file.
+    https://forum.atmospherictoolbox.org/
 
 
 CODA Developers
