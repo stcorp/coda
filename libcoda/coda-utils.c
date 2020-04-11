@@ -778,7 +778,8 @@ LIBCODA_API void coda_str64(int64_t a, char *s)
     if (a < 0)
     {
         s[0] = '-';
-        coda_str64u((uint64_t)(-a), &s[1]);
+        /* shift by one to account for lowest negative value being one off compared to highest postive value */
+        coda_str64u((uint64_t)(-(a + 1)) + 1, &s[1]);
     }
     else
     {
