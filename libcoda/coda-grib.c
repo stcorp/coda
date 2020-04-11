@@ -1724,7 +1724,7 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
 
             if (read_bytes(product->raw_product, file_offset, 26, buffer) < 0)
             {
-                coda_grib_type_delete((coda_dynamic_type *)gds);
+                coda_mem_type_delete((coda_dynamic_type *)gds);
                 return -1;
             }
 
