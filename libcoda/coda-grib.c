@@ -2210,7 +2210,7 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
         return -1;
     }
 
-    section_size = ((buffer[0] * 256 + buffer[1]) * 256 + buffer[2]) * 256 + buffer[3];
+    section_size = (((uint32_t)buffer[0] * 256 + buffer[1]) * 256 + buffer[2]) * 256 + buffer[3];
 
     if (buffer[4] != 1)
     {
