@@ -3112,6 +3112,7 @@ int coda_grib_reopen(coda_product **product)
             /* read message based on GRIB Edition Number 2 specification */
             if (read_bytes(product_file->raw_product, file_offset + 8, 8, &message_size) < 0)
             {
+                coda_dynamic_type_delete((coda_dynamic_type *)message_union);
                 coda_grib_close((coda_product *)product_file);
                 return -1;
             }
@@ -3138,7 +3139,7 @@ int coda_grib_reopen(coda_product **product)
         if (coda_mem_array_add_element((coda_mem_array *)product_file->root_type, (coda_dynamic_type *)message_union) !=
             0)
         {
-            coda_dynamic_type_delete((coda_dynamic_type *)message);
+            coda_dynamic_type_delete((coda_dynamic_type *)message_union);
             coda_grib_close((coda_product *)product_file);
             return -1;
         }
