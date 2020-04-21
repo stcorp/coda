@@ -78,6 +78,11 @@ static int read_length_value(coda_netcdf_product *product, int64_t *offset, int6
 #endif
         *offset += 8;
     }
+    if (*value < 0)
+    {
+        coda_set_error(CODA_ERROR_PRODUCT, "invalid netCDF file (negative length value)");
+        return -1;
+    }
 
     return 0;
 }
