@@ -55,6 +55,23 @@ static int read_bytes(coda_product *product, int64_t byte_offset, int64_t length
 {
     if (product->mem_ptr != NULL)
     {
+        if (byte_offset < 0)
+        {
+            if (product->format == coda_format_ascii || product->format == coda_format_binary)
+            {
+                coda_set_error(CODA_ERROR_OUT_OF_BOUNDS_READ, "trying to read before the start of the file");
+                return -1;
+            }
+            else
+            {
+                char offset_str[21];
+
+                coda_str64(byte_offset, offset_str);
+                coda_set_error(CODA_ERROR_OUT_OF_BOUNDS_READ, "trying to read bytes using invalid offset %s",
+                               offset_str);
+                return -1;
+            }
+        }
         if (((uint64_t)byte_offset + length) > ((uint64_t)product->mem_size))
         {
             if (product->format == coda_format_ascii || product->format == coda_format_binary)
@@ -81,6 +98,11 @@ static int read_bytes(coda_product *product, int64_t byte_offset, int64_t length
     else
     {
         assert(product->format == coda_format_ascii || product->format == coda_format_binary);
+        if (byte_offset < 0)
+        {
+            coda_set_error(CODA_ERROR_OUT_OF_BOUNDS_READ, "trying to read before the start of the file");
+            return -1;
+        }
         if (((uint64_t)byte_offset + length) > ((uint64_t)product->file_size))
         {
             coda_set_error(CODA_ERROR_OUT_OF_BOUNDS_READ, "trying to read beyond the end of the file");
