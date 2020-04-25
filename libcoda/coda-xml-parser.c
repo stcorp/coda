@@ -349,14 +349,14 @@ static void XMLCALL start_element_handler(void *data, const char *el, const char
 
     info->value_length = 0;
 
-    info->depth++;
-    if (info->depth >= CODA_CURSOR_MAXDEPTH)
+    if (info->depth >= CODA_CURSOR_MAXDEPTH - 1)
     {
         coda_set_error(CODA_ERROR_PRODUCT, "xml file exceeds maximum supported hierarchical depth (%d)",
                        CODA_CURSOR_MAXDEPTH);
         abort_parser(info);
         return;
     }
+    info->depth++;
 
     info->record[info->depth] = NULL;
     parent = info->record[info->depth - 1];
