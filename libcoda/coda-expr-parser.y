@@ -1069,6 +1069,10 @@ LIBCODA_API int coda_expression_from_string(const char *exprstring, coda_express
         }
         coda_expression__delete_buffer(bufstate, scanner);
         coda_expression_lex_destroy(scanner);
+        if (parsed_expression) {
+            coda_expression_delete(parsed_expression);
+            parsed_expression = NULL;
+        }
         return -1;
     }
     coda_expression__delete_buffer(bufstate, scanner);
