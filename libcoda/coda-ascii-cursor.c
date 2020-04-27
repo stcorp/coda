@@ -509,6 +509,7 @@ long coda_ascii_parse_double(const char *buffer, long buffer_length, double *dst
     if (length > 0 && (*buffer == 'd' || *buffer == 'D' || *buffer == 'e' || *buffer == 'E'))
     {
         long exponent_value;
+        int exponent_overflow = 0;
 
         buffer++;
         length--;
@@ -530,8 +531,16 @@ long coda_ascii_parse_double(const char *buffer, long buffer_length, double *dst
             {
                 break;
             }
-            exponent_value = 10 * exponent_value + (*buffer - '0');
-            exponent_length++;
+            if (!exponent_overflow)
+            {
+                exponent_value = 10 * exponent_value + (*buffer - '0');
+                exponent_length++;
+                if (exponent_value > 1024)
+                {
+                    /* we will now get 'inf' anyway, so stop parsing to prevent integer overflow in exponent */
+                    exponent_overflow = 1;
+                }
+            }
             buffer++;
             length--;
         }
