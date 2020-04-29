@@ -1554,7 +1554,7 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
         return -1;
     }
 
-    section_size = ((buffer[0] * 256) + buffer[1]) * 256 + buffer[2];
+    section_size = (((long)buffer[0] * 256) + buffer[1]) * 256 + buffer[2];
 
     gtype = grib_type[grib1_table2Version];
     type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[3]);
@@ -1686,7 +1686,7 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
             return -1;
         }
 
-        section_size = ((buffer[0] * 256) + buffer[1]) * 256 + buffer[2];
+        section_size = (((long)buffer[0] * 256) + buffer[1]) * 256 + buffer[2];
 
         file_offset += 6;
 
@@ -2042,7 +2042,7 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
             return -1;
         }
 
-        section_size = ((buffer[0] * 256) + buffer[1]) * 256 + buffer[2];
+        section_size = (((long)buffer[0] * 256) + buffer[1]) * 256 + buffer[2];
         if ((buffer[4] * 256) + buffer[5] != 0)
         {
             coda_set_error(CODA_ERROR_PRODUCT, "Bit Map Section with predefined bit map not supported");
@@ -2081,7 +2081,7 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
         return -1;
     }
 
-    section_size = ((buffer[0] * 256) + buffer[1]) * 256 + buffer[2];
+    section_size = (((long)buffer[0] * 256) + buffer[1]) * 256 + buffer[2];
     if (buffer[3] & 0x80)
     {
         if (bitmask != NULL)
@@ -2302,7 +2302,7 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
     file_offset += 4;
     while (memcmp(buffer, "7777", 4) != 0)
     {
-        section_size = ((buffer[0] * 256 + buffer[1]) * 256 + buffer[2]) * 256 + buffer[3];
+        section_size = (((uint32_t)buffer[0] * 256 + buffer[1]) * 256 + buffer[2]) * 256 + buffer[3];
 
         /* read section number */
         if (read_bytes(product->raw_product, file_offset, 1, buffer) < 0)
@@ -2574,7 +2574,7 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                                 value = buffer[0] * 256 + buffer[1];
                                 break;
                             case 4:
-                                value = ((buffer[0] * 256 + buffer[1]) * 256 + buffer[2]) * 256 + buffer[3];
+                                value = (((uint32_t)buffer[0] * 256 + buffer[1]) * 256 + buffer[2]) * 256 + buffer[3];
                                 break;
                             default:
                                 coda_set_error(CODA_ERROR_PRODUCT, "unsupported octect size (%d) for numbers in 'list "
@@ -2656,13 +2656,14 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                 hoursAfterDataCutoff = buffer[5] * 256 + buffer[6];
                 minutesAfterDataCutoff = buffer[7];
                 indicatorOfUnitOfTimeRange = buffer[8];
-                forecastTime = ((buffer[9] * 256 + buffer[10]) * 256 + buffer[11]) * 256 + buffer[12];
+                forecastTime = (((uint32_t)buffer[9] * 256 + buffer[10]) * 256 + buffer[11]) * 256 + buffer[12];
                 typeOfFirstFixedSurface = buffer[13];
                 if (typeOfFirstFixedSurface != 255)
                 {
                     int8_t scaleFactor = ((int8_t *)buffer)[14];
 
-                    firstFixedSurface = ((buffer[15] * 256 + buffer[16]) * 256 + buffer[17]) * 256 + buffer[18];
+                    firstFixedSurface = (((uint32_t)buffer[15] * 256 + buffer[16]) * 256 + buffer[17]) * 256 +
+                        buffer[18];
                     while (scaleFactor < 0)
                     {
                         firstFixedSurface *= 10;
@@ -2683,7 +2684,8 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                 {
                     int8_t scaleFactor = ((int8_t *)buffer)[20];
 
-                    secondFixedSurface = ((buffer[21] * 256 + buffer[22]) * 256 + buffer[23]) * 256 + buffer[24];
+                    secondFixedSurface = (((uint32_t)buffer[21] * 256 + buffer[22]) * 256 + buffer[23]) * 256 +
+                        buffer[24];
                     while (scaleFactor < 0)
                     {
                         secondFixedSurface *= 10;
@@ -2732,7 +2734,7 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
             {
                 return -1;
             }
-            num_elements = ((buffer[0] * 256 + buffer[1]) * 256 + buffer[2]) * 256 + buffer[3];
+            num_elements = (((uint32_t)buffer[0] * 256 + buffer[1]) * 256 + buffer[2]) * 256 + buffer[3];
             dataRepresentationTemplate = buffer[4] * 256 + buffer[5];
             file_offset += 6;
 
