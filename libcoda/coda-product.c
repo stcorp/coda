@@ -379,6 +379,7 @@ static int reopen_with_backend(coda_product **product_file, coda_format format)
             break;
 #else
             coda_set_error(CODA_ERROR_NO_HDF4_SUPPORT, NULL);
+            coda_close(*product_file);
             return -1;
 #endif
         case coda_format_hdf5:
@@ -390,6 +391,7 @@ static int reopen_with_backend(coda_product **product_file, coda_format format)
             break;
 #else
             coda_set_error(CODA_ERROR_NO_HDF5_SUPPORT, NULL);
+            coda_close(*product_file);
             return -1;
 #endif
         case coda_format_cdf:
