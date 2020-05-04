@@ -1734,6 +1734,7 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
             {
                 coda_set_error(CODA_ERROR_PRODUCT,
                                "grid definition with MISSING value (65535) for both Ni and Nj not supported");
+                coda_dynamic_type_delete((coda_dynamic_type *)gds);
                 return -1;
             }
             if (Ni != 65535 && Nj != 65535)
