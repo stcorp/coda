@@ -39,7 +39,8 @@ void coda_netcdf_type_delete(coda_dynamic_type *type)
     assert(type != NULL);
     assert(type->backend == coda_backend_netcdf);
 
-    if (type->definition->type_class == coda_array_class)
+    if (type->definition &&
+        type->definition->type_class == coda_array_class)
     {
         if (((coda_netcdf_array *)type)->base_type != NULL)
         {
@@ -163,8 +164,11 @@ coda_netcdf_basic_type *coda_netcdf_basic_type_new(int nc_type, int64_t offset, 
             type->definition = (coda_type *)coda_type_number_new(coda_format_netcdf, coda_real_class);
             break;
         default:
-            assert(0);
-            exit(1);
+            coda_set_error(CODA_ERROR_INVALID_FORMAT,
+                           "unsupported nc_type: %d (%s:%u)",
+                           nc_type, __FILE__, __LINE__);
+            coda_dynamic_type_delete((coda_dynamic_type *)type);
+            return NULL;
     }
     if (type->definition == NULL)
     {
