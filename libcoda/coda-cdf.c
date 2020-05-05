@@ -1209,7 +1209,8 @@ static int read_GDR(coda_cdf_product *product_file, int64_t offset)
     int32_t num_attr;
     int32_t nz_vars;
 
-    if (read_bytes(product_file->raw_product, offset + 8, 4, &record_type) < 0)
+    if (offset > LONG_MAX - 8 ||
+        read_bytes(product_file->raw_product, offset + 8, 4, &record_type) < 0)
     {
         return -1;
     }
