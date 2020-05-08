@@ -566,6 +566,7 @@ static int read_var_array(coda_netcdf_product *product, int64_t *offset, int64_t
         /* nelems */
         if (read_length_value(product, offset, &nelems) != 0)
         {
+            free(name);
             return -1;
         }
         num_dims = 0;
@@ -574,6 +575,7 @@ static int read_var_array(coda_netcdf_product *product, int64_t *offset, int64_t
             /* dimid */
             if (read_length_value(product, offset, &dim_id) != 0)
             {
+                free(name);
                 return -1;
             }
             if (dim_id < 0 || dim_id >= num_dim_lengths)
@@ -631,6 +633,15 @@ static int read_var_array(coda_netcdf_product *product, int64_t *offset, int64_t
         swap_int32(&nc_type);
 #endif
         *offset += 4;
+        if (nc_type < 1 || nc_type > 6)
+        {
+            coda_dynamic_type_delete((coda_dynamic_type *)attributes);
+            coda_conversion_delete(conversion);
+            free(name);
+            coda_set_error(CODA_ERROR_PRODUCT, "invalid netCDF file (invalid netcdf type (%d))", (int)nc_type);
+            return -1;
+
+        }
 
         /* check if we need to use a conversion */
         if (conversion->numerator == 1.0 && conversion->add_offset == 0.0)
