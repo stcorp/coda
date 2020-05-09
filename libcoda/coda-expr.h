@@ -131,6 +131,7 @@ struct coda_expression_struct
     coda_expression_node_type tag;
     coda_expression_type result_type;
     int is_constant;
+    int recursion_depth;
 };
 
 struct coda_expression_bool_constant_struct
@@ -138,6 +139,7 @@ struct coda_expression_bool_constant_struct
     coda_expression_node_type tag;
     coda_expression_type result_type;
     int is_constant;
+    int recursion_depth;
     int value;
 };
 typedef struct coda_expression_bool_constant_struct coda_expression_bool_constant;
@@ -147,6 +149,7 @@ struct coda_expression_float_constant_struct
     coda_expression_node_type tag;
     coda_expression_type result_type;
     int is_constant;
+    int recursion_depth;
     double value;
 };
 typedef struct coda_expression_float_constant_struct coda_expression_float_constant;
@@ -156,6 +159,7 @@ struct coda_expression_integer_constant_struct
     coda_expression_node_type tag;
     coda_expression_type result_type;
     int is_constant;
+    int recursion_depth;
     int64_t value;
 };
 typedef struct coda_expression_integer_constant_struct coda_expression_integer_constant;
@@ -165,6 +169,7 @@ struct coda_expression_string_constant_struct
     coda_expression_node_type tag;
     coda_expression_type result_type;
     int is_constant;
+    int recursion_depth;
     long length;
     char *value;
 };
@@ -175,6 +180,7 @@ struct coda_expression_operation_struct
     coda_expression_node_type tag;
     coda_expression_type result_type;
     int is_constant;
+    int recursion_depth;
     char *identifier;
     coda_expression *operand[4];
 };

@@ -104,6 +104,10 @@
 
 #define REGEX_MAX_NUM_SUBSTRING 15
 
+#ifndef CODA_MAX_RECURSION_DEPTH
+#define CODA_MAX_RECURSION_DEPTH 10000
+#endif
+
 static int iswhitespace(char a)
 {
     return (a == ' ' || a == '\t' || a == '\n' || a == '\r');
@@ -236,6 +240,7 @@ static coda_expression *boolean_constant_new(char *string_value)
     expr->tag = expr_constant_boolean;
     expr->result_type = coda_expression_boolean;
     expr->is_constant = 1;
+    expr->recursion_depth = 0;
     expr->value = (*string_value == 't' || *string_value == 'T');
     free(string_value);
 
@@ -264,6 +269,7 @@ static coda_expression *float_constant_new(char *string_value)
     expr->tag = expr_constant_float;
     expr->result_type = coda_expression_float;
     expr->is_constant = 1;
+    expr->recursion_depth = 0;
     expr->value = value;
 
     return (coda_expression *)expr;
@@ -291,6 +297,7 @@ static coda_expression *integer_constant_new(char *string_value)
     expr->tag = expr_constant_integer;
     expr->result_type = coda_expression_integer;
     expr->is_constant = 1;
+    expr->recursion_depth = 0;
     expr->value = value;
 
     return (coda_expression *)expr;
@@ -310,6 +317,7 @@ static coda_expression *rawstring_constant_new(char *string_value)
     expr->tag = expr_constant_rawstring;
     expr->result_type = coda_expression_string;
     expr->is_constant = 1;
+    expr->recursion_depth = 0;
     expr->length = (long)strlen(string_value);
     expr->value = string_value;
 
@@ -338,6 +346,7 @@ static coda_expression *string_constant_new(char *string_value)
     expr->tag = expr_constant_string;
     expr->result_type = coda_expression_string;
     expr->is_constant = 1;
+    expr->recursion_depth = 0;
     expr->length = length;
     expr->value = string_value;
 
@@ -559,6 +568,42 @@ coda_expression *coda_expression_new(coda_expression_node_type tag, char *string
             expr->is_constant = expr->result_type != coda_expression_node && (op1 == NULL || op1->is_constant) &&
                 (op2 == NULL || op2->is_constant) && (op3 == NULL || op3->is_constant) &&
                 (op4 == NULL || op4->is_constant);
+    }
+
+    expr->recursion_depth = 0;
+    if (op1 != NULL)
+    {
+        if (op1->recursion_depth + 1 > expr->recursion_depth)
+        {
+            expr->recursion_depth = op1->recursion_depth + 1;
+        }
+    }
+    if (op2 != NULL)
+    {
+        if (op2->recursion_depth + 1 > expr->recursion_depth)
+        {
+            expr->recursion_depth = op2->recursion_depth + 1;
+        }
+    }
+    if (op3 != NULL)
+    {
+        if (op3->recursion_depth + 1 > expr->recursion_depth)
+        {
+            expr->recursion_depth = op3->recursion_depth + 1;
+        }
+    }
+    if (op4 != NULL)
+    {
+        if (op4->recursion_depth + 1 > expr->recursion_depth)
+        {
+            expr->recursion_depth = op4->recursion_depth + 1;
+        }
+    }
+    if (expr->recursion_depth > CODA_MAX_RECURSION_DEPTH)
+    {
+        coda_set_error(CODA_ERROR_EXPRESSION, "maximum recursion depth (%ld) reached", CODA_MAX_RECURSION_DEPTH);
+        coda_expression_delete((coda_expression *)expr);
+        return NULL;
     }
 
     return (coda_expression *)expr;
