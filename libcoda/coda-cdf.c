@@ -407,7 +407,7 @@ static int read_AEDR(coda_cdf_product *product_file, int64_t offset, const char 
     swap_int32(&num_elems);
 #endif
     offset += 56;
-    if (aedr_next < 0)
+    if (aedr_next < 0 || aedr_next >= product_file->file_size)
     {
         coda_set_error(CODA_ERROR_PRODUCT, "CDF file has invalid offset for AEDR record");
         return -1;
@@ -559,12 +559,12 @@ static int read_ADR(coda_cdf_product *product_file, int64_t offset)
     swap_int32(&nz_entries);
     swap_int32(&maxz_entry);
 #endif
-    if (adr_next < 0)
+    if (adr_next < 0 || adr_next >= product_file->file_size)
     {
         coda_set_error(CODA_ERROR_PRODUCT, "CDF file has invalid offset for ADR record");
         return -1;
     }
-    if (agredr_head < 0)
+    if (agredr_head < 0 || agredr_head >= product_file->file_size)
     {
         coda_set_error(CODA_ERROR_PRODUCT, "CDF file has invalid offset for AgrEDR record");
         return -1;
@@ -579,7 +579,7 @@ static int read_ADR(coda_cdf_product *product_file, int64_t offset)
         coda_set_error(CODA_ERROR_PRODUCT, "CDF file has invalid number of g/rEntries in ADR record");
         return -1;
     }
-    if (azedr_head < 0)
+    if (azedr_head < 0 || azedr_head >= product_file->file_size)
     {
         coda_set_error(CODA_ERROR_PRODUCT, "CDF file has invalid offset for AzEDR record");
         return -1;
@@ -831,7 +831,7 @@ static int read_VXR(coda_cdf_product *product_file, coda_cdf_variable *variable,
     swap_int32(&nused_entries);
 #endif
     offset += 28;
-    if (vxr_next < 0)
+    if (vxr_next < 0 || vxr_next >= product_file->file_size)
     {
         coda_set_error(CODA_ERROR_PRODUCT, "CDF file has invalid offset for VXR record");
         return -1;
@@ -875,7 +875,7 @@ static int read_VXR(coda_cdf_product *product_file, coda_cdf_variable *variable,
             coda_set_error(CODA_ERROR_PRODUCT, "CDF file has invalid last record number in VXR record");
             return -1;
         }
-        if (vr_offset < 0)
+        if (vr_offset < 0 || vr_offset >= product_file->file_size)
         {
             coda_set_error(CODA_ERROR_PRODUCT, "CDF file has invalid offset for VR record");
             return -1;
@@ -1049,17 +1049,17 @@ static int read_VDR(coda_cdf_product *product_file, int64_t offset, int is_zvar)
     swap_int64(&cpr_spr_offset);
     swap_int32(&blocking_factor);
 #endif
-    if (vdr_next < 0)
+    if (vdr_next < 0 || vdr_next >= product_file->file_size)
     {
         coda_set_error(CODA_ERROR_PRODUCT, "CDF file has invalid offset for VDR record");
         return -1;
     }
-    if (vxr_head < 0)
+    if (vxr_head < 0 || vxr_head >= product_file->file_size)
     {
         coda_set_error(CODA_ERROR_PRODUCT, "CDF file has invalid offset for VXR record");
         return -1;
     }
-    if (vxr_tail < 0)
+    if (vxr_tail < 0 || vxr_tail >= product_file->file_size)
     {
         coda_set_error(CODA_ERROR_PRODUCT, "CDF file has invalid offset for VXR record");
         return -1;
@@ -1074,7 +1074,7 @@ static int read_VDR(coda_cdf_product *product_file, int64_t offset, int is_zvar)
         coda_set_error(CODA_ERROR_PRODUCT, "CDF file has invalid variable number in VDR record");
         return -1;
     }
-    if (cpr_spr_offset < -1)
+    if (cpr_spr_offset < -1 || cpr_spr_offset >= product_file->file_size)
     {
         coda_set_error(CODA_ERROR_PRODUCT, "CDF file has invalid offset for CPR/SPR record");
         return -1;
@@ -1264,17 +1264,17 @@ static int read_GDR(coda_cdf_product *product_file, int64_t offset)
     swap_int32(&product_file->rnum_dims);
     swap_int32(&nz_vars);
 #endif
-    if (rvdr_head < 0)
+    if (rvdr_head < 0 || rvdr_head >= product_file->file_size)
     {
         coda_set_error(CODA_ERROR_PRODUCT, "CDF file has invalid offset for rVDR record");
         return -1;
     }
-    if (zvdr_head < 0)
+    if (zvdr_head < 0 || zvdr_head >= product_file->file_size)
     {
         coda_set_error(CODA_ERROR_PRODUCT, "CDF file has invalid offset for zVDR record");
         return -1;
     }
-    if (adr_head < 0)
+    if (adr_head < 0 || adr_head >= product_file->file_size)
     {
         coda_set_error(CODA_ERROR_PRODUCT, "CDF file has invalid offset for ADR record");
         return -1;
@@ -1388,7 +1388,7 @@ static int read_file(coda_cdf_product *product_file)
     swap_int32(&flags);
     swap_int32(&product_file->cdf_increment);
 #endif
-    if (gdr_offset < 0)
+    if (gdr_offset < 0 || gdr_offset >= product_file->file_size)
     {
         coda_set_error(CODA_ERROR_PRODUCT, "CDF file has invalid offset for GDR record");
         return -1;
