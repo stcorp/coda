@@ -164,7 +164,7 @@ static void coda_expression_error(void *scanner, const char *error)
 %type     <stringval> identifier
 %type     <stringval> reserved_identifier
 %destructor { coda_expression_delete($$); } node voidexpr boolexpr intexpr floatexpr stringexpr
-%destructor { free($$); } INT_VALUE FLOAT_VALUE STRING_VALUE NAME identifier
+%destructor { free($$); } INT_VALUE FLOAT_VALUE STRING_VALUE NAME INDEX_VAR identifier
 
 %pure-parser
 %lex-param { void *scanner }
@@ -241,11 +241,11 @@ reserved_identifier:
     | FUNC_TRIM { $$ = "trim"; }
     | FUNC_UNBOUNDINDEX { $$ = "unboundindex"; }
     | FUNC_WITH { $$ = "with"; }
-    | INDEX_VAR
     ;
 
 identifier:
       NAME
+    | INDEX_VAR
     | reserved_identifier { $$ = strdup($1); }
     ;
 
