@@ -163,7 +163,7 @@ static void coda_expression_error(void *scanner, const char *error)
 %type     <expr>      stringexpr
 %type     <stringval> identifier
 %type     <stringval> reserved_identifier
-%destructor { coda_expression_delete($$); } node voidexpr boolexpr intexpr floatexpr stringexpr
+%destructor { coda_expression_delete($$); } node rootnode nonrootnode voidexpr boolexpr intexpr floatexpr stringexpr
 %destructor { free($$); } INT_VALUE FLOAT_VALUE STRING_VALUE NAME INDEX_VAR identifier
 
 %pure-parser
