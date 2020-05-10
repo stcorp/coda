@@ -143,6 +143,10 @@ int coda_mem_type_update(coda_dynamic_type **type, coda_type *definition)
 
             /* convert record to text */
             mem_type = (coda_mem_type *)coda_mem_string_new((coda_type_text *)definition, NULL, NULL, NULL);
+            if (mem_type->attributes != NULL)
+            {
+                coda_dynamic_type_delete(mem_type->attributes);
+            }
             mem_type->attributes = ((coda_mem_record *)*type)->attributes;
             ((coda_mem_type *)*type)->attributes = NULL;
             coda_dynamic_type_delete(*type);
