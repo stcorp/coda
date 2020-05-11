@@ -277,7 +277,8 @@ static int get_entries(za_file *zf)
             return -1;
         }
 
-        if (read(zf->fd, entry->filename, entry->filename_length) < 0)
+        const ssize_t len = read(zf->fd, entry->filename, entry->filename_length);
+        if (len != entry->filename_length)
         {
             zf->handle_error(strerror(errno));
             return -1;
