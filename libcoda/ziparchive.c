@@ -113,6 +113,7 @@ static int get_entries(za_file *zf)
     uint32_t signature;
     uint32_t offset;
     uint16_t num_entries;
+    long result;
     int i;
 
     /* read the 'end of central directory record' */
@@ -179,9 +180,15 @@ static int get_entries(za_file *zf)
         entry = &zf->entry[i];
 
         /* read the constant length part of the central directory 'file header' */
-        if (read(zf->fd, buffer.as_int8, 46) < 0)
+        result = read(zf->fd, buffer.as_int8, 46);
+        if (result < 0)
         {
             zf->handle_error(strerror(errno));
+            return -1;
+        }
+        if (result != 46)
+        {
+            entry->zf->handle_error("unexpected end in zip file");
             return -1;
         }
 
@@ -277,9 +284,15 @@ static int get_entries(za_file *zf)
             return -1;
         }
 
-        if (read(zf->fd, entry->filename, entry->filename_length) < 0)
+        result = read(zf->fd, entry->filename, entry->filename_length);
+        if (result < 0)
         {
             zf->handle_error(strerror(errno));
+            return -1;
+        }
+        if (((uint32_t)result) != entry->filename_length)
+        {
+            entry->zf->handle_error("unexpected end in zip file");
             return -1;
         }
         entry->filename[entry->filename_length] = '\0';
@@ -457,6 +470,7 @@ int za_read_entry(za_entry *entry, char *out_buffer)
     uint32_t uncompressed_size;
     uint16_t filename_length;
     uint16_t extrafield_length;
+    long result;
 
     if (lseek(entry->zf->fd, entry->localheader_offset, SEEK_SET) < 0)
     {
@@ -465,9 +479,15 @@ int za_read_entry(za_entry *entry, char *out_buffer)
     }
 
     /* read the constant length part of the 'local file header' */
-    if (read(entry->zf->fd, buffer.as_int8, 30) < 0)
+    result = read(entry->zf->fd, buffer.as_int8, 30);
+    if (result < 0)
     {
         entry->zf->handle_error(strerror(errno));
+        return -1;
+    }
+    if (result != 30)
+    {
+        entry->zf->handle_error("unexpected end in zip file");
         return -1;
     }
 
@@ -577,9 +597,15 @@ int za_read_entry(za_entry *entry, char *out_buffer)
 
     if (entry->compression == 0)
     {
-        if (read(entry->zf->fd, out_buffer, entry->uncompressed_size) < 0)
+        result = read(entry->zf->fd, out_buffer, entry->uncompressed_size);
+        if (result < 0)
         {
             entry->zf->handle_error(strerror(errno));
+            return -1;
+        }
+        if (((uint32_t)result) != entry->uncompressed_size)
+        {
+            entry->zf->handle_error("unexpected end in zip file");
             return -1;
         }
     }
@@ -596,10 +622,16 @@ int za_read_entry(za_entry *entry, char *out_buffer)
             return -1;
         }
 
-        if (read(entry->zf->fd, in_buffer, entry->compressed_size) < 0)
+        result = read(entry->zf->fd, in_buffer, entry->compressed_size);
+        if (result < 0)
         {
             entry->zf->handle_error(strerror(errno));
             free(in_buffer);
+            return -1;
+        }
+        if (((uint32_t)result) != entry->compressed_size)
+        {
+            entry->zf->handle_error("unexpected end in zip file");
             return -1;
         }
 
