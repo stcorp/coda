@@ -77,6 +77,12 @@ static int read_length_value(coda_netcdf_product *product, int64_t *offset, int6
         swap_int64(value);
 #endif
         *offset += 8;
+        /* quick boundary check to prevent potential integer overflow problems later on */
+        if (*value > product->file_size)
+        {
+            coda_set_error(CODA_ERROR_PRODUCT, "invalid netCDF file (length value too large)");
+            return -1;
+        }
     }
     if (*value < 0)
     {
@@ -230,9 +236,9 @@ static int read_att_array(coda_netcdf_product *product, int64_t *offset, coda_me
         name = malloc(string_length + 1);
         if (name == NULL)
         {
-            coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
             coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
                            (long)(string_length + 1), __FILE__, __LINE__);
+            coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
             return -1;
         }
         name[string_length] = '\0';
@@ -281,9 +287,9 @@ static int read_att_array(coda_netcdf_product *product, int64_t *offset, coda_me
                 value_length *= 8;
                 break;
             default:
+                coda_set_error(CODA_ERROR_PRODUCT, "invalid netCDF file (invalid netcdf type (%d))", (int)nc_type);
                 free(name);
                 coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
-                coda_set_error(CODA_ERROR_PRODUCT, "invalid netCDF file (invalid netcdf type (%d))", (int)nc_type);
                 return -1;
         }
 
@@ -491,7 +497,6 @@ static int read_var_array(coda_netcdf_product *product, int64_t *offset, int64_t
 
     if (read_bytes(product->raw_product, *offset, 4, &tag) < 0)
     {
-        coda_set_error(CODA_ERROR_FILE_READ, "could not read from file (%s)", strerror(errno));
         return -1;
     }
 #ifndef WORDS_BIGENDIAN
@@ -580,8 +585,8 @@ static int read_var_array(coda_netcdf_product *product, int64_t *offset, int64_t
             }
             if (dim_id < 0 || dim_id >= num_dim_lengths)
             {
-                free(name);
                 coda_set_error(CODA_ERROR_PRODUCT, "invalid netCDF file (invalid dimid for variable %s)", name);
+                free(name);
                 return -1;
             }
             if (j == nelems - 1)
@@ -635,10 +640,10 @@ static int read_var_array(coda_netcdf_product *product, int64_t *offset, int64_t
         *offset += 4;
         if (nc_type < 1 || nc_type > 6)
         {
+            coda_set_error(CODA_ERROR_PRODUCT, "invalid netCDF file (invalid netcdf type (%d))", (int)nc_type);
             coda_dynamic_type_delete((coda_dynamic_type *)attributes);
             coda_conversion_delete(conversion);
             free(name);
-            coda_set_error(CODA_ERROR_PRODUCT, "invalid netCDF file (invalid netcdf type (%d))", (int)nc_type);
             return -1;
 
         }
@@ -698,6 +703,14 @@ static int read_var_array(coda_netcdf_product *product, int64_t *offset, int64_t
             swap_int64(&var_offset);
 #endif
             *offset += 8;
+        }
+        if (var_offset > product->file_size)
+        {
+            coda_set_error(CODA_ERROR_PRODUCT, "invalid netCDF file (invalid offset for variable %s)", name);
+            coda_dynamic_type_delete((coda_dynamic_type *)attributes);
+            coda_conversion_delete(conversion);
+            free(name);
+            return -1;
         }
         if (last_dim_set)
         {
@@ -860,7 +873,6 @@ int coda_netcdf_reopen(coda_product **product)
     /* magic */
     if (read_bytes(product_file->raw_product, offset, 4, magic) < 0)
     {
-        coda_set_error(CODA_ERROR_FILE_READ, "could not read from file (%s)", strerror(errno));
         coda_netcdf_close((coda_product *)product_file);
         return -1;
     }
@@ -878,7 +890,6 @@ int coda_netcdf_reopen(coda_product **product)
     /* numrecs */
     if (read_length_value(product_file, &offset, &num_records) != 0)
     {
-        coda_set_error(CODA_ERROR_FILE_READ, "could not read from file (%s)", strerror(errno));
         coda_netcdf_close((coda_product *)product_file);
         return -1;
     }
