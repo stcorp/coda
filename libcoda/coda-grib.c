@@ -2378,7 +2378,7 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
             type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[0]);
             coda_mem_record_add_field(grid, "sourceOfGridDefinition", type, 0);
 
-            num_data_points = ((buffer[1] * 256 + buffer[2]) * 256 + buffer[3]) * 256 + buffer[4];
+            num_data_points = (((uint32_t)buffer[1] * 256 + buffer[2]) * 256 + buffer[3]) * 256 + buffer[4];
             gtype = grib_type[grib2_numberOfDataPoints];
             type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)gtype, NULL, cproduct, num_data_points);
             coda_mem_record_add_field(grid, "numberOfDataPoints", type, 0);
@@ -2426,7 +2426,7 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                 type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[1]);
                 coda_mem_record_add_field(grid, "scaleFactorOfRadiusOfSphericalEarth", type, 0);
 
-                intvalue = ((buffer[2] * 256 + buffer[3]) * 256 + buffer[4]) * 256 + buffer[5];
+                intvalue = (((uint32_t)buffer[2] * 256 + buffer[3]) * 256 + buffer[4]) * 256 + buffer[5];
                 gtype = grib_type[grib2_scaledValueOfRadiusOfSphericalEarth];
                 type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)gtype, NULL, cproduct, intvalue);
                 coda_mem_record_add_field(grid, "scaledValueOfRadiusOfSphericalEarth", type, 0);
@@ -2435,7 +2435,7 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                 type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[6]);
                 coda_mem_record_add_field(grid, "scaleFactorOfEarthMajorAxis", type, 0);
 
-                intvalue = ((buffer[7] * 256 + buffer[8]) * 256 + buffer[9]) * 256 + buffer[10];
+                intvalue = (((uint32_t)buffer[7] * 256 + buffer[8]) * 256 + buffer[9]) * 256 + buffer[10];
                 gtype = grib_type[grib2_scaledValueOfEarthMajorAxis];
                 type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)gtype, NULL, cproduct, intvalue);
                 coda_mem_record_add_field(grid, "scaledValueOfEarthMajorAxis", type, 0);
@@ -2444,38 +2444,38 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                 type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[11]);
                 coda_mem_record_add_field(grid, "scaleFactorOfEarthMinorAxis", type, 0);
 
-                intvalue = ((buffer[12] * 256 + buffer[13]) * 256 + buffer[14]) * 256 + buffer[15];
+                intvalue = (((uint32_t)buffer[12] * 256 + buffer[13]) * 256 + buffer[14]) * 256 + buffer[15];
                 gtype = grib_type[grib2_scaledValueOfEarthMinorAxis];
                 type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)gtype, NULL, cproduct, intvalue);
                 coda_mem_record_add_field(grid, "scaledValueOfEarthMinorAxis", type, 0);
 
-                Ni = ((buffer[16] * 256 + buffer[17]) * 256 + buffer[18]) * 256 + buffer[19];
+                Ni = (((uint32_t)buffer[16] * 256 + buffer[17]) * 256 + buffer[18]) * 256 + buffer[19];
                 gtype = grib_type[grib2_Ni];
                 type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)gtype, NULL, cproduct, Ni);
                 coda_mem_record_add_field(grid, "Ni", type, 0);
 
-                Nj = ((buffer[20] * 256 + buffer[21]) * 256 + buffer[22]) * 256 + buffer[23];
+                Nj = (((uint32_t)buffer[20] * 256 + buffer[21]) * 256 + buffer[22]) * 256 + buffer[23];
                 gtype = grib_type[grib2_Nj];
                 type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)gtype, NULL, cproduct, Nj);
                 coda_mem_record_add_field(grid, "Nj", type, 0);
 
-                intvalue = ((buffer[24] * 256 + buffer[25]) * 256 + buffer[26]) * 256 + buffer[27];
+                intvalue = (((uint32_t)buffer[24] * 256 + buffer[25]) * 256 + buffer[26]) * 256 + buffer[27];
                 gtype = grib_type[grib2_basicAngleOfTheInitialProductionDomain];
                 type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)gtype, NULL, cproduct, intvalue);
                 coda_mem_record_add_field(grid, "basicAngleOfTheInitialProductionDomain", type, 0);
 
-                intvalue = ((buffer[28] * 256 + buffer[29]) * 256 + buffer[30]) * 256 + buffer[31];
+                intvalue = (((uint32_t)buffer[28] * 256 + buffer[29]) * 256 + buffer[30]) * 256 + buffer[31];
                 gtype = grib_type[grib2_subdivisionsOfBasicAngle];
                 type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)gtype, NULL, cproduct, intvalue);
                 coda_mem_record_add_field(grid, "subdivisionsOfBasicAngle", type, 0);
 
-                intvalue = ((buffer[32] * 256 + buffer[33]) * 256 + buffer[34]) * 256 + buffer[35];
+                intvalue = (((uint32_t)buffer[32] * 256 + buffer[33]) * 256 + buffer[34]) * 256 + buffer[35];
                 intvalue = buffer[32] & 0x80 ? -((int64_t)intvalue - (1 << 31)) : intvalue;
                 gtype = grib_type[grib2_latitudeOfFirstGridPoint];
                 type = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)gtype, NULL, cproduct, intvalue);
                 coda_mem_record_add_field(grid, "latitudeOfFirstGridPoint", type, 0);
 
-                intvalue = ((buffer[36] * 256 + buffer[37]) * 256 + buffer[38]) * 256 + buffer[39];
+                intvalue = (((uint32_t)buffer[36] * 256 + buffer[37]) * 256 + buffer[38]) * 256 + buffer[39];
                 intvalue = buffer[36] & 0x80 ? -((int64_t)intvalue - (1 << 31)) : intvalue;
                 gtype = grib_type[grib2_longitudeOfFirstGridPoint];
                 type = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)gtype, NULL, cproduct, intvalue);
@@ -2485,24 +2485,24 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                 type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, buffer[40]);
                 coda_mem_record_add_field(grid, "resolutionAndComponentFlags", type, 0);
 
-                intvalue = ((buffer[41] * 256 + buffer[42]) * 256 + buffer[43]) * 256 + buffer[44];
+                intvalue = (((uint32_t)buffer[41] * 256 + buffer[42]) * 256 + buffer[43]) * 256 + buffer[44];
                 intvalue = buffer[41] & 0x80 ? -((int64_t)intvalue - (1 << 31)) : intvalue;
                 gtype = grib_type[grib2_latitudeOfLastGridPoint];
                 type = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)gtype, NULL, cproduct, intvalue);
                 coda_mem_record_add_field(grid, "latitudeOfLastGridPoint", type, 0);
 
-                intvalue = ((buffer[45] * 256 + buffer[46]) * 256 + buffer[47]) * 256 + buffer[48];
+                intvalue = (((uint32_t)buffer[45] * 256 + buffer[46]) * 256 + buffer[47]) * 256 + buffer[48];
                 intvalue = buffer[45] & 0x80 ? -((int64_t)intvalue - (1 << 31)) : intvalue;
                 gtype = grib_type[grib2_longitudeOfLastGridPoint];
                 type = (coda_dynamic_type *)coda_mem_int32_new((coda_type_number *)gtype, NULL, cproduct, intvalue);
                 coda_mem_record_add_field(grid, "longitudeOfLastGridPoint", type, 0);
 
-                intvalue = ((buffer[49] * 256 + buffer[50]) * 256 + buffer[51]) * 256 + buffer[52];
+                intvalue = (((uint32_t)buffer[49] * 256 + buffer[50]) * 256 + buffer[51]) * 256 + buffer[52];
                 gtype = grib_type[grib2_iDirectionIncrement];
                 type = (coda_dynamic_type *)coda_mem_uint32_new((coda_type_number *)gtype, NULL, cproduct, intvalue);
                 coda_mem_record_add_field(grid, "iDirectionIncrement", type, 0);
 
-                intvalue = ((buffer[53] * 256 + buffer[54]) * 256 + buffer[55]) * 256 + buffer[56];
+                intvalue = (((uint32_t)buffer[53] * 256 + buffer[54]) * 256 + buffer[55]) * 256 + buffer[56];
                 if (template_number >= 40 && template_number <= 43)
                 {
                     gtype = grib_type[grib2_N];
