@@ -97,6 +97,7 @@ struct za_file_struct
     int fd;
     int num_entries;
     char *filename;
+    int64_t file_size;
     za_entry *entry;
     hashtable *hash_data;
     void (*handle_error) (const char *, ...);
@@ -309,6 +310,27 @@ static int get_entries(za_file *zf)
             zf->handle_error(strerror(errno));
             return -1;
         }
+
+        /* perform some quick sanity checks on the offsets and sizes */
+        if (entry->localheader_offset > zf->file_size)
+        {
+            entry->zf->handle_error("invalid zip file (local header offset exceeds file size)");
+            return -1;
+        }
+        if (entry->localheader_offset + entry->compressed_size > zf->file_size)
+        {
+            entry->zf->handle_error("invalid zip file (entry size exceeds file size)");
+            return -1;
+        }
+        if (entry->compression != 0)
+        {
+            /* for zlib the theoretical maximum compression factor is 1032 */
+            if (entry->uncompressed_size / 1032 > entry->compressed_size + 1)
+            {
+                entry->zf->handle_error("invalid uncompressed size in zip file");
+                return -1;
+            }
+        }
     }
 
     return 0;
@@ -363,6 +385,7 @@ za_file *za_open(const char *filename, void (*error_handler) (const char *, ...)
         }
         return NULL;
     }
+    zf->file_size = statbuf.st_size;
     zf->num_entries = 0;
     zf->entry = NULL;
     zf->hash_data = NULL;
