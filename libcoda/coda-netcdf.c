@@ -230,6 +230,7 @@ static int read_att_array(coda_netcdf_product *product, int64_t *offset, coda_me
         /* nelems */
         if (read_length_value(product, offset, &string_length) != 0)
         {
+            coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
             return -1;
         }
         /* chars */
@@ -268,6 +269,8 @@ static int read_att_array(coda_netcdf_product *product, int64_t *offset, coda_me
         /* nelems */
         if (read_length_value(product, offset, &nelems) != 0)
         {
+            free(name);
+            coda_dynamic_type_delete((coda_dynamic_type *)*attributes);
             return -1;
         }
         value_length = (long)nelems;
