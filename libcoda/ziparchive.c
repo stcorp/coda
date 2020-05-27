@@ -655,6 +655,7 @@ int za_read_entry(za_entry *entry, char *out_buffer)
         if (((uint32_t)result) != entry->compressed_size)
         {
             entry->zf->handle_error("unexpected end in zip file");
+            free(in_buffer);
             return -1;
         }
 
