@@ -77,16 +77,16 @@ static int read_length_value(coda_netcdf_product *product, int64_t *offset, int6
         swap_int64(value);
 #endif
         *offset += 8;
-        /* quick boundary check to prevent potential integer overflow problems later on */
-        if (*value > product->file_size)
-        {
-            coda_set_error(CODA_ERROR_PRODUCT, "invalid netCDF file (length value too large)");
-            return -1;
-        }
     }
     if (*value < 0)
     {
         coda_set_error(CODA_ERROR_PRODUCT, "invalid netCDF file (negative length value)");
+        return -1;
+    }
+    /* quick boundary check to prevent potential integer overflow problems later on */
+    if (*value > product->file_size)
+    {
+        coda_set_error(CODA_ERROR_PRODUCT, "invalid netCDF file (length value too large)");
         return -1;
     }
 
