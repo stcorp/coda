@@ -2542,6 +2542,7 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                     {
                         coda_set_error(CODA_ERROR_PRODUCT, "'list of numbers' in GDS should only be present if Ni or "
                                        "Nj have a MISSING value (4294967295)");
+                        coda_dynamic_type_delete((coda_dynamic_type *)grid);
                         return -1;
                     }
 
