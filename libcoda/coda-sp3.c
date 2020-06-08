@@ -1987,10 +1987,13 @@ int coda_sp3_close(coda_product *product)
     {
         coda_dynamic_type_delete(product->root_type);
     }
-
     if (product->filename != NULL)
     {
         free(product->filename);
+    }
+    if (product->mem_ptr != NULL)
+    {
+        free(product->mem_ptr);
     }
 
     free(product);
