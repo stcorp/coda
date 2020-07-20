@@ -4149,7 +4149,7 @@ static int parse_entry(za_file *zf, zip_entry_type type, const char *name, coda_
     info.product_definition = current_product_definition;
 
     filesize = za_get_entry_size(entry);
-    info.buffer = malloc(filesize);
+    info.buffer = calloc(filesize, sizeof(char));
     if (info.buffer == NULL)
     {
         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
