@@ -715,6 +715,11 @@ int za_read_entry(za_entry *entry, char *out_buffer)
             }
             return -1;
         }
+        if (zs.avail_in != 0 || zs.avail_out != 0)
+        {
+            entry->zf->handle_error("invalid compressed/uncompressed size for zip entry");
+            return -1;
+        }
     }
 
     return 0;
