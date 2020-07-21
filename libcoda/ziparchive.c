@@ -417,7 +417,7 @@ za_file *za_open(const char *filename, void (*error_handler) (const char *, ...)
         za_close(zf);
         return NULL;
     }
-    if (buffer[0] != 'P' && buffer[1] != 'K')
+    if (buffer[0] != 'P' || buffer[1] != 'K')
     {
         error_handler("could not open %s (not a zip file)", filename);
         za_close(zf);
