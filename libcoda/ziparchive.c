@@ -317,17 +317,31 @@ static int get_entries(za_file *zf)
             entry->zf->handle_error("invalid zip file (local header offset exceeds file size)");
             return -1;
         }
-        if (entry->localheader_offset + entry->compressed_size > zf->file_size)
-        {
-            entry->zf->handle_error("invalid zip file (entry size exceeds file size)");
-            return -1;
-        }
         if (entry->compression != 0)
         {
+            if (entry->localheader_offset + entry->compressed_size > zf->file_size)
+            {
+                entry->zf->handle_error("invalid zip file (entry size exceeds file size)");
+                return -1;
+            }
             /* for zlib the theoretical maximum compression factor is 1032 */
             if (entry->uncompressed_size / 1032 > entry->compressed_size + 1)
             {
                 entry->zf->handle_error("invalid uncompressed size in zip file");
+                return -1;
+            }
+        }
+        else
+        {
+            if (entry->compressed_size != entry->uncompressed_size)
+            {
+                entry->zf->handle_error("invalid zip file (compressed and uncompressed sizes should be equal for "
+                                        "uncompressed entry)");
+                return -1;
+            }
+            if (entry->localheader_offset + entry->uncompressed_size > zf->file_size)
+            {
+                entry->zf->handle_error("invalid zip file (entry size exceeds file size)");
                 return -1;
             }
         }
