@@ -1,3 +1,8 @@
+2.21.2 2020-10-27
+~~~~~~~~~~~~~~~~~
+
+* Fixed potential memory issues and improved overall code stability.
+
 2.21.1 2020-03-31
 ~~~~~~~~~~~~~~~~~
 

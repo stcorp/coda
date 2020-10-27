@@ -1739,7 +1739,7 @@ static int read_grib1_message(coda_grib_product *product, coda_mem_record *messa
             }
             if (Ni != 65535 && Nj != 65535)
             {
-                num_elements = (long)Ni * Nj;
+                num_elements = ((long)Ni) * Nj;
             }
 
             gtype = grib_type[grib1_Ni];
