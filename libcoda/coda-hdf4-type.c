@@ -149,7 +149,7 @@ static int get_attribute_value(const coda_hdf4_product *product, coda_hdf4_attri
         return 0;
     }
     attribute = attributes->attribute[index];
-    if (attribute->definition->type_class != coda_integer_class || attribute->definition->type_class != coda_real_class)
+    if (attribute->definition->type_class != coda_integer_class && attribute->definition->type_class != coda_real_class)
     {
         return 0;
     }
