@@ -142,11 +142,19 @@ extern "C"
 
 #ifndef CODA_INTERNAL
 
+/* *CFFI-ON* */
+
 LIBCODA_API extern const char *coda_get_libcoda_version(void);
+
+/* *CFFI-OFF* */
 
 #define libcoda_version (coda_get_libcoda_version())
 
+/* *CFFI-ON* */
+
 LIBCODA_API extern int *coda_get_errno(void);
+
+/* *CFFI-OFF* */
 
 #define coda_errno (*coda_get_errno())
 
@@ -159,15 +167,22 @@ LIBCODA_API extern int *coda_get_errno(void);
 #endif
 #endif
 
+/* *CFFI-ON* */
+
 /** Maximum number of dimensions of a multidimensional array 
  * \ingroup coda_general
  */
 #define CODA_MAX_NUM_DIMS         8
 
 /* Defines for backward compatibility with CODA 1.x interface */
+
+/* *CFFI-OFF* */
+
 #define coda_ProductFile coda_product
 #define coda_Cursor coda_cursor
 #define coda_Type coda_type
+
+/* *CFFI-ON* */
 
 #define CODA_SUCCESS                                          (0)
 #define CODA_ERROR_OUT_OF_MEMORY                             (-1)
@@ -292,9 +307,14 @@ typedef enum coda_special_type_enum coda_special_type;
 typedef enum coda_native_type_enum coda_native_type;
 typedef enum coda_expression_type_enum coda_expression_type;
 
+/* *CFFI-OFF* */
+
 typedef struct coda_product_struct coda_product;
 typedef struct coda_cursor_struct coda_cursor;
 typedef struct coda_type_struct coda_type;
+
+/* *CFFI-ON* */
+
 typedef struct coda_expression_struct coda_expression;
 
 /* CODA General */
@@ -376,7 +396,13 @@ LIBCODA_API int coda_utcstring_to_time(const char *str, double *datetime);
 /* CODA Error */
 
 /* *INDENT-OFF* */
+
+/* *CFFI-OFF* */
+
 LIBCODA_API void coda_set_error(int err, const char *message, ...) PRINTF_ATTR;
+
+/* *CFFI-ON* */
+
 /* *INDENT-ON* */
 LIBCODA_API const char *coda_errno_to_string(int err);
 
@@ -582,6 +608,7 @@ LIBCODA_API int coda_expression_eval_node(const coda_expression *expr, coda_curs
 
 LIBCODA_API int coda_expression_print(const coda_expression *expr, int (*print) (const char *, ...));
 
+/* *CFFI-OFF* */
 
 /* DO NOT USE ANY OF THE FIELDS CONTAINED IN THE RECORDS BELOW! */
 
