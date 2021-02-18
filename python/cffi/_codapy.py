@@ -43,15 +43,27 @@ from _codac import ffi as _ffi
 
 class Product():
     def __init__(self):
-        self._y = _ffi.new('coda_product **')
+        self._y = _ffi.new('coda_product **') # TODO change to _x again
 
-    # TODO context manager methods
-    # TODO .cursor() -> auto set product
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args): # TODO args?
+        close(self)
+
+    def cursor(self):
+        cursor = Cursor()
+        cursor_set_product(cursor, self)
+        return cursor
+
+    # TODO fetch
 
 
 class Cursor():
     def __init__(self):
         self._x = _ffi.new('coda_cursor *')
+
+    # TODO fetch
 
 
 def init():
