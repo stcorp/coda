@@ -42,6 +42,8 @@ from _codac import ffi as _ffi
 
 # TODO __all__ ?
 
+# TODO for new methods, raise exceptions when return code != 0?
+
 
 class Product():
     def __init__(self, _x):
@@ -60,6 +62,9 @@ class Product():
         cursor = Cursor()
         cursor_set_product(cursor, self)
         return cursor
+
+    def fetch(self, *args):
+        return fetch(self, *args)
 
     def __enter__(self):
         return self
@@ -111,6 +116,9 @@ class Cursor():
         x = _ffi.new('long *')
         code = _lib.coda_cursor_get_num_elements(self._x, x)
         return x[0]
+
+    def fetch(self, *args):
+        return fetch(self, *args)
 
 
 # TODO generate cursor_* using inspection?
@@ -398,6 +406,8 @@ def _get_c_library_filename():
     # otherwise assume it can be found by name
     return '/usr/local/lib/libcoda.so'
 
+
+# TODO merge with above exceptions
 
 #
 # EXCEPTION HIERARCHY
@@ -906,6 +916,8 @@ def _get_cursor(start):
         # copy the cursor passed in by the user
         return copy.deepcopy(start)
 
+
+# TODO add methods to product/cursor (as mixin?)
 
 def get_attributes(start, *path):
     """
