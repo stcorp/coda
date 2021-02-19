@@ -107,10 +107,12 @@ class Cursor():
         array = numpy.frombuffer(buf).reshape(shape)
         return array
 
-    def read_array(self):
-        read_type = self.get_type().get_array_base_type().get_read_type()
-        if read_type == coda_native_type_double:
-            return self.read_double_array()
+    def read(self):
+        type_ = self.get_type()
+        if type_.get_class() == coda_array_class:
+            read_type = type_.get_array_base_type().get_read_type()
+            if read_type == coda_native_type_double:
+                return self.read_double_array()
 
     def get_type(self):
         x = _ffi.new('coda_type **')
