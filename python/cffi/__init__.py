@@ -235,7 +235,21 @@ class Error(Exception):
     pass
 
 
-class CLibraryError(Error):
+class CodaError(Error):
+    """Generalization of all CODA Layer 1 high-level API errors"""
+    pass
+
+
+class FetchError(CodaError):
+    def __init__(self, str):
+        CodaError.__init__(self)
+        self.str = str
+
+    def __str__(self):
+        return "CODA FetchError: " + self.str
+
+
+class CLibraryError(CodaError):
     """Exception raised when an error occurs inside the CODA C library.
 
     Attributes:
@@ -434,25 +448,6 @@ def _get_c_library_filename():
     # TODO revert
     # otherwise assume it can be found by name
     return '/usr/local/lib/libcoda.so'
-
-
-# TODO merge with above exceptions
-
-#
-# EXCEPTION HIERARCHY
-#
-class CodaError(Exception):
-    """Generalization of all CODA Layer 1 high-level API errors"""
-    pass
-
-
-class FetchError(CodaError):
-    def __init__(self, str):
-        CodaError.__init__(self)
-        self.str = str
-
-    def __str__(self):
-        return "CODA FetchError: " + self.str
 
 
 #
