@@ -29,13 +29,13 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 """
 
-from .codac import *
-import numpy
 import copy
-import os
 import io
+import numpy
+import os
 import sys
 
+from _codapy import *
 
 #
 # EXCEPTION HIERARCHY
@@ -891,42 +891,45 @@ def get_unit(start, *path):
 # scalars with type coda_native_type_bytes require extra code to find out their size, so this
 # type is omitted here.
 _readNativeTypeScalarFunctionDictionary = {
-    coda_native_type_int8: cursor_read_int8,
-    coda_native_type_uint8: cursor_read_uint8,
-    coda_native_type_int16: cursor_read_int16,
-    coda_native_type_uint16: cursor_read_uint16,
-    coda_native_type_int32: cursor_read_int32,
-    coda_native_type_uint32: cursor_read_uint32,
-    coda_native_type_int64: cursor_read_int64,
-    coda_native_type_uint64: cursor_read_uint64,
-    coda_native_type_float: cursor_read_float,
-    coda_native_type_double: cursor_read_double,
-    coda_native_type_char: cursor_read_char,
-    coda_native_type_string: cursor_read_string,
-    coda_native_type_bytes: cursor_read_bytes}
+#    coda_native_type_int8: cursor_read_int8,
+#    coda_native_type_uint8: cursor_read_uint8,
+#    coda_native_type_int16: cursor_read_int16,
+#    coda_native_type_uint16: cursor_read_uint16,
+#    coda_native_type_int32: cursor_read_int32,
+#    coda_native_type_uint32: cursor_read_uint32,
+#    coda_native_type_int64: cursor_read_int64,
+#    coda_native_type_uint64: cursor_read_uint64,
+#    coda_native_type_float: cursor_read_float,
+#    coda_native_type_double: cursor_read_double,
+#    coda_native_type_char: cursor_read_char,
+#    coda_native_type_string: cursor_read_string,
+#    coda_native_type_bytes: cursor_read_bytes
+}
 
 # dictionary (a.k.a. switch construct ;) for native type array read functions.
 _readNativeTypeArrayFunctionDictionary = {
-    coda_native_type_int8: cursor_read_int8_array,
-    coda_native_type_uint8: cursor_read_uint8_array,
-    coda_native_type_int16: cursor_read_int16_array,
-    coda_native_type_uint16: cursor_read_uint16_array,
-    coda_native_type_int32: cursor_read_int32_array,
-    coda_native_type_uint32: cursor_read_uint32_array,
-    coda_native_type_int64: cursor_read_int64_array,
-    coda_native_type_uint64: cursor_read_uint64_array,
-    coda_native_type_float: cursor_read_float_array,
+#    coda_native_type_int8: cursor_read_int8_array,
+#    coda_native_type_uint8: cursor_read_uint8_array,
+#    coda_native_type_int16: cursor_read_int16_array,
+#    coda_native_type_uint16: cursor_read_uint16_array,
+#    coda_native_type_int32: cursor_read_int32_array,
+#    coda_native_type_uint32: cursor_read_uint32_array,
+#    coda_native_type_int64: cursor_read_int64_array,
+#    coda_native_type_uint64: cursor_read_uint64_array,
+#    coda_native_type_float: cursor_read_float_array,
     coda_native_type_double: cursor_read_double_array,
-    coda_native_type_char: _fetch_object_array,
-    coda_native_type_string: _fetch_object_array,
-    coda_native_type_bytes: _fetch_object_array}
+#    coda_native_type_char: _fetch_object_array,
+#    coda_native_type_string: _fetch_object_array,
+#    coda_native_type_bytes: _fetch_object_array
+}
 
 # dictionary (a.k.a. switch construct ;) for special type scalar read functions.
 _readSpecialTypeScalarFunctionDictionary = {
-    coda_special_no_data: lambda x: None,
-    coda_special_vsf_integer: cursor_read_double,
-    coda_special_time: cursor_read_double,
-    coda_special_complex: cursor_read_complex}
+#    coda_special_no_data: lambda x: None,
+#    coda_special_vsf_integer: cursor_read_double,
+#    coda_special_time: cursor_read_double,
+#    coda_special_complex: cursor_read_complex
+}
 
 # dictionary (a.k.a. switch construct ;) for special type array read functions.
 # scalars with type coda_special_no_data is a special case that requires extra code, and
@@ -934,7 +937,8 @@ _readSpecialTypeScalarFunctionDictionary = {
 _readSpecialTypeArrayFunctionDictionary = {
     coda_special_vsf_integer: cursor_read_double_array,
     coda_special_time: cursor_read_double_array,
-    coda_special_complex: cursor_read_complex_array}
+#    coda_special_complex: cursor_read_complex_array
+}
 
 # dictionary used as a 'typemap'. a tuple is returned, of which the first element is a
 # boolean that indicates if the type is considered to be scalar. if so, the second
@@ -953,7 +957,8 @@ _numpyNativeTypeDictionary = {
     coda_native_type_double: (True, numpy.float64),
     coda_native_type_char: (False, None),
     coda_native_type_string: (False, None),
-    coda_native_type_bytes: (False, None)}
+    coda_native_type_bytes: (False, None)
+}
 
 
 # dictionary used as a 'typemap'. a tuple is returned, of which the first element is a
@@ -964,7 +969,8 @@ _numpySpecialTypeDictionary = {
     coda_special_no_data: (False, None),
     coda_special_vsf_integer: (True, numpy.float64),
     coda_special_time: (True, numpy.float64),
-    coda_special_complex: (True, numpy.complex128)}
+    coda_special_complex: (True, numpy.complex128)
+}
 
 
 #

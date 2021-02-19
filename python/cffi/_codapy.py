@@ -66,6 +66,20 @@ class Cursor():
     # TODO fetch
 
 
+class Type():
+    def __init__(self, _x):
+        self._x = _x
+
+
+def coda_set_definition_path_conditional(p1, p2, p3):
+    def conv(p):
+        if p is None:
+            return _ffi.NULL
+        else:
+            return _encode_path(p)
+    return _lib.coda_set_definition_path_conditional(conv(p1), conv(p2), conv(p3))
+
+
 def init():
     _lib.coda_init()
 
@@ -99,7 +113,7 @@ def cursor_get_array_dim(cursor): # TODO exists in swig version?
     x = _ffi.new('int *')
     y = _ffi.new('long[8]')
     code = _lib.coda_cursor_get_array_dim(cursor._x, x, y)
-    return tuple(y)[:x[0]]
+    return list(y)[:x[0]]
 
 
 def cursor_read_double_array(cursor):
@@ -111,6 +125,36 @@ def cursor_read_double_array(cursor):
     buf = _ffi.buffer(d)
     array = numpy.frombuffer(buf).reshape(shape)
     return array
+
+
+def cursor_get_type(cursor):
+    x = _ffi.new('coda_type **')
+    code = _lib.coda_cursor_get_type(cursor._x, x)
+    return Type(x[0])
+
+
+def cursor_get_num_elements(cursor):
+    x = _ffi.new('long *')
+    code = _lib.coda_cursor_get_num_elements(cursor._x, x)
+    return x[0]
+
+
+def type_get_class(type_):
+    x = _ffi.new('enum coda_type_class_enum *') # TODO shorter type?
+    code = _lib.coda_type_get_class(type_._x, x)
+    return x[0]
+
+
+def type_get_array_base_type(type_):
+    x = _ffi.new('coda_type **')
+    code = _lib.coda_type_get_array_base_type(type_._x, x)
+    return Type(x[0])
+
+
+def type_get_read_type(type_):
+    x = _ffi.new('coda_native_type *')
+    code = _lib.coda_type_get_read_type(type_._x, x)
+    return x[0]
 
 
 class Error(Exception):
@@ -326,18 +370,22 @@ def _init():
     clib = _get_c_library_filename()
     _lib = _ffi.dlopen(clib)
 
+    # Import constants
+    for attrname in dir(_lib):
+        attr = getattr(_lib, attrname)
+        if isinstance(attr, int):
+            globals()[attrname] = attr
+
     if os.getenv('CODA_DEFINITION') is None:
         # Set coda definition path relative to C library
-        relpath = "../share/coda/definitions"
+        basename = os.path.basename(clib)
         if _system() == "Windows":
-            if _lib.coda_set_definition_path_conditional(_encode_path(os.path.basename(clib)), _ffi.NULL,
-                                                         _encode_path(relpath)) != 0:
-                raise CLibraryError() # TODO add check to harppy?
+            dirname = None
         else:
-            if _lib.coda_set_definition_path_conditional(_encode_path(os.path.basename(clib)),
-                                                         _encode_path(os.path.dirname(clib)),
-                                                         _encode_path(relpath)) != 0:
-                raise CLibraryError() # TODO add check to harppy?
+            dirname = os.path.dirname(clib)
+        relpath = "../share/coda/definitions"
+        if coda_set_definition_path_conditional(basename, dirname, relpath) != 0:
+            raise CLibraryError() # TODO add check to harppy?
 
     # TODO UDUNITS2_XML_PATH only for harp?
 
