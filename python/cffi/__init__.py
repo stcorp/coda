@@ -282,6 +282,34 @@ def c_index_to_fortran_index(shape, index):
     return _lib.coda_c_index_to_fortran_index(num_dims, d, index)
 
 
+def NaN():
+    return _lib.coda_NaN()
+
+
+def isNaN(x):
+    return _lib.coda_isNaN(x)
+
+
+def isInf(x):
+    return _lib.coda_isInf(x)
+
+
+def MinInf():
+    return _lib.coda_MinInf()
+
+
+def isMinInf(x):
+    return _lib.coda_isMinInf(x)
+
+
+def PlusInf():
+    return _lib.coda_PlusInf()
+
+
+def isPlusInf(x):
+    return _lib.coda_isPlusInf(x)
+
+
 def get_encoding():
     """Return the encoding used to convert between unicode strings and C strings
     (only relevant when using Python 3).
