@@ -9,6 +9,10 @@ with coda.open('madis-raob.nc') as product:
     array = product.fetch('tpTropQCD')
     print(array)
 
+    print(product.get_class())
+    print(product.get_type())
+    print(product.get_version())
+
     # fetch scalar via cursor
     cursor = product.cursor()
     scalar = cursor.fetch('globalInventory')

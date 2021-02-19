@@ -105,11 +105,40 @@ class Product():
     def fetch(self, *args):
         return fetch(self, *args)
 
+    def get_class(self):
+        c = _ffi.new('char **')
+        _check(_lib.coda_get_product_class(self._x, c))
+        if c[0] != _ffi.NULL:
+            return _decode_string(_ffi.string(c[0]))
+
+    def get_type(self):
+        c = _ffi.new('char **')
+        _check(_lib.coda_get_product_type(self._x, c))
+        if c[0] != _ffi.NULL:
+            return _decode_string(_ffi.string(c[0]))
+
+    def get_version(self):
+        c = _ffi.new('int *')
+        _check(_lib.coda_get_product_version(self._x, c))
+        return c[0]
+
     def __enter__(self):
         return self
 
     def __exit__(self, *args): # TODO args?
         close(self)
+
+
+def get_product_class(product):
+    return product.get_class()
+
+
+def get_product_type(product):
+    return product.get_type()
+
+
+def get_product_version(product):
+    return product.get_version()
 
 
 def open(path):
@@ -229,17 +258,16 @@ class Type():
         _check(_lib.coda_type_get_class(self._x, x), 'coda_type_get_class')
         return x[0]
 
-
     def get_array_base_type(self):
         x = _ffi.new('coda_type **')
         _check(_lib.coda_type_get_array_base_type(self._x, x), 'coda_type_get_array_base_type')
         return Type(x[0])
 
-
     def get_read_type(self):
         x = _ffi.new('coda_native_type *')
         _check(_lib.coda_type_get_read_type(self._x, x), 'coda_type_get_read_type')
         return x[0]
+
 
 # TODO generate using inspection?
 

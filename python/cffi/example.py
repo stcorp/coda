@@ -22,6 +22,10 @@ print(coda.isPlusInf(0), coda.isPlusInf(coda.PlusInf()), coda.isPlusInf(coda.Min
 # open product
 product = coda.open('madis-raob.nc')
 
+print('class', coda.get_product_class(product))
+print('type', coda.get_product_type(product))
+print('version', coda.get_product_version(product))
+
 # fetch array
 array = coda.fetch(product, 'tpTropQCD')
 print(array)
@@ -79,6 +83,12 @@ except coda.CodacError as e:
 
 # version
 print(coda.version())
+
+# product class etc
+product = coda.open('AE_TEST_ALD_U_N_1B_20190105T011602023_008364010_002143_0001.DBL')
+print('class', coda.get_product_class(product))
+print('type', coda.get_product_type(product))
+print('version', coda.get_product_version(product))
 
 #finalize
 coda.close(product)
