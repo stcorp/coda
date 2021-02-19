@@ -42,8 +42,8 @@ from _codac import ffi as _ffi
 
 
 class Product():
-    def __init__(self):
-        self._y = _ffi.new('coda_product **') # TODO change to _x again
+    def __init__(self, _x):
+        self._x = _x
 
     def __enter__(self):
         return self
@@ -75,11 +75,10 @@ def done():
 
 
 def open(path):
-    product = Product()
-    code = _lib.coda_open(_encode_path(path), product._y)
-    product._x = product._y[0]
+    x = _ffi.new('coda_product **')
+    code = _lib.coda_open(_encode_path(path), x)
     if code == 0:
-        return product
+        return Product(x[0])
     else:
         pass # TODO
 
