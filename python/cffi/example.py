@@ -9,6 +9,9 @@ elif sys.argv[1] == 'swig':
 # initialize
 coda.init()
 
+# misc
+print('index:', coda.c_index_to_fortran_index([4,10], 9))
+
 # open product
 product = coda.open('madis-raob.nc')
 

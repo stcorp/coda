@@ -274,6 +274,14 @@ def done():
     _lib.coda_done()
 
 
+def c_index_to_fortran_index(shape, index):
+    num_dims = len(shape)
+    d = _ffi.new('long [%d]' % num_dims)
+    for i in range(len(shape)):
+        d[i] = shape[i]
+    return _lib.coda_c_index_to_fortran_index(num_dims, d, index)
+
+
 def get_encoding():
     """Return the encoding used to convert between unicode strings and C strings
     (only relevant when using Python 3).
