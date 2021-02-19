@@ -135,7 +135,7 @@ class Cursor():
 
     def get_array_dim(self): # TODO exists in swig version?
         x = _ffi.new('int *')
-        y = _ffi.new('long[8]')
+        y = _ffi.new('long[%d]' % _lib.CODA_MAX_NUM_DIMS)
         _check(_lib.coda_cursor_get_array_dim(self._x, x, y), 'coda_cursor_get_array_dim')
         return list(y)[:x[0]]
 
