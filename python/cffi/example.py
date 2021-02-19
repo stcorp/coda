@@ -1,10 +1,10 @@
 import os
+import sys
 
-# CFFI
-import _codapy as coda
-
-# SWIG
-#import coda
+if len(sys.argv) == 1 or sys.argv[1] == 'cffi':
+    import _codapy as coda
+elif sys.argv[1] == 'swig':
+    import coda
 
 coda.init()
 
