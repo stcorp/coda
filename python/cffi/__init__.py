@@ -124,6 +124,11 @@ class Cursor():
     def __init__(self):
         self._x = _ffi.new('coda_cursor *')
 
+    def __deepcopy__(self, memo):
+        cursor = Cursor()
+        _ffi.buffer(cursor._x)[:] = _ffi.buffer(self._x)[:]
+        return cursor
+
     def set_product(self, product):
         _check(_lib.coda_cursor_set_product(self._x, product._x), 'coda_cursor_set_product')
 
