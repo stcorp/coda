@@ -115,19 +115,14 @@ class Cursor():
         array = numpy.frombuffer(buf).reshape(shape)
         return array
 
-    def read(self):
-        type_ = self.get_type()
-        class_ = type_.get_class()
+    def read_double_partial_array(self, offset, count):
+        d = _ffi.new('double[%d]' % count)
 
-        if class_ == coda_array_class:
-            read_type = type_.get_array_base_type().get_read_type()
-            if read_type == coda_native_type_double:
-                return self.read_double_array()
+        code = _lib.coda_cursor_read_double_partial_array(self._x, offset, count, d)
 
-        elif class_ == coda_integer_class:
-            read_type = type_.get_read_type()
-            if read_type == coda_native_type_int32:
-                return self.read_int32()
+        buf = _ffi.buffer(d)
+        array = numpy.frombuffer(buf)
+        return array
 
     def get_type(self):
         x = _ffi.new('coda_type **')
@@ -167,6 +162,10 @@ def cursor_read_int32(cursor):
 
 def cursor_read_double_array(cursor):
     return cursor.read_double_array()
+
+
+def cursor_read_double_partial_array(cursor, *args):
+    return cursor.read_double_partial_array(*args)
 
 
 def cursor_get_type(cursor):
@@ -1352,7 +1351,7 @@ _readNativeTypeScalarFunctionDictionary = {
 #    coda_native_type_uint8: cursor_read_uint8,
 #    coda_native_type_int16: cursor_read_int16,
 #    coda_native_type_uint16: cursor_read_uint16,
-#    coda_native_type_int32: cursor_read_int32,
+    coda_native_type_int32: cursor_read_int32,
 #    coda_native_type_uint32: cursor_read_uint32,
 #    coda_native_type_int64: cursor_read_int64,
 #    coda_native_type_uint64: cursor_read_uint64,

@@ -7,25 +7,10 @@ elif sys.argv[1] == 'swig':
     import coda
 
 with coda.open('madis-raob.nc') as product:
-    print('product:', product)
-
-    # fetch
+    # fetch array
     array = product.fetch('tpTropQCD')
     print(array)
 
-    cursor = product.cursor()
-    print('cursor:', cursor)
-
-    cursor.goto('tpTropQCD')
-
-    shape = cursor.get_array_dim()
-    print('shape:', shape)
-
-    array = cursor.read()
-    print(array)
-
-    cursor = product.cursor()
-    cursor.goto('globalInventory')
-
-    scalar = cursor.read()
+    # fetch scalar
+    scalar = product.fetch('globalInventory')
     print(scalar)

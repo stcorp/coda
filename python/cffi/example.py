@@ -10,33 +10,31 @@ elif sys.argv[1] == 'swig':
 coda.init()
 
 # open product
-
 product = coda.open('madis-raob.nc')
-print('product:', product)
-
 
 # fetch array
 array = coda.fetch(product, 'tpTropQCD')
 print(array)
 
+# fetch scalar
+scalar = coda.fetch(product, 'globalInventory')
+print(scalar)
 
 # read scalar uint16
 cursor = coda.Cursor()
-print('cursor:', cursor)
 code = coda.cursor_set_product(cursor, product)
 print(code)
 
 code = coda.cursor_goto(cursor, 'globalInventory')
 print(code)
 
-hup = coda.cursor_read_int32(cursor)
-print('one:', hup)
+gi = coda.cursor_read_int32(cursor)
+print('globalInventory:', gi)
 
+# read double array
 code = coda.cursor_goto_root(cursor)
 print(code)
 
-
-# read double array
 code = coda.cursor_goto(cursor, 'tpTropQCD')
 print(code)
 
@@ -46,6 +44,16 @@ print('shape:', shape)
 array = coda.cursor_read_double_array(cursor)
 print(array)
 
+# read double partial array
+code = coda.cursor_goto_root(cursor)
+print(code)
+
+code = coda.cursor_goto(cursor, 'tpTropQCD')
+print(code)
+
+array = coda.cursor_read_double_partial_array(cursor, 10, 22)
+print(array.shape)
+print(array)
 
 #finalize
 code = coda.close(product)
