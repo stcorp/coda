@@ -289,7 +289,7 @@ def set_encoding(encoding):
 
 def version():
     """Return the version of the CODA C library."""
-    return _decode_string(_ffi.string(_check(_lib.coda_get_libcoda_version(), 'coda_version')))
+    return _decode_string(_ffi.string(_lib.coda_get_libcoda_version()))
 
 
 def _get_filesystem_encoding():

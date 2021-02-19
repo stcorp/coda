@@ -67,6 +67,9 @@ try:
 except coda.CodacError as e:
     print(str(e))
 
+# version
+print(coda.version())
+
 #finalize
 coda.close(product)
 coda.done()
