@@ -22,21 +22,17 @@ print(scalar)
 
 # read scalar uint16
 cursor = coda.Cursor()
-code = coda.cursor_set_product(cursor, product)
-print(code)
+coda.cursor_set_product(cursor, product)
 
-code = coda.cursor_goto(cursor, 'globalInventory')
-print(code)
+coda.cursor_goto(cursor, 'globalInventory')
 
 gi = coda.cursor_read_int32(cursor)
 print('globalInventory:', gi)
 
 # read double array
-code = coda.cursor_goto_root(cursor)
-print(code)
+coda.cursor_goto_root(cursor)
 
-code = coda.cursor_goto(cursor, 'tpTropQCD')
-print(code)
+coda.cursor_goto(cursor, 'tpTropQCD')
 
 shape = coda.cursor_get_array_dim(cursor)
 print('shape:', shape)
@@ -45,17 +41,32 @@ array = coda.cursor_read_double_array(cursor)
 print(array)
 
 # read double partial array
-code = coda.cursor_goto_root(cursor)
-print(code)
+coda.cursor_goto_root(cursor)
 
-code = coda.cursor_goto(cursor, 'tpTropQCD')
-print(code)
+coda.cursor_goto(cursor, 'tpTropQCD')
 
 array = coda.cursor_read_double_partial_array(cursor, 10, 22)
 print(array.shape)
 print(array)
 
+# exceptions
+coda.cursor_goto_root(cursor)
+
+try:
+    coda.cursor_goto(cursor, 'zzz')
+except coda.CodacError as e:
+    print(str(e))
+
+try:
+    coda.cursor_read_int32(cursor)
+except coda.CodacError as e:
+    print(str(e))
+
+try:
+    coda.open('pipo')
+except coda.CodacError as e:
+    print(str(e))
+
 #finalize
-code = coda.close(product)
-print(code)
+coda.close(product)
 coda.done()

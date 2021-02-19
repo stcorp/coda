@@ -40,9 +40,48 @@ import numpy
 
 from _codac import ffi as _ffi
 
-# TODO __all__ ?
 
-# TODO for new methods, raise exceptions when return code != 0?
+class CodaError(Exception):
+    pass
+
+
+class FetchError(CodaError):
+    def __init__(self, str):
+        super(CodaError, self).__init__(self)
+        self.str = str
+
+    def __str__(self):
+        return "CODA FetchError: " + self.str
+
+
+class CodacError(CodaError):
+    """Exception raised when an error occurs inside the CODA C library.
+
+    Attributes:
+        errno       --  error code; if None, the error code will be retrieved from
+                        the CODA C library.
+        strerror    --  error message; if None, the error message will be retrieved
+                        from the CODA C library.
+
+    """
+    def __init__(self, function=None):
+        super(CodacError, self).__init__(self)
+
+        errno = _lib.coda_get_errno()[0] # TODO coda.coda_errno? remove [0]
+        strerror = _decode_string(_ffi.string(_lib.coda_errno_to_string(errno)))
+        if function:
+            strerror = function + '(): ' + strerror
+
+        self.errno = errno
+        self.strerror = strerror
+
+    def __str__(self):
+        return self.strerror
+
+
+def _check(return_code, function=None):
+    if return_code != 0:
+        raise CodacError(function=function)
 
 
 class Product():
@@ -52,11 +91,11 @@ class Product():
     @staticmethod
     def open(path):
         x = _ffi.new('coda_product **')
-        code = _lib.coda_open(_encode_path(path), x)
+        _check(_lib.coda_open(_encode_path(path), x), 'coda_open')
         return Product(x[0])
 
     def close(self):
-        _lib.coda_close(self._x)
+        _check(_lib.coda_close(self._x), 'coda_close')
 
     def cursor(self):
         cursor = Cursor()
@@ -86,30 +125,30 @@ class Cursor():
         self._x = _ffi.new('coda_cursor *')
 
     def set_product(self, product):
-        _lib.coda_cursor_set_product(self._x, product._x)
+        _check(_lib.coda_cursor_set_product(self._x, product._x), 'coda_cursor_set_product')
 
     def goto(self, name): # TODO name
-        _lib.coda_cursor_goto(self._x, _encode_string(name))
+        _check(_lib.coda_cursor_goto(self._x, _encode_string(name)), 'coda_cursor_goto')
 
     def goto_root(self):
-        _lib.coda_cursor_goto_root(self._x)
+        _check(_lib.coda_cursor_goto_root(self._x), 'coda_cursor_goto_root')
 
     def get_array_dim(self): # TODO exists in swig version?
         x = _ffi.new('int *')
         y = _ffi.new('long[8]')
-        code = _lib.coda_cursor_get_array_dim(self._x, x, y)
+        _check(_lib.coda_cursor_get_array_dim(self._x, x, y), 'coda_cursor_get_array_dim')
         return list(y)[:x[0]]
 
     def read_int32(self):
         x = _ffi.new('int32_t *')
-        code = _lib.coda_cursor_read_int32(self._x, x)
+        _check(_lib.coda_cursor_read_int32(self._x, x), 'coda_cursor_read_int32')
         return x[0]
 
     def read_double_array(self):
         shape = cursor_get_array_dim(self) # TODO size?
         size = functools.reduce(lambda x, y: x*y, shape, 1)
         d = _ffi.new('double[%d]' % size)
-        code = _lib.coda_cursor_read_double_array(self._x, d, 0) # TODO order
+        _check(_lib.coda_cursor_read_double_array(self._x, d, 0), 'coda_cursor_read_double_array') # TODO order
 
         buf = _ffi.buffer(d)
         array = numpy.frombuffer(buf).reshape(shape)
@@ -118,7 +157,7 @@ class Cursor():
     def read_double_partial_array(self, offset, count):
         d = _ffi.new('double[%d]' % count)
 
-        code = _lib.coda_cursor_read_double_partial_array(self._x, offset, count, d)
+        _check(_lib.coda_cursor_read_double_partial_array(self._x, offset, count, d), 'coda_cursor_read_double_partial_array')
 
         buf = _ffi.buffer(d)
         array = numpy.frombuffer(buf)
@@ -126,12 +165,12 @@ class Cursor():
 
     def get_type(self):
         x = _ffi.new('coda_type **')
-        code = _lib.coda_cursor_get_type(self._x, x)
+        _check(_lib.coda_cursor_get_type(self._x, x), 'coda_cursor_get_type')
         return Type(x[0])
 
     def get_num_elements(self):
         x = _ffi.new('long *')
-        code = _lib.coda_cursor_get_num_elements(self._x, x)
+        _check(_lib.coda_cursor_get_num_elements(self._x, x), 'coda_cursor_get_num_elements')
         return x[0]
 
     def fetch(self, *args):
@@ -182,19 +221,19 @@ class Type():
 
     def get_class(self):
         x = _ffi.new('enum coda_type_class_enum *') # TODO shorter type?
-        code = _lib.coda_type_get_class(self._x, x)
+        _check(_lib.coda_type_get_class(self._x, x), 'coda_type_get_class')
         return x[0]
 
 
     def get_array_base_type(self):
         x = _ffi.new('coda_type **')
-        code = _lib.coda_type_get_array_base_type(self._x, x)
+        _check(_lib.coda_type_get_array_base_type(self._x, x), 'coda_type_get_array_base_type')
         return Type(x[0])
 
 
     def get_read_type(self):
         x = _ffi.new('coda_native_type *')
-        code = _lib.coda_type_get_read_type(self._x, x)
+        _check(_lib.coda_type_get_read_type(self._x, x), 'coda_type_get_read_type')
         return x[0]
 
 # TODO generate using inspection?
@@ -217,61 +256,17 @@ def coda_set_definition_path_conditional(p1, p2, p3):
             return _ffi.NULL
         else:
             return _encode_path(p)
-    return _lib.coda_set_definition_path_conditional(conv(p1), conv(p2), conv(p3))
+    _check(_lib.coda_set_definition_path_conditional(conv(p1), conv(p2), conv(p3)), 'coda_set_definition_path_conditional')
 
 set_definition_path_conditional = coda_set_definition_path_conditional
 
 
 def init():
-    _lib.coda_init()
+    _check(_lib.coda_init(), 'coda_init')
 
 
 def done():
     _lib.coda_done()
-
-
-class Error(Exception):
-    """Exception base class for all CODA Python interface errors."""
-    pass
-
-
-class CodaError(Error):
-    """Generalization of all CODA Layer 1 high-level API errors"""
-    pass
-
-
-class FetchError(CodaError):
-    def __init__(self, str):
-        CodaError.__init__(self)
-        self.str = str
-
-    def __str__(self):
-        return "CODA FetchError: " + self.str
-
-
-class CLibraryError(CodaError):
-    """Exception raised when an error occurs inside the CODA C library.
-
-    Attributes:
-        errno       --  error code; if None, the error code will be retrieved from
-                        the CODA C library.
-        strerror    --  error message; if None, the error message will be retrieved
-                        from the CODA C library.
-
-    """
-    def __init__(self, errno=None, strerror=None):
-        if errno is None:
-            errno = _lib.coda_get_errno()[0] # TODO coda.coda_errno? remove [0]
-
-        if strerror is None:
-            strerror = _decode_string(_ffi.string(_lib.coda_errno_to_string(errno)))
-
-        super(CLibraryError, self).__init__(errno, strerror)
-        self.errno = errno
-        self.strerror = strerror
-
-    def __str__(self):
-        return self.strerror
 
 
 def get_encoding():
@@ -294,7 +289,7 @@ def set_encoding(encoding):
 
 def version():
     """Return the version of the CODA C library."""
-    return _decode_string(_ffi.string(_lib.coda_get_libcoda_version()))
+    return _decode_string(_ffi.string(_check(_lib.coda_get_libcoda_version(), 'coda_version')))
 
 
 def _get_filesystem_encoding():
@@ -331,9 +326,9 @@ def _encode_string_with_encoding(string, encoding="utf-8"):
             return string.encode(encoding)
         except LookupError:
             # Here it is certain that the encoding is not supported.
-            raise Error("unknown encoding '%s'" % encoding)
+            raise CodaError("unknown encoding '%s'" % encoding)
     except UnicodeEncodeError:
-        raise Error("cannot encode '%s' using encoding '%s'" % (string, encoding))
+        raise CodaError("cannot encode '%s' using encoding '%s'" % (string, encoding))
 
 
 def _decode_string_with_encoding(string, encoding="utf-8"):
@@ -362,9 +357,9 @@ def _decode_string_with_encoding(string, encoding="utf-8"):
             return string.decode(encoding)
         except LookupError:
             # Here it is certain that the encoding is not supported.
-            raise Error("unknown encoding '%s'" % encoding)
+            raise CodaError("unknown encoding '%s'" % encoding)
     except UnicodeEncodeError:
-        raise Error("cannot decode '%s' using encoding '%s'" % (string, encoding))
+        raise CodaError("cannot decode '%s' using encoding '%s'" % (string, encoding))
 
 
 def _encode_path(path):
@@ -1318,15 +1313,14 @@ def _init():
         else:
             dirname = os.path.dirname(clib)
         relpath = "../share/coda/definitions"
-        if coda_set_definition_path_conditional(basename, dirname, relpath) != 0:
-            raise CLibraryError() # TODO add check to harppy?
+        coda_set_definition_path_conditional(basename, dirname, relpath)
 
     # TODO UDUNITS2_XML_PATH only for harp?
 
     # Set default encoding.
     _encoding = "ascii"
 
-    _lib.coda_init()
+    init()
 
 
 #
