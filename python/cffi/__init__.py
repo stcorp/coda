@@ -84,7 +84,15 @@ def _check(return_code, function=None):
         raise CodacError(function=function)
 
 
-class Product():
+class Node():
+    def fetch(self, *args):
+        return fetch(self, *args)
+
+    def get_description(self):
+        return get_description(self)
+
+
+class Product(Node):
     def __init__(self, _x):
         self._x = _x
 
@@ -101,9 +109,6 @@ class Product():
         cursor = Cursor()
         cursor_set_product(cursor, self)
         return cursor
-
-    def fetch(self, *args):
-        return fetch(self, *args)
 
     def get_class(self):
         c = _ffi.new('char **')
@@ -149,7 +154,7 @@ def close(product):
     product.close()
 
 
-class Cursor():
+class Cursor(Node):
     def __init__(self):
         self._x = _ffi.new('coda_cursor *')
 
@@ -207,9 +212,6 @@ class Cursor():
         _check(_lib.coda_cursor_get_num_elements(self._x, x), 'coda_cursor_get_num_elements')
         return x[0]
 
-    def fetch(self, *args):
-        return fetch(self, *args)
-
 
 # TODO generate cursor_* using inspection?
 
@@ -258,6 +260,12 @@ class Type():
         _check(_lib.coda_type_get_class(self._x, x), 'coda_type_get_class')
         return x[0]
 
+    def get_description(self):
+        c = _ffi.new('char **')
+        _check(_lib.coda_type_get_description(self._x, c), 'coda_type_get_description')
+        if c[0] != _ffi.NULL:
+            return _decode_string(_ffi.string(c[0]))
+
     def get_array_base_type(self):
         x = _ffi.new('coda_type **')
         _check(_lib.coda_type_get_array_base_type(self._x, x), 'coda_type_get_array_base_type')
@@ -281,6 +289,10 @@ def type_get_array_base_type(type_):
 
 def type_get_read_type(type_):
     return type_.get_read_type()
+
+
+def type_get_description(type_):
+    return type_.get_description()
 
 
 def coda_set_definition_path_conditional(p1, p2, p3):

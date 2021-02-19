@@ -89,6 +89,14 @@ product = coda.open('AE_TEST_ALD_U_N_1B_20190105T011602023_008364010_002143_0001
 print('class', coda.get_product_class(product))
 print('type', coda.get_product_type(product))
 print('version', coda.get_product_version(product))
+print('description', coda.get_description(product))
+
+# product/cursor methods
+cursor = coda.Cursor()
+coda.cursor_set_product(cursor, product)
+
+print('description', coda.get_description(product))
+print('description', coda.get_description(cursor))
 
 #finalize
 coda.close(product)
