@@ -45,30 +45,131 @@ class Product():
     def __init__(self, _x):
         self._x = _x
 
-    def __enter__(self):
-        return self
+    @staticmethod
+    def open(path):
+        x = _ffi.new('coda_product **')
+        code = _lib.coda_open(_encode_path(path), x)
+        return Product(x[0])
 
-    def __exit__(self, *args): # TODO args?
-        close(self)
+    def close(self):
+        _lib.coda_close(self._x)
 
     def cursor(self):
         cursor = Cursor()
         cursor_set_product(cursor, self)
         return cursor
 
-    # TODO fetch
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args): # TODO args?
+        close(self)
+
+
+def open(path):
+    return Product.open(path)
+
+
+def close(product):
+    product.close()
 
 
 class Cursor():
     def __init__(self):
         self._x = _ffi.new('coda_cursor *')
 
-    # TODO fetch
+    def set_product(self, product):
+        _lib.coda_cursor_set_product(self._x, product._x)
+
+    def goto(self, name): # TODO name
+        _lib.coda_cursor_goto(self._x, _encode_string(name))
+
+    def get_array_dim(self): # TODO exists in swig version?
+        x = _ffi.new('int *')
+        y = _ffi.new('long[8]')
+        code = _lib.coda_cursor_get_array_dim(self._x, x, y)
+        return list(y)[:x[0]]
+
+    def read_double_array(self):
+        shape = cursor_get_array_dim(self) # TODO size?
+        size = functools.reduce(lambda x, y: x*y, shape, 1)
+        d = _ffi.new('double[%d]' % size)
+        code = _lib.coda_cursor_read_double_array(self._x, d, 0) # TODO order
+
+        buf = _ffi.buffer(d)
+        array = numpy.frombuffer(buf).reshape(shape)
+        return array
+
+    def get_type(self):
+        x = _ffi.new('coda_type **')
+        code = _lib.coda_cursor_get_type(self._x, x)
+        return Type(x[0])
+
+    def get_num_elements(self):
+        x = _ffi.new('long *')
+        code = _lib.coda_cursor_get_num_elements(self._x, x)
+        return x[0]
+
+
+# TODO generate cursor_* using inspection?
+
+def cursor_set_product(cursor, product):
+    return cursor.set_product(product)
+
+
+def cursor_goto(cursor, name):
+    return cursor.goto(name)
+
+
+def cursor_get_array_dim(cursor):
+    return cursor.get_array_dim()
+
+
+def cursor_read_double_array(cursor):
+    return cursor.read_double_array()
+
+
+def cursor_get_type(cursor):
+    return cursor.get_type()
+
+
+def cursor_get_num_elements(cursor):
+    return cursor.get_num_elements()
 
 
 class Type():
     def __init__(self, _x):
         self._x = _x
+
+    def get_class(self):
+        x = _ffi.new('enum coda_type_class_enum *') # TODO shorter type?
+        code = _lib.coda_type_get_class(self._x, x)
+        return x[0]
+
+
+    def get_array_base_type(self):
+        x = _ffi.new('coda_type **')
+        code = _lib.coda_type_get_array_base_type(self._x, x)
+        return Type(x[0])
+
+
+    def get_read_type(self):
+        x = _ffi.new('coda_native_type *')
+        code = _lib.coda_type_get_read_type(self._x, x)
+        return x[0]
+
+# TODO generate using inspection?
+
+def type_get_class(type_):
+    return type_.get_class()
+
+
+def type_get_array_base_type(type_):
+    return type_.get_array_base_type()
+
+
+def type_get_read_type(type_):
+    return type_.get_read_type()
 
 
 def coda_set_definition_path_conditional(p1, p2, p3):
@@ -79,6 +180,8 @@ def coda_set_definition_path_conditional(p1, p2, p3):
             return _encode_path(p)
     return _lib.coda_set_definition_path_conditional(conv(p1), conv(p2), conv(p3))
 
+set_definition_path_conditional = coda_set_definition_path_conditional
+
 
 def init():
     _lib.coda_init()
@@ -86,75 +189,6 @@ def init():
 
 def done():
     _lib.coda_done()
-
-
-def open(path):
-    x = _ffi.new('coda_product **')
-    code = _lib.coda_open(_encode_path(path), x)
-    if code == 0:
-        return Product(x[0])
-    else:
-        pass # TODO
-
-
-def close(product):
-    _lib.coda_close(product._x)
-
-
-def cursor_set_product(cursor, product):
-    _lib.coda_cursor_set_product(cursor._x, product._x)
-
-
-def cursor_goto(cursor, name): # TODO name
-    _lib.coda_cursor_goto(cursor._x, _encode_string(name))
-
-
-def cursor_get_array_dim(cursor): # TODO exists in swig version?
-    x = _ffi.new('int *')
-    y = _ffi.new('long[8]')
-    code = _lib.coda_cursor_get_array_dim(cursor._x, x, y)
-    return list(y)[:x[0]]
-
-
-def cursor_read_double_array(cursor):
-    shape = cursor_get_array_dim(cursor) # TODO size?
-    size = functools.reduce(lambda x, y: x*y, shape, 1)
-    d = _ffi.new('double[%d]' % size)
-    code = _lib.coda_cursor_read_double_array(cursor._x, d, 0) # TODO order
-
-    buf = _ffi.buffer(d)
-    array = numpy.frombuffer(buf).reshape(shape)
-    return array
-
-
-def cursor_get_type(cursor):
-    x = _ffi.new('coda_type **')
-    code = _lib.coda_cursor_get_type(cursor._x, x)
-    return Type(x[0])
-
-
-def cursor_get_num_elements(cursor):
-    x = _ffi.new('long *')
-    code = _lib.coda_cursor_get_num_elements(cursor._x, x)
-    return x[0]
-
-
-def type_get_class(type_):
-    x = _ffi.new('enum coda_type_class_enum *') # TODO shorter type?
-    code = _lib.coda_type_get_class(type_._x, x)
-    return x[0]
-
-
-def type_get_array_base_type(type_):
-    x = _ffi.new('coda_type **')
-    code = _lib.coda_type_get_array_base_type(type_._x, x)
-    return Type(x[0])
-
-
-def type_get_read_type(type_):
-    x = _ffi.new('coda_native_type *')
-    code = _lib.coda_type_get_read_type(type_._x, x)
-    return x[0]
 
 
 class Error(Exception):
