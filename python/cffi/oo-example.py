@@ -16,11 +16,16 @@ with coda.open('madis-raob.nc') as product:
     cursor = product.cursor()
     print('cursor:', cursor)
 
-    code = cursor.goto('tpTropQCD')
-    print(code)
+    cursor.goto('tpTropQCD')
 
     shape = cursor.get_array_dim()
     print('shape:', shape)
 
     array = cursor.read()
     print(array)
+
+    cursor = product.cursor()
+    cursor.goto('globalInventory')
+
+    scalar = cursor.read()
+    print(scalar)

@@ -91,11 +91,19 @@ class Cursor():
     def goto(self, name): # TODO name
         _lib.coda_cursor_goto(self._x, _encode_string(name))
 
+    def goto_root(self):
+        _lib.coda_cursor_goto_root(self._x)
+
     def get_array_dim(self): # TODO exists in swig version?
         x = _ffi.new('int *')
         y = _ffi.new('long[8]')
         code = _lib.coda_cursor_get_array_dim(self._x, x, y)
         return list(y)[:x[0]]
+
+    def read_int32(self):
+        x = _ffi.new('int32_t *')
+        code = _lib.coda_cursor_read_int32(self._x, x)
+        return x[0]
 
     def read_double_array(self):
         shape = cursor_get_array_dim(self) # TODO size?
@@ -109,10 +117,17 @@ class Cursor():
 
     def read(self):
         type_ = self.get_type()
-        if type_.get_class() == coda_array_class:
+        class_ = type_.get_class()
+
+        if class_ == coda_array_class:
             read_type = type_.get_array_base_type().get_read_type()
             if read_type == coda_native_type_double:
                 return self.read_double_array()
+
+        elif class_ == coda_integer_class:
+            read_type = type_.get_read_type()
+            if read_type == coda_native_type_int32:
+                return self.read_int32()
 
     def get_type(self):
         x = _ffi.new('coda_type **')
@@ -138,8 +153,16 @@ def cursor_goto(cursor, name):
     return cursor.goto(name)
 
 
+def cursor_goto_root(cursor):
+    return cursor.goto_root()
+
+
 def cursor_get_array_dim(cursor):
     return cursor.get_array_dim()
+
+
+def cursor_read_int32(cursor):
+    return cursor.read_int32()
 
 
 def cursor_read_double_array(cursor):
