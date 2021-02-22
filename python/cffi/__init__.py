@@ -215,6 +215,14 @@ def cursor_goto_root(cursor):
     _check(_lib.coda_cursor_goto_root(cursor._x), 'coda_cursor_goto_root')
 
 
+def cursor_use_base_type_of_special_type(cursor):
+    _check(_lib.coda_cursor_use_base_type_of_special_type(cursor._x), 'coda_cursor_use_base_type_of_special_type')
+
+
+def cursor_goto_array_element_by_index(cursor, index):
+    _check(_lib.coda_cursor_goto_array_element_by_index(cursor._x, index), 'coda_cursor_goto_array_element_by_index')
+
+
 def cursor_get_depth(cursor):
     x = _ffi.new('int *')
     _check(_lib.coda_cursor_get_depth(cursor._x, x), 'coda_cursor_get_depth')
@@ -382,6 +390,14 @@ def cursor_read_double_array(cursor, order=0):
 
 def cursor_read_double_partial_array(cursor, offset, count):
     return _read_partial(cursor, 'double', offset, count)
+
+
+def cursor_read_bytes(cursor, offset, count): # TODO default all data?
+    d = _ffi.new('uint8_t[%d]' % count)
+    _check(_lib.coda_cursor_read_bytes(cursor._x, d, offset, count), 'coda_cursor_read_bytes')
+    buf = _ffi.buffer(d)
+    array = numpy.frombuffer(buf, dtype='uint8')
+    return array
 
 
 def cursor_get_type(cursor):

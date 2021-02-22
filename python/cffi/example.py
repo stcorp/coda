@@ -116,6 +116,13 @@ coda.cursor_set_product(cursor, product)
 print('description', coda.get_description(product))
 print('description', coda.get_description(cursor))
 
+coda.cursor_goto(cursor, 'geolocation')
+coda.cursor_goto_array_element_by_index(cursor, 0)
+coda.cursor_goto(cursor, 'start_of_observation_time')
+coda.cursor_use_base_type_of_special_type(cursor)
+data = coda.cursor_read_bytes(cursor, 0, 4)
+print(type(data), data.shape, data.dtype, data)
+
 # expressions
 expr = coda.expression_from_string('1+2')
 print(coda.expression_is_constant(expr))
