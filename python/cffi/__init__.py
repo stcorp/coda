@@ -511,6 +511,85 @@ def expression_delete(expr):
     _lib.coda_expression_delete(expr._x)
 
 
+def _to_parts(dt, from_, fmt=None):
+    y = _ffi.new('int *')
+    mo = _ffi.new('int *')
+    d = _ffi.new('int *')
+    h = _ffi.new('int *')
+    mi = _ffi.new('int *')
+    s = _ffi.new('int *')
+    mus = _ffi.new('int *')
+
+    if from_ == 'double':
+        _check(_lib.coda_time_double_to_parts(dt, y, mo, d, h, mi, s, mus), 'coda_time_double_to_parts')
+    elif from_ == 'double_utc':
+        _check(_lib.coda_time_double_to_parts_utc(dt, y, mo, d, h, mi, s, mus), 'coda_time_double_to_parts_utc')
+    elif from_ == 'string':
+        _check(_lib.coda_time_string_to_parts(fmt, dt, y, mo, d, h, mi, s, mus), 'coda_time_string_to_parts')
+
+    return [y[0], mo[0], d[0], h[0], mi[0], s[0], mus[0]]
+
+
+def time_double_to_parts(d):
+    return _to_parts(d, 'double')
+
+
+def time_double_to_parts_utc(d):
+    return _to_parts(d, 'double_utc')
+
+
+def time_double_to_string(d, fmt):
+    s = _ffi.new('char [100]') # TODO
+    _check(_lib.coda_time_double_to_string(d, _encode_string(fmt), s), 'coda_time_double_to_string')
+    return _decode_string(_ffi.string(s))
+
+
+def time_double_to_string_utc(d, fmt):
+    s = _ffi.new('char [100]') # TODO
+    fmt = _encode_string(fmt)
+    _check(_lib.coda_time_double_to_string_utc(d, fmt, s), 'coda_time_double_to_string_utc')
+    return _decode_string(_ffi.string(s))
+
+
+def time_parts_to_double(y, mo, d, h, mi, s, mus):
+    dt = _ffi.new('double *')
+    _check(_lib.coda_time_parts_to_double(y, mo, d, h, mi, s, mus, dt), 'coda_time_parts_to_double')
+    return dt[0]
+
+
+def time_parts_to_double_utc(y, mo, d, h, mi, s, mus):
+    dt = _ffi.new('double *')
+    _check(_lib.coda_time_parts_to_double_utc(y, mo, d, h, mi, s, mus, dt), 'coda_time_parts_to_double_utc')
+    return dt[0]
+
+
+def time_parts_to_string(y, mo, d, h, mi, s, mus, fmt):
+    dt = _ffi.new('char [100]') # TODO
+    fmt = _encode_string(fmt)
+    _check(_lib.coda_time_parts_to_string(y, mo, d, h, mi, s, mus, fmt, dt), 'coda_time_parts_to_string')
+    return _decode_string(_ffi.string(dt))
+
+
+def time_string_to_double(fmt, s):
+    d = _ffi.new('double *')
+    fmt = _encode_string(fmt)
+    s = _encode_string(s)
+    _check(_lib.coda_time_string_to_double(fmt, s, d), 'coda_time_string_to_double')
+    return d[0]
+
+
+def time_string_to_double_utc(fmt, s):
+    d = _ffi.new('double *')
+    fmt = _encode_string(fmt)
+    s = _encode_string(s)
+    _check(_lib.coda_time_string_to_double_utc(fmt, s, d), 'coda_time_string_to_double_utc')
+    return d[0]
+
+
+def time_string_to_parts(fmt, s):
+    return _to_parts(_encode_string(s), 'string', _encode_string(fmt))
+
+
 def set_definition_path_conditional(p1, p2, p3):
     def conv(p):
         if p is None:

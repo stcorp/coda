@@ -146,6 +146,30 @@ expr = coda.expression_from_string('"bananen" + "vla"')
 print(coda.expression_eval_string(expr))
 coda.expression_delete(expr)
 
+# time
+parts = coda.time_double_to_parts(12345.67890)
+print(parts)
+parts_utc = coda.time_double_to_parts_utc(12345.67890)
+print(parts_utc)
+s = coda.time_double_to_string(12345.67890, 'yyyy-mm-dd')
+print(s)
+s_utc = coda.time_double_to_string_utc(12345.67890, 'yyyy-mm-dd')
+print(s_utc)
+
+d = coda.time_parts_to_double(*parts)
+print(d)
+d = coda.time_parts_to_double_utc(*parts_utc)
+print(d)
+s = coda.time_parts_to_string(*parts, 'yyyy-mm-dd')
+print(s)
+
+d = coda.time_string_to_double('yyyy-mm-dd', s)
+print(d)
+d = coda.time_string_to_double_utc('yyyy-mm-dd', s)
+print(d)
+parts = coda.time_string_to_parts( 'yyyy-mm-dd', s)
+print(parts)
+
 #options
 coda.set_option_bypass_special_types(1)
 print(coda.get_option_bypass_special_types())
