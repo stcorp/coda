@@ -219,8 +219,24 @@ def cursor_use_base_type_of_special_type(cursor):
     _check(_lib.coda_cursor_use_base_type_of_special_type(cursor._x), 'coda_cursor_use_base_type_of_special_type')
 
 
+def cursor_goto_first_array_element(cursor):
+    _check(_lib.coda_cursor_goto_first_array_element(cursor._x), 'coda_cursor_goto_first_array_element')
+
+
+def cursor_goto_next_array_element(cursor):
+    _check(_lib.coda_cursor_goto_next_array_element(cursor._x), 'coda_cursor_goto_next_array_element')
+
+
 def cursor_goto_array_element_by_index(cursor, index):
     _check(_lib.coda_cursor_goto_array_element_by_index(cursor._x, index), 'coda_cursor_goto_array_element_by_index')
+
+
+def cursor_goto_first_record_field(cursor):
+    _check(_lib.coda_cursor_goto_first_record_field(cursor._x), 'coda_cursor_goto_first_record_field')
+
+
+def cursor_goto_next_record_field(cursor):
+    _check(_lib.coda_cursor_goto_next_record_field(cursor._x), 'coda_cursor_goto_next_record_field')
 
 
 def cursor_get_depth(cursor):
@@ -234,6 +250,12 @@ def cursor_get_array_dim(cursor):
     y = _ffi.new('long[%d]' % _lib.CODA_MAX_NUM_DIMS)
     _check(_lib.coda_cursor_get_array_dim(cursor._x, x, y), 'coda_cursor_get_array_dim')
     return list(y)[:x[0]]
+
+
+def cursor_get_record_field_available_status(cursor, index):
+    x = _ffi.new('int *')
+    _check(_lib.coda_cursor_get_record_field_available_status(cursor._x, index, x), 'coda_cursor_get_record_field_available_status')
+    return x[0]
 
 
 def _read_scalar(cursor, type_):
@@ -406,15 +428,21 @@ def cursor_get_type(cursor):
     return Type(x[0])
 
 
-def cursor_get_num_elements(cursor):
-    x = _ffi.new('long *')
-    _check(_lib.coda_cursor_get_num_elements(cursor._x, x), 'coda_cursor_get_num_elements')
+def cursor_get_special_type(cursor):
+    x = _ffi.new('enum coda_special_type_enum *')
+    _check(_lib.coda_cursor_get_special_type(cursor._x, x), 'coda_cursor_get_special_type')
     return x[0]
 
 
 def type_get_class(type_):
     x = _ffi.new('enum coda_type_class_enum *')
     _check(_lib.coda_type_get_class(type_._x, x), 'coda_type_get_class')
+    return x[0]
+
+
+def cursor_get_num_elements(cursor):
+    x = _ffi.new('long *')
+    _check(_lib.coda_cursor_get_num_elements(cursor._x, x), 'coda_cursor_get_num_elements')
     return x[0]
 
 
@@ -435,6 +463,18 @@ def type_get_description(type_):
     _check(_lib.coda_type_get_description(type_._x, c), 'coda_type_get_description')
     if c[0] != _ffi.NULL:
         return _decode_string(_ffi.string(c[0]))
+
+
+def type_get_record_field_hidden_status(type_, index):
+    x = _ffi.new('int *')
+    _check(_lib.coda_type_get_record_field_hidden_status(type_._x, index, x), 'coda_type_get_record_field_hidden_status')
+    return x[0]
+
+
+def type_get_record_field_name(type_, index):
+    x = _ffi.new('char **')
+    _check(_lib.coda_type_get_record_field_name(type_._x, index, x), 'coda_type_get_record_field_name')
+    return _decode_string(_ffi.string(x[0]))
 
 
 def expression_from_string(s):
@@ -1750,43 +1790,43 @@ _init()
 # scalars with type coda_native_type_bytes require extra code to find out their size, so this
 # type is omitted here.
 _readNativeTypeScalarFunctionDictionary = {
-#    coda_native_type_int8: cursor_read_int8,
-#    coda_native_type_uint8: cursor_read_uint8,
-#    coda_native_type_int16: cursor_read_int16,
-#    coda_native_type_uint16: cursor_read_uint16,
+    coda_native_type_int8: cursor_read_int8,
+    coda_native_type_uint8: cursor_read_uint8,
+    coda_native_type_int16: cursor_read_int16,
+    coda_native_type_uint16: cursor_read_uint16,
     coda_native_type_int32: cursor_read_int32,
-#    coda_native_type_uint32: cursor_read_uint32,
-#    coda_native_type_int64: cursor_read_int64,
-#    coda_native_type_uint64: cursor_read_uint64,
-#    coda_native_type_float: cursor_read_float,
-#    coda_native_type_double: cursor_read_double,
+    coda_native_type_uint32: cursor_read_uint32,
+    coda_native_type_int64: cursor_read_int64,
+    coda_native_type_uint64: cursor_read_uint64,
+    coda_native_type_float: cursor_read_float,
+    coda_native_type_double: cursor_read_double,
 #    coda_native_type_char: cursor_read_char,
 #    coda_native_type_string: cursor_read_string,
-#    coda_native_type_bytes: cursor_read_bytes
+    coda_native_type_bytes: cursor_read_bytes
 }
 
 # dictionary (a.k.a. switch construct ;) for native type array read functions.
 _readNativeTypeArrayFunctionDictionary = {
-#    coda_native_type_int8: cursor_read_int8_array,
-#    coda_native_type_uint8: cursor_read_uint8_array,
-#    coda_native_type_int16: cursor_read_int16_array,
-#    coda_native_type_uint16: cursor_read_uint16_array,
-#    coda_native_type_int32: cursor_read_int32_array,
-#    coda_native_type_uint32: cursor_read_uint32_array,
-#    coda_native_type_int64: cursor_read_int64_array,
-#    coda_native_type_uint64: cursor_read_uint64_array,
-#    coda_native_type_float: cursor_read_float_array,
+    coda_native_type_int8: cursor_read_int8_array,
+    coda_native_type_uint8: cursor_read_uint8_array,
+    coda_native_type_int16: cursor_read_int16_array,
+    coda_native_type_uint16: cursor_read_uint16_array,
+    coda_native_type_int32: cursor_read_int32_array,
+    coda_native_type_uint32: cursor_read_uint32_array,
+    coda_native_type_int64: cursor_read_int64_array,
+    coda_native_type_uint64: cursor_read_uint64_array,
+    coda_native_type_float: cursor_read_float_array,
     coda_native_type_double: cursor_read_double_array,
-#    coda_native_type_char: _fetch_object_array,
-#    coda_native_type_string: _fetch_object_array,
-#    coda_native_type_bytes: _fetch_object_array
+    coda_native_type_char: _fetch_object_array,
+    coda_native_type_string: _fetch_object_array,
+    coda_native_type_bytes: _fetch_object_array
 }
 
 # dictionary (a.k.a. switch construct ;) for special type scalar read functions.
 _readSpecialTypeScalarFunctionDictionary = {
-#    coda_special_no_data: lambda x: None,
-#    coda_special_vsf_integer: cursor_read_double,
-#    coda_special_time: cursor_read_double,
+    coda_special_no_data: lambda x: None,
+    coda_special_vsf_integer: cursor_read_double,
+    coda_special_time: cursor_read_double,
 #    coda_special_complex: cursor_read_complex
 }
 
