@@ -25,6 +25,11 @@ product = coda.open('madis-raob.nc')
 print('class', coda.get_product_class(product))
 print('type', coda.get_product_type(product))
 print('version', coda.get_product_version(product))
+print('deffile', coda.get_product_definition_file(product))
+print('file size', coda.get_product_file_size(product))
+print('filename', coda.get_product_filename(product))
+print('format', coda.get_product_format(product))
+print('root type', coda.type_get_class(coda.get_product_root_type(product)))
 
 # fetch array
 array = coda.fetch(product, 'tpTropQCD')

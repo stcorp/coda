@@ -186,20 +186,50 @@ def _string(s):
 
 def get_product_class(product):
     c = _ffi.new('char **')
-    _check(_lib.coda_get_product_class(product._x, c))
+    _check(_lib.coda_get_product_class(product._x, c), 'coda_get_product_class')
     return _string(c[0])
 
 
 def get_product_version(product):
     c = _ffi.new('int *')
-    _check(_lib.coda_get_product_version(product._x, c))
+    _check(_lib.coda_get_product_version(product._x, c), 'coda_get_product_version')
     return c[0]
 
 
 def get_product_type(product):
     c = _ffi.new('char **')
-    _check(_lib.coda_get_product_type(product._x, c))
+    _check(_lib.coda_get_product_type(product._x, c), 'coda_get_product_type')
     return _string(c[0])
+
+
+def get_product_filename(product):
+    c = _ffi.new('char **')
+    _check(_lib.coda_get_product_filename(product._x, c), 'coda_get_product_filename')
+    return _string(c[0])
+
+
+def get_product_definition_file(product):
+    c = _ffi.new('char **')
+    _check(_lib.coda_get_product_definition_file(product._x, c), 'coda_get_product_definition_file')
+    return _string(c[0])
+
+
+def get_product_file_size(product):
+    c = _ffi.new('int64_t *')
+    _check(_lib.coda_get_product_file_size(product._x, c), 'coda_get_product_file_size')
+    return c[0]
+
+
+def get_product_format(product):
+    c = _ffi.new('enum coda_format_enum *')
+    _check(_lib.coda_get_product_format(product._x, c), 'coda_get_product_format')
+    return c[0]
+
+
+def get_product_root_type(product):
+    c = _ffi.new('coda_type **')
+    _check(_lib.coda_get_product_root_type(product._x, c), 'coda_get_product_root_type')
+    return Type(c[0])
 
 
 def cursor_set_product(cursor, product):
