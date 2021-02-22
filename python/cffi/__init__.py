@@ -40,6 +40,9 @@ import numpy
 
 from _codac import ffi as _ffi
 
+#
+# high-level interface
+#
 
 class CodaError(Exception):
     pass
@@ -88,7 +91,8 @@ class Node():
     def fetch(self, *args):
         return fetch(self, *args)
 
-    def get_description(self):
+    @property
+    def description(self):
         return get_description(self)
 
 
@@ -98,9 +102,7 @@ class Product(Node):
 
     @staticmethod
     def open(path):
-        x = _ffi.new('coda_product **')
-        _check(_lib.coda_open(_encode_path(path), x), 'coda_open')
-        return Product(x[0])
+        return open(path)
 
     def close(self):
         _check(_lib.coda_close(self._x), 'coda_close')
@@ -110,22 +112,17 @@ class Product(Node):
         cursor_set_product(cursor, self)
         return cursor
 
-    def get_class(self):
-        c = _ffi.new('char **')
-        _check(_lib.coda_get_product_class(self._x, c))
-        if c[0] != _ffi.NULL:
-            return _decode_string(_ffi.string(c[0]))
+    @property
+    def version(self):
+        return get_product_version(self)
 
-    def get_type(self):
-        c = _ffi.new('char **')
-        _check(_lib.coda_get_product_type(self._x, c))
-        if c[0] != _ffi.NULL:
-            return _decode_string(_ffi.string(c[0]))
+    @property
+    def class_(self):
+        return get_product_class(self)
 
-    def get_version(self):
-        c = _ffi.new('int *')
-        _check(_lib.coda_get_product_version(self._x, c))
-        return c[0]
+    @property
+    def type_(self):
+        return get_product_type(self)
 
     def __enter__(self):
         return self
@@ -134,24 +131,14 @@ class Product(Node):
         close(self)
 
 
-def get_product_class(product):
-    return product.get_class()
-
-
-def get_product_type(product):
-    return product.get_type()
-
-
-def get_product_version(product):
-    return product.get_version()
-
-
 def open(path):
-    return Product.open(path)
+    x = _ffi.new('coda_product **')
+    _check(_lib.coda_open(_encode_path(path), x), 'coda_open')
+    return Product(x[0])
 
 
 def close(product):
-    product.close()
+    _check(_lib.coda_close(product._x), 'coda_close')
 
 
 class Cursor(Node):
@@ -275,6 +262,33 @@ class Type():
         x = _ffi.new('coda_native_type *')
         _check(_lib.coda_type_get_read_type(self._x, x), 'coda_type_get_read_type')
         return x[0]
+
+
+#
+# low-level interface
+#
+
+
+def get_product_class(product):
+    c = _ffi.new('char **')
+    _check(_lib.coda_get_product_class(product._x, c))
+    if c[0] != _ffi.NULL:
+        return _decode_string(_ffi.string(c[0]))
+
+
+def get_product_version(product):
+    c = _ffi.new('int *')
+    _check(_lib.coda_get_product_version(product._x, c))
+    return c[0]
+
+
+
+
+def get_product_type(product):
+    c = _ffi.new('char **')
+    _check(_lib.coda_get_product_type(product._x, c))
+    if c[0] != _ffi.NULL:
+        return _decode_string(_ffi.string(c[0]))
 
 
 # TODO generate using inspection?
