@@ -511,7 +511,7 @@ def expression_delete(expr):
     _lib.coda_expression_delete(expr._x)
 
 
-def coda_set_definition_path_conditional(p1, p2, p3):
+def set_definition_path_conditional(p1, p2, p3):
     def conv(p):
         if p is None:
             return _ffi.NULL
@@ -519,7 +519,47 @@ def coda_set_definition_path_conditional(p1, p2, p3):
             return _encode_path(p)
     _check(_lib.coda_set_definition_path_conditional(conv(p1), conv(p2), conv(p3)), 'coda_set_definition_path_conditional')
 
-set_definition_path_conditional = coda_set_definition_path_conditional
+coda_set_definition_path_conditional = set_definition_path_conditional # compat
+
+
+def set_option_bypass_special_types(enable):
+    _check(_lib.coda_set_option_bypass_special_types(enable), 'coda_set_option_bypass_special_types')
+
+
+def get_option_bypass_special_types():
+    return _lib.coda_get_option_bypass_special_types()
+
+
+def set_option_perform_boundary_checks(enable):
+    _check(_lib.coda_set_option_perform_boundary_checks(enable), 'coda_set_option_perform_boundary_checks')
+
+
+def get_option_perform_boundary_checks():
+    return _lib.coda_get_option_perform_boundary_checks()
+
+
+def set_option_perform_conversions(enable):
+    _check(_lib.coda_set_option_perform_conversions(enable), 'coda_set_option_perform_conversions')
+
+
+def get_option_perform_conversions():
+    return _lib.coda_get_option_perform_conversions()
+
+
+def set_option_use_fast_size_expressions(enable):
+    _check(_lib.coda_set_option_use_fast_size_expressions(enable), 'coda_set_option_use_fast_size_expressions')
+
+
+def get_option_use_fast_size_expressions():
+    return _lib.coda_get_option_use_fast_size_expressions()
+
+
+def set_option_use_mmap(enable):
+    _check(_lib.coda_set_option_use_mmap(enable), 'coda_set_option_use_mmap')
+
+
+def get_option_use_mmap():
+    return _lib.coda_get_option_use_mmap()
 
 
 def init():
@@ -1572,9 +1612,7 @@ def get_unit(start, *path):
 
     return type_get_unit(nodeType)
 
-#
-# MODULE OPTIONS
-#
+
 # _filterRecordFields: if set to True, hidden record fields are ignored.
 _filterRecordFields = True
 

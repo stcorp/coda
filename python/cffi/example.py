@@ -146,6 +146,18 @@ expr = coda.expression_from_string('"bananen" + "vla"')
 print(coda.expression_eval_string(expr))
 coda.expression_delete(expr)
 
+#options
+coda.set_option_bypass_special_types(1)
+print(coda.get_option_bypass_special_types())
+coda.set_option_perform_boundary_checks(0)
+print(coda.get_option_perform_boundary_checks())
+coda.set_option_perform_conversions(1)
+print(coda.get_option_perform_conversions())
+coda.set_option_use_fast_size_expressions(0)
+print(coda.get_option_use_fast_size_expressions())
+coda.set_option_use_mmap(1)
+print(coda.get_option_use_mmap())
+
 #finalize
 coda.close(product)
 coda.done()
