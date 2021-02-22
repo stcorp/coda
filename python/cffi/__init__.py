@@ -217,33 +217,160 @@ def cursor_get_array_dim(cursor):
     return list(y)[:x[0]]
 
 
-def cursor_read_int32(cursor):
-    x = _ffi.new('int32_t *')
-    _check(_lib.coda_cursor_read_int32(cursor._x, x), 'coda_cursor_read_int32')
+def _read_scalar(cursor, type_):
+    x = _ffi.new('%s *' % type_)
+    desc = type_
+    if desc.endswith('_t'):
+        desc = desc[:-2]
+    func = getattr(_lib, 'coda_cursor_read_%s' % desc)
+    _check(func(cursor._x, x), 'coda_cursor_read_%s' % desc)
     return x[0]
 
 
-def cursor_read_double_array(cursor):
-    shape = cursor_get_array_dim(cursor) # TODO size?
+def _read_array(cursor, type_, order):
+    shape = cursor_get_array_dim(cursor)
     size = functools.reduce(lambda x, y: x*y, shape, 1)
-    d = _ffi.new('double[%d]' % size)
-    _check(_lib.coda_cursor_read_double_array(cursor._x, d, 0), 'coda_cursor_read_double_array') # TODO order
-
+    d = _ffi.new('%s[%d]' % (type_, size))
+    desc = type_
+    if desc.endswith('_t'):
+        desc = desc[:-2]
+    func = getattr(_lib, 'coda_cursor_read_%s_array' % desc)
+    _check(func(cursor._x, d, order), 'coda_cursor_read_%s_array' % desc)
     buf = _ffi.buffer(d)
     array = numpy.frombuffer(buf).reshape(shape)
     return array
 
 
-
-def cursor_read_double_partial_array(cursor, offset, count):
-    d = _ffi.new('double[%d]' % count)
-
-    _check(_lib.coda_cursor_read_double_partial_array(cursor._x, offset, count, d), 'coda_cursor_read_double_partial_array')
-
+def _read_partial(cursor, type_, offset, count):
+    d = _ffi.new('%s[%d]' % (type_, count))
+    desc = type_
+    if desc.endswith('_t'):
+        desc = desc[:-2]
+    func = getattr(_lib, 'coda_cursor_read_%s_partial_array' % desc)
+    _check(func(cursor._x, offset, count, d), 'coda_cursor_read_%s_partial_array' % desc)
     buf = _ffi.buffer(d)
     array = numpy.frombuffer(buf)
     return array
 
+
+def cursor_read_int8(cursor):
+    return _read_scalar(cursor, 'int8_t')
+
+
+def cursor_read_int8_array(cursor, order=0):
+    return _read_array(cursor, 'int8_t', order)
+
+
+def cursor_read_int8_partial_array(cursor, offset, count):
+    return _read_partial(cursor, 'int8_t', offset, count)
+
+
+def cursor_read_int16(cursor):
+    return _read_scalar(cursor, 'int16_t')
+
+
+def cursor_read_int16_array(cursor, order=0):
+    return _read_array(cursor, 'int16_t', order)
+
+
+def cursor_read_int16_partial_array(cursor, offset, count):
+    return _read_partial(cursor, 'int16_t', offset, count)
+
+
+def cursor_read_int32(cursor):
+    return _read_scalar(cursor, 'int32_t')
+
+
+def cursor_read_int32_array(cursor, order=0):
+    return _read_array(cursor, 'int32_t', order)
+
+
+def cursor_read_int32_partial_array(cursor, offset, count):
+    return _read_partial(cursor, 'int32_t', offset, count)
+
+
+def cursor_read_int64(cursor):
+    return _read_scalar(cursor, 'int64_t')
+
+
+def cursor_read_int64_array(cursor, order=0):
+    return _read_array(cursor, 'int64_t', order)
+
+
+def cursor_read_int64_partial_array(cursor, offset, count):
+    return _read_partial(cursor, 'int64_t', offset, count)
+
+
+def cursor_read_uint8(cursor):
+    return _read_scalar(cursor, 'uint8_t')
+
+
+def cursor_read_uint8_array(cursor, order=0):
+    return _read_array(cursor, 'uint8_t', order)
+
+
+def cursor_read_uint8_partial_array(cursor, offset, count):
+    return _read_partial(cursor, 'uint8_t', offset, count)
+
+
+def cursor_read_uint16(cursor):
+    return _read_scalar(cursor, 'uint16_t')
+
+
+def cursor_read_uint16_array(cursor, order=0):
+    return _read_array(cursor, 'uint16_t', order)
+
+
+def cursor_read_uint16_partial_array(cursor, offset, count):
+    return _read_partial(cursor, 'uint16_t', offset, count)
+
+
+def cursor_read_uint32(cursor):
+    return _read_scalar(cursor, 'uint32_t')
+
+
+def cursor_read_uint32_array(cursor, order=0):
+    return _read_array(cursor, 'uint32_t', order)
+
+
+def cursor_read_uint32_partial_array(cursor, offset, count):
+    return _read_partial(cursor, 'uint32_t', offset, count)
+
+
+def cursor_read_uint64(cursor):
+    return _read_scalar(cursor, 'uint64_t')
+
+
+def cursor_read_uint64_array(cursor, order=0):
+    return _read_array(cursor, 'uint64_t', order)
+
+
+def cursor_read_uint64_partial_array(cursor, offset, count):
+    return _read_partial(cursor, 'uint64_t', offset, count)
+
+
+def cursor_read_float(cursor):
+    return _read_scalar(cursor, 'float')
+
+
+def cursor_read_float_array(cursor, order=0):
+    return _read_array(cursor, 'float', order)
+
+
+def cursor_read_float_partial_array(cursor, offset, count):
+    return _read_partial(cursor, 'float', offset, count)
+
+
+def cursor_read_double(cursor):
+    return _read_scalar(cursor, 'double')
+
+
+def cursor_read_double_array(cursor, order=0):
+    return _read_array(cursor, 'double', order)
+
+
+def cursor_read_double_partial_array(cursor, offset, count):
+    return _read_partial(cursor, 'double', offset, count)
 
 
 def cursor_get_type(cursor):

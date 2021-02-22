@@ -42,6 +42,10 @@ coda.cursor_goto(cursor, 'globalInventory')
 
 gi = coda.cursor_read_int32(cursor)
 print('globalInventory:', gi)
+try:
+    coda.cursor_read_uint16(cursor)
+except coda.CodacError as e:
+    print(str(e))
 
 # read double array
 coda.cursor_goto_root(cursor)
