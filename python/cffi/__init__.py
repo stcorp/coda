@@ -169,6 +169,11 @@ class Type():
         self._x = _x
 
 
+class Expression():
+    def __init__(self, _x):
+        self._x = _x
+
+
 #
 # low-level interface
 #
@@ -208,6 +213,12 @@ def cursor_goto_parent(cursor):
 
 def cursor_goto_root(cursor):
     _check(_lib.coda_cursor_goto_root(cursor._x), 'coda_cursor_goto_root')
+
+
+def cursor_get_depth(cursor):
+    x = _ffi.new('int *')
+    _check(_lib.coda_cursor_get_depth(cursor._x, x), 'coda_cursor_get_depth')
+    return x[0]
 
 
 def cursor_get_array_dim(cursor):
@@ -386,7 +397,7 @@ def cursor_get_num_elements(cursor):
 
 
 def type_get_class(type_):
-    x = _ffi.new('enum coda_type_class_enum *') # TODO shorter type?
+    x = _ffi.new('enum coda_type_class_enum *')
     _check(_lib.coda_type_get_class(type_._x, x), 'coda_type_get_class')
     return x[0]
 
@@ -408,6 +419,80 @@ def type_get_description(type_):
     _check(_lib.coda_type_get_description(type_._x, c), 'coda_type_get_description')
     if c[0] != _ffi.NULL:
         return _decode_string(_ffi.string(c[0]))
+
+
+def expression_from_string(s):
+    x = _ffi.new('coda_expression **')
+    _check(_lib.coda_expression_from_string(_encode_string(s), x), 'coda_expression_from_string')
+    return Expression(x[0])
+
+
+def expression_eval_bool(expr, cursor=None):
+    x = _ffi.new('int *')
+    if cursor is None:
+        cur = _ffi.NULL
+    else:
+        cur = cursor._x
+    _check(_lib.coda_expression_eval_bool(expr._x, cur, x), 'coda_expression_eval_bool')
+    return x[0]
+
+
+def expression_eval_integer(expr, cursor=None):
+    x = _ffi.new('int64_t *')
+    if cursor is None:
+        cur = _ffi.NULL
+    else:
+        cur = cursor._x
+    _check(_lib.coda_expression_eval_integer(expr._x, cur, x), 'coda_expression_eval_integer')
+    return x[0]
+
+
+def expression_eval_float(expr, cursor=None):
+    x = _ffi.new('double *') # TODO eval_float/eval_double separation?
+    if cursor is None:
+        cur = _ffi.NULL
+    else:
+        cur = cursor._x
+    _check(_lib.coda_expression_eval_float(expr._x, cur, x), 'coda_expression_eval_float')
+    return x[0]
+
+
+def expression_eval_string(expr, cursor=None):
+    x = _ffi.new('char **')
+    y = _ffi.new('long *')
+    if cursor is None:
+        cur = _ffi.NULL
+    else:
+        cur = cursor._x
+    _check(_lib.coda_expression_eval_string(expr._x, cur, x, y), 'coda_expression_eval_string')
+    return _ffi.string(x[0]) # TODO decode?
+
+
+def expression_eval_node(expr, cursor):
+    _check(_lib.coda_expression_eval_node(expr._x, cursor._x), 'coda_expression_eval_node')
+
+
+def expression_get_type(expr):
+    x = _ffi.new('enum coda_expression_type_enum *')
+    _check(_lib.coda_expression_get_type(expr._x, x), 'coda_expression_get_type')
+    return x[0]
+
+
+def expression_get_type_name(type_):
+    name = _lib.coda_expression_get_type_name(type_)
+    return _decode_string(_ffi.string(name))
+
+
+def expression_is_constant(expr):
+    return _lib.coda_expression_is_constant(expr._x)
+
+
+def expression_is_equal(expr1, expr2):
+    return _lib.coda_expression_is_equal(expr1._x, expr2._x)
+
+
+def expression_delete(expr):
+    _lib.coda_expression_delete(expr._x)
 
 
 def coda_set_definition_path_conditional(p1, p2, p3):

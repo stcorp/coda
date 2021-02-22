@@ -47,6 +47,11 @@ try:
 except coda.CodacError as e:
     print(str(e))
 
+coda.cursor_goto_root(cursor)
+expr = coda.expression_from_string('2 * int(./globalInventory)')
+print('expr:', coda.expression_eval_integer(expr, cursor))
+coda.expression_delete(expr)
+
 # read double array
 coda.cursor_goto_root(cursor)
 coda.cursor_goto(cursor, 'tpTropQCD')
@@ -89,6 +94,14 @@ except coda.CodacError as e:
 # version
 print(coda.version())
 
+# node expr
+coda.cursor_goto_root(cursor)
+print('root depth:', coda.cursor_get_depth(cursor))
+expr = coda.expression_from_string('/globalInventory')
+coda.expression_eval_node(expr, cursor)
+print('expr depth:', coda.cursor_get_depth(cursor))
+coda.expression_delete(expr)
+
 # product class etc
 product = coda.open('AE_TEST_ALD_U_N_1B_20190105T011602023_008364010_002143_0001.DBL')
 print('class', coda.get_product_class(product))
@@ -102,6 +115,29 @@ coda.cursor_set_product(cursor, product)
 
 print('description', coda.get_description(product))
 print('description', coda.get_description(cursor))
+
+# expressions
+expr = coda.expression_from_string('1+2')
+print(coda.expression_is_constant(expr))
+print(coda.expression_is_equal(expr, expr))
+result = coda.expression_eval_integer(expr)
+print(result)
+type_ = coda.expression_get_type(expr)
+name = coda.expression_get_type_name(type_)
+print('type', type_, name)
+coda.expression_delete(expr)
+
+expr = coda.expression_from_string('4.5')
+print(coda.expression_eval_float(expr, cursor))
+coda.expression_delete(expr)
+
+expr = coda.expression_from_string('true')
+print(coda.expression_eval_bool(expr))
+coda.expression_delete(expr)
+
+expr = coda.expression_from_string('"bananen" + "vla"')
+print(coda.expression_eval_string(expr))
+coda.expression_delete(expr)
 
 #finalize
 coda.close(product)
