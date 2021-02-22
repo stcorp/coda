@@ -45,7 +45,8 @@ print('globalInventory:', gi)
 
 # read double array
 coda.cursor_goto_root(cursor)
-
+coda.cursor_goto(cursor, 'tpTropQCD')
+coda.cursor_goto_parent(cursor)
 coda.cursor_goto(cursor, 'tpTropQCD')
 
 shape = coda.cursor_get_array_dim(cursor)
