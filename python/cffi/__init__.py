@@ -131,9 +131,29 @@ class Product(Node):
         close(self)
 
 
+def recognize_file(path):
+    x = _ffi.new('int64_t *')
+    y = _ffi.new('enum coda_format_enum *')
+    z = _ffi.new('char **')
+    a = _ffi.new('char **')
+    b = _ffi.new('int *')
+
+    _check(_lib.coda_recognize_file(_encode_path(path), x, y, z, a, b), 'coda_recognize_file')
+
+    return [x[0], y[0], _string(z[0]), _string(a[0]), b[0]]
+
+
 def open(path):
     x = _ffi.new('coda_product **')
     _check(_lib.coda_open(_encode_path(path), x), 'coda_open')
+    return Product(x[0])
+
+
+def open_as(path, class_, type_, version):
+    x = _ffi.new('coda_product **')
+    class_ = _encode_string(class_)
+    type_ = _encode_string(type_)
+    _check(_lib.coda_open_as(_encode_path(path), class_, type_, version, x), 'coda_open_as')
     return Product(x[0])
 
 

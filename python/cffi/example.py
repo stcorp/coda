@@ -20,6 +20,8 @@ print(coda.isMinInf(0), coda.isMinInf(coda.MinInf()), coda.isMinInf(coda.PlusInf
 print(coda.isPlusInf(0), coda.isPlusInf(coda.PlusInf()), coda.isPlusInf(coda.MinInf()))
 
 # open product
+what = coda.recognize_file('madis-raob.nc')
+print('what:', what)
 product = coda.open('madis-raob.nc')
 
 print('class', coda.get_product_class(product))
@@ -135,7 +137,11 @@ print('expr depth:', coda.cursor_get_depth(cursor))
 coda.expression_delete(expr)
 
 # product class etc
-product = coda.open('AE_TEST_ALD_U_N_1B_20190105T011602023_008364010_002143_0001.DBL')
+what = coda.recognize_file('AE_TEST_ALD_U_N_1B_20190105T011602023_008364010_002143_0001.DBL')
+print('what:', what)
+
+product = coda.open_as('AE_TEST_ALD_U_N_1B_20190105T011602023_008364010_002143_0001.DBL', 'AEOLUS', 'ALD_U_N_1B', 9)
+
 print('class', coda.get_product_class(product))
 print('type', coda.get_product_type(product))
 print('version', coda.get_product_version(product))
