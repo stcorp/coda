@@ -38,6 +38,12 @@ print(scalar)
 cursor = coda.Cursor()
 coda.cursor_set_product(cursor, product)
 
+print('cursor has attrs', coda.cursor_has_attributes(cursor))
+type_ = coda.cursor_get_type(cursor)
+print('type has attrs', coda.type_has_attributes(type_))
+a = coda.type_get_attributes(type_)
+print('attrs type name', coda.type_get_class_name(coda.type_get_class(a)))
+
 coda.cursor_goto(cursor, 'globalInventory')
 
 gi = coda.cursor_read_int32(cursor)
@@ -54,12 +60,33 @@ coda.expression_delete(expr)
 
 # read double array
 coda.cursor_goto_root(cursor)
+type_ = coda.cursor_get_type(cursor)
+cl = coda.cursor_get_type_class(cursor)
+print('cl', cl)
+print('num recs:', coda.type_get_num_record_fields(type_))
+print('nt name:', coda.type_get_native_type_name(coda.type_get_read_type(type_)))
+print('0 hidden:', coda.type_get_record_field_hidden_status(type_, 0))
+print('0 available:', coda.type_get_record_field_available_status(type_, 0))
+print('field type:', coda.type_get_class(coda.type_get_record_field_type(type_, 0)))
+print('has attributes:', coda.type_has_attributes(type_))
+
 coda.cursor_goto(cursor, 'tpTropQCD')
 coda.cursor_goto_parent(cursor)
 coda.cursor_goto(cursor, 'tpTropQCD')
 
 shape = coda.cursor_get_array_dim(cursor)
 print('shape:', shape)
+
+type_ = coda.cursor_get_type(cursor)
+print('numdims:', coda.type_get_array_num_dims(type_))
+print('dims:', coda.type_get_array_dim(type_))
+#print('attrs:', coda.type_get_attributes(type_))
+print('bitsize:', coda.type_get_bit_size(type_))
+print('class:', coda.type_get_class_name(coda.type_get_class(type_)))
+print('fixed:', coda.type_get_fixed_value(type_))
+print('format:', coda.type_get_format(type_))
+print('formatname:', coda.type_get_format_name(coda.type_get_format(type_)))
+print('name:', coda.type_get_name(type_))
 
 array = coda.cursor_read_double_array(cursor)
 print(array)
@@ -108,6 +135,7 @@ print('class', coda.get_product_class(product))
 print('type', coda.get_product_type(product))
 print('version', coda.get_product_version(product))
 print('description', coda.get_description(product))
+print('attrs', coda.get_attributes(product))
 
 # product/cursor methods
 cursor = coda.Cursor()
@@ -119,6 +147,7 @@ print('description', coda.get_description(cursor))
 coda.cursor_goto(cursor, 'geolocation')
 coda.cursor_goto_array_element_by_index(cursor, 0)
 coda.cursor_goto(cursor, 'start_of_observation_time')
+
 coda.cursor_use_base_type_of_special_type(cursor)
 data = coda.cursor_read_bytes(cursor, 0, 4)
 print(type(data), data.shape, data.dtype, data)
