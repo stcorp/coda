@@ -508,6 +508,15 @@ def cursor_read_bytes(cursor, offset, count): # TODO default all data?
     return array
 
 
+def cursor_read_string(cursor):
+    l = _ffi.new('long *')
+    _check(_lib.coda_cursor_get_string_length(cursor._x, l), 'coda_cursor_get_string_length')
+    l = l[0]
+    y = _ffi.new('char [%d]' % l)
+    _check(_lib.coda_cursor_read_string(cursor._x, y, l), 'coda_cursor_read_string')
+    return _decode_string(_ffi.unpack(y, l))
+
+
 def cursor_get_type(cursor):
     x = _ffi.new('coda_type **')
     _check(_lib.coda_cursor_get_type(cursor._x, x), 'coda_cursor_get_type')
@@ -1971,7 +1980,7 @@ _readNativeTypeScalarFunctionDictionary = {
     coda_native_type_float: cursor_read_float,
     coda_native_type_double: cursor_read_double,
 #    coda_native_type_char: cursor_read_char,
-#    coda_native_type_string: cursor_read_string,
+    coda_native_type_string: cursor_read_string,
     coda_native_type_bytes: cursor_read_bytes
 }
 

@@ -41,7 +41,7 @@ print(array)
 scalar = coda.fetch(product, 'globalInventory')
 print(scalar)
 
-# read scalar uint16
+# read scalar int32
 cursor = coda.Cursor()
 coda.cursor_set_product(cursor, product)
 
@@ -98,9 +98,16 @@ print('name:', coda.type_get_name(type_))
 array = coda.cursor_read_double_array(cursor)
 print(array)
 
+# read string
+coda.cursor_goto_root(cursor)
+coda.cursor_goto(cursor, 'staName')
+type_ = coda.cursor_get_type(cursor)
+print('dims:', coda.type_get_array_dim(type_))
+coda.cursor_goto_first_array_element(cursor)
+print(repr(coda.cursor_read_string(cursor)))
+
 # read double partial array
 coda.cursor_goto_root(cursor)
-
 coda.cursor_goto(cursor, 'tpTropQCD')
 
 array = coda.cursor_read_double_partial_array(cursor, 10, 22)
