@@ -212,7 +212,7 @@ d = coda.time_parts_to_double(*parts)
 print(d)
 d = coda.time_parts_to_double_utc(*parts_utc)
 print(d)
-s = coda.time_parts_to_string(*parts, 'yyyy-mm-dd')
+s = coda.time_parts_to_string(*parts+['yyyy-mm-dd'])
 print(s)
 
 d = coda.time_string_to_double('yyyy-mm-dd', s)

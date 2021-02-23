@@ -508,10 +508,14 @@ def cursor_read_bytes(cursor, offset, count): # TODO default all data?
     return array
 
 
-def cursor_read_string(cursor):
+def cursor_get_string_length(cursor):
     l = _ffi.new('long *')
     _check(_lib.coda_cursor_get_string_length(cursor._x, l), 'coda_cursor_get_string_length')
-    l = l[0]
+    return l[0]
+
+
+def cursor_read_string(cursor):
+    l = cursor_get_string_length(cursor)
     y = _ffi.new('char [%d]' % l)
     _check(_lib.coda_cursor_read_string(cursor._x, y, l), 'coda_cursor_read_string')
     return _decode_string(_ffi.unpack(y, l))
