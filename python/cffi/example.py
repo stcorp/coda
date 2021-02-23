@@ -222,6 +222,14 @@ print(coda.get_option_use_fast_size_expressions())
 coda.set_option_use_mmap(1)
 print(coda.get_option_use_mmap())
 
+#callback
+
+def findhelper(filepath, status, error):
+    print('match?', filepath, status, error)
+
+#broken on swig side?
+#coda.match_filefilter('', ['/home/srepmub/coda/python/cffi/blup'], findhelper)
+
 #finalize
 coda.close(product)
 coda.done()

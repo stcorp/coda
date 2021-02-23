@@ -161,6 +161,23 @@ def close(product):
     _check(_lib.coda_close(product._x), 'coda_close')
 
 
+def match_filefilter(filter_, paths, callback):
+    def passer(filepath, status, error, userdata): # TODO pass userdata?
+        callback(_string(filepath), status, _string(error))
+        return 0
+
+    fptr = _ffi.callback( # TODO check security?
+                ' int (char *, enum coda_filefilter_status_enum, char *, void *)',
+                passer)
+    npaths = len(paths)
+    paths2 = _ffi.new('char *[%d]' % npaths)
+    for i, path in enumerate(paths):
+        paths2[i] = _ffi.new('char[]', _encode_string(paths[i]))
+    voidp = _ffi.new('char *') # TODO _ffi.handle?
+
+    _check(_lib.coda_match_filefilter(_encode_string(filter_), npaths, paths2, fptr, voidp))
+
+
 class Cursor(Node):
     def __init__(self):
         self._x = _ffi.new('coda_cursor *')
