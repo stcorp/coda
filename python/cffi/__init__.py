@@ -516,8 +516,8 @@ def cursor_get_string_length(cursor):
 
 def cursor_read_string(cursor):
     l = cursor_get_string_length(cursor)
-    y = _ffi.new('char [%d]' % l)
-    _check(_lib.coda_cursor_read_string(cursor._x, y, l), 'coda_cursor_read_string')
+    y = _ffi.new('char [%d]' % (l+1))
+    _check(_lib.coda_cursor_read_string(cursor._x, y, l+1), 'coda_cursor_read_string')
     return _decode_string(_ffi.unpack(y, l))
 
 

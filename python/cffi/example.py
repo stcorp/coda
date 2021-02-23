@@ -147,6 +147,9 @@ coda.expression_delete(expr)
 what = coda.recognize_file('AE_TEST_ALD_U_N_1B_20190105T011602023_008364010_002143_0001.DBL')
 print('what:', what)
 
+# close
+coda.close(product)
+
 product = coda.open_as('AE_TEST_ALD_U_N_1B_20190105T011602023_008364010_002143_0001.DBL', 'AEOLUS', 'ALD_U_N_1B', 9)
 
 print('class', coda.get_product_class(product))
@@ -240,6 +243,22 @@ def findhelper(filepath, status, error):
 #broken on swig side?
 #coda.match_filefilter('', ['/home/srepmub/coda/python/cffi/blup'], findhelper)
 
-#finalize
+#close
 coda.close(product)
+
+# test self fabricated product
+
+product = coda.open('woef.nc')
+cursor = coda.Cursor()
+coda.cursor_set_product(cursor, product)
+
+# scalar char
+coda.cursor_goto(cursor, 'mychar')
+coda.cursor_goto_first_array_element(cursor)
+print(repr(coda.cursor_read_string(cursor)))
+print(coda.fetch(product, 'mychar'))
+
+coda.close(product)
+
+#finalize
 coda.done()
