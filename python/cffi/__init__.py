@@ -424,6 +424,18 @@ def _read_partial(cursor, type_, offset, count):
     return array
 
 
+def cursor_read_char(cursor):
+    return _read_scalar(cursor, 'char')
+
+
+def cursor_read_char_array(cursor, order=0):
+    return _read_array(cursor, 'char', order)
+
+
+def cursor_read_char_partial_array(cursor, offset, count):
+    return _read_partial(cursor, 'char', offset, count)
+
+
 def cursor_read_int8(cursor):
     return _read_scalar(cursor, 'int8_t')
 
