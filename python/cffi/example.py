@@ -148,6 +148,11 @@ print('version', coda.get_product_version(product))
 print('description', coda.get_description(product))
 print('attrs', coda.get_attributes(product))
 
+try:
+    coda.get_product_variable_value(product, 'geolocation', 0)
+except coda.CodacError as e:
+    print(str(e))
+
 # product/cursor methods
 cursor = coda.Cursor()
 coda.cursor_set_product(cursor, product)
@@ -223,10 +228,8 @@ coda.set_option_use_mmap(1)
 print(coda.get_option_use_mmap())
 
 #callback
-
 def findhelper(filepath, status, error):
     print('match?', filepath, status, error)
-
 #broken on swig side?
 #coda.match_filefilter('', ['/home/srepmub/coda/python/cffi/blup'], findhelper)
 

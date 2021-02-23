@@ -269,6 +269,12 @@ def get_product_root_type(product):
     return Type(c[0])
 
 
+def get_product_variable_value(product, variable, index):
+    x = _ffi.new('int64_t *')
+    _check(_lib.coda_get_product_variable_value(product._x, _encode_string(variable), index, x), 'coda_get_product_variable_value')
+    return x[0]
+
+
 def cursor_set_product(cursor, product):
     _check(_lib.coda_cursor_set_product(cursor._x, product._x), 'coda_cursor_set_product')
 
