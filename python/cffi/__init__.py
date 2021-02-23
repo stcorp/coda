@@ -311,6 +311,14 @@ def cursor_goto_array_element_by_index(cursor, index):
     _check(_lib.coda_cursor_goto_array_element_by_index(cursor._x, index), 'coda_cursor_goto_array_element_by_index')
 
 
+def cursor_goto_array_element(cursor, idcs):
+    n = len(idcs)
+    s = _ffi.new('long [%d]' % n)
+    for i, val in enumerate(idcs):
+        s[i] = val
+    _check(_lib.coda_cursor_goto_array_element(cursor._x, n, s), 'coda_cursor_goto_array_element')
+
+
 def cursor_goto_first_record_field(cursor):
     _check(_lib.coda_cursor_goto_first_record_field(cursor._x), 'coda_cursor_goto_first_record_field')
 
@@ -319,9 +327,27 @@ def cursor_goto_next_record_field(cursor):
     _check(_lib.coda_cursor_goto_next_record_field(cursor._x), 'coda_cursor_goto_next_record_field')
 
 
+def cursor_goto_available_union_field(cursor):
+    _check(_lib.coda_cursor_goto_available_union_field(cursor._x), 'coda_cursor_goto_available_union_field')
+
+
+def cursor_goto_record_field_by_index(cursor, index):
+    _check(_lib.coda_cursor_goto_record_field_by_index(cursor._x, index), 'coda_cursor_goto_record_field_by_index')
+
+
+def cursor_goto_record_field_by_name(cursor, name):
+    _check(_lib.coda_cursor_goto_record_field_by_name(cursor._x, _encode_string(name)), 'coda_cursor_goto_record_field_by_name')
+
+
 def cursor_get_depth(cursor):
     x = _ffi.new('int *')
     _check(_lib.coda_cursor_get_depth(cursor._x, x), 'coda_cursor_get_depth')
+    return x[0]
+
+
+def cursor_get_index(cursor):
+    x = _ffi.new('long *')
+    _check(_lib.coda_cursor_get_index(cursor._x, x), 'coda_cursor_get_index')
     return x[0]
 
 
@@ -338,10 +364,28 @@ def cursor_get_record_field_available_status(cursor, index):
     return x[0]
 
 
+def cursor_get_record_field_index_from_name(cursor, name):
+    x = _ffi.new('long *')
+    _check(_lib.coda_cursor_get_record_field_index_from_name(cursor._x, _encode_string(name), x), 'coda_cursor_get_record_field_index_from_name')
+    return x[0]
+
+
+def cursor_get_available_union_field_index(cursor):
+    x = _ffi.new('long *')
+    _check(_lib.coda_cursor_get_available_union_field_index(cursor._x, x), 'coda_cursor_get_available_union_field_index')
+    return x[0]
+
+
 def cursor_has_attributes(cursor):
     x = _ffi.new('int *')
     _check(_lib.coda_cursor_has_attributes(cursor._x, x), 'coda_cursor_has_attributes')
     return x[0]
+
+
+def cursor_get_product_file(cursor):
+    x = _ffi.new('coda_product **')
+    _check(_lib.coda_cursor_get_product_file(cursor._x, x), 'coda_get_product_file')
+    return Product(x[0])
 
 
 def _read_scalar(cursor, type_):
@@ -500,9 +544,56 @@ def cursor_read_double_partial_array(cursor, offset, count):
     return _read_partial(cursor, 'double', offset, count)
 
 
+def cursor_get_bit_size(cursor):
+    x = _ffi.new('int64_t *')
+    _check(_lib.coda_cursor_get_bit_size(cursor._x, x), 'coda_cursor_get_bit_size')
+    return x[0]
+
+
+def cursor_get_byte_size(cursor):
+    x = _ffi.new('int64_t *')
+    _check(_lib.coda_cursor_get_byte_size(cursor._x, x), 'coda_cursor_get_byte_size')
+    return x[0]
+
+
+def cursor_get_file_bit_offset(cursor):
+    x = _ffi.new('int64_t *')
+    _check(_lib.coda_cursor_get_file_bit_offset(cursor._x, x), 'coda_cursor_get_file_bit_offset')
+    return x[0]
+
+
+def cursor_get_file_byte_offset(cursor):
+    x = _ffi.new('int64_t *')
+    _check(_lib.coda_cursor_get_file_byte_offset(cursor._x, x), 'coda_cursor_get_file_byte_offset')
+    return x[0]
+
+
+def cursor_get_format(cursor):
+    x = _ffi.new('enum coda_format_enum *')
+    _check(_lib.coda_cursor_get_format(cursor._x, x), 'coda_cursor_get_format')
+    return x[0]
+
+
+def cursor_has_ascii_content(cursor):
+    x = _ffi.new('int *')
+    _check(_lib.coda_cursor_has_ascii_content(cursor._x, x), 'coda_cursor_has_ascii_content')
+    return x[0]
+
+
 def cursor_read_bytes(cursor, offset, count): # TODO default all data?
     d = _ffi.new('uint8_t[%d]' % count)
     _check(_lib.coda_cursor_read_bytes(cursor._x, d, offset, count), 'coda_cursor_read_bytes')
+    buf = _ffi.buffer(d)
+    array = numpy.frombuffer(buf, dtype='uint8')
+    return array
+
+
+def cursor_read_bits(cursor, offset, count): # TODO default all data?
+    nbytes = count // 8
+    if count % 8 > 0:
+        nbytes += 1
+    d = _ffi.new('uint8_t[%d]' % nbytes)
+    _check(_lib.coda_cursor_read_bits(cursor._x, d, offset, count), 'coda_cursor_read_bits')
     buf = _ffi.buffer(d)
     array = numpy.frombuffer(buf, dtype='uint8')
     return array
@@ -557,6 +648,22 @@ def type_get_format(type_):
     return x[0]
 
 
+def type_get_special_type(type_):
+    x = _ffi.new('enum coda_special_type_enum *')
+    _check(_lib.coda_type_get_special_type(type_._x, x), 'coda_type_get_special_type')
+    return x[0]
+
+
+def type_get_special_type_name(n):
+    return _string(_lib.coda_type_get_special_type_name(n))
+
+
+def type_get_special_base_type(type_):
+    x = _ffi.new('coda_type **')
+    _check(_lib.coda_type_get_special_base_type(type_._x, x), 'coda_type_get_special_base_type')
+    return Type(x[0])
+
+
 def type_get_array_base_type(type_):
     x = _ffi.new('coda_type **')
     _check(_lib.coda_type_get_array_base_type(type_._x, x), 'coda_type_get_array_base_type')
@@ -606,6 +713,12 @@ def type_get_record_field_available_status(type_, index):
     return x[0]
 
 
+def type_get_record_union_status(type_):
+    x = _ffi.new('int *')
+    _check(_lib.coda_type_get_record_union_status(type_._x, x), 'coda_type_get_record_union_status')
+    return x[0]
+
+
 def type_get_record_field_hidden_status(type_, index):
     x = _ffi.new('int *')
     _check(_lib.coda_type_get_record_field_hidden_status(type_._x, index, x), 'coda_type_get_record_field_hidden_status')
@@ -618,15 +731,39 @@ def type_get_record_field_name(type_, index):
     return _string(x[0])
 
 
+def type_get_record_field_real_name(type_, index):
+    x = _ffi.new('char **')
+    _check(_lib.coda_type_get_record_field_real_name(type_._x, index, x), 'coda_type_get_record_field_real_name')
+    return _string(x[0])
+
+
 def type_get_record_field_type(type_, index):
     x = _ffi.new('coda_type **')
     _check(_lib.coda_type_get_record_field_type(type_._x, index, x), 'coda_type_get_record_field_type')
     return Type(x[0])
 
 
+def type_get_record_field_index_from_name(type_, name):
+    x = _ffi.new('long *')
+    _check(_lib.coda_type_get_record_field_index_from_name(type_._x, _encode_string(name), x), 'coda_type_get_record_field_index_from_name')
+    return x[0]
+
+
+def type_get_record_field_index_from_real_name(type_, name):
+    x = _ffi.new('long *')
+    _check(_lib.coda_type_get_record_field_index_from_real_name(type_._x, _encode_string(name), x), 'coda_type_get_record_field_index_from_real_name')
+    return x[0]
+
+
 def type_get_bit_size(type_):
     x = _ffi.new('int64_t *')
     _check(_lib.coda_type_get_bit_size(type_._x, x), 'coda_type_get_bit_size')
+    return x[0]
+
+
+def type_get_string_length(type_):
+    x = _ffi.new('long *')
+    _check(_lib.coda_type_get_string_length(type_._x, x), 'coda_type_get_string_length')
     return x[0]
 
 
@@ -645,6 +782,12 @@ def type_get_native_type_name(f):
 def type_get_name(type_):
     x = _ffi.new('char **')
     _check(_lib.coda_type_get_name(type_._x, x), 'coda_type_get_name')
+    return _string(x[0])
+
+
+def type_get_unit(type_):
+    x = _ffi.new('char **')
+    _check(_lib.coda_type_get_unit(type_._x, x), 'coda_type_get_unit')
     return _string(x[0])
 
 

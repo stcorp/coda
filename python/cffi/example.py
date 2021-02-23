@@ -75,8 +75,24 @@ print('nt name:', coda.type_get_native_type_name(coda.type_get_read_type(type_))
 print('0 hidden:', coda.type_get_record_field_hidden_status(type_, 0))
 print('0 available:', coda.type_get_record_field_available_status(type_, 0))
 print('field type:', coda.type_get_class(coda.type_get_record_field_type(type_, 0)))
+print('field name:', coda.type_get_record_field_name(type_, 0))
+print('field realname:', coda.type_get_record_field_real_name(type_, 0))
+print('index:', coda.type_get_record_field_index_from_name(type_, 'nStaticIds'))
+print('index:', coda.cursor_get_record_field_index_from_name(cursor, 'nStaticIds'))
+print('indexreal:', coda.type_get_record_field_index_from_real_name(type_, 'nStaticIds'))
 print('has attributes:', coda.type_has_attributes(type_))
+print('unit:', coda.type_get_unit(type_))
+print('union status:', coda.type_get_record_union_status(type_))
+print('union av i:', coda.cursor_get_available_union_field_index(cursor))
+print('product file', coda.get_product_filename(coda.cursor_get_product_file(cursor)))
 
+
+coda.cursor_goto_root(cursor)
+coda.cursor_goto_record_field_by_index(cursor, 0)
+coda.cursor_goto_root(cursor)
+coda.cursor_goto_record_field_by_name(cursor, 'nStaticIds')
+
+coda.cursor_goto_root(cursor)
 coda.cursor_goto(cursor, 'tpTropQCD')
 coda.cursor_goto_parent(cursor)
 coda.cursor_goto(cursor, 'tpTropQCD')
@@ -98,12 +114,18 @@ print('name:', coda.type_get_name(type_))
 array = coda.cursor_read_double_array(cursor)
 print(array)
 
+#get specific element
+coda.cursor_goto_array_element(cursor, [0,1,7])
+print(coda.cursor_read_double(cursor))
+
 # read string
 coda.cursor_goto_root(cursor)
 coda.cursor_goto(cursor, 'staName')
 type_ = coda.cursor_get_type(cursor)
+print(coda.type_get_name(type_))
 print('dims:', coda.type_get_array_dim(type_))
 coda.cursor_goto_first_array_element(cursor)
+print(coda.cursor_get_string_length(cursor))
 print(repr(coda.cursor_read_string(cursor)))
 
 # read double partial array
@@ -113,6 +135,11 @@ coda.cursor_goto(cursor, 'tpTropQCD')
 array = coda.cursor_read_double_partial_array(cursor, 10, 22)
 print(array.shape)
 print(array)
+
+try:
+    coda.cursor_goto_available_union_field(cursor)
+except coda.CodacError as e:
+    print(str(e))
 
 # exceptions
 coda.cursor_goto_root(cursor)
@@ -174,8 +201,20 @@ coda.cursor_goto(cursor, 'geolocation')
 coda.cursor_goto_array_element_by_index(cursor, 0)
 coda.cursor_goto(cursor, 'start_of_observation_time')
 
+type_ = coda.cursor_get_type(cursor)
+print('T', coda.type_get_special_type(type_))
+print('N', coda.type_get_special_type_name(2))
+print('B', coda.type_get_native_type_name(coda.type_get_read_type(coda.type_get_special_base_type(type_))))
+
 coda.cursor_use_base_type_of_special_type(cursor)
+print('bitsize:', coda.cursor_get_bit_size(cursor))
+print('bytesize:', coda.cursor_get_byte_size(cursor))
+print('bitoff', coda.cursor_get_file_bit_offset(cursor))
+print('byteoff', coda.cursor_get_file_byte_offset(cursor))
+print('format', coda.cursor_get_format(cursor))
 data = coda.cursor_read_bytes(cursor, 0, 4)
+print(type(data), data.shape, data.dtype, data)
+data = coda.cursor_read_bits(cursor, 8, 40)
 print(type(data), data.shape, data.dtype, data)
 
 # expressions
@@ -240,8 +279,12 @@ print(coda.get_option_use_mmap())
 #callback
 def findhelper(filepath, status, error):
     print('match?', filepath, status, error)
+
 #broken on swig side?
 #coda.match_filefilter('', ['/home/srepmub/coda/python/cffi/blup'], findhelper)
+
+print('index', coda.cursor_get_index(cursor))
+print('has_ascii', coda.cursor_has_ascii_content(cursor))
 
 #close
 coda.close(product)
@@ -255,6 +298,8 @@ coda.cursor_set_product(cursor, product)
 # scalar char
 coda.cursor_goto(cursor, 'mychar')
 coda.cursor_goto_first_array_element(cursor)
+type_ = coda.cursor_get_type(cursor)
+print('len', coda.type_get_string_length(type_)) # TODO -1?
 print(repr(coda.cursor_read_string(cursor)))
 print(coda.fetch(product, 'mychar'))
 
