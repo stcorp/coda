@@ -556,6 +556,49 @@ def cursor_read_double_partial_array(cursor, offset, count):
     return _read_partial(cursor, 'double', offset, count)
 
 
+def cursor_read_complex(cursor):
+    return complex(*cursor_read_complex_double_split(cursor))
+
+
+def cursor_read_complex_double_pair(cursor):
+    d = _ffi.new('double [2]')
+    _check(_lib.coda_cursor_read_complex_double_pair(cursor._x, d), 'coda_cursor_read_complex_double_pair')
+    return numpy.asarray(list(d), dtype=float)
+
+
+def cursor_read_complex_double_split(cursor):
+    d = _ffi.new('double *')
+    e = _ffi.new('double *')
+    _check(_lib.coda_cursor_read_complex_double_split(cursor._x, d, e), 'coda_cursor_read_complex_double_split')
+    return [d[0], e[0]]
+
+
+def cursor_read_complex_array(cursor, order=0):
+    array = cursor_read_complex_double_pairs_array(cursor, order)
+    return numpy.squeeze(array.view(dtype=complex))
+
+
+def cursor_read_complex_double_pairs_array(cursor, order=0):
+    shape = cursor_get_array_dim(cursor)
+    size = functools.reduce(lambda x, y: x*y, shape, 1)
+    d = _ffi.new('double[%d]' % (size*2))
+    _check(_lib.coda_cursor_read_complex_double_pairs_array(cursor._x, d, order), 'coda_cursor_read_complex_double_pairs_array')
+    buf = _ffi.buffer(d)
+    array = numpy.frombuffer(buf).reshape(tuple(shape)+(2,))
+    return array
+
+
+def cursor_read_complex_double_split_array(cursor, order=0):
+    shape = cursor_get_array_dim(cursor)
+    size = functools.reduce(lambda x, y: x*y, shape, 1)
+    d = _ffi.new('double[%d]' % size)
+    e = _ffi.new('double[%d]' % size)
+    _check(_lib.coda_cursor_read_complex_double_split_array(cursor._x, d, e, order), 'coda_cursor_read_complex_double_split_array')
+    array1 = numpy.frombuffer(_ffi.buffer(d)).reshape(shape)
+    array2 = numpy.frombuffer(_ffi.buffer(e)).reshape(shape)
+    return [array1, array2]
+
+
 def cursor_get_bit_size(cursor):
     x = _ffi.new('int64_t *')
     _check(_lib.coda_cursor_get_bit_size(cursor._x, x), 'coda_cursor_get_bit_size')

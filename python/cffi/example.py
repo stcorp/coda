@@ -265,13 +265,13 @@ parts = coda.time_string_to_parts( 'yyyy-mm-dd', s)
 print(parts)
 
 #options
-coda.set_option_bypass_special_types(1)
+coda.set_option_bypass_special_types(0)
 print(coda.get_option_bypass_special_types())
-coda.set_option_perform_boundary_checks(0)
+coda.set_option_perform_boundary_checks(1)
 print(coda.get_option_perform_boundary_checks())
-coda.set_option_perform_conversions(1)
+coda.set_option_perform_conversions(0)
 print(coda.get_option_perform_conversions())
-coda.set_option_use_fast_size_expressions(0)
+coda.set_option_use_fast_size_expressions(1)
 print(coda.get_option_use_fast_size_expressions())
 coda.set_option_use_mmap(1)
 print(coda.get_option_use_mmap())
@@ -289,8 +289,7 @@ print('has_ascii', coda.cursor_has_ascii_content(cursor))
 #close
 coda.close(product)
 
-# test self fabricated product
-
+#test self-fabricated product
 product = coda.open('woef.nc')
 cursor = coda.Cursor()
 coda.cursor_set_product(cursor, product)
@@ -299,9 +298,41 @@ coda.cursor_set_product(cursor, product)
 coda.cursor_goto(cursor, 'mychar')
 coda.cursor_goto_first_array_element(cursor)
 type_ = coda.cursor_get_type(cursor)
-print('len', coda.type_get_string_length(type_)) # TODO -1?
+print('len', coda.type_get_string_length(type_))
 print(repr(coda.cursor_read_string(cursor)))
 print(coda.fetch(product, 'mychar'))
+
+#complex numbers
+product = coda.open("MIP_NL__1PYDSI20120401_012202_000060153113_00161_52761_0000.N1")
+
+cursor = coda.Cursor()
+coda.cursor_set_product(cursor, product)
+
+print(coda.cursor_get_num_elements(cursor))
+type_ = coda.cursor_get_type(cursor)
+print(coda.type_get_class_name(coda.type_get_class(type_)))
+
+for i in range(14):
+    print(i, coda.type_get_record_field_name(type_, i))
+
+coda.cursor_goto(cursor, 'mipas_level_1b_mds')
+coda.cursor_goto_array_element_by_index(cursor, 3)
+coda.cursor_goto_record_field_by_name(cursor, 'spike_amp')
+
+array = coda.cursor_read_complex_array(cursor)
+print(type(array), array.dtype, array.shape, array[50], type(array[50]))
+array = coda.cursor_read_complex_double_pairs_array(cursor)
+print(type(array), array.dtype, array.shape, array[50])
+array = coda.cursor_read_complex_double_split_array(cursor)
+print(type(array), len(array), len(array[0]), type(array[0]), array[0].dtype, array[0][50], array[1][50])
+
+coda.cursor_goto_array_element_by_index(cursor, 50)
+scalar = coda.cursor_read_complex(cursor)
+print(type(scalar), scalar)
+scalar = coda.cursor_read_complex_double_pair(cursor)
+print(type(scalar), scalar.dtype, scalar)
+scalar = coda.cursor_read_complex_double_split(cursor)
+print(type(scalar), scalar)
 
 coda.close(product)
 
