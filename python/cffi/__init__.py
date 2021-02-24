@@ -162,6 +162,9 @@ def close(product):
 
 
 def match_filefilter(filter_, paths, callback):
+    if isinstance(paths, str): # TODO py2
+        paths = [paths]
+
     def passer(filepath, status, error, userdata): # TODO pass userdata?
         callback(_string(filepath), status, _string(error))
         return 0
