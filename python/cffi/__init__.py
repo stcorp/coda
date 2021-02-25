@@ -40,6 +40,11 @@ import numpy
 
 from _codac import ffi as _ffi
 
+PY3 = sys.version_info[0] == 3
+
+if PY3:
+    long = int
+
 #
 # high-level interface
 #
@@ -140,7 +145,7 @@ def recognize_file(path):
 
     _check(_lib.coda_recognize_file(_encode_path(path), x, y, z, a, b), 'coda_recognize_file')
 
-    return [x[0], y[0], _string(z[0]), _string(a[0]), b[0]]
+    return [long(x[0]), y[0], _string(z[0]), _string(a[0]), b[0]]
 
 
 def open(path):
@@ -257,7 +262,7 @@ def get_product_definition_file(product):
 def get_product_file_size(product):
     c = _ffi.new('int64_t *')
     _check(_lib.coda_get_product_file_size(product._x, c), 'coda_get_product_file_size')
-    return c[0]
+    return long(c[0])
 
 
 def get_product_format(product):
@@ -275,7 +280,7 @@ def get_product_root_type(product):
 def get_product_variable_value(product, variable, index):
     x = _ffi.new('int64_t *')
     _check(_lib.coda_get_product_variable_value(product._x, _encode_string(variable), index, x), 'coda_get_product_variable_value')
-    return x[0]
+    return long(x[0])
 
 
 def cursor_set_product(cursor, product):
@@ -476,7 +481,7 @@ def cursor_read_int32_partial_array(cursor, offset, count):
 
 
 def cursor_read_int64(cursor):
-    return _read_scalar(cursor, 'int64_t')
+    return long(_read_scalar(cursor, 'int64_t'))
 
 
 def cursor_read_int64_array(cursor, order=0):
@@ -524,7 +529,7 @@ def cursor_read_uint32_partial_array(cursor, offset, count):
 
 
 def cursor_read_uint64(cursor):
-    return _read_scalar(cursor, 'uint64_t')
+    return long(_read_scalar(cursor, 'uint64_t'))
 
 
 def cursor_read_uint64_array(cursor, order=0):
@@ -605,25 +610,25 @@ def cursor_read_complex_double_split_array(cursor, order=0):
 def cursor_get_bit_size(cursor):
     x = _ffi.new('int64_t *')
     _check(_lib.coda_cursor_get_bit_size(cursor._x, x), 'coda_cursor_get_bit_size')
-    return x[0]
+    return long(x[0])
 
 
 def cursor_get_byte_size(cursor):
     x = _ffi.new('int64_t *')
     _check(_lib.coda_cursor_get_byte_size(cursor._x, x), 'coda_cursor_get_byte_size')
-    return x[0]
+    return long(x[0])
 
 
 def cursor_get_file_bit_offset(cursor):
     x = _ffi.new('int64_t *')
     _check(_lib.coda_cursor_get_file_bit_offset(cursor._x, x), 'coda_cursor_get_file_bit_offset')
-    return x[0]
+    return long(x[0])
 
 
 def cursor_get_file_byte_offset(cursor):
     x = _ffi.new('int64_t *')
     _check(_lib.coda_cursor_get_file_byte_offset(cursor._x, x), 'coda_cursor_get_file_byte_offset')
-    return x[0]
+    return long(x[0])
 
 
 def cursor_get_format(cursor):
@@ -816,7 +821,7 @@ def type_get_record_field_index_from_real_name(type_, name):
 def type_get_bit_size(type_):
     x = _ffi.new('int64_t *')
     _check(_lib.coda_type_get_bit_size(type_._x, x), 'coda_type_get_bit_size')
-    return x[0]
+    return long(x[0])
 
 
 def type_get_string_length(type_):
@@ -885,7 +890,7 @@ def expression_eval_integer(expr, cursor=None):
     else:
         cur = cursor._x
     _check(_lib.coda_expression_eval_integer(expr._x, cur, x), 'coda_expression_eval_integer')
-    return x[0]
+    return long(x[0])
 
 
 def expression_eval_float(expr, cursor=None):
