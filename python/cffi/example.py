@@ -291,6 +291,8 @@ def test():
     print(repr(coda.cursor_read_string(cursor)))
     print(coda.fetch(product, 'mychar'))
 
+    coda.close(product)
+
     #complex numbers
     product = coda.open("MIP_NL__1PYDSI20120401_012202_000060153113_00161_52761_0000.N1")
 
