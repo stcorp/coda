@@ -2189,7 +2189,7 @@ _readNativeTypeScalarFunctionDictionary = {
     coda_native_type_uint64: cursor_read_uint64,
     coda_native_type_float: cursor_read_float,
     coda_native_type_double: cursor_read_double,
-#    coda_native_type_char: cursor_read_char,
+    coda_native_type_char: cursor_read_char,
     coda_native_type_string: cursor_read_string,
     coda_native_type_bytes: cursor_read_bytes
 }
@@ -2216,7 +2216,7 @@ _readSpecialTypeScalarFunctionDictionary = {
     coda_special_no_data: lambda x: None,
     coda_special_vsf_integer: cursor_read_double,
     coda_special_time: cursor_read_double,
-#    coda_special_complex: cursor_read_complex
+    coda_special_complex: cursor_read_complex
 }
 
 # dictionary (a.k.a. switch construct ;) for special type array read functions.
@@ -2225,7 +2225,7 @@ _readSpecialTypeScalarFunctionDictionary = {
 _readSpecialTypeArrayFunctionDictionary = {
     coda_special_vsf_integer: cursor_read_double_array,
     coda_special_time: cursor_read_double_array,
-#    coda_special_complex: cursor_read_complex_array
+    coda_special_complex: cursor_read_complex_array
 }
 
 # dictionary used as a 'typemap'. a tuple is returned, of which the first element is a
