@@ -98,7 +98,7 @@ def _check(return_code, function=None):
         raise CodacError(function=function)
 
 
-class Node():
+class Node(object):
     def fetch(self, *args):
         return fetch(self, *args)
 
@@ -108,6 +108,8 @@ class Node():
 
 
 class Product(Node):
+    __slots__ = ['_x']
+
     def __init__(self, _x):
         self._x = _x
 
@@ -193,6 +195,8 @@ def match_filefilter(filter_, paths, callback):
 
 
 class Cursor(Node):
+    __slots__ = ['_x']
+
     def __init__(self):
         self._x = _ffi.new('coda_cursor *')
 
@@ -215,12 +219,16 @@ class Cursor(Node):
         return cursor_get_type(self)
 
 
-class Type():
+class Type(object):
+    __slots__ = ['_x']
+
     def __init__(self, _x):
         self._x = _x
 
 
-class Expression():
+class Expression(object):
+    __slots__ = ['_x']
+
     def __init__(self, _x):
         self._x = _x
 
