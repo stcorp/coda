@@ -45,6 +45,12 @@ PY3 = sys.version_info[0] == 3
 if PY3:
     long = int
 
+    def _is_str(s):
+        return isinstance(s, str)
+else:
+    def _is_str(s):
+        return isinstance(s, (str, unicode))
+
 #
 # high-level interface
 #
@@ -75,7 +81,7 @@ class CodacError(CodaError):
     def __init__(self, function=None):
         super(CodacError, self).__init__(self)
 
-        errno = _lib.coda_get_errno()[0] # TODO coda.coda_errno? remove [0]
+        errno = _lib.coda_get_errno()[0]
         strerror = _decode_string(_ffi.string(_lib.coda_errno_to_string(errno)))
         if function:
             strerror = function + '(): ' + strerror
@@ -132,7 +138,7 @@ class Product(Node):
     def __enter__(self):
         return self
 
-    def __exit__(self, *args): # TODO args?
+    def __exit__(self, exc_type, exc_value, traceback):
         close(self)
 
 
@@ -167,10 +173,10 @@ def close(product):
 
 
 def match_filefilter(filter_, paths, callback):
-    if isinstance(paths, str): # TODO py2
+    if _is_str(paths):
         paths = [paths]
 
-    def passer(filepath, status, error, userdata): # TODO pass userdata?
+    def passer(filepath, status, error, userdata): # TODO pass userdata using _ffi.handle?
         callback(_string(filepath), status, _string(error))
         return 0
 
@@ -181,7 +187,7 @@ def match_filefilter(filter_, paths, callback):
     paths2 = _ffi.new('char *[%d]' % npaths)
     for i, path in enumerate(paths):
         paths2[i] = _ffi.new('char[]', _encode_string(paths[i]))
-    voidp = _ffi.new('char *') # TODO _ffi.handle?
+    voidp = _ffi.new('char *')
 
     _check(_lib.coda_match_filefilter(_encode_string(filter_), npaths, paths2, fptr, voidp))
 
@@ -643,7 +649,7 @@ def cursor_has_ascii_content(cursor):
     return x[0]
 
 
-def cursor_read_bytes(cursor, offset, count): # TODO default all data?
+def cursor_read_bytes(cursor, offset, count):
     d = _ffi.new('uint8_t[%d]' % count)
     _check(_lib.coda_cursor_read_bytes(cursor._x, d, offset, count), 'coda_cursor_read_bytes')
     buf = _ffi.buffer(d)
@@ -651,7 +657,7 @@ def cursor_read_bytes(cursor, offset, count): # TODO default all data?
     return array
 
 
-def cursor_read_bits(cursor, offset, count): # TODO default all data?
+def cursor_read_bits(cursor, offset, count):
     nbytes = count // 8
     if count % 8 > 0:
         nbytes += 1
@@ -894,7 +900,7 @@ def expression_eval_integer(expr, cursor=None):
 
 
 def expression_eval_float(expr, cursor=None):
-    x = _ffi.new('double *') # TODO eval_float/eval_double separation?
+    x = _ffi.new('double *')
     if cursor is None:
         cur = _ffi.NULL
     else:
@@ -911,7 +917,7 @@ def expression_eval_string(expr, cursor=None):
     else:
         cur = cursor._x
     _check(_lib.coda_expression_eval_string(expr._x, cur, x, y), 'coda_expression_eval_string')
-    return _ffi.string(x[0]) # TODO decode?
+    return _ffi.string(x[0]) # TODO swig variant does not decode, should we?
 
 
 def expression_eval_node(expr, cursor):
@@ -968,13 +974,13 @@ def time_double_to_parts_utc(d):
 
 
 def time_double_to_string(d, fmt):
-    s = _ffi.new('char [100]') # TODO
+    s = _ffi.new('char [%d]' % (len(fmt)+1))
     _check(_lib.coda_time_double_to_string(d, _encode_string(fmt), s), 'coda_time_double_to_string')
     return _string(s)
 
 
 def time_double_to_string_utc(d, fmt):
-    s = _ffi.new('char [100]') # TODO
+    s = _ffi.new('char [%d]' % (len(fmt)+1))
     fmt = _encode_string(fmt)
     _check(_lib.coda_time_double_to_string_utc(d, fmt, s), 'coda_time_double_to_string_utc')
     return _string(s)
@@ -993,7 +999,7 @@ def time_parts_to_double_utc(y, mo, d, h, mi, s, mus):
 
 
 def time_parts_to_string(y, mo, d, h, mi, s, mus, fmt):
-    dt = _ffi.new('char [100]') # TODO
+    dt = _ffi.new('char [%d]' % (len(fmt)+1))
     fmt = _encode_string(fmt)
     _check(_lib.coda_time_parts_to_string(y, mo, d, h, mi, s, mus, fmt, dt), 'coda_time_parts_to_string')
     return _string(dt)
@@ -1781,8 +1787,6 @@ def _get_cursor(start):
         return copy.deepcopy(start)
 
 
-# TODO add methods to product/cursor (as mixin?)
-
 def get_attributes(start, *path):
     """
     Retrieve the attributes of the specified data item.
@@ -2157,8 +2161,6 @@ def _init():
             dirname = os.path.dirname(clib)
         relpath = "../share/coda/definitions"
         coda_set_definition_path_conditional(basename, dirname, relpath)
-
-    # TODO UDUNITS2_XML_PATH only for harp?
 
     # Set default encoding.
     _encoding = "ascii"
