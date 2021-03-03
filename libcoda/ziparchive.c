@@ -100,7 +100,7 @@ struct za_file_struct
     int64_t file_size;
     za_entry *entry;
     hashtable *hash_data;
-    void (*handle_error) (const char *, ...);
+    void (*handle_error)(const char *, ...);
 };
 
 static int get_entries(za_file *zf)
@@ -350,7 +350,7 @@ static int get_entries(za_file *zf)
     return 0;
 }
 
-za_file *za_open(const char *filename, void (*error_handler) (const char *, ...))
+za_file *za_open(const char *filename, void (*error_handler)(const char *, ...))
 {
     struct stat statbuf;
     za_file *zf;

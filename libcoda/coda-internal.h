@@ -139,8 +139,8 @@ LIBCODA_API int coda_type_get_record_field_index_from_name_n(const coda_type *ty
 
 int coda_cursor_compare(const coda_cursor *cursor1, const coda_cursor *cursor2);
 
-int coda_expression_print_html(const coda_expression *expr, int (*print) (const char *, ...));
-int coda_expression_print_xml(const coda_expression *expr, int (*print) (const char *, ...));
+int coda_expression_print_html(const coda_expression *expr, int (*print)(const char *, ...));
+int coda_expression_print_xml(const coda_expression *expr, int (*print)(const char *, ...));
 
 int coda_product_variable_get_size(coda_product *product, const char *name, long *size);
 int coda_product_variable_get_pointer(coda_product *product, const char *name, long i, int64_t **ptr);

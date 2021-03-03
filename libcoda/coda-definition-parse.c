@@ -58,10 +58,10 @@
 
 typedef struct parser_info_struct parser_info;
 
-typedef int (*init_handler) (parser_info *, const char **attr);
-typedef int (*finalise_handler) (parser_info *);
-typedef int (*add_element_to_parent_handler) (parser_info *);
-typedef void (*free_data_handler) (void *);
+typedef int (*init_handler)(parser_info *, const char **attr);
+typedef int (*finalise_handler)(parser_info *);
+typedef int (*add_element_to_parent_handler)(parser_info *);
+typedef void (*free_data_handler)(void *);
 
 typedef enum xml_element_tag_enum
 {

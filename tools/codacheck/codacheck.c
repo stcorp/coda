@@ -42,9 +42,9 @@
 #include "coda.h"
 
 /* internal CODA functions */
-int coda_cursor_print_path(const coda_cursor *cursor, int (*print) (const char *, ...));
+int coda_cursor_print_path(const coda_cursor *cursor, int (*print)(const char *, ...));
 int coda_product_check(coda_product *product, int full_read_check,
-                       void (*callbackfunc) (coda_cursor *, const char *, void *), void *userdata);
+                       void (*callbackfunc)(coda_cursor *, const char *, void *), void *userdata);
 
 int option_verbose;
 int option_quick;

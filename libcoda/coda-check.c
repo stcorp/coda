@@ -41,7 +41,7 @@
 #include <string.h>
 
 static int check_definition(coda_cursor *cursor, coda_type **definition,
-                            void (*callbackfunc) (coda_cursor *, const char *, void *), void *userdata)
+                            void (*callbackfunc)(coda_cursor *, const char *, void *), void *userdata)
 {
     coda_type_class definition_type_class;
     coda_type_class type_class;
@@ -295,7 +295,7 @@ static int check_definition(coda_cursor *cursor, coda_type **definition,
 }
 
 static int check_data(coda_cursor *cursor, coda_type **definition, int read_check, int size_check, int64_t *bit_size,
-                      void (*callbackfunc) (coda_cursor *, const char *, void *), void *userdata)
+                      void (*callbackfunc)(coda_cursor *, const char *, void *), void *userdata)
 {
     coda_type_class type_class;
     int skip_mem_size_check = 0;
@@ -871,7 +871,7 @@ static int check_data(coda_cursor *cursor, coda_type **definition, int read_chec
 }
 
 LIBCODA_API int coda_product_check(coda_product *product, int full_read_check,
-                                   void (*callbackfunc) (coda_cursor *, const char *, void *), void *userdata)
+                                   void (*callbackfunc)(coda_cursor *, const char *, void *), void *userdata)
 {
     coda_type *definition = NULL;
     coda_cursor cursor;

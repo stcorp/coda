@@ -44,6 +44,6 @@ struct coda_tree_node_struct
 };
 
 coda_tree_node *coda_tree_node_new(const coda_type *type);
-void coda_tree_node_delete(coda_tree_node *node, void (*free_item) (void *));
+void coda_tree_node_delete(coda_tree_node *node, void (*free_item)(void *));
 int coda_tree_node_add_item_for_path(coda_tree_node *node, const char *path, void *item, int leaf_only);
 int coda_tree_node_get_item_for_cursor(coda_tree_node *node, coda_cursor *cursor, void **item);

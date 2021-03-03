@@ -36,7 +36,7 @@
 
 #ifndef CODA_READ_FUNC_TYPE_DEF
 #define CODA_READ_FUNC_TYPE_DEF
-typedef int (*read_function) (const coda_cursor *, void *);
+typedef int (*read_function)(const coda_cursor *, void *);
 #endif
 
 static int read_partial_array(const coda_cursor *cursor, read_function read_basic_type_function, long offset,

@@ -68,7 +68,7 @@ coda_tree_node *coda_tree_node_new(const coda_type *root_type)
  * \param node Pointer to the node that should be deleted
  * \param free_time Optional deallocation function that will be called on all items that are attached to nodes
  */
-void coda_tree_node_delete(coda_tree_node *node, void (*free_item) (void *))
+void coda_tree_node_delete(coda_tree_node *node, void (*free_item)(void *))
 {
     int i;
 

@@ -4147,7 +4147,7 @@ int coda_expression_eval_void(const coda_expression *expr, const coda_cursor *cu
     return eval_void(&info, expr);
 }
 
-static void print_escaped_string(const char *str, int length, int (*print) (const char *, ...), int xml, int html)
+static void print_escaped_string(const char *str, int length, int (*print)(const char *, ...), int xml, int html)
 {
     int i = 0;
 
@@ -4235,7 +4235,7 @@ static void print_escaped_string(const char *str, int length, int (*print) (cons
  10: logical_or
  15: <start>
  */
-static int print_expression(const coda_expression *expr, int (*print) (const char *, ...), int xml, int html,
+static int print_expression(const coda_expression *expr, int (*print)(const char *, ...), int xml, int html,
                             int precedence)
 {
     assert(expr != NULL);
@@ -4888,12 +4888,12 @@ static int print_expression(const coda_expression *expr, int (*print) (const cha
     return 0;
 }
 
-int coda_expression_print_html(const coda_expression *expr, int (*print) (const char *, ...))
+int coda_expression_print_html(const coda_expression *expr, int (*print)(const char *, ...))
 {
     return print_expression(expr, print, 1, 1, 15);
 }
 
-int coda_expression_print_xml(const coda_expression *expr, int (*print) (const char *, ...))
+int coda_expression_print_xml(const coda_expression *expr, int (*print)(const char *, ...))
 {
     return print_expression(expr, print, 1, 0, 15);
 }
@@ -4914,7 +4914,7 @@ int coda_expression_print_xml(const coda_expression *expr, int (*print) (const c
  *   \arg \c  0, Succes.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_expression_print(const coda_expression *expr, int (*print) (const char *, ...))
+LIBCODA_API int coda_expression_print(const coda_expression *expr, int (*print)(const char *, ...))
 {
     return print_expression(expr, print, 0, 0, 15);
 }

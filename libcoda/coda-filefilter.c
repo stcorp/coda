@@ -54,7 +54,7 @@ typedef struct NameBuffer_struct
 THREAD_LOCAL ff_expr *coda_filefilter_tree;
 
 static int coda_match_filepath(int ignore_other_file_types, coda_expression *expr, NameBuffer *path_name,
-                               int (*callback) (const char *, coda_filefilter_status, const char *, void *),
+                               int (*callback)(const char *, coda_filefilter_status, const char *, void *),
                                void *userdata);
 
 static void name_buffer_init(NameBuffer *name)
@@ -108,7 +108,7 @@ static void append_string_to_name_buffer(NameBuffer *name, const char *str)
 }
 
 static int coda_match_file(coda_expression *expr, NameBuffer *path_name,
-                           int (*callback) (const char *, coda_filefilter_status, const char *, void *), void *userdata)
+                           int (*callback)(const char *, coda_filefilter_status, const char *, void *), void *userdata)
 {
     coda_product *product;
     coda_cursor cursor;
@@ -154,7 +154,7 @@ static int coda_match_file(coda_expression *expr, NameBuffer *path_name,
 }
 
 static int coda_match_dir(coda_expression *expr, NameBuffer *path_name,
-                          int (*callback) (const char *, coda_filefilter_status, const char *, void *), void *userdata)
+                          int (*callback)(const char *, coda_filefilter_status, const char *, void *), void *userdata)
 {
 #ifdef WIN32
     WIN32_FIND_DATA FileData;
@@ -278,7 +278,7 @@ static int coda_match_dir(coda_expression *expr, NameBuffer *path_name,
 }
 
 static int coda_match_filepath(int ignore_other_file_types, coda_expression *expr, NameBuffer *path_name,
-                               int (*callback) (const char *, coda_filefilter_status, const char *, void *),
+                               int (*callback)(const char *, coda_filefilter_status, const char *, void *),
                                void *userdata)
 {
     struct stat sb;
@@ -372,7 +372,7 @@ static int coda_match_filepath(int ignore_other_file_types, coda_expression *exp
  *   \arg other, The return value from the last call to the callback function.
  */
 LIBCODA_API int coda_match_filefilter(const char *filefilter, int num_filepaths, const char **filepathlist,
-                                      int (*callbackfunc) (const char *, coda_filefilter_status, const char *, void *),
+                                      int (*callbackfunc)(const char *, coda_filefilter_status, const char *, void *),
                                       void *userdata)
 {
     NameBuffer path_name;

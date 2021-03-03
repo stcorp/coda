@@ -48,8 +48,8 @@
 #include "coda-definition.h"
 
 #ifdef __GNUC__
-static int ff_printf(const char *fmt, ...) __attribute__ ((format(printf, 1, 2)));
-static int fi_printf(const char *fmt, ...) __attribute__ ((format(printf, 1, 2)));
+static int ff_printf(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
+static int fi_printf(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 #else
 static int ff_printf(const char *fmt, ...);
 static int fi_printf(const char *fmt, ...);

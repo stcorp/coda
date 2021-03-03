@@ -354,7 +354,7 @@ LIBCODA_API void coda_strfl(double a, char *s);
 LIBCODA_API long coda_c_index_to_fortran_index(int num_dims, const long dim[], long index);
 
 LIBCODA_API int coda_match_filefilter(const char *filefilter, int num_filepaths, const char **filepaths,
-                                      int (*callbackfunc) (const char *, coda_filefilter_status, const char *, void *),
+                                      int (*callbackfunc)(const char *, coda_filefilter_status, const char *, void *),
                                       void *userdata);
 
 /* CODA Time */
@@ -518,7 +518,7 @@ LIBCODA_API int coda_cursor_get_available_union_field_index(const coda_cursor *c
 
 LIBCODA_API int coda_cursor_get_array_dim(const coda_cursor *cursor, int *num_dims, long dim[]);
 
-LIBCODA_API int coda_cursor_print_path(const coda_cursor *cursor, int (*print) (const char *, ...));
+LIBCODA_API int coda_cursor_print_path(const coda_cursor *cursor, int (*print)(const char *, ...));
 
 /* read simple-type scalars */
 
@@ -606,7 +606,7 @@ LIBCODA_API int coda_expression_eval_string(const coda_expression *expr, const c
                                             long *length);
 LIBCODA_API int coda_expression_eval_node(const coda_expression *expr, coda_cursor *cursor);
 
-LIBCODA_API int coda_expression_print(const coda_expression *expr, int (*print) (const char *, ...));
+LIBCODA_API int coda_expression_print(const coda_expression *expr, int (*print)(const char *, ...));
 
 /* *CFFI-OFF* */
 

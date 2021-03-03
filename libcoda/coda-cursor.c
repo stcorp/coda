@@ -237,7 +237,7 @@ int coda_cursor_compare(const coda_cursor *cursor1, const coda_cursor *cursor2)
  *   \arg \c  0, Succes.
  *   \arg \c -1, Error occurred (check #coda_errno).
  */
-LIBCODA_API int coda_cursor_print_path(const coda_cursor *cursor, int (*print) (const char *, ...))
+LIBCODA_API int coda_cursor_print_path(const coda_cursor *cursor, int (*print)(const char *, ...))
 {
     int i;
 

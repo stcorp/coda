@@ -45,7 +45,7 @@
 typedef struct za_entry_struct za_entry;
 typedef struct za_file_struct za_file;
 
-za_file *za_open(const char *filename, void (*error_handler) (const char *, ...));
+za_file *za_open(const char *filename, void (*error_handler)(const char *, ...));
 
 const char *za_get_filename(za_file *zf);
 long za_get_num_entries(za_file *zf);
