@@ -1294,14 +1294,8 @@ def _get_c_library_filename():
     if os.path.exists(library_path):
         return library_path
 
-    # check for library file in the parent directory
-    parent_path = os.path.normpath(os.path.join(os.path.dirname(__file__), "../../..", library_name))
-    if os.path.exists(parent_path):
-        return parent_path
-
-    # TODO revert
-    # otherwise assume it can be found by name
-    return '/usr/local/lib/libcoda.so'
+    # otherwise assume the library to be in the parent library directory
+    return os.path.normpath(os.path.join(os.path.dirname(__file__), "../../..", library_name))
 
 
 #
