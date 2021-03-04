@@ -1,3 +1,5 @@
+* Greatly improved performance of codacheck on HDF5/netCDF4 products.
+
 2.21.2 2020-10-27
 ~~~~~~~~~~~~~~~~~
 
