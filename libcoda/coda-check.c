@@ -627,30 +627,90 @@ static int check_data(coda_cursor *cursor, coda_type **definition, int read_chec
                     }
                     if (num_elements > 0)
                     {
+                        coda_type *array_element_type;
+                        coda_type_class array_element_type_class;
+                        coda_format array_element_type_format;
+
                         if (coda_cursor_goto_first_array_element(cursor) != 0)
                         {
                             return -1;
                         }
-                        for (i = 0; i < num_elements; i++)
+                        if (coda_cursor_get_type(cursor, &array_element_type) != 0)
                         {
-                            if (check_data(cursor, &base_definition, read_check, size_check, &sub_bit_size,
-                                           callbackfunc, userdata) != 0)
+                            return -1;
+                        }
+                        if (coda_type_get_class(array_element_type, &array_element_type_class) != 0)
+                        {
+                            return -1;
+                        }
+                        if (coda_type_get_format(array_element_type, &array_element_type_format) != 0)
+                        {
+                            return -1;
+                        }
+                        if (coda_cursor_get_bit_size(cursor, &sub_bit_size) != 0)
+                        {
+                            return -1;
+                        }
+                        /* Reading data element-by-element from a HDF5 datafile takes a long time for large datasets
+                         * so for large blocks of integers or doubles in HDF5 format we check the first array element
+                         * without reading it and then read the whole array in one action. */
+                        if (read_check && array_element_type_format == coda_format_hdf5 && num_elements > 1 &&
+                            (array_element_type_class == coda_integer_class ||
+                             array_element_type_class == coda_real_class))
+                        {
+                            double *values;
+
+                            assert(size_check == 0);
+
+                            /* only perform type check for the first array element */
+                            if (check_data(cursor, &base_definition, 0, 0, &sub_bit_size, callbackfunc, userdata) != 0)
                             {
                                 return -1;
                             }
-                            if (size_check)
+                            coda_cursor_goto_parent(cursor);
+
+                            values = malloc(num_elements * sizeof(double));
+                            if (values == NULL)
                             {
-                                *bit_size += sub_bit_size;
+                                coda_set_error(CODA_ERROR_OUT_OF_MEMORY,
+                                               "out of memory (could not allocate %lu bytes) (%s:%u)",
+                                               (long)(num_elements * sizeof(double)), __FILE__, __LINE__);
+                                return -1;
                             }
-                            if (i < num_elements - 1)
+                            if (coda_cursor_read_double_array(cursor, values, coda_array_ordering_c) != 0)
                             {
-                                if (coda_cursor_goto_next_array_element(cursor) != 0)
+                                if (coda_errno != CODA_ERROR_PRODUCT && coda_errno != CODA_ERROR_INVALID_FORMAT &&
+                                    coda_errno != CODA_ERROR_INVALID_DATETIME)
                                 {
                                     return -1;
                                 }
+                                callbackfunc(cursor, coda_errno_to_string(coda_errno), userdata);
                             }
+                            free(values);
                         }
-                        coda_cursor_goto_parent(cursor);
+                        else
+                        {
+                            for (i = 0; i < num_elements; i++)
+                            {
+                                if (check_data(cursor, &base_definition, read_check, size_check, &sub_bit_size,
+                                               callbackfunc, userdata) != 0)
+                                {
+                                    return -1;
+                                }
+                                if (size_check)
+                                {
+                                    *bit_size += sub_bit_size;
+                                }
+                                if (i < num_elements - 1)
+                                {
+                                    if (coda_cursor_goto_next_array_element(cursor) != 0)
+                                    {
+                                        return -1;
+                                    }
+                                }
+                            }
+                            coda_cursor_goto_parent(cursor);
+                        }
                         if (*definition != NULL && base_definition == NULL)
                         {
                             *definition = NULL;
