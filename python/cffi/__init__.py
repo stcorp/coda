@@ -1630,7 +1630,7 @@ def _fetch_intermediate_array(cursor, path, pathIndex=0):
     return array
 
 
-def _fetch_object_array(cursor):
+def _fetch_object_array(cursor, type_tree=None):
     """
     _fetch_object_array() fetches arrays with a basetype that is not considered
     scalar.
@@ -1652,17 +1652,17 @@ def _fetch_object_array(cursor):
     # loop over all elements excluding the last one
     arraySizeMinOne = array.size - 1
     for i in range(arraySizeMinOne):
-        array.flat[i] = _fetch_subtree(cursor)
+        array.flat[i] = _fetch_subtree(cursor, type_tree)
         cursor_goto_next_array_element(cursor)
 
     # final element then back tp parent scope
-    array.flat[arraySizeMinOne] = _fetch_subtree(cursor)
+    array.flat[arraySizeMinOne] = _fetch_subtree(cursor, type_tree)
     cursor_goto_parent(cursor)
 
     return array
 
 
-def _fetch_subtree(cursor):
+def _fetch_subtree(cursor, type_tree=None):
     """
     _fetch_subtree() recursively fetches all data starting from a specified
     position. this function is commonly called when path traversal reaches the
@@ -1672,37 +1672,29 @@ def _fetch_subtree(cursor):
     while hidden fields are only skipped if the filtering option is set to True.
     """
 
-    nodeType = cursor_get_type(cursor)
-    nodeClass = type_get_class(nodeType)
+    if type_tree is None:
+        type_tree = _determine_type_tree(cursor)
 
-    if nodeClass == coda_record_class:
-        fieldCount = cursor_get_num_elements(cursor)
+    class_ = type_tree['class']
+
+    if class_ == 'record':
+        fields = type_tree['fields']
+
+        fieldCount = len(fields)
 
         # check for empty record.
         if fieldCount == 0:
             return Record()
-
-        # get information about the record fields.
-        skipField = [False] * fieldCount
-        for i in range(0, fieldCount):
-            if cursor_get_record_field_available_status(cursor, i) != 1:
-                # skip field if unavailable.
-                skipField[i] = True
-                continue
-
-            if _filterRecordFields:
-                skipField[i] = bool(type_get_record_field_hidden_status(nodeType, i))
 
         # create a new Record.
         record = Record()
 
         # read data.
         cursor_goto_first_record_field(cursor)
-        for i in range(0, fieldCount):
-            if not skipField[i]:
-                data = _fetch_subtree(cursor)
-                fieldName = type_get_record_field_name(nodeType, i)
-                record._registerField(fieldName, data)
+        for i, field in enumerate(fields):
+            if field is not None:
+                data = _fetch_subtree(cursor, field['type'])
+                record._registerField(field['name'], data)
 
             # avoid calling cursor_goto_next_record_field() after reading
             # the final field. otherwise, the cursor would get positioned
@@ -1713,30 +1705,25 @@ def _fetch_subtree(cursor):
         cursor_goto_parent(cursor)
         return record
 
-    elif (nodeClass == coda_array_class):
+    elif class_ == 'array':
         # check for empty array.
         if cursor_get_num_elements(cursor) == 0:
             return None
 
-        # get base type information.
-        arrayBaseType = type_get_array_base_type(nodeType)
-        arrayBaseClass = type_get_class(arrayBaseType)
-
-        if ((arrayBaseClass == coda_array_class) or (arrayBaseClass == coda_record_class)):
+        if type_tree['baseclass'] == 'object':
             # neither an array of arrays nor an array of records can be read directly.
             # therefore, the elements of the array are read one at a time and stored
             # in a numpy array.
-            return _fetch_object_array(cursor)
+            return _fetch_object_array(cursor, type_tree['type'])
 
-        elif ((arrayBaseClass == coda_integer_class) or (arrayBaseClass == coda_real_class) or
-              (arrayBaseClass == coda_text_class) or (arrayBaseClass == coda_raw_class)):
+        elif type_tree['baseclass'] == 'scalar':
             # scalar base type.
-            arrayBaseReadType = type_get_read_type(arrayBaseType)
+            arrayBaseReadType = type_tree['readtype']
             return _readNativeTypeArrayFunctionDictionary[arrayBaseReadType](cursor)
 
-        elif arrayBaseClass == coda_special_class:
+        elif type_tree['baseclass'] == 'special':
             # special base type.
-            arrayBaseSpecialType = type_get_special_type(arrayBaseType)
+            arrayBaseSpecialType = type_tree['specialtype']
             if arrayBaseSpecialType == coda_special_no_data:
                 # this is a very weird special case that will probably never occur.
                 # for consistency, an array with base type coda_special_no_data will
@@ -1752,23 +1739,104 @@ def _fetch_subtree(cursor):
             else:
                 return _readSpecialTypeArrayFunctionDictionary[arrayBaseSpecialType](cursor)
 
+    elif class_ == 'scalar':
+        # scalar type.
+        nodeReadType = type_tree['readtype']
+        return _readNativeTypeScalarFunctionDictionary[nodeReadType](cursor)
+
+    elif class_ == 'special':
+        # special type.
+        nodeSpecialType = type_tree['specialtype']
+        return _readSpecialTypeScalarFunctionDictionary[nodeSpecialType](cursor)
+
+
+def _determine_type_tree(cursor):
+    tree = {}
+
+    nodeType = cursor_get_type(cursor)
+    nodeClass = type_get_class(nodeType)
+
+    if nodeClass == coda_record_class:
+        tree['class'] = 'record'
+        tree['fields'] = fields = []
+
+        fieldCount = cursor_get_num_elements(cursor)
+        if fieldCount == 0:
+            return tree
+
+        # determine field visibility
+        skipField = [False] * fieldCount
+        for i in range(0, fieldCount):
+            if cursor_get_record_field_available_status(cursor, i) != 1:
+                # skip field if unavailable.
+                skipField[i] = True
+                continue
+
+            if _filterRecordFields:
+                skipField[i] = bool(type_get_record_field_hidden_status(nodeType, i))
+
+        # field names (None means invisible)
+        cursor_goto_first_record_field(cursor)
+        for i in range(0, fieldCount):
+            if not skipField[i]:
+                fieldName = type_get_record_field_name(nodeType, i)
+                subtype = _determine_type_tree(cursor)
+                fields.append({'name': fieldName, 'type': subtype})
+            else:
+                fields.append(None)
+
+            # avoid calling cursor_goto_next_record_field() after reading
+            # the final field. otherwise, the cursor would get positioned
+            # outside the record.
+            if i < fieldCount - 1:
+                cursor_goto_next_record_field(cursor)
+
+        cursor_goto_parent(cursor)
+
+    elif (nodeClass == coda_array_class):
+        tree['class'] = 'array'
+
+        # get base type information.
+        arrayBaseType = type_get_array_base_type(nodeType)
+        arrayBaseClass = type_get_class(arrayBaseType)
+
+        if ((arrayBaseClass == coda_array_class) or (arrayBaseClass == coda_record_class)):
+            tree['baseclass'] = 'object'
+
+        elif ((arrayBaseClass == coda_integer_class) or (arrayBaseClass == coda_real_class) or
+              (arrayBaseClass == coda_text_class) or (arrayBaseClass == coda_raw_class)):
+            tree['baseclass'] = 'scalar'
+            tree['readtype'] = type_get_read_type(arrayBaseType)
+
+        elif arrayBaseClass == coda_special_class:
+            tree['baseclass'] = 'special'
+            tree['specialtype'] = type_get_special_type(arrayBaseType)
+
         else:
             raise FetchError("array of unknown base type")
 
+        cursor_goto_first_array_element(cursor)
+        subtype = _determine_type_tree(cursor)
+        tree['type'] = subtype
+        cursor_goto_parent(cursor)
+
     elif ((nodeClass == coda_integer_class) or (nodeClass == coda_real_class) or
           (nodeClass == coda_text_class) or (nodeClass == coda_raw_class)):
-        # scalar type.
+        tree['class'] = 'scalar'
+
         nodeReadType = type_get_read_type(nodeType)
-        return _readNativeTypeScalarFunctionDictionary[nodeReadType](cursor)
+        tree['readtype'] = nodeReadType
 
     elif nodeClass == coda_special_class:
-        # special type.
+        tree['class'] = 'special'
+
         nodeSpecialType = cursor_get_special_type(cursor)
-        return _readSpecialTypeScalarFunctionDictionary[nodeSpecialType](cursor)
+        tree['specialtype'] = nodeSpecialType
 
     else:
         raise FetchError("element of unknown type")
 
+    return tree
 
 #
 # CODA LAYER I HIGH LEVEL API

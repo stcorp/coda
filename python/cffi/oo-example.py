@@ -19,8 +19,8 @@ with coda.open('madis-raob.nc') as product:
 
 
 with coda.open('AE_TEST_ALD_U_N_1B_20190105T011602023_008364010_002143_0001.DBL') as product:
-    print(product.description)
-
     array = product.fetch('geolocation')
     print(array.dtype, array.shape)
+    print(type(array[0]))
     print(array[0])
+
