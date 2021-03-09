@@ -1308,7 +1308,7 @@ def _get_c_library_filename():
     else:
         library_name = "libcoda.so"
 
-    return '/usr/local/lib/libcoda.so'
+#    return '/usr/local/lib/libcoda.so'
 
     # check for library file in the parent directory (for pyinstaller bundles)
     library_path = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", library_name))
@@ -1701,8 +1701,7 @@ def _fetch_subtree(cursor, type_tree=None):
     class_ = type_tree[0]
 
     if class_ == CLASS_SCALAR:
-        nodeReadType = type_tree[1]
-        return _readNativeTypeScalarFunctionDictionary[nodeReadType](cursor)
+        return type_tree[1](cursor)
 
     elif class_ == CLASS_RECORD:
         fields = type_tree[1]
@@ -1721,7 +1720,10 @@ def _fetch_subtree(cursor, type_tree=None):
         for i, field in enumerate(fields):
             if field is not None:
                 name, type_ = field
-                data = _fetch_subtree(cursor, type_)
+                if type_[0] == CLASS_SCALAR: # inline scalar case for performance
+                    data = type_[1](cursor)
+                else:
+                    data = _fetch_subtree(cursor, type_)
                 setattr(record, name, data)
 
             # avoid calling cursor_goto_next_record_field() after reading
@@ -1766,8 +1768,7 @@ def _fetch_subtree(cursor, type_tree=None):
                 return _readSpecialTypeArrayFunctionDictionary[extratype](cursor)
 
     elif class_ == CLASS_SPECIAL:
-        nodeSpecialType = type_tree[1]
-        return _readSpecialTypeScalarFunctionDictionary[nodeSpecialType](cursor)
+        return type_tree[1](cursor)
 
 
 def _determine_type_tree(cursor):
@@ -1776,7 +1777,13 @@ def _determine_type_tree(cursor):
     nodeType = cursor_get_type(cursor)
     nodeClass = type_get_class(nodeType)
 
-    if nodeClass == coda_record_class:
+    if ((nodeClass == coda_integer_class) or (nodeClass == coda_real_class) or
+          (nodeClass == coda_text_class) or (nodeClass == coda_raw_class)):
+        nodeReadType = type_get_read_type(nodeType)
+        reader = _readNativeTypeScalarFunctionDictionary[nodeReadType]
+        tree = [CLASS_SCALAR, reader]
+
+    elif nodeClass == coda_record_class:
         fields = []
         registered = []
 
@@ -1843,14 +1850,10 @@ def _determine_type_tree(cursor):
 
         tree = [CLASS_ARRAY, baseclass, extratype, subtype]
 
-    elif ((nodeClass == coda_integer_class) or (nodeClass == coda_real_class) or
-          (nodeClass == coda_text_class) or (nodeClass == coda_raw_class)):
-        nodeReadType = type_get_read_type(nodeType)
-        tree = [CLASS_SCALAR, nodeReadType]
-
     elif nodeClass == coda_special_class:
         nodeSpecialType = cursor_get_special_type(cursor)
-        tree = [CLASS_SPECIAL, nodeSpecialType]
+        reader = _readSpecialTypeScalarFunctionDictionary[nodeSpecialType]
+        tree = [CLASS_SPECIAL, reader]
 
     else:
         raise FetchError("element of unknown type")
