@@ -39,6 +39,7 @@ import sys
 import numpy
 
 from _codac import ffi as _ffi
+ffinew = _ffi.new
 
 PY3 = sys.version_info[0] == 3
 
@@ -50,6 +51,9 @@ if PY3:
 else:
     def _is_str(s):
         return isinstance(s, (str, unicode))
+
+# IMPORTANT: note that we manually inline many things here, to speed up
+# the low level interface (when using CPython)!
 
 #
 # high-level interface
@@ -302,35 +306,38 @@ def cursor_set_product(cursor, product):
 
 
 def cursor_goto(cursor, path):
-    _check(_lib.coda_cursor_goto(cursor._x, _encode_string(path)), 'coda_cursor_goto')
+    if _lib.coda_cursor_goto(cursor._x, _encode_string(path)) != 0:
+        raise CodacError('coda_cursor_goto')
 
 
 def cursor_goto_parent(cursor):
-    _check(_lib.coda_cursor_goto_parent(cursor._x), 'coda_cursor_goto_parent')
+    if _lib.coda_cursor_goto_parent(cursor._x) != 0:
+        raise CodacError('coda_cursor_goto_parent')
 
 
 def cursor_goto_root(cursor):
-    _check(_lib.coda_cursor_goto_root(cursor._x), 'coda_cursor_goto_root')
+    if _lib.coda_cursor_goto_root(cursor._x) != 0:
+        raise CodacError('coda_cursor_goto_root')
 
 
 def cursor_goto_attributes(cursor):
-    _check(_lib.coda_cursor_goto_attributes(cursor._x), 'coda_cursor_goto_attributes')
-
-
-def cursor_use_base_type_of_special_type(cursor):
-    _check(_lib.coda_cursor_use_base_type_of_special_type(cursor._x), 'coda_cursor_use_base_type_of_special_type')
+    if _lib.coda_cursor_goto_attributes(cursor._x) != 0:
+        raise CodacError('coda_cursor_goto_attributes')
 
 
 def cursor_goto_first_array_element(cursor):
-    _check(_lib.coda_cursor_goto_first_array_element(cursor._x), 'coda_cursor_goto_first_array_element')
+    if _lib.coda_cursor_goto_first_array_element(cursor._x) != 0:
+        raise CodacError('coda_cursor_goto_first_array_element')
 
 
 def cursor_goto_next_array_element(cursor):
-    _check(_lib.coda_cursor_goto_next_array_element(cursor._x), 'coda_cursor_goto_next_array_element')
+    if _lib.coda_cursor_goto_next_array_element(cursor._x) != 0:
+        raise CodacError('coda_cursor_goto_next_array_element')
 
 
 def cursor_goto_array_element_by_index(cursor, index):
-    _check(_lib.coda_cursor_goto_array_element_by_index(cursor._x, index), 'coda_cursor_goto_array_element_by_index')
+    if _lib.coda_cursor_goto_array_element_by_index(cursor._x, index) != 0:
+        raise CodacError('coda_cursor_goto_array_element_by_index')
 
 
 def cursor_goto_array_element(cursor, idcs):
@@ -338,27 +345,37 @@ def cursor_goto_array_element(cursor, idcs):
     s = _ffi.new('long [%d]' % n)
     for i, val in enumerate(idcs):
         s[i] = val
-    _check(_lib.coda_cursor_goto_array_element(cursor._x, n, s), 'coda_cursor_goto_array_element')
+    if _lib.coda_cursor_goto_array_element(cursor._x, n, s) != 0:
+        raise CodacError('coda_cursor_goto_array_element')
 
 
 def cursor_goto_first_record_field(cursor):
-    _check(_lib.coda_cursor_goto_first_record_field(cursor._x), 'coda_cursor_goto_first_record_field')
+    if _lib.coda_cursor_goto_first_record_field(cursor._x) != 0:
+        raise CodacError('coda_cursor_goto_first_record_field')
 
 
 def cursor_goto_next_record_field(cursor):
-    _check(_lib.coda_cursor_goto_next_record_field(cursor._x), 'coda_cursor_goto_next_record_field')
+    if _lib.coda_cursor_goto_next_record_field(cursor._x) != 0:
+        raise CodacError('coda_cursor_goto_next_record_field')
 
 
 def cursor_goto_available_union_field(cursor):
-    _check(_lib.coda_cursor_goto_available_union_field(cursor._x), 'coda_cursor_goto_available_union_field')
+    if _lib.coda_cursor_goto_available_union_field(cursor._x) != 0:
+        raise CodacError('coda_cursor_goto_available_union_field')
 
 
 def cursor_goto_record_field_by_index(cursor, index):
-    _check(_lib.coda_cursor_goto_record_field_by_index(cursor._x, index), 'coda_cursor_goto_record_field_by_index')
+    if _lib.coda_cursor_goto_record_field_by_index(cursor._x, index) != 0:
+        raise CodacError('coda_cursor_goto_record_field_by_index')
 
 
 def cursor_goto_record_field_by_name(cursor, name):
-    _check(_lib.coda_cursor_goto_record_field_by_name(cursor._x, _encode_string(name)), 'coda_cursor_goto_record_field_by_name')
+    if _lib.coda_cursor_goto_record_field_by_name(cursor._x, _encode_string(name)) != 0:
+        raise CodacError('coda_cursor_goto_record_field_by_name')
+
+
+def cursor_use_base_type_of_special_type(cursor):
+    _check(_lib.coda_cursor_use_base_type_of_special_type(cursor._x), 'coda_cursor_use_base_type_of_special_type')
 
 
 def cursor_get_depth(cursor):
@@ -567,7 +584,10 @@ def cursor_read_float_partial_array(cursor, offset, count):
 
 
 def cursor_read_double(cursor):
-    return _read_scalar(cursor, 'double')
+    x = ffinew('double *')
+    if _lib.coda_cursor_read_double(cursor._x, x) != 0:
+        raise CodacError('coda_cursor_read_double')
+    return x[0]
 
 
 def cursor_read_double_array(cursor, order=0):
@@ -1677,7 +1697,11 @@ def _fetch_subtree(cursor, type_tree=None):
 
     class_ = type_tree['class']
 
-    if class_ == 'record':
+    if class_ == 'scalar':
+        nodeReadType = type_tree['readtype']
+        return _readNativeTypeScalarFunctionDictionary[nodeReadType](cursor)
+
+    elif class_ == 'record':
         fields = type_tree['fields']
 
         fieldCount = len(fields)
@@ -1738,11 +1762,6 @@ def _fetch_subtree(cursor, type_tree=None):
                 return numpy.empty(None, shape=arrayShape)
             else:
                 return _readSpecialTypeArrayFunctionDictionary[arrayBaseSpecialType](cursor)
-
-    elif class_ == 'scalar':
-        # scalar type.
-        nodeReadType = type_tree['readtype']
-        return _readNativeTypeScalarFunctionDictionary[nodeReadType](cursor)
 
     elif class_ == 'special':
         # special type.
