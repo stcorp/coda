@@ -1308,6 +1308,8 @@ def _get_c_library_filename():
     else:
         library_name = "libcoda.so"
 
+    return '/usr/local/lib/libcoda.so'
+
     # check for library file in the parent directory (for pyinstaller bundles)
     library_path = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", library_name))
     if os.path.exists(library_path):
@@ -1358,16 +1360,8 @@ class Record(object):
         numpy.complex128: "complex",
         numpy.object_: "object"}
 
-    def __init__(self):
-        self._registeredFields = []
-
-    def _registerField(self, name, data):
-        """
-        _registerField() is a private method that is used to populate
-        the Record with fields read from the product file.
-        """
-        self._registeredFields.append(name)
-        self.__setattr__(name, data)
+    def __init__(self, registered=[]):
+        self._registeredFields = registered
 
     def __len__(self):
         """
@@ -1712,7 +1706,6 @@ def _fetch_subtree(cursor, type_tree=None):
 
     elif class_ == CLASS_RECORD:
         fields = type_tree[1]
-
         fieldCount = len(fields)
 
         # check for empty record.
@@ -1720,7 +1713,8 @@ def _fetch_subtree(cursor, type_tree=None):
             return Record()
 
         # create a new Record.
-        record = Record()
+        registered = type_tree[2]
+        record = Record(registered)
 
         # read data.
         cursor_goto_first_record_field(cursor)
@@ -1728,7 +1722,7 @@ def _fetch_subtree(cursor, type_tree=None):
             if field is not None:
                 name, type_ = field
                 data = _fetch_subtree(cursor, type_)
-                record._registerField(name, data)
+                setattr(record, name, data)
 
             # avoid calling cursor_goto_next_record_field() after reading
             # the final field. otherwise, the cursor would get positioned
@@ -1784,10 +1778,11 @@ def _determine_type_tree(cursor):
 
     if nodeClass == coda_record_class:
         fields = []
+        registered = []
 
         fieldCount = cursor_get_num_elements(cursor)
         if fieldCount == 0:
-            return [CLASS_RECORD, fields]
+            return [CLASS_RECORD, fields, registered]
 
         # determine field visibility
         skipField = [False] * fieldCount
@@ -1807,6 +1802,7 @@ def _determine_type_tree(cursor):
                 fieldName = type_get_record_field_name(nodeType, i)
                 subtype = _determine_type_tree(cursor)
                 fields.append([fieldName, subtype])
+                registered.append(fieldName)
             else:
                 fields.append(None)
 
@@ -1818,7 +1814,7 @@ def _determine_type_tree(cursor):
 
         cursor_goto_parent(cursor)
 
-        tree = [CLASS_RECORD, fields]
+        tree = [CLASS_RECORD, fields, registered]
 
     elif (nodeClass == coda_array_class):
         # get base type information.
