@@ -29,7 +29,6 @@
 
 from __future__ import print_function
 
-import collections
 import copy
 import functools
 import io
@@ -1346,8 +1345,6 @@ class Record(object):
     the name of the attribute, and its value is read from the product file.
     """
 
-    __slots__ = []
-
     # dictionary to convert from numpy types to
     # a string representation of the corresponding CODA type.
     _typeToString = {
@@ -1362,6 +1359,27 @@ class Record(object):
         numpy.float64: "double",
         numpy.complex128: "complex",
         numpy.object_: "object"}
+
+    def __init__(self, registered=[]):
+        self._registeredFields = registered
+
+    def __len__(self):
+        """
+        Return the number of fields in this record.
+        """
+        return len(self._registeredFields)
+
+    def __getitem__(self, key):
+        if not isinstance(key, int):
+            raise TypeError("index should be an integer")
+
+        if key < 0:
+            key += len(self._registeredFields)
+
+        if key < 0 or key >= len(self._registeredFields):
+            raise IndexError
+
+        return self.__dict__[self._registeredFields[key]]
 
     def __repr__(self):
         """
@@ -1382,8 +1400,8 @@ class Record(object):
 
         out = io.StringIO()
 
-        for field in self._fields:
-            data = getattr(self, field)
+        for field in self._registeredFields:
+            data = self.__dict__[field]
 
             out.write(u"%32s:" % (field))
 
@@ -1690,12 +1708,14 @@ def _fetch_subtree(cursor, type_tree=None):
         fieldCount = len(fields)
 
         # check for empty record.
-        recordclass = type_tree[2]
         if fieldCount == 0:
-            return recordclass()
+            return Record()
+
+        # create a new Record.
+        registered = type_tree[2]
+        record = Record(registered)
 
         # read data.
-        values = []
         cursor_goto_first_record_field(cursor)
         for i, field in enumerate(fields):
             if field is not None:
@@ -1704,7 +1724,7 @@ def _fetch_subtree(cursor, type_tree=None):
                     data = type_[1](cursor)
                 else:
                     data = _fetch_subtree(cursor, type_)
-                values.append(data)
+                setattr(record, name, data)
 
             # avoid calling cursor_goto_next_record_field() after reading
             # the final field. otherwise, the cursor would get positioned
@@ -1713,7 +1733,7 @@ def _fetch_subtree(cursor, type_tree=None):
                 cursor_goto_next_record_field(cursor)
 
         cursor_goto_parent(cursor)
-        return recordclass(*values)
+        return record
 
     elif class_ == CLASS_ARRAY:
         # check for empty array.
@@ -1768,42 +1788,40 @@ def _determine_type_tree(cursor):
         registered = []
 
         fieldCount = cursor_get_num_elements(cursor)
+        if fieldCount == 0:
+            return [CLASS_RECORD, fields, registered]
 
-        if fieldCount != 0:
-            # determine field visibility
-            skipField = [False] * fieldCount
-            for i in range(0, fieldCount):
-                if cursor_get_record_field_available_status(cursor, i) != 1:
-                    # skip field if unavailable.
-                    skipField[i] = True
-                    continue
+        # determine field visibility
+        skipField = [False] * fieldCount
+        for i in range(0, fieldCount):
+            if cursor_get_record_field_available_status(cursor, i) != 1:
+                # skip field if unavailable.
+                skipField[i] = True
+                continue
 
-                if _filterRecordFields:
-                    skipField[i] = bool(type_get_record_field_hidden_status(nodeType, i))
+            if _filterRecordFields:
+                skipField[i] = bool(type_get_record_field_hidden_status(nodeType, i))
 
-            # field names (None means invisible)
-            cursor_goto_first_record_field(cursor)
-            for i in range(0, fieldCount):
-                if not skipField[i]:
-                    fieldName = type_get_record_field_name(nodeType, i)
-                    subtype = _determine_type_tree(cursor)
-                    fields.append([fieldName, subtype])
-                    registered.append(fieldName)
-                else:
-                    fields.append(None)
+        # field names (None means invisible)
+        cursor_goto_first_record_field(cursor)
+        for i in range(0, fieldCount):
+            if not skipField[i]:
+                fieldName = type_get_record_field_name(nodeType, i)
+                subtype = _determine_type_tree(cursor)
+                fields.append([fieldName, subtype])
+                registered.append(fieldName)
+            else:
+                fields.append(None)
 
-                # avoid calling cursor_goto_next_record_field() after reading
-                # the final field. otherwise, the cursor would get positioned
-                # outside the record.
-                if i < fieldCount - 1:
-                    cursor_goto_next_record_field(cursor)
+            # avoid calling cursor_goto_next_record_field() after reading
+            # the final field. otherwise, the cursor would get positioned
+            # outside the record.
+            if i < fieldCount - 1:
+                cursor_goto_next_record_field(cursor)
 
-            cursor_goto_parent(cursor)
+        cursor_goto_parent(cursor)
 
-        class RecordTuple(Record, collections.namedtuple('Record', registered)):
-            pass
-
-        tree = [CLASS_RECORD, fields, RecordTuple]
+        tree = [CLASS_RECORD, fields, registered]
 
     elif (nodeClass == coda_array_class):
         # get base type information.
