@@ -2,9 +2,12 @@ import os
 import sys
 
 import __init__ as coda
+import time
 
 
-for x in range(2):
+for x in range(1):
+    t0 = time.time()
+
     with coda.open('madis-raob.nc') as product:
         # fetch array via product
         array = product.fetch('tpTropQCD')
@@ -24,4 +27,10 @@ for x in range(2):
         print(array.dtype, array.shape)
         print(type(array[0]))
         print(array[0])
+        print(array[0].start_of_observation_time)
+        array[0].start_of_observation_time = 12.14
+        print(array[0].start_of_observation_time)
+        print(array[0][1])
 
+
+    print('%.2f' % (time.time()-t0))

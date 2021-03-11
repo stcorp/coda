@@ -1336,6 +1336,8 @@ def _isIterable(maybeIterable):
 # CLASS RECORD; REPRESENTS CODA RECORDS IN PYTHON
 #
 class Record(object):
+    __slots__ = []
+
     """
     A class that represents the CODA record type in Python.
 
@@ -1345,86 +1347,9 @@ class Record(object):
     the name of the attribute, and its value is read from the product file.
     """
 
-    # dictionary to convert from numpy types to
-    # a string representation of the corresponding CODA type.
-    _typeToString = {
-        numpy.int8: "int8",
-        numpy.uint8: "uint8",
-        numpy.int16: "int16",
-        numpy.uint16: "uint16",
-        numpy.int32: "int32",
-        numpy.uint32: "uint32",
-        numpy.int64: "int64",
-        numpy.float32: "float",
-        numpy.float64: "double",
-        numpy.complex128: "complex",
-        numpy.object_: "object"}
+    # TODO move most of RecordType here? (check performance!)
 
-    def __init__(self, registered=[]):
-        self._registeredFields = registered
 
-    def __len__(self):
-        """
-        Return the number of fields in this record.
-        """
-        return len(self._registeredFields)
-
-    def __getitem__(self, key):
-        if not isinstance(key, int):
-            raise TypeError("index should be an integer")
-
-        if key < 0:
-            key += len(self._registeredFields)
-
-        if key < 0 or key >= len(self._registeredFields):
-            raise IndexError
-
-        return self.__dict__[self._registeredFields[key]]
-
-    def __repr__(self):
-        """
-        Return the canonical string representation of the instance.
-
-        This is always the identifying string '<coda record>'.
-        """
-        return "<coda record>"
-
-    def __str__(self):
-        """
-        Print type/structure information for this record.
-
-        The output format is identical to how MATLAB shows structure information, except
-        that for now a fixed padding value of 32 is used, and that the precision parameters
-        for some of the floats will differ.
-        """
-
-        out = io.StringIO()
-
-        for field in self._registeredFields:
-            data = self.__dict__[field]
-
-            out.write(u"%32s:" % (field))
-
-            if isinstance(data, Record):
-                out.write(u"record (%i fields)\n" % (len(data),))
-
-            elif isinstance(data, numpy.ndarray):
-                dim = data.shape
-                dimString = ""
-                for d in dim[:-1]:
-                    dimString += "%ix" % (d,)
-                dimString += "%i" % (dim[-1],)
-                out.write(u"[%s %s]\n" % (dimString, self._typeToString[data.dtype.type]))
-
-            elif isinstance(data, str):
-                out.write(u"\"%s\"\n" % (data,))
-
-            else:
-                # if type is none of the above, fall back
-                # on the type specific __str__() function.
-                out.write(u"%s\n" % (data,))
-
-        return out.getvalue()
 
 
 #
@@ -1706,16 +1631,15 @@ def _fetch_subtree(cursor, type_tree=None):
     elif class_ == CLASS_RECORD:
         fields = type_tree[1]
         fieldCount = len(fields)
+        registered = type_tree[2]
+        record_class = type_tree[3]
 
         # check for empty record.
         if fieldCount == 0:
-            return Record()
-
-        # create a new Record.
-        registered = type_tree[2]
-        record = Record(registered)
+            return record_class()
 
         # read data.
+        values = []
         cursor_goto_first_record_field(cursor)
         for i, field in enumerate(fields):
             if field is not None:
@@ -1724,7 +1648,7 @@ def _fetch_subtree(cursor, type_tree=None):
                     data = type_[1](cursor)
                 else:
                     data = _fetch_subtree(cursor, type_)
-                setattr(record, name, data)
+                values.append(data)
 
             # avoid calling cursor_goto_next_record_field() after reading
             # the final field. otherwise, the cursor would get positioned
@@ -1733,6 +1657,8 @@ def _fetch_subtree(cursor, type_tree=None):
                 cursor_goto_next_record_field(cursor)
 
         cursor_goto_parent(cursor)
+
+        record = record_class(registered, values)
         return record
 
     elif class_ == CLASS_ARRAY:
@@ -1788,40 +1714,134 @@ def _determine_type_tree(cursor):
         registered = []
 
         fieldCount = cursor_get_num_elements(cursor)
-        if fieldCount == 0:
-            return [CLASS_RECORD, fields, registered]
+        if fieldCount != 0:
+            # determine field visibility
+            skipField = [False] * fieldCount
+            for i in range(0, fieldCount):
+                if cursor_get_record_field_available_status(cursor, i) != 1:
+                    # skip field if unavailable.
+                    skipField[i] = True
+                    continue
 
-        # determine field visibility
-        skipField = [False] * fieldCount
-        for i in range(0, fieldCount):
-            if cursor_get_record_field_available_status(cursor, i) != 1:
-                # skip field if unavailable.
-                skipField[i] = True
-                continue
+                if _filterRecordFields:
+                    skipField[i] = bool(type_get_record_field_hidden_status(nodeType, i))
 
-            if _filterRecordFields:
-                skipField[i] = bool(type_get_record_field_hidden_status(nodeType, i))
+            # field names (None means invisible)
+            cursor_goto_first_record_field(cursor)
+            for i in range(0, fieldCount):
+                if not skipField[i]:
+                    fieldName = type_get_record_field_name(nodeType, i)
+                    subtype = _determine_type_tree(cursor)
+                    fields.append([fieldName, subtype])
+                    registered.append(fieldName)
+                else:
+                    fields.append(None)
 
-        # field names (None means invisible)
-        cursor_goto_first_record_field(cursor)
-        for i in range(0, fieldCount):
-            if not skipField[i]:
-                fieldName = type_get_record_field_name(nodeType, i)
-                subtype = _determine_type_tree(cursor)
-                fields.append([fieldName, subtype])
-                registered.append(fieldName)
-            else:
-                fields.append(None)
+                # avoid calling cursor_goto_next_record_field() after reading
+                # the final field. otherwise, the cursor would get positioned
+                # outside the record.
+                if i < fieldCount - 1:
+                    cursor_goto_next_record_field(cursor)
 
-            # avoid calling cursor_goto_next_record_field() after reading
-            # the final field. otherwise, the cursor would get positioned
-            # outside the record.
-            if i < fieldCount - 1:
-                cursor_goto_next_record_field(cursor)
+            cursor_goto_parent(cursor)
 
-        cursor_goto_parent(cursor)
+        class RecordType(Record):
+            __slots__ = ['_fields', '_values']
 
-        tree = [CLASS_RECORD, fields, registered]
+            # field name to index mapping
+
+            _field_to_index = {}
+            for i, field in enumerate(registered):
+                _field_to_index[field] = i
+
+            # dictionary to convert from numpy types to
+            # a string representation of the corresponding CODA type.
+
+            _typeToString = {
+                numpy.int8: "int8",
+                numpy.uint8: "uint8",
+                numpy.int16: "int16",
+                numpy.uint16: "uint16",
+                numpy.int32: "int32",
+                numpy.uint32: "uint32",
+                numpy.int64: "int64",
+                numpy.float32: "float",
+                numpy.float64: "double",
+                numpy.complex128: "complex",
+                numpy.object_: "object"}
+
+
+            def __init__(self, fields=[], values=[]):
+                super(RecordType, self).__setattr__('_fields', fields)
+                super(RecordType, self).__setattr__('_values', values)
+
+            def __len__(self):
+                """
+                Return the number of fields in this record.
+                """
+                return len(self._fields)
+
+            def __getitem__(self, key):
+                if not isinstance(key, int):
+                    raise TypeError("index should be an integer")
+
+                if key < 0:
+                    key += len(self._fields)
+
+                if key < 0 or key >= len(self._fields):
+                    raise IndexError
+
+                return self._values[key]
+
+            def __getattr__(self, field):
+                return self._values[self._field_to_index[field]]
+
+            def __setattr__(self, field, value):
+                self._values[self._field_to_index[field]] = value
+
+            def __repr__(self):
+                """
+                Return the canonical string representation of the instance.
+
+                This is always the identifying string '<coda record>'.
+                """
+                return "<coda record>"
+
+            def __str__(self):
+                """
+                Print type/structure information for this record.
+
+                The output format is identical to how MATLAB shows structure information, except
+                that for now a fixed padding value of 32 is used, and that the precision parameters
+                for some of the floats will differ.
+                """
+                out = io.StringIO()
+
+                for field, data in zip(self._fields, self._values):
+                    out.write(u"%32s:" % (field))
+
+                    if isinstance(data, Record):
+                        out.write(u"record (%i fields)\n" % (len(data),))
+
+                    elif isinstance(data, numpy.ndarray):
+                        dim = data.shape
+                        dimString = ""
+                        for d in dim[:-1]:
+                            dimString += "%ix" % (d,)
+                        dimString += "%i" % (dim[-1],)
+                        out.write(u"[%s %s]\n" % (dimString, self._typeToString[data.dtype.type]))
+
+                    elif isinstance(data, str):
+                        out.write(u"\"%s\"\n" % (data,))
+
+                    else:
+                        # if type is none of the above, fall back
+                        # on the type specific __str__() function.
+                        out.write(u"%s\n" % (data,))
+
+                return out.getvalue()
+
+        tree = [CLASS_RECORD, fields, registered, RecordType]
 
     elif (nodeClass == coda_array_class):
         # get base type information.
