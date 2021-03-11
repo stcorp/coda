@@ -5,7 +5,7 @@ import __init__ as coda
 import time
 
 
-for x in range(1):
+for x in range(4):
     t0 = time.time()
 
     with coda.open('madis-raob.nc') as product:
@@ -27,6 +27,8 @@ for x in range(1):
         print(array.dtype, array.shape)
         print(type(array[0]))
         print(array[0])
+        print(repr(array[0]))
+        print(isinstance(array[0], coda.Record))
         print(array[0].start_of_observation_time)
         array[0].start_of_observation_time = 12.14
         print(array[0].start_of_observation_time)

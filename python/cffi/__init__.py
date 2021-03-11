@@ -1588,13 +1588,14 @@ def _fetch_object_array(cursor, type_tree=None):
     cursor_goto_first_array_element(cursor)
 
     # loop over all elements excluding the last one
+    flat = array.flat
     arraySizeMinOne = array.size - 1
     for i in range(arraySizeMinOne):
-        array.flat[i] = _fetch_subtree(cursor, type_tree)
+        flat[i] = _fetch_subtree(cursor, type_tree)
         cursor_goto_next_array_element(cursor)
 
     # final element then back tp parent scope
-    array.flat[arraySizeMinOne] = _fetch_subtree(cursor, type_tree)
+    flat[arraySizeMinOne] = _fetch_subtree(cursor, type_tree)
     cursor_goto_parent(cursor)
 
     return array
