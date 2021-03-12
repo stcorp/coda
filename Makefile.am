@@ -7,7 +7,6 @@ ACLOCAL_AMFLAGS = -I m4
 DOXYGEN = @DOXYGEN@
 INDENT = @INDENT@
 
-PYTHON_SWIGFLAGS = -w119,451 -python -Ipython -I$(srcdir)/python -DPRINTF_ATTR= @SWIGFLAGS@
 JAVA_SWIGFLAGS = -w119,451 -java -Ijava -I$(srcdir)/java -package nl.stcorp.coda -outdir java/nl/stcorp/coda -DPRINTF_ATTR= @SWIGFLAGS@
 JNICPPFLAGS = @JNICPPFLAGS@
 JNIEXT = @JNIEXT@
@@ -63,9 +62,7 @@ endif
 if BUILD_PYTHON
 codapython_PYTHON = \
 	$(srcdir)/python/__init__.py \
-	$(srcdir)/python/codapython.py \
-	python/codac.py
-codapython_LTLIBRARIES = _codac.la
+	python/_codac.py
 endif
 
 if BUILD_JAVA
@@ -389,27 +386,13 @@ endif
 
 # python
 
-python/codac.c: libcoda/coda.h.in $(srcdir)/python/codac.i \
-    $(srcdir)/python/coda_typemaps.i \
-    $(srcdir)/python/coda_ignore.i \
-    $(srcdir)/python/coda_rename.i
+python/_codac.py: $(srcdir)/libcoda/coda.h.in $(srcdir)/python/build.py
 	@$(MKDIR_P) python
-	$(SWIG) $(PYTHON_SWIGFLAGS) -o python/codac.c $(srcdir)/python/codac.i
+	$(PYTHON) $(srcdir)/python/build.py $(srcdir)/libcoda/coda.h.in python/_codac.py && touch python/_codac.py # explicitly touch the file to make sure the timestamp gets updated
 
 EXTRA_DIST += \
-	python/codac.c \
-	python/codac.py \
-	$(srcdir)/python/codac.i \
-	$(srcdir)/python/coda_typemaps.i \
-	$(srcdir)/python/coda_ignore.i \
-	$(srcdir)/python/coda_rename.i
-
-if BUILD_PYTHON
-_codac_la_SOURCES = python/codac.c
-_codac_la_LDFLAGS = -module -shared -avoid-version
-_codac_la_LIBADD = libcoda.la
-_codac_la_DEPENDENCIES = libcoda.la
-endif
+	python/_codac.py \
+	python/build.py
 
 # java
 
@@ -738,7 +721,7 @@ libcoda/coda.h.cmake.in: libcoda/coda.h.in Makefile.am
 # *** development install targets to avoid long installs ***
 
 install-python:
-	$(MAKE) install-codapythonLTLIBRARIES install-codapythonPYTHON
+	$(MAKE) install-codapythonPYTHON
 
 install-matlab:
 	$(MAKE) install-nodist_matlabmexexecDATA
