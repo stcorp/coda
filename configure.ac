@@ -204,6 +204,8 @@ AC_PROG_INSTALL
 
 AC_PROG_AWK
 
+AM_PATH_PYTHON
+
 AC_ARG_VAR(DOXYGEN, [The documentation generation program Doxygen])
 if test "$DOXYGEN" = "" ; then
   AC_PATH_PROG([DOXYGEN], [doxygen])
@@ -371,21 +373,9 @@ else
 fi
 
 if test $ac_cv_enable_python = yes ; then
-  AM_PATH_PYTHON
   if test -z "$PYTHON" ; then
     AC_MSG_ERROR(BOXED_TEXT([ERROR: Python is required to build the Python interface.
 Try setting the PYTHON environment variable to the full path to your python executable if you have Python installed.]))
-  fi
-  ST_PATH_PYTHON_INCLUDE
-  if test -z "$PYTHON_INCLUDE" ; then
-    AC_MSG_ERROR(BOXED_TEXT([ERROR: Python include files are needed to build the Python interface.
-Try setting the PYTHON_INCLUDE environment variable to the directory that contains Python.h.]))
-  fi
-  ST_PATH_NUMPY_INCLUDE
-  AC_ARG_VAR(NUMPY_INCLUDE, [The Python include directory where the 'numpy' package is installed ($NUMPY_INCLUDE/numpy/ndarrayobject.h should exist). By default NUMPY_INCLUDE is set to the value of PYTHON_INCLUDE])
-  if test -z "$NUMPY_INCLUDE" ; then
-    AC_MSG_ERROR([BOXED_TEXT([ERROR: Python numpy package is needed for the Python interface.
-Please install 'numpy' or, if you have already installed this package, set the NUMPY_INCLUDE environment variable and make sure that the file $NUMPY_INCLUDE/numpy/ndarrayobject.h exists.])])
   fi
   codapythondir="$pyexecdir/coda"
 fi
