@@ -447,7 +447,10 @@ def _read_array(cursor, type_, order):
     func = getattr(_lib, 'coda_cursor_read_%s_array' % desc)
     _check(func(cursor._x, d, order), 'coda_cursor_read_%s_array' % desc)
     buf = _ffi.buffer(d)
-    array = numpy.frombuffer(buf).reshape(shape)
+    # TODO use array(buffer=.., shape=..)
+    # TODO what about 'char' type?
+    array = numpy.frombuffer(buf, dtype=desc)
+    array = array.reshape(shape)
     return array
 
 
@@ -1308,8 +1311,6 @@ def _get_c_library_filename():
     else:
         library_name = "libcoda.so"
 
-#    return '/usr/local/lib/libcoda.so'
-
     # check for library file in the parent directory (for pyinstaller bundles)
     library_path = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", library_name))
     if os.path.exists(library_path):
@@ -1664,7 +1665,7 @@ def _fetch_subtree(cursor, type_tree=None):
 
     elif class_ == CLASS_ARRAY:
         # check for empty array.
-        if cursor_get_num_elements(cursor) == 0:
+        if len(type_tree) == 1:
             return None
 
         _, baseclass, extratype, subtype = type_tree
@@ -1845,6 +1846,10 @@ def _determine_type_tree(cursor):
         tree = [CLASS_RECORD, fields, registered, RecordType]
 
     elif (nodeClass == coda_array_class):
+        # check for empty array.
+        if cursor_get_num_elements(cursor) == 0:
+            return [CLASS_ARRAY]
+
         # get base type information.
         arrayBaseType = type_get_array_base_type(nodeType)
         arrayBaseClass = type_get_class(arrayBaseType)

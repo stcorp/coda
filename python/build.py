@@ -69,6 +69,7 @@ def read_header_file(filename):
         typedef ... coda_product;
         typedef ... coda_type;
         # define MAX_NUM_DIMS 8
+        # define CODA_CURSOR_MAXDEPTH 32
         typedef struct
         {
             coda_product *product;
@@ -78,7 +79,7 @@ def read_header_file(filename):
                 void *type;
                 long index;
                 int64_t bit_offset;
-            } stack[MAX_NUM_DIMS];
+            } stack[CODA_CURSOR_MAXDEPTH];
         } coda_cursor;
     """);
 
