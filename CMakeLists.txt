@@ -636,35 +636,9 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
 
   # python
   if(CODA_BUILD_PYTHON)
-    find_package(PythonLibs)
-    if(NOT PYTHONLIBS_FOUND)
-      message(FATAL_ERROR "PYTHON libraries or include files not found.")
-    endif(NOT PYTHONLIBS_FOUND)
-    include_directories(${PYTHON_INCLUDE_DIRS})
-    find_package(NUMPY)
-    if(NOT NUMPY_FOUND)
-      message(FATAL_ERROR "Python numpy package is needed for the Python interface. Please install 'numpy' or, if you have already installed this package, set the NUMPY_INCLUDE environment variable and make sure that the file $NUMPY_INCLUDE/numpy/ndarrayobject.h exists.")
-    endif(NOT NUMPY_FOUND)
-    include_directories(${NUMPY_INCLUDE_DIR})
-    add_library(coda_python MODULE python/codac.c)
-    set_target_properties(coda_python PROPERTIES
-      OUTPUT_NAME "_codac"
-      PREFIX "")
-    if(WIN32)
-      set_target_properties(coda_python PROPERTIES SUFFIX .pyd)
-      set_target_properties(coda_python PROPERTIES COMPILE_FLAGS "-DLIBCODADLL")
-      target_link_libraries(coda_python coda ${PYTHON_LIBRARIES})
-    else(WIN32)
-      target_link_libraries(coda_python coda)
-      if(APPLE)
-        set_target_properties(coda_python PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
-      endif(APPLE)
-    endif(WIN32)
-    install(TARGETS coda_python DESTINATION ${PYTHON_PREFIX})
     install(FILES
       python/__init__.py
-      python/codac.py
-      python/codapython.py
+      python/_codac.py
       DESTINATION ${PYTHON_PREFIX})
   endif(CODA_BUILD_PYTHON)
 
