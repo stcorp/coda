@@ -54,8 +54,12 @@ else:
         return isinstance(s, (str, unicode))
 
 # use thread-local storage to avoid calling _ffi.new all the time
-TLS = threading.local()
-TLS.double = _ffi.new('double *')
+
+class ThreadLocalState(threading.local):
+    def __init__(self):
+        self.double = _ffi.new('double *')
+
+TLS = ThreadLocalState()
 
 # IMPORTANT: note that we manually inline many things here, to speed up
 # the low level interface (when using CPython)!
