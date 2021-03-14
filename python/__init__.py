@@ -35,6 +35,7 @@ import io
 import os
 import platform
 import sys
+import threading
 
 import numpy
 
@@ -51,6 +52,10 @@ if PY3:
 else:
     def _is_str(s):
         return isinstance(s, (str, unicode))
+
+# use thread-local storage to avoid calling _ffi.new all the time
+TLS = threading.local()
+TLS.double = _ffi.new('double *')
 
 # IMPORTANT: note that we manually inline many things here, to speed up
 # the low level interface (when using CPython)!
@@ -587,7 +592,7 @@ def cursor_read_float_partial_array(cursor, offset, count):
 
 
 def cursor_read_double(cursor):
-    x = ffinew('double *')
+    x = TLS.double
     if _lib.coda_cursor_read_double(cursor._x, x) != 0:
         raise CodacError('coda_cursor_read_double')
     return x[0]
