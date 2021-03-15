@@ -1,3 +1,9 @@
+* Major refactoring of the CODA Python interface:
+  - changed implementation from swig to cffi (allows use of coda with pypy)
+  - improved performance for coda.fetch() (greatest speedup when using pypy)
+  - added new Object Oriented interface
+  The refactoring should be completely backward compatible.
+
 * Greatly improved performance of codacheck on HDF5/netCDF4 products.
 
 2.21.2 2020-10-27
