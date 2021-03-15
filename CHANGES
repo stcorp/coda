@@ -1,3 +1,6 @@
+WARNING: Make sure to remove existing coda installations before upgrading.
+(e.g. remove /usr/local/lib/python<x.y>/site-packages/coda)
+
 * Major refactoring of the CODA Python interface:
   - changed implementation from swig to cffi (allows use of coda with pypy)
   - improved performance for coda.fetch() (greatest speedup when using pypy)
