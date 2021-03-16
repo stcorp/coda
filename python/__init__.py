@@ -321,12 +321,12 @@ class Cursor(Node):
         return cursor_get_format(self)
 
     @property
-    def has_attributes(self): # TODO bool?
-        return cursor_has_attributes(self)
+    def has_attributes(self):
+        return bool(cursor_has_attributes(self))
 
     @property
-    def has_ascii_content(self): # TODO bool?
-        return cursor_has_ascii_content(self)
+    def has_ascii_content(self):
+        return bool(cursor_has_ascii_content(self))
 
     @property
     def available_union_field_index(self):
@@ -518,8 +518,8 @@ class Type(object):
         return type_get_description(self)
 
     @property
-    def has_attributes(self): # TODO bool?
-        return type_has_attributes(self)
+    def has_attributes(self):
+        return bool(type_has_attributes(self))
 
     @property
     def attributes(self):
@@ -620,10 +620,10 @@ class Expression(object):
         return expression_from_string(s)
 
     def is_constant(self):
-        return expression_is_constant(self)
+        return bool(expression_is_constant(self))
 
     def is_equal(self, expr):
-        return expression_is_equal(self,expr)
+        return bool(expression_is_equal(self,expr))
 
     def eval_integer(self, cursor):
         return expression_eval_integer(self, cursor)
