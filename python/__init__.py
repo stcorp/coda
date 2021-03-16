@@ -114,16 +114,29 @@ def _check(return_code, function=None):
 class Node(object):
     __slots__ = []
 
-    def fetch(self, *args):
-        return fetch(self, *args)
+    def fetch(self, *path):
+        return fetch(self, *path)
 
-    @property
-    def description(self):
-        return get_description(self)
+    def description(self, *path):
+        return get_description(self, *path)
 
-    @property
-    def attributes(self):
-        return get_attributes(self)
+    def attributes(self, *path):
+        return get_attributes(self, *path)
+
+    def unit(self, *path):
+        return get_unit(self, *path)
+
+    def size(self, *path):
+        return get_size(self, *path)
+
+    def field_available(self, *path):
+        return get_field_available(self, *path)
+
+    def field_count(self, *path):
+        return get_field_count(self, *path)
+
+    def field_names(self, *path):
+        return get_field_names(self, *path)
 
 
 class Product(Node):
