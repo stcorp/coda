@@ -112,6 +112,8 @@ def _check(return_code, function=None):
 
 
 class Node(object):
+    __slots__ = []
+
     def fetch(self, *args):
         return fetch(self, *args)
 
