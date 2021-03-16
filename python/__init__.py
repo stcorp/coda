@@ -119,6 +119,10 @@ class Node(object):
     def description(self):
         return get_description(self)
 
+    @property
+    def attributes(self):
+        return get_attributes(self)
+
 
 class Product(Node):
     __slots__ = ['_x']
@@ -149,6 +153,33 @@ class Product(Node):
     @property
     def type_(self):
         return get_product_type(self)
+
+    @property
+    def definition_file(self):
+        return get_product_definition_file(self)
+
+    @property
+    def file_size(self):
+        return get_product_file_size(self)
+
+    @property
+    def filename(self):
+        return get_product_filename(self)
+
+    @property
+    def format(self):
+        return get_product_format(self)
+
+    @property
+    def format_name(self):
+        return type_get_format_name(get_product_format(self))
+
+    @property
+    def root_type(self):
+        return get_product_root_type(self)
+
+    def variable_value(self, variable, index):
+        return get_product_variable_value(self, variable, index)
 
     def __enter__(self):
         return self
@@ -225,11 +256,237 @@ class Cursor(Node):
         cursor_goto_parent(self)
 
     def goto_root(self):
-        cursor_goto_root(self, path)
+        cursor_goto_root(self)
+
+    def goto_first_record_field(self):
+        cursor_goto_first_record_field(self)
+
+    def goto_next_record_field(self):
+        cursor_goto_next_record_field(self)
+
+    def goto_record_field_by_index(self, index):
+        cursor_goto_record_field_by_index(self, index)
+
+    def goto_record_field_by_name(self, name):
+        cursor_goto_record_field_by_name(self, name)
+
+    def goto_first_array_element(self):
+        cursor_goto_first_array_element(self)
+
+    def goto_next_array_element(self):
+        cursor_goto_next_array_element(self)
+
+    def goto_array_element(self, idcs):
+        cursor_goto_array_element(self, idcs)
+
+    def goto_array_element_by_index(self, index):
+        cursor_goto_array_element_by_index(self, index)
+
+    def goto_available_union_field(self):
+        cursor_goto_available_union_field(self)
+
+    def goto_attributes(self):
+        cursor_goto_attributes(self)
+
+    def set_product(self, product):
+        cursor_set_product(self, product)
+
+    @property
+    def num_elements(self):
+        return cursor_get_num_elements(self)
+
+    @property
+    def string_length(self):
+        return cursor_get_string_length(self)
+
+    def use_base_type_of_special_type(self):
+        cursor_use_base_type_of_special_type(self)
 
     @property
     def type_(self):
         return cursor_get_type(self)
+
+    @property
+    def type_class(self):
+        return cursor_get_type_class(self)
+
+    @property
+    def special_type(self):
+        return cursor_get_special_type(self)
+
+    @property
+    def format(self):
+        return cursor_get_format(self)
+
+    @property
+    def has_attributes(self): # TODO bool?
+        return cursor_has_attributes(self)
+
+    @property
+    def has_ascii_content(self): # TODO bool?
+        return cursor_has_ascii_content(self)
+
+    @property
+    def available_union_field_index(self):
+        return cursor_get_available_union_field_index(self)
+
+    @property
+    def array_dim(self):
+        return cursor_get_array_dim(self)
+
+    @property
+    def depth(self):
+        return cursor_get_depth(self)
+
+    @property
+    def index(self):
+        return cursor_get_index(self)
+
+    @property
+    def bit_size(self):
+        return cursor_get_bit_size(self)
+
+    @property
+    def byte_size(self):
+        return cursor_get_byte_size(self)
+
+    @property
+    def file_bit_offset(self):
+        return cursor_get_file_bit_offset(self)
+
+    @property
+    def file_byte_offset(self):
+        return cursor_get_file_byte_offset(self)
+
+    @property
+    def product(self):
+        return cursor_get_product_file(self)
+
+    def read_char(self):
+        return cursor_read_char(self)
+
+    def read_char_array(self, order=0):
+        return cursor_read_char_array(self, order)
+
+    def read_char_partial_array(self, offset, count):
+        return cursor_read_char_partial_array(self, offset, count)
+
+    def read_int8(self):
+        return cursor_read_int8(self)
+
+    def read_int8_array(self, order=0):
+        return cursor_read_int8_array(self, order)
+
+    def read_int8_partial_array(self, offset, count):
+        return cursor_read_int8_partial_array(self, offset, count)
+
+    def read_int16(self):
+        return cursor_read_int16(self)
+
+    def read_int16_array(self, order=0):
+        return cursor_read_int16_array(self, order)
+
+    def read_int16_partial_array(self, offset, count):
+        return cursor_read_int16_partial_array(self, offset, count)
+
+    def read_int32(self):
+        return cursor_read_int32(self)
+
+    def read_int32_array(self, order=0):
+        return read_int32_array(self, order)
+
+    def read_int32_partial_array(self, offset, count):
+        return cursor_read_int32_partial_array(self, offset, count)
+
+    def read_int64(self):
+        return cursor_read_int64(self)
+
+    def read_int64_array(self, order=0):
+        return read_int64_array(self, order)
+
+    def read_int64_partial_array(self, offset, count):
+        return cursor_read_int64_partial_array(self, offset, count)
+
+    def read_uint8(self):
+        return cursor_read_uint8(self)
+
+    def read_uint8_array(self, order=0):
+        return cursor_read_uint8_array(self, order)
+
+    def read_uint8_partial_array(self, offset, count):
+        return cursor_read_uint8_partial_array(self, offset, count)
+
+    def read_uint16(self):
+        return cursor_read_uint16(self)
+
+    def read_uint16_array(self, order=0):
+        return cursor_read_uint16_array(self, order)
+
+    def read_uint16_partial_array(self, offset, count):
+        return cursor_read_uint16_partial_array(self, offset, count)
+
+    def read_uint32(self):
+        return cursor_read_uint32(self)
+
+    def read_uint32_array(self, order=0):
+        return cursor_read_uint32_array(self, order)
+
+    def read_uint32_partial_array(self, offset, count):
+        return cursor_read_uint32_partial_array(self, offset, count)
+
+    def read_uint64(self):
+        return cursor_read_uint64(self)
+
+    def read_uint64_array(self, order=0):
+        return cursor_read_uint64_array(self, order)
+
+    def read_uint64_partial_array(self, offset, count):
+        return cursor_read_uint64_partial_array(self, offset, count)
+
+    def read_float(self):
+        return cursor_read_float(self)
+
+    def read_float_array(self, order=0):
+        return cursor_read_float_array(self, order)
+
+    def read_float_partial_array(self, offset, count):
+        return cursor_read_float_partial_array(self, offset, count)
+
+    def read_double(self):
+        return cursor_read_double(self)
+
+    def read_double_array(self, order=0):
+        return cursor_read_double_array(self, order)
+
+    def read_double_partial_array(self, offset, count):
+        return cursor_read_double_partial_array(self, offset, count)
+
+    def read_complex(self):
+        return cursor_read_complex(self)
+
+    def read_complex_double_pair(self):
+        return cursor_read_complex_double_pair(self)
+
+    def read_complex_double_split(self):
+        return cursor_read_complex_double_split(self)
+
+    def read_complex_array(self, order=0):
+        return cursor_read_complex_array(self, order)
+
+    def read_complex_double_pairs_array(self, order=0):
+        return cursor_read_complex_double_pairs_array(self, order)
+
+    def read_complex_double_split_array(self, order=0):
+        return cursor_read_complex_double_split_array(self, order)
+
+    def read_string(self):
+        return cursor_read_string(self)
+
+    def read_bits(self, offset, count):
+        return cursor_read_bits(self, offset, count)
+
+    def read_bytes(self, offset, count):
+        return cursor_read_bytes(self, offset, count)
 
 
 class Type(object):
@@ -238,6 +495,117 @@ class Type(object):
     def __init__(self, _x):
         self._x = _x
 
+    @property
+    def class_(self):
+        return type_get_class(self)
+
+    @property
+    def class_name(self):
+        return type_get_class_name(self.class_)
+
+    @property
+    def format(self):
+        return type_get_format(self)
+
+    @property
+    def format_name(self):
+        return type_get_format_name(self.format)
+
+    @property
+    def description(self):
+        return type_get_description(self)
+
+    @property
+    def has_attributes(self): # TODO bool?
+        return type_has_attributes(self)
+
+    @property
+    def attributes(self):
+        return type_get_attributes(self)
+
+    @property
+    def num_record_fields(self):
+        return type_get_num_record_fields(self)
+
+    @property
+    def read_type(self):
+        return type_get_read_type(self)
+
+    @property
+    def read_type_name(self):
+        return type_get_native_type_name(self.read_type)
+
+    @property
+    def special_type(self):
+        return type_get_special_type(self)
+
+    @property
+    def special_type_name(self):
+        return type_get_special_type_name(self.special_type)
+
+    @property
+    def special_base_type(self):
+        return type_get_special_base_type(self)
+
+    @property
+    def array_base_type(self):
+        return type_get_array_base_type(self)
+
+    # TODO add Field class.. eg "type_.fields[3].hidden"
+
+    def record_field_hidden_status(self, index):
+        return type_get_record_field_hidden_status(self, index)
+
+    def record_field_available_status(self, index):
+        return type_get_record_field_available_status(self, index)
+
+    def record_field_type(self, index):
+        return type_get_record_field_type(self, index)
+
+    def record_field_name(self, index):
+        return type_get_record_field_name(self, index)
+
+    def record_field_real_name(self, index):
+        return type_get_record_field_real_name(self, index)
+
+    def record_field_index_from_name(self, name):
+        return type_get_record_field_index_from_name(self, name)
+
+    def record_field_index_from_real_name(self, name):
+        return type_get_record_field_index_from_real_name(self, name)
+
+    @property
+    def record_union_status(self):
+        return type_get_record_union_status(self)
+
+    @property
+    def unit(self):
+        return type_get_unit(self)
+
+    @property
+    def array_dim(self):
+        return type_get_array_dim(self)
+
+    @property
+    def array_num_dims(self):
+        return type_get_array_num_dims(self)
+
+    @property
+    def bit_size(self):
+        return type_get_bit_size(self)
+
+    @property
+    def fixed_value(self):
+        return type_get_fixed_value(self)
+
+    @property
+    def name(self):
+        return type_get_name(self)
+
+    @property
+    def string_length(self):
+        return type_get_string_length(self)
+
 
 class Expression(object):
     __slots__ = ['_x']
@@ -245,6 +613,41 @@ class Expression(object):
     def __init__(self, _x):
         self._x = _x
 
+    @staticmethod
+    def from_string(s):
+        return expression_from_string(s)
+
+    def is_constant(self):
+        return expression_is_constant(self)
+
+    def is_equal(self, expr):
+        return expression_is_equal(self,expr)
+
+    def eval_integer(self, cursor):
+        return expression_eval_integer(self, cursor)
+
+    def eval_float(self, cursor):
+        return expression_eval_float(self, cursor)
+
+    def eval_bool(self, cursor):
+        return expression_eval_bool(self, cursor)
+
+    def eval_string(self, cursor):
+        return expression_eval_string(self, cursor)
+
+    def eval_node(self, cursor):
+        return expression_eval_node(self, cursor)
+
+    @property
+    def type_(self):
+        return expression_get_type(self)
+
+    @property
+    def type_name(self):
+        return expression_get_type_name(self.type_)
+
+    def delete(self):
+        return expression_delete(self)
 
 #
 # low-level interface
