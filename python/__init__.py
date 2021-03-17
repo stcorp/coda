@@ -264,8 +264,8 @@ class Cursor(Node):
         _ffi.buffer(cursor._x)[:] = _ffi.buffer(self._x)[:]
         return cursor
 
-    def goto(self, path):
-        cursor_goto(self, path)
+    def goto(self, *path):
+        _traverse_path(self, path)
 
     def goto_parent(self):
         cursor_goto_parent(self)
@@ -1737,6 +1737,8 @@ def _get_c_library_filename():
         library_name = "libcoda.dylib"
     else:
         library_name = "libcoda.so"
+
+#    return '/usr/local/lib/libcoda.so'
 
     # check for library file in the parent directory (for pyinstaller bundles)
     library_path = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", library_name))
