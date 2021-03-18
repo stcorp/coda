@@ -114,6 +114,7 @@ def _check(return_code, function=None):
 class Node(object):
     __slots__ = []
 
+    # TODO add arguments for partial arrays?
     def read(self, *path):
         return fetch(self, *path)
 
@@ -138,10 +139,6 @@ class Node(object):
     @property
     def unit(self):
         return get_unit(self)
-
-    @property
-    def size(self):
-        return get_size(self)
 
     @property
     def field_available(self):
@@ -198,7 +195,7 @@ class Product(Node):
 
     @property
     def format(self):
-        return get_product_format(self)
+        return type_get_format_name(get_product_format(self))
 
     @property
     def coda_type(self):
@@ -311,15 +308,15 @@ class Cursor(Node):
 
     @property
     def type_class(self):
-        return cursor_get_type_class(self)
+        return type_get_class_name(cursor_get_type_class(self))
 
     @property
     def special_type(self):
-        return cursor_get_special_type(self)
+        return type_get_special_type_name(cursor_get_special_type(self))
 
     @property
     def format(self):
-        return cursor_get_format(self)
+        return type_get_format_name(cursor_get_format(self))
 
     @property
     def has_attributes(self):
@@ -374,11 +371,11 @@ class Type(object):
 
     @property
     def type_class(self):
-        return type_get_class(self)
+        return type_get_class_name(type_get_class(self))
 
     @property
     def format(self):
-        return type_get_format(self)
+        return type_get_format_name(type_get_format(self))
 
     @property
     def description(self):
@@ -402,7 +399,7 @@ class Type(object):
 
     @property
     def special_type(self):
-        return type_get_special_type(self)
+        return type_get_special_type_name(type_get_special_type(self))
 
     @property
     def special_base_type(self):
