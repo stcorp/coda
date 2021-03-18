@@ -152,10 +152,8 @@ class Product(Node):
     def close(self):
         close(self)
 
-    def cursor(self):
-        cursor = Cursor()
-        cursor_set_product(cursor, self)
-        return cursor
+    def cursor(self, *path):
+        return Cursor(self, *path)
 
     @property
     def version(self):
@@ -252,12 +250,26 @@ def match_filefilter(filter_, paths, callback):
 class Cursor(Node):
     __slots__ = ['_x']
 
-    def __init__(self):
+    def __init__(self, obj=None, *path):
         self._x = _ffi.new('coda_cursor *')
+
+        if obj is not None:
+            if isinstance(obj, Product):
+                self.set_product(obj)
+            elif isinstance(obj, Cursor):
+                obj._copy_state_to(self)
+            else:
+                raise TypeError('argument to Cursor.__init__ must be None, Product or Cursor')
+
+        if path:
+            self.goto(*path)
+
+    def _copy_state_to(self, other):
+        _ffi.buffer(other._x)[:] = _ffi.buffer(self._x)[:]
 
     def __deepcopy__(self, memo):
         cursor = Cursor()
-        _ffi.buffer(cursor._x)[:] = _ffi.buffer(self._x)[:]
+        self._copy_state_to(cursor)
         return cursor
 
     def goto(self, *path):
