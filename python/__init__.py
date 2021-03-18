@@ -262,42 +262,55 @@ class Cursor(Node):
 
     def goto(self, *path):
         _traverse_path(self, path)
+        return self
 
     def goto_parent(self):
         cursor_goto_parent(self)
+        return self
 
     def goto_root(self):
         cursor_goto_root(self)
+        return self
 
     def goto_first_record_field(self):
         cursor_goto_first_record_field(self)
+        return self
 
     def goto_next_record_field(self):
         cursor_goto_next_record_field(self)
+        return self
 
     def goto_record_field_by_index(self, index):
         cursor_goto_record_field_by_index(self, index)
+        return self
 
     def goto_record_field_by_name(self, name):
         cursor_goto_record_field_by_name(self, name)
+        return self
 
     def goto_first_array_element(self):
         cursor_goto_first_array_element(self)
+        return self
 
     def goto_next_array_element(self):
         cursor_goto_next_array_element(self)
+        return self
 
     def goto_array_element(self, idcs):
         cursor_goto_array_element(self, idcs)
+        return self
 
     def goto_array_element_by_index(self, index):
         cursor_goto_array_element_by_index(self, index)
+        return self
 
     def goto_available_union_field(self):
         cursor_goto_available_union_field(self)
+        return self
 
     def goto_attributes(self):
         cursor_goto_attributes(self)
+        return self
 
     def set_product(self, product):
         cursor_set_product(self, product)
