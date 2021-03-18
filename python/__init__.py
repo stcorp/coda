@@ -114,28 +114,45 @@ def _check(return_code, function=None):
 class Node(object):
     __slots__ = []
 
-    def fetch(self, *path):
+    def read(self, *path):
         return fetch(self, *path)
 
-    def description(self, *path):
-        return get_description(self, *path)
+    def find(self, *path):
+        if isinstance(self, Product):
+            return self.cursor(*path)
+        else:
+            return self.goto(*path)
 
-    def attributes(self, *path):
-        return get_attributes(self, *path)
+    @property
+    def data(self):
+        return fetch(self)
 
-    def unit(self, *path):
-        return get_unit(self, *path)
+    @property
+    def description(self):
+        return get_description(self)
 
-    def size(self, *path):
-        return get_size(self, *path)
+    @property
+    def attributes(self):
+        return get_attributes(self)
 
-    def field_available(self, *path):
-        return get_field_available(self, *path)
+    @property
+    def unit(self):
+        return get_unit(self)
 
-    def field_count(self, *path):
+    @property
+    def size(self):
+        return get_size(self)
+
+    @property
+    def field_available(self):
+        return get_field_available(self)
+
+    @property
+    def field_count(self):
         return get_field_count(self, *path)
 
-    def field_names(self, *path):
+    @property
+    def field_names(self):
         return get_field_names(self, *path)
 
 
@@ -195,56 +212,6 @@ class Product(Node):
 
     def __exit__(self, exc_type, exc_value, traceback):
         close(self)
-
-
-def recognize_file(path):
-    x = _ffi.new('int64_t *')
-    y = _ffi.new('enum coda_format_enum *')
-    z = _ffi.new('char **')
-    a = _ffi.new('char **')
-    b = _ffi.new('int *')
-
-    _check(_lib.coda_recognize_file(_encode_path(path), x, y, z, a, b), 'coda_recognize_file')
-
-    return [long(x[0]), y[0], _string(z[0]), _string(a[0]), b[0]]
-
-
-def open(path):
-    x = _ffi.new('coda_product **')
-    _check(_lib.coda_open(_encode_path(path), x), 'coda_open')
-    return Product(x[0])
-
-
-def open_as(path, class_, type_, version):
-    x = _ffi.new('coda_product **')
-    class_ = _encode_string(class_)
-    type_ = _encode_string(type_)
-    _check(_lib.coda_open_as(_encode_path(path), class_, type_, version, x), 'coda_open_as')
-    return Product(x[0])
-
-
-def close(product):
-    _check(_lib.coda_close(product._x), 'coda_close')
-
-
-def match_filefilter(filter_, paths, callback):
-    if _is_str(paths):
-        paths = [paths]
-
-    def passer(filepath, status, error, userdata): # TODO pass userdata using _ffi.handle?
-        callback(_string(filepath), status, _string(error))
-        return 0
-
-    fptr = _ffi.callback( # TODO check security?
-                ' int (char *, enum coda_filefilter_status_enum, char *, void *)',
-                passer)
-    npaths = len(paths)
-    paths2 = _ffi.new('char *[%d]' % npaths)
-    for i, path in enumerate(paths):
-        paths2[i] = _ffi.new('char[]', _encode_string(paths[i]))
-    voidp = _ffi.new('char *')
-
-    _check(_lib.coda_match_filefilter(_encode_string(filter_), npaths, paths2, fptr, voidp))
 
 
 class Cursor(Node):
@@ -398,132 +365,6 @@ class Cursor(Node):
     def product(self):
         return cursor_get_product_file(self)
 
-    def read_char(self):
-        return cursor_read_char(self)
-
-    def read_char_array(self, order=0):
-        return cursor_read_char_array(self, order)
-
-    def read_char_partial_array(self, offset, count):
-        return cursor_read_char_partial_array(self, offset, count)
-
-    def read_int8(self):
-        return cursor_read_int8(self)
-
-    def read_int8_array(self, order=0):
-        return cursor_read_int8_array(self, order)
-
-    def read_int8_partial_array(self, offset, count):
-        return cursor_read_int8_partial_array(self, offset, count)
-
-    def read_int16(self):
-        return cursor_read_int16(self)
-
-    def read_int16_array(self, order=0):
-        return cursor_read_int16_array(self, order)
-
-    def read_int16_partial_array(self, offset, count):
-        return cursor_read_int16_partial_array(self, offset, count)
-
-    def read_int32(self):
-        return cursor_read_int32(self)
-
-    def read_int32_array(self, order=0):
-        return read_int32_array(self, order)
-
-    def read_int32_partial_array(self, offset, count):
-        return cursor_read_int32_partial_array(self, offset, count)
-
-    def read_int64(self):
-        return cursor_read_int64(self)
-
-    def read_int64_array(self, order=0):
-        return read_int64_array(self, order)
-
-    def read_int64_partial_array(self, offset, count):
-        return cursor_read_int64_partial_array(self, offset, count)
-
-    def read_uint8(self):
-        return cursor_read_uint8(self)
-
-    def read_uint8_array(self, order=0):
-        return cursor_read_uint8_array(self, order)
-
-    def read_uint8_partial_array(self, offset, count):
-        return cursor_read_uint8_partial_array(self, offset, count)
-
-    def read_uint16(self):
-        return cursor_read_uint16(self)
-
-    def read_uint16_array(self, order=0):
-        return cursor_read_uint16_array(self, order)
-
-    def read_uint16_partial_array(self, offset, count):
-        return cursor_read_uint16_partial_array(self, offset, count)
-
-    def read_uint32(self):
-        return cursor_read_uint32(self)
-
-    def read_uint32_array(self, order=0):
-        return cursor_read_uint32_array(self, order)
-
-    def read_uint32_partial_array(self, offset, count):
-        return cursor_read_uint32_partial_array(self, offset, count)
-
-    def read_uint64(self):
-        return cursor_read_uint64(self)
-
-    def read_uint64_array(self, order=0):
-        return cursor_read_uint64_array(self, order)
-
-    def read_uint64_partial_array(self, offset, count):
-        return cursor_read_uint64_partial_array(self, offset, count)
-
-    def read_float(self):
-        return cursor_read_float(self)
-
-    def read_float_array(self, order=0):
-        return cursor_read_float_array(self, order)
-
-    def read_float_partial_array(self, offset, count):
-        return cursor_read_float_partial_array(self, offset, count)
-
-    def read_double(self):
-        return cursor_read_double(self)
-
-    def read_double_array(self, order=0):
-        return cursor_read_double_array(self, order)
-
-    def read_double_partial_array(self, offset, count):
-        return cursor_read_double_partial_array(self, offset, count)
-
-    def read_complex(self):
-        return cursor_read_complex(self)
-
-    def read_complex_double_pair(self):
-        return cursor_read_complex_double_pair(self)
-
-    def read_complex_double_split(self):
-        return cursor_read_complex_double_split(self)
-
-    def read_complex_array(self, order=0):
-        return cursor_read_complex_array(self, order)
-
-    def read_complex_double_pairs_array(self, order=0):
-        return cursor_read_complex_double_pairs_array(self, order)
-
-    def read_complex_double_split_array(self, order=0):
-        return cursor_read_complex_double_split_array(self, order)
-
-    def read_string(self):
-        return cursor_read_string(self)
-
-    def read_bits(self, offset, count):
-        return cursor_read_bits(self, offset, count)
-
-    def read_bytes(self, offset, count):
-        return cursor_read_bytes(self, offset, count)
-
 
 class Type(object):
     __slots__ = ['_x']
@@ -660,6 +501,57 @@ class Expression(object):
 
     def delete(self):
         return expression_delete(self)
+
+
+def recognize_file(path):
+    x = _ffi.new('int64_t *')
+    y = _ffi.new('enum coda_format_enum *')
+    z = _ffi.new('char **')
+    a = _ffi.new('char **')
+    b = _ffi.new('int *')
+
+    _check(_lib.coda_recognize_file(_encode_path(path), x, y, z, a, b), 'coda_recognize_file')
+
+    return [long(x[0]), y[0], _string(z[0]), _string(a[0]), b[0]]
+
+
+def open(path):
+    x = _ffi.new('coda_product **')
+    _check(_lib.coda_open(_encode_path(path), x), 'coda_open')
+    return Product(x[0])
+
+
+def open_as(path, class_, type_, version):
+    x = _ffi.new('coda_product **')
+    class_ = _encode_string(class_)
+    type_ = _encode_string(type_)
+    _check(_lib.coda_open_as(_encode_path(path), class_, type_, version, x), 'coda_open_as')
+    return Product(x[0])
+
+
+def close(product):
+    _check(_lib.coda_close(product._x), 'coda_close')
+
+
+def match_filefilter(filter_, paths, callback):
+    if _is_str(paths):
+        paths = [paths]
+
+    def passer(filepath, status, error, userdata): # TODO pass userdata using _ffi.handle?
+        callback(_string(filepath), status, _string(error))
+        return 0
+
+    fptr = _ffi.callback( # TODO check security?
+                ' int (char *, enum coda_filefilter_status_enum, char *, void *)',
+                passer)
+    npaths = len(paths)
+    paths2 = _ffi.new('char *[%d]' % npaths)
+    for i, path in enumerate(paths):
+        paths2[i] = _ffi.new('char[]', _encode_string(paths[i]))
+    voidp = _ffi.new('char *')
+
+    _check(_lib.coda_match_filefilter(_encode_string(filter_), npaths, paths2, fptr, voidp))
+
 
 #
 # low-level interface
