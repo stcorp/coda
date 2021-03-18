@@ -162,11 +162,11 @@ class Product(Node):
         return get_product_version(self)
 
     @property
-    def class_(self):
+    def product_class(self):
         return get_product_class(self)
 
     @property
-    def type_(self):
+    def product_type(self):
         return get_product_type(self)
 
     @property
@@ -186,11 +186,7 @@ class Product(Node):
         return get_product_format(self)
 
     @property
-    def format_name(self):
-        return type_get_format_name(get_product_format(self))
-
-    @property
-    def root_type(self):
+    def coda_type(self):
         return get_product_root_type(self)
 
     def variable_value(self, variable, index):
@@ -318,7 +314,7 @@ class Cursor(Node):
         cursor_use_base_type_of_special_type(self)
 
     @property
-    def type_(self):
+    def coda_type(self):
         return cursor_get_type(self)
 
     @property
@@ -511,20 +507,12 @@ class Type(object):
         self._x = _x
 
     @property
-    def class_(self):
+    def type_class(self):
         return type_get_class(self)
-
-    @property
-    def class_name(self):
-        return type_get_class_name(self.class_)
 
     @property
     def format(self):
         return type_get_format(self)
-
-    @property
-    def format_name(self):
-        return type_get_format_name(self.format)
 
     @property
     def description(self):
@@ -547,16 +535,8 @@ class Type(object):
         return type_get_read_type(self)
 
     @property
-    def read_type_name(self):
-        return type_get_native_type_name(self.read_type)
-
-    @property
     def special_type(self):
         return type_get_special_type(self)
-
-    @property
-    def special_type_name(self):
-        return type_get_special_type_name(self.special_type)
 
     @property
     def special_base_type(self):
@@ -600,10 +580,6 @@ class Type(object):
     @property
     def array_dim(self):
         return type_get_array_dim(self)
-
-    @property
-    def array_num_dims(self):
-        return type_get_array_num_dims(self)
 
     @property
     def bit_size(self):
@@ -654,12 +630,8 @@ class Expression(object):
         return expression_eval_node(self, cursor)
 
     @property
-    def type_(self):
+    def expression_type(self):
         return expression_get_type(self)
-
-    @property
-    def type_name(self):
-        return expression_get_type_name(self.type_)
 
     def delete(self):
         return expression_delete(self)
