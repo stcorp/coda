@@ -68,20 +68,20 @@ TLS = ThreadLocalState()
 # high-level interface
 #
 
-class CodaError(Exception):
+class Error(Exception):
     pass
 
 
-class FetchError(CodaError):
+class FetchError(Error):
     def __init__(self, str):
-        super(CodaError, self).__init__(self)
+        super(Error, self).__init__(self)
         self.str = str
 
     def __str__(self):
         return "CODA FetchError: " + self.str
 
 
-class CodacError(CodaError):
+class CodacError(Error):
     """Exception raised when an error occurs inside the CODA C library.
 
     Attributes:
@@ -1632,9 +1632,9 @@ def _encode_string_with_encoding(string, encoding="utf-8"):
             return string.encode(encoding)
         except LookupError:
             # Here it is certain that the encoding is not supported.
-            raise CodaError("unknown encoding '%s'" % encoding)
+            raise Error("unknown encoding '%s'" % encoding)
     except UnicodeEncodeError:
-        raise CodaError("cannot encode '%s' using encoding '%s'" % (string, encoding))
+        raise Error("cannot encode '%s' using encoding '%s'" % (string, encoding))
 
 
 def _decode_string_with_encoding(string, encoding="utf-8"):
@@ -1663,9 +1663,9 @@ def _decode_string_with_encoding(string, encoding="utf-8"):
             return string.decode(encoding)
         except LookupError:
             # Here it is certain that the encoding is not supported.
-            raise CodaError("unknown encoding '%s'" % encoding)
+            raise Error("unknown encoding '%s'" % encoding)
     except UnicodeEncodeError:
-        raise CodaError("cannot decode '%s' using encoding '%s'" % (string, encoding))
+        raise Error("cannot decode '%s' using encoding '%s'" % (string, encoding))
 
 
 def _encode_path(path):
