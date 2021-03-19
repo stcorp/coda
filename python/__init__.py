@@ -156,8 +156,11 @@ class Node(object):
 class Product(Node):
     __slots__ = ['_x']
 
-    def __init__(self, _x):
-        self._x = _x
+    def __init__(self, path=None, _x=None):
+        if path is not None:
+            self._x = Product.open(path)._x  # TODO refactor
+        else:
+            self._x = _x
 
     @staticmethod
     def open(path):
@@ -464,12 +467,11 @@ class Type(object):
 class Expression(object):
     __slots__ = ['_x']
 
-    def __init__(self, _x):
-        self._x = _x
-
-    @staticmethod
-    def from_string(s):
-        return expression_from_string(s)
+    def __init__(self, s=None, _x=None):
+        if s is not None:
+            self._x = expression_from_string(s)._x # TODO refactor
+        else:
+            self._x = _x
 
     def is_constant(self):
         return bool(expression_is_constant(self))
@@ -515,7 +517,7 @@ def recognize_file(path):
 def open(path):
     x = _ffi.new('coda_product **')
     _check(_lib.coda_open(_encode_path(path), x), 'coda_open')
-    return Product(x[0])
+    return Product(_x=x[0])
 
 
 def open_as(path, class_, type_, version):
@@ -523,7 +525,7 @@ def open_as(path, class_, type_, version):
     class_ = _encode_string(class_)
     type_ = _encode_string(type_)
     _check(_lib.coda_open_as(_encode_path(path), class_, type_, version, x), 'coda_open_as')
-    return Product(x[0])
+    return Product(_x=x[0])
 
 
 def close(product):
@@ -737,7 +739,7 @@ def cursor_has_attributes(cursor):
 def cursor_get_product_file(cursor):
     x = _ffi.new('coda_product **')
     _check(_lib.coda_cursor_get_product_file(cursor._x, x), 'coda_get_product_file')
-    return Product(x[0])
+    return Product(_x=x[0])
 
 
 def _read_scalar(cursor, type_):
@@ -1220,7 +1222,7 @@ def type_has_attributes(type_):
 def expression_from_string(s):
     x = _ffi.new('coda_expression **')
     _check(_lib.coda_expression_from_string(_encode_string(s), x), 'coda_expression_from_string')
-    return Expression(x[0])
+    return Expression(_x=x[0])
 
 
 def expression_eval_bool(expr, cursor=None):
