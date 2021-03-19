@@ -118,6 +118,9 @@ class Node(object):
     def read(self, *path):
         return fetch(self, *path)
 
+    def cursor(self, *path):
+        return Cursor(self, *path)
+
     def find(self, *path):
         return Cursor(self, *path)
 
@@ -161,9 +164,6 @@ class Product(Node):
 
     def close(self):
         close(self)
-
-    def cursor(self, *path):
-        return Cursor(self, *path)
 
     @property
     def version(self):
@@ -472,24 +472,22 @@ class Expression(object):
     def is_equal(self, expr):
         return bool(expression_is_equal(self,expr))
 
-    def eval_integer(self, cursor):
-        return expression_eval_integer(self, cursor)
-
-    def eval_float(self, cursor):
-        return expression_eval_float(self, cursor)
-
-    def eval_bool(self, cursor):
-        return expression_eval_bool(self, cursor)
-
-    def eval_string(self, cursor):
-        return expression_eval_string(self, cursor)
-
-    def eval_node(self, cursor):
-        return expression_eval_node(self, cursor)
+    def eval(self, cursor=None):
+        expression_type = self.expression_type
+        if expression_type == 'boolean':
+            return bool(expression_eval_bool(self, cursor))
+        elif expression_type == 'integer':
+            return expression_eval_integer(self, cursor)
+        elif expression_type == 'float':
+            return expression_eval_float(self, cursor)
+        elif expression_type == 'string':
+            return expression_eval_string(self, cursor)
+        elif expression_type == 'node':
+            return expression_eval_node(self, cursor)
 
     @property
     def expression_type(self):
-        return expression_get_type(self)
+        return expression_get_type_name(expression_get_type(self))
 
     def delete(self):
         return expression_delete(self)
