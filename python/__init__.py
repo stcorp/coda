@@ -119,10 +119,7 @@ class Node(object):
         return fetch(self, *path)
 
     def find(self, *path):
-        if isinstance(self, Product):
-            return self.cursor(*path)
-        else:
-            return self.goto(*path)
+        return Cursor(self, *path)
 
     @property
     def data(self):
@@ -158,13 +155,9 @@ class Product(Node):
 
     def __init__(self, path=None, _x=None):
         if path is not None:
-            self._x = Product.open(path)._x  # TODO refactor
+            self._x = Product(path)._x  # TODO refactor
         else:
             self._x = _x
-
-    @staticmethod
-    def open(path):
-        return open(path)
 
     def close(self):
         close(self)
