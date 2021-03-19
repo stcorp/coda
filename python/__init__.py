@@ -155,7 +155,7 @@ class Product(Node):
 
     def __init__(self, path=None, _x=None):
         if path is not None:
-            self._x = Product(path)._x  # TODO refactor
+            self._x = open(path)._x  # TODO refactor
         else:
             self._x = _x
 
