@@ -160,7 +160,7 @@ class Product(Node):
 
     def __init__(self, path=None, _x=None):
         if path is not None:
-            self._x = open(path)._x  # TODO refactor
+            self._x = open(path)._x
         else:
             self._x = _x
 
@@ -464,7 +464,7 @@ class Expression(object):
 
     def __init__(self, s=None, _x=None):
         if s is not None:
-            self._x = expression_from_string(s)._x # TODO refactor
+            self._x = expression_from_string(s)._x
         else:
             self._x = _x
 
@@ -755,10 +755,12 @@ def _read_array(cursor, type_, order):
     func = getattr(_lib, 'coda_cursor_read_%s_array' % desc)
     _check(func(cursor._x, d, order), 'coda_cursor_read_%s_array' % desc)
     buf = _ffi.buffer(d)
-    # TODO use array(buffer=.., shape=..)
-    # TODO what about 'char' type?
-    array = numpy.frombuffer(buf, dtype=desc)
-    array = array.reshape(shape)
+    if desc == 'char':
+        chars = list(map(chr, bytes(buf)))
+        array = numpy.array(chars, dtype=object)
+        array = array.reshape(shape)
+    else:
+        array = numpy.ndarray(shape=shape, buffer=buf, dtype=desc)
     return array
 
 
@@ -770,7 +772,11 @@ def _read_partial(cursor, type_, offset, count):
     func = getattr(_lib, 'coda_cursor_read_%s_partial_array' % desc)
     _check(func(cursor._x, offset, count, d), 'coda_cursor_read_%s_partial_array' % desc)
     buf = _ffi.buffer(d)
-    array = numpy.frombuffer(buf)
+    if desc == 'char':
+        chars = list(map(chr, bytes(buf)))
+        array = numpy.array(chars, dtype=object)
+    else:
+        array = numpy.frombuffer(buf)
     return array
 
 
@@ -1256,7 +1262,7 @@ def expression_eval_string(expr, cursor=None):
     else:
         cur = cursor._x
     _check(_lib.coda_expression_eval_string(expr._x, cur, x, y), 'coda_expression_eval_string')
-    return _ffi.string(x[0]) # TODO swig variant does not decode, should we?
+    return _ffi.string(x[0])
 
 
 def expression_eval_node(expr, cursor):
@@ -1659,8 +1665,6 @@ class Record(object):
     """
 
     # TODO move most of RecordType here? (check performance!)
-
-
 
 
 #
