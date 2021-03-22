@@ -114,42 +114,44 @@ def _check(return_code, function=None):
 class Node(object):
     __slots__ = []
 
-    # TODO add arguments for partial arrays?
-    def read(self, *path):
+    def fetch(self, *path):
         return fetch(self, *path)
+
+    # TODO add arguments for partial arrays?
+    def read(self):
+        return fetch(self)
 
     def cursor(self, *path):
         return Cursor(self, *path)
 
-    def find(self, *path):
-        return Cursor(self, *path)
-
-    @property
-    def data(self):
-        return fetch(self)
+    def get_description(self, *path):
+        return get_description(self, *path)
 
     @property
     def description(self):
         return get_description(self)
 
+    def get_attributes(self, *path):
+        return get_attributes(self, *path)
+
     @property
-    def attributes(self):
-        return get_attributes(self)
+    def get_unit(self, *path):
+        return get_unit(self, *path)
 
     @property
     def unit(self):
         return get_unit(self)
 
     @property
-    def field_available(self):
-        return get_field_available(self)
+    def field_available(self, *path):
+        return get_field_available(self, *path)
 
     @property
-    def field_count(self):
+    def field_count(self, *path):
         return get_field_count(self, *path)
 
     @property
-    def field_names(self):
+    def field_names(self, *path):
         return get_field_names(self, *path)
 
 
