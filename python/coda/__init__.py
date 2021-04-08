@@ -1627,7 +1627,9 @@ def _get_c_library_filename():
     else:
         library_name = "libcoda.so"
 
-#    return '/usr/local/lib/libcoda.so'
+    coda_library_path = os.getenv('CODA_LIBRARY_PATH')
+    if coda_library_path is not None:
+        return os.path.join(coda_library_path, library_name)
 
     # check for library file in the parent directory (for pyinstaller bundles)
     library_path = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", library_name))
