@@ -61,8 +61,8 @@ endif
 
 if BUILD_PYTHON
 codapython_PYTHON = \
-	$(srcdir)/python/coda/__init__.py \
-	python/coda/_codac.py
+	$(srcdir)/python/__init__.py \
+	python/_codac.py
 endif
 
 if BUILD_JAVA
@@ -386,12 +386,12 @@ endif
 
 # python
 
-python/coda/_codac.py: $(srcdir)/libcoda/coda.h.in $(srcdir)/python/build.py
+python/_codac.py: $(srcdir)/libcoda/coda.h.in $(srcdir)/python/build.py
 	@$(MKDIR_P) python
-	$(PYTHON) $(srcdir)/python/build.py $(srcdir)/libcoda/coda.h.in python/coda/_codac.py && touch python/coda/_codac.py # explicitly touch the file to make sure the timestamp gets updated
+	$(PYTHON) $(srcdir)/python/build.py $(srcdir)/libcoda/coda.h.in python/_codac.py && touch python/_codac.py # explicitly touch the file to make sure the timestamp gets updated
 
 EXTRA_DIST += \
-	python/coda/_codac.py \
+	python/_codac.py \
 	python/build.py
 
 # java
