@@ -760,6 +760,8 @@ def _read_array(cursor, type_, order):
         array = numpy.array(chars, dtype=object)
         array = array.reshape(shape)
     else:
+        if desc == 'float':
+            desc = 'float32'
         array = numpy.ndarray(shape=shape, buffer=buf, dtype=desc)
     return array
 
