@@ -196,7 +196,7 @@ class Product(Node):
         return type_get_format_name(get_product_format(self))
 
     @property
-    def coda_type(self):
+    def root_type(self):
         return get_product_root_type(self)
 
     def variable_value(self, variable, index):
