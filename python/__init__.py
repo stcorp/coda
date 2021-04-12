@@ -333,6 +333,12 @@ class Cursor(Node):
     def available_union_field_index(self):
         return cursor_get_available_union_field_index(self)
 
+    def record_field_available_status(self, index):
+        return cursor_get_record_field_available_status(self, index)
+
+    def record_field_index_from_name(self, name):
+        return cursor_get_record_field_index_from_name(self, name)
+
     @property
     def array_dim(self):
         return cursor_get_array_dim(self)
