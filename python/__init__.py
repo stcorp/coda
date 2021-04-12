@@ -61,9 +61,6 @@ class ThreadLocalState(threading.local):
 
 TLS = ThreadLocalState()
 
-# IMPORTANT: note that we manually inline many things here, to speed up
-# the low level interface (when using CPython)!
-
 #
 # high-level interface
 #
@@ -117,9 +114,17 @@ class Node(object):
     def fetch(self, *path):
         return fetch(self, *path)
 
-    # TODO add arguments for partial arrays?
     def read(self):
         return fetch(self)
+
+    def read_partial_array(self, offset, count):
+        cursor = self.cursor()
+
+        nodeType = cursor_get_type(cursor)
+        baseType = type_get_array_base_type(nodeType)
+        readType = type_get_read_type(baseType)
+
+        return _readNativeTypePartialArrayFunctionDictionary[readType](cursor, offset, count)
 
     def cursor(self, *path):
         return Cursor(self, *path)
@@ -407,8 +412,6 @@ class Type(object):
     def array_base_type(self):
         return type_get_array_base_type(self)
 
-    # TODO add Field class.. eg "type_.fields[3].hidden"
-
     def record_field_hidden_status(self, index):
         return type_get_record_field_hidden_status(self, index)
 
@@ -529,11 +532,11 @@ def match_filefilter(filter_, paths, callback):
     if _is_str(paths):
         paths = [paths]
 
-    def passer(filepath, status, error, userdata): # TODO pass userdata using _ffi.handle?
+    def passer(filepath, status, error, userdata):
         callback(_string(filepath), status, _string(error))
         return 0
 
-    fptr = _ffi.callback( # TODO check security?
+    fptr = _ffi.callback(
                 ' int (char *, enum coda_filefilter_status_enum, char *, void *)',
                 passer)
     npaths = len(paths)
@@ -1666,8 +1669,6 @@ class Record(object):
     the name of the attribute, and its value is read from the product file.
     """
 
-    # TODO move most of RecordType here? (check performance!)
-
 
 #
 # PATH TRAVERSAL
@@ -2645,6 +2646,20 @@ _readNativeTypeArrayFunctionDictionary = {
     coda_native_type_char: _fetch_object_array,
     coda_native_type_string: _fetch_object_array,
     coda_native_type_bytes: _fetch_object_array
+}
+
+# dictionary (a.k.a. switch construct ;) for native type partial array read functions.
+_readNativeTypePartialArrayFunctionDictionary = {
+    coda_native_type_int8: cursor_read_int8_partial_array,
+    coda_native_type_uint8: cursor_read_uint8_partial_array,
+    coda_native_type_int16: cursor_read_int16_partial_array,
+    coda_native_type_uint16: cursor_read_uint16_partial_array,
+    coda_native_type_int32: cursor_read_int32_partial_array,
+    coda_native_type_uint32: cursor_read_uint32_partial_array,
+    coda_native_type_int64: cursor_read_int64_partial_array,
+    coda_native_type_uint64: cursor_read_uint64_partial_array,
+    coda_native_type_float: cursor_read_float_partial_array,
+    coda_native_type_double: cursor_read_double_partial_array,
 }
 
 # dictionary (a.k.a. switch construct ;) for special type scalar read functions.
