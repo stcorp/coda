@@ -294,11 +294,9 @@ class Cursor(Node):
     def set_product(self, product):
         cursor_set_product(self, product)
 
-    @property
     def num_elements(self):
         return cursor_get_num_elements(self)
 
-    @property
     def string_length(self):
         return cursor_get_string_length(self)
 
@@ -351,11 +349,9 @@ class Cursor(Node):
     def index(self):
         return cursor_get_index(self)
 
-    @property
     def bit_size(self):
         return cursor_get_bit_size(self)
 
-    @property
     def byte_size(self):
         return cursor_get_byte_size(self)
 
