@@ -1227,7 +1227,9 @@ def type_has_attributes(type_):
 
 def expression_from_string(s):
     x = _ffi.new('coda_expression **')
-    _check(_lib.coda_expression_from_string(_encode_string_with_encoding(s, 'ascii'), x), 'coda_expression_from_string')
+    if not isinstance(s, bytes):
+        s = _encode_string_with_encoding(s, 'ascii')
+    _check(_lib.coda_expression_from_string(s, x), 'coda_expression_from_string')
     return Expression(_x=x[0])
 
 
