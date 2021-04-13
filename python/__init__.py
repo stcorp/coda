@@ -420,14 +420,16 @@ class Type(object):
 
 
 class IntegerType(Type):
-    pass
+    __slots__ = []
 
 
 class RealType(Type):
-    pass
+    __slots__ = []
 
 
 class RecordType(Type):
+    __slots__ = []
+
     @property
     def num_fields(self):
         return type_get_num_record_fields(self)
@@ -459,6 +461,8 @@ class RecordType(Type):
 
 
 class ArrayType(Type):
+    __slots__ = []
+
     @property
     def base_type(self):
         return type_get_array_base_type(self)
@@ -469,19 +473,23 @@ class ArrayType(Type):
 
 
 class SpecialType(Type):
+    __slots__ = []
+
     @property
     def base_type(self):
         return type_get_special_base_type(self)
 
 
 class TextType(Type):
+    __slots__ = []
+
     @property
     def string_length(self):
         return type_get_string_length(self)
 
 
 class RawType(Type):
-    pass
+    __slots__ = []
 
 
 class Expression(object):
