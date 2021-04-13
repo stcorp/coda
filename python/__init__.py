@@ -395,10 +395,6 @@ class Type(object):
         return type_get_attributes(self)
 
     @property
-    def num_record_fields(self):
-        return type_get_num_record_fields(self)
-
-    @property
     def read_type(self):
         return type_get_read_type(self)
 
@@ -407,45 +403,8 @@ class Type(object):
         return type_get_special_type_name(type_get_special_type(self))
 
     @property
-    def special_base_type(self):
-        return type_get_special_base_type(self)
-
-    @property
-    def array_base_type(self):
-        return type_get_array_base_type(self)
-
-    def record_field_hidden_status(self, index):
-        return type_get_record_field_hidden_status(self, index)
-
-    def record_field_available_status(self, index):
-        return type_get_record_field_available_status(self, index)
-
-    def record_field_type(self, index):
-        return type_get_record_field_type(self, index)
-
-    def record_field_name(self, index):
-        return type_get_record_field_name(self, index)
-
-    def record_field_real_name(self, index):
-        return type_get_record_field_real_name(self, index)
-
-    def record_field_index_from_name(self, name):
-        return type_get_record_field_index_from_name(self, name)
-
-    def record_field_index_from_real_name(self, name):
-        return type_get_record_field_index_from_real_name(self, name)
-
-    @property
-    def record_union_status(self):
-        return type_get_record_union_status(self)
-
-    @property
     def unit(self):
         return type_get_unit(self)
-
-    @property
-    def array_dim(self):
-        return type_get_array_dim(self)
 
     @property
     def bit_size(self):
@@ -459,9 +418,70 @@ class Type(object):
     def name(self):
         return type_get_name(self)
 
+
+class IntegerType(Type):
+    pass
+
+
+class RealType(Type):
+    pass
+
+
+class RecordType(Type):
+    @property
+    def num_fields(self):
+        return type_get_num_record_fields(self)
+
+    def field_hidden_status(self, index):
+        return type_get_record_field_hidden_status(self, index)
+
+    def field_available_status(self, index):
+        return type_get_record_field_available_status(self, index)
+
+    def field_type(self, index):
+        return type_get_record_field_type(self, index)
+
+    def field_name(self, index):
+        return type_get_record_field_name(self, index)
+
+    def field_real_name(self, index):
+        return type_get_record_field_real_name(self, index)
+
+    def field_index_from_name(self, name):
+        return type_get_record_field_index_from_name(self, name)
+
+    def field_index_from_real_name(self, name):
+        return type_get_record_field_index_from_real_name(self, name)
+
+    @property
+    def union_status(self):
+        return type_get_record_union_status(self)
+
+
+class ArrayType(Type):
+    @property
+    def base_type(self):
+        return type_get_array_base_type(self)
+
+    @property
+    def dim(self):
+        return type_get_array_dim(self)
+
+
+class SpecialType(Type):
+    @property
+    def base_type(self):
+        return type_get_special_base_type(self)
+
+
+class TextType(Type):
     @property
     def string_length(self):
         return type_get_string_length(self)
+
+
+class RawType(Type):
+    pass
 
 
 class Expression(object):
@@ -602,10 +622,16 @@ def get_product_format(product):
     return c[0]
 
 
+def _type(coda_type):
+    x = _ffi.new('enum coda_type_class_enum *')
+    _check(_lib.coda_type_get_class(coda_type, x), 'coda_type_get_class')
+    return _codaClassToTypeClass[x[0]](coda_type)
+
+
 def get_product_root_type(product):
     c = _ffi.new('coda_type **')
     _check(_lib.coda_get_product_root_type(product._x, c), 'coda_get_product_root_type')
-    return Type(c[0])
+    return _type(c[0])
 
 
 def get_product_variable_value(product, variable, index):
@@ -1036,7 +1062,7 @@ def cursor_read_string(cursor):
 def cursor_get_type(cursor):
     x = _ffi.new('coda_type **')
     _check(_lib.coda_cursor_get_type(cursor._x, x), 'coda_cursor_get_type')
-    return Type(x[0])
+    return _type(x[0])
 
 
 def cursor_get_type_class(cursor):
@@ -1082,19 +1108,19 @@ def type_get_special_type_name(n):
 def type_get_special_base_type(type_):
     x = _ffi.new('coda_type **')
     _check(_lib.coda_type_get_special_base_type(type_._x, x), 'coda_type_get_special_base_type')
-    return Type(x[0])
+    return _type(x[0])
 
 
 def type_get_array_base_type(type_):
     x = _ffi.new('coda_type **')
     _check(_lib.coda_type_get_array_base_type(type_._x, x), 'coda_type_get_array_base_type')
-    return Type(x[0])
+    return _type(x[0])
 
 
 def type_get_attributes(type_):
     x = _ffi.new('coda_type **')
     _check(_lib.coda_type_get_attributes(type_._x, x), 'coda_type_get_attributes')
-    return Type(x[0])
+    return _type(x[0])
 
 
 def type_get_array_num_dims(type_):
@@ -1161,7 +1187,7 @@ def type_get_record_field_real_name(type_, index):
 def type_get_record_field_type(type_, index):
     x = _ffi.new('coda_type **')
     _check(_lib.coda_type_get_record_field_type(type_._x, index, x), 'coda_type_get_record_field_type')
-    return Type(x[0])
+    return _type(x[0])
 
 
 def type_get_record_field_index_from_name(type_, name):
@@ -2713,4 +2739,15 @@ _numpySpecialTypeDictionary = {
     coda_special_vsf_integer: (True, numpy.float64),
     coda_special_time: (True, numpy.float64),
     coda_special_complex: (True, numpy.complex128)
+}
+
+# dictionary mapping coda class to Type subclass
+_codaClassToTypeClass = {
+    coda_integer_class: IntegerType,
+    coda_real_class: RealType,
+    coda_text_class: TextType,
+    coda_raw_class: RawType,
+    coda_array_class: ArrayType,
+    coda_record_class: RecordType,
+    coda_special_class: SpecialType,
 }
