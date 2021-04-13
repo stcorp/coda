@@ -27,6 +27,44 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+"""CODA Python interface
+
+This package implements the CODA Python interface. The interface consists
+of a low-level part, corresponding directly to the C interface, and a high-
+level part, which adds an object-oriented wrapper layer and additional
+convenience methods.
+
+Using the high-level interface, a CODA Product is represented by an
+instance of class Product. One or more instances of class Cursor can be
+used to navigate a product, and extract CODA types and product data. CODA
+types are represented as instances of class Type. There are several
+subclasses of Type, corresponding to the different CODA type classes.
+
+Example of basic usage:
+
+    import coda
+
+    with coda.Product('somefile.nc') as product:
+        # use cursor
+        cursor = product.cursor()
+        cursor.goto('a/b')
+        data = cursor.read()
+
+        # use convenience method
+        data = product.fetch('a/b')
+
+Also using the high-level interface, a CODA expression is represented by
+an instance of class Expression.
+
+For both the Cursor and Expression classes, there are much fewer methods
+than there are functions in the low-level interface, because in Python
+functions can return different types of values. For example, rather than
+having to call cursor_read_uint8(cursor), we can just call cursor.read().
+
+Further information is available in the CODA documentation.
+
+"""
+
 from __future__ import print_function
 
 import copy
