@@ -104,10 +104,16 @@ TLS = ThreadLocalState()
 #
 
 class Error(Exception):
-    pass
+    """Exception base class for all CODA Python interface errors."""
 
 
 class FetchError(Error):
+    """Exception raised when an errors occurs when fetching data.
+
+    Attributes:
+        str       --  error message
+    """
+
     def __init__(self, str):
         super(Error, self).__init__(self)
         self.str = str
@@ -147,6 +153,14 @@ def _check(return_code, function=None):
 
 
 class Node(object):
+    """Base class of 'Product' and 'Cursor' classes.
+
+    This class contains shared functionality between Product and Cursor.
+    For this functionality, a Product can be used as if it were a Cursor
+    (pointing at the product root).
+
+    """
+
     __slots__ = []
 
     def fetch(self, *path):
@@ -199,6 +213,17 @@ class Node(object):
 
 
 class Product(Node):
+    """CODA Product class.
+
+    An instance of this class represents a CODA product.
+
+    It is a wrapper class around the low-level coda_product struct.
+
+    It implements the context-management protocol for conveniently
+    closing products.
+
+    """
+
     __slots__ = ['_x']
 
     def __init__(self, path=None, _x=None):
@@ -253,6 +278,17 @@ class Product(Node):
 
 
 class Cursor(Node):
+    """CODA Cursor class.
+
+    An instance of this class represents a CODA cursor.
+
+    It is a wrapper class around the low-level coda_cursor struct.
+
+    Cursors are used to navigate a product hierarchy, and
+    extract CODA types and product data.
+
+    """
+
     __slots__ = ['_x']
 
     def __init__(self, obj=None, *path):
@@ -407,6 +443,25 @@ class Cursor(Node):
 
 
 class Type(object):
+    """CODA Type base class.
+
+    An instance of this class represents a CODA type.
+
+    It is a wrapper class around the low-level coda_type struct.
+
+    Specialized functionality corresponding to the different CODA
+    types is provided by the following subclasses:
+
+    - 'IntegerType'
+    - 'RealType'
+    - 'RecordType'
+    - 'ArrayType'
+    - 'SpecialType'
+    - 'TextType'
+    - 'RawType'
+
+    """
+
     __slots__ = ['_x']
 
     def __init__(self, _x):
@@ -458,14 +513,20 @@ class Type(object):
 
 
 class IntegerType(Type):
+    """CODA Integer Type class."""
+
     __slots__ = []
 
 
 class RealType(Type):
+    """CODA Real Type class."""
+
     __slots__ = []
 
 
 class RecordType(Type):
+    """CODA Record Type class."""
+
     __slots__ = []
 
     @property
@@ -499,6 +560,8 @@ class RecordType(Type):
 
 
 class ArrayType(Type):
+    """CODA Array Type class."""
+
     __slots__ = []
 
     @property
@@ -511,6 +574,8 @@ class ArrayType(Type):
 
 
 class SpecialType(Type):
+    """CODA Special Type class."""
+
     __slots__ = []
 
     @property
@@ -519,6 +584,8 @@ class SpecialType(Type):
 
 
 class TextType(Type):
+    """CODA Text Type class."""
+
     __slots__ = []
 
     @property
@@ -527,10 +594,20 @@ class TextType(Type):
 
 
 class RawType(Type):
+    """CODA Raw Type class."""
+
     __slots__ = []
 
 
 class Expression(object):
+    """CODA Expression class.
+
+    An instance of this class represents a CODA expression.
+
+    It is a wrapper class around the low-level coda_expression struct.
+
+    """
+
     __slots__ = ['_x']
 
     def __init__(self, s=None, _x=None):
@@ -579,6 +656,13 @@ def recognize_file(path):
 
 
 def open(path):
+    """Open a CODA compatible product.
+
+    Arguments:
+    path -- path to CODA compatible file.
+
+    Returns an instance of 'Product'.
+    """
     x = _ffi.new('coda_product **')
     _check(_lib.coda_open(_encode_path(path), x), 'coda_open')
     return Product(_x=x[0])
@@ -593,6 +677,14 @@ def open_as(path, class_, type_, version):
 
 
 def close(product):
+    """Close CODA product.
+
+    Note that the 'with' keyword is also supported, to automatically close products.
+
+    Arguments:
+    product -- instance of 'Product'.
+
+    """
     _check(_lib.coda_close(product._x), 'coda_close')
 
 
