@@ -48,7 +48,7 @@ Example of basic usage:
         # use cursor
         cursor = product.cursor()
         cursor.goto('a/b')
-        data = cursor.read()
+        data = cursor.fetch()
 
         # use convenience method
         data = product.fetch('a/b')
@@ -56,12 +56,18 @@ Example of basic usage:
 Also using the high-level interface, a CODA expression is represented by
 an instance of class Expression.
 
+For the convenience methods, it is possible to specify a path indicating
+from where to retrieve data. A path consists of a sequence of strings and
+integers, which are resolved from the respective location. The path can be
+given as a CODA node expression or as one or more positional arguments.
+
 For both the Cursor and Expression classes, there are much fewer methods
 than there are functions in the low-level interface, because in Python
 functions can return different types of values. For example, rather than
-having to call cursor_read_uint8(cursor), we can just call cursor.read().
+having to call cursor_read_uint8(cursor), we can just call cursor.fetch().
 
-Further information is available in the CODA documentation.
+Further information (also about the low-level interface) is available in
+the CODA documentation.
 
 """
 
@@ -112,6 +118,7 @@ class FetchError(Error):
 
     Attributes:
         str       --  error message
+
     """
 
     def __init__(self, str):
@@ -132,6 +139,7 @@ class CodacError(Error):
                         from the CODA C library.
 
     """
+
     def __init__(self, function=None):
         super(CodacError, self).__init__(self)
 
@@ -164,12 +172,89 @@ class Node(object):
     __slots__ = []
 
     def fetch(self, *path):
+        """Return all product data (recursively) for the current data item
+        (or as specified by a path).
+
+        This can result in a combination of nested 'Record' instances,
+        numpy arrays, scalars, strings and so on.
+
+        Some examples:
+
+            data = product.fetch('fieldname')
+            data = cursor.fetch('a/b')
+
+        Arguments:
+        path -- path description (optional)
+        """
         return fetch(self, *path)
 
-    def read(self):
-        return fetch(self)
+    def get_attributes(self, *path):
+        """Return a 'Record' instance containing the attributes for the
+        current data item (or as specified by a path).
+
+        Arguments:
+        path -- path description (optional)
+        """
+        return get_attributes(self, *path)
+
+    @property
+    def attributes(self):
+        """Return a 'Record' instance containing the attributes for the
+        current data item.
+        """
+        return get_description(self, *path)
+
+    def get_description(self, *path):
+        """Return the description in the product format definition for the
+        current data item (or as specified by a path).
+
+        Arguments:
+        path -- path description (optional)
+        """
+        return get_description(self, *path)
+
+    @property
+    def description(self):
+        """Return the description (as a string) in the product format
+        definition for the current data item.
+        """
+        return get_description(self)
+
+    @property
+    def get_unit(self, *path):
+        """Return unit information (as a string) in the product format
+        definition for the current data item (or as specified by a path).
+
+        Arguments:
+        path -- path description (optional)
+        """
+        return get_unit(self, *path)
+
+    @property
+    def unit(self):
+        """Return unit information (as a string) in the product format
+        definition for the current data item.
+        """
+        return get_unit(self)
+
+    def cursor(self, *path):
+        """Return a new 'Cursor' instance, pointing to the same data
+        item (or as specified by a path).
+
+        Arguments:
+        path -- path description (optional)
+        """
+        return Cursor(self, *path)
 
     def read_partial_array(self, offset, count):
+        """Return partial (flat) array data, using specified offset and count.
+
+        C array ordering conventions are used.
+
+        Arguments:
+        offset -- (flat) array index
+        count -- number of elements to read
+        """
         cursor = self.cursor()
 
         nodeType = cursor_get_type(cursor)
@@ -178,37 +263,37 @@ class Node(object):
 
         return _readNativeTypePartialArrayFunctionDictionary[readType](cursor, offset, count)
 
-    def cursor(self, *path):
-        return Cursor(self, *path)
-
-    def get_description(self, *path):
-        return get_description(self, *path)
-
-    @property
-    def description(self):
-        return get_description(self)
-
-    def get_attributes(self, *path):
-        return get_attributes(self, *path)
-
-    @property
-    def get_unit(self, *path):
-        return get_unit(self, *path)
-
-    @property
-    def unit(self):
-        return get_unit(self)
-
     @property
     def field_available(self, *path):
+        """Return a boolean indicating whether a record field is available.
+
+        The last item of the path description must point to a record field.
+
+        Arguments:
+        path -- path description (optional)
+        """
         return get_field_available(self, *path)
 
     @property
     def field_count(self, *path):
+        """Return the number of fields in a record.
+
+        The last item of the path must point to a record.
+
+        Arguments:
+        path -- path description (optional)
+        """
         return get_field_count(self, *path)
 
     @property
     def field_names(self, *path):
+        """Return the names of the fields in a record.
+
+        The last item of the path must point to a record.
+
+        Arguments:
+        path -- path description (optional)
+        """
         return get_field_names(self, *path)
 
 
@@ -219,55 +304,98 @@ class Product(Node):
 
     It is a wrapper class around the low-level coda_product struct.
 
-    It implements the context-management protocol for conveniently
-    closing products.
+    It implements the context-manager protocol for conveniently
+    closing (these low-level) products.
 
     """
 
     __slots__ = ['_x']
 
     def __init__(self, path=None, _x=None):
+        """Initialize a 'Product' instance for specified product file.
+
+        The instance should be cleaned up after use via 'with' keyword or
+        by calling the 'close' method (or global function).
+
+        Arguments:
+        path -- path to product file
+        """
         if path is not None:
             self._x = open(path)._x
         else:
             self._x = _x
 
     def close(self):
+        """Close the low-level CODA product.
+
+        Note that it is also possible to use the 'with' keyword for this.
+        """
         close(self)
 
     @property
     def version(self):
+        """Return the product type version.
+        """
         return get_product_version(self)
 
     @property
     def product_class(self):
+        """Return the name of the product class.
+        """
         return get_product_class(self)
 
     @property
     def product_type(self):
+        """Return the name of the product type.
+        """
         return get_product_type(self)
 
     @property
+    def format(self):
+        """Return the name of the product format."""
+        return type_get_format_name(get_product_format(self))
+
+    @property
     def definition_file(self):
+        """Return the path to the coda definition file that describes the product format.
+        """
         return get_product_definition_file(self)
 
     @property
     def file_size(self):
+        """Return the product file size.
+        """
         return get_product_file_size(self)
 
     @property
     def filename(self):
+        """Return the product filename.
+        """
         return get_product_filename(self)
 
     @property
-    def format(self):
-        return type_get_format_name(get_product_format(self))
-
-    @property
     def root_type(self):
+        """Return the CODA type of the root of the product.
+        """
         return get_product_root_type(self)
 
-    def variable_value(self, variable, index):
+    def variable_value(self, variable, index=0):
+        """Return the value for a product variable.
+
+        Product variables are used to store frequently needed
+        information of a product (information that is needed to
+        calculate byte offsets or array sizes within a product).
+
+        Consult the CODA Product Definition Documentation for
+        an overview of product variables for a certain product type.
+
+        Product variables can be one-dimensional arrays, in which an
+        index must be passed.
+
+        Arguments:
+        variable -- name of product variable
+        index -- array index of the product variable (optional)
+        """
         return get_product_variable_value(self, variable, index)
 
     def __enter__(self):
@@ -287,11 +415,32 @@ class Cursor(Node):
     Cursors are used to navigate a product hierarchy, and
     extract CODA types and product data.
 
+    Internally, a 'Cursor' instance consists of a stack of pointers,
+    making it is possible to easily move up and down a product hierarchy.
+
     """
 
     __slots__ = ['_x']
 
     def __init__(self, obj=None, *path):
+        """Initialize a 'Cursor' instance.
+
+        If a 'Cursor' instance is passed, the cursor will point to the
+        same location.
+
+        If a 'Product' instance is passed, the cursor will point to the
+        product root.
+
+        If a path is given, the cursor location will then be changed
+        to point as specified.
+
+        If no arguments are given, the 'set_product' method should be
+        used to point to a 'Product' instance.
+
+        Arguments:
+        obj -- existing 'Cursor' or 'Product' instance (optional)
+        path -- path description (optional)
+        """
         self._x = _ffi.new('coda_cursor *')
 
         if obj is not None:
@@ -314,132 +463,271 @@ class Cursor(Node):
         return cursor
 
     def goto(self, *path):
+        """Move the cursor as specified by 'path'.
+
+        Arguments:
+        path -- path description (optional)
+        """
         _traverse_path(self, path)
         return self
 
     def goto_parent(self):
+        """Move the cursor one level up in the hierarchy.
+        """
         cursor_goto_parent(self)
         return self
 
     def goto_root(self):
+        """Move the cursor to the product root.
+        """
         cursor_goto_root(self)
         return self
 
     def goto_first_record_field(self):
+        """Move the cursor to the first record field.
+        """
         cursor_goto_first_record_field(self)
         return self
 
     def goto_next_record_field(self):
+        """Move the cursor to the next record field.
+        """
         cursor_goto_next_record_field(self)
         return self
 
     def goto_record_field_by_index(self, index):
+        """Move the cursor to the record field with the given index.
+
+        Arguments:
+        index -- field index
+        """
         cursor_goto_record_field_by_index(self, index)
         return self
 
     def goto_record_field_by_name(self, name):
+        """Move the cursor to the record field with the given name.
+
+        Arguments:
+        index -- field name
+        """
         cursor_goto_record_field_by_name(self, name)
         return self
 
     def goto_first_array_element(self):
+        """Move the cursor to the first array element.
+        """
         cursor_goto_first_array_element(self)
         return self
 
     def goto_next_array_element(self):
+        """Move the cursor to the next array element.
+        """
         cursor_goto_next_array_element(self)
         return self
 
     def goto_array_element(self, idcs):
+        """Move the cursor to the array element with the given indices.
+
+        Arguments:
+        idcs -- sequence of indices (one per dimension)
+        """
         cursor_goto_array_element(self, idcs)
         return self
 
     def goto_array_element_by_index(self, index):
+        """Move the cursor to the array element with the given index.
+
+        A multi-dimensional array is treated as a one-dimensional array
+        (with the same number of elements).
+
+        The ordering in such a one dimensional array is by definition
+        chosen to be equal to the way the array elements are stored as a
+        sequence in the product file.
+
+        The mapping of a one dimensional index for each multidimensional
+        data array to an array of subscripts (and vice versa) is defined
+        in such a way that the last element of a subscript array is the
+        one that is the fastest running index (i.e. C array ordering).
+
+        All multidimensional arrays have their dimensions defined using C
+        array ordering in CODA.
+
+        Arguments:
+        index -- array index
+        """
         cursor_goto_array_element_by_index(self, index)
         return self
 
     def goto_available_union_field(self):
+        """Move the cursor to the available union field.
+        """
         cursor_goto_available_union_field(self)
         return self
 
     def goto_attributes(self):
+        """Move the cursor to a (virtual) record containing the attributes
+        of the current data element.
+        """
         cursor_goto_attributes(self)
         return self
 
     def set_product(self, product):
+        """Initialize the cursor to point to the given product root.
+
+        Arguments:
+        product -- 'Product' instance
+        """
         cursor_set_product(self, product)
 
+    @property
+    def product(self):
+        """Return the corresponding 'Product' instance.
+        """
+        return cursor_get_product_file(self)
+
     def num_elements(self):
+        """Return the number of array or record elements (or 1 for other
+        types."""
         return cursor_get_num_elements(self)
 
     def string_length(self):
+        """Return the length in bytes of a string."""
         return cursor_get_string_length(self)
 
     def use_base_type_of_special_type(self):
+        """Reinterpret special data using the special type base type.
+
+        All special data types have a base type that can be used to read
+        the data in its raw form (e.g. for ASCII time data the type will
+        change to a string type and for binary compound time data the type
+        will change to a record with fields containing binary numbers).
+        """
         cursor_use_base_type_of_special_type(self)
 
     @property
     def coda_type(self):
+        """Return a 'Type' instance corresponding to the CODA type for
+        the current location.
+        """
         return cursor_get_type(self)
 
     @property
     def type_class(self):
+        """Return the name of the CODA type class for the current
+        location.
+        """
         return type_get_class_name(cursor_get_type_class(self))
 
     @property
     def special_type(self):
+        """Return the name of the special type for the current
+        location.
+        """
         return type_get_special_type_name(cursor_get_special_type(self))
 
     @property
     def format(self):
+        """Return the name of the storage format for the current
+        location.
+        """
         return type_get_format_name(cursor_get_format(self))
 
     @property
     def has_attributes(self):
+        """Return a boolean indicating if there are attributes for
+        the current location.
+        """
         return bool(cursor_has_attributes(self))
 
     @property
     def has_ascii_content(self):
+        """Return a boolean indicating if the data for the current
+        location is stored in ASCII format.
+        """
         return bool(cursor_has_ascii_content(self))
 
     @property
     def available_union_field_index(self):
+        """Return the index of the available union field.
+        """
         return cursor_get_available_union_field_index(self)
 
     def record_field_available_status(self, index):
-        return cursor_get_record_field_available_status(self, index)
+        """Return a boolean indicating if a record field is available.
+
+        Arguments:
+        index -- record field index
+        """
+        return bool(cursor_get_record_field_available_status(self, index))
 
     def record_field_index_from_name(self, name):
+        """Return record field index for the field with the given name.
+
+        Arguments:
+        name -- record field name
+        """
         return cursor_get_record_field_index_from_name(self, name)
 
     @property
     def array_dim(self):
+        """Return a list containing the dimensions of an array.
+        """
         return cursor_get_array_dim(self)
 
     @property
     def depth(self):
+        """Return the hierarchical depth of the current location.
+        """
         return cursor_get_depth(self)
 
     @property
     def index(self):
+        """Return the array or record field index for the current location.
+
+        For arrays, a 'flat' index is returned (similator to the argument
+        of the 'goto_array_element_by_index' method).
+        """
         return cursor_get_index(self)
 
     def bit_size(self):
+        """Return the bit size for the current location.
+        """
         return cursor_get_bit_size(self)
 
     def byte_size(self):
+        """Return the byte size for the current location.
+
+        It is calculated by rounding *up* the bit size to the nearest byte.
+        """
         return cursor_get_byte_size(self)
 
     @property
     def file_bit_offset(self):
+        """Return the file offset in bits for the current location.
+        """
         return cursor_get_file_bit_offset(self)
 
     @property
     def file_byte_offset(self):
+        """Return the file offset in bytes for the current location.
+
+        It is calculated by rounding *down* the bit offset to the nearest
+        byte.
+        """
         return cursor_get_file_byte_offset(self)
 
-    @property
-    def product(self):
-        return cursor_get_product_file(self)
+
+class Record(object):
+    """CODA Record class.
+
+    An instance of this class represents a CODA record.
+
+    Each record field will appear as an instance attribute. The field
+    name is used as the name of the attribute, and its value is read from
+    the product file.
+    """
+
+    __slots__ = []
 
 
 class Type(object):
@@ -469,47 +757,63 @@ class Type(object):
 
     @property
     def type_class(self):
+        """Return the name of the type class.
+        """
         return type_get_class_name(type_get_class(self))
 
     @property
     def format(self):
+        """Return the name of the type storage format.
+        """
         return type_get_format_name(type_get_format(self))
 
     @property
+    def special_type(self):
+        """Return the name of the special type."""
+        return type_get_special_type_name(type_get_special_type(self))
+
+    @property
     def description(self):
+        """Return the type description.
+        """
         return type_get_description(self)
 
     @property
     def has_attributes(self):
+        """Return a boolean indicating whether the type has any
+        attributes.
+        """
         return bool(type_has_attributes(self))
 
     @property
     def attributes(self):
+        """Return the type for the associated attribute record.
+        """
         return type_get_attributes(self)
 
     @property
     def read_type(self):
+        """Return the best native type for reading the data.
+        """
         return type_get_read_type(self)
 
     @property
-    def special_type(self):
-        return type_get_special_type_name(type_get_special_type(self))
-
-    @property
     def unit(self):
+        """Return the type unit.
+        """
         return type_get_unit(self)
 
     @property
     def bit_size(self):
+        """Return the bit size for the type.
+        """
         return type_get_bit_size(self)
 
     @property
     def fixed_value(self):
+        """Return the associated fixed value string for the type.
+        """
         return type_get_fixed_value(self)
-
-    @property
-    def name(self):
-        return type_get_name(self)
 
 
 class IntegerType(Type):
@@ -525,38 +829,84 @@ class RealType(Type):
 
 
 class RecordType(Type):
-    """CODA Record Type class."""
+    """CODA Record Type class.
+
+    Unions are implemented in CODA as records where only one field is
+    'available' a ta time.
+
+    """
 
     __slots__ = []
 
     @property
     def num_fields(self):
+        """Return the total number of fields.
+        """
         return type_get_num_record_fields(self)
 
     def field_hidden_status(self, index):
-        return type_get_record_field_hidden_status(self, index)
+        """Return a boolean indicating whether a field is hidden.
+
+        Arguments:
+        index -- record field index
+        """
+        return bool(type_get_record_field_hidden_status(self, index))
 
     def field_available_status(self, index):
-        return type_get_record_field_available_status(self, index)
+        """Return a boolean indicating whether a field is available.
+
+        Arguments:
+        index -- record field index
+        """
+        return bool(type_get_record_field_available_status(self, index))
 
     def field_type(self, index):
+        """Return 'Type' instance corresponding to a field.
+
+        Arguments:
+        index -- record field index
+        """
         return type_get_record_field_type(self, index)
 
     def field_name(self, index):
+        """Return the name of a field.
+
+        Arguments:
+        index -- record field index
+        """
         return type_get_record_field_name(self, index)
 
     def field_real_name(self, index):
+        """Return the real (unaltered) name of a field.
+
+        Regular field names may be altered because of restrictions on identifier naming.
+
+        Arguments:
+        index -- record field index
+        """
         return type_get_record_field_real_name(self, index)
 
     def field_index_from_name(self, name):
+        """Return the index of a field with given name.
+
+        Arguments:
+        index -- record field name
+        """
         return type_get_record_field_index_from_name(self, name)
 
     def field_index_from_real_name(self, name):
+        """Return the name of a field with given index.
+
+        Arguments:
+        index -- record field index
+        """
         return type_get_record_field_index_from_real_name(self, name)
 
     @property
     def union_status(self):
-        return type_get_record_union_status(self)
+        """Return a boolean indicating whether the record is a union.
+        """
+        return bool(type_get_record_union_status(self))
 
 
 class ArrayType(Type):
@@ -566,10 +916,16 @@ class ArrayType(Type):
 
     @property
     def base_type(self):
+        """Return a 'Type' instance corresponding to the array elements.
+        """
         return type_get_array_base_type(self)
 
     @property
     def dim(self):
+        """Return a list with array dimension sizes.
+
+        The size of a variable dimension is represented as -1.
+        """
         return type_get_array_dim(self)
 
 
@@ -580,6 +936,9 @@ class SpecialType(Type):
 
     @property
     def base_type(self):
+        """Return a 'Type' instance corresponding to the special type
+        base type.
+        """
         return type_get_special_base_type(self)
 
 
@@ -590,6 +949,8 @@ class TextType(Type):
 
     @property
     def string_length(self):
+        """Return the string length in bytes.
+        """
         return type_get_string_length(self)
 
 
@@ -606,23 +967,62 @@ class Expression(object):
 
     It is a wrapper class around the low-level coda_expression struct.
 
+    Consult the CODA documentation for information about the the CODA
+    expression language.
+
     """
 
     __slots__ = ['_x']
 
     def __init__(self, s=None, _x=None):
+        """Initialize an 'Expression' instance.
+
+        The instance should be cleaned up after use via 'with' keyword or
+        by calling the 'delete' method.
+
+        Arguments:
+        s -- string containing CODA expression
+        """
         if s is not None:
             self._x = expression_from_string(s)._x
         else:
             self._x = _x
 
     def is_constant(self):
+        """Return a boolean indicating whether the expression is constant.
+
+        An expression is constant if it does not depend on the contents of
+        a product and hence can be evaluated without requiring a cursor.
+        """
         return bool(expression_is_constant(self))
 
     def is_equal(self, expr):
+        """Return a boolean indicating whether the expression is equal
+        to another 'Expression' instance.
+
+        For two expressions to be considered as equal, all operands to an
+        operation need to be equal and operands need to be provided in the
+        same order.
+
+        For example, the expression '1!=2' is not considered equal to the
+        expression '2!=1'.
+
+        Arguments:
+        expr -- 'Expression' instance
+        """
         return bool(expression_is_equal(self,expr))
 
     def eval(self, cursor=None):
+        """Evaluate the expression and return the resulting value.
+
+        For a constant expression, the 'cursor' argument is optional.
+
+        For a node expression, the cursor is moved to the resulting
+        location and no value is returned.
+
+        Arguments:
+        cursor -- 'Cursor' instance (optional)
+        """
         expression_type = self.expression_type
         if expression_type == 'boolean':
             return bool(expression_eval_bool(self, cursor))
@@ -637,13 +1037,32 @@ class Expression(object):
 
     @property
     def expression_type(self):
+        """Return the name of the expression type.
+        """
         return expression_get_type_name(expression_get_type(self))
 
     def delete(self):
+        """Delete the low-level CODA expression object.
+
+        Note that it is also possible to use the 'with' keyword for this.
+        """
         return expression_delete(self)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.delete()
 
 
 def recognize_file(path):
+    """Return a list containing the file size, format, product class,
+    product type, and format version of a product file.
+
+    Arguments:
+    path -- path to product file
+    """
+
     x = _ffi.new('int64_t *')
     y = _ffi.new('enum coda_format_enum *')
     z = _ffi.new('char **')
@@ -656,30 +1075,47 @@ def recognize_file(path):
 
 
 def open(path):
-    """Open a CODA compatible product.
+    """Return a 'Product' instance for the specified product file.
+
+    Note that products can also be opened as follows:
+
+        product = Product(path)
 
     Arguments:
-    path -- path to CODA compatible file.
-
-    Returns an instance of 'Product'.
+    path -- path to CODA compatible product file.
     """
     x = _ffi.new('coda_product **')
     _check(_lib.coda_open(_encode_path(path), x), 'coda_open')
     return Product(_x=x[0])
 
 
-def open_as(path, class_, type_, version):
+def open_as(path, product_class, product_type, version):
+    """Return a 'Product' instance for the specified product file,
+    using the specified format definition.
+
+    Arguments:
+    path -- path to CODA compatible product file.
+    product_class -- product class name
+    product_type -- product type name
+    version -- format version number (-1 for latest)
+    """
     x = _ffi.new('coda_product **')
-    class_ = _encode_string(class_)
-    type_ = _encode_string(type_)
+    class_ = _encode_string(product_class)
+    type_ = _encode_string(product_type)
     _check(_lib.coda_open_as(_encode_path(path), class_, type_, version, x), 'coda_open_as')
     return Product(_x=x[0])
 
 
 def close(product):
-    """Close CODA product.
+    """Close the given 'Product' instance.
 
-    Note that the 'with' keyword is also supported, to automatically close products.
+    This will release any memory used by the low-level CODA product.
+
+    Note that products can also be closed as follows:
+
+        product.close()
+
+    The 'with' keyword can also be used for this purpose.
 
     Arguments:
     product -- instance of 'Product'.
@@ -687,6 +1123,9 @@ def close(product):
     """
     _check(_lib.coda_close(product._x), 'coda_close')
 
+#
+# low-level interface
+#
 
 def match_filefilter(filter_, paths, callback):
     if _is_str(paths):
@@ -706,11 +1145,6 @@ def match_filefilter(filter_, paths, callback):
     voidp = _ffi.new('char *')
 
     _check(_lib.coda_match_filefilter(_encode_string(filter_), npaths, paths2, fptr, voidp))
-
-
-#
-# low-level interface
-#
 
 
 def _string(s):
@@ -1820,22 +2254,6 @@ def _isIterable(maybeIterable):
         return False
     else:
         return True
-
-
-#
-# CLASS RECORD; REPRESENTS CODA RECORDS IN PYTHON
-#
-class Record(object):
-    __slots__ = []
-
-    """
-    A class that represents the CODA record type in Python.
-
-    When a record is read from a product file, a Record instance is
-    created and populated with fields using the _registerField() method.
-    Each field will appear as an instance attribute. The field name is used as
-    the name of the attribute, and its value is read from the product file.
-    """
 
 
 #
