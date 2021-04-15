@@ -34,6 +34,10 @@ of a low-level part, corresponding directly to the C interface, and a high-
 level part, which adds an object-oriented wrapper layer and additional
 convenience methods.
 
+The Python interface depends on the '_cffi_backend' module, which is part
+of the C foreign function interface (cffi) package. This package must be
+installed in order to be able to use the Python interface.
+
 Using the high-level interface, a CODA Product is represented by an
 instance of class Product. One or more instances of class Cursor can be
 used to navigate a product, and extract CODA types and product data. CODA
@@ -263,7 +267,6 @@ class Node(object):
 
         return _readNativeTypePartialArrayFunctionDictionary[readType](cursor, offset, count)
 
-    @property
     def field_available(self, *path):
         """Return a boolean indicating whether a record field is available.
 
@@ -274,7 +277,6 @@ class Node(object):
         """
         return get_field_available(self, *path)
 
-    @property
     def field_count(self, *path):
         """Return the number of fields in a record.
 
@@ -285,7 +287,6 @@ class Node(object):
         """
         return get_field_count(self, *path)
 
-    @property
     def field_names(self, *path):
         """Return the names of the fields in a record.
 
