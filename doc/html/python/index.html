@@ -14,15 +14,37 @@
 
       <h1>CODA Python</h1>
 
-      <p>The CODA Python interface consists of a Python package 'coda' containing several functions that allow the user to easily access data inside product files.</p>
+      <p>The CODA Python interface consists of a Python package 'coda' containing extensive functionality to access data inside product files.</p>
 
-      <p>The CODA Python interface contains both a wrapping of the <a href="../libcoda/index.html">CODA C interface</a> as well as a version of the higher level CODA functions as can be found in the <a href="../idl/index.html">IDL</a> and <a href="../matlab/index.html">MATLAB</a> interfaces of CODA.</p>
+      <p>There are three ways to use the CODA Python interface. The recommended approach is to use a set of high-level classes as described below. There are also several functions that resemble the <a href="../matlab/index.html">CODA MATLAB interface</a>. For this, see the high-level functions as described below. Finally, the interface also contains a direct wrapping (using CFFI) of the <a href="../libcoda/index.html">CODA C interface</a>. It is not recommended to use this interface directly, as it exists mainly for backward compatibility.</p>
+
+      <p>The CODA Python interface depends on the '_cffi_backend' module, which is part of the C foreign function interface (cffi) package. This package must be installed in order to be able to use the Python interface.</p>
 
       <h2>Contents</h2>
 
       <ul>
         <li><a href="#codadef">CODA Definition Path</a></li>
         <li><a href="#high_level_types">High level CODA Data Types</a></li>
+        <li><a href="#high_level_classes">High level CODA Classes</a>
+          <ul>
+            <li><a href="#coda.Error"><code>coda.Error</code></a></li>
+            <li><a href="#coda.FetchError"><code>coda.FetchError</code></a></li>
+            <li><a href="#coda.CodacError"><code>coda.CodacError</code></a></li>
+            <li><a href="#coda.Node"><code>coda.Node</code></a></li>
+            <li><a href="#coda.Product"><code>coda.Product</code></a></li>
+            <li><a href="#coda.Cursor"><code>coda.Cursor</code></a></li>
+            <li><a href="#coda.Record"><code>coda.Record</code></a></li>
+            <li><a href="#coda.Type"><code>coda.Type</code></a></li>
+            <li><a href="#coda.IntegerType"><code>coda.IntegerType</code></a></li>
+            <li><a href="#coda.RealType"><code>coda.RealType</code></a></li>
+            <li><a href="#coda.RecordType"><code>coda.RecordType</code></a></li>
+            <li><a href="#coda.ArrayType"><code>coda.ArrayType</code></a></li>
+            <li><a href="#coda.SpecialType"><code>coda.SpecialType</code></a></li>
+            <li><a href="#coda.TextType"><code>coda.TextType</code></a></li>
+            <li><a href="#coda.RawType"><code>coda.RawType</code></a></li>
+            <li><a href="#coda.Expression"><code>coda.Expression</code></a></li>
+          </ul>
+        </li>
         <li><a href="#high_level_functions">High level CODA Functions</a>
           <ul>
             <li><a href="#coda_open_hl"><code>coda.open</code></a></li>
@@ -210,7 +232,7 @@
 
       <h2 id="codadef">CODA Definition Path</h2>
       
-      <p>Note that in order to access products whose formats are defined using .codadef files, you should let CODA now where these .codadef files are stored. By default the CODA Python interface will look for .codadef files in a directory relative to the location of the CODA Python package (<code>../../../../share/coda/definitions</code>).
+      <p>To access products whose formats are defined using .codadef files, you should let CODA now where these .codadef files are stored. By default the CODA Python interface will look for .codadef files in a directory relative to the location of the CODA Python package (<code>../../../../share/coda/definitions</code>).
 
       <p>You can override the default location by setting the CODA_DEFINITION environment variable. This environment variable should be a ':' separated (';' on Windows) list of absolute paths to directories containing .codadef files or absolute paths to .codadef files themselves (or a mix of those).</p>
 
@@ -228,7 +250,7 @@ import coda
       
 
       <h2 id="high_level_types">High level CODA Data Types</h2>
-      
+
       <p>When reading data from a product file, CODA will use the following mapping to translate the ingested data into Python data structures:</p>
 
       <table class="fancy">
@@ -274,6 +296,1467 @@ import coda
         <tr><td>special</td><td>time</td><td>Python Float</td></tr>
         <tr><td>special</td><td>complex</td><td>Python Complex Number</td></tr>
       </table>
+
+
+<a name="high_level_classes"></a>
+<h2 id="high_level_classes">High level CODA Classes</h2>
+
+<p>The high-level classes form an object-oriented wrapper layer around the low-level functionality and add some additional convenience methods</p>
+
+<p>A CODA Product is represented by an instance of class Product. One or more instances of class Cursor can be used to navigate a product, and extract CODA types and product data. CODA types are represented as instances of class Type. There are several subclasses of Type, corresponding to the different CODA type classes. A CODA expression is represented by an instance of class Expression.</p>
+
+<p>Example of basic usage:</p>
+
+<div class="fragment"><pre>
+import coda
+
+with coda.Product('somefile.nc') as product:
+    # use cursor
+    cursor = product.cursor()
+    cursor.goto('a/b')
+    data = cursor.fetch()
+
+    # use convenience method
+    data = product.fetch('a/b')
+</pre></div>
+
+<p><a name="coda.Error"></a></p>
+
+<h2>Error Objects</h2>
+
+<p><code>python
+class Error(Exception)
+</code></p>
+
+<p>Exception base class for all CODA Python interface errors.</p>
+
+<p><a name="coda.FetchError"></a></p>
+
+<h2>FetchError Objects</h2>
+
+<p><code>python
+class FetchError(Error)
+</code></p>
+
+<p>Exception raised when an errors occurs when fetching data.</p>
+
+<p><strong>Attributes</strong>:</p>
+
+<ul>
+<li><code>str</code> - error message</li>
+</ul>
+
+<p><a name="coda.CodacError"></a></p>
+
+<h2>CodacError Objects</h2>
+
+<p><code>python
+class CodacError(Error)
+</code></p>
+
+<p>Exception raised when an error occurs inside the CODA C library.</p>
+
+<p><strong>Attributes</strong>:</p>
+
+<ul>
+<li><code>errno</code> - error code; if None, the error code will be retrieved from
+the CODA C library.</li>
+<li><code>strerror</code> - error message; if None, the error message will be retrieved
+from the CODA C library.</li>
+</ul>
+
+<p><a name="coda.Node"></a></p>
+
+<h2>Node Objects</h2>
+
+<p><code>python
+class Node(object)
+</code></p>
+
+<p>Base class of 'Product' and 'Cursor' classes.</p>
+
+<p>This class contains shared functionality between Product and Cursor.
+For this functionality, a Product can be used as if it were a Cursor
+(pointing at the product root).</p>
+
+<p><a name="coda.Node.fetch"></a></p>
+
+<h4>fetch</h4>
+
+<p><code>python
+ | fetch(*path)
+</code></p>
+
+<p>Return all product data (recursively) for the current data item
+(or as specified by a path).</p>
+
+<p>This can result in a combination of nested 'Record' instances,
+numpy arrays, scalars, strings and so on.</p>
+
+<p>Some examples:</p>
+
+<p>data = product.fetch('fieldname')
+data = cursor.fetch('a/b')</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>path</code> - path description (optional)</li>
+</ul>
+
+<p><a name="coda.Node.get_attributes"></a></p>
+
+<h4>get_attributes</h4>
+
+<p><code>python
+ | get_attributes(*path)
+</code></p>
+
+<p>Return a 'Record' instance containing the attributes for the
+current data item (or as specified by a path).</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>path</code> - path description (optional)</li>
+</ul>
+
+<p><a name="coda.Node.attributes"></a></p>
+
+<h4>attributes</h4>
+
+<p><code>python
+ | @property
+ | attributes()
+</code></p>
+
+<p>Return a 'Record' instance containing the attributes for the
+current data item.</p>
+
+<p><a name="coda.Node.get_description"></a></p>
+
+<h4>get_description</h4>
+
+<p><code>python
+ | get_description(*path)
+</code></p>
+
+<p>Return the description in the product format definition for the
+current data item (or as specified by a path).</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>path</code> - path description (optional)</li>
+</ul>
+
+<p><a name="coda.Node.description"></a></p>
+
+<h4>description</h4>
+
+<p><code>python
+ | @property
+ | description()
+</code></p>
+
+<p>Return the description (as a string) in the product format
+definition for the current data item.</p>
+
+<p><a name="coda.Node.get_unit"></a></p>
+
+<h4>get_unit</h4>
+
+<p><code>python
+ | @property
+ | get_unit(*path)
+</code></p>
+
+<p>Return unit information (as a string) in the product format
+definition for the current data item (or as specified by a path).</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>path</code> - path description (optional)</li>
+</ul>
+
+<p><a name="coda.Node.unit"></a></p>
+
+<h4>unit</h4>
+
+<p><code>python
+ | @property
+ | unit()
+</code></p>
+
+<p>Return unit information (as a string) in the product format
+definition for the current data item.</p>
+
+<p><a name="coda.Node.cursor"></a></p>
+
+<h4>cursor</h4>
+
+<p><code>python
+ | cursor(*path)
+</code></p>
+
+<p>Return a new 'Cursor' instance, pointing to the same data
+item (or as specified by a path).</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>path</code> - path description (optional)</li>
+</ul>
+
+<p><a name="coda.Node.read_partial_array"></a></p>
+
+<h4>read_partial_array</h4>
+
+<p><code>python
+ | read_partial_array(offset, count)
+</code></p>
+
+<p>Return partial (flat) array data, using specified offset and count.</p>
+
+<p>C array ordering conventions are used.</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>offset</code> - (flat) array index</li>
+<li><code>count</code> - number of elements to read</li>
+</ul>
+
+<p><a name="coda.Node.field_available"></a></p>
+
+<h4>field_available</h4>
+
+<p><code>python
+ | field_available(*path)
+</code></p>
+
+<p>Return a boolean indicating whether a record field is available.</p>
+
+<p>The last item of the path description must point to a record field.</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>path</code> - path description (optional)</li>
+</ul>
+
+<p><a name="coda.Node.field_count"></a></p>
+
+<h4>field_count</h4>
+
+<p><code>python
+ | field_count(*path)
+</code></p>
+
+<p>Return the number of fields in a record.</p>
+
+<p>The last item of the path must point to a record.</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>path</code> - path description (optional)</li>
+</ul>
+
+<p><a name="coda.Node.field_names"></a></p>
+
+<h4>field_names</h4>
+
+<p><code>python
+ | field_names(*path)
+</code></p>
+
+<p>Return the names of the fields in a record.</p>
+
+<p>The last item of the path must point to a record.</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>path</code> - path description (optional)</li>
+</ul>
+
+<p><a name="coda.Product"></a></p>
+
+<h2>Product Objects</h2>
+
+<p><code>python
+class Product(Node)
+</code></p>
+
+<p>CODA Product class.</p>
+
+<p>An instance of this class represents a CODA product.</p>
+
+<p>It is a wrapper class around the low-level coda_product struct.</p>
+
+<p>It implements the context-manager protocol for conveniently
+closing (these low-level) products.</p>
+
+<p><a name="coda.Product.__init__"></a></p>
+
+<h4>__init__</h4>
+
+<p><code>python
+ | __init__(path)
+</code></p>
+
+<p>Initialize a 'Product' instance for specified product file.</p>
+
+<p>The instance should be cleaned up after use via 'with' keyword or
+by calling the 'close' method (or global function).</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>path</code> - path to product file</li>
+</ul>
+
+<p><a name="coda.Product.close"></a></p>
+
+<h4>close</h4>
+
+<p><code>python
+ | close()
+</code></p>
+
+<p>Close the low-level CODA product.</p>
+
+<p>Note that it is also possible to use the 'with' keyword for this.</p>
+
+<p><a name="coda.Product.version"></a></p>
+
+<h4>version</h4>
+
+<p><code>python
+ | @property
+ | version()
+</code></p>
+
+<p>Return the product type version.</p>
+
+<p><a name="coda.Product.product_class"></a></p>
+
+<h4>product_class</h4>
+
+<p><code>python
+ | @property
+ | product_class()
+</code></p>
+
+<p>Return the name of the product class.</p>
+
+<p><a name="coda.Product.product_type"></a></p>
+
+<h4>product_type</h4>
+
+<p><code>python
+ | @property
+ | product_type()
+</code></p>
+
+<p>Return the name of the product type.</p>
+
+<p><a name="coda.Product.format"></a></p>
+
+<h4>format</h4>
+
+<p><code>python
+ | @property
+ | format()
+</code></p>
+
+<p>Return the name of the product format.</p>
+
+<p><a name="coda.Product.definition_file"></a></p>
+
+<h4>definition_file</h4>
+
+<p><code>python
+ | @property
+ | definition_file()
+</code></p>
+
+<p>Return the path to the coda definition file that describes the product format.</p>
+
+<p><a name="coda.Product.file_size"></a></p>
+
+<h4>file_size</h4>
+
+<p><code>python
+ | @property
+ | file_size()
+</code></p>
+
+<p>Return the product file size.</p>
+
+<p><a name="coda.Product.filename"></a></p>
+
+<h4>filename</h4>
+
+<p><code>python
+ | @property
+ | filename()
+</code></p>
+
+<p>Return the product filename.</p>
+
+<p><a name="coda.Product.root_type"></a></p>
+
+<h4>root_type</h4>
+
+<p><code>python
+ | @property
+ | root_type()
+</code></p>
+
+<p>Return the CODA type of the root of the product.</p>
+
+<p><a name="coda.Product.variable_value"></a></p>
+
+<h4>variable_value</h4>
+
+<p><code>python
+ | variable_value(variable, index=0)
+</code></p>
+
+<p>Return the value for a product variable.</p>
+
+<p>Product variables are used to store frequently needed
+information of a product (information that is needed to
+calculate byte offsets or array sizes within a product).</p>
+
+<p>Consult the CODA Product Definition Documentation for
+an overview of product variables for a certain product type.</p>
+
+<p>Product variables can be one-dimensional arrays, in which an
+index must be passed.</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>variable</code> - name of product variable</li>
+<li><code>index</code> - array index of the product variable (optional)</li>
+</ul>
+
+<p><a name="coda.Cursor"></a></p>
+
+<h2>Cursor Objects</h2>
+
+<p><code>python
+class Cursor(Node)
+</code></p>
+
+<p>CODA Cursor class.</p>
+
+<p>An instance of this class represents a CODA cursor.</p>
+
+<p>It is a wrapper class around the low-level coda_cursor struct.</p>
+
+<p>Cursors are used to navigate a product hierarchy, and
+extract CODA types and product data.</p>
+
+<p>Internally, a 'Cursor' instance consists of a stack of pointers,
+making it is possible to easily move up and down a product hierarchy.</p>
+
+<p><a name="coda.Cursor.__init__"></a></p>
+
+<h4>__init__</h4>
+
+<p><code>python
+ | __init__(obj=None, *path)
+</code></p>
+
+<p>Initialize a 'Cursor' instance.</p>
+
+<p>If a 'Cursor' instance is passed, the cursor will point to the
+same location.</p>
+
+<p>If a 'Product' instance is passed, the cursor will point to the
+product root.</p>
+
+<p>If a path is given, the cursor location will then be changed
+to point as specified.</p>
+
+<p>If no arguments are given, the 'set_product' method should be
+used to point to a 'Product' instance.</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>obj</code> - existing 'Cursor' or 'Product' instance (optional)</li>
+<li><code>path</code> - path description (optional)</li>
+</ul>
+
+<p><a name="coda.Cursor.goto"></a></p>
+
+<h4>goto</h4>
+
+<p><code>python
+ | goto(*path)
+</code></p>
+
+<p>Move the cursor as specified by 'path'.</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>path</code> - path description (optional)</li>
+</ul>
+
+<p><a name="coda.Cursor.goto_parent"></a></p>
+
+<h4>goto_parent</h4>
+
+<p><code>python
+ | goto_parent()
+</code></p>
+
+<p>Move the cursor one level up in the hierarchy.</p>
+
+<p><a name="coda.Cursor.goto_root"></a></p>
+
+<h4>goto_root</h4>
+
+<p><code>python
+ | goto_root()
+</code></p>
+
+<p>Move the cursor to the product root.</p>
+
+<p><a name="coda.Cursor.goto_first_record_field"></a></p>
+
+<h4>goto_first_record_field</h4>
+
+<p><code>python
+ | goto_first_record_field()
+</code></p>
+
+<p>Move the cursor to the first record field.</p>
+
+<p><a name="coda.Cursor.goto_next_record_field"></a></p>
+
+<h4>goto_next_record_field</h4>
+
+<p><code>python
+ | goto_next_record_field()
+</code></p>
+
+<p>Move the cursor to the next record field.</p>
+
+<p><a name="coda.Cursor.goto_record_field_by_index"></a></p>
+
+<h4>goto_record_field_by_index</h4>
+
+<p><code>python
+ | goto_record_field_by_index(index)
+</code></p>
+
+<p>Move the cursor to the record field with the given index.</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>index</code> - field index</li>
+</ul>
+
+<p><a name="coda.Cursor.goto_record_field_by_name"></a></p>
+
+<h4>goto_record_field_by_name</h4>
+
+<p><code>python
+ | goto_record_field_by_name(name)
+</code></p>
+
+<p>Move the cursor to the record field with the given name.</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>index</code> - field name</li>
+</ul>
+
+<p><a name="coda.Cursor.goto_first_array_element"></a></p>
+
+<h4>goto_first_array_element</h4>
+
+<p><code>python
+ | goto_first_array_element()
+</code></p>
+
+<p>Move the cursor to the first array element.</p>
+
+<p><a name="coda.Cursor.goto_next_array_element"></a></p>
+
+<h4>goto_next_array_element</h4>
+
+<p><code>python
+ | goto_next_array_element()
+</code></p>
+
+<p>Move the cursor to the next array element.</p>
+
+<p><a name="coda.Cursor.goto_array_element"></a></p>
+
+<h4>goto_array_element</h4>
+
+<p><code>python
+ | goto_array_element(idcs)
+</code></p>
+
+<p>Move the cursor to the array element with the given indices.</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>idcs</code> - sequence of indices (one per dimension)</li>
+</ul>
+
+<p><a name="coda.Cursor.goto_array_element_by_index"></a></p>
+
+<h4>goto_array_element_by_index</h4>
+
+<p><code>python
+ | goto_array_element_by_index(index)
+</code></p>
+
+<p>Move the cursor to the array element with the given index.</p>
+
+<p>A multi-dimensional array is treated as a one-dimensional array
+(with the same number of elements).</p>
+
+<p>The ordering in such a one dimensional array is by definition
+chosen to be equal to the way the array elements are stored as a
+sequence in the product file.</p>
+
+<p>The mapping of a one dimensional index for each multidimensional
+data array to an array of subscripts (and vice versa) is defined
+in such a way that the last element of a subscript array is the
+one that is the fastest running index (i.e. C array ordering).</p>
+
+<p>All multidimensional arrays have their dimensions defined using C
+array ordering in CODA.</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>index</code> - array index</li>
+</ul>
+
+<p><a name="coda.Cursor.goto_available_union_field"></a></p>
+
+<h4>goto_available_union_field</h4>
+
+<p><code>python
+ | goto_available_union_field()
+</code></p>
+
+<p>Move the cursor to the available union field.</p>
+
+<p><a name="coda.Cursor.goto_attributes"></a></p>
+
+<h4>goto_attributes</h4>
+
+<p><code>python
+ | goto_attributes()
+</code></p>
+
+<p>Move the cursor to a (virtual) record containing the attributes
+of the current data element.</p>
+
+<p><a name="coda.Cursor.set_product"></a></p>
+
+<h4>set_product</h4>
+
+<p><code>python
+ | set_product(product)
+</code></p>
+
+<p>Initialize the cursor to point to the given product root.</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>product</code> - 'Product' instance</li>
+</ul>
+
+<p><a name="coda.Cursor.product"></a></p>
+
+<h4>product</h4>
+
+<p><code>python
+ | @property
+ | product()
+</code></p>
+
+<p>Return the corresponding 'Product' instance.</p>
+
+<p><a name="coda.Cursor.num_elements"></a></p>
+
+<h4>num_elements</h4>
+
+<p><code>python
+ | num_elements()
+</code></p>
+
+<p>Return the number of array or record elements (or 1 for other
+types.</p>
+
+<p><a name="coda.Cursor.string_length"></a></p>
+
+<h4>string_length</h4>
+
+<p><code>python
+ | string_length()
+</code></p>
+
+<p>Return the length in bytes of a string.</p>
+
+<p><a name="coda.Cursor.use_base_type_of_special_type"></a></p>
+
+<h4>use_base_type_of_special_type</h4>
+
+<p><code>python
+ | use_base_type_of_special_type()
+</code></p>
+
+<p>Reinterpret special data using the special type base type.</p>
+
+<p>All special data types have a base type that can be used to read
+the data in its raw form (e.g. for ASCII time data the type will
+change to a string type and for binary compound time data the type
+will change to a record with fields containing binary numbers).</p>
+
+<p><a name="coda.Cursor.coda_type"></a></p>
+
+<h4>coda_type</h4>
+
+<p><code>python
+ | @property
+ | coda_type()
+</code></p>
+
+<p>Return a 'Type' instance corresponding to the CODA type for
+the current location.</p>
+
+<p><a name="coda.Cursor.type_class"></a></p>
+
+<h4>type_class</h4>
+
+<p><code>python
+ | @property
+ | type_class()
+</code></p>
+
+<p>Return the name of the CODA type class for the current
+location.</p>
+
+<p><a name="coda.Cursor.special_type"></a></p>
+
+<h4>special_type</h4>
+
+<p><code>python
+ | @property
+ | special_type()
+</code></p>
+
+<p>Return the name of the special type for the current
+location.</p>
+
+<p><a name="coda.Cursor.format"></a></p>
+
+<h4>format</h4>
+
+<p><code>python
+ | @property
+ | format()
+</code></p>
+
+<p>Return the name of the storage format for the current
+location.</p>
+
+<p><a name="coda.Cursor.has_attributes"></a></p>
+
+<h4>has_attributes</h4>
+
+<p><code>python
+ | @property
+ | has_attributes()
+</code></p>
+
+<p>Return a boolean indicating if there are attributes for
+the current location.</p>
+
+<p><a name="coda.Cursor.has_ascii_content"></a></p>
+
+<h4>has_ascii_content</h4>
+
+<p><code>python
+ | @property
+ | has_ascii_content()
+</code></p>
+
+<p>Return a boolean indicating if the data for the current
+location is stored in ASCII format.</p>
+
+<p><a name="coda.Cursor.available_union_field_index"></a></p>
+
+<h4>available_union_field_index</h4>
+
+<p><code>python
+ | @property
+ | available_union_field_index()
+</code></p>
+
+<p>Return the index of the available union field.</p>
+
+<p><a name="coda.Cursor.record_field_available_status"></a></p>
+
+<h4>record_field_available_status</h4>
+
+<p><code>python
+ | record_field_available_status(index)
+</code></p>
+
+<p>Return a boolean indicating if a record field is available.</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>index</code> - record field index</li>
+</ul>
+
+<p><a name="coda.Cursor.record_field_index_from_name"></a></p>
+
+<h4>record_field_index_from_name</h4>
+
+<p><code>python
+ | record_field_index_from_name(name)
+</code></p>
+
+<p>Return record field index for the field with the given name.</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>name</code> - record field name</li>
+</ul>
+
+<p><a name="coda.Cursor.array_dim"></a></p>
+
+<h4>array_dim</h4>
+
+<p><code>python
+ | @property
+ | array_dim()
+</code></p>
+
+<p>Return a list containing the dimensions of an array.</p>
+
+<p><a name="coda.Cursor.depth"></a></p>
+
+<h4>depth</h4>
+
+<p><code>python
+ | @property
+ | depth()
+</code></p>
+
+<p>Return the hierarchical depth of the current location.</p>
+
+<p><a name="coda.Cursor.index"></a></p>
+
+<h4>index</h4>
+
+<p><code>python
+ | @property
+ | index()
+</code></p>
+
+<p>Return the array or record field index for the current location.</p>
+
+<p>For arrays, a 'flat' index is returned (similator to the argument
+of the 'goto<em>array</em>element<em>by</em>index' method).</p>
+
+<p><a name="coda.Cursor.bit_size"></a></p>
+
+<h4>bit_size</h4>
+
+<p><code>python
+ | bit_size()
+</code></p>
+
+<p>Return the bit size for the current location.</p>
+
+<p><a name="coda.Cursor.byte_size"></a></p>
+
+<h4>byte_size</h4>
+
+<p><code>python
+ | byte_size()
+</code></p>
+
+<p>Return the byte size for the current location.</p>
+
+<p>It is calculated by rounding <em>up</em> the bit size to the nearest byte.</p>
+
+<p><a name="coda.Cursor.file_bit_offset"></a></p>
+
+<h4>file_bit_offset</h4>
+
+<p><code>python
+ | @property
+ | file_bit_offset()
+</code></p>
+
+<p>Return the file offset in bits for the current location.</p>
+
+<p><a name="coda.Cursor.file_byte_offset"></a></p>
+
+<h4>file_byte_offset</h4>
+
+<p><code>python
+ | @property
+ | file_byte_offset()
+</code></p>
+
+<p>Return the file offset in bytes for the current location.</p>
+
+<p>It is calculated by rounding <em>down</em> the bit offset to the nearest
+byte.</p>
+
+<p><a name="coda.Record"></a></p>
+
+<h2>Record Objects</h2>
+
+<p><code>python
+class Record(object)
+</code></p>
+
+<p>CODA Record class.</p>
+
+<p>An instance of this class represents a CODA record.</p>
+
+<p>Each record field will appear as an instance attribute. The field
+name is used as the name of the attribute, and its value is read from
+the product file.</p>
+
+<p><a name="coda.Type"></a></p>
+
+<h2>Type Objects</h2>
+
+<p><code>python
+class Type(object)
+</code></p>
+
+<p>CODA Type base class.</p>
+
+<p>An instance of this class represents a CODA type.</p>
+
+<p>It is a wrapper class around the low-level coda_type struct.</p>
+
+<p>Specialized functionality corresponding to the different CODA
+types is provided by the following subclasses:</p>
+
+<ul>
+<li>'IntegerType'</li>
+<li>'RealType'</li>
+<li>'RecordType'</li>
+<li>'ArrayType'</li>
+<li>'SpecialType'</li>
+<li>'TextType'</li>
+<li>'RawType'</li>
+</ul>
+
+<p><a name="coda.Type.type_class"></a></p>
+
+<h4>type_class</h4>
+
+<p><code>python
+ | @property
+ | type_class()
+</code></p>
+
+<p>Return the name of the type class.</p>
+
+<p><a name="coda.Type.format"></a></p>
+
+<h4>format</h4>
+
+<p><code>python
+ | @property
+ | format()
+</code></p>
+
+<p>Return the name of the type storage format.</p>
+
+<p><a name="coda.Type.special_type"></a></p>
+
+<h4>special_type</h4>
+
+<p><code>python
+ | @property
+ | special_type()
+</code></p>
+
+<p>Return the name of the special type.</p>
+
+<p><a name="coda.Type.description"></a></p>
+
+<h4>description</h4>
+
+<p><code>python
+ | @property
+ | description()
+</code></p>
+
+<p>Return the type description.</p>
+
+<p><a name="coda.Type.has_attributes"></a></p>
+
+<h4>has_attributes</h4>
+
+<p><code>python
+ | @property
+ | has_attributes()
+</code></p>
+
+<p>Return a boolean indicating whether the type has any
+attributes.</p>
+
+<p><a name="coda.Type.attributes"></a></p>
+
+<h4>attributes</h4>
+
+<p><code>python
+ | @property
+ | attributes()
+</code></p>
+
+<p>Return the type for the associated attribute record.</p>
+
+<p><a name="coda.Type.read_type"></a></p>
+
+<h4>read_type</h4>
+
+<p><code>python
+ | @property
+ | read_type()
+</code></p>
+
+<p>Return the best native type for reading the data.</p>
+
+<p><a name="coda.Type.unit"></a></p>
+
+<h4>unit</h4>
+
+<p><code>python
+ | @property
+ | unit()
+</code></p>
+
+<p>Return the type unit.</p>
+
+<p><a name="coda.Type.bit_size"></a></p>
+
+<h4>bit_size</h4>
+
+<p><code>python
+ | @property
+ | bit_size()
+</code></p>
+
+<p>Return the bit size for the type.</p>
+
+<p><a name="coda.Type.fixed_value"></a></p>
+
+<h4>fixed_value</h4>
+
+<p><code>python
+ | @property
+ | fixed_value()
+</code></p>
+
+<p>Return the associated fixed value string for the type.</p>
+
+<p><a name="coda.IntegerType"></a></p>
+
+<h2>IntegerType Objects</h2>
+
+<p><code>python
+class IntegerType(Type)
+</code></p>
+
+<p>CODA Integer Type class.</p>
+
+<p><a name="coda.RealType"></a></p>
+
+<h2>RealType Objects</h2>
+
+<p><code>python
+class RealType(Type)
+</code></p>
+
+<p>CODA Real Type class.</p>
+
+<p><a name="coda.RecordType"></a></p>
+
+<h2>RecordType Objects</h2>
+
+<p><code>python
+class RecordType(Type)
+</code></p>
+
+<p>CODA Record Type class.</p>
+
+<p>Unions are implemented in CODA as records where only one field is
+'available' a ta time.</p>
+
+<p><a name="coda.RecordType.num_fields"></a></p>
+
+<h4>num_fields</h4>
+
+<p><code>python
+ | @property
+ | num_fields()
+</code></p>
+
+<p>Return the total number of fields.</p>
+
+<p><a name="coda.RecordType.field_hidden_status"></a></p>
+
+<h4>field_hidden_status</h4>
+
+<p><code>python
+ | field_hidden_status(index)
+</code></p>
+
+<p>Return a boolean indicating whether a field is hidden.</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>index</code> - record field index</li>
+</ul>
+
+<p><a name="coda.RecordType.field_available_status"></a></p>
+
+<h4>field_available_status</h4>
+
+<p><code>python
+ | field_available_status(index)
+</code></p>
+
+<p>Return a boolean indicating whether a field is available.</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>index</code> - record field index</li>
+</ul>
+
+<p><a name="coda.RecordType.field_type"></a></p>
+
+<h4>field_type</h4>
+
+<p><code>python
+ | field_type(index)
+</code></p>
+
+<p>Return 'Type' instance corresponding to a field.</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>index</code> - record field index</li>
+</ul>
+
+<p><a name="coda.RecordType.field_name"></a></p>
+
+<h4>field_name</h4>
+
+<p><code>python
+ | field_name(index)
+</code></p>
+
+<p>Return the name of a field.</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>index</code> - record field index</li>
+</ul>
+
+<p><a name="coda.RecordType.field_real_name"></a></p>
+
+<h4>field_real_name</h4>
+
+<p><code>python
+ | field_real_name(index)
+</code></p>
+
+<p>Return the real (unaltered) name of a field.</p>
+
+<p>Regular field names may be altered because of restrictions on identifier naming.</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>index</code> - record field index</li>
+</ul>
+
+<p><a name="coda.RecordType.field_index_from_name"></a></p>
+
+<h4>field_index_from_name</h4>
+
+<p><code>python
+ | field_index_from_name(name)
+</code></p>
+
+<p>Return the index of a field with given name.</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>index</code> - record field name</li>
+</ul>
+
+<p><a name="coda.RecordType.field_index_from_real_name"></a></p>
+
+<h4>field_index_from_real_name</h4>
+
+<p><code>python
+ | field_index_from_real_name(name)
+</code></p>
+
+<p>Return the name of a field with given index.</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>index</code> - record field index</li>
+</ul>
+
+<p><a name="coda.RecordType.union_status"></a></p>
+
+<h4>union_status</h4>
+
+<p><code>python
+ | @property
+ | union_status()
+</code></p>
+
+<p>Return a boolean indicating whether the record is a union.</p>
+
+<p><a name="coda.ArrayType"></a></p>
+
+<h2>ArrayType Objects</h2>
+
+<p><code>python
+class ArrayType(Type)
+</code></p>
+
+<p>CODA Array Type class.</p>
+
+<p><a name="coda.ArrayType.base_type"></a></p>
+
+<h4>base_type</h4>
+
+<p><code>python
+ | @property
+ | base_type()
+</code></p>
+
+<p>Return a 'Type' instance corresponding to the array elements.</p>
+
+<p><a name="coda.ArrayType.dim"></a></p>
+
+<h4>dim</h4>
+
+<p><code>python
+ | @property
+ | dim()
+</code></p>
+
+<p>Return a list with array dimension sizes.</p>
+
+<p>The size of a variable dimension is represented as -1.</p>
+
+<p><a name="coda.SpecialType"></a></p>
+
+<h2>SpecialType Objects</h2>
+
+<p><code>python
+class SpecialType(Type)
+</code></p>
+
+<p>CODA Special Type class.</p>
+
+<p><a name="coda.SpecialType.base_type"></a></p>
+
+<h4>base_type</h4>
+
+<p><code>python
+ | @property
+ | base_type()
+</code></p>
+
+<p>Return a 'Type' instance corresponding to the special type
+base type.</p>
+
+<p><a name="coda.TextType"></a></p>
+
+<h2>TextType Objects</h2>
+
+<p><code>python
+class TextType(Type)
+</code></p>
+
+<p>CODA Text Type class.</p>
+
+<p><a name="coda.TextType.string_length"></a></p>
+
+<h4>string_length</h4>
+
+<p><code>python
+ | @property
+ | string_length()
+</code></p>
+
+<p>Return the string length in bytes.</p>
+
+<p><a name="coda.RawType"></a></p>
+
+<h2>RawType Objects</h2>
+
+<p><code>python
+class RawType(Type)
+</code></p>
+
+<p>CODA Raw Type class.</p>
+
+<p><a name="coda.Expression"></a></p>
+
+<h2>Expression Objects</h2>
+
+<p><code>python
+class Expression(object)
+</code></p>
+
+<p>CODA Expression class.</p>
+
+<p>An instance of this class represents a CODA expression.</p>
+
+<p>It is a wrapper class around the low-level coda_expression struct.</p>
+
+<p>Consult the CODA documentation for information about the the CODA
+expression language.</p>
+
+<p><a name="coda.Expression.__init__"></a></p>
+
+<h4>__init__</h4>
+
+<p><code>python
+ | __init__(s)
+</code></p>
+
+<p>Initialize an 'Expression' instance.</p>
+
+<p>The instance should be cleaned up after use via 'with' keyword or
+by calling the 'delete' method.</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>s</code> - string containing CODA expression</li>
+</ul>
+
+<p><a name="coda.Expression.is_constant"></a></p>
+
+<h4>is_constant</h4>
+
+<p><code>python
+ | is_constant()
+</code></p>
+
+<p>Return a boolean indicating whether the expression is constant.</p>
+
+<p>An expression is constant if it does not depend on the contents of
+a product and hence can be evaluated without requiring a cursor.</p>
+
+<p><a name="coda.Expression.is_equal"></a></p>
+
+<h4>is_equal</h4>
+
+<p><code>python
+ | is_equal(expr)
+</code></p>
+
+<p>Return a boolean indicating whether the expression is equal
+to another 'Expression' instance.</p>
+
+<p>For two expressions to be considered as equal, all operands to an
+operation need to be equal and operands need to be provided in the
+same order.</p>
+
+<p>For example, the expression '1!=2' is not considered equal to the
+expression '2!=1'.</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>expr</code> - 'Expression' instance</li>
+</ul>
+
+<p><a name="coda.Expression.eval"></a></p>
+
+<h4>eval</h4>
+
+<p><code>python
+ | eval(cursor=None)
+</code></p>
+
+<p>Evaluate the expression and return the resulting value.</p>
+
+<p>For a constant expression, the 'cursor' argument is optional.</p>
+
+<p>For a node expression, the cursor is moved to the resulting
+location and no value is returned.</p>
+
+<p><strong>Arguments</strong>:</p>
+
+<ul>
+<li><code>cursor</code> - 'Cursor' instance (optional)</li>
+</ul>
+
+<p><a name="coda.Expression.expression_type"></a></p>
+
+<h4>expression_type</h4>
+
+<p><code>python
+ | @property
+ | expression_type()
+</code></p>
+
+<p>Return the name of the expression type.</p>
+
+<p><a name="coda.Expression.delete"></a></p>
+
+<h4>delete</h4>
+
+<p><code>python
+ | delete()
+</code></p>
+
+<p>Delete the low-level CODA expression object.</p>
+
+<p>Note that it is also possible to use the 'with' keyword for this.</p>
 
       <h2 id="high_level_functions">High level CODA Functions</h2>
       
