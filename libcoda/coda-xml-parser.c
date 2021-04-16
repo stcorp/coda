@@ -207,8 +207,8 @@ static coda_mem_record *attribute_record_new(coda_type_record *definition, coda_
                 coda_dynamic_type_delete((coda_dynamic_type *)attributes);
                 return NULL;
             }
-            attribute = coda_mem_string_new((coda_type_text *)definition->field[attribute_index]->type, NULL,
-                                            (coda_product *)product, attr[2 * i + 1]);
+            attribute = coda_mem_data_new(definition->field[attribute_index]->type, NULL, (coda_product *)product,
+                                          strlen(attr[2 * i + 1]), (uint8_t *)attr[2 * i + 1]);
         }
         if (attribute == NULL)
         {

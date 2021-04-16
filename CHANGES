@@ -9,6 +9,9 @@ WARNING: Make sure to remove existing coda installations before upgrading.
 
 * Greatly improved performance of codacheck on HDF5/netCDF4 products.
 
+* Allow xml attributes to be interpreted as any ascii datatype via a
+  codadef definition (instead of only allowing it to be text).
+
 2.21.2 2020-10-27
 ~~~~~~~~~~~~~~~~~
 
