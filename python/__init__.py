@@ -829,79 +829,84 @@ class RealType(Type):
     __slots__ = []
 
 
+class RecordTypeField(object):
+    """CODA Record Type Field class.
+    """
+
+    __slots__ = ['recordtype', 'index']
+
+    def __init__(self, recordtype, index):
+        self.recordtype = recordtype
+        self.index = index
+
+    @property
+    def hidden(self):
+        """Return a boolean indicating whether the field is hidden.
+        """
+        return bool(type_get_record_field_hidden_status(self.recordtype, self.index))
+
+    @property
+    def available(self):
+        """Return a boolean indicating whether the field is available.
+        """
+        return bool(type_get_record_field_available_status(self.recordtype, self.index))
+
+    @property
+    def coda_type(self):
+        """Return 'Type' instance corresponding to the field.
+        """
+        return type_get_record_field_type(self.recordtype, self.index)
+
+    @property
+    def name(self):
+        """Return the name (identifier) of the field
+        """
+        return type_get_record_field_name(self.recordtype, self.index)
+
+    @property
+    def real_name(self):
+        """Return the real (original) name of the field.
+
+        This may be different from the regular name (identifier) because
+        of restrictions on identifier names.
+        """
+        return type_get_record_field_real_name(self.recordtype, self.index)
+
+
 class RecordType(Type):
     """CODA Record Type class.
 
     Unions are implemented in CODA as records where only one field is
-    'available' a ta time.
+    'available' at a time.
 
     """
 
     __slots__ = []
 
-    @property
     def num_fields(self):
         """Return the total number of fields.
         """
         return type_get_num_record_fields(self)
 
-    def field_hidden_status(self, index):
-        """Return a boolean indicating whether a field is hidden.
+    def field(self, index):
+        """Return an instance of 'RecordTypeField' corresponding to the
+        specified field index or name.
 
         Arguments:
-        index -- record field index
+        index -- field index or name
         """
-        return bool(type_get_record_field_hidden_status(self, index))
+        if _is_str(index):
+            index = type_get_record_field_index_from_name(self, index)
+        return RecordTypeField(self, index)
 
-    def field_available_status(self, index):
-        """Return a boolean indicating whether a field is available.
-
-        Arguments:
-        index -- record field index
+    def fields(self):
+        """Return a list of 'RecordTypeField' instances corresponding
+        to the fields.
         """
-        return bool(type_get_record_field_available_status(self, index))
-
-    def field_type(self, index):
-        """Return 'Type' instance corresponding to a field.
-
-        Arguments:
-        index -- record field index
-        """
-        return type_get_record_field_type(self, index)
-
-    def field_name(self, index):
-        """Return the name of a field.
-
-        Arguments:
-        index -- record field index
-        """
-        return type_get_record_field_name(self, index)
-
-    def field_real_name(self, index):
-        """Return the real (unaltered) name of a field.
-
-        Regular field names may be altered because of restrictions on identifier naming.
-
-        Arguments:
-        index -- record field index
-        """
-        return type_get_record_field_real_name(self, index)
-
-    def field_index_from_name(self, name):
-        """Return the index of a field with given name.
-
-        Arguments:
-        index -- record field name
-        """
-        return type_get_record_field_index_from_name(self, name)
-
-    def field_index_from_real_name(self, name):
-        """Return the name of a field with given index.
-
-        Arguments:
-        index -- record field index
-        """
-        return type_get_record_field_index_from_real_name(self, name)
+        result = []
+        for i in range(self.num_fields()):
+            result.append(RecordTypeField(self, i))
+        return result
 
     @property
     def union_status(self):

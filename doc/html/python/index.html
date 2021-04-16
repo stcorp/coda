@@ -38,6 +38,7 @@
             <li><a href="#coda.IntegerType"><code>coda.IntegerType</code></a></li>
             <li><a href="#coda.RealType"><code>coda.RealType</code></a></li>
             <li><a href="#coda.RecordType"><code>coda.RecordType</code></a></li>
+            <li><a href="#coda.RecordTypeField"><code>coda.RecordTypeField</code></a></li>
             <li><a href="#coda.ArrayType"><code>coda.ArrayType</code></a></li>
             <li><a href="#coda.SpecialType"><code>coda.SpecialType</code></a></li>
             <li><a href="#coda.TextType"><code>coda.TextType</code></a></li>
@@ -1421,132 +1422,45 @@ class RecordType(Type)
 <p>CODA Record Type class.</p>
 
 <p>Unions are implemented in CODA as records where only one field is
-'available' a ta time.</p>
+'available' at a time.</p>
 
 <p><a name="coda.RecordType.num_fields"></a></p>
 
 <h4>num_fields</h4>
 
 <p><code>python
- | @property
  | num_fields()
 </code></p>
 
 <p>Return the total number of fields.</p>
 
-<p><a name="coda.RecordType.field_hidden_status"></a></p>
+<p><a name="coda.RecordType.field"></a></p>
 
-<h4>field_hidden_status</h4>
+<h4>field</h4>
 
 <p><code>python
- | field_hidden_status(index)
+ | field(index)
 </code></p>
-
-<p>Return a boolean indicating whether a field is hidden.</p>
 
 <p><strong>Arguments</strong>:</p>
 
 <ul>
-<li><code>index</code> - record field index</li>
+<li><code>index</code> - field index or name</li>
 </ul>
 
-<p><a name="coda.RecordType.field_available_status"></a></p>
+<p>Return an instance of 'RecordTypeField' corresponding to the
+specified field index or name.</p>
 
-<h4>field_available_status</h4>
+<p><a name="coda.RecordType.fields"></a></p>
+
+<h4>fields</h4>
 
 <p><code>python
- | field_available_status(index)
+ | fields()
 </code></p>
 
-<p>Return a boolean indicating whether a field is available.</p>
-
-<p><strong>Arguments</strong>:</p>
-
-<ul>
-<li><code>index</code> - record field index</li>
-</ul>
-
-<p><a name="coda.RecordType.field_type"></a></p>
-
-<h4>field_type</h4>
-
-<p><code>python
- | field_type(index)
-</code></p>
-
-<p>Return 'Type' instance corresponding to a field.</p>
-
-<p><strong>Arguments</strong>:</p>
-
-<ul>
-<li><code>index</code> - record field index</li>
-</ul>
-
-<p><a name="coda.RecordType.field_name"></a></p>
-
-<h4>field_name</h4>
-
-<p><code>python
- | field_name(index)
-</code></p>
-
-<p>Return the name of a field.</p>
-
-<p><strong>Arguments</strong>:</p>
-
-<ul>
-<li><code>index</code> - record field index</li>
-</ul>
-
-<p><a name="coda.RecordType.field_real_name"></a></p>
-
-<h4>field_real_name</h4>
-
-<p><code>python
- | field_real_name(index)
-</code></p>
-
-<p>Return the real (unaltered) name of a field.</p>
-
-<p>Regular field names may be altered because of restrictions on identifier naming.</p>
-
-<p><strong>Arguments</strong>:</p>
-
-<ul>
-<li><code>index</code> - record field index</li>
-</ul>
-
-<p><a name="coda.RecordType.field_index_from_name"></a></p>
-
-<h4>field_index_from_name</h4>
-
-<p><code>python
- | field_index_from_name(name)
-</code></p>
-
-<p>Return the index of a field with given name.</p>
-
-<p><strong>Arguments</strong>:</p>
-
-<ul>
-<li><code>index</code> - record field name</li>
-</ul>
-
-<p><a name="coda.RecordType.field_index_from_real_name"></a></p>
-
-<h4>field_index_from_real_name</h4>
-
-<p><code>python
- | field_index_from_real_name(name)
-</code></p>
-
-<p>Return the name of a field with given index.</p>
-
-<p><strong>Arguments</strong>:</p>
-
-<ul>
-<li><code>index</code> - record field index</li>
-</ul>
+<p>Return a list of 'RecordTypeField' instances corresponding
+to the fields.</p>
 
 <p><a name="coda.RecordType.union_status"></a></p>
 
@@ -1558,6 +1472,73 @@ class RecordType(Type)
 </code></p>
 
 <p>Return a boolean indicating whether the record is a union.</p>
+
+<p><a name="coda.RecordTypeField"></a></p>
+
+<h2>RecordTypeField Objects</h2>
+
+<p><code>python
+class RecordTypeField(object)
+</code></p>
+
+<p><a name="coda.RecordTypeField.hidden"></a></p>
+
+<h4>hidden</h4>
+
+<p><code>python
+ | @property
+ | hidden()
+</code></p>
+
+<p>Return a boolean indicating whether the field is hidden.</p>
+
+<p><a name="coda.RecordTypeField.available"></a></p>
+
+<h4>available</h4>
+
+<p><code>python
+ | @property
+ | available()
+</code></p>
+
+<p>Return a boolean indicating whether the field is available.</p>
+
+<p><a name="coda.RecordTypeField.coda_type"></a></p>
+
+<h4>coda_type</h4>
+
+<p><code>python
+ | @property
+ | coda_type()
+</code></p>
+
+<p>Return 'Type' instance corresponding to the field.</p>
+
+<p><a name="coda.RecordTypeField.name"></a></p>
+
+<h4>name</h4>
+
+<p><code>python
+ | @property
+ | name()
+</code></p>
+
+<p>Return the name (identifier) of the field</p>
+
+<p><a name="coda.RecordTypeField.real_name"></a></p>
+
+<h4>real_name</h4>
+
+<p><code>python
+ | @property
+ | real_name()
+</code></p>
+
+<p>Return the real (original) name of the field.</p>
+
+<p>This may be different from the regular name (identifier) because
+of restrictions on identifier names.</p>
+
 
 <p><a name="coda.ArrayType"></a></p>
 
