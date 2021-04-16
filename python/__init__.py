@@ -653,7 +653,7 @@ class Cursor(Node):
         """
         return cursor_get_available_union_field_index(self)
 
-    def record_field_available_status(self, index):
+    def record_field_is_available(self, index):
         """Return a boolean indicating if a record field is available.
 
         Arguments:
@@ -840,16 +840,17 @@ class RecordTypeField(object):
         self.index = index
 
     @property
-    def hidden(self):
+    def is_hidden(self):
         """Return a boolean indicating whether the field is hidden.
         """
         return bool(type_get_record_field_hidden_status(self.recordtype, self.index))
 
     @property
-    def available(self):
-        """Return a boolean indicating whether the field is available.
+    def is_dynamic_available(self):
+        """Return a boolean indicating whether the availability of the
+        field is dynamic.
         """
-        return bool(type_get_record_field_available_status(self.recordtype, self.index))
+        return type_get_record_field_available_status(self.recordtype, self.index) == -1
 
     @property
     def coda_type(self):
@@ -909,7 +910,7 @@ class RecordType(Type):
         return result
 
     @property
-    def union_status(self):
+    def is_union(self):
         """Return a boolean indicating whether the record is a union.
         """
         return bool(type_get_record_union_status(self))
