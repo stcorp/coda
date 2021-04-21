@@ -356,6 +356,13 @@ Variables</h2></td></tr>
 <div class="line">    }</div>
 <div class="line">    <a class="code" href="group__coda__cursor.html#gadbb9fba27af87d3b854194316a1f8c08">coda_cursor_goto_parent</a>(cursor);</div>
 <div class="line">}</div>
+<div class="ttc" id="agroup__coda__cursor_html_ga90362bd9b257866af5373f43947925f4"><div class="ttname"><a href="group__coda__cursor.html#ga90362bd9b257866af5373f43947925f4">coda_cursor_goto_first_array_element</a></div><div class="ttdeci">int coda_cursor_goto_first_array_element(coda_cursor *cursor)</div><div class="ttdef"><b>Definition:</b> coda-cursor.c:859</div></div>
+<div class="ttc" id="agroup__coda__cursor_html_gab4aa54ab5f18c8827435c834dc0415f9"><div class="ttname"><a href="group__coda__cursor.html#gab4aa54ab5f18c8827435c834dc0415f9">coda_cursor_read_double</a></div><div class="ttdeci">int coda_cursor_read_double(const coda_cursor *cursor, double *dst)</div><div class="ttdef"><b>Definition:</b> coda-cursor-read.c:2536</div></div>
+<div class="ttc" id="agroup__coda__cursor_html_gab9e4cc79aea8d6f50f8406c2fddc66c8"><div class="ttname"><a href="group__coda__cursor.html#gab9e4cc79aea8d6f50f8406c2fddc66c8">coda_cursor_get_num_elements</a></div><div class="ttdeci">int coda_cursor_get_num_elements(const coda_cursor *cursor, long *num_elements)</div><div class="ttdef"><b>Definition:</b> coda-cursor.c:1695</div></div>
+<div class="ttc" id="agroup__coda__cursor_html_gac383bb48a0aef63af6c128e8af96238a"><div class="ttname"><a href="group__coda__cursor.html#gac383bb48a0aef63af6c128e8af96238a">coda_cursor_get_array_dim</a></div><div class="ttdeci">int coda_cursor_get_array_dim(const coda_cursor *cursor, int *num_dims, long dim[])</div><div class="ttdef"><b>Definition:</b> coda-cursor.c:2186</div></div>
+<div class="ttc" id="agroup__coda__cursor_html_gadbb9fba27af87d3b854194316a1f8c08"><div class="ttname"><a href="group__coda__cursor.html#gadbb9fba27af87d3b854194316a1f8c08">coda_cursor_goto_parent</a></div><div class="ttdeci">int coda_cursor_goto_parent(coda_cursor *cursor)</div><div class="ttdef"><b>Definition:</b> coda-cursor.c:1324</div></div>
+<div class="ttc" id="agroup__coda__cursor_html_gaf0251269bb9774efc232cf6771ca9692"><div class="ttname"><a href="group__coda__cursor.html#gaf0251269bb9774efc232cf6771ca9692">coda_cursor_goto_next_array_element</a></div><div class="ttdeci">int coda_cursor_goto_next_array_element(coda_cursor *cursor)</div><div class="ttdef"><b>Definition:</b> coda-cursor.c:1123</div></div>
+<div class="ttc" id="agroup__coda__general_html_ga2ce9fe0cb6bac604e8ec7f44f7b3e9e2"><div class="ttname"><a href="group__coda__general.html#ga2ce9fe0cb6bac604e8ec7f44f7b3e9e2">coda_c_index_to_fortran_index</a></div><div class="ttdeci">long coda_c_index_to_fortran_index(int num_dims, const long dim[], long index)</div><div class="ttdef"><b>Definition:</b> coda-utils.c:269</div></div>
 </div><!-- fragment --><dl class="section see"><dt>See also</dt><dd><a class="el" href="group__coda__cursor.html#ga08300afc8797ef5bba44b2acb316bdaf">coda_cursor_goto_array_element_by_index()</a> </dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -748,6 +755,10 @@ Variables</h2></td></tr>
 <div class="line">    }</div>
 <div class="line">    <span class="keywordflow">return</span> 0; <span class="comment">// if possible continue processing the other files</span></div>
 <div class="line">}</div>
+<div class="ttc" id="agroup__coda__general_html_ga9db8ea3d16c2944c2e3dcf1952d94bb2"><div class="ttname"><a href="group__coda__general.html#ga9db8ea3d16c2944c2e3dcf1952d94bb2">coda_filefilter_status</a></div><div class="ttdeci">enum coda_filefilter_status_enum coda_filefilter_status</div><div class="ttdef"><b>Definition:</b> coda.h:316</div></div>
+<div class="ttc" id="agroup__coda__general_html_ggaee4781f4dd13a19806e599480b566c57a1b7f80b816dec50104deeebbe30c1096"><div class="ttname"><a href="group__coda__general.html#ggaee4781f4dd13a19806e599480b566c57a1b7f80b816dec50104deeebbe30c1096">coda_ffs_no_match</a></div><div class="ttdeci">@ coda_ffs_no_match</div><div class="ttdef"><b>Definition:</b> coda.h:236</div></div>
+<div class="ttc" id="agroup__coda__general_html_ggaee4781f4dd13a19806e599480b566c57aa4bb836accb7c2dc35ceec5e59f3a1f8"><div class="ttname"><a href="group__coda__general.html#ggaee4781f4dd13a19806e599480b566c57aa4bb836accb7c2dc35ceec5e59f3a1f8">coda_ffs_match</a></div><div class="ttdeci">@ coda_ffs_match</div><div class="ttdef"><b>Definition:</b> coda.h:235</div></div>
+<div class="ttc" id="agroup__coda__general_html_ggaee4781f4dd13a19806e599480b566c57abbdd4b1445d884350a1f2b749878c7ef"><div class="ttname"><a href="group__coda__general.html#ggaee4781f4dd13a19806e599480b566c57abbdd4b1445d884350a1f2b749878c7ef">coda_ffs_unsupported_file</a></div><div class="ttdeci">@ coda_ffs_unsupported_file</div><div class="ttdef"><b>Definition:</b> coda.h:234</div></div>
 </div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">filefilter</td><td>String containing the filter. </td></tr>
@@ -847,6 +858,7 @@ Variables</h2></td></tr>
 <div class="line">{</div>
 <div class="line">    <a class="code" href="group__coda__general.html#ga4a7e44bcb241c93a6b29e4c7f8cecadb">coda_set_definition_path</a>(<span class="stringliteral">&quot;&lt;your path&gt;&quot;</span>);</div>
 <div class="line">}</div>
+<div class="ttc" id="agroup__coda__general_html_ga4a7e44bcb241c93a6b29e4c7f8cecadb"><div class="ttname"><a href="group__coda__general.html#ga4a7e44bcb241c93a6b29e4c7f8cecadb">coda_set_definition_path</a></div><div class="ttdeci">int coda_set_definition_path(const char *path)</div><div class="ttdef"><b>Definition:</b> coda.c:365</div></div>
 </div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">path</td><td>Search path for .codadef files </td></tr>

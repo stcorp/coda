@@ -1,11 +1,14 @@
-WARNING: Make sure to remove existing coda installations before upgrading.
-(e.g. remove /usr/local/lib/python<x.y>/site-packages/coda)
+2.22 2021-04-22
+~~~~~~~~~~~~~~~
+
+WARNING: Make sure to remove existing coda python installations before
+upgrading (e.g. remove /usr/local/lib/python<x.y>/site-packages/coda).
 
 * Major refactoring of the CODA Python interface:
   - changed implementation from swig to cffi (allows use of coda with pypy)
   - improved performance for coda.fetch() (greatest speedup when using pypy)
   - added new Object Oriented interface
-  The refactoring should be completely backward compatible.
+  This new Python interface of CODA is fully backward compatible.
 
 * Greatly improved performance of codacheck on HDF5/netCDF4 products.
 

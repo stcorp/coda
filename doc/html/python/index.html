@@ -16,9 +16,11 @@
 
       <p>The CODA Python interface consists of a Python package 'coda' containing extensive functionality to access data inside product files.</p>
 
-      <p>There are three ways to use the CODA Python interface. The recommended approach is to use a set of high-level classes as described below. There are also several functions that resemble the <a href="../matlab/index.html">CODA MATLAB interface</a>. For this, see the high-level functions as described below. Finally, the interface also contains a direct wrapping (using CFFI) of the <a href="../libcoda/index.html">CODA C interface</a>. It is not recommended to use this interface directly, as it exists mainly for backward compatibility.</p>
+      <p>The CODA Python interface consists of a high-level interface and a low-level interface.</p>
+      <p>The high level interface include an object oriented interface using classes for Products, Cursors, and Types. This is the recommended interface to use. In addition, there are high-level module functions that resemble the <a href="../matlab/index.html">CODA MATLAB</a> and <a href="../idl/index.html">CODA IDL</a> interfaces.</p>
+      <p>The low-level interface contains a direct wrapping (using CFFI) of the <a href="../libcoda/index.html">CODA C interface</a>. It is not recommended to use this interface directly, unless you need to use specific functions that are not available in the high-level interface.</p>
 
-      <p>The CODA Python interface depends on the '_cffi_backend' module, which is part of the C foreign function interface (cffi) package. This package must be installed in order to be able to use the Python interface.</p>
+      <p>The CODA Python interface depends on the cffi and numpy python packages. These packages must be installed in order to be able to use the Python interface.</p>
 
       <h2>Contents</h2>
 

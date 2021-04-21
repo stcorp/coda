@@ -55,8 +55,8 @@ What you will need
     MATLAB: The MATLAB interface will only work with MATLAB version 6.5 (R13)
     and higher.
 
-  - If you plan on using the Python interface you need Python version 2.6 or
-    higher and the Python 'numpy' package (version 1.2 or higher).
+  - If you plan on using the Python interface you need Python version 2.7 or
+    higher and the Python 'numpy' and 'cffi' packages.
 
   - If you plan on using the Java interface you need JDK/JRE version 8.
 
@@ -97,7 +97,7 @@ Additional software that you will need:
   - flex (>=2.5.20)
   - bison
   - doxygen
-  - swig (for python and java interfaces)
+  - swig (for java interfaces)
 
 After you clone and checkout the CODA git repository first run the bootstrap
 script in the root of the source directory::

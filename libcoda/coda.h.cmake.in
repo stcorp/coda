@@ -249,6 +249,12 @@ enum coda_format_enum
     coda_format_sp3                         /**< Data stored in SP3 format */
 };
 
+/** @} */
+
+/** \addtogroup coda_types
+ * @{
+ */
+
 enum coda_type_class_enum
 {
     coda_record_class,                      /**< Class of all record types */
@@ -289,6 +295,10 @@ enum coda_native_type_enum
 
 /** @} */
 
+/** \addtogroup coda_expression
+ * @{
+ */
+
 enum coda_expression_type_enum
 {
     coda_expression_boolean,
@@ -298,6 +308,8 @@ enum coda_expression_type_enum
     coda_expression_node,
     coda_expression_void
 };
+
+/** @} */
 
 typedef enum coda_array_ordering_enum coda_array_ordering;
 typedef enum coda_filefilter_status_enum coda_filefilter_status;
