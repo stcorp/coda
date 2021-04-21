@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2020 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2021 S[&]T, The Netherlands.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -142,11 +142,19 @@ extern "C"
 
 #ifndef CODA_INTERNAL
 
+/* *CFFI-ON* */
+
 LIBCODA_API extern const char *coda_get_libcoda_version(void);
+
+/* *CFFI-OFF* */
 
 #define libcoda_version (coda_get_libcoda_version())
 
+/* *CFFI-ON* */
+
 LIBCODA_API extern int *coda_get_errno(void);
+
+/* *CFFI-OFF* */
 
 #define coda_errno (*coda_get_errno())
 
@@ -159,15 +167,22 @@ LIBCODA_API extern int *coda_get_errno(void);
 #endif
 #endif
 
+/* *CFFI-ON* */
+
 /** Maximum number of dimensions of a multidimensional array 
  * \ingroup coda_general
  */
 #define CODA_MAX_NUM_DIMS         8
 
 /* Defines for backward compatibility with CODA 1.x interface */
+
+/* *CFFI-OFF* */
+
 #define coda_ProductFile coda_product
 #define coda_Cursor coda_cursor
 #define coda_Type coda_type
+
+/* *CFFI-ON* */
 
 #define CODA_SUCCESS                                          (0)
 #define CODA_ERROR_OUT_OF_MEMORY                             (-1)
@@ -292,9 +307,14 @@ typedef enum coda_special_type_enum coda_special_type;
 typedef enum coda_native_type_enum coda_native_type;
 typedef enum coda_expression_type_enum coda_expression_type;
 
+/* *CFFI-OFF* */
+
 typedef struct coda_product_struct coda_product;
 typedef struct coda_cursor_struct coda_cursor;
 typedef struct coda_type_struct coda_type;
+
+/* *CFFI-ON* */
+
 typedef struct coda_expression_struct coda_expression;
 
 /* CODA General */
@@ -334,7 +354,7 @@ LIBCODA_API void coda_strfl(double a, char *s);
 LIBCODA_API long coda_c_index_to_fortran_index(int num_dims, const long dim[], long index);
 
 LIBCODA_API int coda_match_filefilter(const char *filefilter, int num_filepaths, const char **filepaths,
-                                      int (*callbackfunc) (const char *, coda_filefilter_status, const char *, void *),
+                                      int (*callbackfunc)(const char *, coda_filefilter_status, const char *, void *),
                                       void *userdata);
 
 /* CODA Time */
@@ -376,7 +396,13 @@ LIBCODA_API int coda_utcstring_to_time(const char *str, double *datetime);
 /* CODA Error */
 
 /* *INDENT-OFF* */
+
+/* *CFFI-OFF* */
+
 LIBCODA_API void coda_set_error(int err, const char *message, ...) PRINTF_ATTR;
+
+/* *CFFI-ON* */
+
 /* *INDENT-ON* */
 LIBCODA_API const char *coda_errno_to_string(int err);
 
@@ -492,7 +518,7 @@ LIBCODA_API int coda_cursor_get_available_union_field_index(const coda_cursor *c
 
 LIBCODA_API int coda_cursor_get_array_dim(const coda_cursor *cursor, int *num_dims, long dim[]);
 
-LIBCODA_API int coda_cursor_print_path(const coda_cursor *cursor, int (*print) (const char *, ...));
+LIBCODA_API int coda_cursor_print_path(const coda_cursor *cursor, int (*print)(const char *, ...));
 
 /* read simple-type scalars */
 
@@ -580,8 +606,9 @@ LIBCODA_API int coda_expression_eval_string(const coda_expression *expr, const c
                                             long *length);
 LIBCODA_API int coda_expression_eval_node(const coda_expression *expr, coda_cursor *cursor);
 
-LIBCODA_API int coda_expression_print(const coda_expression *expr, int (*print) (const char *, ...));
+LIBCODA_API int coda_expression_print(const coda_expression *expr, int (*print)(const char *, ...));
 
+/* *CFFI-OFF* */
 
 /* DO NOT USE ANY OF THE FIELDS CONTAINED IN THE RECORDS BELOW! */
 

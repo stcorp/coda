@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2020 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2021 S[&]T, The Netherlands.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2020 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2021 S[&]T, The Netherlands.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -139,14 +139,9 @@
  * \ingroup coda_product
  */
 
-/** \enum coda_format_enum
- * The data storage formats that are supported by CODA
- * \ingroup coda_product
- */
-
 /** \typedef coda_format
  * The data storage formats that are supported by CODA
- * \ingroup coda_product
+ * \ingroup coda_general
  */
 
 /** \addtogroup coda_product

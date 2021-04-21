@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2020 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2021 S[&]T, The Netherlands.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -113,28 +113,13 @@
  * \ingroup coda_types
  */
 
-/** \enum coda_type_class_enum
- * CODA Type classes
- * \ingroup coda_types
- */
-
 /** \typedef coda_native_type
- * Machine specific data types
- * \ingroup coda_types
- */
-
-/** \enum coda_native_type_enum
  * Machine specific data types
  * \ingroup coda_types
  */
 
 /** \typedef coda_type_class
  * CODA Type classes
- * \ingroup coda_types
- */
-
-/** \enum coda_special_type_enum
- * The special data types 
  * \ingroup coda_types
  */
 

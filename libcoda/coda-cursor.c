@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2020 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2021 S[&]T, The Netherlands.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -140,14 +140,9 @@
  * \ingroup coda_cursor
  */
 
-/** \enum coda_array_ordering_enum
- * Ordering of elements within arrays (C or Fortran variant)
- * \ingroup coda_cursor
- */
-
 /** \typedef coda_array_ordering
  * Ordering of elements within arrays (C or Fortran variant)
- * \ingroup coda_cursor
+ * \ingroup coda_general
  */
 
 void coda_dynamic_type_delete(coda_dynamic_type *type)

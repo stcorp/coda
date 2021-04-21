@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2020 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2021 S[&]T, The Netherlands.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -88,11 +88,6 @@
 
 /** \typedef coda_expression
  * CODA Expression
- * \ingroup coda_expression
- */
-
-/** \enum coda_expression_type_enum
- * Result types of CODA expressions.
  * \ingroup coda_expression
  */
 

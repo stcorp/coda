@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2020 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2021 S[&]T, The Netherlands.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -64,11 +64,6 @@
  * If no .codadef files are loaded, CODA will still be able to provide access to HDF4, HDF5, netCDF, and XML products
  * by taking the format definition from the product files itself (for XML this will be a reduced form of access, since
  * 'leaf elements' can not be interpreted as e.g. integer/float/time but will only be accessible as string data).
- */
-
-/** \enum coda_filefilter_status_enum
- * Status codes that are passed to the callback function of coda_match_filefilter()
- * \ingroup coda_general
  */
 
 /** \typedef coda_filefilter_status
