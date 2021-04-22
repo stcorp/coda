@@ -1847,6 +1847,8 @@ location and no value is returned.</p>
 
       <p>The <code>start</code> parameter must be a valid CODA file handle that was retrieved with <code>coda.open()</code>, a valid <a href="#low_level_types">CODA Cursor</a> <i>_or_</i> a product file path. If the start argument is a cursor, then the specified path is traversed starting from the position represented by the cursor. The format of the <code>path</code> argument is described at the <a href="#coda_path_argument">top of this section</a>.</p>
 
+      <p>Note that <code>coda.fetch()</code> is implemented for a large part in Python. It uses the C library underneath for cursor navigation and core reading functionality. This is the reason why, for instance, the -1 argument can only be provided as a separate argument to the function (and not as part of a path string, such as <code>"dataset[-1]"</code>), since the -1 argument is specific to the Python interface of CODA.</p>
+
       <h3 id="coda_get_field_available"><code>coda.get_field_available(start, *path)</code></h3>
 
       <p>Find out whether a dynamically available record field is available or not.</p>
