@@ -2903,22 +2903,29 @@ def fetch(start, *path):
     data specification argument list empty (product = coda.fetch(pf)).
 
     The start argument must be a valid CODA file handle that was
-    retrieved with coda.open() _or_ a valid CODA cursor. If the start
-    argument is a cursor, then the specified path is traversed starting from
-    the position represented by the cursor.
+    retrieved with coda.open(), a valid CODA cursor _or_ a product file
+    path. If the start argument is a cursor, then the specified path is
+    traversed starting from the position represented by the cursor.
 
     More information can be found in the CODA Python documentation.
     """
 
+    product = None
+    if _is_str(start):
+        product = start = Product(start)
     cursor = _get_cursor(start)
 
     # traverse the path
     (intermediateNode, pathIndex) = _traverse_path(cursor, path)
 
-    if (intermediateNode):
-        result = _fetch_intermediate_array(cursor, path, pathIndex)
-    else:
-        result = _fetch_subtree(cursor)
+    try:
+        if (intermediateNode):
+            result = _fetch_intermediate_array(cursor, path, pathIndex)
+        else:
+            result = _fetch_subtree(cursor)
+    finally:
+        if product is not None:
+            product.close()
 
     # clean up cursor
     del cursor
