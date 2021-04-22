@@ -846,9 +846,9 @@ class RecordTypeField(object):
         return bool(type_get_record_field_hidden_status(self.recordtype, self.index))
 
     @property
-    def is_dynamic_available(self):
-        """Return a boolean indicating whether the availability of the
-        field is dynamic.
+    def is_optional(self):
+        """Return a boolean indicating whether the field is optional
+        (not always available).
         """
         return type_get_record_field_available_status(self.recordtype, self.index) == -1
 
