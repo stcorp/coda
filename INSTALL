@@ -33,8 +33,8 @@ What you will need
     The binary package, which is only available for Windows, contains pre-built
     versions of everything from the source distribution (without the sources)
     and all documentation and examples. For the IDL and MATLAB interfaces,
-    pre-built versions are included for IDL 6.3 and higher for Windows, and
-    MATLAB R2007b (v7.5) and higher for Windows. For the Python interface, a
+    pre-built versions are included for IDL 8.3 and higher for Windows, and
+    MATLAB R2019b (v9.7) and higher for Windows. For the Python interface, a
     pre-built version for Python 3.7 is included. For the Java interface, a
     pre-built version for JDK 8 is included. All CODA interfaces have been
     compiled with HDF4 and HDF5 support built in.
