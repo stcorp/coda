@@ -689,7 +689,6 @@ indent:
 
 EXTRA_DIST += \
 	CMakeLists.txt \
-	CMakeModules/FindNUMPY.cmake \
 	CMakeModules/FindHDF4.cmake \
 	CMakeModules/FindHDF5.cmake \
 	CMakeModules/FindIDL.cmake \
