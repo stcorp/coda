@@ -23,6 +23,7 @@ of GNU indent.
 
 Release checklist
 -----------------
+- make sure we have the latest versions embedded for expat, pcre, and zlib
 - make sure all 'commit steps' (see above) have been performed
 - ensure automake and CMake builds are consistent
 - check compiler warnings
