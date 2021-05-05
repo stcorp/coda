@@ -2709,6 +2709,10 @@ def _determine_type_tree(cursor):
 
                 return self._values[key]
 
+            @property
+            def __dict__(self):
+                return dict(zip(self._fields, self._values))
+
             def __getattr__(self, field):
                 return self._values[self._field_to_index[field]]
 
