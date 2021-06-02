@@ -278,7 +278,7 @@ static coda_hdf4_type *basic_type_new(int32 data_type, coda_conversion *conversi
     }
     if (conversion != NULL)
     {
-        if (coda_type_number_set_conversion((coda_type_number *)type, conversion) != 0)
+        if (coda_type_number_set_conversion((coda_type_number *)type->definition, conversion) != 0)
         {
             coda_hdf4_type_delete((coda_dynamic_type *)type);
             return NULL;
