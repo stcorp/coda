@@ -1,5 +1,11 @@
+2.22.1 2021-06-07
+~~~~~~~~~~~~~~~~~
+
 * Fixed memory issue in HDF4 backend when data would have a non-default
   scale_factor, add_offset, or _FillValue attribute.
+
+* Fixed backward compatibility issue in the new Python interface
+  (Record.__dict__ is now available again).
 
 2.22 2021-04-22
 ~~~~~~~~~~~~~~~
