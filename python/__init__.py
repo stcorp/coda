@@ -417,7 +417,7 @@ class Cursor(Node):
     extract CODA types and product data.
 
     Internally, a 'Cursor' instance consists of a stack of pointers,
-    making it is possible to easily move up and down a product hierarchy.
+    making it possible to easily move up and down a product hierarchy.
 
     """
 
