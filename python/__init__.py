@@ -1366,8 +1366,7 @@ def _read_array(cursor, type_, order):
     _check(func(cursor._x, d, order), 'coda_cursor_read_%s_array' % desc)
     buf = _ffi.buffer(d)
     if desc == 'char':
-        chars = list(map(chr, bytes(buf)))
-        array = numpy.array(chars, dtype=object)
+        array = numpy.array(buf, dtype='int8')
         array = array.reshape(shape)
     else:
         if desc == 'float':
@@ -1385,15 +1384,14 @@ def _read_partial(cursor, type_, offset, count):
     _check(func(cursor._x, offset, count, d), 'coda_cursor_read_%s_partial_array' % desc)
     buf = _ffi.buffer(d)
     if desc == 'char':
-        chars = list(map(chr, bytes(buf)))
-        array = numpy.array(chars, dtype=object)
+        array = numpy.array(buf, dtype='int8')
     else:
         array = numpy.frombuffer(buf)
     return array
 
 
 def cursor_read_char(cursor):
-    return _read_scalar(cursor, 'char')
+    return _decode_string(_read_scalar(cursor, 'char'))
 
 
 def cursor_read_char_array(cursor, order=0):
