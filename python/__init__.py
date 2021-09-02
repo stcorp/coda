@@ -2712,7 +2712,11 @@ def _determine_type_tree(cursor):
                 return dict(zip(self._fields, self._values))
 
             def __getattr__(self, field):
-                return self._values[self._field_to_index[field]]
+                try:
+                    return self._values[self._field_to_index[field]]
+                except KeyError:
+                    raise AttributeError("%r object has no attribute %r" %
+                                        (self.__class__.__name__, field))
 
             def __setattr__(self, field, value):
                 self._values[self._field_to_index[field]] = value
