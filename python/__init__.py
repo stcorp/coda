@@ -2237,19 +2237,18 @@ def _get_c_library_filename():
     else:
         library_name = "libcoda.so"
 
-    # check for library file in the parent directory (for pyinstaller bundles)
-    library_path = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", library_name))
-    if os.path.exists(library_path):
-        return library_path
+    # expand symlinks (for conda-forge, pypy build)
+    dirname = os.path.dirname(os.path.realpath(__file__))
 
-    # assume the library to be in the parent library directory
-    library_path = os.path.normpath(os.path.join(os.path.dirname(__file__), "../../..", library_name))
-    if not os.path.exists(library_path):
-        # on RHEL the python path uses lib64, but the library might have gotten installed in lib
-        alt_library_path = os.path.normpath(os.path.join(os.path.dirname(__file__), "../../../../lib", library_name))
-        if os.path.exists(alt_library_path):
-            return alt_library_path
-    return library_path
+    # look in different directories based on platform
+    for rel_path in (
+        "..",  # pyinstaller bundles
+        "../../..",  # regular lib dir
+        "../../../../lib",  # on RHEL the python path uses lib64, but the library might have gotten installed in lib
+    ):
+        library_path = os.path.normpath(os.path.join(dirname, rel_path, library_name))
+        if os.path.exists(library_path):
+            return library_path
 
 
 #
