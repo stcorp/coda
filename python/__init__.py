@@ -101,13 +101,16 @@ else:
     def _is_str(s):
         return isinstance(s, (str, unicode))
 
+
 # use thread-local storage to avoid calling _ffi.new all the time
 
 class ThreadLocalState(threading.local):
     def __init__(self):
         self.double = _ffi.new('double *')
 
+
 TLS = ThreadLocalState()
+
 
 #
 # high-level interface
@@ -1017,7 +1020,7 @@ class Expression(object):
         Arguments:
         expr -- 'Expression' instance
         """
-        return bool(expression_is_equal(self,expr))
+        return bool(expression_is_equal(self, expr))
 
     def eval(self, cursor=None):
         """Evaluate the expression and return the resulting value.
@@ -1130,6 +1133,7 @@ def close(product):
     """
     _check(_lib.coda_close(product._x), 'coda_close')
 
+
 #
 # low-level interface
 #
@@ -1215,7 +1219,8 @@ def get_product_root_type(product):
 
 def get_product_variable_value(product, variable, index):
     x = _ffi.new('int64_t *')
-    _check(_lib.coda_get_product_variable_value(product._x, _encode_string(variable), index, x), 'coda_get_product_variable_value')
+    _check(_lib.coda_get_product_variable_value(product._x, _encode_string(variable), index, x),
+           'coda_get_product_variable_value')
     return long(x[0])
 
 
@@ -1317,19 +1322,22 @@ def cursor_get_array_dim(cursor):
 
 def cursor_get_record_field_available_status(cursor, index):
     x = _ffi.new('int *')
-    _check(_lib.coda_cursor_get_record_field_available_status(cursor._x, index, x), 'coda_cursor_get_record_field_available_status')
+    _check(_lib.coda_cursor_get_record_field_available_status(cursor._x, index, x),
+           'coda_cursor_get_record_field_available_status')
     return x[0]
 
 
 def cursor_get_record_field_index_from_name(cursor, name):
     x = _ffi.new('long *')
-    _check(_lib.coda_cursor_get_record_field_index_from_name(cursor._x, _encode_string(name), x), 'coda_cursor_get_record_field_index_from_name')
+    _check(_lib.coda_cursor_get_record_field_index_from_name(cursor._x, _encode_string(name), x),
+           'coda_cursor_get_record_field_index_from_name')
     return x[0]
 
 
 def cursor_get_available_union_field_index(cursor):
     x = _ffi.new('long *')
-    _check(_lib.coda_cursor_get_available_union_field_index(cursor._x, x), 'coda_cursor_get_available_union_field_index')
+    _check(_lib.coda_cursor_get_available_union_field_index(cursor._x, x),
+           'coda_cursor_get_available_union_field_index')
     return x[0]
 
 
@@ -1551,7 +1559,8 @@ def cursor_read_complex_double_pairs_array(cursor, order=0):
     shape = cursor_get_array_dim(cursor)
     size = functools.reduce(lambda x, y: x*y, shape, 1)
     d = _ffi.new('double[%d]' % (size*2))
-    _check(_lib.coda_cursor_read_complex_double_pairs_array(cursor._x, d, order), 'coda_cursor_read_complex_double_pairs_array')
+    _check(_lib.coda_cursor_read_complex_double_pairs_array(cursor._x, d, order),
+           'coda_cursor_read_complex_double_pairs_array')
     buf = _ffi.buffer(d)
     array = numpy.frombuffer(buf).reshape(tuple(shape)+(2,))
     return array
@@ -1562,7 +1571,8 @@ def cursor_read_complex_double_split_array(cursor, order=0):
     size = functools.reduce(lambda x, y: x*y, shape, 1)
     d = _ffi.new('double[%d]' % size)
     e = _ffi.new('double[%d]' % size)
-    _check(_lib.coda_cursor_read_complex_double_split_array(cursor._x, d, e, order), 'coda_cursor_read_complex_double_split_array')
+    _check(_lib.coda_cursor_read_complex_double_split_array(cursor._x, d, e, order),
+           'coda_cursor_read_complex_double_split_array')
     array1 = numpy.frombuffer(_ffi.buffer(d)).reshape(shape)
     array2 = numpy.frombuffer(_ffi.buffer(e)).reshape(shape)
     return [array1, array2]
@@ -1624,16 +1634,16 @@ def cursor_read_bits(cursor, offset, count):
 
 
 def cursor_get_string_length(cursor):
-    l = _ffi.new('long *')
-    _check(_lib.coda_cursor_get_string_length(cursor._x, l), 'coda_cursor_get_string_length')
+    length = _ffi.new('long *')
+    _check(_lib.coda_cursor_get_string_length(cursor._x, length), 'coda_cursor_get_string_length')
     return l[0]
 
 
 def cursor_read_string(cursor):
-    l = cursor_get_string_length(cursor)
+    length = cursor_get_string_length(cursor)
     y = _ffi.new('char [%d]' % (l+1))
-    _check(_lib.coda_cursor_read_string(cursor._x, y, l+1), 'coda_cursor_read_string')
-    return _decode_string(_ffi.unpack(y, l))
+    _check(_lib.coda_cursor_read_string(cursor._x, y, length + 1), 'coda_cursor_read_string')
+    return _decode_string(_ffi.unpack(y, length))
 
 
 def cursor_get_type(cursor):
@@ -1733,7 +1743,8 @@ def type_get_num_record_fields(type_):
 
 def type_get_record_field_available_status(type_, index):
     x = _ffi.new('int *')
-    _check(_lib.coda_type_get_record_field_available_status(type_._x, index, x), 'coda_type_get_record_field_available_status')
+    _check(_lib.coda_type_get_record_field_available_status(type_._x, index, x),
+           'coda_type_get_record_field_available_status')
     return x[0]
 
 
@@ -1745,7 +1756,8 @@ def type_get_record_union_status(type_):
 
 def type_get_record_field_hidden_status(type_, index):
     x = _ffi.new('int *')
-    _check(_lib.coda_type_get_record_field_hidden_status(type_._x, index, x), 'coda_type_get_record_field_hidden_status')
+    _check(_lib.coda_type_get_record_field_hidden_status(type_._x, index, x),
+           'coda_type_get_record_field_hidden_status')
     return x[0]
 
 
@@ -1769,13 +1781,15 @@ def type_get_record_field_type(type_, index):
 
 def type_get_record_field_index_from_name(type_, name):
     x = _ffi.new('long *')
-    _check(_lib.coda_type_get_record_field_index_from_name(type_._x, _encode_string(name), x), 'coda_type_get_record_field_index_from_name')
+    _check(_lib.coda_type_get_record_field_index_from_name(type_._x, _encode_string(name), x),
+           'coda_type_get_record_field_index_from_name')
     return x[0]
 
 
 def type_get_record_field_index_from_real_name(type_, name):
     x = _ffi.new('long *')
-    _check(_lib.coda_type_get_record_field_index_from_real_name(type_._x, _encode_string(name), x), 'coda_type_get_record_field_index_from_real_name')
+    _check(_lib.coda_type_get_record_field_index_from_real_name(type_._x, _encode_string(name), x),
+           'coda_type_get_record_field_index_from_real_name')
     return x[0]
 
 
@@ -1988,9 +2002,11 @@ def set_definition_path_conditional(p1, p2, p3):
             return _ffi.NULL
         else:
             return _encode_path(p)
-    _check(_lib.coda_set_definition_path_conditional(conv(p1), conv(p2), conv(p3)), 'coda_set_definition_path_conditional')
+    _check(_lib.coda_set_definition_path_conditional(conv(p1), conv(p2), conv(p3)),
+           'coda_set_definition_path_conditional')
 
-coda_set_definition_path_conditional = set_definition_path_conditional # compat
+
+coda_set_definition_path_conditional = set_definition_path_conditional  # compat
 
 
 def set_option_bypass_special_types(enable):
@@ -2177,8 +2193,8 @@ def _encode_path(path):
 
     """
     if isinstance(path, bytes):
-        # This branch will be taken for instances of class str on Python 2 (since this is an alias for class bytes), and
-        # on Python 3 for instances of class bytes.
+        # This branch will be taken for instances of class str on Python 2 (since this is an alias for class bytes),
+        # and on Python 3 for instances of class bytes.
         return path
     elif isinstance(path, str):
         # This branch will only be taken for instances of class str on Python 3. On Python 2 such instances will take
@@ -2195,8 +2211,8 @@ def _encode_string(string):
 
     """
     if isinstance(string, bytes):
-        # This branch will be taken for instances of class str on Python 2 (since this is an alias for class bytes), and
-        # on Python 3 for instances of class bytes.
+        # This branch will be taken for instances of class str on Python 2 (since this is an alias for class bytes),
+        # and on Python 3 for instances of class bytes.
         return string
     elif isinstance(string, str):
         # This branch will only be taken for instances of class str on Python 3. On Python 2 such instances will take
@@ -2221,7 +2237,6 @@ def _decode_string(string):
         return _decode_string_with_encoding(string, get_encoding())
     else:
         raise TypeError("string must be bytes or str, not %r" % string.__class__.__name__)
-
 
 
 def _get_c_library_filename():
@@ -2285,7 +2300,8 @@ def _traverse_path(cursor, path, start=0):
             elif isinstance(path[pathIndex], (list, tuple)):
                 arrayIndex = path[pathIndex]
             else:
-                raise ValueError("path specification (%s) should be a string or (list of) integers" % (path[pathIndex],))
+                raise ValueError("path specification (%s) should be a string or (list of) integers" %
+                                 (path[pathIndex],))
 
             # get the shape of the array from the cursor. the size of all
             # dynamic dimensions are computed by the coda library.
@@ -2356,7 +2372,8 @@ def _fetch_intermediate_array(cursor, path, pathIndex=0):
         # if the current path element is of type int, then
         # the intermediate array must be of rank 1. hence
         # the int in question must equal -1.
-        assert path[pathIndex] == -1, "A rank-1 intermediate array should always be indexed by -1 (got %i)." % (path[pathIndex],)
+        assert path[pathIndex] == -1, \
+            "A rank-1 intermediate array should always be indexed by -1 (got %i)." % (path[pathIndex],)
 
         fetchShape.append(arrayShape[0])
         fetchStep.append(1)
@@ -2557,7 +2574,7 @@ def _fetch_subtree(cursor, type_tree=None):
         for i, field in enumerate(fields):
             if field is not None:
                 name, type_ = field
-                if type_[0] == CLASS_SCALAR: # inline scalar case for performance
+                if type_[0] == CLASS_SCALAR:  # inline scalar case for performance
                     data = type_[1](cursor)
                 else:
                     data = _fetch_subtree(cursor, type_)
@@ -2617,7 +2634,7 @@ def _determine_type_tree(cursor):
     nodeClass = type_get_class(nodeType)
 
     if ((nodeClass == coda_integer_class) or (nodeClass == coda_real_class) or
-          (nodeClass == coda_text_class) or (nodeClass == coda_raw_class)):
+            (nodeClass == coda_text_class) or (nodeClass == coda_raw_class)):
         nodeReadType = type_get_read_type(nodeType)
         reader = _readNativeTypeScalarFunctionDictionary[nodeReadType]
         tree = [CLASS_SCALAR, reader]
@@ -2683,7 +2700,6 @@ def _determine_type_tree(cursor):
                 numpy.complex128: "complex",
                 numpy.object_: "object"}
 
-
             def __init__(self, fields=[], values=[]):
                 super(RecordType, self).__setattr__('_fields', fields)
                 super(RecordType, self).__setattr__('_values', values)
@@ -2715,7 +2731,7 @@ def _determine_type_tree(cursor):
                     return self._values[self._field_to_index[field]]
                 except KeyError:
                     raise AttributeError("%r object has no attribute %r" %
-                                        (self.__class__.__name__, field))
+                                         (self.__class__.__name__, field))
 
             def __setattr__(self, field, value):
                 self._values[self._field_to_index[field]] = value
@@ -2804,6 +2820,7 @@ def _determine_type_tree(cursor):
         raise FetchError("element of unknown type")
 
     return tree
+
 
 #
 # CODA LAYER I HIGH LEVEL API
