@@ -2273,7 +2273,7 @@ def _isIterable(maybeIterable):
     """Is the argument an iterable object? Taken from the Python Cookbook, recipe 1.12"""
     try:
         iter(maybeIterable)
-    except:
+    except Exception:
         return False
     else:
         return True
