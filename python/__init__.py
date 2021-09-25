@@ -1636,7 +1636,7 @@ def cursor_read_bits(cursor, offset, count):
 def cursor_get_string_length(cursor):
     length = _ffi.new('long *')
     _check(_lib.coda_cursor_get_string_length(cursor._x, length), 'coda_cursor_get_string_length')
-    return l[0]
+    return length[0]
 
 
 def cursor_read_string(cursor):
