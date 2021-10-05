@@ -1614,7 +1614,12 @@ def cursor_has_ascii_content(cursor):
     return x[0]
 
 
-def cursor_read_bytes(cursor, offset, count):
+def cursor_read_bytes(cursor, offset=None, count=None):
+    if offset is None and count is None:
+        offset = 0
+        count = cursor_get_byte_size(cursor)
+        if count == 0:
+            return None
     d = _ffi.new('uint8_t[%d]' % count)
     _check(_lib.coda_cursor_read_bytes(cursor._x, d, offset, count), 'coda_cursor_read_bytes')
     buf = _ffi.buffer(d)
