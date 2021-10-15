@@ -306,13 +306,11 @@ AC_SUBST(pkgdatadir)
 idldlmexecdir=
 matlabmexexecdir=
 codapythondir=
-codapyexecdir=
 javadir=
 
 AC_SUBST(idldlmexecdir)
 AC_SUBST(matlabmexexecdir)
 AC_SUBST(codapythondir)
-AC_SUBST(codapyexecdir)
 AC_SUBST(javadir)
 
 # *** coda-idl ***
@@ -377,7 +375,7 @@ if test $ac_cv_enable_python = yes ; then
     AC_MSG_ERROR(BOXED_TEXT([ERROR: Python is required to build the Python interface.
 Try setting the PYTHON environment variable to the full path to your python executable if you have Python installed.]))
   fi
-  codapythondir="$pyexecdir/coda"
+  codapythondir="$pythondir/coda"
 fi
 
 AM_CONDITIONAL(BUILD_PYTHON, test $ac_cv_enable_python = yes)
