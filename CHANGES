@@ -1,3 +1,9 @@
+* Fixed backward compatibility issues in Python interface with reading
+  strings and characters, and RecordType.__getattr__ now raises
+  AttributeError if attribute does not exist.
+
+* Improved CMake build system.
+
 2.22.1 2021-06-07
 ~~~~~~~~~~~~~~~~~
 
@@ -5,8 +11,7 @@
   scale_factor, add_offset, or _FillValue attribute.
 
 * Fixed backward compatibility issues in the new Python interface
-  (Record.__dict__ is now available again, and RecordType.__getattr__ now
-  raises AttributeError if attribute does not exist).
+  (Record.__dict__ is now available again).
 
 2.22 2021-04-22
 ~~~~~~~~~~~~~~~
