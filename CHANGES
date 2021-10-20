@@ -1,6 +1,10 @@
-* Fixed backward compatibility issues in Python interface with reading
-  strings and characters, and RecordType.__getattr__ now raises
-  AttributeError if attribute does not exist.
+2.22.2 2021-10-20
+~~~~~~~~~~~~~~~~~
+
+* Fixed backward compatibility issues in Python interface: fixed reading of
+  strings and characters; RecordType.__getattr__() now raises AttributeError
+  if attribute does not exist; fixed potential ingestion problems linked to
+  empty arrays and/or unavailable record fields.
 
 * Improved CMake build system.
 
