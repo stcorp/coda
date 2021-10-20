@@ -2666,33 +2666,22 @@ def _fetch_subtree(cursor, type_tree=None):
         if fieldCount == 0:
             return record
 
-        available = [cursor_get_record_field_available_status(cursor, i) == 1
-                         for i in range(fieldCount)]
-
         # read data.
-        values = []
-        cursor_goto_first_record_field(cursor)
-
         for i, field in enumerate(fields):
-            if field is not None:
-                if available[i]:
-                    name, type_ = field
-                    if type_[0] == CLASS_SCALAR:  # inline scalar case for performance
-                        data = type_[1](cursor)
-                    else:
-                        data = _fetch_subtree(cursor, type_)
-                    values.append((name, data))
+            # not hidden and available
+            if field is not None and cursor.record_field_is_available(i):
+                cursor_goto_record_field_by_index(cursor, i)
 
-            # avoid calling cursor_goto_next_record_field() after reading
-            # the final field. otherwise, the cursor would get positioned
-            # outside the record.
-            if i < fieldCount - 1:
-                cursor_goto_next_record_field(cursor)
+                name, type_ = field
+                if type_[0] == CLASS_SCALAR:  # inline scalar case for performance
+                    data = type_[1](cursor)
+                else:
+                    data = _fetch_subtree(cursor, type_)
 
-        cursor_goto_parent(cursor)
+                record._registerField(name, data)
 
-        for name, val in values:
-            record._registerField(name, val)
+                cursor_goto_parent(cursor)
+
         return record
 
     elif class_ == CLASS_ARRAY:
