@@ -2643,8 +2643,7 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
             file_offset += 4;
 
             /* we could possibly add support for 41, 44, 45 and 48 in the future as well */
-            if (productDefinitionTemplate <= 6 || productDefinitionTemplate == 15 || productDefinitionTemplate == 40 ||
-                productDefinitionTemplate == 51)
+            if (productDefinitionTemplate <= 6 || productDefinitionTemplate == 15  || productDefinitionTemplate == 51)
             {
                 if (read_bytes(product->raw_product, file_offset, 25, buffer) < 0)
                 {
@@ -2688,6 +2687,69 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
 
                     secondFixedSurface = (((uint32_t)buffer[21] * 256 + buffer[22]) * 256 + buffer[23]) * 256 +
                         buffer[24];
+                    while (scaleFactor < 0)
+                    {
+                        secondFixedSurface *= 10;
+                        scaleFactor++;
+                    }
+                    while (scaleFactor > 0)
+                    {
+                        secondFixedSurface /= 10;
+                        scaleFactor--;
+                    }
+                }
+                else
+                {
+                    secondFixedSurface = coda_NaN();
+                }
+                file_offset += 25;
+                coordinate_values_offset = num_coordinate_values > 0 ? file_offset : -1;
+            }
+            else if (productDefinitionTemplate == 40)
+            {
+                if (read_bytes(product->raw_product, file_offset, 25, buffer) < 0)
+                {
+                    return -1;
+                }
+                parameterCategory = buffer[0];
+                parameterNumber = buffer[1];
+                /* skip constituentType (2 bytes) */
+                typeOfGeneratingProcess = buffer[4];
+                backgroundProcess = buffer[5];
+                generatingProcessIdentifier = buffer[6];
+                hoursAfterDataCutoff = buffer[7] * 256 + buffer[8];
+                minutesAfterDataCutoff = buffer[9];
+                indicatorOfUnitOfTimeRange = buffer[10];
+                forecastTime = (((uint32_t)buffer[11] * 256 + buffer[12]) * 256 + buffer[13]) * 256 + buffer[14];
+                typeOfFirstFixedSurface = buffer[15];
+                if (typeOfFirstFixedSurface != 255)
+                {
+                    int8_t scaleFactor = ((int8_t *)buffer)[16];
+
+                    firstFixedSurface = (((uint32_t)buffer[17] * 256 + buffer[18]) * 256 + buffer[19]) * 256 +
+                        buffer[20];
+                    while (scaleFactor < 0)
+                    {
+                        firstFixedSurface *= 10;
+                        scaleFactor++;
+                    }
+                    while (scaleFactor > 0)
+                    {
+                        firstFixedSurface /= 10;
+                        scaleFactor--;
+                    }
+                }
+                else
+                {
+                    firstFixedSurface = coda_NaN();
+                }
+                typeOfSecondFixedSurface = buffer[21];
+                if (typeOfSecondFixedSurface != 255)
+                {
+                    int8_t scaleFactor = ((int8_t *)buffer)[22];
+
+                    secondFixedSurface = (((uint32_t)buffer[23] * 256 + buffer[24]) * 256 + buffer[25]) * 256 +
+                        buffer[26];
                     while (scaleFactor < 0)
                     {
                         secondFixedSurface *= 10;

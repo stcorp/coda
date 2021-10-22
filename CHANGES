@@ -1,3 +1,5 @@
+* Fixed issue with reading GRIB2 data with productDefinitionTemplate 40.
+
 2.22.2 2021-10-20
 ~~~~~~~~~~~~~~~~~
 
