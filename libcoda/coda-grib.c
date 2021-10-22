@@ -169,6 +169,7 @@ enum
     grib2_interpretationOfListOfNumbers,
     grib2_parameterCategory,
     grib2_parameterNumber,
+    grib2_constituentType,
     grib2_typeOfGeneratingProcess,
     grib2_backgroundProcess,
     grib2_generatingProcessIdentifier,
@@ -1102,6 +1103,12 @@ static int grib_init(void)
     coda_type_set_bit_size(grib_type[grib2_parameterNumber], 8);
     coda_type_set_description(grib_type[grib2_parameterNumber], "Parameter Number");
 
+    grib_type[grib2_constituentType] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
+    coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_constituentType], endianness);
+    coda_type_set_read_type(grib_type[grib2_constituentType], coda_native_type_uint16);
+    coda_type_set_bit_size(grib_type[grib2_constituentType], 16);
+    coda_type_set_description(grib_type[grib2_constituentType], "Constituent Number");
+
     grib_type[grib2_typeOfGeneratingProcess] = (coda_type *)coda_type_number_new(coda_format_grib, coda_integer_class);
     coda_type_number_set_endianness((coda_type_number *)grib_type[grib2_typeOfGeneratingProcess], endianness);
     coda_type_set_read_type(grib_type[grib2_typeOfGeneratingProcess], coda_native_type_uint8);
@@ -1312,6 +1319,10 @@ static int grib_init(void)
     field = coda_type_record_field_new("parameterNumber");
     coda_type_record_field_set_type(field, grib_type[grib2_parameterNumber]);
     coda_type_record_add_field((coda_type_record *)grib_type[grib2_data], field);
+    field = coda_type_record_field_new("constituentType");
+    coda_type_record_field_set_type(field, grib_type[grib2_constituentType]);
+    coda_type_record_add_field((coda_type_record *)grib_type[grib2_data], field);
+    coda_type_record_field_set_optional(field);
     field = coda_type_record_field_new("typeOfGeneratingProcess");
     coda_type_record_field_set_type(field, grib_type[grib2_typeOfGeneratingProcess]);
     coda_type_record_add_field((coda_type_record *)grib_type[grib2_data], field);
@@ -2185,6 +2196,8 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
     int64_t coordinate_values_offset = -1;
     uint8_t parameterCategory = 0;
     uint8_t parameterNumber = 0;
+    int has_constituentType = 0;
+    uint16_t constituentType = 0;
     uint8_t typeOfGeneratingProcess = 0;
     uint8_t backgroundProcess = 0;
     uint8_t generatingProcessIdentifier = 0;
@@ -2713,7 +2726,8 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
                 }
                 parameterCategory = buffer[0];
                 parameterNumber = buffer[1];
-                /* skip constituentType (2 bytes) */
+                has_constituentType = 1;
+                constituentType = buffer[2] * 256 + buffer[3];
                 typeOfGeneratingProcess = buffer[4];
                 backgroundProcess = buffer[5];
                 generatingProcessIdentifier = buffer[6];
@@ -2915,6 +2929,14 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
             gtype = grib_type[grib2_parameterNumber];
             type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct, parameterNumber);
             coda_mem_record_add_field(data, "parameterNumber", type, 0);
+
+            if (has_constituentType)
+            {
+                gtype = grib_type[grib2_constituentType];
+                type = (coda_dynamic_type *)coda_mem_uint16_new((coda_type_number *)gtype, NULL, cproduct,
+                                                                constituentType);
+                coda_mem_record_add_field(data, "constituentType", type, 0);
+            }
 
             gtype = grib_type[grib2_typeOfGeneratingProcess];
             type = (coda_dynamic_type *)coda_mem_uint8_new((coda_type_number *)gtype, NULL, cproduct,

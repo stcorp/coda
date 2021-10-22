@@ -1,4 +1,5 @@
-* Fixed issue with reading GRIB2 data with productDefinitionTemplate 40.
+* Added constituentType for GRIB2 data with productDefinitionTemplate 40 and
+  fixed reading of these grib messages.
 
 2.22.2 2021-10-20
 ~~~~~~~~~~~~~~~~~
