@@ -425,8 +425,13 @@ static int read_basic_type(const coda_cursor *cursor, void *dst, long size_bound
     {
         value_size = size_boundary;
     }
-    if (variable->data != NULL)
+    if ((variable->data != NULL) && (value_size > 0))
     {
+        if (offset > (variable->num_records * variable->num_values_per_record * variable->value_size))
+        {
+            coda_set_error(CODA_ERROR_UNSUPPORTED_PRODUCT, "Offset too large in accessing data of CDF variable");
+            return -1;
+        }
         memcpy(dst, &variable->data[offset], value_size);
     }
     else
