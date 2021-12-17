@@ -2656,7 +2656,7 @@ static int read_grib2_message(coda_grib_product *product, coda_mem_record *messa
             file_offset += 4;
 
             /* we could possibly add support for 41, 44, 45 and 48 in the future as well */
-            if (productDefinitionTemplate <= 6 || productDefinitionTemplate == 15  || productDefinitionTemplate == 51)
+            if (productDefinitionTemplate <= 6 || productDefinitionTemplate == 15 || productDefinitionTemplate == 51)
             {
                 if (read_bytes(product->raw_product, file_offset, 25, buffer) < 0)
                 {
