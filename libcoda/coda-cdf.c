@@ -649,9 +649,38 @@ static int read_VR(coda_cdf_product *product_file, coda_cdf_variable *variable, 
         {
             last = variable->num_records - 1;
         }
-        for (i = first; i <= last; i++)
+        if (variable->has_compression)
         {
-            variable->offset[i] = offset + 12 + (i - first) * variable->num_values_per_record * variable->value_size;
+            if (variable->data == NULL)
+            {
+                variable->data = malloc(variable->num_records * variable->num_values_per_record * variable->value_size);
+                if (variable->data == NULL)
+                {
+                    coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not allocate %lu bytes) (%s:%u)",
+                                   (long)variable->num_records * variable->num_values_per_record * variable->value_size,
+                                   __FILE__, __LINE__);
+                    return -1;
+                }
+            }
+            if (read_bytes(product_file->raw_product, offset + 12,
+                           (last - first + 1) * variable->num_values_per_record * variable->value_size,
+                           &variable->data[first * variable->num_values_per_record * variable->value_size]) < 0)
+            {
+                return -1;
+            }
+
+            for (i = first; i <= last; i++)
+            {
+                variable->offset[i] = i * variable->num_values_per_record * variable->value_size;
+            }
+        }
+        else
+        {
+            for (i = first; i <= last; i++)
+            {
+                variable->offset[i] = offset + 12 +
+                    (i - first) * variable->num_values_per_record * variable->value_size;
+            }
         }
     }
     else if (record_type == 13)
@@ -663,6 +692,11 @@ static int read_VR(coda_cdf_product *product_file, coda_cdf_variable *variable, 
         int result;
         int i;
 
+        if (!variable->has_compression)
+        {
+            coda_set_error(CODA_ERROR_FILE_READ, "unexpected CVVR record for uncompressed CDF variable");
+            return -1;
+        }
         if (first >= variable->num_records)
         {
             /* completely skip this record */
@@ -692,7 +726,7 @@ static int read_VR(coda_cdf_product *product_file, coda_cdf_variable *variable, 
 
         if (csize < 20)
         {
-            coda_set_error(CODA_ERROR_PRODUCT, "Invalid compressed data block for CDF variable");
+            coda_set_error(CODA_ERROR_PRODUCT, "invalid compressed data block for CDF variable");
             return -1;
         }
         buffer = malloc((size_t)csize);
@@ -1168,12 +1202,14 @@ static int read_VDR(coda_cdf_product *product_file, int64_t offset, int is_zvar)
     if (is_zvar)
     {
         variable_type = coda_cdf_variable_new(data_type, max_rec, record_varys, num_dims, zdim_sizes, dim_varys,
-                                              product_file->array_ordering, num_elems, srecords, &variable);
+                                              product_file->array_ordering, num_elems, srecords, has_compression,
+                                              &variable);
     }
     else
     {
         variable_type = coda_cdf_variable_new(data_type, max_rec, record_varys, num_dims, product_file->rdim_sizes,
-                                              dim_varys, product_file->array_ordering, num_elems, srecords, &variable);
+                                              dim_varys, product_file->array_ordering, num_elems, srecords,
+                                              has_compression, &variable);
     }
     if (variable_type == NULL)
     {

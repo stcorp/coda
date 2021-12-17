@@ -71,6 +71,7 @@ typedef struct coda_cdf_variable_struct
     int num_values_per_record;
     int value_size;
     int sparse_rec_method;      /* 0: no sparse records, 1: padded sparse records, 2: previous sparse records */
+    int has_compression;
     int64_t *offset;    /* file offset for each record - will be offset into 'data' if 'data != NULL' */
     int8_t *data;
 } coda_cdf_variable;
@@ -103,7 +104,7 @@ typedef struct coda_cdf_product_struct
 coda_dynamic_type *coda_cdf_variable_new(int32_t data_type, int32_t max_rec, int32_t rec_varys, int32_t num_dims,
                                          int32_t dim[CODA_MAX_NUM_DIMS], int32_t dim_varys[CODA_MAX_NUM_DIMS],
                                          coda_array_ordering array_ordering, int32_t num_elements,
-                                         int sparse_rec_method, coda_cdf_variable **variable);
+                                         int sparse_rec_method, int has_compression, coda_cdf_variable **variable);
 
 int coda_cdf_variable_add_attribute(coda_cdf_variable *type, const char *real_name, coda_dynamic_type *attribute_type,
                                     int update_definition);

@@ -258,7 +258,7 @@ static coda_cdf_time *time_type_new(int32_t data_type, coda_cdf_type *base_type)
 coda_dynamic_type *coda_cdf_variable_new(int32_t data_type, int32_t max_rec, int32_t rec_varys, int32_t num_dims,
                                          int32_t dim[CODA_MAX_NUM_DIMS], int32_t dim_varys[CODA_MAX_NUM_DIMS],
                                          coda_array_ordering array_ordering, int32_t num_elements,
-                                         int sparse_rec_method, coda_cdf_variable **variable)
+                                         int sparse_rec_method, int has_compression, coda_cdf_variable **variable)
 {
     coda_cdf_variable *type;
     int is_scalar = 0;
@@ -283,6 +283,7 @@ coda_dynamic_type *coda_cdf_variable_new(int32_t data_type, int32_t max_rec, int
     type->num_values_per_record = 1;
     type->value_size = -1;
     type->sparse_rec_method = sparse_rec_method;
+    type->has_compression = has_compression;
     type->offset = NULL;
     type->data = NULL;
 

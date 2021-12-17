@@ -1,3 +1,6 @@
+* Fixed issue with reading compressed variables from CDF where variable would
+  also contain VVR records besides CVVR records.
+
 * Added constituentType for GRIB2 data with productDefinitionTemplate 40 and
   fixed reading of these grib messages.
 
