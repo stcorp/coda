@@ -119,6 +119,8 @@ TLS = ThreadLocalState()
 class Error(Exception):
     """Exception base class for all CODA Python interface errors."""
 
+CodaError = Error  # compat
+
 
 class FetchError(Error):
     """Exception raised when an errors occurs when fetching data.
