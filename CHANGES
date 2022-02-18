@@ -1,3 +1,11 @@
+2.23.1 2022-02-18
+~~~~~~~~~~~~~~~~~
+
+* Improved performance in Python interface for some use cases.
+
+* Fixed backward compatibility issu with new Python interface (coda.CodaError
+  has been reintroduced as an alias for the new coda.Error exception class).
+
 2.23 2021-12-17
 ~~~~~~~~~~~~~~~
 
