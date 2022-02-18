@@ -2445,7 +2445,7 @@ def _traverse_path(cursor, path, start=0):
 #
 # HELPER FUNCTIONS FOR CODA.FETCH()
 #
-def _fetch_intermediate_array(cursor, path, pathIndex=0):
+def _fetch_intermediate_array(cursor, path, pathIndex=0):  # TODO use type tree!
     """
     _fetch_intermediate_array calls _traverse_path() to traverse the path
     until the end is reached or an intermediate array is encountered.
@@ -2508,6 +2508,7 @@ def _fetch_intermediate_array(cursor, path, pathIndex=0):
     # 'basetype' of the intermediate array can only be determined after traversing the path
     # to a (i.e. the first) array element.
     array = None
+    nodeReader = None
 
     # currentElementIndex represents an index into the flattened array from which elements
     # will be _read_. however, iteration is performed over the flattened array into which
@@ -2550,6 +2551,7 @@ def _fetch_intermediate_array(cursor, path, pathIndex=0):
                     raise FetchError("cannot read array (not all elements are available)")
                 else:
                     (scalar, numpyType) = _numpyNativeTypeDictionary[nodeReadType]
+                    nodeReader = _readNativeTypeScalarFunctionDictionary.get(nodeReadType)
 
             elif nodeClass == coda_special_class:
                 nodeSpecialType = type_get_special_type(nodeType)
@@ -2577,7 +2579,11 @@ def _fetch_intermediate_array(cursor, path, pathIndex=0):
         else:
             # the end of the path was reached. from this point on,
             # the entire subtree is fetched.
-            array.flat[i] = _fetch_subtree(cursor)
+
+            if nodeReader is not None:
+                array.flat[i] = nodeReader(cursor)  # TODO optimize scalar leafs.. better yet, use type tree
+            else:
+                array.flat[i] = _fetch_subtree(cursor)
 
         # update fetchIndex and nextElementIndex.
         for j in range(0, len(fetchShape)):
