@@ -2394,11 +2394,15 @@ def _traverse_path(cursor, path, start=0, type_path=None):
     reldepth = 0
 
     for pathIndex in range(start, len(path)):
+        if type_path is not None:
+            index = type_path[pathIndex]
+            if index is not None:
+                cursor_goto_record_field_by_index(cursor, index)
+                reldepth += 1
+                continue
+
         if isinstance(path[pathIndex], str):
-            if type_path is not None:
-                cursor_goto_record_field_by_index(cursor, type_path[pathIndex])
-            else:
-                cursor_goto(cursor, path[pathIndex])
+            cursor_goto(cursor, path[pathIndex])
             reldepth += 1
         else:
             if isinstance(path[pathIndex], int):
@@ -2572,6 +2576,7 @@ def _fetch_intermediate_array(cursor, path, pathIndex=0, type_path=None):
                 array = numpy.empty(dtype=numpyType, shape=tmpShape)
             else:
                 array = numpy.empty(dtype=object, shape=tmpShape)
+            flat = array.flat  # optimization
 
 
         # when this point is reached, a result array has been allocated
@@ -2580,15 +2585,15 @@ def _fetch_intermediate_array(cursor, path, pathIndex=0, type_path=None):
         # result stored.
         if intermediateNode:
             # an intermediate array was encountered.
-            array.flat[i] = _fetch_intermediate_array(cursor, path, copiedPathIndex, type_path)
+            flat[i] = _fetch_intermediate_array(cursor, path, copiedPathIndex, type_path)
         else:
             # the end of the path was reached. from this point on,
             # the entire subtree is fetched.
 
             if nodeReader is not None:
-                array.flat[i] = nodeReader(cursor)
+                flat[i] = nodeReader(cursor)
             else:
-                array.flat[i] = _fetch_subtree(cursor)  # TODO add type tree for leafs to type path
+                flat[i] = _fetch_subtree(cursor)  # TODO add type tree for leafs to type path
 
         # update fetchIndex and nextElementIndex.
         for j in range(0, len(fetchShape)):
