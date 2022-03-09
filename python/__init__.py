@@ -2382,7 +2382,7 @@ def _isIterable(maybeIterable):
 #
 # PATH TRAVERSAL
 #
-def _traverse_path(cursor, path, start=0):
+def _traverse_path(cursor, path, start=0, type_path=None):
     """
     _traverse_path() traverses the specified path until
     an array with variable indices is encountered or the
@@ -2395,7 +2395,10 @@ def _traverse_path(cursor, path, start=0):
 
     for pathIndex in range(start, len(path)):
         if isinstance(path[pathIndex], str):
-            cursor_goto(cursor, path[pathIndex])
+            if type_path is not None:
+                cursor_goto_record_field_by_index(cursor, type_path[pathIndex])
+            else:
+                cursor_goto(cursor, path[pathIndex])
             reldepth += 1
         else:
             if isinstance(path[pathIndex], int):
@@ -2449,7 +2452,7 @@ def _traverse_path(cursor, path, start=0):
 #
 # HELPER FUNCTIONS FOR CODA.FETCH()
 #
-def _fetch_intermediate_array(cursor, path, pathIndex=0):  # TODO use type tree!
+def _fetch_intermediate_array(cursor, path, pathIndex=0, type_path=None):
     """
     _fetch_intermediate_array calls _traverse_path() to traverse the path
     until the end is reached or an intermediate array is encountered.
@@ -2527,7 +2530,7 @@ def _fetch_intermediate_array(cursor, path, pathIndex=0):  # TODO use type tree!
             currentElementIndex += 1
 
         # traverse the path.
-        (intermediateNode, copiedPathIndex, reldepth) = _traverse_path(cursor, path, pathIndex + 1)
+        (intermediateNode, copiedPathIndex, reldepth) = _traverse_path(cursor, path, pathIndex + 1, type_path)
 
         # create the result array by examining the type of the first element.
         # This is equivalent to i == 0
@@ -2577,15 +2580,15 @@ def _fetch_intermediate_array(cursor, path, pathIndex=0):  # TODO use type tree!
         # result stored.
         if intermediateNode:
             # an intermediate array was encountered.
-            array.flat[i] = _fetch_intermediate_array(cursor, path, copiedPathIndex)
+            array.flat[i] = _fetch_intermediate_array(cursor, path, copiedPathIndex, type_path)
         else:
             # the end of the path was reached. from this point on,
             # the entire subtree is fetched.
 
             if nodeReader is not None:
-                array.flat[i] = nodeReader(cursor)  # TODO optimize scalar leafs.. better yet, use type tree
+                array.flat[i] = nodeReader(cursor)
             else:
-                array.flat[i] = _fetch_subtree(cursor)
+                array.flat[i] = _fetch_subtree(cursor)  # TODO add type tree for leafs to type path
 
         # update fetchIndex and nextElementIndex.
         for j in range(0, len(fetchShape)):
@@ -2728,6 +2731,23 @@ def _fetch_subtree(cursor, type_tree=None):
 
     elif class_ == CLASS_SPECIAL:
         return type_tree[1](cursor)
+
+
+# TODO we currently only cache field indices here, which helps a lot.
+# TODO for small arrays, it would probably help to cache more information.
+# TODO we probably also want to pre-determine the type tree for leafs.
+
+def _determine_type_path(nodeType, path):
+    type_path = []
+    for segment in path:
+        if isinstance(segment, str):
+            i = type_get_record_field_index_from_name(nodeType, segment)
+            type_path.append(i)
+            nodeType = type_get_record_field_type(nodeType, i)
+        else:
+            type_path.append(None)
+            nodeType = type_get_array_base_type(nodeType)
+    return type_path
 
 
 def _determine_type_tree(nodeType):
@@ -2910,13 +2930,15 @@ def fetch(start, *path):
     if _is_str(start):
         product = start = Product(start)
     cursor = _get_cursor(start)
+    nodeType = cursor_get_type(cursor)
 
     # traverse the path
     (intermediateNode, pathIndex, _) = _traverse_path(cursor, path)
 
     try:
         if (intermediateNode):
-            result = _fetch_intermediate_array(cursor, path, pathIndex)
+            type_path = _determine_type_path(nodeType, path)
+            result = _fetch_intermediate_array(cursor, path, pathIndex, type_path)
         else:
             result = _fetch_subtree(cursor)
     finally:
