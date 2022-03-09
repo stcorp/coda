@@ -2391,9 +2391,12 @@ def _traverse_path(cursor, path, start=0):
     thrown when a check fails.
     """
 
+    reldepth = 0
+
     for pathIndex in range(start, len(path)):
         if isinstance(path[pathIndex], str):
             cursor_goto(cursor, path[pathIndex])
+            reldepth += 1
         else:
             if isinstance(path[pathIndex], int):
                 arrayIndex = [path[pathIndex]]
@@ -2429,7 +2432,7 @@ def _traverse_path(cursor, path, start=0):
                     raise ValueError("array index (%i) exceeds array range [0:%i)" % (arrayIndex[i], arrayShape[i]))
 
             if intermediateArray:
-                return (True, pathIndex)
+                return (True, pathIndex, reldepth)
             else:
                 # if all indices are non-variable, just move the cursor
                 # to the indicated element.
@@ -2437,9 +2440,10 @@ def _traverse_path(cursor, path, start=0):
                     cursor_goto_array_element(cursor, [])
                 else:
                     cursor_goto_array_element(cursor, arrayIndex)
+                reldepth += 1
 
     # we've arrived at the end of the path.
-    return (False, len(path) - 1)
+    return (False, len(path) - 1, reldepth)
 
 
 #
@@ -2455,7 +2459,6 @@ def _fetch_intermediate_array(cursor, path, pathIndex=0):  # TODO use type tree!
     recursively fetches each element of the array. note that this will result
     in calls to _fetch_data().
     """
-
     arrayShape = cursor_get_array_dim(cursor)
 
     # handle a rank-0 array by converting it to
@@ -2523,10 +2526,8 @@ def _fetch_intermediate_array(cursor, path, pathIndex=0):  # TODO use type tree!
             cursor_goto_next_array_element(cursor)
             currentElementIndex += 1
 
-        depth = cursor_get_depth(cursor)
-
         # traverse the path.
-        (intermediateNode, copiedPathIndex) = _traverse_path(cursor, path, pathIndex + 1)
+        (intermediateNode, copiedPathIndex, reldepth) = _traverse_path(cursor, path, pathIndex + 1)
 
         # create the result array by examining the type of the first element.
         # This is equivalent to i == 0
@@ -2569,6 +2570,7 @@ def _fetch_intermediate_array(cursor, path, pathIndex=0):  # TODO use type tree!
             else:
                 array = numpy.empty(dtype=object, shape=tmpShape)
 
+
         # when this point is reached, a result array has been allocated
         # and the flatArrayIter is set.
         # The required element will now be read, the iterator incremented and the
@@ -2596,7 +2598,7 @@ def _fetch_intermediate_array(cursor, path, pathIndex=0):  # TODO use type tree!
             fetchIndex[j] = 0
             nextElementIndex -= fetchStep[j + 1]
 
-        for j in range(cursor_get_depth(cursor) - depth):
+        for j in range(reldepth):
             cursor_goto_parent(cursor)
 
     cursor_goto_parent(cursor)
@@ -2830,7 +2832,7 @@ def get_attributes(start, *path):
 
     cursor = _get_cursor(start)
 
-    (intermediateNode, pathIndex) = _traverse_path(cursor, path)
+    (intermediateNode, _, _) = _traverse_path(cursor, path)
     if intermediateNode:
         # we encountered an array with variable (-1) indices.
         # this is only allowed when calling coda.fetch().
@@ -2861,7 +2863,7 @@ def get_description(start, *path):
 
     cursor = _get_cursor(start)
 
-    (intermediateNode, pathIndex) = _traverse_path(cursor, path)
+    (intermediateNode, _, _) = _traverse_path(cursor, path)
     if intermediateNode:
         # we encountered an array with variable (-1) indices.
         # this is only allowed when calling coda.fetch().
@@ -2910,7 +2912,7 @@ def fetch(start, *path):
     cursor = _get_cursor(start)
 
     # traverse the path
-    (intermediateNode, pathIndex) = _traverse_path(cursor, path)
+    (intermediateNode, pathIndex, _) = _traverse_path(cursor, path)
 
     try:
         if (intermediateNode):
@@ -2949,7 +2951,7 @@ def get_field_available(start, *path):
     cursor = _get_cursor(start)
 
     # traverse up until the last node of the path.
-    (intermediateNode, pathIndex) = _traverse_path(cursor, path[:-1])
+    (intermediateNode, _, _) = _traverse_path(cursor, path[:-1])
     if intermediateNode:
         # we encountered an array with variable (-1) indices.
         # this is only allowed when calling coda.fetch().
@@ -2984,7 +2986,7 @@ def get_field_count(start, *path):
 
     cursor = _get_cursor(start)
 
-    (intermediateNode, pathIndex) = _traverse_path(cursor, path)
+    (intermediateNode, _, _) = _traverse_path(cursor, path)
     if intermediateNode:
         # we encountered an array with variable (-1) indices.
         # this is only allowed when calling coda.fetch().
@@ -3023,7 +3025,7 @@ def get_field_names(start, *path):
 
     cursor = _get_cursor(start)
 
-    (intermediateNode, pathIndex) = _traverse_path(cursor, path)
+    (intermediateNode, _, _) = _traverse_path(cursor, path)
     if intermediateNode:
         # we encountered an array with variable (-1) indices.
         # this is only allowed when calling coda.fetch().
@@ -3065,7 +3067,7 @@ def get_size(start, *path):
 
     cursor = _get_cursor(start)
 
-    (intermediateNode, pathIndex) = _traverse_path(cursor, path)
+    (intermediateNode, _, _) = _traverse_path(cursor, path)
     if intermediateNode:
         # we encountered an array with variable (-1) indices.
         # this is only allowed when calling coda.fetch().
@@ -3146,7 +3148,7 @@ def get_unit(start, *path):
 
     cursor = _get_cursor(start)
 
-    (intermediateNode, pathIndex) = _traverse_path(cursor, path)
+    (intermediateNode, _, _) = _traverse_path(cursor, path)
     if intermediateNode:
         # we encountered an array with variable (-1) indices.
         # this is only allowed when calling coda.fetch().
