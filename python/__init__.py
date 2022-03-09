@@ -2397,7 +2397,8 @@ def _traverse_path(cursor, path, start=0, type_path=None):
         if type_path is not None:
             index = type_path[pathIndex]
             if index is not None:
-                cursor_goto_record_field_by_index(cursor, index)
+                if _goto_index(cursor._x, index) != 0:  # optimized to avoid lookup, boilerplate call
+                    raise CodacError('coda_cursor_goto_record_field_by_index')
                 reldepth += 1
                 continue
 
@@ -2530,7 +2531,8 @@ def _fetch_intermediate_array(cursor, path, pathIndex=0, type_path=None):
     for i in range(0, elementCount):
         # move the cursor to the next required array element.
         while currentElementIndex < nextElementIndex:
-            cursor_goto_next_array_element(cursor)
+            if _goto_next_elem(cursor._x) != 0:  # optimized to avoid lookup, boilerplate call
+                raise CodacError('coda_cursor_goto_next_array_element')
             currentElementIndex += 1
 
         # traverse the path.
@@ -2607,7 +2609,8 @@ def _fetch_intermediate_array(cursor, path, pathIndex=0, type_path=None):
             nextElementIndex -= fetchStep[j + 1]
 
         for j in range(reldepth):
-            cursor_goto_parent(cursor)
+            if _goto_parent(cursor._x) != 0:  # optimized to avoid lookup, boilerplate call
+                raise CodacError('coda_cursor_goto_parent')
 
     cursor_goto_parent(cursor)
     return array
@@ -3203,10 +3206,13 @@ def get_option_filter_record_fields():
 
 def _init():
     """Initialize the CODA Python interface."""
-    global _lib, _encoding
+    global _lib, _encoding, _goto_index, _goto_parent, _goto_next_elem
     # Initialize the CODA C library
     clib = _get_c_library_filename()
     _lib = _ffi.dlopen(clib)
+    _goto_index = _lib.coda_cursor_goto_record_field_by_index
+    _goto_parent = _lib.coda_cursor_goto_parent
+    _goto_next_elem = _lib.coda_cursor_goto_next_array_element
 
     # Import constants
     for attrname in dir(_lib):
