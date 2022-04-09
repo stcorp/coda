@@ -98,7 +98,7 @@ static void coda_matlab_parse_arg(const mxArray *arg, int *arg_type, long *index
                     index[i] = (int)((int32_t *)data)[i];
                     break;
                 default:
-                    mexErrMsgTxt("index parameter not of type double or int32");
+                    mexErrMsgTxt("Index parameter not of type double or int32");
                     break;
             }
         }
@@ -139,7 +139,7 @@ void coda_matlab_traverse_data(int nrhs, const mxArray *prhs[], coda_cursor *cur
 
             if (type_class != coda_array_class)
             {
-                mexErrMsgTxt("Error in parameter");
+                mexErrMsgTxt("Using numeric index for type that is not an array");
             }
 
             for (i = 0; i < length; i++)
@@ -193,13 +193,11 @@ void coda_matlab_traverse_data(int nrhs, const mxArray *prhs[], coda_cursor *cur
             {
                 if (coda_errno == CODA_ERROR_ARRAY_NUM_DIMS_MISMATCH)
                 {
-                    mexPrintf("ERROR: array dimensions mismatch\n");
-                    mexErrMsgTxt("Error in parameter");
+                    mexErrMsgTxt("Error in parameter (array dimensions mismatch)");
                 }
                 if (coda_errno == CODA_ERROR_ARRAY_OUT_OF_BOUNDS)
                 {
-                    mexPrintf("ERROR: array index out of bounds\n");
-                    mexErrMsgTxt("Error in parameter");
+                    mexErrMsgTxt("Error in parameter (array index out of bounds)");
                 }
                 coda_matlab_coda_error();
             }
@@ -214,7 +212,7 @@ void coda_matlab_traverse_data(int nrhs, const mxArray *prhs[], coda_cursor *cur
         }
         else
         {
-            mexErrMsgTxt("Error in paramater");
+            mexErrMsgTxt("Error in parameter (not a string or integer)");
         }
 
         if (name != NULL)
