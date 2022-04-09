@@ -139,7 +139,7 @@ void coda_matlab_traverse_data(int nrhs, const mxArray *prhs[], coda_cursor *cur
 
             if (type_class != coda_array_class)
             {
-                mexErrMsgTxt("Error in paramater");
+                mexErrMsgTxt("Error in parameter");
             }
 
             for (i = 0; i < length; i++)
