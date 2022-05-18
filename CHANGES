@@ -1,3 +1,8 @@
+2.24 2022-05-18
+~~~~~~~~~~~~~~~
+
+* Added significant speed improvements for recursive reads in Python interface.
+
 2.23.1 2022-02-18
 ~~~~~~~~~~~~~~~~~
 
