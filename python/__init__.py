@@ -812,11 +812,13 @@ class Record(object):
 
             elif isinstance(data, numpy.ndarray):
                 dim = data.shape
+                if len(dim) == 0:
+                    dim = [1]
                 dimString = ""
                 for d in dim[:-1]:
                     dimString += "%ix" % (d,)
                 dimString += "%i" % (dim[-1],)
-                out.write("[%s %s]" % (dimString,self._typeToString[data.dtype.type]))
+                out.write("[%s %s]" % (dimString, self._typeToString[data.dtype.type]))
 
             elif _is_str(data):
                 out.write("\"%s\"" % (data,))
@@ -825,6 +827,8 @@ class Record(object):
                 # if type is none of the above, fall back
                 # on the type specific __str__() function.
                 out.write("%s" % (data,))
+
+            out.write("\n")
 
         return out.getvalue()
 

@@ -1,3 +1,9 @@
+2.24.1 2022-12-07
+~~~~~~~~~~~~~~~~~
+
+* Fixed printing of coda.Record objects in Python interface (missing
+  end-of-line and support for 0-dimensional arrays).
+
 2.24 2022-05-18
 ~~~~~~~~~~~~~~~
 
