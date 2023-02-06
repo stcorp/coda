@@ -1,3 +1,9 @@
+2.24.2 2023-02-06
+~~~~~~~~~~~~~~~~~
+
+* Reverted Python interface optimisation introduced in 2.24 since a fetch no
+  longer allowed a sub path to be provided as a single string parameter.
+
 2.24.1 2022-12-07
 ~~~~~~~~~~~~~~~~~
 
