@@ -119,6 +119,13 @@ TLS = ThreadLocalState()
 class Error(Exception):
     """Exception base class for all CODA Python interface errors."""
 
+    def __str__(self):
+        return 'Error'
+
+    def __repr__(self):
+        return self.__str__()
+
+
 CodaError = Error  # compat
 
 
