@@ -119,12 +119,6 @@ TLS = ThreadLocalState()
 class Error(Exception):
     """Exception base class for all CODA Python interface errors."""
 
-    def __str__(self):
-        return 'Error'
-
-    def __repr__(self):
-        return 'Error()'
-
 
 CodaError = Error  # compat
 
@@ -142,7 +136,7 @@ class FetchError(Error):
         self.str = str
 
     def __str__(self):
-        return 'FetchError: ' + self.str
+        return self.str
 
     def __repr__(self):
         return 'FetchError(%r)' % self.str
@@ -171,7 +165,7 @@ class CodacError(Error):
         self.strerror = strerror
 
     def __str__(self):
-        return 'CodacError: ' + self.strerror
+        return self.strerror
 
     def __repr__(self):
         return 'CodacError(%s, %r)' % (self.errno, self.strerror)
