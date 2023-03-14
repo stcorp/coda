@@ -123,7 +123,7 @@ class Error(Exception):
         return 'Error'
 
     def __repr__(self):
-        return self.__str__()
+        return 'Error()'
 
 
 CodaError = Error  # compat
@@ -142,7 +142,10 @@ class FetchError(Error):
         self.str = str
 
     def __str__(self):
-        return "CODA FetchError: " + self.str
+        return 'FetchError: ' + self.str
+
+    def __repr__(self):
+        return 'FetchError(%r)' % self.str
 
 
 class CodacError(Error):
@@ -168,7 +171,10 @@ class CodacError(Error):
         self.strerror = strerror
 
     def __str__(self):
-        return self.strerror
+        return 'CodacError: ' + self.strerror
+
+    def __repr__(self):
+        return 'CodacError(%s, %r)' % (self.errno, self.strerror)
 
 
 def _check(return_code, function=None):
