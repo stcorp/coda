@@ -663,7 +663,7 @@ static int read_leap_second_table(char *filename)
         double scalefactor;
 
         num_read = 0;
-        result = fscanf(f, "%100[^\n]%n", buffer, &num_read);
+        result = fscanf(f, "%99[^\n]%n", buffer, &num_read);
         if (num_read <= 0)
         {
             break;
