@@ -112,8 +112,8 @@ build CODA, but they do not allow regeneration of automatically generated
 files (such as the documentation), so they are not recommended for performing
 co-development of CODA.
 
-Using Anaconda
---------------
+Using Conda
+-----------
 
 CODA is also available as a conda package for Windows, Linux, and macOS
 (only 64bit and Python3). You can install CODA using conda with::
@@ -123,6 +123,12 @@ CODA is also available as a conda package for Windows, Linux, and macOS
 Note that this version of CODA does not include the Fortran, Java, MATLAB,
 and IDL interfaces. It only includes the Python interfaces, C library, and
 command line tools.
+
+Also be aware that if you use conda within an Anaconda installation to first
+create a separate environment using e.g. `conda create -n coda` and
+`conda activate coda`, otherwise the conda installation will likely fail.
+The recommended installation of conda is Miniforge or Mambaforge as this will
+ensure that all packages are taken from the conda-forge channel by default.
 
 
 Building the source package (Unix)
