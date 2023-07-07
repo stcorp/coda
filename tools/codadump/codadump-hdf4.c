@@ -39,7 +39,7 @@
 
 static void write_data(int depth, int array_depth, int record_depth);
 
-static void handle_hdf4_error()
+static void handle_hdf4_error(void)
 {
     fprintf(stderr, "ERROR: HDF error\n");
     HEprint(stderr, 0);
@@ -47,7 +47,7 @@ static void handle_hdf4_error()
     exit(1);
 }
 
-void hdf4_info_init()
+void hdf4_info_init(void)
 {
     hdf4_info.hdf_vfile_id = Hopen(output_file_name, DFACC_CREATE, 0);
     if (hdf4_info.hdf_vfile_id == -1)
@@ -69,7 +69,7 @@ void hdf4_info_init()
     hdf4_info.vgroup_depth = 0;
 }
 
-void hdf4_info_done()
+void hdf4_info_done(void)
 {
     SDend(hdf4_info.hdf_file_id);
     Vend(hdf4_info.hdf_vfile_id);
@@ -250,7 +250,7 @@ static void *hdf_fill_value(int32 type)
     }
 }
 
-void hdf4_enter_record()
+void hdf4_enter_record(void)
 {
     const char *description;
 
@@ -286,7 +286,7 @@ void hdf4_enter_record()
     }
 }
 
-void hdf4_leave_record()
+void hdf4_leave_record(void)
 {
     if (traverse_info.num_records > 0)
     {
@@ -298,7 +298,7 @@ void hdf4_leave_record()
     }
 }
 
-void hdf4_enter_array()
+void hdf4_enter_array(void)
 {
     int dim_id;
     int num_dims;
@@ -320,7 +320,7 @@ void hdf4_enter_array()
     }
 }
 
-void hdf4_leave_array()
+void hdf4_leave_array(void)
 {
 }
 
@@ -340,7 +340,7 @@ static void create_hdf_data_block(int dim_id)
     }
 }
 
-static void destroy_hdf_data_block()
+static void destroy_hdf_data_block(void)
 {
     assert(hdf4_info.data != NULL);
     free(hdf4_info.data);
@@ -374,7 +374,7 @@ static void set_dim_names(int num_dims)
     }
 }
 
-static void write_dims()
+static void write_dims(void)
 {
     int dim_id;
 
@@ -1053,7 +1053,7 @@ static void write_data(int depth, int array_depth, int record_depth)
     }
 }
 
-void export_data_element_to_hdf4()
+void export_data_element_to_hdf4(void)
 {
     int64_t filled_size;
     int64_t size;

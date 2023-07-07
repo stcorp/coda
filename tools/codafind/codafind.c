@@ -42,14 +42,14 @@
 
 static int verbosity;
 
-static void print_version()
+static void print_version(void)
 {
     printf("codafind %s\n", libcoda_version);
     printf("Copyright (C) 2007-2022 S[&]T, The Netherlands.\n");
     printf("\n");
 }
 
-static void print_help()
+static void print_help(void)
 {
     printf("Usage:\n");
     printf("    codafind [-D definitionpath] [<options>] <files|directories>\n");

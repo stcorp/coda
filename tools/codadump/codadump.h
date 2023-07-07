@@ -164,30 +164,30 @@ extern hdf4_info_t hdf4_info;
 #endif
 
 /* codadump.c functions */
-void handle_coda_error();
+void handle_coda_error(void);
 
 /* codadump-ascii.c functions */
-void export_data_element_to_ascii();
+void export_data_element_to_ascii(void);
 
 /* codadump-dim.c functions */
 void print_all_distinct_dims(int dim_id);
-void dim_info_init();
-void dim_info_done();
-void dim_enter_array();
-void dim_leave_array();
-void clear_array_info();
-int dim_record_field_available();
+void dim_info_init(void);
+void dim_info_done(void);
+void dim_enter_array(void);
+void dim_leave_array(void);
+void clear_array_info(void);
+int dim_record_field_available(void);
 
 
 /* codadump-hdf4.c functions */
 #ifdef HAVE_HDF4
-void hdf4_info_init();
-void hdf4_info_done();
-void hdf4_enter_record();
-void hdf4_leave_record();
-void hdf4_enter_array();
-void hdf4_leave_array();
-void export_data_element_to_hdf4();
+void hdf4_info_init(void);
+void hdf4_info_done(void);
+void hdf4_enter_record(void);
+void hdf4_leave_record(void);
+void hdf4_enter_array(void);
+void hdf4_leave_array(void);
+void export_data_element_to_hdf4(void);
 #endif
 
 /* codadump-json.c functions */
@@ -201,8 +201,8 @@ void print_debug_data(const char *product_class, const char *product_type, int f
 
 /* codadump-traverse.c functions */
 void print_full_field_name(FILE *f, int print_dims, int compound_as_array);
-void traverse_info_init();
-void traverse_info_done();
-void traverse_product();
+void traverse_info_init(void);
+void traverse_info_done(void);
+void traverse_product(void);
 
 #endif

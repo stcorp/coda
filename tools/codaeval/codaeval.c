@@ -111,14 +111,14 @@ static void generate_escaped_string(const char *str, int length)
     }
 }
 
-static void print_version()
+static void print_version(void)
 {
     printf("codaeval %s\n", libcoda_version);
     printf("Copyright (C) 2007-2022 S[&]T, The Netherlands\n");
     printf("\n");
 }
 
-static void print_help()
+static void print_help(void)
 {
     printf("Usage:\n");
     printf("    codaeval [-D definitionpath] [<options>] expression [<files|directories>]\n");

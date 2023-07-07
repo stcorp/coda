@@ -31,14 +31,14 @@
 
 #include "codadump.h"
 
-void dim_info_init()
+void dim_info_init(void)
 {
     dim_info.num_dims = 0;
     dim_info.is_var_size = 0;
     dim_info.last_var_size_dim = -1;
 }
 
-void dim_info_done()
+void dim_info_done(void)
 {
 }
 
@@ -296,7 +296,7 @@ static void get_all_dims_for_array(int depth, int array_depth, int record_depth)
     }
 }
 
-void dim_enter_array()
+void dim_enter_array(void)
 {
     coda_type_class type_class;
     array_info_t *array_info;
@@ -570,7 +570,7 @@ void dim_enter_array()
     }
 }
 
-void dim_leave_array()
+void dim_leave_array(void)
 {
     array_info_t *array_info;
     int dim_id;
@@ -734,7 +734,7 @@ static int get_record_field_available_status(int depth, int array_depth, int rec
     return 0;
 }
 
-int dim_record_field_available()
+int dim_record_field_available(void)
 {
     /* find out whether there is at least one occurrence where this field is available */
     return get_record_field_available_status(0, 0, 0);

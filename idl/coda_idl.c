@@ -95,7 +95,7 @@ static void idl_coda_set_definition_path(void)
     }
 }
 
-static int idl_coda_init()
+static int idl_coda_init(void)
 {
     if (!idl_coda_loaded)
     {
@@ -116,7 +116,7 @@ static int idl_coda_init()
     return 0;
 }
 
-static void idl_coda_done()
+static void idl_coda_done(void)
 {
     if (idl_coda_loaded)
     {

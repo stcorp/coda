@@ -785,13 +785,13 @@ static jdoubleArray SWIG_JavaArrayOutDouble (JNIEnv *jenv, double *result, jsize
 #include "coda.h"
 
 
-    static const char *helper_version()
+    static const char *helper_version(void)
     {
         return libcoda_version;
     }
 
 
-    coda_cursor *new_coda_cursor()
+    coda_cursor *new_coda_cursor(void)
     {
         return (coda_cursor *)malloc(sizeof(coda_cursor));
     }

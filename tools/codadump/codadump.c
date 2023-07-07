@@ -54,14 +54,14 @@ int show_type;
 int show_unit;
 int show_description;
 
-static void print_version()
+static void print_version(void)
 {
     printf("codadump version %s\n", libcoda_version);
     printf("Copyright (C) 2007-2022 S[&]T, The Netherlands.\n");
     printf("\n");
 }
 
-static void print_help()
+static void print_help(void)
 {
     printf("Usage:\n");
     printf("    codadump [-D definitionpath] list [<list options>] <product file>\n");
@@ -201,7 +201,7 @@ static void print_help()
     printf("\n");
 }
 
-void handle_coda_error()
+void handle_coda_error(void)
 {
     fprintf(stderr, "ERROR: %s\n", coda_errno_to_string(coda_errno));
     fflush(stderr);

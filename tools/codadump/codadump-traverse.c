@@ -31,7 +31,7 @@
 
 #include "codadump.h"
 
-static void traverse_data();
+static void traverse_data(void);
 
 static void print_array_dim(FILE *f, int array_id)
 {
@@ -180,7 +180,7 @@ void print_full_field_name(FILE *f, int print_dims, int compound_as_array)
     }
 }
 
-void traverse_info_init()
+void traverse_info_init(void)
 {
     traverse_info.pf = NULL;
     traverse_info.current_depth = 0;
@@ -188,7 +188,7 @@ void traverse_info_init()
     traverse_info.num_records = 0;
 }
 
-void traverse_info_done()
+void traverse_info_done(void)
 {
     if (traverse_info.pf != NULL)
     {
@@ -200,7 +200,7 @@ void traverse_info_done()
     }
 }
 
-static void handle_data_element()
+static void handle_data_element(void)
 {
     if (run_mode == RUN_MODE_LIST)
     {
@@ -347,7 +347,7 @@ static void traverse_record(int index, int traverse_hidden)
     traverse_data();
 }
 
-static void traverse_data()
+static void traverse_data(void)
 {
     coda_type_class type_class;
 
@@ -554,7 +554,7 @@ static void traverse_data()
     }
 }
 
-void traverse_product()
+void traverse_product(void)
 {
     int result;
 

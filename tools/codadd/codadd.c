@@ -57,14 +57,14 @@ void generate_xmlschema(const char *output_file_name, const char *product_class,
 void generate_definition(const char *output_file_name, const char *file_name);
 void generate_detection_tree(coda_format format);
 
-static void print_version()
+static void print_version(void)
 {
     printf("codadd %s\n", libcoda_version);
     printf("Copyright (C) 2007-2022 S[&]T, The Netherlands.\n");
     printf("\n");
 }
 
-static void print_help()
+static void print_help(void)
 {
     printf("Usage:\n");
     printf("    codadd [-D definitionpath]\n");

@@ -139,7 +139,7 @@ typedef long long int	uint64_t;
 */
 %inline
 %{
-    static const char *helper_version()
+    static const char *helper_version(void)
     {
         return libcoda_version;
     }
@@ -168,7 +168,7 @@ typedef long long int	uint64_t;
   
 */
 %{
-    coda_cursor *new_coda_cursor()
+    coda_cursor *new_coda_cursor(void)
     {
         return (coda_cursor *)malloc(sizeof(coda_cursor));
     }
@@ -192,7 +192,7 @@ typedef long long int	uint64_t;
 
 %};
 
-coda_cursor *new_coda_cursor();
+coda_cursor *new_coda_cursor(void);
 void delete_coda_cursor(coda_cursor *self);
 coda_cursor *deepcopy_coda_cursor(coda_cursor *self);
 

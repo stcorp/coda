@@ -499,7 +499,7 @@ static void write_data(FILE *f, int depth, int array_depth, int record_depth)
     }
 }
 
-void export_data_element_to_ascii()
+void export_data_element_to_ascii(void)
 {
     if (first_write_of_data)
     {
