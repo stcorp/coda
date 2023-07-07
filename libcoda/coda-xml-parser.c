@@ -95,6 +95,7 @@ static coda_mem_record *attribute_record_new(coda_type_record *definition, coda_
     int i;
 
     assert(definition != NULL);
+    assert(!definition->is_union);
     attributes = coda_mem_record_new(definition, NULL);
 
     if (el != coda_element_name_from_xml_name(el))
@@ -543,6 +544,7 @@ static void XMLCALL start_element_handler(void *data, const char *el, const char
     {
         int i;
 
+        assert(!((coda_type_record *)definition)->is_union);
         info->record[info->depth] = coda_mem_record_new((coda_type_record *)definition, info->attributes);
         if (info->record[info->depth] == NULL)
         {
@@ -772,6 +774,7 @@ int coda_xml_parse(coda_xml_product *product)
     else
     {
         assert(product->product_definition->root_type->type_class == coda_record_class);
+        assert(!((coda_type_record *)product->product_definition->root_type)->is_union);
         info.record[0] = coda_mem_record_new((coda_type_record *)product->product_definition->root_type, NULL);
     }
     if (info.record[0] == NULL)
