@@ -79,7 +79,7 @@ int vsnprintf(const char *, size_t, const char *, va_list ap);
 #define H5_USE_16_API
 
 /* Make sure we build the PCRE library statically on Windows */
-#define PCRE_STATIC
+#define PCRE2_STATIC
 
 #ifdef WIN32
 
