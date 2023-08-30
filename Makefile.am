@@ -163,7 +163,7 @@ libz_internal_la_SOURCES = \
 	libcoda/zlib/zutil.c \
 	libcoda/zlib/zutil.h
 libz_internal_la_CPPFLAGS = -Ilibcoda/zlib -I$(srcdir)/libcoda/zlib $(AM_CPPFLAGS)
-EXTRA_DIST += libcoda/zlib/COPYING libcoda/zlib/README
+EXTRA_DIST += libcoda/zlib/LICENSE libcoda/zlib/README
 
 # libcoda
 
