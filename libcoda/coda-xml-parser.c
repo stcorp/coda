@@ -209,7 +209,7 @@ static coda_mem_record *attribute_record_new(coda_type_record *definition, coda_
                 return NULL;
             }
             attribute = coda_mem_data_new(definition->field[attribute_index]->type, NULL, (coda_product *)product,
-                                          strlen(attr[2 * i + 1]), (uint8_t *)attr[2 * i + 1]);
+                                          (long)strlen(attr[2 * i + 1]), (uint8_t *)attr[2 * i + 1]);
         }
         if (attribute == NULL)
         {

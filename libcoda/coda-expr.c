@@ -3680,8 +3680,8 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                     PCRE2_SIZE *ovector;
 
                     ovector = pcre2_get_ovector_pointer(match_data);
-                    *offset = ovector[2 * index];
-                    *length = ovector[2 * index + 1] - ovector[2 * index];
+                    *offset = (long)ovector[2 * index];
+                    *length = (long)(ovector[2 * index + 1] - ovector[2 * index]);
                     *value = matchstring;
                 }
                 pcre2_match_data_free(match_data);
