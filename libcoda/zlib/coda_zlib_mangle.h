@@ -14,6 +14,9 @@
 #define adler32_combine64 coda_adler32_combine64
 #define adler32_z coda_adler32_z
 #define crc32 coda_crc32
+#define crc32_combine_gen coda_crc32_combine_gen
+#define crc32_combine_gen64 coda_crc32_combine_gen64
+#define crc32_combine_op coda_crc32_combine_op
 #define crc32_combine64 coda_crc32_combine64
 #define crc32_z coda_crc32_z
 #define get_crc_table coda_get_crc_table
