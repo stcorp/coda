@@ -1,3 +1,5 @@
+* Migrated from PCRE to PCRE2. The embedded PCRE2 library is now version 10.42.
+
 2.24.2 2023-02-06
 ~~~~~~~~~~~~~~~~~
 

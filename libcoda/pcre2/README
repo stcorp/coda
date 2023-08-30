@@ -1,0 +1,11 @@
+
+These files are taken from PCRE2, Version 10.42.
+
+The source files have been slightly modified in order to fit them into this
+build system. The changes that were made are:
+
+ - pcre2.h includes coda_pcre2_mangle.h to name mangle public symbols.
+
+ - pcre2_internal.h and pcre2_config.c include coda_pcre2_config.h with CODA
+   specific settings for PCRE2 (which would otherwise have been located in
+   config.h).

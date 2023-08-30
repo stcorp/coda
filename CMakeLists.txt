@@ -394,35 +394,39 @@ set(LIBEXPAT_SOURCES
 
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/expat)
 
-set(LIBPCRE_SOURCES
-  libcoda/pcre/coda_pcre_config.h
-  libcoda/pcre/coda_pcre_mangle.h
-  libcoda/pcre/pcre.h
-  libcoda/pcre/pcre_byte_order.c
-  libcoda/pcre/pcre_chartables.c
-  libcoda/pcre/pcre_compile.c
-  libcoda/pcre/pcre_config.c
-  libcoda/pcre/pcre_dfa_exec.c
-  libcoda/pcre/pcre_exec.c
-  libcoda/pcre/pcre_fullinfo.c
-  libcoda/pcre/pcre_get.c
-  libcoda/pcre/pcre_globals.c
-  libcoda/pcre/pcre_internal.h
-  libcoda/pcre/pcre_maketables.c
-  libcoda/pcre/pcre_newline.c
-  libcoda/pcre/pcre_ord2utf8.c
-  libcoda/pcre/pcre_printint.c
-  libcoda/pcre/pcre_refcount.c
-  libcoda/pcre/pcre_string_utils.c
-  libcoda/pcre/pcre_study.c
-  libcoda/pcre/pcre_tables.c
-  libcoda/pcre/pcre_ucd.c
-  libcoda/pcre/pcre_valid_utf8.c
-  libcoda/pcre/pcre_version.c
-  libcoda/pcre/pcre_xclass.c
-  libcoda/pcre/ucp.h)
+set(LIBPCRE2_SOURCES
+  libcoda/pcre2/coda_pcre2_config.h
+  libcoda/pcre2/coda_pcre2_mangle.h
+  libcoda/pcre2/pcre2.h
+  libcoda/pcre2/pcre2_auto_possess.c
+  libcoda/pcre2/pcre2_chartables.c
+  libcoda/pcre2/pcre2_compile.c
+  libcoda/pcre2/pcre2_config.c
+  libcoda/pcre2/pcre2_context.c
+  libcoda/pcre2/pcre2_dfa_match.c
+  libcoda/pcre2/pcre2_error.c
+  libcoda/pcre2/pcre2_extuni.c
+  libcoda/pcre2/pcre2_find_bracket.c
+  libcoda/pcre2/pcre2_internal.h
+  libcoda/pcre2/pcre2_intmodedep.h
+  libcoda/pcre2/pcre2_maketables.c
+  libcoda/pcre2/pcre2_match_data.c
+  libcoda/pcre2/pcre2_match.c
+  libcoda/pcre2/pcre2_newline.c
+  libcoda/pcre2/pcre2_ord2utf.c
+  libcoda/pcre2/pcre2_pattern_info.c
+  libcoda/pcre2/pcre2_script_run.c
+  libcoda/pcre2/pcre2_string_utils.c
+  libcoda/pcre2/pcre2_study.c
+  libcoda/pcre2/pcre2_substitute.c
+  libcoda/pcre2/pcre2_substring.c
+  libcoda/pcre2/pcre2_tables.c
+  libcoda/pcre2/pcre2_ucd.c
+  libcoda/pcre2/pcre2_ucp.h
+  libcoda/pcre2/pcre2_valid_utf.c
+  libcoda/pcre2/pcre2_xclass.c)
 
-include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/pcre)
+include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/pcre2)
 
 set(LIBZLIB_SOURCES
   libcoda/zlib/adler32.c
@@ -444,7 +448,7 @@ set(LIBZLIB_SOURCES
 
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/libcoda/zlib)
 
-add_library(coda_static STATIC ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBPCRE_SOURCES} ${LIBZLIB_SOURCES})
+add_library(coda_static STATIC ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBPCRE2_SOURCES} ${LIBZLIB_SOURCES})
 # On Windows, we want libcoda.lib for static, coda.dll & coda.lib for shared.
 # On Unix, we want libcoda.a and libcoda.so
 if(WIN32)
@@ -461,7 +465,7 @@ endif(WIN32)
 
 if(NOT CODA_BUILD_SUBPACKAGE_MODE)
 
-  add_library(coda SHARED ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBPCRE_SOURCES} ${LIBZLIB_SOURCES})
+  add_library(coda SHARED ${LIBCODA_SOURCES} ${LIBEXPAT_SOURCES} ${LIBPCRE2_SOURCES} ${LIBZLIB_SOURCES})
   target_link_libraries(coda ${HDF4_LIBRARIES} ${HDF5_LIBRARIES})
   set_target_properties(coda PROPERTIES
     VERSION ${LIBCODA_MAJOR}.${LIBCODA_MINOR}.${LIBCODA_REVISION}

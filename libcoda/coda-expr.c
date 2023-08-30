@@ -42,7 +42,8 @@
 #include "coda-ascii.h"
 #include "ipow.h"
 
-#include "pcre.h"
+#define PCRE2_CODE_UNIT_WIDTH 8
+#include "pcre2.h"
 
 /** \defgroup coda_expression CODA Expression
  * CODA comes with a powerful expression language that can be used to perform calculations based on product data.
@@ -1100,16 +1101,16 @@ static int eval_boolean(eval_info *info, const coda_expression *expr, int *value
             break;
         case expr_regex:
             {
-                int ovector[(REGEX_MAX_NUM_SUBSTRING + 1) * 3];
-                const char *error;
-                int erroffset;
+                int errorcode;
+                PCRE2_SIZE erroffset;
                 long matchstring_offset;
                 long matchstring_length;
                 char *matchstring;
                 long pattern_offset;
                 long pattern_length;
                 char *pattern;
-                pcre *re;
+                pcre2_match_data *match_data;
+                pcre2_code *re;
                 int rc;
 
                 if (eval_string(info, opexpr->operand[0], &pattern_offset, &pattern_length, &pattern) != 0)
@@ -1127,13 +1128,13 @@ static int eval_boolean(eval_info *info, const coda_expression *expr, int *value
 
                 if (pattern_length > 0)
                 {
-                    pattern[pattern_offset + pattern_length] = '\0';    /* add terminating zero */
-                    re = pcre_compile(&pattern[pattern_offset], PCRE_DOTALL | PCRE_DOLLAR_ENDONLY, &error, &erroffset,
-                                      NULL);
+                    re = pcre2_compile((PCRE2_SPTR8)&pattern[pattern_offset], pattern_length,
+                                       PCRE2_DOTALL | PCRE2_DOLLAR_ENDONLY, &errorcode, &erroffset, NULL);
                 }
                 else
                 {
-                    re = pcre_compile("", PCRE_DOTALL | PCRE_DOLLAR_ENDONLY, &error, &erroffset, NULL);
+                    re = pcre2_compile((PCRE2_SPTR8)"", 0, PCRE2_DOTALL | PCRE2_DOLLAR_ENDONLY, &errorcode, &erroffset,
+                                       NULL);
                 }
                 if (pattern != NULL)
                 {
@@ -1141,8 +1142,10 @@ static int eval_boolean(eval_info *info, const coda_expression *expr, int *value
                 }
                 if (re == NULL)
                 {
+                    PCRE2_UCHAR buffer[256];
+                    pcre2_get_error_message(errorcode, buffer, sizeof(buffer));
                     coda_set_error(CODA_ERROR_EXPRESSION,
-                                   "invalid format for regex pattern ('%s' at position %d)", error, erroffset);
+                                   "invalid format for regex pattern ('%s' at position %d)", buffer, erroffset);
                     if (matchstring != NULL)
                     {
                         free(matchstring);
@@ -1152,22 +1155,32 @@ static int eval_boolean(eval_info *info, const coda_expression *expr, int *value
 
                 if (matchstring == NULL)
                 {
-                    /* pcre_exec does not except NULL for an empty matchstring */
+                    /* pcre2_match does not except NULL for an empty matchstring */
                     matchstring = strdup("");
                     if (matchstring == NULL)
                     {
                         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)",
                                        __FILE__, __LINE__);
-                        pcre_free(re);
+                        pcre2_code_free(re);
                         return -1;
                     }
                 }
 
-                rc = pcre_exec(re, NULL, &matchstring[matchstring_offset], matchstring_length, 0, 0, ovector,
-                               (REGEX_MAX_NUM_SUBSTRING + 1) * 3);
+                match_data = pcre2_match_data_create_from_pattern(re, NULL);
+                if (match_data == NULL)
+                {
+                    coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "could not allocate regexp match data (%s:%u)",
+                                   __FILE__, __LINE__);
+                    free(matchstring);
+                    pcre2_code_free(re);
+                    return -1;
+                }
+                rc = pcre2_match(re, (PCRE2_SPTR8)&matchstring[matchstring_offset], matchstring_length, 0, 0,
+                                 match_data, NULL);
                 free(matchstring);
-                pcre_free(re);
-                if (rc < 0 && rc != PCRE_ERROR_NOMATCH)
+                pcre2_code_free(re);
+                pcre2_match_data_free(match_data);
+                if (rc < 0 && rc != PCRE2_ERROR_NOMATCH)
                 {
                     coda_set_error(CODA_ERROR_EXPRESSION, "could not evaluate regex pattern (error code %d)", rc);
                     return -1;
@@ -3514,16 +3527,16 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
             break;
         case expr_regex:
             {
-                int ovector[(REGEX_MAX_NUM_SUBSTRING + 1) * 3];
-                const char *error;
-                int erroffset;
+                int errorcode;
+                PCRE2_SIZE erroffset;
                 long matchstring_offset;
                 long matchstring_length;
                 char *matchstring;
                 long pattern_offset;
                 long pattern_length;
                 char *pattern = NULL;
-                pcre *re;
+                pcre2_match_data *match_data;
+                pcre2_code *re;
                 int index = 0;
                 int rc;
 
@@ -3542,13 +3555,13 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
 
                 if (pattern_length > 0)
                 {
-                    pattern[pattern_offset + pattern_length] = '\0';    /* add terminating zero */
-                    re = pcre_compile(&pattern[pattern_offset], PCRE_DOTALL | PCRE_DOLLAR_ENDONLY, &error, &erroffset,
-                                      NULL);
+                    re = pcre2_compile((PCRE2_SPTR8)&pattern[pattern_offset], pattern_length,
+                                       PCRE2_DOTALL | PCRE2_DOLLAR_ENDONLY, &errorcode, &erroffset, NULL);
                 }
                 else
                 {
-                    re = pcre_compile("", PCRE_DOTALL | PCRE_DOLLAR_ENDONLY, &error, &erroffset, NULL);
+                    re = pcre2_compile((PCRE2_SPTR8)"", 0, PCRE2_DOTALL | PCRE2_DOLLAR_ENDONLY, &errorcode, &erroffset,
+                                       NULL);
                 }
                 if (pattern != NULL)
                 {
@@ -3556,8 +3569,10 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                 }
                 if (re == NULL)
                 {
+                    PCRE2_UCHAR buffer[256];
+                    pcre2_get_error_message(errorcode, buffer, sizeof(buffer));
                     coda_set_error(CODA_ERROR_EXPRESSION,
-                                   "invalid format for regex pattern ('%s' at position %d)", error, erroffset);
+                                   "invalid format for regex pattern ('%s' at position %d)", buffer, erroffset);
                     if (matchstring != NULL)
                     {
                         free(matchstring);
@@ -3573,7 +3588,7 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                     /* get subexpression by index */
                     if (eval_integer(info, opexpr->operand[2], &intvalue) != 0)
                     {
-                        pcre_free(re);
+                        pcre2_code_free(re);
                         return -1;
                     }
                     index = (int)intvalue;
@@ -3587,7 +3602,7 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                     /* get subexpression by name */
                     if (eval_string(info, opexpr->operand[2], &substrname_offset, &substrname_length, &substrname) != 0)
                     {
-                        pcre_free(re);
+                        pcre2_code_free(re);
                         return -1;
                     }
                     if (length == 0)
@@ -3598,16 +3613,16 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                         {
                             free(substrname);
                         }
-                        pcre_free(re);
+                        pcre2_code_free(re);
                         return -1;
                     }
-                    index = pcre_get_stringnumber(re, substrname);
+                    index = pcre2_substring_number_from_name(re, (PCRE2_SPTR8)substrname);
                     if (index < 0)
                     {
                         coda_set_error(CODA_ERROR_EXPRESSION,
                                        "invalid substring name parameter for regex (substring name not in pattern)");
                         free(substrname);
-                        pcre_free(re);
+                        pcre2_code_free(re);
                         return -1;
                     }
                     free(substrname);
@@ -3615,30 +3630,41 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
 
                 if (matchstring == NULL)
                 {
-                    /* pcre_exec does not except NULL for an empty matchstring */
+                    /* pcre2_match does not except NULL for an empty matchstring */
                     matchstring = strdup("");
                     if (matchstring == NULL)
                     {
                         coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "out of memory (could not duplicate string) (%s:%u)",
                                        __FILE__, __LINE__);
-                        pcre_free(re);
+                        pcre2_code_free(re);
                         return -1;
                     }
                 }
 
-                rc = pcre_exec(re, NULL, &matchstring[matchstring_offset], matchstring_length, 0, 0, ovector,
-                               (REGEX_MAX_NUM_SUBSTRING + 1) * 3);
-                pcre_free(re);
-                if (rc < 0 && rc != PCRE_ERROR_NOMATCH)
+                match_data = pcre2_match_data_create_from_pattern(re, NULL);
+                if (match_data == NULL)
+                {
+                    coda_set_error(CODA_ERROR_OUT_OF_MEMORY, "could not allocate regexp match data (%s:%u)",
+                                   __FILE__, __LINE__);
+                    free(matchstring);
+                    pcre2_code_free(re);
+                    return -1;
+                }
+                rc = pcre2_match(re, (PCRE2_SPTR8)&matchstring[matchstring_offset], matchstring_length, 0, 0,
+                                 match_data, NULL);
+                pcre2_code_free(re);
+                if (rc < 0 && rc != PCRE2_ERROR_NOMATCH)
                 {
                     coda_set_error(CODA_ERROR_EXPRESSION, "could not evaluate regex pattern (error code %d)", rc);
                     free(matchstring);
+                    pcre2_match_data_free(match_data);
                     return -1;
                 }
                 if (rc == 0)
                 {
                     coda_set_error(CODA_ERROR_EXPRESSION, "regex pattern contains too many subexpressions");
                     free(matchstring);
+                    pcre2_match_data_free(match_data);
                     return -1;
                 }
                 if (index >= rc)
@@ -3651,10 +3677,14 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                 }
                 else
                 {
+                    PCRE2_SIZE *ovector;
+
+                    ovector = pcre2_get_ovector_pointer(match_data);
                     *offset = ovector[2 * index];
                     *length = ovector[2 * index + 1] - ovector[2 * index];
                     *value = matchstring;
                 }
+                pcre2_match_data_free(match_data);
             }
             break;
         case expr_product_class:

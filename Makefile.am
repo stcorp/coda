@@ -37,7 +37,7 @@ clean-local: $(CLEAN_LOCAL_TARGETS)
 if SUBPACKAGE_MODE
 
 noinst_PROGRAMS = codadd
-noinst_LTLIBRARIES = libcoda.la libexpat_internal.la libpcre_internal.la libz_internal.la
+noinst_LTLIBRARIES = libcoda.la libexpat_internal.la libpcre2_internal.la libz_internal.la
 
 else
 
@@ -49,7 +49,7 @@ noinst_PROGRAMS = findtypedef
 # libraries (+ related files)
 
 lib_LTLIBRARIES = libcoda.la
-noinst_LTLIBRARIES = libexpat_internal.la libpcre_internal.la libz_internal.la
+noinst_LTLIBRARIES = libexpat_internal.la libpcre2_internal.la libz_internal.la
 
 if BUILD_IDL
 idldlmexec_LTLIBRARIES = coda_idl.la
@@ -108,37 +108,41 @@ libexpat_internal_la_CPPFLAGS = -Ilibcoda/expat -I$(srcdir)/libcoda/expat $(AM_C
 EXTRA_DIST += libcoda/expat/xmltok_impl.c libcoda/expat/xmltok_ns.c
 EXTRA_DIST += libcoda/expat/COPYING libcoda/expat/README
 
-# pcre
+# pcre2
 
-libpcre_internal_la_SOURCES = \
-	libcoda/pcre/coda_pcre_config.h \
-	libcoda/pcre/coda_pcre_mangle.h \
-	libcoda/pcre/pcre.h \
-	libcoda/pcre/pcre_byte_order.c \
-	libcoda/pcre/pcre_chartables.c \
-	libcoda/pcre/pcre_compile.c \
-	libcoda/pcre/pcre_config.c \
-	libcoda/pcre/pcre_dfa_exec.c \
-	libcoda/pcre/pcre_exec.c \
-	libcoda/pcre/pcre_fullinfo.c \
-	libcoda/pcre/pcre_get.c \
-	libcoda/pcre/pcre_globals.c \
-	libcoda/pcre/pcre_internal.h \
-	libcoda/pcre/pcre_maketables.c \
-	libcoda/pcre/pcre_newline.c \
-	libcoda/pcre/pcre_ord2utf8.c \
-	libcoda/pcre/pcre_printint.c \
-	libcoda/pcre/pcre_refcount.c \
-	libcoda/pcre/pcre_string_utils.c \
-	libcoda/pcre/pcre_study.c \
-	libcoda/pcre/pcre_tables.c \
-	libcoda/pcre/pcre_ucd.c \
-	libcoda/pcre/pcre_valid_utf8.c \
-	libcoda/pcre/pcre_version.c \
-	libcoda/pcre/pcre_xclass.c \
-	libcoda/pcre/ucp.h
-libpcre_internal_la_CPPFLAGS = -Ilibcoda/pcre -I$(srcdir)/libcoda/pcre $(AM_CPPFLAGS)
-EXTRA_DIST += libcoda/pcre/COPYING libcoda/pcre/README
+libpcre2_internal_la_SOURCES = \
+	libcoda/pcre2/coda_pcre2_config.h \
+	libcoda/pcre2/coda_pcre2_mangle.h \
+	libcoda/pcre2/pcre2.h \
+	libcoda/pcre2/pcre2_auto_possess.c \
+	libcoda/pcre2/pcre2_chartables.c \
+	libcoda/pcre2/pcre2_compile.c \
+	libcoda/pcre2/pcre2_config.c \
+	libcoda/pcre2/pcre2_context.c \
+	libcoda/pcre2/pcre2_dfa_match.c \
+	libcoda/pcre2/pcre2_error.c \
+	libcoda/pcre2/pcre2_extuni.c \
+	libcoda/pcre2/pcre2_find_bracket.c \
+	libcoda/pcre2/pcre2_internal.h \
+	libcoda/pcre2/pcre2_intmodedep.h \
+	libcoda/pcre2/pcre2_maketables.c \
+	libcoda/pcre2/pcre2_match_data.c \
+	libcoda/pcre2/pcre2_match.c \
+	libcoda/pcre2/pcre2_newline.c \
+	libcoda/pcre2/pcre2_ord2utf.c \
+	libcoda/pcre2/pcre2_pattern_info.c \
+	libcoda/pcre2/pcre2_script_run.c \
+	libcoda/pcre2/pcre2_string_utils.c \
+	libcoda/pcre2/pcre2_study.c \
+	libcoda/pcre2/pcre2_substitute.c \
+	libcoda/pcre2/pcre2_substring.c \
+	libcoda/pcre2/pcre2_tables.c \
+	libcoda/pcre2/pcre2_ucd.c \
+	libcoda/pcre2/pcre2_ucp.h \
+	libcoda/pcre2/pcre2_valid_utf.c \
+	libcoda/pcre2/pcre2_xclass.c
+libpcre2_internal_la_CPPFLAGS = -Ilibcoda/pcre2 -I$(srcdir)/libcoda/pcre2 $(AM_CPPFLAGS)
+EXTRA_DIST += libcoda/pcre2/COPYING libcoda/pcre2/README
 
 # zlib
 
@@ -263,9 +267,9 @@ libcoda_la_SOURCES += $(libcoda_hdf5_files)
 else
 INDENTFILES += $(libcoda_hdf5_files)
 endif
-libcoda_la_CPPFLAGS = -Ilibcoda/expat -I$(srcdir)/libcoda/expat -Ilibcoda/pcre -I$(srcdir)/libcoda/pcre -Ilibcoda/zlib -I$(srcdir)/libcoda/zlib $(AM_CPPFLAGS)
+libcoda_la_CPPFLAGS = -Ilibcoda/expat -I$(srcdir)/libcoda/expat -Ilibcoda/pcre2 -I$(srcdir)/libcoda/pcre2 -Ilibcoda/zlib -I$(srcdir)/libcoda/zlib $(AM_CPPFLAGS)
 libcoda_la_LDFLAGS = -no-undefined -version-info $(LIBCODA_CURRENT):$(LIBCODA_REVISION):$(LIBCODA_AGE)
-libcoda_la_LIBADD = @LTLIBOBJS@ libexpat_internal.la libpcre_internal.la libz_internal.la $(HDF4LIBS) $(HDF5LIBS)
+libcoda_la_LIBADD = @LTLIBOBJS@ libexpat_internal.la libpcre2_internal.la libz_internal.la $(HDF4LIBS) $(HDF5LIBS)
 INDENTFILES += $(libcoda_la_SOURCES) libcoda/coda.h.in
 BUILT_SOURCES += libcoda/coda-expr-parser.h
 
