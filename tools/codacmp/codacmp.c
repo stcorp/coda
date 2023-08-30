@@ -46,7 +46,6 @@
 
 /* internal CODA functions */
 void coda_cursor_add_to_error_message(const coda_cursor *cursor);
-int coda_cursor_print_path(const coda_cursor *cursor, int (*print)(const char *, ...));
 
 const char *pre[] = { "< ", "> " };
 
