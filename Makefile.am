@@ -141,7 +141,7 @@ libpcre2_internal_la_SOURCES = \
 	libcoda/pcre2/pcre2_valid_utf.c \
 	libcoda/pcre2/pcre2_xclass.c
 libpcre2_internal_la_CPPFLAGS = -Ilibcoda/pcre2 -I$(srcdir)/libcoda/pcre2 $(AM_CPPFLAGS)
-EXTRA_DIST += libcoda/pcre2/COPYING libcoda/pcre2/README
+EXTRA_DIST += libcoda/pcre2/LICENSE libcoda/pcre2/README
 
 # zlib
 
