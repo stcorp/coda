@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2022 S[&]T, The Netherlands.
+ * Copyright (C) 2007-2023 S[&]T, The Netherlands.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,7 +45,7 @@ static int verbosity;
 static void print_version(void)
 {
     printf("codafind %s\n", libcoda_version);
-    printf("Copyright (C) 2007-2022 S[&]T, The Netherlands.\n");
+    printf("Copyright (C) 2007-2023 S[&]T, The Netherlands.\n");
     printf("\n");
 }
 
