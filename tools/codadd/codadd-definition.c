@@ -661,7 +661,7 @@ static void generate_product_definition(const coda_product *product)
     ttm = localtime(&t);
     if (ttm)
     {
-        sprintf(currentdate, "%04d-%02d-%02d", ttm->tm_year + 1900, ttm->tm_mon + 1, ttm->tm_mday);
+        snprintf(currentdate, 15, "%04d-%02d-%02d", ttm->tm_year + 1900, ttm->tm_mon + 1, ttm->tm_mday);
     }
     fi_printf("<cd:ProductDefinition id=\"%s\" format=\"%s\" last-modified=\"%s\" "
               "xmlns:cd=\"http://www.stcorp.nl/coda/definition/2008/07\">\n", name,
