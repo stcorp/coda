@@ -461,6 +461,8 @@ if(WIN32)
 else(WIN32)
   set_target_properties(coda_static PROPERTIES OUTPUT_NAME "coda")
 endif(WIN32)
+# We need to use C99 because of the LIBPCRE2
+set_target_properties(coda_static PROPERTIES C_STANDARD 99)
 
 if(NOT CODA_BUILD_SUBPACKAGE_MODE)
 
@@ -469,6 +471,8 @@ if(NOT CODA_BUILD_SUBPACKAGE_MODE)
   set_target_properties(coda PROPERTIES
     VERSION ${LIBCODA_MAJOR}.${LIBCODA_MINOR}.${LIBCODA_REVISION}
     SOVERSION ${LIBCODA_MAJOR})
+  # We need to use C99 because of the LIBPCRE2
+  set_target_properties(coda PROPERTIES C_STANDARD 99)
   if(WIN32)
     if(CODA_WITH_HDF5)
       # Also set H5_BUILT_AS_DYNAMIC_LIB since we link against the dynamic HDF5 library
