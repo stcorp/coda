@@ -1727,11 +1727,6 @@ int coda_type_array_validate(const coda_type_array *type)
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
-    if (type->num_dims == 0)
-    {
-        coda_set_error(CODA_ERROR_DATA_DEFINITION, "number of dimensions is 0 for array definition");
-        return -1;
-    }
     return 0;
 }
 

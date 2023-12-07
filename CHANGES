@@ -1,3 +1,5 @@
+* Fixed issue where 0-dimensional arrays were not allowed in codadef files.
+
 2.25 2023-09-12
 ~~~~~~~~~~~~~~~
 
