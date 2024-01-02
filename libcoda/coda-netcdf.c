@@ -467,9 +467,10 @@ static int read_att_array(coda_netcdf_product *product, int64_t *offset, coda_me
         else
         {
             coda_netcdf_array *array;
-            long size = (long)nelems;
+            long dim[CODA_MAX_NUM_DIMS];
 
-            array = coda_netcdf_array_new(1, &size, basic_type);
+            dim[0] = (long)nelems;
+            array = coda_netcdf_array_new(1, dim, basic_type);
             if (array == NULL)
             {
                 coda_dynamic_type_delete((coda_dynamic_type *)basic_type);
