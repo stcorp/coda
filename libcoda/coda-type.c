@@ -1727,6 +1727,11 @@ int coda_type_array_validate(const coda_type_array *type)
         coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "type argument is NULL (%s:%u)", __FILE__, __LINE__);
         return -1;
     }
+    if (type->base_type == NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "missing base_type for array type");
+        return -1;
+    }
     return 0;
 }
 
