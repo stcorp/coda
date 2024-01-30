@@ -390,6 +390,7 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
     coda_native_type read_type;
     int64_t bit_size;
     int first_attribute = 1;
+    int result;
     int i;
 
     fi_printf("<table");
@@ -400,7 +401,8 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
     ff_printf(">\n");
 
     /* type name and size */
-    coda_type_get_bit_size(type, &bit_size);
+    result = coda_type_get_bit_size(type, &bit_size);
+    assert(result == 0);
     fi_printf("<tr>");
     fi_printf("<th ");
     if (bit_size < 0)
@@ -414,7 +416,8 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
             {
                 int is_union;
 
-                coda_type_get_record_union_status(type, &is_union);
+                result = coda_type_get_record_union_status(type, &is_union);
+                assert(result == 0);
                 if (is_union)
                 {
                     ff_printf("union");
@@ -432,7 +435,8 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
                 int num_dims;
                 long dim[CODA_MAX_NUM_DIMS];
 
-                coda_type_get_array_dim(type, &num_dims, dim);
+                result = coda_type_get_array_dim(type, &num_dims, dim);
+                assert(result == 0);
                 ff_printf("[");
                 for (i = 0; i < num_dims; i++)
                 {
@@ -453,11 +457,13 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
             }
             break;
         case coda_special_class:
-            coda_type_get_special_type((coda_type *)type, &special_type);
+            result = coda_type_get_special_type((coda_type *)type, &special_type);
+            assert(result == 0);
             ff_printf("%s", coda_type_get_special_type_name(special_type));
             break;
         default:
-            coda_type_get_read_type(type, &read_type);
+            result = coda_type_get_read_type(type, &read_type);
+            assert(result == 0);
             ff_printf("%s", coda_type_get_native_type_name(read_type));
 
             if (type->type_class == coda_text_class && type->format == coda_format_ascii)
@@ -716,7 +722,8 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
                 {
                     long num_fields;
 
-                    coda_type_get_num_record_fields(type, &num_fields);
+                    result = coda_type_get_num_record_fields(type, &num_fields);
+                    assert(result == 0);
                     if (num_fields == 0)
                     {
                         break;
@@ -737,11 +744,16 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
                         int hidden;
                         int available;
 
-                        coda_type_get_record_field_type(type, i, &field_type);
-                        coda_type_get_record_field_name(type, i, &field_name);
-                        coda_type_get_record_field_real_name(type, i, &real_name);
-                        coda_type_get_record_field_hidden_status(type, i, &hidden);
-                        coda_type_get_record_field_available_status(type, i, &available);
+                        result = coda_type_get_record_field_type(type, i, &field_type);
+                        assert(result == 0);
+                        result = coda_type_get_record_field_name(type, i, &field_name);
+                        assert(result == 0);
+                        result = coda_type_get_record_field_real_name(type, i, &real_name);
+                        assert(result == 0);
+                        result = coda_type_get_record_field_hidden_status(type, i, &hidden);
+                        assert(result == 0);
+                        result = coda_type_get_record_field_available_status(type, i, &available);
+                        assert(result == 0);
 
                         fi_printf("<tr valign=\"top\">");
                         fi_printf("<td>%d</td>", i);
@@ -839,7 +851,8 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
                         fi_printf("<br />\n");
                     }
                     fi_printf("<blockquote>\n");
-                    coda_type_get_array_base_type(type, &base_type);
+                    result = coda_type_get_array_base_type(type, &base_type);
+                    assert(result == 0);
                     generate_html_type(base_type, 0, 1);
                     fi_printf("</blockquote>\n");
                 }
@@ -853,7 +866,8 @@ static void generate_html_type(const coda_type *type, int expand_named_type, int
                         fi_printf("<br />\n");
                     }
                     fi_printf("<blockquote>\n");
-                    coda_type_get_special_base_type(type, &base_type);
+                    result = coda_type_get_special_base_type(type, &base_type);
+                    assert(result == 0);
                     generate_html_type(base_type, 0, 1);
                     fi_printf("</blockquote>\n");
                 }
@@ -1040,6 +1054,8 @@ static void generate_html_product_definition(const char *filename, coda_product_
 
 static int type_uses_type(const coda_type *type1, const coda_type *type2, int include_self)
 {
+    int result;
+
     if (type1 == NULL)
     {
         return 0;
@@ -1057,12 +1073,14 @@ static int type_uses_type(const coda_type *type1, const coda_type *type2, int in
                 long num_fields;
                 long i;
 
-                coda_type_get_num_record_fields(type1, &num_fields);
+                result = coda_type_get_num_record_fields(type1, &num_fields);
+                assert(result == 0);
                 for (i = 0; i < num_fields; i++)
                 {
                     coda_type *field_type;
 
-                    coda_type_get_record_field_type(type1, i, &field_type);
+                    result = coda_type_get_record_field_type(type1, i, &field_type);
+                    assert(result == 0);
                     if (type_uses_type(field_type, type2, 1))
                     {
                         return 1;
@@ -1074,14 +1092,16 @@ static int type_uses_type(const coda_type *type1, const coda_type *type2, int in
             {
                 coda_type *base_type;
 
-                coda_type_get_array_base_type(type1, &base_type);
+                result = coda_type_get_array_base_type(type1, &base_type);
+                assert(result == 0);
                 return type_uses_type(base_type, type2, 1);
             }
         case coda_special_class:
             {
                 coda_type *base_type;
 
-                coda_type_get_special_base_type(type1, &base_type);
+                result = coda_type_get_special_base_type(type1, &base_type);
+                assert(result == 0);
                 return type_uses_type(base_type, type2, 1);
             }
         default:
