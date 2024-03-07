@@ -676,6 +676,13 @@ static void XMLCALL end_element_handler(void *data, const char *el)
                             abort_parser(info);
                             return;
                         }
+                        /* if the array is empty and the field is optional then remove the array */
+                        if (((coda_mem_array *)field_type)->num_elements == 0 &&
+                            info->record[info->depth]->definition->field[i]->optional)
+                        {
+                            coda_mem_type_delete(field_type);
+                            info->record[info->depth]->field_type[i] = NULL;
+                        }
                     }
                 }
             }
