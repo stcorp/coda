@@ -1,4 +1,4 @@
-C Copyright (C) 2007-2023 S[&]T, The Netherlands.
+C Copyright (C) 2007-2024 S[&]T, The Netherlands.
 C All rights reserved.
 C
 C Redistribution and use in source and binary forms, with or without

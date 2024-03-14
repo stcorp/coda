@@ -5,12 +5,12 @@ endif()
 
 project(CODA)
 
-set(VERSION 2.25.1)
+set(VERSION 2.25.2)
 set(CODA_VERSION \"${VERSION}\")
 set(CPACK_PACKAGE_VERSION ${VERSION})
 
 # Set dynamic library version
-set(LIBCODA_CURRENT 15)
+set(LIBCODA_CURRENT 16)
 set(LIBCODA_REVISION 8)
 set(LIBCODA_AGE 0)
 math(EXPR LIBCODA_MAJOR "${LIBCODA_CURRENT} - ${LIBCODA_AGE}")

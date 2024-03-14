@@ -1,5 +1,10 @@
+2.25.2 2023-03-14
+~~~~~~~~~~~~~~~~~
+
 * Fixed issue where if a field containing an array of XML elements was optional,
   it was not set as unavailable when the array length was 0.
+
+* Fixed CMake build for locating Python 3.12.
 
 2.25.1 2023-12-07
 ~~~~~~~~~~~~~~~~~
