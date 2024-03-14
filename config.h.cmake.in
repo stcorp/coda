@@ -19,7 +19,7 @@
    CODA is linked against HDF4 library version 4.2r2 or higher). */
 #cmakedefine ENABLE_HDF4_VDATA_ATTRIBUTES ${ENABLE_HDF4_VDATA_ATTRIBUTES}
 
-/* Define to 1 if you have the `bcopy' function. */
+/* Define to 1 if you have the 'bcopy' function. */
 #cmakedefine HAVE_BCOPY ${HAVE_BCOPY}
 
 /* Define to 1 if you have the <dirent.h> header file. */
@@ -28,10 +28,10 @@
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #cmakedefine HAVE_DLFCN_H ${HAVE_DLFCN_H}
 
-/* Define to 1 if you have the `floor' function. */
+/* Define to 1 if you have the 'floor' function. */
 #cmakedefine HAVE_FLOOR ${HAVE_FLOOR}
 
-/* Define to 1 if you have the `getpagesize' function. */
+/* Define to 1 if you have the 'getpagesize' function. */
 #cmakedefine HAVE_GETPAGESIZE ${HAVE_GETPAGESIZE}
 
 /* Define to 1 if HDF4 is available. */
@@ -52,14 +52,14 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #cmakedefine HAVE_INTTYPES_H ${HAVE_INTTYPES_H}
 
-/* Define to 1 if you have the `m' library (-lm). */
+/* Define to 1 if you have the 'm' library (-lm). */
 #cmakedefine HAVE_LIBM ${HAVE_LIBM}
 
-/* Define to 1 if your system has a GNU libc compatible `malloc' function, and
+/* Define to 1 if your system has a GNU libc compatible 'malloc' function, and
    to 0 otherwise. */
 #cmakedefine HAVE_MALLOC ${HAVE_MALLOC}
 
-/* Define to 1 if you have the `memmove' function. */
+/* Define to 1 if you have the 'memmove' function. */
 #cmakedefine HAVE_MEMMOVE ${HAVE_MEMMOVE}
 
 /* Define to 1 if you have the <mex.h> header file. */
@@ -68,20 +68,20 @@
 /* Define to 1 if you have the <mfhdf.h> header file. */
 #cmakedefine HAVE_MFHDF_H ${HAVE_MFHDF_H}
 
-/* Define to 1 if you have a working `mmap' system call. */
+/* Define to 1 if you have a working 'mmap' system call. */
 #cmakedefine HAVE_MMAP ${HAVE_MMAP}
 
 /* Define to 1 if you have the <netcdf.h> header file. */
 #cmakedefine HAVE_NETCDF_H ${HAVE_NETCDF_H}
 
-/* Define to 1 if you have the `pread' function. */
+/* Define to 1 if you have the 'pread' function. */
 #cmakedefine HAVE_PREAD ${HAVE_PREAD}
 
-/* Define to 1 if your system has a GNU libc compatible `realloc' function,
+/* Define to 1 if your system has a GNU libc compatible 'realloc' function,
    and to 0 otherwise. */
 #cmakedefine HAVE_REALLOC ${HAVE_REALLOC}
 
-/* Define to 1 if you have the `stat' function. */
+/* Define to 1 if you have the 'stat' function. */
 #cmakedefine HAVE_STAT ${HAVE_STAT}
 
 /* Define to 1 if you have the <stdint.h> header file. */
@@ -93,10 +93,10 @@
 /* Define to 1 if you have the <stdlib.h> header file. */
 #cmakedefine HAVE_STDLIB_H ${HAVE_STDLIB_H}
 
-/* Define to 1 if you have the `strcasecmp' function. */
+/* Define to 1 if you have the 'strcasecmp' function. */
 #cmakedefine HAVE_STRCASECMP ${HAVE_STRCASECMP}
 
-/* Define to 1 if you have the `strdup' function. */
+/* Define to 1 if you have the 'strdup' function. */
 #cmakedefine HAVE_STRDUP ${HAVE_STRDUP}
 
 /* Define to 1 if you have the <strings.h> header file. */
@@ -105,7 +105,7 @@
 /* Define to 1 if you have the <string.h> header file. */
 #cmakedefine HAVE_STRING_H ${HAVE_STRING_H}
 
-/* Define to 1 if you have the `strncasecmp' function. */
+/* Define to 1 if you have the 'strncasecmp' function. */
 #cmakedefine HAVE_STRNCASECMP ${HAVE_STRNCASECMP}
 
 /* Define to 1 if you have the <sys/mman.h> header file. */
@@ -126,7 +126,7 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #cmakedefine HAVE_UNISTD_H ${HAVE_UNISTD_H}
 
-/* Define to 1 if you have the `vsnprintf' function. */
+/* Define to 1 if you have the 'vsnprintf' function. */
 #cmakedefine HAVE_VSNPRINTF ${HAVE_VSNPRINTF}
 
 /* Define to the sub-directory where libtool stores uninstalled libraries. */
@@ -156,7 +156,7 @@
 /* Define to the compiler attribute to test for printf format compliance */
 #cmakedefine PRINTF_ATTR ${PRINTF_ATTR}
 
-/* Define to 1 if all of the C90 standard headers exist (not just the ones
+/* Define to 1 if all of the C89 standard headers exist (not just the ones
    required in a freestanding environment). This macro is provided for
    backward compatibility; new code need not use it. */
 #cmakedefine STDC_HEADERS ${STDC_HEADERS}
@@ -164,7 +164,7 @@
 /* thread local storage (TLS) keyword */
 #cmakedefine THREAD_LOCAL ${THREAD_LOCAL}
 
-/* Define to 1 if your <sys/time.h> declares `struct tm'. */
+/* Define to 1 if your <sys/time.h> declares 'struct tm'. */
 #cmakedefine TM_IN_SYS_TIME ${TM_IN_SYS_TIME}
 
 /* Version number of package */
@@ -204,15 +204,18 @@
 /* Define to make XML Namespaces functionality available. */
 #cmakedefine XML_NS ${XML_NS}
 
-/* Define to 1 if `lex' declares `yytext' as a `char *' by default, not a
-   `char[]'. */
+/* Define to 1 if 'lex' declares 'yytext' as a 'char *' by default, not a
+   'char[]'. */
 #cmakedefine YYTEXT_POINTER ${YYTEXT_POINTER}
 
 /* Number of bits in a file offset, on hosts where this is settable. */
 #cmakedefine _FILE_OFFSET_BITS ${_FILE_OFFSET_BITS}
 
-/* Define for large files, on AIX-style hosts. */
+/* Define to 1 on platforms where this makes off_t a 64-bit type. */
 #cmakedefine _LARGE_FILES ${_LARGE_FILES}
+
+/* Number of bits in time_t, on hosts where this is settable. */
+#cmakedefine _TIME_BITS ${_TIME_BITS}
 
 /* Define for Solaris 2.5.1 so the uint32_t typedef from <sys/synch.h>,
    <pthread.h>, or <semaphore.h> is not used. If the typedef were allowed, the
@@ -228,6 +231,9 @@
    <pthread.h>, or <semaphore.h> is not used. If the typedef were allowed, the
    #define below would cause a syntax error. */
 #cmakedefine _UINT8_T ${_UINT8_T}
+
+/* Define to 1 on platforms where this makes time_t a 64-bit type. */
+#cmakedefine __MINGW_USE_VC2005_COMPAT ${__MINGW_USE_VC2005_COMPAT}
 
 /* Define to the type of a signed integer type of width exactly 16 bits if
    such a type exists and the standard includes do not define it. */
@@ -251,7 +257,7 @@
 /* Define to rpl_realloc if the replacement function should be used. */
 #cmakedefine realloc ${realloc}
 
-/* Define to `unsigned int' if <sys/types.h> does not define. */
+/* Define as 'unsigned int' if <stddef.h> doesn't define. */
 #cmakedefine size_t ${size_t}
 
 /* Define to the type of an unsigned integer type of width exactly 16 bits if
