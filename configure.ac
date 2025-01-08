@@ -465,6 +465,7 @@ AM_CONDITIONAL(WITH_HDF5, test $ac_cv_with_hdf5 = yes)
 
 # *** xml ****
 
+AC_DEFINE([XML_GE], 1, [Define as 1/0 to enable/disable support for general entities.])
 AC_DEFINE([XML_NS], 1, [Define to make XML Namespaces functionality available.])
 AC_DEFINE([XML_DTD], 1, [Define to make parameter entity parsing functionality available.])
 AC_DEFINE([XML_LARGE_SIZE], 1, [Define to set the size of the XML_Size and XML_Index integer types to be at least 64 bits in size.])
