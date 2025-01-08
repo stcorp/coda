@@ -398,6 +398,7 @@ set(LIBPCRE2_SOURCES
   libcoda/pcre2/pcre2.h
   libcoda/pcre2/pcre2_auto_possess.c
   libcoda/pcre2/pcre2_chartables.c
+  libcoda/pcre2/pcre2_chkdint.c
   libcoda/pcre2/pcre2_compile.c
   libcoda/pcre2/pcre2_config.c
   libcoda/pcre2/pcre2_context.c
