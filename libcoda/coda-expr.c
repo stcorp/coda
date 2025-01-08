@@ -1143,6 +1143,7 @@ static int eval_boolean(eval_info *info, const coda_expression *expr, int *value
                 if (re == NULL)
                 {
                     PCRE2_UCHAR buffer[256];
+
                     pcre2_get_error_message(errorcode, buffer, sizeof(buffer));
                     coda_set_error(CODA_ERROR_EXPRESSION,
                                    "invalid format for regex pattern ('%s' at position %d)", buffer, erroffset);
@@ -3570,6 +3571,7 @@ static int eval_string(eval_info *info, const coda_expression *expr, long *offse
                 if (re == NULL)
                 {
                     PCRE2_UCHAR buffer[256];
+
                     pcre2_get_error_message(errorcode, buffer, sizeof(buffer));
                     coda_set_error(CODA_ERROR_EXPRESSION,
                                    "invalid format for regex pattern ('%s' at position %d)", buffer, erroffset);

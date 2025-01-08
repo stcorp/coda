@@ -73,5 +73,7 @@
 -T mxClassID
 -T mxComplexity
 -T PyObject
+-T PCRE2_SPTR8
+-T PCRE2_UCHAR
 -T XML_Parser
 -T Bytef
