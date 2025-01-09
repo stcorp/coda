@@ -9,7 +9,7 @@ netCDF, CDF, HDF4, HDF5, GRIB, RINEX and SP3. It provides a single consistent
 hierarchical view on data independent of the underlying storage format.
 
 CODA is used as a core component in various ESA software among which the ESA
-Atmospheric Toolbox (BEAT) and the Broadview Radar Altimetry Toolbox (BRAT).
+Atmospheric Toolbox and the Broadview Radar Altimetry Toolbox (BRAT).
 
 The CODA software package comes with interfaces for C, Fortran, IDL, MATLAB,
 Python, and Java and several useful command-line tools.
