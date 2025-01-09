@@ -1,3 +1,6 @@
+2.25.3 2025-01-09
+~~~~~~~~~~~~~~~~~
+
 * Updated embedded expat library to version 2.6.4.
 
 * Updated embedded pcre2 library to version 10.44.
