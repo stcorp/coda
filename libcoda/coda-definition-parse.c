@@ -717,6 +717,11 @@ static int get_named_type(parser_info *info, const char *id, coda_type **type)
         }
     }
     *type = coda_product_class_get_named_type(info->product_class, id);
+    if (*type == NULL)
+    {
+        coda_set_error(CODA_ERROR_DATA_DEFINITION, "named type definition for '%s' is empty", id);
+        return -1;
+    }
     (*type)->retain_count++;
     return 0;
 }
