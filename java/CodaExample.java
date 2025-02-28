@@ -31,6 +31,7 @@
 
 
 import java.lang.reflect.Field;
+import java.nio.file.Paths;
 
 import nl.stcorp.coda.Coda;
 import nl.stcorp.coda.CodaException;
@@ -77,57 +78,7 @@ public class CodaExample
 
     private static void loadLibrary(String libraryName)
     {
-        loadLibrary(System.getProperty("coda.lib.dir", "."), libraryName);
-    }
-
-
-    private static void loadLibrary(String libraryPath, String libraryName)
-    {
-        Class<ClassLoader>   myClass = ClassLoader.class;
-        Field   myField;
-        Object  original;
-        boolean bAccessible;
-
-        try {
-            /* Get the system paths field */
-            myField = myClass.getDeclaredField("sys_paths");
-
-            /* Make the field accessible and record that we did that */
-            bAccessible = myField.isAccessible();
-            if (!bAccessible)
-            {
-                myField.setAccessible(true);
-            }
-
-            /* Backup the contents of the field */
-            original = myField.get(myClass);
-
-            /*
-             * Reset it to null so that whenever "System.loadLibrary" is called,
-             * it will be reconstructed with the changed value.
-             */
-            myField.set(myClass, null);
-            try
-            {
-                /* Change the value and load the library. */
-                System.setProperty("java.library.path", libraryPath);
-                System.loadLibrary(libraryName);
-            }
-            finally
-            {
-                /* Revert back the changes. */
-                myField.set(myClass, original);
-                myField.setAccessible(bAccessible);
-            }
-        }
-        catch (NoSuchFieldException e)
-        {
-            e.printStackTrace();
-        }
-        catch (IllegalAccessException e)
-        {
-            e.printStackTrace();
-        }
+        System.load(Paths.get(System.getProperty("coda.lib.dir", "."), libraryName + ".jnilib").toString());
     }
 
 
