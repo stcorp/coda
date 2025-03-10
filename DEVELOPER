@@ -14,7 +14,7 @@ Run 'make dist' to have config.h.cmake.in and coda.h.cmake.in updated to be
 in line with config.h.in and coda.h.in.
 
 If any interface in the C library has changed check Fortran, IDL, MATLAB,
-Python and Java interfaces for consistency. Use SWIG 4.2.1 to regenerate
+Python and Java interfaces for consistency. Use SWIG 4.1.1 to regenerate
 Java bindings.
 
 Run 'make indent' using GNU indent (2.2.11) to update the indentation of the C
