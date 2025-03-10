@@ -1,3 +1,11 @@
+2.25.5 2025-03-10
+~~~~~~~~~~~~~~~~~
+
+* Fixed CMake error when building against newer versions of HDF4 on Windows.
+
+* Fixed compilation errors when building the CODA Java interface for newer
+  versions of Java.
+
 2.25.4 2025-02-03
 ~~~~~~~~~~~~~~~~~
 
