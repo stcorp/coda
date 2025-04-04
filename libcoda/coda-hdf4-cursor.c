@@ -32,6 +32,7 @@
 #include "coda-hdf4-internal.h"
 
 #include <assert.h>
+#include <stdlib.h>
 
 static int get_native_type_size(coda_native_type type)
 {
