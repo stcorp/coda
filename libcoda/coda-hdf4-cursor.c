@@ -33,6 +33,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 static int get_native_type_size(coda_native_type type)
 {

@@ -32,6 +32,8 @@
 #include "coda-hdf4-internal.h"
 
 #include <assert.h>
+#include <stdlib.h>
+#include <string.h>
 
 static int init_GRImages(coda_hdf4_product *product)
 {

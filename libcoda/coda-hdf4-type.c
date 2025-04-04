@@ -32,6 +32,8 @@
 #include "coda-hdf4-internal.h"
 
 #include <assert.h>
+#include <stdlib.h>
+#include <string.h>
 
 /* Compatibility with versions before HDF4r2 */
 #ifndef _HDF_SDSVAR
