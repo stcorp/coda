@@ -5,7 +5,7 @@ endif()
 
 project(CODA)
 
-set(VERSION 2.25.5)
+set(VERSION 2.25.6)
 set(CODA_VERSION \"${VERSION}\")
 set(CPACK_PACKAGE_VERSION ${VERSION})
 
