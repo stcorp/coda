@@ -138,18 +138,21 @@ static int new_hdf5BasicDataType(hid_t datatype_id, coda_hdf5_data_type **type, 
     switch (H5Tget_class(basic_type->datatype_id))
     {
         case H5T_ENUM:
-            datatype_id = H5Tget_super(datatype_id);
-            if (datatype_id < 0)
-            {
-                coda_set_error(CODA_ERROR_HDF5, NULL);
-                coda_hdf5_type_delete((coda_dynamic_type *)basic_type);
-                return -1;
-            }
-            /* pass through and determine native type from super type of enumeration */
         case H5T_INTEGER:
             {
                 int sign = 0;
                 int result = 0;
+
+                if (H5Tget_class(basic_type->datatype_id) == H5T_ENUM)
+                {
+                    datatype_id = H5Tget_super(datatype_id);
+                    if (datatype_id < 0)
+                    {
+                        coda_set_error(CODA_ERROR_HDF5, NULL);
+                        coda_hdf5_type_delete((coda_dynamic_type *)basic_type);
+                        return -1;
+                    }
+                }
 
                 basic_type->definition = (coda_type *)coda_type_number_new(coda_format_hdf5, coda_integer_class);
                 if (basic_type->definition == NULL)
@@ -557,22 +560,23 @@ static int new_hdf5AttributeDefinition(hid_t attr_id, coda_type **type, long *nu
     switch (H5Tget_class(datatype_id))
     {
         case H5T_ENUM:
-            {
-                hid_t enum_datatype_id = datatype_id;
-
-                datatype_id = H5Tget_super(enum_datatype_id);
-                H5Tclose(enum_datatype_id);
-                if (datatype_id < 0)
-                {
-                    coda_set_error(CODA_ERROR_HDF5, NULL);
-                    return -1;
-                }
-            }
-            /* pass through and determine native type from super type of enumeration */
         case H5T_INTEGER:
             {
                 int sign = 0;
                 int result = 0;
+
+                if (H5Tget_class(datatype_id) == H5T_ENUM)
+                {
+                    hid_t enum_datatype_id = datatype_id;
+
+                    datatype_id = H5Tget_super(enum_datatype_id);
+                    H5Tclose(enum_datatype_id);
+                    if (datatype_id < 0)
+                    {
+                        coda_set_error(CODA_ERROR_HDF5, NULL);
+                        return -1;
+                    }
+                }
 
                 definition = (coda_type *)coda_type_number_new(coda_format_hdf5, coda_integer_class);
                 if (definition == NULL)
