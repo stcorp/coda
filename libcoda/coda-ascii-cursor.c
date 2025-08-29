@@ -811,6 +811,7 @@ int coda_ascii_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size)
         }
         if (size < 0)
         {
+            coda_cursor_add_to_error_message(cursor);
             return -1;
         }
         *bit_size = size * 8;
@@ -842,6 +843,7 @@ int coda_ascii_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size)
                         {
                             coda_set_error(CODA_ERROR_PRODUCT, "product error detected (ascii line separator does not "
                                            "start at byte boundary)");
+                            coda_cursor_add_to_error_message(cursor);
                             return -1;
                         }
                         if (coda_ascii_cursor_read_bytes(cursor, buffer, 0, 1) != 0)
@@ -883,6 +885,7 @@ int coda_ascii_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size)
                                     coda_set_error(CODA_ERROR_PRODUCT, "product error detected (invalid end-of-line "
                                                    "sequence - not a carriage return or linefeed character - byte "
                                                    "offset = %s)", s);
+                                    coda_cursor_add_to_error_message(cursor);
                                     return -1;
                                 }
                         }
@@ -902,6 +905,7 @@ int coda_ascii_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size)
                 {
                     coda_set_error(CODA_ERROR_PRODUCT,
                                    "product error detected (ascii line does not start at byte boundary)");
+                    coda_cursor_add_to_error_message(cursor);
                     return -1;
                 }
 
@@ -967,6 +971,7 @@ int coda_ascii_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size)
                 {
                     coda_set_error(CODA_ERROR_PRODUCT,
                                    "product error detected (ascii line does not start at byte boundary)");
+                    coda_cursor_add_to_error_message(cursor);
                     return -1;
                 }
                 byte_offset = cursor->stack[cursor->n - 1].bit_offset >> 3;
@@ -1014,6 +1019,7 @@ int coda_ascii_cursor_get_bit_size(const coda_cursor *cursor, int64_t *bit_size)
                 {
                     coda_set_error(CODA_ERROR_PRODUCT,
                                    "product error detected (ascii white space does not start at byte boundary)");
+                    coda_cursor_add_to_error_message(cursor);
                     return -1;
                 }
                 byte_offset = cursor->stack[cursor->n - 1].bit_offset >> 3;
