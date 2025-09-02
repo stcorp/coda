@@ -2371,6 +2371,7 @@ def _get_c_library_filename():
         "..",  # pyinstaller bundles
         "../../..",  # regular lib dir
         "../../../../lib",  # on RHEL the python path uses lib64, but the library might have gotten installed in lib
+        "../../../../../lib",  # on Ubuntu the python prefix can be 'local/lib', but libraries get installed in 'lib'
     ):
         library_path = os.path.normpath(os.path.join(dirname, rel_path, library_name))
         if os.path.exists(library_path):
