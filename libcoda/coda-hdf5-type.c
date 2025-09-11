@@ -794,7 +794,7 @@ static int new_hdf5Attribute(coda_product *product, hid_t attr_id, const char *n
         return result;
     }
 
-    if (num_elements == 0)
+    if (num_elements == 0 && definition->type_class != coda_array_class)
     {
         coda_mem_data *element;
 
