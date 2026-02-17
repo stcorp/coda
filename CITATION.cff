@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+title: CODA
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+abstract: The Common Data Access toolset
+type: software
+authors:
+  - name: 'S[&]T'
+    website: 'https://www.stcorp.nl'
+  - name: 'ESA'
+    website: 'https://www.esa.int'
+repository-code: 'https://github.com/stcorp/coda'
+url: 'https://atmospherictoolbox.org/coda/'
+license: BSD-3-Clause
