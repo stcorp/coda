@@ -495,6 +495,7 @@ endif
 
 EXTRA_DIST += \
 	CHANGES \
+	CITATION.cff \
 	COPYING \
 	FAQ \
 	INSTALL \
