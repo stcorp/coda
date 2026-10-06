@@ -1,3 +1,6 @@
+2.25.7 2026-10-06
+~~~~~~~~~~~~~~~~~
+
 * Fixed compatibility issue with HDF4 4.4.0.
 
 * Allow hdf5 attributes to be 0-length arrays
