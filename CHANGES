@@ -1,9 +1,11 @@
-* Fix compatibility with HDF4 4.4.0.
+* Fixed compatibility issue with HDF4 4.4.0.
+
+* Allow hdf5 attributes to be 0-length arrays
 
 2.25.6 2025-06-11
 ~~~~~~~~~~~~~~~~~
 
-* Add missing include file statements that could break compilation with more
+* Added missing include file statements that could break compilation with more
   recent compilers.
 
 2.25.5 2025-03-10
