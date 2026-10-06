@@ -34,13 +34,14 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include "hfile.h"
 
 /* Compatibility with versions before HDF4r2 */
 #ifndef _HDF_SDSVAR
-#define _HDF_SDSVAR            "SDSVar"
+#define _HDF_SDSVAR "SDSVar"
 #endif
 #ifndef _HDF_CRDVAR
-#define _HDF_CRDVAR          "CoordVar"
+#define _HDF_CRDVAR "CoordVar"
 #endif
 
 void coda_hdf4_type_delete(coda_dynamic_type *type)
@@ -1778,6 +1779,9 @@ coda_hdf4_Vgroup *coda_hdf4_Vgroup_new(coda_hdf4_product *product, int32 vgroup_
 {
     coda_hdf4_Vgroup *type;
     int32 num_entries;
+#if LIBVER_MAJOR == 4 && LIBVER_MINOR >= 4
+    size_t buf_size;
+#endif
 
     type = (coda_hdf4_Vgroup *)malloc(sizeof(coda_hdf4_Vgroup));
     if (type == NULL)
@@ -1810,14 +1814,24 @@ coda_hdf4_Vgroup *coda_hdf4_Vgroup_new(coda_hdf4_product *product, int32 vgroup_
         return NULL;
     }
 
+#if LIBVER_MAJOR == 4 && LIBVER_MINOR >= 4
+    buf_size = MAX_HDF4_NAME_LENGTH + 1;
+    if (Vinquire(type->vgroup_id, &num_entries, type->vgroup_name, &buf_size) != 0)
+#else
     if (Vinquire(type->vgroup_id, &num_entries, type->vgroup_name) != 0)
+#endif
     {
         coda_set_error(CODA_ERROR_HDF4, NULL);
         coda_hdf4_type_delete((coda_dynamic_type *)type);
         return NULL;
     }
 
+#if LIBVER_MAJOR == 4 && LIBVER_MINOR >= 4
+    buf_size = MAX_HDF4_NAME_LENGTH + 1;
+    if (Vgetclass(type->vgroup_id, type->classname, &buf_size) != 0)
+#else
     if (Vgetclass(type->vgroup_id, type->classname) != 0)
+#endif
     {
         coda_set_error(CODA_ERROR_HDF4, NULL);
         coda_hdf4_type_delete((coda_dynamic_type *)type);
